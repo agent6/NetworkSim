@@ -1,0 +1,712 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-17T00:42:33.731Z",
+  "scope": "Explicit source/test review surface for this audit and retained concurrent work. No immutable pre-audit source snapshot exists; this is not a Git diff, authorship attribution, or exhaustive historical edit count.",
+  "baseline": "Checkout was already untracked; no reset or blanket commit was made.",
+  "concurrentWork": "AP controller displays, WLC reference dropdowns and server service removal were introduced concurrently and preserved. This audit also repaired defects in these shared files.",
+  "files": [
+    {
+      "path": "src/aaa-accounting.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "50f9f7622911f0ae0fe73f7ecb3b192cb0961b6c1fefd59a77f830959f2fa6ba",
+      "bytes": 9238
+    },
+    {
+      "path": "src/aaa-service.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "e8f3f5fbb89d4a281d5039243a84f743834cb4f0804701a3275dfad5c2c4f2d0",
+      "bytes": 2019
+    },
+    {
+      "path": "src/ap-controller-view.ts",
+      "role": "source",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "377c82ab9565acb1c080c9bcd8c3427055c391d62c7fb5a28c05060dd4ff45dc",
+      "bytes": 3439
+    },
+    {
+      "path": "src/bgp-compat.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "dba4307b6a07846dfea522dce3e5b3bac21d55375558637d2ff2202f17af9657",
+      "bytes": 4797
+    },
+    {
+      "path": "src/bgp-session.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "a12dfc5920cc0c00bf9e678fc8860cd6f834ec99e2c6956d6a74afca7be8f4fa",
+      "bytes": 13697
+    },
+    {
+      "path": "src/cli.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "f9692d54bc0d957433e7c9fd4b2b70c93f4cf5dadaf4a2830a27796fad7c64c8",
+      "bytes": 301621
+    },
+    {
+      "path": "src/config-renderer.ts",
+      "role": "source",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "7930a44285ef59006b3453fcb583296a591b0d105ea919b31009d7b234269ec0",
+      "bytes": 62348
+    },
+    {
+      "path": "src/control-plane.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "c3f9c4fd6eeee881736dbd6acabcf548236c4147cf5dccc4322078f24e775c37",
+      "bytes": 236620
+    },
+    {
+      "path": "src/discovery.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "157366ba698c3d70b0a70b3c7cdf3ec68b84bda655c0c49a355c25eecefbff27",
+      "bytes": 6811
+    },
+    {
+      "path": "src/dns-service.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "bee8cf88869436e471420f8229ea75f8a135de9eaef45e5e827f3ad81ac61d29",
+      "bytes": 4109
+    },
+    {
+      "path": "src/engine.ts",
+      "role": "source",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "c88f5ec22471c66fd22ea211920cbbcbf999f30c090f0e9c05b90bb6aba2ca1c",
+      "bytes": 169490
+    },
+    {
+      "path": "src/ethernet.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "ef74152eaccd75792ad1ebd2b2a7cc04eba57fa1c0dc3bb41a657e9f70245095",
+      "bytes": 2861
+    },
+    {
+      "path": "src/filesystem.ts",
+      "role": "source",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "1b6ad1181e37079313a21a31eb231f4e7bf4c1ec82996c032713fa1b8efb6a3e",
+      "bytes": 1316
+    },
+    {
+      "path": "src/http-service.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "a916159a3dc89c28eea73d5639d0f8a7b50abc033a4f4327ec1fbaed04780e0f",
+      "bytes": 6083
+    },
+    {
+      "path": "src/ios-maintenance.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "5fa8d81f092f6d3b585c9df533aead68e15fb47d2e77550d64b0eee7a43909c1",
+      "bytes": 4293
+    },
+    {
+      "path": "src/ios-platform-compat.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "4a9b5d4eeab04c5ff4fa8e8c9fbeba0992cbd3ac584c2f09364466fc871055f3",
+      "bytes": 15065
+    },
+    {
+      "path": "src/ios-poe.ts",
+      "role": "source",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "243e833e19f65b70b68a3441a89f7d1c811d41d67248e69e8c083112a85b847d",
+      "bytes": 2650
+    },
+    {
+      "path": "src/ios-show-enterprise.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "1bbd5678147a856749da2929ba974cead8b88c330f608fe4980df867dd25ec2f",
+      "bytes": 38856
+    },
+    {
+      "path": "src/ios-show-operational.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "1594d1013bb60dd24bb39d3570948cca254a4a833656cead8712f455dfce0d2c",
+      "bytes": 22547
+    },
+    {
+      "path": "src/ios-show-switching.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "fbb993f96fcf58c49c200b4ca87f5d24d30b1f26cc0203e2b193e0c14c22ba55",
+      "bytes": 14735
+    },
+    {
+      "path": "src/ios-show.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "9c0f97e427736cfa2e26c90ac67497a90bfbaa7ff10267d49e4f2090a932b6d1",
+      "bytes": 72928
+    },
+    {
+      "path": "src/ios-snmp.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "9961e71a83fa7a677bb93e371747fa8d4d9afc89bda90ce23791548ccd6e9f94",
+      "bytes": 10291
+    },
+    {
+      "path": "src/ios-switching-compat.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "fe8bd3f861fcbffb38ea05a7f016754951342e77b50c9579a4a5dbb67e2fa87d",
+      "bytes": 25907
+    },
+    {
+      "path": "src/ios-syntax.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "b1c07ad380b6eacdaf992a682d241e8ccad846aac5a4a37427b8a6fc9bd65262",
+      "bytes": 52097
+    },
+    {
+      "path": "src/ios-wireless.ts",
+      "role": "source",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "153910d45fa62c87ad1fb0c8ef04240e594c76901468f26825f27f500baaac7e",
+      "bytes": 16509
+    },
+    {
+      "path": "src/mac-aging.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "c55db97eb731b4928e9fb6a6fdb8e7d989ef3e8323a971d4d17645776e6a0688",
+      "bytes": 601
+    },
+    {
+      "path": "src/main.ts",
+      "role": "source",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "9da9a37669fb1863c81377dcba43425d016552b7bcaa038834821976f758fb02",
+      "bytes": 123827
+    },
+    {
+      "path": "src/management.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "6235bb352b2e22bd86e27b4235f9aa71570905ae9c9b8e60d796fa0bbb84bc58",
+      "bytes": 26383
+    },
+    {
+      "path": "src/model-driven-management.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "e0b70f8492a9115a595069faeb17fb8d060d8967c5d9ec71f56140cf4ea73690",
+      "bytes": 35351
+    },
+    {
+      "path": "src/model.ts",
+      "role": "source",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "f65036f4a762cecc7ee0a9dc479edf6f776820645ac4d34e241155b76a58a93c",
+      "bytes": 6982
+    },
+    {
+      "path": "src/network-tools-ui.ts",
+      "role": "source",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "12a7c88e8f8f26a00ec1e1f1c430fa80a84c2bf01b63b0a1e1f5e3872fde4937",
+      "bytes": 5906
+    },
+    {
+      "path": "src/packet-policy.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "17bc7992af87a7f1c11c56c0b3e8ba3cd95275ac6a12809b15725315b6dc440a",
+      "bytes": 38055
+    },
+    {
+      "path": "src/persistence.ts",
+      "role": "source",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "e9a25a57c29a59cf4a8106fea616257e4c0f728293051801962ffef95175e5ee",
+      "bytes": 13534
+    },
+    {
+      "path": "src/poe-ui.ts",
+      "role": "source",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "8e8adb580315ea18b2ea87974b7713822e30b1a5571c3171950fd44f5b44b7b3",
+      "bytes": 3974
+    },
+    {
+      "path": "src/poe.ts",
+      "role": "source",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "c376dcb2718f48ba545d09ee441205c56602b7e14a3854a33ab8ad9b64051d45",
+      "bytes": 6614
+    },
+    {
+      "path": "src/qos-scheduler.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "b0007780baeb2fb7aecf81172dc4ed5c1c82cada17043f2f5071671ff10d1fc4",
+      "bytes": 12391
+    },
+    {
+      "path": "src/record-map.ts",
+      "role": "source",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "5353bedc6a269437c82f3d4f5188c6270498065fb82f989681f6c3e220fa1426",
+      "bytes": 709
+    },
+    {
+      "path": "src/services-ui.ts",
+      "role": "source",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "d51cb23c472c0d70d54eff3e4e73d5d8713115c854beb24f5e6b0d039beff476",
+      "bytes": 24579
+    },
+    {
+      "path": "src/snmp.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "8fc9de6c1ca705814a4665e401e00051c1fe41e628bb89ef85cb4e4b48a7ab5b",
+      "bytes": 15239
+    },
+    {
+      "path": "src/ssh-files.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "61512c07418294fa9d00b9e833ef9729088de16656c40ec9b9a4963ecd90bd36",
+      "bytes": 4466
+    },
+    {
+      "path": "src/tcp-channel.ts",
+      "role": "source",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "e467ff8277e7fdfdc4da7d1071206df2714752e5fba3d85bd0090b0a1fc7950f",
+      "bytes": 20815
+    },
+    {
+      "path": "src/windows-cli.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "9902c89fe4cc290db1c9a825cfafa724098cc514c43446b8f13171dfbe351942",
+      "bytes": 46522
+    },
+    {
+      "path": "src/wireless-controller-form.ts",
+      "role": "source",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "d2d60084f5d66cab4a2c72669d2194b3037c4d12e13ebb9878cbf40b936a55cc",
+      "bytes": 9146
+    },
+    {
+      "path": "src/wireless-model.ts",
+      "role": "source",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "3ccdff30259d573fb38890a5b745e2f5867f0def04d729c09d0e5011b213767f",
+      "bytes": 8607
+    },
+    {
+      "path": "src/wireless-ui.ts",
+      "role": "source",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "b20142b67960ceff3b99e482eb08eb201aa3023e9ded1dd84888f1e354accff2",
+      "bytes": 27750
+    },
+    {
+      "path": "src/wireless.ts",
+      "role": "source",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "aa7b4e36fe3bb2ba5bc33f6b02da2256e6b5b34dfd7f74fc384e974286437b78",
+      "bytes": 39537
+    },
+    {
+      "path": "src/wlc-reference-ui.ts",
+      "role": "source",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "4aad65c2165801c5dd330396f8fd978f273b1bda02824a2a965ba17b2657b3fe",
+      "bytes": 8366
+    },
+    {
+      "path": "tests/aaa-accounting.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "a9fffaef9424f8234ba247661ff4ed0ab733e42967886a09c899ad53f1b52bf8",
+      "bytes": 13425
+    },
+    {
+      "path": "tests/ap-controller-config.test.ts",
+      "role": "tests",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "cc82998987b648c43e9dd9711ab2b18d0fb576b4b9e956d1a66c4dcd3b57fcc2",
+      "bytes": 11895
+    },
+    {
+      "path": "tests/bgp-multiprotocol.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "c8a762ed6568ad8336bfe4795ae80d6441c87f4b5919e4018d02339652d7ebb4",
+      "bytes": 14612
+    },
+    {
+      "path": "tests/cli.test.ts",
+      "role": "tests",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "62dd39b593fcf38b465df35ceeb8ba143599d1faa8eb9a6a38496764811898a6",
+      "bytes": 47761
+    },
+    {
+      "path": "tests/dns-service.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "b48b0fb69d6bc6f9aca107486cec6b6f1e027c7958d5753ea90f3aaa1201a563",
+      "bytes": 7044
+    },
+    {
+      "path": "tests/eigrp-auto-summary.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "e9508738a54df6badfd8035adcd3ba7475586b1490fd07ba715730781f48e384",
+      "bytes": 10296
+    },
+    {
+      "path": "tests/ethernet-physical.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "38bf921f3e2a68fceb36bd04a6fa1b1febddfd173ffc48a6e4530423988a03e5",
+      "bytes": 11912
+    },
+    {
+      "path": "tests/ios-show-operational.test.ts",
+      "role": "tests",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "3faca0a39a84f1089aad57c846f16061305429c4afd3de014b3a4146f730e35e",
+      "bytes": 9148
+    },
+    {
+      "path": "tests/ios-show-switching.test.ts",
+      "role": "tests",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "b51fdffa6f9d03e9b6f65d00a8abbb01d154021bba0831c834c4a450f08eefbe",
+      "bytes": 15416
+    },
+    {
+      "path": "tests/mac-aging.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "f3f4ed3cc127d9da472cd07164547f4aa68a41183baaff8c2b6fd8d27c6f9147",
+      "bytes": 3313
+    },
+    {
+      "path": "tests/management.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "8c3e96cfd78ed8cf680dfa74bf4b0bf2c2b849330dc45dbac1456cdc714d9e1f",
+      "bytes": 18618
+    },
+    {
+      "path": "tests/model-driven-management.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "414c1c7d7a3956443ffd615fdbd6c03e8646f8a3106b5135145f6a6581d81fe3",
+      "bytes": 22577
+    },
+    {
+      "path": "tests/persistence.test.ts",
+      "role": "tests",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "b9a836b5dfbba71f93a0aa47ff6ee5729ea079fdc59f766583553c32abf09425",
+      "bytes": 7546
+    },
+    {
+      "path": "tests/platform-fidelity.test.ts",
+      "role": "tests",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "7d2e68279294de7c1e8d2d5c6997d18c09616b437db1e4a0a9810a5c10f039dc",
+      "bytes": 2630
+    },
+    {
+      "path": "tests/poe.test.ts",
+      "role": "tests",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "040e769bc743aec048035ebf1fbab73a09978b20695a14028ea7e7c4890b1a11",
+      "bytes": 11199
+    },
+    {
+      "path": "tests/qos-parity.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "29a675f07c3b374b3b86b64cd2194aca566965939d686e39d61df86e26b76882",
+      "bytes": 6963
+    },
+    {
+      "path": "tests/qos-scheduler.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "6d31471d5c82e243060bb5a75e08df10f076dba1c9d8e529971cf721275085c6",
+      "bytes": 13089
+    },
+    {
+      "path": "tests/record-maps.test.ts",
+      "role": "tests",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "06a2cc593d0d7eda57e41625fc15c52fde78efb7df45a7d3e26a1397d88369a8",
+      "bytes": 8523
+    },
+    {
+      "path": "tests/services-ui.test.ts",
+      "role": "tests",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "d18c85e7a18861ab4059eedfa01546295870f3ff0ced08c1c4e85918fcc997bc",
+      "bytes": 9873
+    },
+    {
+      "path": "tests/snmp.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "96a0baec91d6a17c6b990d2581b5b1d4929099d2f8006817868f8624e827a925",
+      "bytes": 17401
+    },
+    {
+      "path": "tests/ssh-files.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "0b114df56be61dabc7b21bf964f9613a01227fd3ed7bc9889f6364c90fe3c939",
+      "bytes": 6699
+    },
+    {
+      "path": "tests/windows-cli.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "a675403746e2373f448430f2736bb2733f0318386f1456153bdb01ae694a65cd",
+      "bytes": 19843
+    },
+    {
+      "path": "tests/wired-fidelity.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "97c037eed794111dfb3290f42dd7fb907fbefc32507d1ff3bc42537a02a501d3",
+      "bytes": 15543
+    },
+    {
+      "path": "tests/wireless.test.ts",
+      "role": "tests",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "23d643ff5171131ee705e3fdbbb79eaa42f76fcb84135e0406f017d394715947",
+      "bytes": 40260
+    }
+  ],
+  "evidencePaths": [
+    "docs/audits/aaa-accounting-browser-validation.json",
+    "docs/audits/aaa-accounting-fidelity.md",
+    "docs/audits/aaa-accounting-inventory.json",
+    "docs/audits/ap-controller-browser-validation.json",
+    "docs/audits/audit-summary.json",
+    "docs/audits/cisco-compatibility-matrix.md",
+    "docs/audits/cli-command-coverage.md",
+    "docs/audits/command-probe-validation.json",
+    "docs/audits/coverage-inventory.json",
+    "docs/audits/cross-device-integration.md",
+    "docs/audits/dependency-map.json",
+    "docs/audits/exam-objective-coverage.json",
+    "docs/audits/exam-objective-coverage.md",
+    "docs/audits/final-validation-report.md",
+    "docs/audits/implementation-progress.md",
+    "docs/audits/known-limitations.md",
+    "docs/audits/localhost-wireless-browser-validation.json",
+    "docs/audits/model-driven-browser-validation.json",
+    "docs/audits/model-driven-management-coverage.json",
+    "docs/audits/networksim-node-inventory.md",
+    "docs/audits/protocol-fidelity-audit.md",
+    "docs/audits/reference-command-inventory.json",
+    "docs/audits/server-services-browser-validation.json",
+    "docs/audits/snmp-fidelity.md",
+    "docs/audits/windows-browser-validation.json",
+    "docs/audits/windows-cli-coverage.md",
+    "docs/audits/windows-command-inventory.json",
+    "docs/audits/wired-fidelity-audit.md",
+    "docs/audits/wired-fidelity-findings.json",
+    "docs/audits/wireless-fidelity-findings.json",
+    "docs/audits/wireless-gui-inventory.json",
+    "docs/audits/wlc-gui-coverage.md",
+    "docs/audits/wlc-reference-browser-validation.json"
+  ],
+  "tooling": [
+    "scripts/audit-change-manifest.mjs",
+    "scripts/audit-command-contexts.mjs",
+    "scripts/audit-command-fixtures.mjs",
+    "scripts/audit-command-ledger.mjs",
+    "scripts/audit-command-parity.mjs",
+    "scripts/audit-command-probes.mjs",
+    "scripts/audit-command-registrations.mjs",
+    "scripts/audit-exam-objectives.py",
+    "scripts/audit-model-driven-management.mjs",
+    "scripts/audit-reference-commands.py",
+    "scripts/audit-windows-commands.mjs",
+    "scripts/audit-wireless-gui.mjs",
+    "scripts/browser-aaa-accounting.mjs",
+    "scripts/browser-ap-controller.mjs",
+    "scripts/browser-model-driven.mjs",
+    "scripts/browser-radio-coverage.mjs",
+    "scripts/browser-server-services.mjs",
+    "scripts/browser-windows-fidelity.mjs",
+    "scripts/browser-wireless.mjs",
+    "scripts/browser-wlc-references.mjs",
+    "scripts/fidelity-inventory.mjs",
+    "scripts/report-fidelity-audit.mjs"
+  ],
+  "standalone": {
+    "path": "NetworkSim.html",
+    "sha256": "6340aa22b114a00c94d12570e66e1c03887189f131ac80b7cf2c3094c722f632",
+    "bytes": 3456643
+  }
+}

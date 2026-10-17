@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "profile": "Catalyst 9800 IOS XE 17.12 teaching subset; C9115 lightweight inspired; generic PoE+",
-  "generatedAt": "2026-10-17T00:30:05.392Z",
+  "generatedAt": "2026-10-17T00:42:11.276Z",
   "generator": "node scripts/audit-wireless-gui.mjs",
   "sources": [
     {
       "path": "src/wireless-ui.ts",
-      "sha256": "4183bfa803a164032c93856d0c1b61c99d0e7490199ce60db7e941a4801c2c33"
+      "sha256": "b20142b67960ceff3b99e482eb08eb201aa3023e9ded1dd84888f1e354accff2"
     },
     {
       "path": "src/poe-ui.ts",
@@ -14,7 +14,7 @@
     },
     {
       "path": "src/wireless-controller-form.ts",
-      "sha256": "aac5b1940821971993f9dd90ce7e0050f89015b7d6a4e7df76d09ce2ff590f64"
+      "sha256": "d2d60084f5d66cab4a2c72669d2194b3037c4d12e13ebb9878cbf40b936a55cc"
     },
     {
       "path": "src/ap-controller-view.ts",
@@ -22,7 +22,7 @@
     },
     {
       "path": "src/wlc-reference-ui.ts",
-      "sha256": "f1ad18ba589eb7af6939aa14e2c1396111acdb5de7998acefeae337e4864c19e"
+      "sha256": "4aad65c2165801c5dd330396f8fd978f273b1bda02824a2a965ba17b2657b3fe"
     }
   ],
   "counts": {
@@ -34,7 +34,9 @@
     "complete": 0,
     "partial": 74,
     "monitoringAndActionHooks": 22,
-    "apReadOnlyDisplayFields": 22
+    "apReadOnlyDisplayFields": 22,
+    "referenceDropdownTemplates": 12,
+    "hiddenControlMarkers": 1
   },
   "fields": [
     {
@@ -644,11 +646,16 @@
       "repeat": "per configured row",
       "state": "wireless.wlans[name].authenticationList",
       "runtimePath": "dot1x method list → AAA group → real UDP requests",
-      "default": "default",
-      "validation": "method-list name",
-      "tests": "WF-07/08/09",
+      "default": "existing explicit method list or available implicit default; blank when unavailable",
+      "validation": "existing method-list dropdown for Enterprise WLANs; implicit default preserved on unrelated Apply",
+      "tests": "WF-07/08/09/22; WLC reference browser implicit-default selection/Apply",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "dot1x",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -795,10 +802,10 @@
       "source": "src/wireless-ui.ts:50",
       "repeat": "per configured row",
       "state": "wireless.policyTags[name]",
-      "runtimePath": "WLAN/policy mapping namespace consumed by delivered AP configuration",
+      "runtimePath": "WLAN/policy mapping namespace consumed by delivered AP configuration; empty tags can be created and removed",
       "default": "default-policy-tag exists",
-      "validation": "unique profile name; selected references must exist",
-      "tests": "WF-10/11/12/20; unsaved reference options remain partial",
+      "validation": "unique profile name; selected references must exist; built-in name read-only and nonremovable",
+      "tests": "APCFG-07/08; WLC reference browser unsaved create, mappings, empty-tag persistence and deletion",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
       "status": "partial",
@@ -820,6 +827,11 @@
       "tests": "WL-20/29; policy-tag rejoin test",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "policy-tag",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -839,6 +851,11 @@
       "tests": "WF-02/11",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "wlan",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -858,6 +875,11 @@
       "tests": "WL-14/28; WF-02",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "policy",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -915,6 +937,11 @@
       "tests": "WF-02/04",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "join",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -934,6 +961,11 @@
       "tests": "WF-02/04",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "flex",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -1162,6 +1194,11 @@
       "tests": "WF-02/03/12",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "rf24",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -1181,6 +1218,11 @@
       "tests": "WF-02/03/12",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "rf5",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -1219,6 +1261,11 @@
       "tests": "WL-15/16/27; virtual interface dataplane incomplete",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "interface",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -1314,6 +1361,11 @@
       "tests": "AP policy-tag rejoin test; WF-02",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "policy-tag",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -1333,6 +1385,11 @@
       "tests": "WF-01/02/04",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "site-tag",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -1352,6 +1409,11 @@
       "tests": "WF-02/03/12",
       "persistence": "running topology and startup configuration where saved; derived sessions excluded",
       "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "reference": {
+        "kind": "rf-tag",
+        "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+        "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser"
+      },
       "status": "partial",
       "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
     },
@@ -1617,6 +1679,126 @@
       "editable": false,
       "status": "partial",
       "evidence": "APCFG-01–06 received profile/forwarding/HTML/dependency/channel checks; WF-20 real reserved WLAN identity; 21-check wireless browser run verifies read-only radio/WLAN display; complete per-field boundaries remain partial"
+    }
+  ],
+  "references": [
+    {
+      "name": "wlan-auth",
+      "label": "802.1X authentication list",
+      "kind": "dot1x",
+      "source": "src/wireless-ui.ts:48",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    },
+    {
+      "name": "tag-name",
+      "label": "Policy tag",
+      "kind": "policy-tag",
+      "source": "src/wireless-ui.ts:51",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    },
+    {
+      "name": "tag-wlan",
+      "label": "WLAN profile",
+      "kind": "wlan",
+      "source": "src/wireless-ui.ts:51",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    },
+    {
+      "name": "tag-policy",
+      "label": "Policy profile",
+      "kind": "policy",
+      "source": "src/wireless-ui.ts:51",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    },
+    {
+      "name": "site-join",
+      "label": "AP join profile",
+      "kind": "join",
+      "source": "src/wireless-ui.ts:52",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    },
+    {
+      "name": "site-flex",
+      "label": "Flex profile",
+      "kind": "flex",
+      "source": "src/wireless-ui.ts:52",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    },
+    {
+      "name": "rftag-24",
+      "label": "2.4 GHz RF profile",
+      "kind": "rf24",
+      "source": "src/wireless-ui.ts:56",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    },
+    {
+      "name": "rftag-5",
+      "label": "5 GHz RF profile",
+      "kind": "rf5",
+      "source": "src/wireless-ui.ts:56",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    },
+    {
+      "name": "management-interface",
+      "label": "Interface",
+      "kind": "interface",
+      "source": "src/wireless-ui.ts:58",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    },
+    {
+      "name": "ap-policy",
+      "label": "Policy tag",
+      "kind": "policy-tag",
+      "source": "src/wireless-ui.ts:58",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    },
+    {
+      "name": "ap-site",
+      "label": "Site tag",
+      "kind": "site-tag",
+      "source": "src/wireless-ui.ts:58",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    },
+    {
+      "name": "ap-rf",
+      "label": "RF tag",
+      "kind": "rf-tag",
+      "source": "src/wireless-ui.ts:58",
+      "options": "existing own profile/interface names plus unsaved form rows; removed or incompatible selections retained as unavailable and invalid",
+      "validator": "bindWLCReferences custom validity, invalid-section reveal, then transactional controllerFormDraft parser",
+      "status": "partial"
+    }
+  ],
+  "controlMarkers": [
+    {
+      "name": "policy-tag-definitions",
+      "type": "hidden",
+      "meaning": "Current form explicitly declares all policy tags, including empty tags; absence preserves older form compatibility",
+      "persistent": false,
+      "source": "src/wireless-ui.ts",
+      "parser": "src/wireless-controller-form.ts"
     }
   ]
 }

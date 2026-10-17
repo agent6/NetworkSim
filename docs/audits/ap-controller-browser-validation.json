@@ -1,0 +1,48 @@
+{
+  "generatedAt": "2026-10-17T00:42:11.876Z",
+  "browser": "155.0.8059.84",
+  "url": "http://127.0.0.1:58553",
+  "artifact": {
+    "path": "dist/index.html",
+    "bytes": 3456643,
+    "sha256": "6340aa22b114a00c94d12570e66e1c03887189f131ac80b7cf2c3094c722f632"
+  },
+  "sourceDigests": [
+    {
+      "path": "src/wireless-ui.ts",
+      "sha256": "b20142b67960ceff3b99e482eb08eb201aa3023e9ded1dd84888f1e354accff2"
+    },
+    {
+      "path": "src/wlc-reference-ui.ts",
+      "sha256": "4aad65c2165801c5dd330396f8fd978f273b1bda02824a2a965ba17b2657b3fe"
+    },
+    {
+      "path": "src/wireless-controller-form.ts",
+      "sha256": "d2d60084f5d66cab4a2c72669d2194b3037c4d12e13ebb9878cbf40b936a55cc"
+    },
+    {
+      "path": "src/wireless.ts",
+      "sha256": "aa7b4e36fe3bb2ba5bc33f6b02da2256e6b5b34dfd7f74fc384e974286437b78"
+    },
+    {
+      "path": "src/ap-controller-view.ts",
+      "sha256": "377c82ab9565acb1c080c9bcd8c3427055c391d62c7fb5a28c05060dd4ff45dc"
+    },
+    {
+      "path": "src/wireless-example.ts",
+      "sha256": "8819f118e24f886843a18e8f77c052e4e8cc8af50db423f7a2d2b0e7a359ecdc"
+    }
+  ],
+  "fixture": "Built-in wireless example; GUI-created 5GHz RF149/80MHz/25dBm; Enterprise and WPA2 key mismatch/recovery; actual routed DNS/HTTP",
+  "checks": [
+    "AP displays its received WLC, WLAN, security and VLAN without local radio controls",
+    "WLC GUI RF profile changes the actual AP channel, width and power",
+    "Matching Enterprise credentials connect the second laptop through RADIUS",
+    "WLC SSID and security changes reach the AP and disconnect mismatched laptops",
+    "Matching SSID with a wrong WPA2 key cannot create a wireless association",
+    "Correcting the WPA2 key connects the laptop and completes DHCP",
+    "The matching laptop fetches the real routed DNS/HTTP server over the controller WLAN",
+    "AP monitoring stays synchronized with no browser errors"
+  ],
+  "errors": []
+}
