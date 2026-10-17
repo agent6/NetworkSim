@@ -1,3 +1,6 @@
+import {validateEndpoint} from './endpoint.ts';
+import {validatePhone} from './phone.ts';
+import {validateLinkMedium} from './link-medium.ts';
 import{validatePoE}from'./poe.ts';
 import {dnsRecords,validateDNSRecords} from './dns-service.ts';
 import{validateWireless}from'./wireless-model.ts';
@@ -8,7 +11,7 @@ import { validateLesson } from "./lessons.ts";
 
 const STORAGE_KEY = "network-sim.labs.v1";
 const WORKSPACE_KEY = "network-sim.workspace.v1";
-const KINDS = new Set(["router", "switch", "poeswitch", "l3switch", "pc", "server", "wlc", "ap", "laptop"]);
+const KINDS = new Set(["router", "switch", "poeswitch", "l3switch", "pc", "server", "wlc", "ap", "laptop", "phone"]);
 export interface SavedLab {
   id: string;
   name: string;
@@ -222,14 +225,15 @@ function validateDocument(doc: any): LabDocument {
     position(d);
     if (!KINDS.has(d.kind) || typeof d.powered !== "boolean")
       throw Error("A device has an unknown type or power state.");
-    validateConfig(d.config);validatePoE(d.kind,d.config);
+    validateConfig(d.config);validateEndpoint(d.kind,d.config);validatePhone(d.kind,d.config);validatePoE(d.kind,d.config);
     validateWireless(d.kind,d.config.features.wireless);
-    if (d.startupConfig !== undefined) {validateConfig(d.startupConfig);validatePoE(d.kind,d.startupConfig);validateWireless(d.kind,d.startupConfig.features.wireless);}
+    if (d.startupConfig !== undefined) {validateConfig(d.startupConfig);validateEndpoint(d.kind,d.startupConfig);validatePhone(d.kind,d.startupConfig);validatePoE(d.kind,d.startupConfig);validateWireless(d.kind,d.startupConfig.features.wireless);}
     if (d.configurationRegister !== undefined && !['current','next'].every(key=>Number.isInteger(d.configurationRegister[key])&&d.configurationRegister[key]>=0&&d.configurationRegister[key]<=65535))
       throw Error("A device has an invalid configuration register.");
     d.runtime = emptyRuntime();
   }
   for (const link of lab.links) {
+    validateLinkMedium(link.physical);
     id(link.id);
     for (const ep of [link.a, link.b]) {
       const d = lab.devices.find((v: any) => v.id === ep?.deviceId);

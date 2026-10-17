@@ -1,3 +1,4 @@
+import {endpointGlobalLines,endpointInterfaceLines} from './ios-endpoint.ts';
 import { speedIsAuto } from './ethernet.ts';
 import {renderSNMP} from './ios-snmp.ts';
 import{renderWireless}from'./ios-wireless.ts';
@@ -57,7 +58,7 @@ function interfaceLines(p: InterfaceConfig, config: DeviceConfig): string[] {
   if(p.features.pimDrPriority!==undefined)a.push(` ip pim dr-priority ${p.features.pimDrPriority}`);
   if (p.features.channelGroup) a.push(` channel-group ${p.features.channelGroup} mode ${p.features.channelMode || 'on'}`);
   if (p.features.portfastType) a.push(` spanning-tree portfast ${p.features.portfastType}${p.features.portfastTrunk?' trunk':''}`); else if (p.features.portfast) a.push(' spanning-tree portfast');
-  a.push(...switchingInterfaceLines(p));
+  a.push(...switchingInterfaceLines(p),...endpointInterfaceLines(p));
   if(p.features.trackingPolicy)a.push(` ${p.features.trackingForm==='snooping'?'ipv6 snooping':'device-tracking'} attach-policy ${p.features.trackingPolicy}`);
   if(p.features.rootGuard)a.push(' spanning-tree guard root');
   if(p.features.loopGuard)a.push(' spanning-tree guard loop');
@@ -256,7 +257,7 @@ export function renderConfig(device: Device, config: DeviceConfig = device.confi
   for(const [kind,command]of [['raGuard','ipv6 nd raguard'],['dhcpv6Guard','ipv6 dhcp guard'],['ndInspection','ipv6 nd inspection'],['sourceGuard','ipv6 source-guard']])for(const [name,policy]of Object.entries<any>(c.features.ipv6Policies?.[kind]||{})){lines.push(`${command} policy ${name}`);if(policy.deviceRole)lines.push(` device-role ${policy.deviceRole}`);for(const [field,cmd]of [['trusted','trusted-port'],['validateSourceMac','validate source-mac'],['dropUnsecure','drop-unsecure'],['validateAddress','validate address'],['validatePrefix','validate prefix'],['permitLinkLocal','permit link-local'],['denyGlobalAutoconf','deny global-autoconf']])if(policy[field]!==undefined&&!(field==='trusted'&&kind==='sourceGuard'))lines.push((policy[field]?' ':' no ')+cmd);for(const [field,cmd]of [['hopLimitMin','hop-limit minimum'],['hopLimitMax','hop-limit maximum'],['managedFlag','managed-config-flag'],['otherFlag','other-config-flag'],['routerPreferenceMaximum','router-preference maximum'],['sourceAcl','match ipv6 access-list'],['serverAcl','match server access-list'],['prefixList',kind==='raGuard'?'match ra prefix-list':'match reply prefix-list'],['serverPreferenceMin','preference min'],['serverPreferenceMax','preference max'],['securityLevel','sec-level minimum']])if(policy[field]!==undefined)lines.push(` ${cmd} ${policy[field]}`);if(policy.limit!==undefined)lines.push(' limit address-count '+policy.limit);if(policy.tracking)lines.push(` tracking ${policy.tracking}${policy.lifetime!==undefined?' '+(policy.tracking==='enable'?'reachable-lifetime':'stale-lifetime')+' '+policy.lifetime:''}`);if(kind==='sourceGuard'&&policy.trusted)lines.push(' trusted');lines.push(' exit','!');}
   for(const [name,b]of Object.entries<any>(c.features.bfdTemplates||{})){lines.push(`bfd-template single-hop ${name}`,` interval min-tx ${b.minTx??300} min-rx ${b.minRx??300} multiplier ${b.multiplier??3}`);if(b.echo)lines.push(' echo');if(b.authentication)lines.push(` authentication ${b.authentication.mode} keychain ${b.authentication.keyChain}`);if(b.dampening)lines.push(' dampening '+b.dampening.join(' '));lines.push(' exit','!');}
   if(c.features.flowTopTalkers){const top=c.features.flowTopTalkers;lines.push('ip flow-top-talkers',` top ${top.top}`,` sort-by ${top.sortBy}`,` cache-timeout ${top.cacheTimeout}`,' exit','!');}
-  lines.push(...switchingCompatibilityLines({...device,config:c}));
+  lines.push(...switchingCompatibilityLines({...device,config:c}),...endpointGlobalLines(c));
   for (const p of Object.values(c.interfaces)) lines.push(...interfaceLines(p,c));
   for (const route of c.staticRoutes) lines.push(routeLine(route));
   for(const binding of c.features.staticBfd??[])lines.push(`ip route static bfd ${binding.interface} ${binding.peer}`);

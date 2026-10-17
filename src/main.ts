@@ -1,3 +1,5 @@
+import {showPhone} from './phone-ui.ts';
+import {endpointUsesPoE} from './endpoint.ts';
 import {showNetworkTools} from './network-tools-ui.ts';
 import{showPoE}from'./poe-ui.ts';
 import{showSimulation}from'./simulation-ui.ts';
@@ -60,7 +62,7 @@ const $$ = <T extends HTMLElement = HTMLElement>(
   parent: ParentNode = document,
 ): T[] => [...parent.querySelectorAll<T>(selector)];
 const app = $("#app");
-const kinds: DeviceKind[] = ["router", "switch", "l3switch", "poeswitch", "pc", "server", "wlc", "ap", "laptop"];
+const kinds: DeviceKind[] = ["router", "switch", "l3switch", "poeswitch", "pc", "server", "wlc", "ap", "laptop", "phone"];
 const kindDescriptions = [
   "Routing & WAN",
   "VLANs & switching",
@@ -71,6 +73,7 @@ const kindDescriptions = [
   "Wireless LAN controller",
   "Lightweight dual-band AP",
   "Wireless workstation",
+  "PoE voice VLAN endpoint & PC passthrough",
 ];
 const paletteLabels: Partial<Record<DeviceKind, string>> = {
   switch: 'L2 switch', l3switch: 'L3 switch', ap: 'Access point', laptop: 'Laptop',
@@ -555,7 +558,7 @@ function renderInspector() {
     d = selectedDevice();
   el.hidden = !inspectorOpen || !d;
   if (!d) return;
-  const markup = `<div class="flex items-center justify-between border-b border-slate-100 p-4"><span class="section-label">Device details</span>${button("inspector", "close", "Hide details")}</div><div class="p-4"><div class="flex items-center gap-3"><span class="palette-symbol">${icon(d.kind, 32)}</span><div><div class="text-sm font-semibold">${esc(d.config.hostname)}</div><div class="mt-1 text-[10px] text-slate-400">${deviceLabels[d.kind]}</div></div></div><div class="mt-4 flex gap-2"><button class="btn-primary flex-1" data-action="open-device">${icon("terminal", 14)} Open ${d.kind === "pc" || d.kind === "server" ? "desktop" : ["wlc","ap","laptop","poeswitch"].includes(d.kind) ? "settings" : "console"}</button>${d.kind==='ap'?'':button("power-device", "power", d.powered ? "Power off device" : "Power on device")}</div><div class="mt-3 flex items-center justify-between"><button data-action="rename-device" class="text-[10px] text-slate-400 hover:text-teal">Rename device</button><button data-action="lock-device" class="text-[10px] text-slate-400 hover:text-teal">${d.config.features.positionLocked ? "Unlock position" : "Lock position"}</button></div></div><div class="p-4"><button data-action="delete" class="text-[10px] text-rose-500">Remove device</button></div>`;
+  const markup = `<div class="flex items-center justify-between border-b border-slate-100 p-4"><span class="section-label">Device details</span>${button("inspector", "close", "Hide details")}</div><div class="p-4"><div class="flex items-center gap-3"><span class="palette-symbol">${icon(d.kind, 32)}</span><div><div class="text-sm font-semibold">${esc(d.config.hostname)}</div><div class="mt-1 text-[10px] text-slate-400">${deviceLabels[d.kind]}</div></div></div><div class="mt-4 flex gap-2"><button class="btn-primary flex-1" data-action="open-device">${icon("terminal", 14)} Open ${d.kind === "pc" || d.kind === "server" ? "desktop" : ["wlc","ap","laptop","poeswitch","phone"].includes(d.kind) ? "settings" : "console"}</button>${d.kind==='ap'||endpointUsesPoE(d)?'':button("power-device", "power", d.powered ? "Power off device" : "Power on device")}</div><div class="mt-3 flex items-center justify-between"><button data-action="rename-device" class="text-[10px] text-slate-400 hover:text-teal">Rename device</button><button data-action="lock-device" class="text-[10px] text-slate-400 hover:text-teal">${d.config.features.positionLocked ? "Unlock position" : "Lock position"}</button></div></div><div class="p-4"><button data-action="delete" class="text-[10px] text-rose-500">Remove device</button></div>`;
   if (markup !== lastInspectorMarkup) {
     el.innerHTML = markup;
     lastInspectorMarkup = markup;
@@ -572,6 +575,7 @@ function openDevice(id: string, forceConsole = false) {
   const d = sim.getDevice(id);
   if (!d) return;
   selectDevice(id);
+  if(d.kind==='phone')return showPhone(sim,d,dialog,()=>hostConfig(d),transaction);
   if(!forceConsole&&d.kind==='poeswitch')return showPoE(sim,d,formDialog,transaction,()=>{closeDialog();openConsole(d.id);});
   if(!forceConsole&&['wlc','ap','laptop'].includes(d.kind))return wirelessDialog(d);
   if (!forceConsole && (d.kind === "pc" || d.kind === "server"))
@@ -609,7 +613,7 @@ function revealConsoleDevice() {
   viewport.y += Math.max(70, Math.min(canvas.clientHeight - 65, y)) - y;
 }
 function ensureConsoleSession(id: string) {
-  if (sessions.has(id)) return;
+  if (sessions.has(id)||sim.getDevice(id)?.kind==='phone') return;
   sessions.set(id, { cli: new IOSSession(sim, id), lines: [], history: [], cursor: 0 });
   if (renderedSession === id) renderedSession = null;
 }
@@ -618,13 +622,14 @@ function syncConsoleDevices() {
   for (const id of sessions.keys()) if (!deviceIds.has(id)) sessions.delete(id);
   if (activeDevice && !deviceIds.has(activeDevice)) activeDevice = null;
   if (!activeDevice && dockOpen)
-    activeDevice = selectedDevice()?.id ?? sim.lab.devices[0]?.id ?? null;
+    activeDevice = (selectedDevice()?.kind!=='phone'?selectedDevice()?.id:undefined) ?? sim.lab.devices.find(d=>d.kind!=='phone')?.id ?? null;
   if (activeDevice) ensureConsoleSession(activeDevice);
 }
 function openConsole(id: string) {
   stashTerminal();
   const d = sim.getDevice(id);
   if (!d) return;
+  if(d.kind==='phone')return showPhone(sim,d,dialog,()=>hostConfig(d),transaction);
   activeDevice = id;
   selectDevice(id);
   ensureConsoleSession(id);
@@ -646,7 +651,7 @@ function renderDock() {
   const maximize = $('[data-action="maximize-dock"]');
   maximize.setAttribute("aria-label", dockMaximized ? "Restore console size" : "Expand console");
   maximize.dataset.tooltip = dockMaximized ? "Restore console size" : "Expand console";
-  const markup = sim.lab.devices.map(device =>
+  const markup = sim.lab.devices.filter(device=>device.kind!=='phone').map(device =>
     `<div class="console-session ${device.id === activeDevice ? "active" : ""}"><button data-session="${esc(device.id)}" role="tab" aria-selected="${device.id === activeDevice}" aria-controls="console-panel" class="session-name"><span class="session-dot ${sim.devicePowered(device.id) ? "on" : ""}"></span>${esc(device.config.hostname)}</button></div>`,
   ).join("");
   if (markup !== lastSessionMarkup) { $("#console-device-tabs").innerHTML = markup; lastSessionMarkup = markup; }
@@ -1114,7 +1119,7 @@ function pasteSelection() {
 }
 
 function powerDevices(devices: Device[], powered: boolean) {
-  const affected = devices.filter((d) => d.kind!=='ap'&&d.powered !== powered);
+  const affected = devices.filter((d) => d.kind!=='ap'&&!endpointUsesPoE(d)&&d.powered !== powered);
   transaction(() => {
     for (const d of affected) {
       sim.power(d.id, powered);
@@ -1192,7 +1197,7 @@ function desktop(d: Device) {
   );
 }
 function hostConfig(d: Device) {
-  const p = Object.values(d.config.interfaces)[0];
+  const p = d.kind==='phone'?d.config.interfaces.Network:Object.values(d.config.interfaces)[0];
   const mode4 = p.features.dhcp ? "dhcp" : "manual";
   const mode6 = p.features.ipv6Autoconfig
     ? p.features.dhcpv6Client
@@ -1647,12 +1652,12 @@ const actions: Record<string, () => void> = {
   },
   "power-device": () => {
     const d = selectedDevice();
-    if (d&&d.kind!=='ap') powerDevices([d], !d.powered);
+    if (d&&d.kind!=='ap'&&!endpointUsesPoE(d)) powerDevices([d], !d.powered);
   },
   "power-lab": () => {
     dialog(
       "Power controls",
-      `<p class="text-xs leading-6 text-slate-500">Power changes clear learned tables and active protocol sessions. Devices boot from their startup configuration. AP power follows the connected PoE switch and port.</p>`,
+      `<p class="text-xs leading-6 text-slate-500">Power changes clear learned tables and active protocol sessions. Devices boot from their startup configuration. AP and phone power follow the connected PoE switch and port.</p>`,
       `<button class="btn" id="all-off">Power off all</button><button class="btn-primary" id="all-on">Power on all</button>`,
     );
     $("#all-off").onclick = () => powerDevices(sim.lab.devices, false);
@@ -2291,12 +2296,12 @@ svg.addEventListener("contextmenu", (e) => {
   if (d) {
     label = d.config.hostname;
     items = [
-      ["open-device", "terminal", d.kind === "pc" || d.kind === "server" ? "Open desktop" : "Open console", "Enter"],
+      ["open-device", "terminal", d.kind === "pc" || d.kind === "server" ? "Open desktop" : d.kind === "phone" ? "Open phone settings" : "Open console", "Enter"],
       ["connect-device", "link", "Connect to another device"],
       null,
       ["rename-device", "edit", "Rename device", "F2"],
       ["lock-device", "lock", d.config.features.positionLocked ? "Unlock position" : "Lock position"],
-      ...(d.kind==='ap'?[]:[["power-device", "power", d.powered ? "Power off device" : "Power on device"] as ContextMenuItem]),
+      ...(d.kind==='ap'||endpointUsesPoE(d)?[]:[["power-device", "power", d.powered ? "Power off device" : "Power on device"] as ContextMenuItem]),
       null,
       ["copy", "copy", "Copy", `${mod}C`],
       ["duplicate", "copy", "Duplicate", `${mod}D`],

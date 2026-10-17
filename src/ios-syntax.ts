@@ -169,6 +169,9 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
 
 /** Deliberately explicit: prose in legacy argument hints is not an executable grammar. */
 function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
+  if(path==='network-policy'||path==='network-policy profile')return[[number(1,4294967295,'LLDP-MED network-policy profile')]];
+  if(path==='show network-policy profile')return[[],[word('detail')],[number(1,4294967295,'Network-policy profile')],[number(1,4294967295,'Network-policy profile'),word('detail')]];
+  if(path==='voice vlan'&&context.mode==='network-policy')return [...combine([[number(1,4094,'Voice VLAN')],[word('dot1p')]], [[],[word('cos'),number(0,7,'Layer2 CoS priority')],[word('dscp'),number(0,63,'IP differentiated services code point')]]),...choices(['none','untagged'])];
   if(['policy-class','policy-police'].includes(context.mode??'')){
     const names=['default','ef',...Array.from({length:7},(_,i)=>'cs'+(i+1)),...Array.from({length:4},(_,c)=>Array.from({length:3},(_,d)=>`af${c+1}${d+1}`)).flat()],dscp:Form[]=[[number(0,63,'Differentiated Services Code Point')],...choices(names)];
     if(path==='set dscp')return dscp;
@@ -374,6 +377,7 @@ function specialPosition(path: string, tokens: IosToken[], context: IosSyntaxCon
 }
 
 function negativeForms(path: string, forms: Form[], context: IosSyntaxContext): Form[] {
+  if(path==='network-policy'||path==='network-policy profile'&&['interface','range'].includes(context.mode??'')||path==='voice vlan'&&context.mode==='network-policy')return[[],...forms];
   if(['policy-class','policy-police'].includes(context.mode??'')&&['set dscp','conform-action','exceed-action','violate-action'].includes(path))return [[],...forms];
   if(path==='power inline')return [[],...forms];
   if(context.mode?.startsWith('wireless-')&&['tx-power max','channel chan-width','security wpa psk set-key','security dot1x authentication-list','vlan','session-timeout','native-vlan-id','policy-tag','site-tag','rf-tag','ap-profile','flex-profile','24ghz-rf-policy','5ghz-rf-policy','ap capwap timers heartbeat-timeout'].includes(path))return[[],...forms];

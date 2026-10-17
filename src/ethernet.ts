@@ -1,3 +1,4 @@
+import {mediumState,type LinkMedium} from './link-medium.ts';
 import type { Device, InterfaceConfig } from './model.ts';
 
 export interface EthernetState {
@@ -9,6 +10,7 @@ export interface EthernetState {
   duplexAuto: boolean;
   mismatch: boolean;
   reason?: string;
+  medium?:string;length?:number;propagation?:number;bitErrorRate?:number;
 }
 
 /** Legacy projects used 1000 for both the default and explicit speed 1000. */
@@ -29,7 +31,7 @@ export function interfaceBandwidth(device: Device, port: InterfaceConfig): numbe
 export function interfaceDuplex(device: Device, port: InterfaceConfig): InterfaceConfig['duplex'] { return device.runtime.features.ethernet?.[port.name.split('.')[0]]?.duplex ?? port.duplex; }
 
 /** Bounded twisted-pair negotiation. No FLP, master/slave or PHY signal encoding. */
-export function negotiateEthernet(local: InterfaceConfig, peer: InterfaceConfig): EthernetState {
+export function negotiateEthernet(local: InterfaceConfig, peer: InterfaceConfig, medium?:LinkMedium): EthernetState {
   const speedAuto = speedIsAuto(local), peerAuto = speedIsAuto(peer);
   const available = (p: InterfaceConfig, auto: boolean) => ethernetSpeeds(p).filter(n => (!auto ? n === p.speed : true) && (p.duplex !== 'half' || n <= 100));
   const left = available(local, speedAuto), right = available(peer, peerAuto);
@@ -42,5 +44,6 @@ export function negotiateEthernet(local: InterfaceConfig, peer: InterfaceConfig)
     return other.duplex === 'half' ? 'half' : 'full';
   };
   const own = duplex(local, peer, speedAuto, peerAuto), remote = duplex(peer, local, peerAuto, speedAuto);
-  return { carrier: speed > 0, speed: speed || local.speed, duplex: own, peerDuplex: remote, speedAuto, duplexAuto: local.duplex === 'auto', mismatch: speed > 0 && own !== remote, ...(!speed ? { reason: 'No common Ethernet speed or duplex capability' } : {}) };
+  const physical=mediumState(medium,speed,local.features.mediaType,peer.features.mediaType);
+  return { ...physical,carrier: speed > 0&&physical.carrier, speed: speed || local.speed, duplex: own, peerDuplex: remote, speedAuto, duplexAuto: local.duplex === 'auto', mismatch: speed > 0 && own !== remote, ...(!speed ? { reason: 'No common Ethernet speed or duplex capability' } : {}) };
 }

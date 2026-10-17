@@ -49,6 +49,7 @@ export const deviceLabels: Record<DeviceKind, string> = {
   l3switch: "Layer 3 switch",
   pc: "Computer",
   server: "Server",
+  phone: "VoIP phone",
 };
 export function icon(name: string, size = 18): string {
   const node = nodeIcon(name, size);

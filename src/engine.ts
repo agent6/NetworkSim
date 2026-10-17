@@ -1,3 +1,5 @@
+import {phoneIngress,validatePhone} from './phone.ts';
+import {endpointUsesPoE,endpointProfile,endpointNetworkPort,endpointEgressVlan,endpointIngressAllowed,endpointVoicePolicy,switchVoiceVlan,validateEndpoint} from './endpoint.ts';
 import {ownRecordValue,setRecordValue} from './record-map.ts';
 import {recomputePoE,validatePoE,type PoEPower}from './poe.ts';
 import {answerDNS,dnsName,type DNSRecordType} from './dns-service.ts';
@@ -29,11 +31,11 @@ import { EgressScheduler, inheritQosClass } from './qos-scheduler.ts';
 
 export interface IPPacket {
   id: string; parentId?: string; source: string; destination: string; protocol: string; ttl: number; size: number; df: boolean;
-  sourcePort?: number; destinationPort?: number; dscp?: number; pimTree?: 'rpt' | 'spt'; body: any; vrf?: string; fragment?: { id: string; offset: number; length: number; more: boolean; total: number };
+  sourcePort?: number; destinationPort?: number; dscp?: number; ecn?:0|1|2|3; pimTree?: 'rpt' | 'spt'; body: any; vrf?: string; fragment?: { id: string; offset: number; length: number; more: boolean; total: number };
 }
 interface ArpMessage { kind: 'arp'; operation: 'request' | 'reply'; source: string; target: string; mac: string; targetMac?: string; family: 4 | 6 }
 interface DHCPMessage { kind: 'dhcp'; operation: 'discover' | 'offer' | 'request' | 'ack' | 'nak' | 'decline' | 'release'; clientId: string; transaction: string; serverId?: string; address?: string; prefix?: number; gateway?: string; dns?: string[]; lease?: number; domain?: string; bootfile?: string; nextServer?: string; options?: Record<string, any>; routers?: string[]; relay?: string; relayPort?: string; serverAddress?: string; unicast?: string; phase?: string; reason?: string; option82?: { circuitId: string; remoteId: string } }
-export interface Frame { id: string; sourceMac: string; destinationMac: string; vlan?: number; payload: IPPacket | ArpMessage | DHCPMessage | LinkControl; hops: number; mirrored?: boolean; remoteSpan?: { sourceDevice: string; session: string; vlan: number } }
+export interface Frame { id: string; sourceMac: string; destinationMac: string; vlan?: number; cos?:number; payload: IPPacket | ArpMessage | DHCPMessage | LinkControl; hops: number; mirrored?: boolean; remoteSpan?: { sourceDevice: string; session: string; vlan: number } }
 interface Resolution { deviceId: string; port: string; target: string; packets: IPPacket[]; attempts: number; timer?: TimerHandle }
 interface ProbeWait { deviceId: string; timer: TimerHandle; sentAt: number; callback: (reply: ProbeReply) => void; expectedData?: string }
 interface Reassembly { parts: Map<number, number>; packet: IPPacket; timer: TimerHandle }
@@ -90,10 +92,10 @@ export class Simulator {
   private id(kind: string): string { return kind + '-' + (++this.sequence).toString(36); }
   getDevice(id: string): Device | undefined { return this.lab.devices.find(d => d.id === id || d.config.hostname === id); }
   addDevice(kind: DeviceKind, x = 160, y = 160): Device {
-    if (!['router', 'switch', 'poeswitch', 'l3switch', 'pc', 'server', 'wlc', 'ap', 'laptop'].includes(kind)) throw new Error('Unknown device kind');
-    const stem = ({ router: 'R', switch: 'SW', poeswitch:'PSW', l3switch: 'DSW', pc: 'PC', server: 'SRV', wlc:'WLC', ap:'AP', laptop:'LAP' } as const)[kind];
+    if (!['router', 'switch', 'poeswitch', 'l3switch', 'pc', 'server', 'wlc', 'ap', 'laptop', 'phone'].includes(kind)) throw new Error('Unknown device kind');
+    const stem = ({ router: 'R', switch: 'SW', poeswitch:'PSW', l3switch: 'DSW', pc: 'PC', server: 'SRV', wlc:'WLC', ap:'AP', laptop:'LAP', phone:'PHONE' } as const)[kind];
     let n = 1; while (this.lab.devices.some(d => d.config.hostname === stem + n)) n++;
-    const device: Device = { id: this.id('device'), kind, x, y, powered: kind!=='ap', config: factoryDeviceConfig(kind, stem + n), runtime: {...emptyRuntime(),features:{bootTime:this.clock.now()}} };
+    const device: Device = { id: this.id('device'), kind, x, y, powered: kind!=='ap'&&kind!=='phone', config: factoryDeviceConfig(kind, stem + n), runtime: {...emptyRuntime(),features:{bootTime:this.clock.now()}} };
     this.lab.devices.push(device); this.changed(); if(kind==='pc')this.startAutomaticClients(device); return device;
   }
   removeDevice(id: string): void {
@@ -115,7 +117,7 @@ export class Simulator {
   }
   disconnect(linkId: string): void { this.lab.links = this.lab.links.filter(l => l.id !== linkId); this.changed(); }
   power(id: string, powered: boolean): void {
-    const d = this.getDevice(id); if (!d || d.kind==='ap' || d.powered === powered) return;
+    const d = this.getDevice(id); if (!d || d.kind==='ap' || endpointUsesPoE(d) || d.powered === powered) return;
     this.nodeGenerations.set(d.id, (this.nodeGenerations.get(d.id) ?? 0) + 1);
     d.powered = powered; this.clock.cancelOwner(d.id); this.cryptoServices.clear(d.id); this.ipv6Services.clearDevice(d.id); this.tcpChannels.closeDevice(d.id);
     for (const [key, waiting] of this.pendingArp) if (waiting.deviceId === d.id) this.pendingArp.delete(key);
@@ -132,18 +134,18 @@ export class Simulator {
   /** Restart software independently of the AP's electrical PoE supply. */
   reload(id:string):void {
     const d=this.getDevice(id);if(!d||!this.devicePowered(d.id))return;
-    if(d.kind!=='ap'){this.power(d.id,false);this.power(d.id,true);return;}
+    if(d.kind!=='ap'&&!endpointUsesPoE(d)){this.power(d.id,false);this.power(d.id,true);return;}
     const supply=d.runtime.features.poePower as PoEPower;
     this.nodeGenerations.set(d.id,(this.nodeGenerations.get(d.id)??0)+1);
     this.clock.cancelOwner(d.id);this.cryptoServices.clear(d.id);this.ipv6Services.clearDevice(d.id);this.tcpChannels.closeDevice(d.id);
     for(const[key,row]of this.pendingArp)if(row.deviceId===d.id)this.pendingArp.delete(key);
-    for(const[key,row]of this.serviceWait)if(row.deviceId===d.id)this.finishService(key,undefined,'AP restarted');
-    for(const[key,result]of this.dhcpWait)if(result.deviceId===d.id){result.status='failure';result.error='AP restarted';this.dhcpWait.delete(key);}
+    for(const[key,row]of this.serviceWait)if(row.deviceId===d.id)this.finishService(key,undefined,'PoE device restarted');
+    for(const[key,result]of this.dhcpWait)if(result.deviceId===d.id){result.status='failure';result.error='PoE device restarted';this.dhcpWait.delete(key);}
     this.wireless.devicePowerChanged(d.id);
-    d.config=clone(d.startupConfig??factoryDeviceConfig('ap',d.config.hostname));
+    d.config=clone(d.startupConfig??(d.kind==='ap'?factoryDeviceConfig('ap',d.config.hostname):d.config));
     d.runtime=emptyRuntime();d.runtime.features.bootTime=this.clock.now();d.runtime.features.poePower=supply;d.powered=true;
     this.resetAutomaticAddresses(d);
-    this.emit({nodeId:d.id,protocol:'SYSTEM',label:'AP restarted',detail:'Software restart; PoE supply remains available',disposition:'info'});
+    this.emit({nodeId:d.id,protocol:'SYSTEM',label:'PoE device restarted',detail:'Software restart; PoE supply remains available',disposition:'info'});
     this.changed();this.startAutomaticClients(d);
   }
   recompute(): void {
@@ -202,19 +204,19 @@ export class Simulator {
       }
     } finally { this.computing = false; }
   }
-  devicePowered(id:string):boolean {const d=this.getDevice(id);return !!d&&(d.kind==='ap'?d.runtime.features.poePower?.available===true:d.powered);}
+  devicePowered(id:string):boolean {const d=this.getDevice(id);return !!d&&(d.kind==='ap'||endpointUsesPoE(d)?d.runtime.features.poePower?.available===true:d.powered);}
   applyPoEPower(id:string,supply:PoEPower):void {
     const d=this.getDevice(id);if(!d)return;const old=d.runtime.features.poePower as PoEPower|undefined;
     d.powered=supply.available;
     if(old&&old.available!==supply.available){
       this.nodeGenerations.set(d.id,(this.nodeGenerations.get(d.id)??0)+1);this.clock.cancelOwner(d.id);this.cryptoServices.clear(d.id);this.ipv6Services.clearDevice(d.id);this.tcpChannels.closeDevice(d.id);
       for(const[key,row]of this.pendingArp)if(row.deviceId===d.id)this.pendingArp.delete(key);
-      for(const[key,row]of this.serviceWait)if(row.deviceId===d.id)this.finishService(key,undefined,'AP power supply changed');
-      for(const[key,result]of this.dhcpWait)if(result.deviceId===d.id){result.status='failure';result.error='AP power supply changed';this.dhcpWait.delete(key);}
+      for(const[key,row]of this.serviceWait)if(row.deviceId===d.id)this.finishService(key,undefined,'PoE power supply changed');
+      for(const[key,result]of this.dhcpWait)if(result.deviceId===d.id){result.status='failure';result.error='PoE power supply changed';this.dhcpWait.delete(key);}
       d.runtime=emptyRuntime();d.runtime.features.bootTime=this.clock.now();this.resetAutomaticAddresses(d);this.wireless.devicePowerChanged(d.id);
     }
     d.runtime.features.poePower=supply;
-    if(!old||JSON.stringify(old)!==JSON.stringify(supply))this.emit({nodeId:d.id,peerId:supply.switchId,port:'GigabitEthernet0',protocol:'PoE',label:supply.available?'Power available':'Power unavailable',detail:supply.reason,disposition:supply.available?'info':'warning'});
+    if(!old||JSON.stringify(old)!==JSON.stringify(supply))this.emit({nodeId:d.id,peerId:supply.switchId,port:endpointNetworkPort(d),protocol:'PoE',label:supply.available?'Power available':'Power unavailable',detail:supply.reason,disposition:supply.available?'info':'warning'});
     if(old&&!old.available&&supply.available&&d.powered)this.startAutomaticClients(d);
   }
   interfaceUp(deviceId: string, port: string, seen = new Set<string>()): boolean {
@@ -234,13 +236,13 @@ export class Simulator {
     const link = this.linkAt(d.id, port); if (!link || !link.enabled) return false;
     const peer = link.a.deviceId === d.id && link.a.port === port ? link.b : link.a;
     const pd = this.getDevice(peer.deviceId), pc = pd?.config.interfaces[peer.port];
-    return !!pd&&this.devicePowered(pd.id) && !!pc?.adminUp && !pc.features.errDisabled && negotiateEthernet(cfg, pc).carrier;
+    return !!pd&&this.devicePowered(pd.id) && !!pc?.adminUp && !pc.features.errDisabled && negotiateEthernet(cfg, pc,link.physical).carrier;
   }
   ethernetState(deviceId: string, port: string): EthernetState | undefined {
     const d = this.getDevice(deviceId), cfg = d?.config.interfaces[port], link = d && this.linkAt(d.id, port);
     if (!d || !cfg || !link || /^(?:Loopback|Vlan|Tunnel|Null|Port-channel|Wireless)/i.test(port) || port.includes('.')) return;
     const peer = link.a.deviceId === d.id && link.a.port === port ? link.b : link.a, pc = this.getDevice(peer.deviceId)?.config.interfaces[peer.port];
-    return pc ? negotiateEthernet(cfg, pc) : undefined;
+    return pc ? negotiateEthernet(cfg, pc,link.physical) : undefined;
   }
   routes(deviceId: string, vrf?: string): Route[] { const d = this.getDevice(deviceId); return d ? d.runtime.routes.filter(r => (r.vrf ?? '') === (vrf ?? '')) : []; }
   advance(ms: number, budget = 10000): AdvanceResult { const result = this.clock.advance(ms, budget); this.notify(); return result; }
@@ -261,7 +263,7 @@ export class Simulator {
   carriesVlan(d: Device, port: string, vlan: number): boolean {
     const c = d.config.interfaces[port]; if (!c || !c.switchport || !d.config.vlans[vlan]?.active) return false;
     const trunk = this.trunk(d, port);
-    return trunk ? !trunk.allowedVlans || trunk.allowedVlans.includes(vlan) : c.vlan === vlan || c.features.voiceVlan === vlan;
+    return trunk ? !trunk.allowedVlans || trunk.allowedVlans.includes(vlan) : c.vlan === vlan || switchVoiceVlan(d,d.config.interfaces[port]) === vlan;
   }
   private trunk(d: Device, port: string): { nativeVlan: number; allowedVlans: number[] | null } | undefined {
     const c = d.config.interfaces[port]; const state = d.runtime.features.trunks?.[port];
@@ -274,7 +276,7 @@ export class Simulator {
   }
   private count(d: Device, port: string, kind: 'tx' | 'rx' | 'drops', bytes = 0): void { const c = d.runtime.counters[port] ??= { tx: 0, rx: 0, drops: 0, txBytes: 0, rxBytes: 0 }; c[kind]++; if (kind === 'tx') c.txBytes += bytes; if (kind === 'rx') c.rxBytes += bytes; }
   private packetSummary(p: IPPacket): PacketSummary {
-    const b = p.body ?? {}, v6 = isIPv6(p.destination), ports = ['tcp', 'udp'].includes(p.protocol), result: PacketSummary = { id: p.id, parentId: p.parentId, source: p.source, destination: p.destination, protocol: p.protocol.toUpperCase(), ipVersion: v6 ? 6 : 4, ttl: p.ttl, size: p.size, df: p.df, dscp: p.dscp ?? 0, sourcePort: ports ? p.sourcePort : undefined, destinationPort: ports ? p.destinationPort : undefined, messageType: b.kind };
+    const b = p.body ?? {}, v6 = isIPv6(p.destination), ports = ['tcp', 'udp'].includes(p.protocol), result: PacketSummary = { id: p.id, parentId: p.parentId, source: p.source, destination: p.destination, protocol: p.protocol.toUpperCase(), ipVersion: v6 ? 6 : 4, ttl: p.ttl, size: p.size, df: p.df, dscp: p.dscp ?? 0, ecn:p.ecn??0, sourcePort: ports ? p.sourcePort : undefined, destinationPort: ports ? p.destinationPort : undefined, messageType: b.kind };
     if(b.kind==='netflow-export')result.netflowVersion=b.version;
     if(b.kind==='control-plane'&&b.payload?.wireless)Object.assign(result,{messageType:'capwap-'+b.payload.type,innerFrameId:b.payload.frame?.id,vlan:b.payload.vlan,ssid:b.payload.wlan});
     if (p.fragment) Object.assign(result, { fragmentOffset: p.fragment.offset, moreFragments: p.fragment.more, fragmentId: p.fragment.id });
@@ -294,7 +296,7 @@ export class Simulator {
   }
   private summary(frame: Frame): PacketSummary {
     const p = frame.payload;
-    const ethernet = { vlan: frame.vlan, sourceMac: frame.sourceMac, destinationMac: frame.destinationMac };
+    const ethernet = { vlan: frame.vlan,cos:frame.cos, sourceMac: frame.sourceMac, destinationMac: frame.destinationMac };
     if ('kind' in p && p.kind === 'link-control') return { id: frame.id, source: p.body.source ?? '', destination: p.body.clientId ?? 'multicast', protocol: p.protocol, ...ethernet, messageType: p.body.type, ...(p.protocol === 'DHCPV6' ? { dhcpOperation: p.body.type, requestedAddress: p.body.address } : p.protocol === 'ICMPV6' && ['ra', 'rs'].includes(p.body.type) ? { icmpType: p.body.type === 'ra' ? 134 : 133, icmpCode: 0 } : {}) };
     if ('kind' in p) return { id: frame.id, source: p.kind === 'arp' ? p.source : p.clientId, destination: p.kind === 'arp' ? p.target : p.serverId ?? 'broadcast', protocol: p.kind === 'arp' ? (p.family === 6 ? 'NDP' : 'ARP') : 'DHCP', ...ethernet, ...(p.kind === 'arp' ? { arpOperation: p.operation, targetMac: p.targetMac, ...(p.family === 6 ? { icmpType: p.operation === 'request' ? 135 : 136, icmpCode: 0 } : {}) } : { dhcpOperation: p.operation, requestedAddress: p.address, relayAddress: p.relay }) };
     return { ...this.packetSummary(p), ...ethernet };
@@ -310,7 +312,7 @@ export class Simulator {
     const peer = link.a.deviceId === d.id && link.a.port === port ? link.b : link.a;
     const pd = this.getDevice(peer.deviceId)!;
     const bytes = 'size' in frame.payload ? frame.payload.size + 18 : 64;
-    const physical = negotiateEthernet(c, pd.config.interfaces[peer.port]), speed = Math.max(1, physical.speed);
+    const physical = negotiateEthernet(c, pd.config.interfaces[peer.port],link.physical), speed = Math.max(1, physical.speed);
     const key = d.id + ':' + port;
     const peerKey = pd.id + ':' + peer.port;
     const start = Math.max(this.clock.now(), this.wireAvailable.get(key) ?? 0, physical.duplex === 'half' && physical.peerDuplex === 'half' ? this.wireAvailable.get(peerKey) ?? 0 : 0), finish = start + Math.max(64, bytes) * 8 / (speed * 1000);
@@ -336,11 +338,12 @@ export class Simulator {
     this.event(d, port, copy, 'Frame sent', d.config.hostname + ' → ' + pd.config.hostname, 'send', pd.id);
     const revision = link.id;
     const senderGeneration = this.nodeGenerations.get(d.id) ?? 0;
-    this.clock.schedule(finish - this.clock.now() + Math.max(0, link.delay), () => {
+    this.clock.schedule(finish - this.clock.now() + Math.max(0, link.delay)+(physical.propagation??0), () => {
       if (!this.lab.links.includes(link) || link.id !== revision || !this.interfaceUp(d.id, port) || senderGeneration !== (this.nodeGenerations.get(d.id) ?? 0)) { this.event(d, port, copy, 'Cable interrupted', 'The link or sender changed while the frame was in flight.', 'drop', pd.id); return; }
       const currentPhysical = this.ethernetState(d.id,port);
       if (!currentPhysical || currentPhysical.speed !== physical.speed || currentPhysical.duplex !== physical.duplex || currentPhysical.peerDuplex !== physical.peerDuplex) { this.count(d,port,'drops'); this.event(d,port,copy,'Ethernet reconfigured','Operational speed or duplex changed while the frame was in flight.','drop',pd.id); return; }
       if (transmission.failed) { this.count(d, port, 'drops'); this.event(d, port, copy, 'Ethernet duplex collision', 'Overlapping transmissions on a mismatched half/full duplex link corrupted the frame.', 'drop', pd.id); return; }
+      const ber=currentPhysical.bitErrorRate??0;if(ber>0&&this.clock.random()<-Math.expm1(bytes*8*Math.log1p(-ber))){this.count(d,port,'drops');const counters=pd.runtime.counters[peer.port]??={tx:0,rx:0,drops:0,txBytes:0,rxBytes:0};counters.inputErrors=(counters.inputErrors??0)+1;counters.crc=(counters.crc??0)+1;this.event(pd,peer.port,copy,'Ethernet signal error','The configured physical signal model corrupted the frame FCS.','drop',d.id);return;}
       const directionalLoss = (link.a.deviceId === d.id && link.a.port === port ? link.lossAB : link.lossBA) ?? link.loss;
       if (directionalLoss > 0 && this.clock.random() < directionalLoss) { this.count(d, port, 'drops'); this.event(d, port, copy, 'Link loss', 'The link loss model discarded this frame.', 'drop', pd.id); return; }
       this.count(pd, peer.port, 'rx', bytes); this.event(pd, peer.port, copy, 'Frame received', pd.config.hostname + ' received a frame on ' + peer.port, 'receive', d.id); this.receiveFrame(pd, peer.port, copy);
@@ -351,6 +354,7 @@ export class Simulator {
     if (c.switchport) return Object.keys(d.config.interfaces).filter(p => /^Vlan\d+$/i.test(p) && Number(p.slice(4)) === vlan && this.interfaceUp(d.id, p));
     const aggregate = c.features.channelGroup && 'Port-channel' + c.features.channelGroup;
     if (aggregate && d.config.interfaces[aggregate]) return vlan === undefined && this.interfaceUp(d.id, aggregate) ? [aggregate] : [];
+    if((d.kind==='pc'||d.kind==='phone')&&endpointProfile(d).role==='phone')return endpointIngressAllowed(d,vlan,this.clock.now())?[physical]:[];
     const out: string[] = vlan === undefined ? [physical] : [];
     for (const [p, cfg] of Object.entries(d.config.interfaces)) if (p.startsWith(physical + '.') && this.interfaceUp(d.id, p) && ((cfg.features.dot1q === vlan) || (cfg.features.dot1qNative && vlan === undefined))) out.push(p);
     const group = c.features.channelGroup; if (group && d.config.interfaces['Port-channel' + group]) out.push('Port-channel' + group);
@@ -358,16 +362,29 @@ export class Simulator {
   }
   private receiveFrame(d: Device, port: string, frame: Frame): void {
     const c = d.config.interfaces[port]; if (!c) return;
-    if ('kind' in frame.payload && frame.payload.kind === 'link-control' && ['UDLD', 'STP', 'CDP', 'LLDP'].includes(frame.payload.protocol)) { receiveLinkControl(this, d, port, frame.payload); return; }
+    if ('kind' in frame.payload && frame.payload.kind === 'link-control' && ['UDLD', 'STP', 'CDP', 'LLDP', 'DTP', 'LACP', 'PAGP', 'VTP'].includes(frame.payload.protocol)) { receiveLinkControl(this, d, port, frame.payload); return; }
     if (frame.mirrored) { const capture = d.runtime.features.capturedFrames ??= []; capture.push({ time: this.clock.now(), port, ...this.summary(frame) }); if (capture.length > 500) capture.shift(); return; }
     if (Object.values(d.config.features.spanSessions ?? {}).some((session: any) => session.destination === port)) return;
+    if(d.kind==='phone'){
+      const action=phoneIngress(port,frame,endpointEgressVlan(d,this.clock.now()),this.macOf(d.id,'Network'));
+      if(action.forward&&this.interfaceUp(d.id,action.forward)){
+        this.event(d,action.forward,frame,'Phone PC passthrough','Forwarding untagged data without changing its VLAN, source MAC or IP TTL.','forward');
+        this.sendWire(d,action.forward,clone(frame));
+      }
+      if(!action.local){
+        observeFrame(this,d,port,'rx',frame);
+        if(action.drop){this.count(d,port,'drops');this.event(d,port,frame,'Phone VLAN isolation',action.drop,'drop');}
+        return;
+      }
+    }
+    if(!c.switchport&&!endpointIngressAllowed(d,frame.vlan,this.clock.now())){this.count(d,port,'drops');this.event(d,port,frame,'Endpoint VLAN mismatch','The phone rejects traffic outside its received voice VLAN policy.','drop');return;}
     observeFrame(this, d, port, 'rx', frame);
     this.wireless.receiveEthernet(d,port,frame);
     let vlan = frame.vlan;
     if (c.switchport) {
       const trunk = this.trunk(d, port);
-      if (!trunk && vlan === 0 && c.features.voiceVlan === 'dot1p') vlan = c.vlan;
-      if (!trunk && vlan !== undefined && vlan !== c.vlan && vlan !== c.features.voiceVlan) { this.event(d, port, frame, 'VLAN mismatch', 'An access port rejected a tagged frame from another VLAN.', 'drop'); return; }
+      if (!trunk && vlan === 0 && switchVoiceVlan(d,d.config.interfaces[port]) === 'dot1p') vlan = c.vlan;
+      if (!trunk && vlan !== undefined && vlan !== c.vlan && vlan !== switchVoiceVlan(d,d.config.interfaces[port])) { this.event(d, port, frame, 'VLAN mismatch', 'An access port rejected a tagged frame from another VLAN.', 'drop'); return; }
       vlan = vlan ?? trunk?.nativeVlan ?? c.vlan;
       if (!this.carriesVlan(d, port, vlan)) { this.event(d, port, frame, 'VLAN filtered', 'This VLAN is not allowed on the ingress port.', 'drop'); return; }
       if (!this.stpAllows(d, port, vlan)) { this.event(d, port, frame, 'STP blocked', 'The spanning-tree state prevents forwarding in VLAN ' + vlan + '.', 'drop'); return; }
@@ -427,7 +444,7 @@ export class Simulator {
       const group = cfg.features.channelGroup;
       if (learnedPort && learnedPort !== port && (!group || String(group) !== String(learnedGroup))) continue;
       if (group) { if (String(inputGroup) === String(group) || groups.has(String(group)) || this.channelMember(d, String(group), frame, vlan) !== port) continue; groups.add(String(group)); }
-      const copy = clone(frame); const trunk = this.trunk(d, port); copy.vlan = trunk && vlan !== trunk.nativeVlan || cfg.features.voiceVlan === vlan && vlan !== cfg.vlan ? vlan : cfg.features.voiceVlan === 'dot1p' && frame.vlan === 0 ? 0 : undefined;
+      const copy = clone(frame); const trunk = this.trunk(d, port); copy.vlan = trunk && vlan !== trunk.nativeVlan || switchVoiceVlan(d,d.config.interfaces[port]) === vlan && vlan !== cfg.vlan ? vlan : switchVoiceVlan(d,d.config.interfaces[port]) === 'dot1p' && frame.vlan === 0 ? 0 : undefined;
       this.event(d, port, copy, learnedPort ? 'MAC forwarding' : 'Frame flooding', learnedPort ? 'The destination MAC is learned on this port.' : 'Broadcast or unknown destination in VLAN ' + vlan + '.', 'forward'); this.sendWire(d, port, copy);
     }
   }
@@ -443,12 +460,12 @@ export class Simulator {
         if (multicastPorts && !multicastPorts.has(port)) continue;
         if (learnedPort && learnedPort !== port && (!cfg.features.channelGroup || String(cfg.features.channelGroup) !== String(learnedGroup))) continue;
         if (cfg.features.channelGroup) { const group = String(cfg.features.channelGroup); if (groups.has(group) || this.channelMember(d, group, frame, vlan) !== port) continue; groups.add(group); }
-        const copy = clone(frame), trunk = this.trunk(d, port); copy.vlan = trunk && vlan !== trunk.nativeVlan || cfg.features.voiceVlan === vlan && vlan !== cfg.vlan ? vlan : cfg.features.voiceVlan === 'dot1p' && frame.vlan === 0 ? 0 : undefined; this.sendWire(d, port, copy);
+        const copy = clone(frame), trunk = this.trunk(d, port); copy.vlan = trunk && vlan !== trunk.nativeVlan || switchVoiceVlan(d,d.config.interfaces[port]) === vlan && vlan !== cfg.vlan ? vlan : switchVoiceVlan(d,d.config.interfaces[port]) === 'dot1p' && frame.vlan === 0 ? 0 : undefined; this.sendWire(d, port, copy);
       }
     } else if (/^Port-channel/i.test(logical)) {
       const member = this.channelMember(d, logical.replace(/^Port-channel/i, ''), frame); if (member) this.sendWire(d, member, frame);
     } else if (logical.includes('.')) { frame.vlan = c.features.dot1qNative ? undefined : Number(c.features.dot1q); this.sendWire(d, logical.split('.')[0], frame); }
-    else this.sendWire(d, logical, frame);
+    else {if((d.kind==='pc'||d.kind==='phone')&&endpointProfile(d).role==='phone'&&logical===endpointNetworkPort(d)&&!(('kind' in payload)&&payload.kind==='link-control'&&(d.kind==='pc'||['CDP','LLDP','STP','DTP','LACP','PAGP','VTP','UDLD'].includes(payload.protocol)))){const policy=endpointVoicePolicy(d,this.clock.now());frame.vlan=endpointEgressVlan(d,this.clock.now());if(frame.vlan!==undefined)frame.cos=policy?.cos;if(policy?.dscp!==undefined&&!('kind' in payload))frame.payload={...payload,dscp:policy.dscp};}this.sendWire(d, logical, frame);}
   }
   private multicastPorts(d: Device, vlan: number, frame: Frame): Set<string> | undefined {
     if (frame.remoteSpan) return;
@@ -479,7 +496,7 @@ export class Simulator {
     }
     this.changed();
   }
-  sendLinkControl(deviceId: string, port: string, message: LinkControl): void { const d = this.getDevice(deviceId); if (d) { if (['UDLD', 'STP', 'CDP', 'LLDP'].includes(message.protocol)) this.sendWire(d, port, { id: this.id('frame'), sourceMac: this.macOf(d.id, port), destinationMac: message.protocol === 'STP' ? '01:80:c2:00:00:00' : message.protocol === 'LLDP' ? '01:80:c2:00:00:0e' : '01:00:0c:cc:cc:cc', payload: message, hops: 1 }); else this.transmit(d, port, '33:33:00:00:00:01', message); } }
+  sendLinkControl(deviceId: string, port: string, message: LinkControl): void { const d = this.getDevice(deviceId); if (d) { if (['UDLD', 'STP', 'CDP', 'LLDP', 'DTP', 'LACP', 'PAGP', 'VTP'].includes(message.protocol)) this.sendWire(d, port, { id: this.id('frame'), sourceMac: this.macOf(d.id, port), destinationMac: message.protocol === 'STP' ? '01:80:c2:00:00:00' : message.protocol === 'LLDP' ? '01:80:c2:00:00:0e' : message.protocol === 'LACP' ? '01:80:c2:00:00:02' : '01:00:0c:cc:cc:cc', payload: message, hops: 1 }); else this.transmit(d, port, '33:33:00:00:00:01', message); } }
   sendDAD(deviceId: string, port: string, address: string): void { const d = this.getDevice(deviceId); if (d) this.transmit(d, port, '33:33:ff:' + address.replace(/:/g, '').slice(-6).padStart(6, '0').match(/../g)!.join(':'), { kind: 'arp', operation: 'request', source: '::', target: address, mac: this.macOf(d.id, port), family: 6 }); }
   sendNeighborAnnouncement(deviceId: string, port: string, address: string): void { const d = this.getDevice(deviceId); if (d) this.transmit(d, port, '33:33:00:00:00:01', { kind: 'arp', operation: 'reply', source: address, target: address, mac: this.macOf(d.id, port), family: 6 }); }
   sendIPv6ServicePacket(deviceId: string, source: string, destination: string, body: any): void { const d = this.getDevice(deviceId); if (!d) return; const packet = this.makePacket(source, destination, 'udp', 128, body); packet.sourcePort = 547; packet.destinationPort = 547; this.originate(d, packet); }
@@ -743,7 +760,7 @@ export class Simulator {
         const timeout = this.clock.schedule(options.timeout ?? 3000, () => { this.probes.delete(result.id + '|' + sequence); complete({ sequence, error: 'Request timed out' }); }, { label: 'echo timeout' });
         this.probes.set(result.id + '|' + sequence, { deviceId: d.id, timer: timeout, sentAt: this.clock.now(), callback: complete, expectedData: options.validateData ? dataHex : undefined });
         const packet = this.makePacket(options.source ?? '', target, isIPv6(target) ? 'icmpv6' : 'icmp', size, { kind: 'echo-request', probeId: result.id, sequence, dataHex });
-        packet.df = !!options.df; packet.ttl = options.ttl ?? 64; packet.vrf = options.vrf; packet.dscp = options.tos === undefined ? undefined : options.tos >>> 2; packet.sourcePort = 10000 + this.hash(result.id) % 50000; packet.destinationPort = packet.sourcePort;
+        packet.df = !!options.df; packet.ttl = options.ttl ?? 64; packet.vrf = options.vrf; packet.dscp = options.tos === undefined ? undefined : options.tos >>> 2; packet.ecn=options.tos===undefined?undefined:(options.tos&3) as 0|1|2|3; packet.sourcePort = 10000 + this.hash(result.id) % 50000; packet.destinationPort = packet.sourcePort;
         this.originate(d, packet, options.interface);
       }, { label: 'echo send' });
     }
@@ -1275,12 +1292,22 @@ export class Simulator {
     if (parsed?.format !== 'netsim-lab' || parsed.version !== 1 || !parsed.lab || !Array.isArray(parsed.lab.devices) || !Array.isArray(parsed.lab.links) || !Array.isArray(parsed.lab.notes)) throw new Error('This is not a supported NetworkSim lab document');
     if (parsed.lab.devices.length > 500 || parsed.lab.links.length > 2000) throw new Error('Lab exceeds simulator limits');
     const ids = new Set<string>();
-    for (const d of parsed.lab.devices) { if (!d.id || ids.has(d.id) || !['router', 'switch', 'poeswitch', 'l3switch', 'pc', 'server', 'wlc', 'ap', 'laptop'].includes(d.kind) || !d.config?.interfaces || !d.config?.vlans || !Array.isArray(d.config.staticRoutes) || !d.config.protocols || !d.config.services || !d.config.features) throw new Error('Invalid or duplicate device'); ids.add(d.id); for (const [port, c] of Object.entries(d.config.interfaces) as [string, InterfaceConfig][]) { if (!port || !c || !Array.isArray(c.ipv6) || !c.features || !Number.isFinite(c.mtu) || !Number.isFinite(c.speed) || c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean' || (c.ip && !isIPv4(c.ip))) throw new Error('Invalid interface configuration'); } validatePoE(d.kind,d.config);validateWireless(d.kind,d.config.features.wireless);if(d.startupConfig){for(const c of Object.values(d.startupConfig.interfaces) as InterfaceConfig[])if(c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean')throw Error('Invalid saved Ethernet autonegotiation setting');validateWireless(d.kind,d.startupConfig.features.wireless);validatePoE(d.kind,d.startupConfig);}d.runtime = emptyRuntime();d.runtime.features.bootTime=this.clock.now(); }
+    for (const d of parsed.lab.devices) { if (!d.id || ids.has(d.id) || !['router', 'switch', 'poeswitch', 'l3switch', 'pc', 'server', 'wlc', 'ap', 'laptop', 'phone'].includes(d.kind) || !d.config?.interfaces || !d.config?.vlans || !Array.isArray(d.config.staticRoutes) || !d.config.protocols || !d.config.services || !d.config.features) throw new Error('Invalid or duplicate device'); ids.add(d.id); for (const [port, c] of Object.entries(d.config.interfaces) as [string, InterfaceConfig][]) { if (!port || !c || !Array.isArray(c.ipv6) || !c.features || !Number.isFinite(c.mtu) || !Number.isFinite(c.speed) || c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean' || (c.ip && !isIPv4(c.ip))) throw new Error('Invalid interface configuration'); } validateEndpoint(d.kind,d.config);validatePhone(d.kind,d.config);validatePoE(d.kind,d.config);validateWireless(d.kind,d.config.features.wireless);if(d.startupConfig){for(const c of Object.values(d.startupConfig.interfaces) as InterfaceConfig[])if(c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean')throw Error('Invalid saved Ethernet autonegotiation setting');validateWireless(d.kind,d.startupConfig.features.wireless);validateEndpoint(d.kind,d.startupConfig);validatePhone(d.kind,d.startupConfig);validatePoE(d.kind,d.startupConfig);}d.runtime = emptyRuntime();d.runtime.features.bootTime=this.clock.now(); }
     const occupied = new Set<string>();
     for (const link of parsed.lab.links) { if (!link?.a || !link?.b || !Number.isFinite(link.delay) || !Number.isFinite(link.loss)) throw new Error('Invalid link'); for (const e of [link.a, link.b]) { const d = parsed.lab.devices.find((x: Device) => x.id === e.deviceId); const key = e.deviceId + '|' + e.port; if (!d?.config.interfaces[e.port] || occupied.has(key)) throw new Error('Invalid or occupied cable endpoint'); occupied.add(key); } }
     this.lab = parsed.lab; this.seed = Number.isInteger(parsed.seed) ? parsed.seed >>> 0 || 1 : this.seed; this.clock = new SimulationClock(this.seed);
     for (const id of [...this.lab.devices.map(d => d.id), ...this.lab.links.map(l => l.id), ...this.lab.notes.map(n => n.id)]) { const suffix = /-([0-9a-z]+)$/.exec(id)?.[1]; if (suffix) this.sequence = Math.max(this.sequence, parseInt(suffix, 36)); }
     this.resetRuntime();
+  }
+  restartEndpointInterface(deviceId:string):void {
+    const d=this.getDevice(deviceId);if(!d||d.kind!=='pc')return;const ports=Object.values(d.config.interfaces).filter(p=>/^GigabitEthernet/.test(p.name)),states=ports.map(p=>p.adminUp);
+    try{for(const p of ports)p.adminUp=false;this.recompute();}finally{ports.forEach((p,i)=>p.adminUp=states[i]);}this.changed();
+  }
+  endpointPolicyChanged(deviceId:string):void {
+    const d=this.getDevice(deviceId);if(!d||endpointProfile(d).role!=='phone')return;
+    for(const[key,result]of this.dhcpWait)if(result.deviceId===d.id){result.status='failure';result.error='Received voice VLAN policy changed';this.dhcpWait.delete(key);}
+    for(const[key,row]of this.pendingArp)if(row.deviceId===d.id)this.pendingArp.delete(key);
+    this.tcpChannels.closeDevice(d.id);this.ipv6Services.clearDevice(d.id);this.resetAutomaticAddresses(d);d.runtime.arp={};delete d.runtime.features.dhcpClientLeases;delete d.runtime.features.dhcpAddressChecks;delete d.runtime.features.dhcpv6Leases;this.changed();this.startAutomaticClients(d);
   }
   private resetAutomaticAddresses(d: Device): void {
     for (const c of Object.values(d.config.interfaces)) {
@@ -1292,10 +1319,11 @@ export class Simulator {
   }
   private startAutomaticClients(d: Device): void {
     if (!d.powered) return;
+    const runtime=d.runtime,generation=runtime.features.automaticClientGeneration=(runtime.features.automaticClientGeneration??0)+1;
     for (const [port, c] of Object.entries(d.config.interfaces)) {
       let dhcpRequest: ServiceResult | undefined;
       const retry = () => {
-        if (!d.powered) return;
+        if (!d.powered||d.runtime!==runtime||runtime.features.automaticClientGeneration!==generation) return;
         if (c.features.dhcp && !c.ip && dhcpRequest?.status !== 'success' && !d.runtime.features.dhcpClientLeases?.[port] && this.interfaceUp(d.id, port)) dhcpRequest = this.requestDHCP(d.id, port);
         if (c.features.dhcpv6Client?.stateful && !d.runtime.features.dhcpv6Leases?.[port] && this.interfaceUp(d.id, port)) this.requestDHCPv6(d.id, port, c.features.dhcpv6Client.prefixDelegationName);
         if (c.features.ipv6Autoconfig && !c.features.slaacAddresses?.length && this.interfaceUp(d.id, port)) this.requestIPv6(d.id, port);

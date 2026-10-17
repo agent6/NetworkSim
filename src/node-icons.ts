@@ -2,17 +2,18 @@ import atlas from "./assets/node-icons.png";
 import type { DeviceKind } from "./model.ts";
 
 // One flat ImageGen diagram family: gray outlines, transparent interiors and no perspective.
-// Equal-size viewports keep the stroke weight consistent across all nine nodes.
+// Equal-size viewports keep the stroke weight consistent across all ten nodes.
 const crops: Record<DeviceKind, readonly [number, number, number, number]> = {
-  router: [35, 80, 380, 380],
-  switch: [437, 82, 380, 380],
-  l3switch: [842, 82, 380, 380],
-  poeswitch: [47, 467, 380, 380],
-  pc: [437, 464, 380, 380],
-  server: [842, 455, 380, 380],
-  wlc: [48, 843, 380, 380],
-  ap: [437, 836, 380, 380],
-  laptop: [848, 815, 380, 380],
+  router: [31, 78, 340, 340],
+  switch: [380, 80, 340, 340],
+  l3switch: [734, 80, 340, 340],
+  poeswitch: [1082, 81, 340, 340],
+  pc: [32, 408, 340, 340],
+  server: [385, 399, 340, 340],
+  wlc: [736, 409, 340, 340],
+  ap: [1080, 402, 340, 340],
+  laptop: [46, 697, 340, 340],
+  phone: [394, 717, 340, 340],
 };
 
 export function nodeIcon(name: string, size: number): string | undefined {
@@ -22,5 +23,5 @@ export function nodeIcon(name: string, size: number): string | undefined {
 
 /** Embed the original artwork once so dragging does not reparse image data. */
 export function nodeIconDefinitions(): string {
-  return `<svg width="0" height="0" aria-hidden="true" style="position:absolute;overflow:hidden"><defs><image id="netsim-art-atlas" href="${atlas}" width="1254" height="1254" preserveAspectRatio="none"/></defs></svg>`;
+  return `<svg width="0" height="0" aria-hidden="true" style="position:absolute;overflow:hidden"><defs><image id="netsim-art-atlas" href="${atlas}" width="1448" height="1086" preserveAspectRatio="none"/></defs></svg>`;
 }

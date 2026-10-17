@@ -1,6 +1,6 @@
 import {defaultWireless} from './wireless-model.ts';
 /** Original browser-local network simulation domain contract. */
-export type DeviceKind = 'router' | 'switch' | 'poeswitch' | 'l3switch' | 'pc' | 'server' | 'wlc' | 'ap' | 'laptop';
+export type DeviceKind = 'router' | 'switch' | 'poeswitch' | 'l3switch' | 'pc' | 'server' | 'wlc' | 'ap' | 'laptop' | 'phone';
 export type SwitchportMode = 'access' | 'trunk' | 'dynamic-auto' | 'dynamic-desirable';
 export type Disposition = 'info' | 'send' | 'receive' | 'forward' | 'drop' | 'success' | 'warning';
 
@@ -100,7 +100,7 @@ export interface Device {
   configurationRegister?: { current: number; next: number };
 }
 export interface Endpoint { deviceId: string; port: string }
-export interface Link { id: string; a: Endpoint; b: Endpoint; enabled: boolean; delay: number; loss: number; lossAB?: number; lossBA?: number }
+export interface Link { id: string; a: Endpoint; b: Endpoint; enabled: boolean; delay: number; loss: number; lossAB?: number; lossBA?: number; physical?:import('./link-medium.ts').LinkMedium }
 export interface Note { id: string; x: number; y: number; text: string; locked?: boolean }
 export interface Lab { id: string; name: string; devices: Device[]; links: Link[]; notes: Note[] }
 export interface PacketSummary {
@@ -145,8 +145,9 @@ export function defaultInterface(name: string, switchport = false): InterfaceCon
 
 export function factoryDeviceConfig(kind: DeviceKind, hostname: string): DeviceConfig {
   const switchport = kind === 'switch' || kind === 'poeswitch' || kind === 'l3switch', interfaces: Record<string, InterfaceConfig> = {};
-  const ports = switchport ? [...Array.from({ length: 24 }, (_, i) => 'GigabitEthernet0/' + (i + 1)), 'GigabitEthernet1/1', 'GigabitEthernet1/2'] : kind === 'router' ? Array.from({ length: 4 }, (_, i) => 'GigabitEthernet0/' + i) : kind==='wlc'?['GigabitEthernet1']:kind==='laptop'?['Wireless0']:['GigabitEthernet0'];
+  const ports = switchport ? [...Array.from({ length: 24 }, (_, i) => 'GigabitEthernet0/' + (i + 1)), 'GigabitEthernet1/1', 'GigabitEthernet1/2'] : kind === 'router' ? Array.from({ length: 4 }, (_, i) => 'GigabitEthernet0/' + i) : kind==='wlc'?['GigabitEthernet1']:kind==='laptop'?['Wireless0']:kind==='phone'?['Network','PC']:['GigabitEthernet0'];
   for (const port of ports) { interfaces[port] = defaultInterface(port, switchport); interfaces[port].adminUp = kind !== 'router'; }
-  const features:Record<string,any>={};if(switchport)features.vtp={domain:'',mode:'server',version:1,revision:0};if(kind==='ap')features.powerSource='poe';if(kind==='poeswitch')features.poe={budget:370};if(['wlc','ap','laptop'].includes(kind))features.wireless=defaultWireless(kind==='wlc'?'c9800-17.12':kind==='ap'?'c9115-lightweight':'generic-dual-band');if(kind==='pc'||kind==='ap'||kind==='laptop')interfaces[kind==='laptop'?'Wireless0':'GigabitEthernet0'].features.dhcp=true;
+  const features:Record<string,any>={};if(switchport)features.vtp={domain:'',mode:'server',version:1,revision:0};if(kind==='ap'||kind==='phone')features.powerSource='poe';if(kind==='poeswitch')features.poe={budget:370};if(['wlc','ap','laptop'].includes(kind))features.wireless=defaultWireless(kind==='wlc'?'c9800-17.12':kind==='ap'?'c9115-lightweight':'generic-dual-band');if(kind==='pc'||kind==='ap'||kind==='laptop'||kind==='phone')interfaces[kind==='laptop'?'Wireless0':kind==='phone'?'Network':'GigabitEthernet0'].features.dhcp=true;
+  if(kind==='phone'){interfaces.Network.description='Network uplink · PoE input and voice traffic';interfaces.PC.description='PC passthrough · untagged data only';}
   return { hostname, interfaces, vlans: { 1: { id: 1, name: 'default', active: true } }, ipRouting: kind === 'router', ipv6Routing: false, dnsServers: [], staticRoutes: [], protocols: {}, services: {}, features };
 }
