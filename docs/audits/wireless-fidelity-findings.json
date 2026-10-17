@@ -176,7 +176,7 @@
         "WF-14"
       ],
       "status": "repaired",
-      "remaining": "43 current WLC field templates inventoried; full vendor GUI and all input browser/reload boundaries are not complete."
+      "remaining": "44 current WLC field templates inventoried; full vendor GUI and every per-field boundary/reload/hardware comparison remain incomplete."
     },
     {
       "id": "WFA-08",
@@ -294,6 +294,50 @@
       ],
       "status": "repaired",
       "remaining": "Regression names cover constructor, __proto__, toString and hasOwnProperty; full fuzzing of every saved dictionary shape remains outside this evidence."
+    },
+    {
+      "id": "WFA-13",
+      "nodes": [
+        "wlc"
+      ],
+      "priority": "P0",
+      "feature": "Reference dropdown operational status labels",
+      "reference": "Reference labels must reflect the same enabled state edited by each current form control.",
+      "before": "The targeted WLC browser reproduced CAMPUS \u00b7 Campus \u00b7 Disabled for the enabled CAMPUS WLAN. Enabled policy and RF rows used the same incorrect path.",
+      "rootCause": "bindWLCReferences read .checked from controls rendered as on/off select elements.",
+      "fix": "Read on/off values for HTMLSelectElement and checked state for checkboxes; preserve the live unsaved catalog and unavailable selections.",
+      "files": [
+        "src/wlc-reference-ui.ts"
+      ],
+      "tests": [
+        "scripts/browser-wlc-references.mjs status/SSID/VLAN mapping assertion"
+      ],
+      "status": "repaired",
+      "remaining": "Exact Cisco GUI visual equivalence and all per-field default/negation/reload cases remain partial."
+    },
+    {
+      "id": "WFA-14",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P0",
+      "feature": "Implicit Enterprise authentication and non-destructive Apply",
+      "reference": "The existing runtime selects the default dot1x list when WLAN.authenticationList is absent. Equivalent defaults must not silently become a client configuration change.",
+      "before": "The new dropdown showed an invalid blank even when the implicit default list worked. The draft made implicit authentication/true security flags explicit, changing runtime signatures and forcing avoidable client reauthentication on unrelated Apply.",
+      "rootCause": "GUI default selection did not match runtime fallback, and draft normalization changed semantically equivalent optional properties.",
+      "fix": "Select an available own default method list for an implicit existing Enterprise profile; preserve absent authentication/AKM/WPA2 fields when mode and implicit choice are unchanged. Missing lists still block transactionally.",
+      "files": [
+        "src/wireless-ui.ts",
+        "src/wireless-controller-form.ts"
+      ],
+      "tests": [
+        "WF-22",
+        "scripts/browser-wlc-references.mjs implicit-default fixture/hostname Apply"
+      ],
+      "status": "repaired",
+      "remaining": "Full GUI preservation matrix for every optional CLI-only setting remains partial."
     }
   ],
   "additionalVerifiedScenarios": [
@@ -313,12 +357,27 @@
     "preserved": [
       "AP received-controller diagnostics and removal of editable AP-local radios",
       "WLC RF channel input and authoritative RF profile values",
-      "PoE high/low priority and actual detection-order admission"
+      "PoE high/low priority and actual detection-order admission",
+      "Live WLC reference dropdowns, built-in name protection and explicit policy-tag definitions"
     ],
     "validation": [
-      "tests/ap-controller-config.test.ts APCFG-01 through APCFG-06",
+      "tests/ap-controller-config.test.ts APCFG-01 through APCFG-08",
       "tests/poe.test.ts POE-12 and POE-13"
     ],
     "note": "These changes were introduced concurrently by other task work. Own-property fixes preserved them; inventory was regenerated against current sources."
+  },
+  "targetedFollowUp": {
+    "productionSourceHeld": true,
+    "nodeTests": {
+      "command": "node --test --test-concurrency=1 tests/wireless.test.ts tests/ap-controller-config.test.ts tests/poe.test.ts",
+      "passed": 69,
+      "failed": 0,
+      "log": ".cache/wlc-reference-targeted-node-tests.log"
+    },
+    "browserEvidence": [
+      "docs/audits/wlc-reference-browser-validation.json",
+      "docs/audits/ap-controller-browser-validation.json"
+    ],
+    "boundary": "No new WLC pages or main/CLI/control-plane implementation added; explicit server TFTP/SCP/SFTP exclusion preserved."
   }
 }
