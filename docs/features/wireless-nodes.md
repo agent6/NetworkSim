@@ -1,6 +1,6 @@
 # Wireless nodes
 
-Open the rebuilt `index.html` directly from disk. Wireless features, Tailwind styling and all eight generated device icons are embedded; no backend or internet connection is required. The controller is displayed simply as **WLC**.
+Open the rebuilt `index.html` directly from disk. Wireless features, Tailwind styling and all nine flat diagram icons are embedded; no backend or internet connection is required. The controller is displayed simply as **WLC**.
 
 ## Build a wireless lab
 

@@ -11,7 +11,7 @@ import { nodeIconDefinitions } from "./node-icons.ts";
 import { alignMove, type AlignmentGuide, type AlignmentItem } from "./alignment.ts";
 import { Simulator } from "./engine.ts";
 import { IOSSession, CLI_CAPABILITIES } from "./cli.ts";
-import { terminalRows } from "./ios-terminal.ts";
+import { terminalRows, terminalPage } from "./ios-terminal.ts";
 import { CONTROL_PLANE_CAPABILITIES } from "./control-plane.ts";
 import { isIPv6, parseCidr } from "./ip.ts";
 import { showServices } from "./services-ui.ts";
@@ -76,22 +76,22 @@ const paletteLabels: Partial<Record<DeviceKind, string>> = {
   switch: 'L2 switch', l3switch: 'L3 switch', ap: 'Access point', laptop: 'Laptop',
 };
 const selected = new Set<string>();
-const sessions = new Map<
-  string,
-  {
-    cli: IOSSession;
-    lines: string[];
-    history: string[];
-    cursor: number;
-    pending?: string[];
-    pendingDraft?: {value:string;start:number;end:number};
-    draft?: string;
-    draftStart?: number;
-    draftEnd?: number;
-    historyDraft?: string;
-    scrollTop?: number;
-  }
->();
+type TerminalSession = {
+  cli: IOSSession;
+  lines: string[];
+  history: string[];
+  cursor: number;
+  pending?: string[];
+  pageStart?: number;
+  pageEcho?: string[];
+  pendingDraft?: {value:string;start:number;end:number};
+  draft?: string;
+  draftStart?: number;
+  draftEnd?: number;
+  historyDraft?: string;
+  scrollTop?: number;
+};
+const sessions = new Map<string, TerminalSession>();
 const undoStack: string[] = [],
   redoStack: string[] = [];
 let viewport: Viewport = { x: 70, y: 60, scale: 1 };
@@ -700,22 +700,47 @@ function pollTerminal() {
     renderTerminal();
   }
 }
+function fitTerminalPage(lines: string[], length: number, echo: string[] = []) {
+  const panel = $("#console-panel"), style = getComputedStyle(panel);
+  const probe = document.createElement("span");
+  probe.textContent = "0".repeat(100);
+  probe.style.cssText = "position:absolute;visibility:hidden;white-space:pre;pointer-events:none";
+  panel.append(probe);
+  const columnWidth = probe.getBoundingClientRect().width / 100;
+  probe.remove();
+  const columns = Math.max(1, Math.floor((panel.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)) / columnWidth));
+  const rows = Math.floor((panel.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom)) / parseFloat(style.lineHeight));
+  return terminalPage(lines, { columns, rows, length, reservedRows: 1 + terminalRows(echo, columns).length });
+}
+function appendTerminalPage(state: TerminalSession, lines: string[], length: number, echo: string[] = []) {
+  const page = fitTerminalPage(lines, length, echo);
+  state.pageStart = page.pending.length ? state.lines.length : undefined;
+  state.pageEcho = page.pending.length ? echo : undefined;
+  state.lines.push(...page.visible);
+  state.pending = page.pending;
+}
+// Shrinking the console returns overflow to the queue instead of hiding or skipping it.
+new ResizeObserver(() => {
+  const state = activeDevice ? sessions.get(activeDevice) : undefined;
+  if (!dockOpen || !state?.pending?.length || state.pageStart === undefined) return;
+  const page = fitTerminalPage(state.lines.splice(state.pageStart), state.cli.pageLength, state.pageEcho);
+  state.lines.push(...page.visible);
+  state.pending.unshift(...page.pending);
+  renderTerminal(true);
+}).observe($("#console-panel"));
 function runCommand(line: string) {
   if (!activeDevice) return;
   const state = sessions.get(activeDevice);
   if (!state) return;
   const secret = !!(state.cli as any).passwordInput;
-  state.lines.push(secret ? state.cli.prompt : `${state.cli.prompt}${line}`);
-  if (!secret && state.cli.commandTimestamp) state.lines.push(state.cli.commandTimestamp);
+  const echo = [secret ? state.cli.prompt : `${state.cli.prompt}${line}`];
+  if (!secret && state.cli.commandTimestamp) echo.push(state.cli.commandTimestamp);
+  state.lines.push(...echo);
   try {
     const before = snapshot();
     const output = terminalRows(state.cli.execute(line),state.cli.pageWidth);
     if(state.cli.consumeDisplayAction()==='clear-screen'){state.lines=[];state.pending=undefined;state.pendingDraft=undefined;}
-    const page = (state.cli as any).pageLength ?? 24;
-    if (page > 0 && output.length > page) {
-      state.lines.push(...output.slice(0, page));
-      state.pending = output.slice(page);
-    } else state.lines.push(...output);
+    appendTerminalPage(state, output, state.cli.pageLength, echo);
     if (snapshot() !== before) {
       undoStack.push(before);
       if (undoStack.length > 80) undoStack.shift();
@@ -727,7 +752,11 @@ function runCommand(line: string) {
   }
   state.history = [...state.cli.commandHistory];
   state.cursor = state.history.length;
-  if (state.lines.length > 2500) state.lines = state.lines.slice(-2000);
+  if (state.lines.length > 2500) {
+    const removed = state.lines.length - 2000;
+    state.lines = state.lines.slice(removed);
+    if (state.pageStart !== undefined) state.pageStart = Math.max(0, state.pageStart - removed);
+  }
   dirty = true;
   state.draft = "";
   renderTerminal(true);
@@ -736,14 +765,11 @@ function runCommand(line: string) {
 function pageTerminal(oneLine = false, stop = false) {
   const state = activeDevice ? sessions.get(activeDevice) : null;
   if (!state?.pending) return;
-  if (stop) state.pending = [];
-  else
-    state.lines.push(
-      ...state.pending.splice(
-        0,
-        oneLine ? 1 : (state.cli as any).pageLength || 24,
-      ),
-    );
+  if (stop) {
+    state.pending = [];
+    state.pageStart = undefined;
+    state.pageEcho = undefined;
+  } else appendTerminalPage(state, state.pending, oneLine ? 1 : state.cli.pageLength);
   if (!state.pending.length && state.pendingDraft) {
     const input=$<HTMLInputElement>("#terminal-input"), draft=state.pendingDraft;
     state.pendingDraft=undefined;input.value=draft.value;input.setSelectionRange(draft.start,draft.end);
@@ -770,13 +796,14 @@ function cliComplete(help = false) {
     prefix = input.value.slice(0, caret),
     suffix = input.value.slice(caret);
   if (help) {
-    const output=terminalRows(state.cli.help(prefix),state.cli.pageWidth),page=state.cli.pageLength;
-    state.lines.push(`${state.cli.prompt}${prefix}?`);
-    if(page>0&&output.length>page){
+    const output=terminalRows(state.cli.help(prefix),state.cli.pageWidth),echo=[`${state.cli.prompt}${prefix}?`];
+    state.lines.push(...echo);
+    appendTerminalPage(state, output, state.cli.pageLength, echo);
+    if(state.pending?.length){
       state.pendingDraft={value:input.value,start:input.selectionStart??input.value.length,end:input.selectionEnd??input.value.length};
-      state.lines.push(...output.slice(0,page));state.pending=output.slice(page);input.value='';
-    }else state.lines.push(...output);
-    renderTerminal();
+      input.value='';
+    }
+    renderTerminal(true);
   } else {
     const result = state.cli.complete(prefix);
     input.value = result + suffix;

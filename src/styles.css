@@ -544,7 +544,7 @@
 [data-theme="dark"] #grid circle { fill: #30424d; }
 [data-theme="dark"] .inspector,
 [data-theme="dark"] .mini-menu { background: #172630; border-color: #314451; }
-[data-theme="dark"] .node-artwork { filter: brightness(.82); }
+[data-theme="dark"] .node-artwork { filter: brightness(0) invert(.82); }
 [data-theme="dark"] .device-label { fill: #d8e6ee; }
 [data-theme="dark"] .device-sub { fill: #91a8b6; }
 [data-theme="dark"] .device.selected .device-label { fill: #82ddc9; }

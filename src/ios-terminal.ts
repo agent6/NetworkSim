@@ -13,3 +13,11 @@ export function terminalRows(lines: string[], width: number): string[] {
     return rows;
   });
 }
+
+/** Fit one page to the visible terminal cells, reserving room for the prompt and command echo. */
+export function terminalPage(lines: string[], options: { columns: number; rows: number; length: number; reservedRows?: number }): { visible: string[]; pending: string[] } {
+  if (options.length === 0) return { visible: [...lines], pending: [] };
+  const wrapped = terminalRows(lines, options.columns);
+  const count = Math.min(options.length, Math.max(1, Math.floor(options.rows) - (options.reservedRows ?? 1)));
+  return { visible: wrapped.slice(0, count), pending: wrapped.slice(count) };
+}
