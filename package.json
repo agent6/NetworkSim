@@ -1,0 +1,30 @@
+{
+  "name": "network-sim",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "An original offline network laboratory for routing and switching.",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/preview.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --test-concurrency=1 tests/*.test.ts",
+    "check": "npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.0",
+    "@types/node": "^24.0.0",
+    "esbuild": "0.28.2",
+    "tailwindcss": "4.3.0",
+    "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "yaml": "2.9.1"
+  }
+}

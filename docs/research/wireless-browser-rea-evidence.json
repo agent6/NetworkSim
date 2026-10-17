@@ -1,0 +1,46 @@
+{
+  "recordedAt": "2026-10-16",
+  "evidenceId": "ev_613e4f7158244ce5a52cb2e221fc838818a32751c9dd523b99c67839260ec02f",
+  "authority": "controlled-replay",
+  "confidence": "observed",
+  "browser": {
+    "mode": "launch",
+    "process_ownership": "provider-owned",
+    "cleanup": "terminated-owned-process",
+    "product": "Chromium",
+    "version": "155.0.8059.84"
+  },
+  "completeness": {
+    "status": "complete",
+    "equality_eligible": true,
+    "missing_sections": [],
+    "truncated_sections": []
+  },
+  "steps": [
+    {
+      "id": "scenario_start",
+      "status": "completed",
+      "error": null
+    },
+    {
+      "id": "open-labs",
+      "status": "completed",
+      "error": null
+    },
+    {
+      "id": "wireless-example",
+      "status": "completed",
+      "error": null
+    },
+    {
+      "id": "join-and-authenticate",
+      "status": "completed",
+      "error": null
+    }
+  ],
+  "pageErrors": [],
+  "paletteButtons": 8,
+  "controllerLabelIsWLC": true,
+  "associationCount": 0,
+  "scope": "Owned Chrome process. Loaded the example and captured its UI after 12 seconds. Not a Packet Tracer comparison."
+}

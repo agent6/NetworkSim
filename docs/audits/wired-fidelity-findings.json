@@ -1,0 +1,301 @@
+{
+  "schemaVersion": 1,
+  "referenceDate": "2026-10-16",
+  "scope": "Router, L2/L3/PoE shared wired engine; this is not a full IOS compatibility certification",
+  "referenceProfiles": {
+    "switching": "Catalyst 9300 IOS XE 17.12.x",
+    "routing": "IOS XE 17.x public guides; exact 17.12 device observations separately unverified"
+  },
+  "repairs": [
+    {
+      "id": "WIRED-001",
+      "finding": "Physical switch service policies accepted configuration but bridged frames bypassed QoS",
+      "implementation": "`engine.ts` applies physical ingress/egress policies to bridged IP frames on L2, L3 and PoE switches; actual selected EtherChannel members use the same hooks",
+      "behavioralEvidence": "`tests/wired-fidelity.test.ts`: UDP succeeds before policy, fails on input/output drop, and recovers after removal; member marking changes received DSCP",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-002",
+      "finding": "VLAN input marking did not affect bridged frames, and a physical hook could double-charge SVI traffic",
+      "implementation": "Physical policy takes precedence over SVI marking; an ingress marker prevents a second logical input evaluation",
+      "behavioralEvidence": "Same suite: actual received DSCP, exact per-port/VLAN counters, locally delivered SVI echo and fallback after removal",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-003",
+      "finding": "Directly transmitted routed multicast/broadcast control messages bypassed output QoS",
+      "implementation": "`sendControlDatagram` evaluates output policy before direct transmission",
+      "behavioralEvidence": "Same suite: actual OSPF/EIGRP control drops expire peers and withdraw routes; unaffected connected ICMP still works; removal restores routed echo",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-004",
+      "finding": "`match ip address ACL` was accepted but never matched in routing policy",
+      "implementation": "`applyRouteMap` evaluates standard network and extended network/mask ACL semantics",
+      "behavioralEvidence": "Same suite: actual BGP UPDATEs retain only permitted routes; standard/extended filters change real bidirectional UDP; removal restores advertisements",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-005",
+      "finding": "VTPv1/v2 accepted equal revisions, did not increment local edits, excluded client-originated higher revisions and server adoption, copied extended VLANs, and retained stale revision when the payload was unchanged",
+      "implementation": "Local server database edits advance revisions; strictly newer matching databases can be adopted from server/client peers; normal-range synchronization preserves local extended entries; unchanged payload still advances the received revision",
+      "behavioralEvidence": "Same suite: both protocol versions, CLI VLAN rename/delete, higher client revision, equal-revision conflict, extended VLAN isolation, real VLAN UDP delivery and failure after deletion",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-006",
+      "finding": "Routed EtherChannel compared local VRF names across peers",
+      "implementation": "Channel negotiation ignores peer VRF names while still checking local member consistency",
+      "behavioralEvidence": "Same suite: BLUE/RED locally named routed LACP groups establish and carry UDP; wrong local VRF fails",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-007",
+      "finding": "Routed channel members processed ARP as both individual interfaces and the aggregate, producing competing member MAC replies",
+      "implementation": "Routed bundle ingress is delivered to its logical aggregate",
+      "behavioralEvidence": "Same suite and existing `core.test.ts` routed hashing tests: correct neighbor resolution, bidirectional flow and member hashing",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-008",
+      "finding": "IPv6 BGP AF and UPDATE attributes were unsupported",
+      "implementation": "Independent IPv4/IPv6 AF configuration and activation, negotiated logical capabilities, native IPv6 TCP transport, family-specific NLRI/next-hop validation, shared transport, policy, show output, rendering and VRF-Lite",
+      "behavioralEvidence": "`tests/bgp-multiprotocol.test.ts`: native IPv6 TCP data, ND and UDP; family filtering; actual withdrawals; activation removal; config replay/reload; overlapping BLUE/RED neighbor and prefix isolation",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-009",
+      "finding": "BGP `maximum-paths` was accepted but installed only one route; IGP cost was omitted from path ordering",
+      "implementation": "Eligible eBGP/iBGP equal paths install actual ECMP; real IGP next-hop cost precedes router ID and limits multipath eligibility",
+      "behavioralEvidence": "Same suite: 60 delivered UDP flows use both installed next hops; link failure leaves one working path; OSPF cost chooses the higher-router-ID peer with the shorter IGP path",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-010",
+      "finding": "IPv4 and IPv6 prefix lists shared one destructive sequence namespace and rendered IPv6 entries as IPv4",
+      "implementation": "A compatible combined store keeps independent per-family sequence, removal and auto-numbering behavior; render/show commands select the correct family",
+      "behavioralEvidence": "Same suite: identical list name and sequence filter different AFs, independent removal and replay",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-011",
+      "finding": "Dual-stack BFD deduplicated interfaces across address families; IPv6 BGP could not associate a global peer with its link-local BFD session",
+      "implementation": "Independent IPv4/IPv6 sessions; global IPv6 peers bind to the actual on-link neighbor's link-local BFD session",
+      "behavioralEvidence": "Same suite: real BFD control loss withdraws IPv6 BGP before its hold timer while connected IPv6 ICMP remains operational; restoring control packets restores routed UDP",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-012",
+      "finding": "A newly operational routed EtherChannel could have no connected route until an unrelated later recompute; a down unused member could suspend an otherwise compatible group",
+      "implementation": "Operational link/trunk/VTP/channel state is prepared before connected routes; later control reconciliation remains; local operational member checks exclude physically down members",
+      "behavioralEvidence": "`tests/ethernet-physical.test.ts`: first one-member bundle installs its connected route immediately, carries real ICMP, withdraws on disconnect and restores on reconnect; VTP revision tests verify no duplicate increments",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-013",
+      "finding": "Fixed speed mismatch kept carrier up, automatic/explicit 1000 Mb/s could not persist independently, and duplex had no traffic effect",
+      "implementation": "Copper negotiation determines carrier, actual speed and duplex; real opposing transmission overlap causes half-side collision/late-collision, full-side CRC, and actual frame loss; operational speed feeds routing/STP/default bandwidth and storm-control measurements",
+      "behavioralEvidence": "`tests/ethernet-physical.test.ts`: carrier/connected-route withdrawal and recovery, config replay, parallel detection, exact error direction, mismatch correction, matched half-duplex arbitration and actual OSPF metric/ICMP, negotiated LACP compatibility, shared RSTP timing and packet-delivered CDP diagnostics",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-014",
+      "finding": "Queue reservations, priority, shaping and queue-limit were accepted without scheduling effects",
+      "implementation": "Physical output policies use actual event-clock class queues, byte-weighted fair scheduling, congestion-limited LLQ, average-rate shaping and tail drop; pre-mark classification survives egress marking; admission and dequeue counters are separate",
+      "behavioralEvidence": "`tests/qos-scheduler.test.ts`: unequal-size 25/75 byte shares, priority ordering, exact delivered/drop counts, measured shaping spacing, priority exceed drops, removal/flush/recovery, L2/L3/PoE bridging, Catalyst relative-weight semantics/limits and fail-closed unsupported import",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-015",
+      "finding": "EIGRP IPv4 auto-summary was accepted but stored only; implicit summary metric was zero",
+      "implementation": "Classic router and named IPv4 topology commands now suppress classful-boundary specifics, create conditional fixed-AD5 Null0 routes and choose minimum live component metrics. External-only routes stay specific until an internal component enables aggregation. IPv6 rejects classful summarization.",
+      "behavioralEvidence": "Six independent tests in tests/eigrp-auto-summary.test.ts cover real echo failure/recovery and external server traffic, component metric/withdrawal, VRF, topology/protocol output, help, no/default, replay and reload.",
+      "status": "verified-bounded-repair"
+    }
+  ],
+  "subsystems": [
+    {
+      "subsystem": "Ethernet/VLAN/SVI, `ethernet.ts`, `engine.ts`, `ios-switching-compat.ts`",
+      "operationalTrace": "Negotiated carrier/speed/duplex \u2192 actual serialization and traffic-driven errors; VLAN/STP/security admission \u2192 MAC learning \u2192 SVI routing; physical/core/switching/PoE/wired regressions",
+      "status": "partial",
+      "limits": "Bounded copper model. No FLP/master-slave signal exchange, binary exponential backoff, PHY waveform, calibrated attenuation, cable length/pinout faults or fiber transceivers. Matching half duplex uses deterministic shared-medium arbitration. No finite hardware MAC/TCAM resource model; tagged aggregate subinterfaces are not covered by the routed bundle test"
+    },
+    {
+      "subsystem": "STP/RSTP/MST, `control-plane.ts`",
+      "operationalTrace": "Per-VLAN roles/costs and transition timers; actual heartbeat loss for loop guard; topology/compatibility tests",
+      "status": "partial",
+      "limits": "Computed root/role election; no complete received-BPDU election/proposal/agreement or CIST region-boundary FSM; UplinkFast lacks MAC-update packets"
+    },
+    {
+      "subsystem": "DTP/VTP, `control-plane.ts`",
+      "operationalTrace": "Negotiated trunk state \u2192 domain/revision database adoption \u2192 actual VLAN forwarding",
+      "status": "partial",
+      "limits": "Computed rather than packet FSM; VTPv3 primary-server behavior and VTP pruning absent; transparent version-specific advertisement handling not exhaustively validated"
+    },
+    {
+      "subsystem": "EtherChannel/LACP/PAgP, `control-plane.ts`, `engine.ts`",
+      "operationalTrace": "Local/peer compatibility \u2192 active/standby members \u2192 actual single-member frame/hash forwarding",
+      "status": "partial",
+      "limits": "Computed negotiation, no wire PDUs; no independent member congestion scheduler; asymmetric peer allowed-VLAN/native-VLAN consistency has not been certified against the selected platform"
+    },
+    {
+      "subsystem": "Static routing/CEF/VRF, `route-resolver.ts`, `engine.ts`",
+      "operationalTrace": "Connected/static RIB \u2192 recursive weighted forwarding paths \u2192 ARP/ND \u2192 actual packets; resolver/reference/VRF suites",
+      "status": "partial",
+      "limits": "Original deterministic hashing, not a hardware ASIC reproduction; bounded recursion. Control-plane consumers outside BGP still contain a separate `resolveEgress` helper and need further edge-case parity review"
+    },
+    {
+      "subsystem": "OSPFv2/v3, `ospf-packets.ts`, `control-plane.ts`",
+      "operationalTrace": "Actual Hello/DBD/LSREQ/LSUPDATE/LSACK and received LSDB \u2192 SPF/RIB; loss, timers, AF, NSSA and virtual-link tests",
+      "status": "partial",
+      "limits": "Logical router records, not full area-scoped RFC LSA-type databases. DR election and area adapters are computed; complete NBMA/wait and NSSA translator/P-bit/forwarding-address FSMs absent"
+    },
+    {
+      "subsystem": "EIGRP, `control-plane.ts`",
+      "operationalTrace": "Actual Hello/hold and reliable QUERY/REPLY/ACK/SIA gate computed vectors and convergence. Operational classic/named IPv4 classful/manual summaries, conditional AD5 and minimum live metrics affect real traffic; dedicated auto-summary, routing/VRF/control tests.",
+      "status": "partial",
+      "limits": "Normal UPDATE advertisements remain computed. No complete RTP/DUAL input matrix or control bandwidth pacing; bounded numerical wide metrics and external scalar seed propagation. Manual-versus-automatic summary overlap and every external vector corner case are not device-certified."
+    },
+    {
+      "subsystem": "RIP/RIPng, `control-plane.ts`",
+      "operationalTrace": "Actual periodic/triggered advertisements, policies, poison/aging and RIB; loss/version/timer tests",
+      "status": "partial",
+      "limits": "Single selected route, no ECMP or full request-response exchange; queue/flash threshold knobs are stored only"
+    },
+    {
+      "subsystem": "BGP, `bgp-session.ts`, `bgp-compat.ts`, `control-plane.ts`",
+      "operationalTrace": "Actual persistent TCP and negotiated IPv4/IPv6 unicast \u2192 received Adj-RIB-In \u2192 policy/best path/ECMP \u2192 RIB/UPDATEs",
+      "status": "partial",
+      "limits": "Logical MP capability/UPDATE envelopes. Capability changes reset the session. No binary encoding, MRAI, graceful restart, confederations, VPN/multicast SAFIs or full collision/event matrix. Explicit IPv6 link-local neighbor zone syntax and extended next-hop capability are unsupported. The 65-second reboot regression follows existing keepalive/retry detection; complete simultaneous-open behavior remains simplified"
+    },
+    {
+      "subsystem": "Prefix lists/route maps/redistribution, `control-plane.ts`, `packet-policy.ts`",
+      "operationalTrace": "Address-family-aware prefix policy, standard/extended routing ACLs, ordered deny/set/continue, PBR next-hop selection; policy/redistribution tests",
+      "status": "partial",
+      "limits": "Bounded IOS policy language. Repeated same-category match command merging, bare removal forms and all unsupported match/set combinations still need explicit per-command reconciliation"
+    },
+    {
+      "subsystem": "ACL/PBR/NAT, `packet-policy.ts`, `engine.ts`",
+      "operationalTrace": "Ingress ACL \u2192 inbound NAT \u2192 local/control delivery or route/PBR \u2192 outbound NAT/QoS/ACL \u2192 wire; policy/core suites",
+      "status": "partial",
+      "limits": "Modeled packet fields and bounded NAT/PBR catalog; no full IOS ACL/message set, NAT ALG or exhaustive noninitial-fragment hardware behavior"
+    },
+    {
+      "subsystem": "L2 security/IPv6 FHS, `packet-policy.ts`, `fhs-tracking.ts`",
+      "operationalTrace": "Actual ingress DHCP/ARP/ND/IP \u2192 binding/rate/guard policy \u2192 permit/drop and counters",
+      "status": "partial",
+      "limits": "Structured fields, not raw packet-byte validation or every platform hardware feature; resource/attack behavior is bounded"
+    },
+    {
+      "subsystem": "QoS/CoPP, `packet-policy.ts`, `qos-scheduler.ts`, `engine.ts`",
+      "operationalTrace": "Actual classification, marking/policing, physical/L3/control drops; physical output CBWFQ/LLQ/shaper queues with real delivery timing and congestion counters",
+      "status": "partial",
+      "limits": "Bounded byte-weighted scheduler, not a Cisco ASIC recreation. Physical Ethernet output only, one priority class, maximum 64 router classes/eight Catalyst queues including class-default, queue-limit 1\u20134096 and aggregate safety limit 16,384 queued frames. Shapers allow one initial packet, meter IP bytes, and do not implement IOS burst/overhead/hierarchy options. LLQ uses a documented simulator 200 ms token allowance (minimum 1500 bytes), active under congestion. Catalyst mixed bandwidth types and bandwidth+shape conflict reject; remaining-percent weights may total above 100. Per-flow fair-queue, WRED and queueing on input/CoPP/logical interfaces reject. Older imported unsupported policies retain their configuration but fail closed with explicit diagnostics; CLI replay must remove/replace them"
+    },
+    {
+      "subsystem": "HSRP/VRRP/GLBP, `fhrp-packets.ts`, `control-plane.ts`",
+      "operationalTrace": "Actual advertisements/hold expiry \u2192 per-observer election \u2192 ARP/MAC gateway ownership \u2192 routed traffic",
+      "status": "partial",
+      "limits": "IPv4 model; no complete Coup/Resign, GLBP redirect/secondary-forwarder timers or IPv6 FHRP; auth compatibility is not cryptographic"
+    },
+    {
+      "subsystem": "BFD/UDLD, `control-plane.ts`",
+      "operationalTrace": "Actual link/IP controls, advertised timers and optional echo \u2192 dependency failure/err-disable; control/routing/BGP tests",
+      "status": "partial",
+      "limits": "Single-hop bounded state model; BFD authentication/dampening templates are stored only; demand/multihop and complete diagnostics absent"
+    },
+    {
+      "subsystem": "GRE/NHRP/DMVPN, `engine.ts`, `control-plane.ts`",
+      "operationalTrace": "Independent underlay resolution \u2192 actual logical registration/resolution \u2192 GRE inner/outer forwarding",
+      "status": "partial",
+      "limits": "No DMVPN Phase 3 redirect/shortcut FSM, NHS clustering or IPv6 NHRP; stored shortcut/redirect flags do not implement them"
+    },
+    {
+      "subsystem": "Multicast, `control-plane.ts`, `igmp-snooping.ts`, `msdp.ts`",
+      "operationalTrace": "Actual IGMP/PIM Register/dense controls and data; computed shared trees/DR; persistent TCP MSDP",
+      "status": "partial",
+      "limits": "Computed Hello/Join-Prune/Assert eligibility; no complete BSR/Auto-RP, IGMP exclude matrix, IPv6 multicast/MLD or full MSDP mesh/filter catalog"
+    },
+    {
+      "subsystem": "SPAN/NetFlow, `packet-policy.ts`, `remote-span.ts`",
+      "operationalTrace": "Actual copied frames and routed structured exports; counters follow observed packets",
+      "status": "partial",
+      "limits": "Logical envelopes, no wire-compatible RSPAN/ERSPAN/NetFlow encoding or arbitrary flexible record fields"
+    },
+    {
+      "subsystem": "IP SLA/tracking/keychains, `sla.ts`, `tracking.ts`, `control-plane.ts`",
+      "operationalTrace": "Actual ICMP/HTTP/UDP probes and timed object state consumed by FHRP/routes; key validity windows gate control packets",
+      "status": "partial",
+      "limits": "Bounded operation/track catalog; no cryptographic protocol digests. PTP election reports `synchronized=false`, not clock synchronization"
+    },
+    {
+      "subsystem": "PoE, `poe.ts`, `ios-poe.ts`",
+      "operationalTrace": "Direct enabled PSE port + budget and high/low port priority \u2192 detection-order allocation \u2192 AP power lifecycle and real client loss/recovery; PoE/wireless tests",
+      "status": "partial",
+      "limits": "One full-feature 30 W AP allocation with high/low priority and equal-priority detection order. No 802.3af reduced mode, 802.3bt, calibrated electrical faults or non-AP powered devices"
+    }
+  ],
+  "sources": [
+    "https://www.cisco.com/c/en/us/support/docs/ip/border-gateway-protocol-bgp/13753-25.html",
+    "https://www.cisco.com/c/en/us/support/docs/lan-switching/ethernet/10561-3.html",
+    "https://www.cisco.com/c/en/us/support/docs/switches/catalyst-6500-series-switches/12027-53.html",
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/qos_conmgt/configuration/xe-17/qos-conmgt-xe-17-book/qos-conmgt-oview.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_ip6-mbgp-ext-xe.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_irg-basic-net-0.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_irg-multi-load-0.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_iri-iprouting.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/qos/b-quality-of-service/m_qos-scheduling.html",
+    "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/configuration_guide/int_hw/b_1712_int_and_hw_9300_cg/configuring_interface_characteristics.html",
+    "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/configuration_guide/qos/b_1712_qos_9300_cg/configuring_qos.html",
+    "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/configuration_guide/vlan/b_1712_vlan_9300_cg/configuring_vtp.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_ire-enhanced-igrp.html",
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_eigrp/command/ire-cr-book/ire-a1.html",
+    "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/16406-eigrp-toc.html"
+  ],
+  "tests": [
+    "tests/wired-fidelity.test.ts",
+    "tests/bgp-multiprotocol.test.ts",
+    "tests/ethernet-physical.test.ts",
+    "tests/qos-scheduler.test.ts",
+    "tests/eigrp-auto-summary.test.ts"
+  ],
+  "limitations": "All subsystem rows remain partial; command inventory status must not be inferred from passing a subsystem regression.",
+  "validation": {
+    "typecheck": "passed",
+    "fullRegression": {
+      "tests": 675,
+      "passed": 673,
+      "failed": 2,
+      "failureLocations": [
+        "tests/aaa-accounting.test.ts:19",
+        "tests/aaa-accounting.test.ts:27"
+      ],
+      "note": "Concurrent accounting work; no wired/BGP/physical/queue/discovery/wireless failure in this run. This record is a snapshot, not the final repository acceptance result."
+    },
+    "newDedicatedCases": {
+      "wired-fidelity": 7,
+      "bgp-multiprotocol": 7,
+      "ethernet-physical": 8,
+      "qos-scheduler": 8,
+      "eigrp-auto-summary": 6
+    },
+    "eigrpFocusedRegression": {
+      "tests": 212,
+      "passed": 212,
+      "failed": 0,
+      "log": ".cache/wired-eigrp-regression.log",
+      "note": "Control-plane/routing/VRF/policy/reference/core/wired/BGP focused run; topology-display addition subsequently rechecked independently. Parent owns final combined acceptance."
+    },
+    "eigrpShowRegression": {
+      "tests": 24,
+      "passed": 24,
+      "failed": 0
+    },
+    "eigrpAutoSummaryRegression": {
+      "tests": 6,
+      "passed": 6,
+      "failed": 0,
+      "note": "Includes final local Null0 topology display assertions for classic and named IPv4."
+    }
+  }
+}

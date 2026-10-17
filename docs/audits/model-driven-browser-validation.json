@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-10-17T00:17:29.831Z",
+  "browser": "155.0.8059.84",
+  "url": "http://127.0.0.1:4176/",
+  "checks": [
+    "Imported a routed three-node lab through the public YAML workflow",
+    "Initial Windows ping crosses the configured router",
+    "RESTCONF desktop client displays a delivered authentication rejection",
+    "RESTCONF GET shows the actual IOS interface model",
+    "RESTCONF PUT from the desktop changes the real interface admin state",
+    "The RESTCONF change appears in IOS operational output",
+    "The disabled interface stops the actual routed Windows ping",
+    "RESTCONF recovery restores real routed forwarding",
+    "Native hostname mutation updates the diagram through shared configuration",
+    "No browser page errors"
+  ],
+  "errors": []
+}

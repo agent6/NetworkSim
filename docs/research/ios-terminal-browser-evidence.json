@@ -1,0 +1,2056 @@
+{
+  "evidence_id": "ev_e17dade32005d9e5dd3ea05f155494daa6367ce128dd620d418c9a2f54ba1334",
+  "authority": "controlled-replay",
+  "confidence": "observed",
+  "provider": {
+    "id": "rea-playwright-browser-scenario",
+    "name": "REA Playwright browser scenario capture provider",
+    "version": "1"
+  },
+  "parameters": {
+    "browser": {
+      "mode": "launch",
+      "executable_path": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "headless": true
+    },
+    "start_url": {
+      "url": "http://127.0.0.1:4175/",
+      "query": []
+    },
+    "environment": {
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "device_scale_factor": 1
+      },
+      "locale": "en-US",
+      "timezone": "UTC",
+      "color_scheme": "light",
+      "reduced_motion": "reduce",
+      "service_workers": "block"
+    },
+    "actions": [
+      {
+        "step_id": "router",
+        "action": "click",
+        "locator": {
+          "kind": "css",
+          "selector": "button[aria-label=\"Add Router\"]"
+        },
+        "button": "left",
+        "click_count": 1
+      },
+      {
+        "step_id": "render",
+        "action": "wait_for_timeout",
+        "duration_ms": 100
+      },
+      {
+        "step_id": "console",
+        "action": "click",
+        "locator": {
+          "kind": "css",
+          "selector": ".workspace-panel-button[data-action=\"tab-console\"]"
+        },
+        "button": "left",
+        "click_count": 1
+      },
+      {
+        "step_id": "fill-1",
+        "action": "fill",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "value": {
+          "source": "literal",
+          "value": "enable"
+        }
+      },
+      {
+        "step_id": "key-2",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Enter"
+      },
+      {
+        "step_id": "fill-3",
+        "action": "fill",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "value": {
+          "source": "literal",
+          "value": "terminal length 3"
+        }
+      },
+      {
+        "step_id": "key-4",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Enter"
+      },
+      {
+        "step_id": "fill-5",
+        "action": "fill",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "value": {
+          "source": "literal",
+          "value": "show "
+        }
+      },
+      {
+        "step_id": "help-paging",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "?"
+      },
+      {
+        "step_id": "one-help-line",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Enter"
+      },
+      {
+        "step_id": "restore-help-draft",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "q"
+      },
+      {
+        "step_id": "key-6",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Control+u"
+      },
+      {
+        "step_id": "fill-7",
+        "action": "fill",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "value": {
+          "source": "literal",
+          "value": "terminal length 0"
+        }
+      },
+      {
+        "step_id": "key-8",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Enter"
+      },
+      {
+        "step_id": "fill-9",
+        "action": "fill",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "value": {
+          "source": "literal",
+          "value": "configure terminal"
+        }
+      },
+      {
+        "step_id": "key-10",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Enter"
+      },
+      {
+        "step_id": "fill-11",
+        "action": "fill",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "value": {
+          "source": "literal",
+          "value": "hostname Discarded"
+        }
+      },
+      {
+        "step_id": "cancel-config-draft",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Control+c"
+      },
+      {
+        "step_id": "fill-12",
+        "action": "fill",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "value": {
+          "source": "literal",
+          "value": "show running-config | include ^hostname"
+        }
+      },
+      {
+        "step_id": "key-13",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Enter"
+      },
+      {
+        "step_id": "fill-14",
+        "action": "fill",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "value": {
+          "source": "literal",
+          "value": "configure terminal"
+        }
+      },
+      {
+        "step_id": "key-15",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Enter"
+      },
+      {
+        "step_id": "fill-16",
+        "action": "fill",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "value": {
+          "source": "literal",
+          "value": "hostname Accepted"
+        }
+      },
+      {
+        "step_id": "submit-draft-and-exit",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Control+z"
+      },
+      {
+        "step_id": "fill-17",
+        "action": "fill",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "value": {
+          "source": "literal",
+          "value": "show running-config | include ^hostname"
+        }
+      },
+      {
+        "step_id": "key-18",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Enter"
+      },
+      {
+        "step_id": "ctrl-z-in-exec",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Control+z"
+      },
+      {
+        "step_id": "fill-19",
+        "action": "fill",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "value": {
+          "source": "literal",
+          "value": "draft kept"
+        }
+      },
+      {
+        "step_id": "redraw-keeps-transcript",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Control+l"
+      },
+      {
+        "step_id": "redraw-keeps-draft",
+        "action": "press",
+        "locator": {
+          "kind": "css",
+          "selector": "#terminal-input"
+        },
+        "key": "Control+r"
+      }
+    ],
+    "storage": {
+      "cookies": [],
+      "local_storage": [],
+      "session_storage": []
+    },
+    "secrets": [],
+    "capture": {
+      "after_each_step": [
+        "accessibility"
+      ],
+      "at_end": [
+        "accessibility"
+      ],
+      "events": [
+        "page-errors"
+      ],
+      "network": {
+        "request_body": false,
+        "response_body": false,
+        "header_values": false
+      }
+    },
+    "scenario_sha256": "d7f8229448c94cb6ad70acb695d2c702c084460a8ce2c46e21fc62ad4f07a24a"
+  },
+  "normalized_result": {
+    "browser": {
+      "mode": "launch",
+      "process_ownership": "provider-owned",
+      "cleanup": "terminated-owned-process",
+      "product": "Chromium",
+      "version": "155.0.8059.84"
+    },
+    "scenario": {
+      "start_origin": "http://127.0.0.1:4175",
+      "action_count": 30,
+      "secret_references": [],
+      "network_content": {
+        "request_body": false,
+        "response_body": false,
+        "header_values": false
+      },
+      "event_families": [
+        "page-errors"
+      ]
+    },
+    "duration_ms": 1782,
+    "steps": [
+      {
+        "step_index": 0,
+        "step_id": "scenario_start",
+        "action": "goto_start",
+        "elapsed_ms": 1105,
+        "before_url": {
+          "url": "about:blank",
+          "origin": null,
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "d32b0cb2633c45921cb382fee35ccf445861990df81438dc820e133fe07c9542",
+              "bytes": 1732,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\" [disabled]\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\" [disabled]\n    - button \"Power controls\"\n    - text: Double-click a device to configure\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\"\n    - button \"Toggle device details\"\n    - application \"Network topology editor\"\n    - heading \"A clear space to learn networks.\" [level=1]\n    - paragraph: Add devices from the left, connect their ports, then open a console to bring your network to life.\n    - button \"Explore example labs\"\n    - text: 0 devices · 0 links Scroll to zoom · Space to pan 00:00.033\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - text: Simulation running · Ready Changes save automatically\n  - status"
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 1,
+        "step_id": "router",
+        "action": "click",
+        "elapsed_ms": 123,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "c8efdfb9c518cff0ead024ce51234389e5c112bda9e35bee071020684572085f",
+              "bytes": 1774,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\" [disabled]\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\" [disabled]\n    - button \"Power controls\"\n    - text: Double-click a device to configure\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\"\n    - button \"Toggle device details\"\n    - application \"Network topology editor\"\n    - heading \"A clear space to learn networks.\" [level=1]\n    - paragraph: Add devices from the left, connect their ports, then open a console to bring your network to life.\n    - button \"Explore example labs\"\n    - text: 0 devices · 0 links Scroll to zoom · Space to pan 00:00.149\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - text: Simulation running · Ready Changes save automatically\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 2,
+        "step_id": "render",
+        "action": "wait_for_timeout",
+        "elapsed_ms": 126,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "60b6c550b75f6c9d2f509845c73ab08c68307d6b5686f405716c5f1ee55cd81b",
+              "bytes": 1579,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\"\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.250\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 3,
+        "step_id": "console",
+        "action": "click",
+        "elapsed_ms": 83,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "658da4cc6bad7cae97306721f897dc122a1b195bafa0c84e7a80d2e9af0a418b",
+              "bytes": 1927,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.366\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 4,
+        "step_id": "fill-1",
+        "action": "fill",
+        "elapsed_ms": 38,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "c518c026b97a0566c606cff54d4c3cc1806f552d047d414b5c6ead1753bbd1c2",
+              "bytes": 1935,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>\n      - textbox \"Device command\": enable\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 5,
+        "step_id": "key-2",
+        "action": "press",
+        "elapsed_ms": 15,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "8b0f03c2344cb634eb35ff5fca9f99442b6827b159062a0086c6a99bde5aaf0b",
+              "bytes": 1937,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 6,
+        "step_id": "fill-3",
+        "action": "fill",
+        "elapsed_ms": 5,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "3dd11a1ba3aca061deec72e6181d5df82170ebd6850725f0c2a5108f55bbd5cd",
+              "bytes": 1956,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#\n      - textbox \"Device command\": terminal length 3\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 7,
+        "step_id": "key-4",
+        "action": "press",
+        "elapsed_ms": 5,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "7940f7ebeb8368ff133efe3afffc487249e7cab2b89daca000522ab548e1e25e",
+              "bytes": 1958,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 8,
+        "step_id": "fill-5",
+        "action": "fill",
+        "elapsed_ms": 4,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "cff579e4f23dc682dcfcd0588f2486df6cc57a96e5d625cc717e94e48ba020de",
+              "bytes": 1964,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#\n      - textbox \"Device command\": show\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 9,
+        "step_id": "help-paging",
+        "action": "press",
+        "elapsed_ms": 21,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "172095df542192c08deb4a1e330e2f485f93d88429f6a7b20d7807a1cd841d70",
+              "bytes": 2082,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases --More--\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 10,
+        "step_id": "one-help-line",
+        "action": "press",
+        "elapsed_ms": 4,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "84ce37fbb2c4a38812df7b66e0e93804ebf45938f8f671258c5956e5a7733410",
+              "bytes": 2126,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries --More--\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 11,
+        "step_id": "restore-help-draft",
+        "action": "press",
+        "elapsed_ms": 4,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "52c331c206340ddc3475dc753f0bf54f27e2c7c54e0c7f6b568274e5c38edcf2",
+              "bytes": 2127,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#\n      - textbox \"Device command\": show\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 12,
+        "step_id": "key-6",
+        "action": "press",
+        "elapsed_ms": 4,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "4069234c5e7e922d5d1e4d2363c82299aeedb97a9f99f365498291bcbaa5b69e",
+              "bytes": 2121,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 13,
+        "step_id": "fill-7",
+        "action": "fill",
+        "elapsed_ms": 4,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "5a9a0448f4fa08f27d2d9b28b7d968042a0ba17ce119604a38bd4b0353ab3161",
+              "bytes": 2140,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#\n      - textbox \"Device command\": terminal length 0\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 14,
+        "step_id": "key-8",
+        "action": "press",
+        "elapsed_ms": 6,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "9414a8dd77cf60729c55dba930c60799e6066fc238d0f3b0e3fe7198cb55e460",
+              "bytes": 2142,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 15,
+        "step_id": "fill-9",
+        "action": "fill",
+        "elapsed_ms": 4,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "22b3d077f01de23d3971e0bc20ec94667a811257afa27ac1223d56d3a9900083",
+              "bytes": 2162,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#\n      - textbox \"Device command\": configure terminal\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 16,
+        "step_id": "key-10",
+        "action": "press",
+        "elapsed_ms": 7,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "c6acf5892eb4a944e9ef95f6f1ebfd7ede24b19e6150233442f44e8a2101025b",
+              "bytes": 2233,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 17,
+        "step_id": "fill-11",
+        "action": "fill",
+        "elapsed_ms": 4,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "7e16d17cdfeb0e1e4766e54ef672b464f14917800eb94c296d6433ea8a1fd51e",
+              "bytes": 2253,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#\n      - textbox \"Device command\": hostname Discarded\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 18,
+        "step_id": "cancel-config-draft",
+        "action": "press",
+        "elapsed_ms": 4,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "c85cba7b1afd89b4d71b66658d05753effd9b7c93f4a5e0914b68e9e6bc332ad",
+              "bytes": 2257,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 19,
+        "step_id": "fill-12",
+        "action": "fill",
+        "elapsed_ms": 6,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "56712b62ef8d69a63b9064f53046f17ecc94bf3a00ce2c2c28df4b01b79f8a2a",
+              "bytes": 2298,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#\n      - textbox \"Device command\": show running-config | include ^hostname\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 20,
+        "step_id": "key-13",
+        "action": "press",
+        "elapsed_ms": 9,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "3e87e7c5b4beef302c3d0ee251dcb8956f976bdb3ba3d32dba6c4eb38d98044f",
+              "bytes": 2312,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.483\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#show running-config | include ^hostname hostname R1 R1#\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 21,
+        "step_id": "fill-14",
+        "action": "fill",
+        "elapsed_ms": 5,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "7b9e6abf25145971146bda894504a863d66da756463c012298cc5f9f5f72e232",
+              "bytes": 2332,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.600\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#show running-config | include ^hostname hostname R1 R1#\n      - textbox \"Device command\": configure terminal\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 22,
+        "step_id": "key-15",
+        "action": "press",
+        "elapsed_ms": 5,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "ca52648c97973946a08671e1b27fd8da140e0ee165ecdb0b18704d871db96f9e",
+              "bytes": 2403,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.600\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#show running-config | include ^hostname hostname R1 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 23,
+        "step_id": "fill-16",
+        "action": "fill",
+        "elapsed_ms": 3,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "556257c377a8a69ec037804006b07918585548972c50c77fa80c5db577363191",
+              "bytes": 2422,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.600\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"R1\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#show running-config | include ^hostname hostname R1 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#\n      - textbox \"Device command\": hostname Accepted\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 24,
+        "step_id": "submit-draft-and-exit",
+        "action": "press",
+        "elapsed_ms": 6,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "bb37e7484a1d0ed49c017d61abe8ea486491fdf75b2482b7937b2ad396e49141",
+              "bytes": 2456,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.600\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"Accepted\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#show running-config | include ^hostname hostname R1 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Accepted Accepted(config)#^Z Accepted#\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 25,
+        "step_id": "fill-17",
+        "action": "fill",
+        "elapsed_ms": 4,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "7fcbd737d58317426969de002ae15c8b09d9ad8f1f1f2da34dbad19691b4d537",
+              "bytes": 2497,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.600\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"Accepted\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#show running-config | include ^hostname hostname R1 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Accepted Accepted(config)#^Z Accepted#\n      - textbox \"Device command\": show running-config | include ^hostname\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 26,
+        "step_id": "key-18",
+        "action": "press",
+        "elapsed_ms": 5,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "0cc549621672a612255f0c3b02369759e5681164e56810f03d95753ae7fbe753",
+              "bytes": 2523,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.600\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"Accepted\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#show running-config | include ^hostname hostname R1 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Accepted Accepted(config)#^Z Accepted#show running-config | include ^hostname hostname Accepted Accepted#\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 27,
+        "step_id": "ctrl-z-in-exec",
+        "action": "press",
+        "elapsed_ms": 4,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "53651b8392bbe27e77dc0fdebb78cf955083c12c846fc3cc398db7a557393b78",
+              "bytes": 2535,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.600\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"Accepted\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#show running-config | include ^hostname hostname R1 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Accepted Accepted(config)#^Z Accepted#show running-config | include ^hostname hostname Accepted Accepted#^Z Accepted#\n      - textbox \"Device command\"\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 28,
+        "step_id": "fill-19",
+        "action": "fill",
+        "elapsed_ms": 4,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "3b56f86fa00a5cfe0297c8f47edfbbd7acbd6c54475752f6297b211925f28ddb",
+              "bytes": 2547,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.600\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"Accepted\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#show running-config | include ^hostname hostname R1 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Accepted Accepted(config)#^Z Accepted#show running-config | include ^hostname hostname Accepted Accepted#^Z Accepted#\n      - textbox \"Device command\": draft kept\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 29,
+        "step_id": "redraw-keeps-transcript",
+        "action": "press",
+        "elapsed_ms": 5,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "3b56f86fa00a5cfe0297c8f47edfbbd7acbd6c54475752f6297b211925f28ddb",
+              "bytes": 2547,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.600\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"Accepted\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#show running-config | include ^hostname hostname R1 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Accepted Accepted(config)#^Z Accepted#show running-config | include ^hostname hostname Accepted Accepted#^Z Accepted#\n      - textbox \"Device command\": draft kept\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      },
+      {
+        "step_index": 30,
+        "step_id": "redraw-keeps-draft",
+        "action": "press",
+        "elapsed_ms": 3,
+        "before_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "after_url": {
+          "url": "http://127.0.0.1:4175/",
+          "origin": "http://127.0.0.1:4175",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "event_sequence_start": 1,
+        "event_sequence_end": 0,
+        "artifacts": {
+          "screenshot": {
+            "state": "not_requested"
+          },
+          "dom": {
+            "state": "not_requested"
+          },
+          "accessibility": {
+            "state": "captured",
+            "value": {
+              "sha256": "3b56f86fa00a5cfe0297c8f47edfbbd7acbd6c54475752f6297b211925f28ddb",
+              "bytes": 2547,
+              "text": "- document:\n  - banner:\n    - text: NetworkSim\n    - button \"Untitled network\"\n    - button \"Examples\"\n    - button \"My labs\"\n    - button \"Export lab\"\n    - button \"Supported behavior and limits\"\n  - complementary \"Device palette\":\n    - text: Build your network Click or drag a device\n    - button \"Add Router\": Router Routing & WAN\n    - button \"Add Layer 2 switch\": Layer 2 switch VLANs & switching\n    - button \"Add Layer 3 switch\": Layer 3 switch Multilayer switching\n    - button \"Add Computer\": Computer End-user workstation\n    - button \"Add Server\": Server Network services\n  - main:\n    - button \"Select and move (V)\"\n    - button \"Connect devices (C)\"\n    - button \"Add a note (N)\"\n    - button \"Undo (⌘Z)\"\n    - button \"Redo (⇧⌘Z)\" [disabled]\n    - button \"Delete selection\"\n    - button \"Power controls\"\n    - text: R1 · Router\n    - group \"Canvas navigation\":\n      - button \"Zoom out\"\n      - button \"Zoom in\"\n      - button \"Fit topology\"\n      - button \"Reset zoom to 100 percent\": 100%\n    - button \"Console\" [pressed]\n    - button \"Toggle device details\"\n    - application \"Network topology editor\":\n      - button \"R1, Router, powered on\"\n      - text: R1 Router\n    - text: 1 device · 0 links Scroll to zoom · Space to pan 00:00.600\n    - combobox \"Simulation speed\":\n      - option \"0.25×\"\n      - option \"1×\" [selected]\n      - option \"5×\"\n      - option \"10×\"\n    - button \"Pause simulation\"\n    - button \"Advance one simulation event\"\n    - separator \"Resize console\"\n    - button \"Console\" [pressed]\n    - tablist \"Device consoles\":\n      - tab \"Accepted\" [selected]\n    - button \"Copy\"\n    - button \"Terminal keyboard shortcuts\"\n    - button \"Expand console\"\n    - button \"Close console panel\"\n    - region \"Device terminal\":\n      - text: R1>enable R1#terminal length 3 R1#show ? aaa Stored authentication settings access-lists Configured ACLs and counters aliases Display command aliases archive Saved configuration archive entries R1#terminal length 0 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Discarded^C R1#show running-config | include ^hostname hostname R1 R1#configure terminal Enter configuration commands, one per line. End with CNTL/Z. R1(config)#hostname Accepted Accepted(config)#^Z Accepted#show running-config | include ^hostname hostname Accepted Accepted#^Z Accepted#\n      - textbox \"Device command\": draft kept\n    - text: Simulation running · 1 selected Saving changes…\n  - status: Router added. Double-click to configure."
+            }
+          },
+          "url": {
+            "state": "not_requested"
+          },
+          "history": {
+            "state": "not_requested"
+          },
+          "storage": {
+            "state": "not_requested"
+          }
+        },
+        "completeness": {
+          "status": "complete",
+          "equality_eligible": true,
+          "missing_sections": [],
+          "truncated_sections": []
+        },
+        "status": "completed",
+        "error": null
+      }
+    ],
+    "events": {
+      "retained": 0,
+      "dropped": 0,
+      "items": []
+    },
+    "completeness": {
+      "status": "complete",
+      "equality_eligible": true,
+      "missing_sections": [],
+      "truncated_sections": []
+    },
+    "limitations": [
+      "Event sequence records provider receipt order; simultaneous browser causality is not inferred.",
+      "Network content is retained only when selected; Playwright response-body bytes are API results and are not guaranteed to match wire bytes.",
+      "Request bytes are limited to what Playwright exposes; not_exposed does not establish body absence or multipart file coverage.",
+      "Network content reads settle within 5 seconds each and the observer does not request bodies from unfinished responses.",
+      "Playwright scenario events do not expose request initiator stacks; receipt order does not prove causality.",
+      "Storage values are hashed only after declared-secret redaction."
+    ]
+  },
+  "limitations": [
+    "Artifact identity is unavailable for this observation.",
+    "Event sequence records provider receipt order; simultaneous browser causality is not inferred.",
+    "Network content is retained only when selected; Playwright response-body bytes are API results and are not guaranteed to match wire bytes.",
+    "Request bytes are limited to what Playwright exposes; not_exposed does not establish body absence or multipart file coverage.",
+    "Network content reads settle within 5 seconds each and the observer does not request bodies from unfinished responses.",
+    "Playwright scenario events do not expose request initiator stacks; receipt order does not prove causality.",
+    "Storage values are hashed only after declared-secret redaction.",
+    "Browser host platform and architecture were not observed."
+  ]
+}

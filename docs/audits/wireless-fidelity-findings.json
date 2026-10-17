@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "auditDate": "2026-10-16",
+  "referenceProfile": "Catalyst 9800 IOS XE 17.12 teaching subset / 9115 lightweight inspired / generic PoE+",
+  "scope": [
+    "wlc",
+    "ap",
+    "laptop",
+    "poeswitch"
+  ],
+  "verificationBoundary": "Repaired means demonstrated within the original simulator using source, parser, lifecycle and relevant packet/integration tests. It does not assert full Cisco firmware or Web GUI equivalence.",
+  "issues": [
+    {
+      "id": "WFA-01",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P0",
+      "feature": "FlexConnect controller outage",
+      "reference": "Centrally switched clients disassociate in standalone mode; established locally switched clients continue.",
+      "before": "The standalone advertisement path accepted central policies on Flex APs and retained their associations despite failed data tunnels.",
+      "rootCause": "Standalone eligibility did not inspect policy.centralSwitching.",
+      "fix": "Suppress central WLAN advertisements after CAPWAP loss; normal client evaluation disassociates central sessions, retaining local sessions and delivered traffic.",
+      "files": [
+        "src/wireless.ts"
+      ],
+      "tests": [
+        "WF-01",
+        "WL-17"
+      ],
+      "status": "repaired",
+      "remaining": "New client authentication while standalone is not supported."
+    },
+    {
+      "id": "WFA-02",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P0",
+      "feature": "Tag and profile dependencies",
+      "reference": "Per-band RF policies apply to their radio bands; AP service depends on its assigned site/RF/join/Flex configuration.",
+      "before": "Wrong-band references were accepted and missing RF/site/profile objects silently fell back to usable local radio defaults.",
+      "rootCause": "Reference lookups used optional chaining and permissive fallback for explicit missing dependencies.",
+      "fix": "Reject wrong-band CLI/persisted references. Missing explicit dependencies disable affected service; no fallback when a configured profile is missing. Correct RF tag prompt.",
+      "files": [
+        "src/ios-wireless.ts",
+        "src/wireless-model.ts",
+        "src/wireless.ts"
+      ],
+      "tests": [
+        "WF-02",
+        "WF-03",
+        "WF-12"
+      ],
+      "status": "repaired",
+      "remaining": "Hardware-specific deletion protection/error wording and default-policy-tag behavior remain unverified/different."
+    },
+    {
+      "id": "WFA-03",
+      "nodes": [
+        "wlc",
+        "ap"
+      ],
+      "priority": "P0",
+      "feature": "Site profile lifecycle",
+      "reference": "Changing AP/Flex profile references in a site tag requires AP rejoin.",
+      "before": "Only AP tag names triggered rejoin; changed site profile references were hot-applied.",
+      "rootCause": "Rejoin signature compared assignment names but not the effective site profile references/mode.",
+      "fix": "Compare effective join/Flex references and site mode; enter REJOIN and accept configuration responses only during valid configure/run stages.",
+      "files": [
+        "src/wireless.ts"
+      ],
+      "tests": [
+        "WF-04",
+        "AP policy tag changes trigger rejoin"
+      ],
+      "status": "repaired",
+      "remaining": "CAPWAP is structured simulated UDP; rejoin timer is compressed and DTLS is not implemented."
+    },
+    {
+      "id": "WFA-04",
+      "nodes": [
+        "ap",
+        "laptop",
+        "poeswitch"
+      ],
+      "priority": "P0",
+      "feature": "AP CLI reload under PoE-only power",
+      "reference": "An AP software reload resets volatile state while the connected PSE continues providing electrical power.",
+      "before": "Reload called power(false)/power(true), both intentionally ignored for AP nodes, retaining AP runtime/client state.",
+      "rootCause": "Manual electrical power and software restart shared an incompatible API.",
+      "fix": "Parent task adds Simulator.reload with a powered AP-specific runtime reset. PoE record/allocation remains; sessions clear and fresh management/CAPWAP lifecycle runs.",
+      "files": [
+        "src/engine.ts",
+        "src/cli.ts"
+      ],
+      "tests": [
+        "WF-05"
+      ],
+      "status": "repaired",
+      "remaining": "No Cisco boot-loader/image execution; AP source remains exclusively PoE by user request."
+    },
+    {
+      "id": "WFA-05",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P0",
+      "feature": "Saved wireless validation",
+      "reference": "Persisted configuration must not install malformed IDs, address objects, security switches or wrong-band references.",
+      "before": "Duplicate WLAN IDs and non-boolean AKM/WPA2 flags were accepted. A non-string primary address could reach packet logic.",
+      "rootCause": "Incomplete type/range validation of optional wireless fields and cross-profile IDs/bands.",
+      "fix": "Validate unique WLAN IDs, boolean security flags, primary address/name/interface types, and matching RF bands before replacing topology state.",
+      "files": [
+        "src/wireless-model.ts"
+      ],
+      "tests": [
+        "WF-03",
+        "WF-06",
+        "WL-22/23"
+      ],
+      "status": "repaired",
+      "remaining": "Complete malformed-input matrix for every optional dictionary property is still pending."
+    },
+    {
+      "id": "WFA-06",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop",
+        "server"
+      ],
+      "priority": "P0",
+      "feature": "Enterprise RADIUS server group",
+      "reference": "Configured request timeouts/retransmissions precede ordered server failover. A delivered rejection remains authoritative.",
+      "before": "Only the first group server was used; retransmit was ignored and the client always aborted after 12 seconds.",
+      "rootCause": "Authentication selected one server and used an unrelated fixed association deadline.",
+      "fix": "Use delivered UDP requests with per-server timeout/retransmit, ordered fallback only on unavailable server, total bounded association deadline, and runtime/generation cancellation guards. Emit real request/accept/reject/timeout events.",
+      "files": [
+        "src/wireless.ts"
+      ],
+      "tests": [
+        "WF-07",
+        "WF-08",
+        "WF-09",
+        "WL-18/19"
+      ],
+      "status": "repaired",
+      "remaining": "Logical password-based EAP; no PEAP/TLS, RADIUS deadtime/load-balancing/accounting/CoA. Shared-secret reject behavior is the existing simulated AAA service abstraction."
+    },
+    {
+      "id": "WFA-07",
+      "nodes": [
+        "wlc"
+      ],
+      "priority": "P0",
+      "feature": "Non-destructive controller GUI Apply",
+      "reference": "Applying represented GUI fields must preserve unrelated running settings and remain synchronized with CLI/runtime.",
+      "before": "The form rebuilt every profile from defaults, clearing disabled CLI security flags, descriptions, RF channel and Flex properties. Duplicate rows silently merged; empty RF selections were not always removed.",
+      "rootCause": "Whole-table reconstruction coupled to DOM traversal without explicit preserved-field semantics.",
+      "fix": "Extract controllerFormDraft; preserve unrepresented fields, validate every select/duplicate row via parser/draft, explicitly clear RF mappings, retain off-topology assignments and honor deletion of presented AP overrides.",
+      "files": [
+        "src/wireless-controller-form.ts",
+        "src/wireless-ui.ts"
+      ],
+      "tests": [
+        "WF-10",
+        "WF-11",
+        "WF-12",
+        "WF-14"
+      ],
+      "status": "repaired",
+      "remaining": "43 current WLC field templates inventoried; full vendor GUI and all input browser/reload boundaries are not complete."
+    },
+    {
+      "id": "WFA-08",
+      "nodes": [
+        "wlc",
+        "ap",
+        "poeswitch"
+      ],
+      "priority": "P0",
+      "feature": "Controller learns AP power loss",
+      "reference": "An unannounced remote AP failure is learned from failed CAPWAP liveness, while its local radios stop when power is removed.",
+      "before": "WLC polling inspected the simulator's AP power flag and immediately deleted registration without any missed control packet timer.",
+      "rootCause": "Global topology knowledge bypassed the modeled CAPWAP control plane.",
+      "fix": "Expire controller registrations from last delivered AP control message and configured dead interval; emit timeout log/event. Restore actual join after PoE returns.",
+      "files": [
+        "src/wireless.ts"
+      ],
+      "tests": [
+        "WF-13",
+        "PoE per-port shutdown integration"
+      ],
+      "status": "repaired",
+      "remaining": "Three-heartbeat dead-time model is an explicit abstraction rather than a complete Cisco retry/DTLS liveness implementation."
+    },
+    {
+      "id": "WFA-09",
+      "nodes": [
+        "laptop"
+      ],
+      "priority": "P0",
+      "feature": "Wireless shared interface counters",
+      "reference": "Packet/byte statistics must count actual adapter data traffic.",
+      "before": "Wireless send and receive bypassed the shared count hooks, so active clients showed no Wireless0 packet/byte totals.",
+      "rootCause": "The wireless branch returned before wired counting; wireless ingress called receiveFrame directly.",
+      "fix": "Count authorized Wireless0 transmission/received frames through existing engine counters and observation hooks; preserve wired/QoS paths.",
+      "files": [
+        "src/engine.ts"
+      ],
+      "tests": [
+        "WF-15"
+      ],
+      "status": "repaired",
+      "remaining": "These are modeled data-frame counters, not physical 802.11 retry/FCS/radio counters."
+    },
+    {
+      "id": "WFA-10",
+      "nodes": [
+        "wlc"
+      ],
+      "priority": "P0",
+      "feature": "WLAN ID ignored on edit",
+      "reference": "A supplied argument must either take its documented effect or reject explicitly.",
+      "before": "Existing WLAN commands accepted a different ID but retained the old ID; GUI appeared to accept an edit without effect.",
+      "rootCause": "Creation used nullish assignment without validating immutable identity on subsequent full-form commands.",
+      "fix": "Reject changed existing identity transactionally and make existing GUI IDs read-only; creation still validates unique IDs.",
+      "files": [
+        "src/ios-wireless.ts",
+        "src/wireless-ui.ts"
+      ],
+      "tests": [
+        "WF-16"
+      ],
+      "status": "repaired",
+      "remaining": "Exact release-specific Cisco ID-edit error wording and supported recreation workflow require reference runtime capture."
+    },
+    {
+      "id": "WFA-11",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P0",
+      "feature": "GUI value replacement and validation",
+      "reference": "DNS list edits replace the displayed selection; SSID bytes are not silently changed; IPv6 fields reject IPv4 CIDRs.",
+      "before": "WLC DNS Apply appended to old resolvers; SSIDs were trimmed; AP/laptop IPv6 input accepted any CIDR family; invalid address-mode strings fell through to static.",
+      "rootCause": "Generic trim/read helper, additive IOS name-server command, and insufficient form-specific validation.",
+      "fix": "Clear/reapply DNS list, preserve raw SSID bytes, validate IPv6 family and IPv4 address-mode enum.",
+      "files": [
+        "src/wireless-controller-form.ts",
+        "src/wireless-ui.ts"
+      ],
+      "tests": [
+        "WF-18",
+        "browser AP/laptop IPv4-in-IPv6 field rejection"
+      ],
+      "status": "repaired",
+      "remaining": "Full IPv6 GUI renewal/default/negation and reload matrix remains partial."
+    },
+    {
+      "id": "WFA-12",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P0",
+      "feature": "Inherited-member names in user-defined wireless dictionaries",
+      "reference": "Legal IOS-style profile names must remain data and must not inherit JavaScript object members or mutate prototypes.",
+      "before": "Names such as constructor and __proto__ could resolve inherited functions or the prototype setter during profile creation/lookups; GUI retention could clone an inherited function. Global persistence rejection also prevented otherwise legal names from reloading.",
+      "rootCause": "Plain-object dictionary lookup/creation did not consistently require own entries.",
+      "fix": "Use own-property lookup and defineProperty insertion across wireless CLI, form retention, RF validation, AAA references and operational diagnostics. Parent persistence validator permits only dictionary entry positions while recursively rejecting unsafe ordinary child fields.",
+      "files": [
+        "src/wireless-model.ts",
+        "src/ios-wireless.ts",
+        "src/wireless.ts",
+        "src/wireless-controller-form.ts",
+        "src/wireless-ui.ts",
+        "src/persistence.ts"
+      ],
+      "tests": [
+        "WF-19",
+        "WF-20",
+        "WF-21"
+      ],
+      "status": "repaired",
+      "remaining": "Regression names cover constructor, __proto__, toString and hasOwnProperty; full fuzzing of every saved dictionary shape remains outside this evidence."
+    }
+  ],
+  "additionalVerifiedScenarios": [
+    {
+      "id": "WF-17",
+      "behavior": "Hidden directed preferred SSID remains joinable; unknown client scan does not expose it. Configured session expiry causes a fresh four-way handshake.",
+      "status": "verified-in-simulator"
+    }
+  ],
+  "references": [
+    "https://www.cisco.com/c/en/us/td/docs/wireless/controller/9800/17-12/config-guide/b_wl_17_12_cg/m_config_model.html",
+    "https://www.cisco.com/c/en/us/td/docs/wireless/controller/9800/17-12/config-guide/b_wl_17_12_cg/m-sniffer-cg.html",
+    "https://www.cisco.com/c/en/us/td/docs/wireless/controller/9800/17-12/config-guide/b_wl_17_12_cg/m_aaa_dead_server_detection.html",
+    "https://www.cisco.com/c/en/us/td/docs/wireless/access_point/9115ax/quick/guide/ap9115ax-getstart.html"
+  ],
+  "concurrentScopeContext": {
+    "preserved": [
+      "AP received-controller diagnostics and removal of editable AP-local radios",
+      "WLC RF channel input and authoritative RF profile values",
+      "PoE high/low priority and actual detection-order admission"
+    ],
+    "validation": [
+      "tests/ap-controller-config.test.ts APCFG-01 through APCFG-06",
+      "tests/poe.test.ts POE-12 and POE-13"
+    ],
+    "note": "These changes were introduced concurrently by other task work. Own-property fixes preserved them; inventory was regenerated against current sources."
+  }
+}

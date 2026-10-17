@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "referenceProfile": "Cisco IOS XE Dublin17.12 accounting invariants; RFC2866/RFC8907; no native output capture",
+  "documentation": "docs/audits/aaa-accounting-fidelity.md",
+  "entries": [
+    {
+      "name": "aaa accounting exec",
+      "status": "partial",
+      "source": {
+        "path": "src/cli.ts",
+        "line": 472
+      },
+      "tests": [
+        "ACCT-01",
+        "ACCT-03",
+        "ACCT-04",
+        "ACCT-05",
+        "ACCT-06",
+        "ACCT-09",
+        "ACCT-10"
+      ]
+    },
+    {
+      "name": "aaa accounting commands",
+      "status": "partial",
+      "source": {
+        "path": "src/cli.ts",
+        "line": 472
+      },
+      "tests": [
+        "ACCT-02",
+        "ACCT-07",
+        "ACCT-08",
+        "ACCT-12"
+      ]
+    },
+    {
+      "name": "accounting exec",
+      "status": "partial",
+      "source": {
+        "path": "src/cli.ts",
+        "line": 1123
+      },
+      "tests": [
+        "ACCT-03",
+        "ACCT-11"
+      ]
+    },
+    {
+      "name": "accounting commands",
+      "status": "partial",
+      "source": {
+        "path": "src/cli.ts",
+        "line": 1123
+      },
+      "tests": [
+        "ACCT-03",
+        "ACCT-11"
+      ]
+    },
+    {
+      "name": "show accounting",
+      "status": "partial",
+      "source": {
+        "path": "src/cli.ts",
+        "line": 445
+      },
+      "tests": [
+        "ACCT-01"
+      ]
+    },
+    {
+      "name": "aaa accounting connection|network|system",
+      "status": "configuration-only",
+      "source": {
+        "path": "src/cli.ts",
+        "line": 472
+      },
+      "tests": [
+        "ACCT-07"
+      ]
+    },
+    {
+      "name": "local console accounting",
+      "status": "configuration-only",
+      "source": {
+        "path": "src/management.ts",
+        "line": 157
+      },
+      "tests": [
+        "ACCT-06"
+      ]
+    },
+    {
+      "name": "RADIUS command accounting",
+      "status": "unsupported",
+      "source": {
+        "path": "src/aaa-accounting.ts",
+        "line": 62
+      },
+      "tests": [
+        "ACCT-07",
+        "ACCT-08"
+      ]
+    },
+    {
+      "name": "Server Services \u2192 AAA received accounting",
+      "status": "partial",
+      "source": {
+        "path": "src/services-ui.ts",
+        "line": 46
+      },
+      "tests": [
+        "SVC-GUI-07"
+      ]
+    }
+  ],
+  "browserValidation": {
+    "script": "scripts/browser-aaa-accounting.mjs",
+    "result": "docs/audits/aaa-accounting-browser-validation.json",
+    "checks": 6,
+    "pageErrors": 0
+  }
+}

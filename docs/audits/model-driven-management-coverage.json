@@ -1,0 +1,606 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-17T00:19:17.034Z",
+  "generator": "node scripts/audit-model-driven-management.mjs",
+  "scope": "Original IOS XE 17.12 teaching datastore subset over actual simulated TCP/ACL paths",
+  "status": "partial",
+  "profiles": [
+    "router",
+    "switch",
+    "l3switch",
+    "poeswitch",
+    "wlc"
+  ],
+  "unsupportedProfiles": [
+    "ap",
+    "pc",
+    "server",
+    "laptop"
+  ],
+  "sources": [
+    {
+      "path": "src/model-driven-management.ts",
+      "sha256": "e0b70f8492a9115a595069faeb17fb8d060d8967c5d9ec71f56140cf4ea73690"
+    },
+    {
+      "path": "src/http-service.ts",
+      "sha256": "a916159a3dc89c28eea73d5639d0f8a7b50abc033a4f4327ec1fbaed04780e0f"
+    },
+    {
+      "path": "src/ios-platform-compat.ts",
+      "sha256": "4a9b5d4eeab04c5ff4fa8e8c9fbeba0992cbd3ac584c2f09364466fc871055f3"
+    },
+    {
+      "path": "src/network-tools-ui.ts",
+      "sha256": "1c8eb83df5463be369c4bbd2372eb203e9ff478aadbd4e2f467855fbbfcbf643"
+    },
+    {
+      "path": "tests/model-driven-management.test.ts",
+      "sha256": "414c1c7d7a3956443ffd615fdbd6c03e8646f8a3106b5135145f6a6581d81fe3"
+    }
+  ],
+  "counts": {
+    "configCommandProfileEntries": 15,
+    "testCases": 18,
+    "restResourcePatterns": 6,
+    "netconfRPCs": 8
+  },
+  "commands": [
+    {
+      "node": "router",
+      "mode": "config",
+      "command": "netconf-yang",
+      "state": "config.features.managementSettings.netconf",
+      "status": "partial",
+      "tests": [
+        "MD-05",
+        "MD-09",
+        "MD-14",
+        "MD-16"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "switch",
+      "mode": "config",
+      "command": "netconf-yang",
+      "state": "config.features.managementSettings.netconf",
+      "status": "partial",
+      "tests": [
+        "MD-05",
+        "MD-09",
+        "MD-14",
+        "MD-16"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "l3switch",
+      "mode": "config",
+      "command": "netconf-yang",
+      "state": "config.features.managementSettings.netconf",
+      "status": "partial",
+      "tests": [
+        "MD-05",
+        "MD-09",
+        "MD-14",
+        "MD-16"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "poeswitch",
+      "mode": "config",
+      "command": "netconf-yang",
+      "state": "config.features.managementSettings.netconf",
+      "status": "partial",
+      "tests": [
+        "MD-05",
+        "MD-09",
+        "MD-14",
+        "MD-16"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "wlc",
+      "mode": "config",
+      "command": "netconf-yang",
+      "state": "config.features.managementSettings.netconf",
+      "status": "partial",
+      "tests": [
+        "MD-05",
+        "MD-09",
+        "MD-14",
+        "MD-16"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "router",
+      "mode": "config",
+      "command": "netconf-yang feature candidate-datastore",
+      "state": "config.features.managementSettings.candidate",
+      "status": "partial",
+      "tests": [
+        "MD-06",
+        "MD-07",
+        "MD-08",
+        "MD-12",
+        "MD-13"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "switch",
+      "mode": "config",
+      "command": "netconf-yang feature candidate-datastore",
+      "state": "config.features.managementSettings.candidate",
+      "status": "partial",
+      "tests": [
+        "MD-06",
+        "MD-07",
+        "MD-08",
+        "MD-12",
+        "MD-13"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "l3switch",
+      "mode": "config",
+      "command": "netconf-yang feature candidate-datastore",
+      "state": "config.features.managementSettings.candidate",
+      "status": "partial",
+      "tests": [
+        "MD-06",
+        "MD-07",
+        "MD-08",
+        "MD-12",
+        "MD-13"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "poeswitch",
+      "mode": "config",
+      "command": "netconf-yang feature candidate-datastore",
+      "state": "config.features.managementSettings.candidate",
+      "status": "partial",
+      "tests": [
+        "MD-06",
+        "MD-07",
+        "MD-08",
+        "MD-12",
+        "MD-13"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "wlc",
+      "mode": "config",
+      "command": "netconf-yang feature candidate-datastore",
+      "state": "config.features.managementSettings.candidate",
+      "status": "partial",
+      "tests": [
+        "MD-06",
+        "MD-07",
+        "MD-08",
+        "MD-12",
+        "MD-13"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "router",
+      "mode": "config",
+      "command": "restconf",
+      "state": "config.features.managementSettings.restconf",
+      "status": "partial",
+      "tests": [
+        "MD-01",
+        "MD-02",
+        "MD-03",
+        "MD-04",
+        "MD-11",
+        "MD-14",
+        "MD-16"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "switch",
+      "mode": "config",
+      "command": "restconf",
+      "state": "config.features.managementSettings.restconf",
+      "status": "partial",
+      "tests": [
+        "MD-01",
+        "MD-02",
+        "MD-03",
+        "MD-04",
+        "MD-11",
+        "MD-14",
+        "MD-16"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "l3switch",
+      "mode": "config",
+      "command": "restconf",
+      "state": "config.features.managementSettings.restconf",
+      "status": "partial",
+      "tests": [
+        "MD-01",
+        "MD-02",
+        "MD-03",
+        "MD-04",
+        "MD-11",
+        "MD-14",
+        "MD-16"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "poeswitch",
+      "mode": "config",
+      "command": "restconf",
+      "state": "config.features.managementSettings.restconf",
+      "status": "partial",
+      "tests": [
+        "MD-01",
+        "MD-02",
+        "MD-03",
+        "MD-04",
+        "MD-11",
+        "MD-14",
+        "MD-16"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    },
+    {
+      "node": "wlc",
+      "mode": "config",
+      "command": "restconf",
+      "state": "config.features.managementSettings.restconf",
+      "status": "partial",
+      "tests": [
+        "MD-01",
+        "MD-02",
+        "MD-03",
+        "MD-04",
+        "MD-11",
+        "MD-14",
+        "MD-16"
+      ],
+      "parsing": "existing IOS parser; exact zero arguments and no-form",
+      "runtime": "delivered TCP endpoint; service enable gates; no host listener",
+      "persistence": "running config render, saved startup config, exported topology",
+      "reference": "Cisco IOS XE 17.12 documented command and invariant; exact live Cisco transcript not captured"
+    }
+  ],
+  "netconf": {
+    "port": 830,
+    "transport": "persistent simulated TCP, logical SSH authentication; no cryptography",
+    "authentication": "privilege 15 local or shared AAA with actual delivered RADIUS",
+    "framing": "NETCONF base 1.0 XML messages with ]]>]]>",
+    "datastores": [
+      "running",
+      "candidate when explicitly enabled"
+    ],
+    "rpc": [
+      "get",
+      "get-config",
+      "edit-config",
+      "lock",
+      "unlock",
+      "discard-changes",
+      "commit",
+      "close-session"
+    ],
+    "editOperations": [
+      "merge",
+      "replace",
+      "create",
+      "delete",
+      "remove"
+    ],
+    "constraints": [
+      "Only default merge; supported per-interface operations; invalid clone changes never commit",
+      "Shared candidate and session-owned locks; simultaneous CLI conflict rejects commit",
+      "Confirmed commit default 600 seconds, explicit 1–65535; actual virtual timeout/session-loss rollback",
+      "Idle session expires after 120 seconds of virtual time; reset/disable/mode change clears channels/locks",
+      "Conditional advertised capabilities correspond to implemented RPCs"
+    ],
+    "monitoring": "show netconf-yang sessions [detail|session-id], datastores and operational summary read real sessionSnapshot/state; MGMT-MON-01"
+  },
+  "restconf": {
+    "port": 443,
+    "transport": "simulated HTTPS/TCP; logical TLS, no cryptography",
+    "authentication": "privilege 15 local or configured shared AAA; HTTP access-class before datastore handler",
+    "resources": [
+      {
+        "path": "/restconf",
+        "methods": [
+          "GET",
+          "HEAD"
+        ],
+        "behavior": "Discovery root, modeled data/operations containers"
+      },
+      {
+        "path": "/restconf/data",
+        "methods": [
+          "GET",
+          "HEAD"
+        ],
+        "behavior": "Supported operational interfaces and native hostname"
+      },
+      {
+        "path": "/restconf/data/Cisco-IOS-XE-native:native[/hostname]",
+        "methods": [
+          "GET",
+          "HEAD",
+          "PUT",
+          "PATCH"
+        ],
+        "behavior": "Read or atomically update actual IOS hostname"
+      },
+      {
+        "path": "/restconf/data/ietf-interfaces:interfaces",
+        "methods": [
+          "GET",
+          "HEAD",
+          "PATCH",
+          "POST"
+        ],
+        "behavior": "Read, transactionally merge entries or create virtual interfaces; collection PUT rejects"
+      },
+      {
+        "path": "/restconf/data/ietf-interfaces:interfaces/interface={encoded-name}",
+        "methods": [
+          "GET",
+          "HEAD",
+          "PUT",
+          "PATCH",
+          "DELETE"
+        ],
+        "behavior": "RFC7951 list-array entry, replacement/merge, or virtual interface deletion; physical deletion rejects"
+      },
+      {
+        "path": "/restconf/data/ietf-interfaces:interfaces/interface={encoded-name}/{enabled|description}",
+        "methods": [
+          "GET",
+          "HEAD",
+          "PUT",
+          "PATCH",
+          "DELETE"
+        ],
+        "behavior": "Actual leaf update/default reset; DELETE does not delete the interface"
+      }
+    ],
+    "encoding": "application/yang-data+json; RFC7951 list arrays; no-cache; structured errors",
+    "transaction": "validate cloned DeviceConfig, enforce running locks/candidate conflict, atomically apply shared config"
+  },
+  "models": [
+    {
+      "namespace": "http://cisco.com/ns/yang/Cisco-IOS-XE-native",
+      "fields": [
+        "native.hostname"
+      ]
+    },
+    {
+      "namespace": "urn:ietf:params:xml:ns:yang:ietf-interfaces",
+      "fields": [
+        "interfaces.interface.name",
+        "description",
+        "enabled",
+        "type",
+        "oper-status (read only)",
+        "statistics.in-octets (read only)",
+        "statistics.out-octets (read only)"
+      ]
+    },
+    {
+      "namespace": "urn:ietf:params:xml:ns:yang:ietf-ip",
+      "fields": [
+        "ipv4.address.ip",
+        "netmask or prefix-length"
+      ]
+    }
+  ],
+  "behavioralChain": [
+    "CLI config/parser flag",
+    "Endpoint and authentication admission",
+    "Normal routed or switched TCP and interface ACLs",
+    "NETCONF RPC or RESTCONF structured resource validation",
+    "Shared actual interface/hostname configuration",
+    "Actual route/ARP/forwarding changes",
+    "CLI show output, topology serialization and startup reload"
+  ],
+  "testCases": [
+    {
+      "id": "MGMT-MON-01",
+      "title": "MGMT-MON-01 show netconf-yang reports delivered authenticated sessions and actual candidate lock ownership",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-01",
+      "title": "MD-01 RESTCONF GET uses authenticated delivered HTTPS and reports real interface/counter state",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-02",
+      "title": "MD-02 RESTCONF interface edits affect routed traffic and invalid multi-edit transactions roll back",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-03",
+      "title": "MD-03 RESTCONF native hostname and virtual interface changes share CLI, save/load and reload state",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-04",
+      "title": "MD-04 normal inbound ACL and HTTP access-class enforce RESTCONF reachability independently of credentials",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-05",
+      "title": "MD-05 NETCONF authenticates over a persistent TCP830 session and reads real XML configuration",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-06",
+      "title": "MD-06 candidate is gated, isolated, shared and locked; commit applies, discard and session close release state",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-07",
+      "title": "MD-07 confirmed commit times out through simulation clock and restores actual forwarding; confirmation persists",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-08",
+      "title": "MD-08 session failure rolls back unconfirmed commit and power/reset clears locks, candidate and callbacks",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-09",
+      "title": "MD-09 invalid XML/unknown model/partial edits never mutate running state; NETCONF disable terminates sessions",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-10",
+      "title": "MD-10 NETCONF and RESTCONF AAA accounts authenticate through the real RADIUS server and preserve privilege requirements",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-11",
+      "title": "MD-11 strict RESTCONF list/leaf encoding rejects ignored fields and deletion of a leaf preserves its interface",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-12",
+      "title": "MD-12 candidate mode changes terminate sessions, NETCONF ACLs block delivery, and stale candidate edits never overwrite CLI changes",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-13",
+      "title": "MD-13 NETCONF idle session expiry uses virtual time and releases candidate locks",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-14",
+      "title": "MD-14 all five IOS XE teaching node profiles expose authenticated NETCONF and RESTCONF endpoints from actual interfaces",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-15",
+      "title": "MD-15 NETCONF namespace/duplicate field validation and prototype-like interface keys reject without side effects",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-16",
+      "title": "MD-16 lightweight AP does not advertise or accept unavailable model-driven service commands",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    },
+    {
+      "id": "MD-17",
+      "title": "MD-17 inherited entity and undeclared namespace names remain invalid XML without changing the datastore",
+      "file": "tests/model-driven-management.test.ts",
+      "status": "implemented; latest execution reported separately"
+    }
+  ],
+  "browserEvidence": {
+    "file": "docs/audits/model-driven-browser-validation.json",
+    "scope": "10 end-to-end desktop REST client/IOS prompt/real ping checks on isolated imported fixture",
+    "sourceScript": "scripts/browser-model-driven.mjs",
+    "note": "Browser evidence applies to the build recorded in that file; Node integration tests cover NETCONF APIs separately"
+  },
+  "verification": {
+    "parser": true,
+    "state": true,
+    "operationalReads": true,
+    "realTraffic": true,
+    "negativeCases": true,
+    "persistence": true,
+    "resetAndTimers": true,
+    "referenceComparison": "documented primary Cisco/RFC invariants; no real Cisco exact-output/runtime golden",
+    "strictEightLevelComplete": false
+  },
+  "limitations": [
+    "Logical SSH/TLS only; no external binary client interoperability",
+    "No general YANG schema/compiler/library or arbitrary Cisco models",
+    "IPv6 edits, notifications/subscriptions, XPath, NETCONF base1.1 absent",
+    "Startup/copy-config/kill-session/cancel-commit and persistent confirmed commit absent",
+    "No NACM/model authorization, ETag/query options or YANG-patch",
+    "XML subtree retrieval is a selected native/interface subset, not arbitrary subtree projection",
+    "Full platform defaults, AAA policy and Cisco output equivalence remain unverified"
+  ],
+  "references": [
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/prog/configuration/1712/b_1712_programmability_cg/m_1712_prog_yang_netconf.html",
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/prog/configuration/1712/b_1712_programmability_cg/m_1712_prog_restconf.html",
+    "https://www.rfc-editor.org/rfc/rfc6241.html",
+    "https://www.rfc-editor.org/rfc/rfc8040.html",
+    "https://www.rfc-editor.org/rfc/rfc7951.html"
+  ]
+}

@@ -1,0 +1,19 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {Simulator} from '../src/engine.ts';
+import {IOSSession} from '../src/cli.ts';
+import {renderConfig} from '../src/config-renderer.ts';
+function ok(c:IOSSession,...lines:string[]){for(const line of lines){const out=c.execute(line);assert.ok(!out.some(x=>x.startsWith('%')),line+': '+out.join('\n'));}}
+function setup(protocol='standby'){const s=new Simulator(1009),a=s.addDevice('router'),b=s.addDevice('router'),ca=new IOSSession(s,a.id),cb=new IOSSession(s,b.id);for(const [c,ip,priority]of[[ca,'10.0.0.1',110],[cb,'10.0.0.2',100]] as const){ok(c,'enable','conf t','int g0/0',`ip address ${ip} 255.255.255.0`,'no shutdown',`${protocol} 1 ip 10.0.0.254`,`${protocol} 1 priority ${priority}`,`${protocol} 1 preempt`);if(protocol==='vrrp')ok(c,'vrrp 1 timers advertise msec 200');else ok(c,`${protocol} 1 timers msec 200 msec 700`);ok(c,'end');}const sw=s.addDevice('switch');const link=s.connect({deviceId:a.id,port:'GigabitEthernet0/0'},{deviceId:sw.id,port:'GigabitEthernet0/1'});s.connect({deviceId:b.id,port:'GigabitEthernet0/0'},{deviceId:sw.id,port:'GigabitEthernet0/2'});s.advance(4000);return {s,a,b,ca,cb,link};}
+const role=(d:any,kind='hsrp')=>kind==='glbp'?d.runtime.features.glbpGroups?.[0]?.role:d.runtime.features.virtualIps?.find((r:any)=>r.protocol===kind)?.role;
+test('HSRP authenticates/version-checks actual Hello packets and hold expiry drives failover',()=>{
+  const{s,a,b,ca,cb}=setup();for(const c of[ca,cb])ok(c,'conf t','int g0/0','standby version 2','standby 1 authentication md5 key-string shared','end');s.advance(600);assert.equal(role(a),'active');assert.equal(role(b),'standby');assert.ok(b.runtime.features.fhrpPeers.length);assert.ok(s.events.some(e=>e.packet?.destinationPort===1985&&e.packet.destination==='224.0.0.102'));assert.match(a.runtime.features.virtualIps[0].mac,/00:00:0c:9f:f0:01/);
+  ok(cb,'conf t','int g0/0','standby 1 authentication md5 key-string wrong','end');s.advance(900);assert.equal(role(b),'active');assert.equal(b.runtime.features.fhrpPeers.length,0);assert.ok(b.runtime.features.fhrpCounters.rejected>0);ok(cb,'conf t','int g0/0','standby 1 authentication md5 key-string shared','end');s.advance(600);assert.equal(role(b),'standby');s.power(a.id,false);s.advance(200);assert.equal(role(b),'standby');s.advance(600);assert.equal(role(b),'active');assert.ok(s.events.some(e=>e.label==='Peer hold expired'&&e.nodeId===b.id));
+  const copy=s.addDevice('router'),cli=new IOSSession(s,copy.id);copy.config.features.files={snapshot:renderConfig(b).join('\n')};ok(cli,'enable','copy flash:snapshot running-config');assert.deepEqual(copy.config.features.fhrp,b.config.features.fhrp);
+});
+test('one-way loss expires only the observer that missed Hellos; incompatible HSRP versions remain separate',()=>{
+  const{s,a,b,ca,cb,link}=setup();s.advance(600);assert.equal(role(a),'active');assert.equal(role(b),'standby');link.lossAB=1;s.changed();s.advance(900);assert.equal(role(b),'active');assert.equal(a.runtime.features.fhrpPeers.length,1);assert.equal(b.runtime.features.fhrpPeers.length,0);link.lossAB=0;s.changed();s.advance(600);assert.equal(role(b),'standby');ok(cb,'conf t','int g0/0','standby version 2','end');s.advance(900);assert.equal(role(a),'active');assert.equal(role(b),'active');assert.equal(a.runtime.features.fhrpPeers.length,0);
+});
+test('VRRP and GLBP use their own delivered advertisements and retain the departed active until expiry',()=>{
+  for(const [command,protocol]of[['vrrp','vrrp'],['glbp','glbp']]){const{s,a,b}=setup(command);s.advance(600);assert.equal(role(a,protocol),'active');assert.equal(role(b,protocol),'standby');assert.ok(b.runtime.features.fhrpCounters.received>0);s.power(a.id,false);s.advance(100);assert.equal(role(b,protocol),'standby');s.advance(1000);assert.equal(role(b,protocol),'active');}
+});

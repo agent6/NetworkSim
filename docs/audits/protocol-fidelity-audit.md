@@ -1,0 +1,53 @@
+# Shared protocol and packet-flow audit
+
+This is a behavioral audit of an original deterministic simulator. **No row asserts a complete protocol, full platform implementation or wire-compatible encoding.** The [wired findings](wired-fidelity-audit.md), [wireless/GUI audit](wlc-gui-coverage.md), [Windows audit](windows-cli-coverage.md), [SNMP audit](snmp-fidelity.md) and [model-driven scope](../features/model-driven-management.md) contain detailed evidence.
+
+All nine nodes use the same `Simulator`, clock, Ethernet/IP admission, forwarding, service dispatch, counters and persistence. Configuration flows through CLI/GUI into shared state; actual packets/events establish delivery. A configured server, route, AP or successful-looking form does not independently prove reachability.
+
+| Subsystem | Actual execution path and evidence | Remaining boundary |
+| --- | --- | --- |
+| Ethernet and interfaces | `ethernet.ts`, `engine.ts`; negotiated copper carrier/speed/duplex drives serialization, route availability, OSPF/STP bandwidth, diagnostics and traffic-driven CRC/late collisions | No calibrated cable/fiber/attenuation/pinout model, autonegotiation wire pulses, CSMA/CD exponential backoff or hardware registers |
+| VLAN/MAC bridging | Access/trunk admission → STP/security → learning → VLAN-scoped forwarding/flooding; core/switching/wired tests | No finite CAM/TCAM capacity model. Global/per-VLAN aging and zero-disable use real timers; static entries remain exempt |
+| STP/RSTP/MST | Effective roles/costs, timers and real BPDU heartbeat loss gate forwarding | Election is computed; incomplete received-BPDU proposal/agreement and region-boundary FSM |
+| LACP/PAgP/DTP/VTP | Operational links and negotiated state affect trunks/bundles/VLAN databases; packet tests cover mismatches and failure | Negotiation/database exchange remains computed rather than fully encoded received control PDUs; VTPv3 primary server/pruning absent |
+| ARP/IPv6 ND | Delivered link messages, caches, retries, scoped egress and pending-packet release | Structured envelopes; not complete RFC wire bytes or every neighbor-cache transition |
+| IPv4/IPv6 | RIB selection → recursive egress → ACL/NAT/policy → ARP/ND → actual frame delivery | Bounded recursion and platform catalog; logical IP/fragment representations |
+| ICMP | Echo/TTL/size/DF/fragment/error processing; real routed Windows ping/tracert/pathping and IOS probes | Not all ICMP message/options/output variants; complete reference-specific defaults still require reconciliation |
+| TCP/UDP | Actual routed segments/datagrams, handshakes, sequencing, retransmissions, persistent channels and timeouts | Original bounded TCP; no host OS/socket interoperability or exhaustive congestion-control/window model |
+| DHCPv4 | Discover/Offer/Request/Ack, relay, options, reservations, exclusions, conflict/Decline, release/expiry and fresh reload leases | Not full RFC/server administrative catalog; DHCP HA and arbitrary vendor option semantics absent |
+| DHCPv6/SLAAC/DAD | Delivered RA/DAD and DHCPv6 client/server/relay/PD update addresses and routes | Bounded lease/RA models; Windows release6 and complete OS adapter semantics remain partial |
+| DNS | Delivered UDP53 handles A/AAAA/CNAME/MX/NS/PTR, bounded aliases, NODATA/NXDOMAIN/SERVFAIL, TTL/negative caches; Windows and desktop clients share it | Authoritative teaching server plus client cache; no full recursive resolver, zone transfers, DNSSEC or binary DNS |
+| OSPFv2/v3 | Delivered Hello/DBD/LSREQ/LSUPDATE/LSACK and received LSDB drive adjacency/SPF/RIB | Logical router records, computed DR/area adapters; full area LSA types/NBMA/NSSA translator FSM absent |
+| EIGRP | Delivered Hello/hold and reliable QUERY/REPLY/ACK/SIA gate computed vectors/feasibility and forwarding; classic/named IPv4 auto-summary changes classful advertisements and conditional AD5 Null0 routes | Normal UPDATE vectors and numerical external seed propagation remain computed; incomplete RTP/DUAL matrix and pacing. Summary-overlap and full metric corners are unverified |
+| RIP/RIPng | Delivered updates, policies/poison/aging and routes | Single selected route; incomplete request/response and stored queue/flash thresholds |
+| BGP | Persistent delivered TCP OPEN/KEEPALIVE/UPDATE, independent IPv4/IPv6 AF, policies, received routes, withdrawals and ECMP | Logical NLRI/capabilities; no binary encoding, full MRAI/graceful restart/confederations/VPN SAFIs or complete collision matrix |
+| ACL/uRPF/PBR | Actual ingress/egress/control admission and route policy with hit counters | Limited match/action catalog and hardware/fragment behavior |
+| NAT/PAT | Actual translations and reverse traffic, pool exhaustion, idle aging and protocol/port preservation | No full ALG/NAT64 or exhaustive IOS NAT corner cases |
+| L2 security/FHS | Delivered DHCP/ARP/ND/IP checks against bindings, ACLs, rates and guard state | Structured validation and bounded resources; not raw malformed byte parsing or full hardware feature set |
+| QoS/CoPP | Real classification, marking/policing and physical egress queues: LLQ, weighted bytes, shaper eligibility, tail drops and actual counters | Bounded output scheduler and platform restrictions; no WRED, per-flow fair queueing, full hierarchy or ASIC queues. Unsupported imported policies fail closed |
+| HSRP/VRRP/GLBP | Delivered advertisements/hold expiry produce virtual gateway election/ARP ownership and traffic failover | IPv4 only; incomplete Coup/Resign, GLBP redirect/secondary timers and cryptographic authentication |
+| BFD/UDLD | Delivered controls/echo and timers drive route dependencies or err-disable | Bounded single-hop model; authentication/dampening templates and multihop/demand modes incomplete |
+| GRE/mGRE/NHRP | Independent underlay routing, actual logical registration/resolution and encapsulated forwarding | No complete DMVPN phase-3 redirect/shortcut/NHS-cluster/IPv6 NHRP FSM |
+| IKE/IPsec | Logical peer/transform negotiation and actual ESP encapsulated forwarding/drop | No encryption, real certificate/PKI/IKE wire interoperability or complete VPN feature catalog |
+| Multicast | Actual IGMP/PIM Register/dense controls and data, computed shared trees/DR, persistent TCP MSDP | Partial Hello/Join-Prune/Assert and IGMP matrix; IPv6 multicast/MLD/complete BSR/Auto-RP absent |
+| CDP/LLDP | Link-delivered discovery advertisements and received-neighbor aging | Selected TLVs and bounded platform metadata; not binary encodings |
+| PoE | Direct enabled PSE link → budget/limit/priority allocation → AP supply reset/recovery | One full 30 W class-4 AP, no physical detection/fault negotiation, 802.3af reduced mode, 802.3bt or non-AP PD |
+| CAPWAP | Delivered discovery/join/configuration/heartbeat/data affects AP/client state; WLC expires missing delivered heartbeats | Logical control/data, no DTLS certificates, image transfer/full controller failover |
+| 802.11/EAPOL | Logical advertisements/authentication/association/data and actual central/local Ethernet bridging | Deterministic RF/rate estimate; no PHY contention/retries, real encryption, WPA3, autonomous mode or fast/inter-controller roaming |
+| RADIUS/TACACS+ | Real UDP1812/TCP49 authentication and authorization; UDP1813/TCP49 VTY EXEC accounting, TACACS command records and ACK-based delivery/failure telemetry | Logical shared-key security; no real EAP/TLS/digests. RADIUS command accounting is rejected. Console/connection/network/system accounting remain configuration-only; see `aaa-accounting-fidelity.md` |
+| SSH/Telnet | Actual TCP/VTY ACLs, credentials, EXEC/command authorization, sessions/timeouts and remote CLI | Logical SSH, no cryptography/key exchange or complete shell/PTY interoperability |
+| SCP/SFTP | Real TCP22 segmented file requests, credentials, VTY ACL/EXEC privilege, file limits/errors and persistence | IOS XE nodes serve SCP. Server SCP/SFTP is removed by explicit user direction. URL copy subset; no real SSH/SFTP wire format or arbitrary binary files |
+| NETCONF/RESTCONF | Persistent TCP830 XML RPCs / delivered HTTPS JSON operations update the shared datastore and forwarding | Limited interfaces/hostname YANG, logical SSH/TLS; no general YANG compiler, full schemas, NETCONF1.1 or subscriptions |
+| SNMP | Delivered UDP161 GET/GETNEXT, views/ACL/v3 identity and real MIB/counters; UDP162 notifications originate from actual link/auth events | Read-only logical v2c/v3; no BER/USM crypto, GETBULK/writes/informs/v3 traps/full MIB |
+| HTTP/HTTPS | Real TCP requests, status/path/body, authentication/access-class and rendered response | Modeled HTTPS, no TLS/browser Internet networking; bounded headers/status/method server |
+| NTP | Delivered peer requests, authentication compatibility, offset/reach/selection/holdover | Logical timestamps and deterministic clock; no wire cryptography or full discipline/oscillator model |
+| TFTP | Retained engine API supports delivered block/ACK/error exchanges, retries, file state and final ACK retention | Server TFTP service is removed by explicit user direction. Retained API tests do not imply a supported server listener. Text files only; no host filesystem or image execution |
+| Syslog | Delivered datagrams carry source, facility, severity, timestamp and bounded received log | No complete RFC encoding/TLS transport or full Windows event subsystem |
+| SPAN/NetFlow | Actual frame copies and delivered routed structured exports with observed counters | No binary RSPAN/ERSPAN/NetFlow interoperability or arbitrary flexible record schemas |
+| IP SLA/tracking/EEM | Real ICMP/HTTP/UDP probes and clock deadlines update tracked routes/FHRP; supported events run real commands | Limited operation/action catalog; no general Tcl/runtime. PTP election is not PTP clock synchronization |
+
+## Corrections added in this audit
+
+Repairs include bridged QoS admission and SVI precedence, routed multicast policy, routed bundle ARP/VRF handling, ACL-based route-map consumers, VTP revision/default constraints, IPv6 BGP/ECMP, Ethernet negotiation/errors, actual egress scheduling, shared Windows CLI, typed packet-backed DNS, SNMP agent/notifications, SCP/SFTP, model-driven operations, AP software reload, wireless dependencies/GUI preservation and RADIUS failure handling. Each has focused executable evidence; the complete regression log remains separate from reference equivalence.
+
+No read-only formatter should invent successful delivery. Remaining computed protocols and stored-only knobs are explicitly listed here and in `known-limitations.md`; passing a formatter or parser test does not promote them to complete.

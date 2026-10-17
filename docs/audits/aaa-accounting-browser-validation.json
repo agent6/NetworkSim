@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-10-17T00:31:33.302Z",
+  "browser": "155.0.8059.84",
+  "fixture": "public YAML import in isolated headless profile; local static HTML preview",
+  "checks": [
+    "Imported an isolated four-node accounting lab through public YAML import",
+    "Receiver log starts empty and does not substitute device logs",
+    "Windows-host Telnet uses the real VTY login and dispatches accounted commands",
+    "AAA receiver GUI shows actual EXEC and command records with complete secret redaction",
+    "Logout delivers an EXEC Stop and the accounting log remains readable in dark theme",
+    "No browser page errors"
+  ],
+  "errors": []
+}

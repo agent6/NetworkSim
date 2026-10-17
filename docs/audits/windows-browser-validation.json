@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-10-17T00:36:38.478Z",
+  "browser": "155.0.8059.84",
+  "url": "file:///Users/erikpope/projects/NetworkSim/NetworkSim.html",
+  "fixture": "four-node public YAML import; isolated headless profile",
+  "checks": [
+    "Imported a fresh four-node fixture through the public YAML workflow",
+    "PC desktop uses Windows prompt and packet-backed ping",
+    "Continuous ping streams replies, locks command input, and Ctrl+C restores the prompt",
+    "Server DNS GUI accepts a typed CNAME with a TTL",
+    "GUI-created CNAME resolves through the host Network tools DNS client",
+    "SNMP manager GUI queries the reachable router agent through UDP",
+    "SNMP manager rejects an invalid community without a fabricated response",
+    "SNMPv3 manager fields enforce the configured logical authPriv identity and read view",
+    "Incorrect SNMPv3 privacy identity fails through the packet-backed GUI workflow",
+    "Invalid DHCP exclusion range is rejected and previous settings survive",
+    "Invalid typed DNS record is rejected transactionally",
+    "Server services omit the removed TFTP and SCP/SFTP services",
+    "Network tools exposes DNS, SNMP and RESTCONF without File Transfer",
+    "Windows DHCP command installs a real lease from the GUI-configured server",
+    "CLS clears console output, retains the Windows prompt, and preserves command history",
+    "No browser page errors"
+  ],
+  "errors": []
+}

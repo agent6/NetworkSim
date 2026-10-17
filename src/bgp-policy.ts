@@ -1,0 +1,30 @@
+/** Original Thompson-style matcher: bounded state transitions, never regex backtracking. */
+type State={kind:'char'|'split'|'start'|'end'|'accept';test?:(c:string)=>boolean;next?:number;other?:number};
+type Fragment={start:number;ends:[number,'next'|'other'][]};
+const cache=new Map<string,{states:State[];start:number}|undefined>();
+function compile(pattern:string):{states:State[];start:number}|undefined{
+ if(cache.has(pattern))return cache.get(pattern);if(!pattern||pattern.length>256)return;
+ const states:State[]=[];let i=0;const add=(s:State)=>{states.push(s);return states.length-1;},patch=(ends:Fragment['ends'],target:number)=>{for(const[n,k]of ends)states[n][k]=target;};
+ const atom=(kind:State['kind'],test?:State['test']):Fragment=>{const n=add({kind,test});return{start:n,ends:[[n,'next']]};};
+ const choice=(a:Fragment,b:Fragment):Fragment=>({start:add({kind:'split',next:a.start,other:b.start}),ends:[...a.ends,...b.ends]});
+ const escaped=()=>{if(i>=pattern.length)throw Error();const c=pattern[i++];if(/[0-9]/.test(c))throw Error();return c;};
+ const item=():Fragment=>{let f:Fragment;const c=pattern[i++];if(c==='('){f=alternatives();if(pattern[i++]!==')')throw Error();}else if(c==='['){let negate=false;if(pattern[i]==='^'){negate=true;i++;}const ranges:[string,string][]=[];while(i<pattern.length&&pattern[i]!==']'){let first=pattern[i++];if(first==='\\')first=escaped();let last=first;if(pattern[i]==='-'&&pattern[i+1]!==']'){i++;last=pattern[i++];if(last==='\\')last=escaped();if(!last||last<first)throw Error();}ranges.push([first,last]);}if(pattern[i++]!==']'||!ranges.length)throw Error();f=atom('char',value=>ranges.some(([a,b])=>value>=a&&value<=b)!==negate);}else if(c==='^'||c==='$')f=atom(c==='^'?'start':'end');else if(c==='_')f=choice(choice(atom('start'),atom('end')),atom('char',value=>' ,{}()'.includes(value)));else if(c==='.')f=atom('char',()=>true);else if(c==='\\'){const value=escaped();f=atom('char',v=>v===value);}else if(!c||'*+?)|'.includes(c))throw Error();else f=atom('char',v=>v===c);
+ const q=pattern[i];if(q&&'*+?'.includes(q)){if(c==='^'||c==='$')throw Error();i++;if(q==='?')f={start:add({kind:'split',next:f.start}),ends:[...f.ends,[states.length-1,'other']]};else{const n=add({kind:'split',next:f.start});patch(f.ends,n);f={start:q==='*'?n:f.start,ends:[[n,'other']]};}if('*+?'.includes(pattern[i]??'~'))throw Error();}return f;};
+ const sequence=():Fragment=>{let f:Fragment|undefined;while(i<pattern.length&&!')|'.includes(pattern[i])){const next=item();if(f){patch(f.ends,next.start);f={start:f.start,ends:next.ends};}else f=next;}return f??atom('split');};
+ const alternatives=():Fragment=>{let f=sequence();while(pattern[i]==='|'){i++;f=choice(f,sequence());}return f;};
+ let result;try{const f=alternatives();if(i!==pattern.length)throw Error();patch(f.ends,add({kind:'accept'}));result={states,start:f.start};}catch{result=undefined;}if(cache.size>=256)cache.delete(cache.keys().next().value!);cache.set(pattern,result);return result;
+}
+export const validIOSExpression=(pattern:string):boolean=>!!compile(pattern);
+export function matchIOSExpression(pattern:string,value:string):boolean{
+ const c=compile(pattern);if(!c||value.length>8192)return false;
+ const closure=(initial:Iterable<number>,position:number)=>{const visited=new Set<number>(),pending=[...initial];while(pending.length){const n=pending.pop()!;if(visited.has(n))continue;visited.add(n);const s=c.states[n];if(s.kind==='split'||s.kind==='start'&&position===0||s.kind==='end'&&position===value.length){if(s.next!==undefined)pending.push(s.next);if(s.other!==undefined)pending.push(s.other);}}return visited;};
+ let active=new Set<number>();for(let pos=0;pos<=value.length;pos++){active=closure([...active,c.start],pos);if([...active].some(n=>c.states[n].kind==='accept'))return true;const next=new Set<number>();for(const n of active){const s=c.states[n];if(s.kind==='char'&&pos<value.length&&s.test!(value[pos])&&s.next!==undefined)next.add(s.next);}active=next;}return false;
+}
+const wellKnown:Record<string,number>={internet:0,'no-export':0xffffff01,'no-advertise':0xffffff02,'local-as':0xffffff03,'no-peer':0xffffff04,gshut:0xffff0000};
+export function communityNumber(value:string):number|undefined{const s=value.toLowerCase();if(wellKnown[s]!==undefined)return wellKnown[s];if(/^\d+:\d+$/.test(s)){const[a,b]=s.split(':').map(Number);if(a>65535||b>65535)return;return a*65536+b;}if(!/^(?:\d+|0x[0-9a-f]+)$/.test(s))return;const n=Number(s);return Number.isSafeInteger(n)&&n>=0&&n<=0xffffffff?n:undefined;}
+export function canonicalCommunity(value:string):string|undefined{const n=communityNumber(value);if(n===undefined)return;const known=Object.keys(wellKnown).find(k=>wellKnown[k]===n);return known??`${Math.floor(n/65536)}:${n%65536}`;}
+export function displayCommunity(value:string,newFormat=false):string{const n=communityNumber(value);if(n===undefined)return value;const known=Object.keys(wellKnown).find(k=>wellKnown[k]===n);return known??(newFormat?`${Math.floor(n/65536)}:${n%65536}`:String(n));}
+export function communityListMatches(rules:any[],values:string[],newFormat=false,exact=false):boolean{
+ const communities=[...new Set(values.map(canonicalCommunity).filter((s):s is string=>s!==undefined))].sort((a,b)=>communityNumber(a)!-communityNumber(b)!);
+ for(const rule of [...rules].sort((a,b)=>(a.sequence??10)-(b.sequence??10))){let matches=false;if(rule.type==='expanded'||rule.pattern!==undefined)matches=matchIOSExpression(rule.pattern,communities.map(v=>displayCommunity(v,newFormat)).join(' '));else{const expected=[...new Set<string>((rule.communities??[]).map(canonicalCommunity).filter(Boolean))];matches=expected.every(v=>v==='internet'||communities.includes(v))&&(!exact||expected.includes('internet')||expected.length===communities.length);}if(matches)return rule.action==='permit';}return false;
+}

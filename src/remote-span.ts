@@ -1,0 +1,201 @@
+import type { Simulator, Frame, IPPacket } from "./engine.ts";
+import type { Device } from "./model.ts";
+import { isIPv4 } from "./ip.ts";
+
+interface Session {
+  type?:
+    | "local"
+    | "rspan-source"
+    | "rspan-destination"
+    | "erspan-source"
+    | "erspan-destination";
+  sources?: Array<{ interface: string; direction: "rx" | "tx" | "both" }>;
+  destination?: string;
+  remoteVlan?: number;
+  sourceVlan?: number;
+  erspanId?: number;
+  ipAddress?: string;
+  originIp?: string;
+  vrf?: string;
+  shutdown?: boolean;
+}
+function sessions(device: Device): Array<[string, Session]> {
+  return Object.entries(device.config.features.spanSessions || {});
+}
+function row(device: Device, id: string): any {
+  const stats = (device.runtime.features.spanStats ??= {});
+  return (stats[id] ??= { frames: 0, bytes: 0, received: 0, drops: 0 });
+}
+function bytes(frame: Frame): number {
+  return "size" in frame.payload ? frame.payload.size + 18 : 64;
+}
+function copy(frame: Frame): Frame {
+  const value = structuredClone(frame);
+  delete value.remoteSpan;
+  value.mirrored = true;
+  return value;
+}
+function captured(
+  engine: Simulator,
+  device: Device,
+  id: string,
+  session: Session,
+  frame: Frame,
+  source: string,
+  sequence?: number,
+): void {
+  const stats = row(device, id);
+  stats.received = (stats.received || 0) + 1;
+  stats.receivedBytes = (stats.receivedBytes || 0) + bytes(frame);
+  stats.lastSource = source;
+  if (sequence !== undefined) stats.lastSequence = sequence;
+  if (session.destination && engine.interfaceUp(device.id, session.destination))
+    engine.mirrorFrame(device.id, session.destination, copy(frame));
+  else stats.drops = (stats.drops || 0) + 1;
+}
+
+/** Remote copies travel as GRE packets or VLAN frames, never topology shortcuts. */
+export function observeRemoteSpan(
+  engine: Simulator,
+  device: Device,
+  port: string,
+  direction: "rx" | "tx",
+  frame: Frame,
+): void {
+  if (
+    frame.mirrored ||
+    frame.remoteSpan ||
+    (!("kind" in frame.payload) && frame.payload.body?.kind === "remote-span")
+  )
+    return;
+  for (const [id, session] of sessions(device)) {
+    if (
+      session.shutdown ||
+      !["rspan-source", "erspan-source"].includes(session.type || "") ||
+      !session.sources?.some(
+        (source) =>
+          source.interface === port &&
+          (source.direction === direction || source.direction === "both"),
+      )
+    )
+      continue;
+    const stats = row(device, id);
+    stats.frames++;
+    stats.bytes += bytes(frame);
+    if (session.type === "rspan-source") {
+      if (
+        !Number.isInteger(session.remoteVlan) ||
+        session.remoteVlan! < 1 ||
+        session.remoteVlan! > 4094 ||
+        !device.config.features.rspanVlans?.includes(session.remoteVlan)
+      ) {
+        stats.drops++;
+        continue;
+      }
+      const mirrored = structuredClone(frame);
+      mirrored.remoteSpan = {
+        sourceDevice: device.id,
+        session: id,
+        vlan: session.remoteVlan!,
+      };
+      engine.sendRemoteSpanVlan(device.id, session.remoteVlan!, mirrored);
+    } else {
+      const source =
+        session.originIp &&
+        (isIPv4(session.originIp)
+          ? session.originIp
+          : device.config.interfaces[session.originIp]?.ip);
+      if (
+        !source ||
+        !session.ipAddress ||
+        !isIPv4(session.ipAddress) ||
+        !Number.isInteger(session.erspanId)
+      ) {
+        stats.drops++;
+        continue;
+      }
+      const sequence = (stats.sequence = ((stats.sequence || 0) + 1) >>> 0);
+      engine.sendRemoteSpanPacket(
+        device.id,
+        source,
+        session.ipAddress,
+        {
+          kind: "remote-span",
+          sessionId: session.erspanId,
+          sequence,
+          sourceDevice: device.id,
+          frame: copy(frame),
+        },
+        session.vrf,
+      );
+    }
+  }
+}
+
+export function receiveRemoteSpan(
+  engine: Simulator,
+  device: Device,
+  packet: IPPacket,
+  input: string,
+): void {
+  const body = packet.body;
+  if (
+    body?.kind !== "remote-span" ||
+    !body.frame?.payload ||
+    typeof body.frame.sourceMac !== "string" ||
+    typeof body.frame.destinationMac !== "string"
+  )
+    return;
+  let matched = false;
+  for (const [id, session] of sessions(device)) {
+    if (
+      session.shutdown ||
+      session.type !== "erspan-destination" ||
+      session.erspanId !== body.sessionId ||
+      (session.ipAddress && session.ipAddress !== packet.destination) ||
+      (session.originIp && session.originIp !== packet.source)
+    )
+      continue;
+    matched = true;
+    captured(
+      engine,
+      device,
+      id,
+      session,
+      body.frame,
+      packet.source,
+      body.sequence,
+    );
+    row(device, id).input = input;
+  }
+  if (!matched)
+    device.runtime.features.remoteSpanUnmatched =
+      (device.runtime.features.remoteSpanUnmatched || 0) + 1;
+}
+
+/** Called on validated RSPAN VLAN ingress; the engine then bridges the frame. */
+export function receiveRemoteSpanFrame(
+  engine: Simulator,
+  device: Device,
+  port: string,
+  vlan: number,
+  frame: Frame,
+): void {
+  if (
+    !frame.remoteSpan ||
+    frame.remoteSpan.vlan !== vlan ||
+    frame.remoteSpan.sourceDevice === device.id ||
+    !device.config.features.rspanVlans?.includes(vlan)
+  )
+    return;
+  for (const [id, session] of sessions(device)) {
+    if (
+      session.shutdown ||
+      session.type !== "rspan-destination" ||
+      session.sourceVlan !== vlan ||
+      session.destination === port
+    )
+      continue;
+    captured(engine, device, id, session, frame, frame.remoteSpan.sourceDevice);
+  }
+}

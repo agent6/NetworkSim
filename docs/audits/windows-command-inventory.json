@@ -1,0 +1,1184 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-17T00:37:55.968Z",
+  "profiles": {
+    "pc": "Windows 11 24H2 networking subset",
+    "laptop": "Windows 11 24H2 networking subset",
+    "server": "Windows Server 2025 networking subset"
+  },
+  "nativeWindowsObserved": false,
+  "referenceMethod": "Official Microsoft command documentation; original simulation tests. No native Windows output captures were available.",
+  "sourceSha256": "9902c89fe4cc290db1c9a825cfafa724098cc514c43446b8f13171dfbe351942",
+  "counts": {
+    "roots": 17,
+    "variants": 41,
+    "complete": 5,
+    "partial": 33,
+    "unsupported": 3
+  },
+  "automaticallyExtractedRoots": [
+    {
+      "command": "help",
+      "file": "src/windows-cli.ts",
+      "line": 41
+    },
+    {
+      "command": "?",
+      "file": "src/windows-cli.ts",
+      "line": 41
+    },
+    {
+      "command": "ipconfig",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "ping",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "tracert",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "pathping",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "nslookup",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "arp",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "route",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "netstat",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "getmac",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "hostname",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "netsh",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "nbtstat",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "cls",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "ssh",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    },
+    {
+      "command": "telnet",
+      "file": "src/windows-cli.ts",
+      "line": 42
+    }
+  ],
+  "commands": [
+    {
+      "id": "WIN-CMD-001",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "help | ?",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 46,
+        "method": "help"
+      },
+      "status": "complete",
+      "testIds": [
+        "WIN-01"
+      ],
+      "state": "Local supported-command help",
+      "packetBehavior": "none",
+      "saveReload": "none",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/help",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-002",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "hostname",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 39,
+        "method": "execute"
+      },
+      "status": "complete",
+      "testIds": [
+        "WIN-01",
+        "WIN-18"
+      ],
+      "state": "config.hostname",
+      "packetBehavior": "none",
+      "saveReload": "lab config",
+      "change": "retained",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/hostname",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-003",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ipconfig",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 56,
+        "method": "ipConfiguration"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-06"
+      ],
+      "state": "interfaces, interfaceUp, gateways",
+      "packetBehavior": "none",
+      "saveReload": "address config",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-004",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ipconfig /all",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 56,
+        "method": "ipConfiguration"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-06",
+        "WIN-07"
+      ],
+      "state": "MAC/address/DHCP/DNS operational state",
+      "packetBehavior": "none",
+      "saveReload": "config + transient lease",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-005",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ipconfig /renew [adapter]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 52,
+        "method": "ipconfig"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-07"
+      ],
+      "state": "DHCP lease + interface/gateway/DNS",
+      "packetBehavior": "UDP67/68 and DHCP frames",
+      "saveReload": "runtime lease reacquired",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-006",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ipconfig /release [adapter]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 52,
+        "method": "ipconfig"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-07"
+      ],
+      "state": "DHCP release + lease cleanup",
+      "packetBehavior": "UDP67/68",
+      "saveReload": "released lease not persisted",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-007",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ipconfig /renew6 [adapter]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 52,
+        "method": "ipconfig"
+      },
+      "status": "partial",
+      "testIds": [
+        "existing tests/cli.test.ts SLAAC/DHCPv6"
+      ],
+      "state": "shared DHCPv6 client",
+      "packetBehavior": "UDP546/547",
+      "saveReload": "transient lease",
+      "change": "retained",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-008",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ipconfig /flushdns",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 52,
+        "method": "ipconfig"
+      },
+      "status": "complete",
+      "testIds": [
+        "WIN-08"
+      ],
+      "state": "shared runtime DNS cache",
+      "packetBehavior": "none",
+      "saveReload": "runtime only",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-009",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ipconfig /displaydns",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 67,
+        "method": "displayDNS"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-08",
+        "WIN-15"
+      ],
+      "state": "shared positive/negative typed cache and TTL",
+      "packetBehavior": "none",
+      "saveReload": "runtime only",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-010",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ipconfig /autoconfig6",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 52,
+        "method": "ipconfig"
+      },
+      "status": "unsupported",
+      "testIds": [
+        "existing tests/cli.test.ts SLAAC"
+      ],
+      "state": "LEGACY NON-WINDOWS alias retained with explicit notice",
+      "packetBehavior": "IPv6 RS/RA/ND",
+      "saveReload": "SLAAC runtime",
+      "change": "legacy",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-011",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ping [-n count] [-l bytes] [-i ttl] [-w timeout] [-f] [-4|-6] target",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 77,
+        "method": "ping"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-02",
+        "WIN-13",
+        "WIN-15"
+      ],
+      "state": "shared echo probes/replies; bytes excludes IP/ICMP headers",
+      "packetBehavior": "ICMP/ICMPv6 through forwarding/ACL/ARP/ND",
+      "saveReload": "runtime diagnostics",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ping",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-012",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ping -t target",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 80,
+        "method": "startContinuous"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-03",
+        "WIN-20"
+      ],
+      "state": "clock-driven actual echo replies; Ctrl+C cancel",
+      "packetBehavior": "ICMP/ICMPv6",
+      "saveReload": "runtime session",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ping",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-013",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "tracert [-d] [-h hops] [-w timeout] [-4|-6] target",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 91,
+        "method": "trace"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-04"
+      ],
+      "state": "three TTL probes/hop; replies from delivered ICMP",
+      "packetBehavior": "ICMP TTL exceeded and echo reply",
+      "saveReload": "runtime diagnostics",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/tracert",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-014",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "pathping [-n] [-h hops] [-q count] [-p ms] [-w ms] [-4|-6] target",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 92,
+        "method": "pathping"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-05"
+      ],
+      "state": "actual hop echo samples; cumulative loss only",
+      "packetBehavior": "ICMP/ICMPv6",
+      "saveReload": "runtime diagnostics",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/pathping",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-015",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "nslookup [-type=A|AAAA|CNAME|MX|NS|PTR] name [server]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 93,
+        "method": "nslookup"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-08",
+        "WIN-15"
+      ],
+      "state": "shared typed DNS server/cache; explicit server; reverse PTR",
+      "packetBehavior": "UDP53",
+      "saveReload": "server records config/cache runtime",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/nslookup",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-016",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "arp -a|-g [address] [-N interfaceAddress]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 107,
+        "method": "arp"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-09"
+      ],
+      "state": "actual IPv4 runtime neighbor cache",
+      "packetBehavior": "none",
+      "saveReload": "runtime only",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/arp",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-017",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "arp -d address|* [interfaceAddress]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 107,
+        "method": "arp"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-09"
+      ],
+      "state": "selected dynamic IPv4 entries; static/IPv6 retained",
+      "packetBehavior": "subsequent traffic re-ARPs",
+      "saveReload": "runtime only",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/arp",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-018",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "route print [filter]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 109,
+        "method": "routePrint"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-10",
+        "WIN-17"
+      ],
+      "state": "shared operational IPv4/IPv6 routes",
+      "packetBehavior": "none",
+      "saveReload": "config/runtime route state",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/route_ws2008",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-019",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "route [-p] add destination [mask mask] gateway [metric N] [if index]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 108,
+        "method": "route"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-10"
+      ],
+      "state": "active runtime Windows routes; -p config static routes",
+      "packetBehavior": "shared forwarding path selects routes",
+      "saveReload": "-p persisted; others reset",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/route_ws2008",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-020",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "route delete destination [mask mask] [gateway]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 108,
+        "method": "route"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-10",
+        "WIN-17"
+      ],
+      "state": "remove matching static/volatile/default gateway",
+      "packetBehavior": "traffic fails after withdrawal",
+      "saveReload": "removes matching config/runtime",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/route_ws2008",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-021",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netstat [-a] [-n] [-an]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 110,
+        "method": "netstat"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-11"
+      ],
+      "state": "actual TCP channel snapshots + active service listeners",
+      "packetBehavior": "none; listeners backed by server handlers",
+      "saveReload": "runtime sessions/config listeners",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netstat",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-022",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netstat -r",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 110,
+        "method": "netstat"
+      },
+      "status": "complete",
+      "testIds": [
+        "WIN-11"
+      ],
+      "state": "same actual route table as route print",
+      "packetBehavior": "none",
+      "saveReload": "none",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netstat",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-023",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netstat -e",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 111,
+        "method": "ethernetStatistics"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-19"
+      ],
+      "state": "actual aggregate bytes/frame/discard counters; physical errors/split unicast not modeled",
+      "packetBehavior": "none",
+      "saveReload": "runtime counters",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netstat",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-024",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "getmac [/v]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 115,
+        "method": "getmac"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-11"
+      ],
+      "state": "engine adapter MAC and media state",
+      "packetBehavior": "none",
+      "saveReload": "deterministic MAC",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/getmac",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-025",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh interface show interface",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 118,
+        "method": "netsh"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-12"
+      ],
+      "state": "adapter admin/oper state",
+      "packetBehavior": "none",
+      "saveReload": "config admin",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-interface",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-026",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh interface set interface name=adapter admin=enabled|disabled",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 118,
+        "method": "netsh"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-12"
+      ],
+      "state": "actual interface adminUp",
+      "packetBehavior": "traffic ceases/resumes; wireless sync",
+      "saveReload": "lab config",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-interface",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-027",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh interface ipv4 show config|addresses|dnsservers|route",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 119,
+        "method": "netshIP"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-12"
+      ],
+      "state": "shared IPv4 config and routes",
+      "packetBehavior": "none",
+      "saveReload": "lab config",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-interface",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-028",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh interface ipv4 set address name=adapter source=static address=ip mask=mask [gateway=ip|none]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 119,
+        "method": "netshIP"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-12"
+      ],
+      "state": "stop DHCP; actual interface/gateway changes",
+      "packetBehavior": "actual traffic uses new source",
+      "saveReload": "lab config",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-interface",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-029",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh interface ipv4 set address name=adapter source=dhcp",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 119,
+        "method": "netshIP"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-07"
+      ],
+      "state": "DHCP acquisition via engine",
+      "packetBehavior": "UDP67/68",
+      "saveReload": "lease transient",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-interface",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-030",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh interface ipv4 set|add|delete dnsservers ...",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 119,
+        "method": "netshIP"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-12",
+        "WIN-16"
+      ],
+      "state": "shared dnsServers + static override respected by DHCP",
+      "packetBehavior": "subsequent DNS packets target selected server",
+      "saveReload": "lab config",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-interface",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-031",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh interface ipv6 show interfaces|addresses|neighbors|route",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 119,
+        "method": "netshIP"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-13"
+      ],
+      "state": "operational IPv6 addresses/ND/RIB",
+      "packetBehavior": "none",
+      "saveReload": "config/runtime",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-interface",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-032",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh interface ipv6 add|delete address interface=adapter address=IPv6/prefix",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 119,
+        "method": "netshIP"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-13"
+      ],
+      "state": "actual IPv6 config; shared DAD/ND",
+      "packetBehavior": "actual IPv6 ICMP reachability",
+      "saveReload": "lab config",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-interface",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-033",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh wlan show interfaces",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 125,
+        "method": "wlan"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-14"
+      ],
+      "state": "actual association/RF/runtime state",
+      "packetBehavior": "none",
+      "saveReload": "transient wireless association",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-wlan",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-034",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh wlan show networks [mode=bssid]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 125,
+        "method": "wlan"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-14"
+      ],
+      "state": "engine RF advertisements, channel/security/signal",
+      "packetBehavior": "shared wireless model scan",
+      "saveReload": "runtime",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-wlan",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-035",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh wlan show profiles",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 125,
+        "method": "wlan"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-14"
+      ],
+      "state": "profiles from laptop GUI/current adapter and stored profiles",
+      "packetBehavior": "none",
+      "saveReload": "lab config",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-wlan",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-036",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh wlan connect name=profile [ssid=SSID] [interface=Wi-Fi]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 125,
+        "method": "wlan"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-14"
+      ],
+      "state": "existing profile config then asynchronous authentication",
+      "packetBehavior": "real management/EAPOL/CAPWAP/RADIUS/DHCP model",
+      "saveReload": "profile config/association runtime",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-wlan",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-037",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh wlan disconnect [interface=Wi-Fi]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 125,
+        "method": "wlan"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-14"
+      ],
+      "state": "turn off autoConnect through wireless state machine",
+      "packetBehavior": "disassociation + forwarding loss",
+      "saveReload": "adapter preference config",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-wlan",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-038",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ssh | telnet",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 39,
+        "method": "execute"
+      },
+      "status": "partial",
+      "testIds": [
+        "tests/management.test.ts + legacy host delegate"
+      ],
+      "state": "shared management TCP sessions",
+      "packetBehavior": "TCP22/23",
+      "saveReload": "runtime session",
+      "change": "retained",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ssh",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-039",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "cls",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 39,
+        "method": "execute"
+      },
+      "status": "complete",
+      "testIds": [
+        "windows-browser-validation.json: CLS"
+      ],
+      "state": "clears rendered terminal output; keeps prompt and command history",
+      "packetBehavior": "none",
+      "saveReload": "display only",
+      "change": "repaired",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/cls",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-040",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "nbtstat",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 39,
+        "method": "execute"
+      },
+      "status": "unsupported",
+      "testIds": [
+        "WIN-01"
+      ],
+      "state": "NetBIOS/NetBT/WINS not modeled",
+      "packetBehavior": "none",
+      "saveReload": "none",
+      "change": "unsupported",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/nbtstat",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-041",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "Windows OS processes/registry/PowerShell service administration",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 39,
+        "method": "execute"
+      },
+      "status": "unsupported",
+      "testIds": [
+        "WIN-01"
+      ],
+      "state": "server services use explicit NetworkSim GUI",
+      "packetBehavior": "none",
+      "saveReload": "none",
+      "change": "unsupported",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/Windows",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    }
+  ]
+}

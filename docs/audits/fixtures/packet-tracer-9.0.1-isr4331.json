@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-17T00:02:44.734Z",
+  "reference": {
+    "application": "Cisco Packet Tracer 9.0.1",
+    "device": "ISR4331",
+    "reportedIOS": "16.6.4",
+    "selectedCompatibilityTarget": "IOS XE 17.12",
+    "evidenceId": "ev_f059eb006e44c8a6536c880776ccbfeed7648af5689933823e2c7555f66b2d22",
+    "sha256": "4ec895db0a5632e8c53da56d7785513d2e80d8c7893a0e6d3bb11202f2d2eb0a",
+    "scope": "Controlled native educational reference; not real IOS XE 17.12 firmware"
+  },
+  "commands": [
+    "enable",
+    "terminal length 0",
+    "show ip interface brief",
+    "configure terminal",
+    "hostname REA-AUDIT",
+    "interface GigabitEthernet0/0/0",
+    "ip address 192.0.2.1 255.255.255.0",
+    "no shutdown",
+    "ip address 999.1.1.1 255.255.255.0",
+    "end",
+    "show ip interface brief"
+  ],
+  "transcript": "Router>enable\nRouter#terminal length 0\n                ^\n% Invalid input detected at '^' marker.\n\t\nRouter#show ip interface brief\nInterface              IP-Address      OK? Method Status                Protocol \nGigabitEthernet0/0/0   unassigned      YES unset  administratively down down \nGigabitEthernet0/0/1   unassigned      YES unset  administratively down down \nGigabitEthernet0/0/2   unassigned      YES unset  administratively down down\nRouter#configure terminal\nEnter configuration commands, one per line.  End with CNTL/Z.\nRouter(config)#hostname REA-AUDIT\nREA-AUDIT(config)#interface GigabitEthernet0/0/0\nREA-AUDIT(config-if)#ip address 192.0.2.1 255.255.255.0\nREA-AUDIT(config-if)#no shutdown\n\nREA-AUDIT(config-if)#\n%LINK-3-UPDOWN: Interface GigabitEthernet0/0/0, changed state to down\nip address 999.1.1.1 255.255.255.0\n                                ^\n% Invalid input detected at '^' marker.\n\t\nREA-AUDIT(config-if)#end\nREA-AUDIT#\n%SYS-5-CONFIG_I: Configured from console by console\nshow ip interface brief\nInterface              IP-Address      OK? Method Status                Protocol \nGigabitEthernet0/0/0   192.0.2.1       YES manual down                  down \nGigabitEthernet0/0/1   unassigned      YES unset  administratively down down \nGigabitEthernet0/0/2   unassigned      YES unset  administratively down down\nREA-AUDIT#",
+  "verifiedInvariants": [
+    "Fresh physical router interfaces administratively down",
+    "User -> privileged -> global -> interface modes",
+    "Hostname changes prompts",
+    "Valid IPv4 survives rejected invalid IPv4",
+    "no shutdown clears admin-down even without carrier"
+  ],
+  "divergences": [
+    "Packet Tracer rejects terminal length 0; the documented IOS XE command remains supported in NetworkSim",
+    "Interface numbering differs: teaching router has GigabitEthernet0/0 through 0/3",
+    "Invalid IPv4 detail/caret rendering requires separate IOS XE 17.12 comparison"
+  ],
+  "limitations": [
+    "Only the explicitly selected already-running process/window is admitted. REA starts no target process and does not change permissions, foreground applications, or restore application data.",
+    "Click uses AXPress; scroll uses AXIncrement/AXDecrement; key-entry sets the selected element's AXValue. Unsupported elements fail without global event fallback.",
+    "Each completed action is followed immediately by capture; delayed UI changes require explicit wait steps. A failed after-capture can follow a completed action, so failure does not prove absence of application effects.",
+    "Scenarios can change app data, cause app network activity and persist changes. The caller explicitly chooses leave-as-is; automatic restoration is unsupported.",
+    "Window matching uses exact PID and window ID for screenshots and unique accessibility geometry. Accessibility paths can change as the UI changes; stale or ambiguous paths fail. Screenshots are scaled to at most 2048 pixels; scenario output is budgeted at 64 MiB and execution is cancelled after 180 seconds."
+  ]
+}

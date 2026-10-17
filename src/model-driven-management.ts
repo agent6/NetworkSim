@@ -1,0 +1,184 @@
+import type { Simulator } from './engine.ts';
+import { defaultInterface, type Device, type DeviceConfig, type InterfaceConfig } from './model.ts';
+import type { HTTPAuthenticator } from './http-service.ts';
+import type { TCPChannel } from './tcp-channel.ts';
+import type { TimerHandle } from './clock.ts';
+import { isIPv4, maskToPrefix, prefixToMask } from './ip.ts';
+
+const NC='urn:ietf:params:xml:ns:netconf:base:1.0',IF='urn:ietf:params:xml:ns:yang:ietf-interfaces',IP='urn:ietf:params:xml:ns:yang:ietf-ip',NATIVE='http://cisco.com/ns/yang/Cisco-IOS-XE-native';
+const clone=<T>(value:T):T=>structuredClone(value), object=(value:any):value is Record<string,any>=>!!value&&typeof value==='object'&&!Array.isArray(value);
+const escape=(value:unknown)=>String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+class ModelError extends Error{readonly tag:string;readonly status:number;readonly session?:number;constructor(tag:string,message:string,status=400,session?:number){super(message);this.tag=tag;this.status=status;this.session=session;}}
+interface XML{name:string;ns:string;attrs:Record<string,string>;children:XML[];text:string;namespaces:Record<string,string>}
+function decode(text:string):string{if(/&(?![a-zA-Z]+;|#(?:x[0-9a-f]+|\d+);)/i.test(text))throw new ModelError('malformed-message','Malformed XML entity.');return text.replace(/&([^;]+);/g,(_,value:string)=>{const named:Record<string,string>={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"};if(Object.hasOwn(named,value))return named[value];if(/^#(?:x[0-9a-f]+|\d+)$/i.test(value)){const code=value[1].toLowerCase()==='x'?parseInt(value.slice(2),16):+value.slice(1);if(code>0&&code<=0x10ffff&&!(code>=0xd800&&code<=0xdfff))return String.fromCodePoint(code);}throw new ModelError('malformed-message','Unsupported or malformed XML entity.');});}
+/** Bounded original XML subset for the advertised NETCONF RPCs. No DTDs,
+ * processing instructions other than the XML declaration, entities or CDATA. */
+function xml(text:string):XML{
+ if(typeof text!=='string'||text.length>262144||/<!|<\?(?!xml\s)/i.test(text))throw new ModelError('malformed-message','Unsupported or oversized XML message.');
+ text=text.replace(/^\s*<\?xml[^?]*\?>/,'').replace(/\]\]>\]\]>\s*$/,'');const stack:Array<{qname:string;node:XML}>=[];let root:XML|undefined,index=0;
+ const tokens=text.match(/<[^>]*>|[^<]+/g)??[];
+ for(const token of tokens){index+=token.length;if(!token.startsWith('<')){if(stack.length)stack.at(-1)!.node.text+=decode(token);else if(token.trim())throw new ModelError('malformed-message','Text outside XML root.');continue;}
+  if(token.startsWith('</')){const match=/^<\/([\w:.-]+)\s*>$/.exec(token);if(!match||stack.pop()?.qname!==match[1])throw new ModelError('malformed-message','Mismatched XML closing element.');continue;}
+  const match=/^<([A-Za-z_][\w:.-]*)([\s\S]*?)(\/?)>$/.exec(token);if(!match||stack.length>32)throw new ModelError('malformed-message','Invalid XML element.');
+  const namespaces:Record<string,string>=Object.assign(Object.create(null),stack.at(-1)?.node.namespaces??{}),attrs:Record<string,string>=Object.create(null);let tail=match[2];
+  while(tail.trim()){const a=/^\s+([\w:.-]+)\s*=\s*(?:"([^"<]*)"|'([^'<]*)')/.exec(tail);if(!a||Object.hasOwn(attrs,a[1]))throw new ModelError('malformed-message','Invalid or duplicate XML attribute.');attrs[a[1]]=decode(a[2]??a[3]);tail=tail.slice(a[0].length);if(a[1]==='xmlns')namespaces['']=attrs[a[1]];else if(a[1].startsWith('xmlns:'))namespaces[a[1].slice(6)]=attrs[a[1]];}
+  const parts=match[1].split(':');if(parts.length>2||parts.length===2&&!namespaces[parts[0]])throw new ModelError('unknown-namespace','Unknown XML namespace prefix.');const node:XML={name:parts.at(-1)!,ns:namespaces[parts.length===2?parts[0]:'']??'',attrs,children:[],text:'',namespaces};
+  if(stack.length)stack.at(-1)!.node.children.push(node);else{if(root)throw new ModelError('malformed-message','Multiple XML roots.');root=node;}if(!match[3])stack.push({qname:match[1],node});
+ }
+ if(!root||stack.length||index!==text.length)throw new ModelError('malformed-message','Incomplete XML message.');return root;
+}
+const child=(node:XML,name:string)=>node.children.find(n=>n.name===name), scalar=(node:XML)=>{if(node.children.length)throw new ModelError('invalid-value','Expected scalar '+node.name);return node.text;};
+const datastore=(node:XML,name='target')=>{const wrapper=child(node,name);if(!wrapper||wrapper.ns!==NC||wrapper.children.some(c=>c.ns!==NC)||wrapper.children.length!==1||!['running','candidate'].includes(wrapper.children[0].name))throw new ModelError('invalid-value','Only running and enabled candidate datastores are supported.');return wrapper.children[0].name as 'running'|'candidate';};
+interface DataState{locks:Partial<Record<'running'|'candidate',number>>;candidate?:DeviceConfig;base?:string;confirmed?:{session:number;before:DeviceConfig;deadline:number};candidateEnabled:boolean}
+interface Session{id:number;channel:TCPChannel;device:Device;runtime:Device['runtime'];state:DataState;authenticated:boolean;hello:boolean;lastActivity:number;username?:string;idleTimer?:TimerHandle}
+type Authentication=(deviceId:string,list:string,username:string,password:string)=>ReturnType<HTTPAuthenticator>;
+
+/** Original narrow YANG teaching datastore. The TCP/ACL path is shared with
+ * real simulated traffic; SSH/TLS are explicitly logical, not cryptographic. */
+export class ModelDrivenManagement{
+ private engine:Simulator;private authenticate?:Authentication;
+ private sessions=new Map<number,Session>();private sequence=0;private syncing=false;private rollbackTimers=new Map<string,TimerHandle>();
+ constructor(engine:Simulator,authenticate?:Authentication){
+  this.engine=engine;this.authenticate=authenticate;
+  engine.registerTCPChannelService(830,d=>this.platform(d)&&!!d.config.features.managementSettings?.netconf,channel=>this.open(channel));
+  engine.subscribe(()=>this.sync());
+ }
+ sessionSnapshot(deviceId:string):Array<{sessionId:number;source:string;username?:string;authenticated:boolean;hello:boolean;lastActivity:number;locks:string[]}>{return [...this.sessions.values()].filter(s=>s.device.id===deviceId).map(s=>({sessionId:s.id,source:s.channel.peerAddress,username:s.username,authenticated:s.authenticated,hello:s.hello,lastActivity:s.lastActivity,locks:Object.entries(s.state.locks).filter(([,owner])=>owner===s.id).map(([name])=>name)}));}
+ private platform(d:Device):boolean{return ['router','switch','l3switch','poeswitch','wlc'].includes(d.kind);}
+ private state(d:Device):DataState{const enabled=!!d.config.features.managementSettings?.candidate;let state=d.runtime.features.modelDriven;if(!state||state.candidateEnabled!==enabled)state=d.runtime.features.modelDriven={locks:{},candidateEnabled:enabled};return state;}
+ private access(d:Device,user:string,password:string,mode='local',list='default',auth?:HTTPAuthenticator):boolean{
+  if(mode==='aaa'||mode==='netconf'&&d.config.features.aaa?.enabled){const result=auth?.(list,user,password)??this.authenticate?.(d.id,list,user,password);return !!result?.accepted&&(result.privilege??0)===15;}
+  if(!['local','netconf','none'].includes(mode))return false;const entry=Object.hasOwn(d.config.features.users??{},user)?d.config.features.users[user]:undefined;
+  return !!entry&&(entry.privilege??1)===15&&typeof(entry.secret??entry.password)==='string'&&!!(entry.secret??entry.password)&&password===(entry.secret??entry.password);
+ }
+ private sync():void{
+  if(this.syncing)return;this.syncing=true;try{for(const s of [...this.sessions.values()]){
+   if(this.engine.getDevice(s.device.id)!==s.device||s.device.runtime!==s.runtime||!s.device.powered||!s.device.config.features.managementSettings?.netconf||s.state.candidateEnabled!==!!s.device.config.features.managementSettings?.candidate||this.engine.clock.now()-s.lastActivity>120000){this.close(s);s.channel.close('NETCONF session reset, disabled, or idle timeout');}
+  }}finally{this.syncing=false;}
+ }
+ private open(channel:TCPChannel):void{
+  const d=this.engine.getDevice(channel.deviceId);if(!d)return;const s:Session={id:++this.sequence,channel,device:d,runtime:d.runtime,state:this.state(d),authenticated:false,hello:false,lastActivity:this.engine.clock.now()};this.sessions.set(s.id,s);
+  channel.setHandlers({onMessage:message=>this.message(s,message),onClose:()=>this.close(s)});
+  s.idleTimer=this.engine.clock.schedule(120000,()=>{if(this.sessions.get(s.id)===s&&this.engine.clock.now()-s.lastActivity>=120000){this.close(s);channel.close('NETCONF idle timeout');}},{owner:d.id,repeat:120000,label:'NETCONF idle session expiry'});
+ }
+ private close(s:Session):void{
+  this.sessions.delete(s.id);this.engine.clock.cancel(s.idleTimer);const state=s.state;if(state.confirmed?.session===s.id&&s.device.runtime===s.runtime&&this.engine.getDevice(s.device.id)===s.device)this.rollback(s.device,state,'NETCONF session ended before confirmed commit confirmation');
+  for(const target of ['running','candidate'] as const)if(state.locks[target]===s.id){delete state.locks[target];if(target==='candidate'){delete state.candidate;delete state.base;}}
+ }
+ private message(s:Session,message:any):void{
+  if(this.sessions.get(s.id)!==s||s.runtime!==s.device.runtime||!s.device.powered||!s.device.config.features.managementSettings?.netconf)return;s.lastActivity=this.engine.clock.now();this.engine.clock.cancel(s.idleTimer);s.idleTimer=this.engine.clock.schedule(120000,()=>{this.close(s);s.channel.close('NETCONF idle timeout');},{owner:s.device.id,label:'NETCONF idle session expiry'});
+  if(!s.authenticated){if(!object(message)||message.type!=='ssh-auth'||typeof message.username!=='string'||typeof message.password!=='string'||!this.access(s.device,message.username,message.password,'netconf')){s.channel.send({type:'ssh-auth-result',accepted:false,reason:'A valid privilege-15 account is required.'});return;}
+   s.authenticated=true;s.username=message.username;s.channel.send({type:'ssh-auth-result',accepted:true,transport:'logical SSH; no cryptography'});const capabilities=['urn:ietf:params:netconf:base:1.0','urn:ietf:params:netconf:capability:writable-running:1.0','urn:ietf:params:netconf:capability:rollback-on-error:1.0',...s.state.candidateEnabled?['urn:ietf:params:netconf:capability:candidate:1.0','urn:ietf:params:netconf:capability:confirmed-commit:1.0']:[]];s.channel.send(`<hello xmlns="${NC}"><capabilities>${capabilities.map(c=>'<capability>'+c+'</capability>').join('')}</capabilities><session-id>${s.id}</session-id></hello>]]>]]>`);return;
+  }
+  let id='';try{
+   const root=xml(typeof message==='string'?message:'');if(root.ns!==NC)throw new ModelError('unknown-namespace','The NETCONF base namespace is required.');
+   if(root.name==='hello'){if(s.hello)throw new ModelError('operation-failed','Client hello was already received.');if(!child(root,'capabilities')?.children.some(c=>c.name==='capability'&&scalar(c)==='urn:ietf:params:netconf:base:1.0'))throw new ModelError('operation-not-supported','Only NETCONF base 1.0 framing is implemented.');s.hello=true;return;}
+   id=root.attrs['message-id']??'';if(root.name!=='rpc'||!id||!s.hello||root.children.length!==1||root.text.trim())throw new ModelError('malformed-message','Send a client hello followed by one RPC with a message-id.');const content=this.rpc(s,root.children[0]);s.channel.send(`<rpc-reply xmlns="${NC}" message-id="${escape(id)}">${content}</rpc-reply>]]>]]>`);
+  }catch(error){const e=error instanceof ModelError?error:new ModelError('operation-failed','The request could not be applied.');s.channel.send(`<rpc-reply xmlns="${NC}" message-id="${escape(id)}"><rpc-error><error-type>application</error-type><error-tag>${e.tag}</error-tag><error-severity>error</error-severity><error-message>${escape(e.message)}</error-message>${e.session!==undefined?'<error-info><session-id>'+e.session+'</session-id></error-info>':''}</rpc-error></rpc-reply>]]>]]>`);}
+ }
+ private requireCandidate(s:Session):void{if(!s.state.candidateEnabled)throw new ModelError('operation-not-supported','Candidate datastore is not enabled.');}
+ private unlocked(state:DataState,target:'running'|'candidate',session:number):void{const holder=state.locks[target];if(holder!==undefined&&holder!==session)throw new ModelError('in-use','Datastore is locked by another session.',409,holder);}
+ private rpc(s:Session,operation:XML):string{
+  if(operation.ns!==NC)throw new ModelError('operation-not-supported','Unsupported RPC namespace.');const d=s.device,state=s.state,name=operation.name;
+  if(name==='get'||name==='get-config'){
+   if(operation.children.some(c=>c.ns!==NC||!(name==='get'?['filter']:['source','filter']).includes(c.name)))throw new ModelError('unknown-element','Unsupported read option.');
+   const source=name==='get'?'running':datastore(operation,'source');if(source==='candidate')this.requireCandidate(s);const config=source==='candidate'?(state.candidate??d.config):d.config;return '<data>'+this.xmlData(d,config,child(operation,'filter'),name==='get')+'</data>';
+  }
+  if(name==='lock'||name==='unlock'){
+   const target=datastore(operation);if(target==='candidate')this.requireCandidate(s);this.unlocked(state,target,s.id);
+   if(name==='lock'){if(state.locks[target]===s.id)throw new ModelError('lock-denied','This session already holds the datastore lock.',409,s.id);if(target==='candidate'&&state.candidate)throw new ModelError('lock-denied','Discard existing candidate edits before locking.',409);state.locks[target]=s.id;}
+   else{if(state.locks[target]!==s.id)throw new ModelError('lock-denied','This session does not hold the lock.',409);delete state.locks[target];if(target==='candidate'){delete state.candidate;delete state.base;}}
+   return '<ok/>';
+  }
+  if(name==='edit-config'){
+   const target=datastore(operation);if(target==='candidate')this.requireCandidate(s);this.unlocked(state,target,s.id);const cfg=child(operation,'config');if(!cfg)throw new ModelError('missing-element','config is required.');
+   for(const entry of operation.children)if(entry.ns!==NC||!['target','config','default-operation','error-option'].includes(entry.name))throw new ModelError('operation-not-supported','Unsupported edit-config option '+entry.name);
+   const mode=child(operation,'default-operation')?.text.trim()??'merge';if(mode!=='merge')throw new ModelError('operation-not-supported','Only merge default-operation is supported; use operation=replace on a specific interface.');const errors=child(operation,'error-option')?.text.trim();if(errors&&errors!=='rollback-on-error')throw new ModelError('operation-not-supported','Edits are transactional; use rollback-on-error or omit error-option.');
+   const next=clone(target==='candidate'?(state.candidate??d.config):d.config);for(const root of cfg.children)this.editXML(next,root,mode);
+   if(target==='candidate'){state.base??=JSON.stringify(d.config);state.candidate=next;}else this.apply(d,next);return '<ok/>';
+  }
+  if(name==='discard-changes'){this.requireCandidate(s);this.unlocked(state,'candidate',s.id);delete state.candidate;delete state.base;return '<ok/>';}
+  if(name==='commit'){
+   this.requireCandidate(s);this.unlocked(state,'candidate',s.id);this.unlocked(state,'running',s.id);
+   for(const entry of operation.children)if(!['confirmed','confirm-timeout'].includes(entry.name))throw new ModelError('operation-not-supported','Persistent/extended confirmed commit is not implemented.');
+   if(state.confirmed&&state.confirmed.session!==s.id)throw new ModelError('in-use','Another session owns the pending confirmed commit.',409,state.confirmed.session);
+   const confirmed=!!child(operation,'confirmed'),timeout=child(operation,'confirm-timeout');if(timeout&&!confirmed)throw new ModelError('invalid-value','confirm-timeout requires confirmed.');
+   const seconds=timeout?Number(timeout.text.trim()):600;if(confirmed&&(!Number.isInteger(seconds)||seconds<1||seconds>65535))throw new ModelError('invalid-value','confirm-timeout must be 1–65535 seconds.');
+   if(state.base!==undefined&&state.base!==JSON.stringify(d.config)&&!state.confirmed)throw new ModelError('in-use','Running configuration changed since candidate edits; discard and retry.',409);
+   const before=state.confirmed?.before??clone(d.config);if(state.candidate)this.apply(d,clone(state.candidate));delete state.candidate;delete state.base;
+   this.engine.clock.cancel(this.rollbackTimers.get(d.id));this.rollbackTimers.delete(d.id);
+   if(confirmed){state.confirmed={session:s.id,before,deadline:this.engine.clock.now()+seconds*1000};const runtime=d.runtime;this.rollbackTimers.set(d.id,this.engine.clock.schedule(seconds*1000,()=>{if(d.runtime===runtime&&state.confirmed)this.rollback(d,state,'NETCONF confirmed commit timed out');},{owner:d.id,label:'NETCONF confirmed commit rollback'}));}else delete state.confirmed;
+   return '<ok/>';
+  }
+  if(name==='close-session'){this.engine.clock.schedule(50,()=>s.channel.close('NETCONF close-session'),{owner:d.id,label:'NETCONF session close'});return '<ok/>';}
+  throw new ModelError('operation-not-supported','Unsupported NETCONF operation '+name);
+ }
+ private rollback(d:Device,state:DataState,reason:string):void{if(!state.confirmed)return;const before=state.confirmed.before;delete state.confirmed;delete state.candidate;delete state.base;this.engine.clock.cancel(this.rollbackTimers.get(d.id));this.rollbackTimers.delete(d.id);this.apply(d,clone(before));this.engine.log(d.id,'%NETCONF-4-ROLLBACK: '+reason,4);}
+ private apply(d:Device,config:DeviceConfig):void{for(const [name,next]of Object.entries(config.interfaces)){const old=d.config.interfaces[name];if(old&&(old.features.dhcp&&!next.features.dhcp||old.ip!==next.ip||old.mask!==next.mask))this.engine.stopAutomaticAddressing(d.id,name,'ipv4');}d.config=config;this.engine.changed();this.engine.log(d.id,'%DMI-5-CONFIG: Model-driven configuration committed',5);}
+ private interfaceData(d:Device,p:InterfaceConfig,operational:boolean):Record<string,any>{
+  const addresses=[...(p.ip&&p.mask?[{ip:p.ip,netmask:p.mask}]:[]),...(p.features.secondaryIps??[]).map((a:any)=>({ip:a.ip,netmask:a.mask}))];return {name:p.name,description:p.description,type:/^Loopback/.test(p.name)?'iana-if-type:softwareLoopback':'iana-if-type:ethernetCsmacd',enabled:p.adminUp,'ietf-ip:ipv4':{address:addresses},...operational?{'oper-status':this.engine.interfaceUp(d.id,p.name)?'up':'down',statistics:{'in-octets':String(d.runtime.counters[p.name]?.rxBytes??0),'out-octets':String(d.runtime.counters[p.name]?.txBytes??0)}}:{}};
+ }
+ private xmlData(d:Device,config:DeviceConfig,filter:XML|undefined,operational:boolean):string{
+  if(filter&&filter.attrs.type&&filter.attrs.type!=='subtree')throw new ModelError('operation-not-supported','Only subtree filters are supported.');const roots=filter?.children.length?filter.children:[{name:'interfaces',ns:IF,children:[]} as unknown as XML,{name:'native',ns:NATIVE,children:[]} as unknown as XML];let output='';
+  for(const root of roots){if(root.ns===NATIVE&&root.name==='native'){if(root.children.some(c=>c.name!=='hostname'))throw new ModelError('operation-not-supported','Only native hostname is modeled.');output+=`<native xmlns="${NATIVE}"><hostname>${escape(config.hostname)}</hostname></native>`;}
+   else if(root.ns===IF&&['interfaces','interfaces-state'].includes(root.name)){const selected=child(root,'interface'),name=selected&&child(selected,'name')?.text;const ports=Object.values(config.interfaces).filter(p=>!name||p.name===name);output+=`<${root.name} xmlns="${IF}">`+ports.map(p=>{const row=this.interfaceData(d,p,operational||root.name==='interfaces-state');return '<interface><name>'+escape(p.name)+'</name><description>'+escape(p.description)+'</description><type xmlns:ianaift="urn:ietf:params:xml:ns:yang:iana-if-type">ianaift:'+String(row.type).split(':')[1]+'</type><enabled>'+p.adminUp+'</enabled>'+('oper-status'in row?'<oper-status>'+row['oper-status']+'</oper-status><statistics><in-octets>'+row.statistics['in-octets']+'</in-octets><out-octets>'+row.statistics['out-octets']+'</out-octets></statistics>':'')+`<ipv4 xmlns="${IP}">`+row['ietf-ip:ipv4'].address.map((a:any)=>'<address><ip>'+a.ip+'</ip><netmask>'+a.netmask+'</netmask></address>').join('')+'</ipv4></interface>';}).join('')+`</${root.name}>`;}
+   else throw new ModelError('operation-not-supported','Only ietf-interfaces and native hostname subtrees are modeled.');
+  }return output;
+ }
+ private editXML(config:DeviceConfig,node:XML,mode:string):void{
+  if(node.ns===NATIVE&&node.name==='native'){if(node.children.length!==1)throw new ModelError('unknown-element','Exactly one native hostname is required.');for(const leaf of node.children){if(leaf.name!=='hostname'||leaf.ns!==NATIVE)throw new ModelError('unknown-element','Only native hostname is modeled.');this.hostname(config,scalar(leaf));}return;}
+  if(node.ns!==IF||node.name!=='interfaces')throw new ModelError('unknown-namespace','Unsupported writable YANG subtree.');
+  for(const entry of node.children){if(entry.name!=='interface'||entry.ns!==IF)throw new ModelError('unknown-element','Expected ietf-interfaces interface.');if(new Set(entry.children.map(c=>c.ns+'|'+c.name)).size!==entry.children.length)throw new ModelError('invalid-value','Duplicate interface leaf.');const item:Record<string,any>={};for(const leaf of entry.children){if(leaf.ns===IP&&leaf.name==='ipv4'){const ipv4:Record<string,any>={address:[]};for(const address of leaf.children){if(address.name!=='address'||address.ns!==IP)throw new ModelError('unknown-element','Only ipv4 address entries are modeled.');const row:Record<string,any>={};for(const value of address.children){if(value.ns!==IP||!['ip','netmask','prefix-length'].includes(value.name))throw new ModelError('unknown-element','Unsupported IPv4 leaf.');row[value.name]=value.name==='prefix-length'?Number(scalar(value)):scalar(value);}ipv4.address.push(row);}item['ietf-ip:ipv4']=ipv4;}
+    else{if(leaf.ns!==IF||!['name','description','enabled','type'].includes(leaf.name))throw new ModelError('unknown-element','Unsupported interface leaf.');const value=scalar(leaf);if(leaf.name==='enabled'){if(!['true','false'].includes(value.trim()))throw new ModelError('invalid-value','enabled must be boolean.');item.enabled=value.trim()==='true';}else if(leaf.name==='type'){const identity=value.split(':');if(identity.length!==2||leaf.namespaces[identity[0]]!=='urn:ietf:params:xml:ns:yang:iana-if-type')throw new ModelError('unknown-namespace','Interface type requires the IANA interface-type namespace.');item.type='iana-if-type:'+identity[1];}else item[leaf.name]=value;}}
+   const attribute=Object.entries(entry.attrs).find(([key])=>key.split(':').at(-1)==='operation');if(Object.keys(entry.attrs).some(key=>key!=='xmlns'&&!key.startsWith('xmlns:')&&key!==attribute?.[0])||attribute&&(!attribute[0].includes(':')||entry.namespaces[attribute[0].split(':')[0]]!==NC))throw new ModelError('unknown-attribute','Only the NETCONF operation attribute is supported.');const operation=attribute?.[1]??mode;this.editInterface(config,item,operation);
+  }
+ }
+ private hostname(config:DeviceConfig,value:any):void{if(typeof value!=='string'||!/^[a-zA-Z][a-zA-Z0-9_-]{0,62}$/.test(value))throw new ModelError('invalid-value','Invalid IOS hostname.');config.hostname=value;}
+ private editInterface(config:DeviceConfig,item:any,operation='merge',expected?:string):void{
+  if(!object(item)||typeof item.name!=='string'||expected&&item.name!==expected)throw new ModelError('invalid-value','Interface name/key is required and must match the resource.');
+  if(Object.keys(item).some(key=>!['name','description','enabled','type','ietf-ip:ipv4'].includes(key)))throw new ModelError('unknown-element','The interface contains an unsupported or state-only field.');const name=item.name,old=Object.hasOwn(config.interfaces,name)?config.interfaces[name]:undefined;
+  if(!['merge','replace','create','delete','remove'].includes(operation))throw new ModelError('operation-not-supported','Unsupported interface edit operation.');
+  if(['delete','remove'].includes(operation)){if(!old&&operation==='delete')throw new ModelError('data-missing','Interface does not exist.',404);if(!/^(Loopback|Vlan)\d+$/.test(name))throw new ModelError('operation-not-supported','Physical interfaces cannot be deleted.');delete config.interfaces[name];return;}
+  if(old&&operation==='create')throw new ModelError('data-exists','Interface already exists.',409);
+  if(!old&&!/^(Loopback|Vlan)\d+$/.test(name))throw new ModelError('data-missing','Only an existing interface, Loopback or Vlan interface can be edited.',404);
+  if(/^Vlan/.test(name)&&!config.vlans[Number(name.slice(4))])throw new ModelError('invalid-value','Create the VLAN before its SVI.');
+  const p=old??defaultInterface(name);if(operation==='replace'){p.description='';p.adminUp=true;delete p.ip;delete p.mask;delete p.features.secondaryIps;delete p.features.dhcp;delete p.features.dhcpLease;}
+  if(item.type!==undefined&&(typeof item.type!=='string'||!['iana-if-type:ethernetCsmacd','iana-if-type:softwareLoopback'].includes(item.type)||/^Loopback/.test(name)!==/softwareLoopback$/.test(item.type)))throw new ModelError('invalid-value','Interface type does not match the modeled interface.');
+  if(item.description!==undefined){if(typeof item.description!=='string'||item.description.length>240||/[\r\n\u0000]/.test(item.description))throw new ModelError('invalid-value','Description must be a single line of at most 240 characters.');p.description=item.description;}
+  if(item.enabled!==undefined){if(typeof item.enabled!=='boolean')throw new ModelError('invalid-value','enabled must be boolean.');p.adminUp=item.enabled;}
+  const ipv4=item['ietf-ip:ipv4'];if(ipv4!==undefined){if(!object(ipv4)||Object.keys(ipv4).some(key=>key!=='address')||!Array.isArray(ipv4.address))throw new ModelError('unknown-element','Only the IPv4 address list is writable.');if(p.switchport&&ipv4.address.length)throw new ModelError('operation-not-supported','Configure a routed interface or SVI before assigning IPv4.');
+   const incoming=ipv4.address.map((a:any)=>{if(!object(a)||Object.keys(a).some(key=>!['ip','netmask','prefix-length'].includes(key))||!isIPv4(a.ip)||a.netmask!==undefined&&a['prefix-length']!==undefined)throw new ModelError('invalid-value','Invalid IPv4 address entry.');let mask:string;try{mask=a.netmask!==undefined?(maskToPrefix(a.netmask),a.netmask):prefixToMask(a['prefix-length']);}catch{throw new ModelError('invalid-value','Use a contiguous netmask or prefix-length 0–32.');}return{ip:a.ip,mask};});
+   if(new Set(incoming.map((a:any)=>a.ip)).size!==incoming.length)throw new ModelError('invalid-value','Duplicate IPv4 address key.');const previous=operation==='replace'?[]:[...(p.ip&&p.mask?[{ip:p.ip,mask:p.mask}]:[]),...(p.features.secondaryIps??[])];const addresses=[...previous.map((a:any)=>incoming.find((b:any)=>b.ip===a.ip)??a),...incoming.filter((a:any)=>!previous.some((b:any)=>b.ip===a.ip))];
+   p.ip=addresses[0]?.ip;p.mask=addresses[0]?.mask;if(addresses.length>1)p.features.secondaryIps=addresses.slice(1);else delete p.features.secondaryIps;delete p.features.dhcp;delete p.features.dhcpLease;
+  }config.interfaces[name]=p;
+ }
+ handleHTTP(d:Device,payload:any,source:string,authenticate?:HTTPAuthenticator):Record<string,any>|undefined{
+  const path=String(payload?.path??'').split('?')[0];if(!path.startsWith('/restconf'))return;
+  const method=String(payload.method??'GET').toUpperCase(),respond=(statusCode:number,data:any,extra:Record<string,string>={})=>{const content=data===undefined?'':JSON.stringify(data);return{statusCode,content:method==='HEAD'?'':content,headers:{'Content-Type':'application/yang-data+json','Cache-Control':'no-cache','Content-Length':String(new TextEncoder().encode(content).length),...extra}};};
+  const error=(e:ModelError)=>respond(e.status,{'ietf-restconf:errors':{error:[{'error-type':'application','error-tag':e.tag,'error-message':e.message}]}},e.status===401?{'WWW-Authenticate':'Basic realm="RESTCONF"'}:{});
+  try{
+   if(String(payload.path??'').includes('?'))throw new ModelError('invalid-value','RESTCONF query parameters are not implemented.');
+   const accept=Object.entries(payload.headers??{}).find(([key])=>key.toLowerCase()==='accept')?.[1];if(accept&&typeof accept==='string'&&!accept.includes('*/*')&&!accept.includes('application/yang-data+json'))throw new ModelError('operation-not-supported','Only application/yang-data+json responses are supported.',406);
+   if(!this.platform(d)||!d.config.features.managementSettings?.restconf)throw new ModelError('operation-not-supported','RESTCONF is disabled.',404);if(!payload.secure||!d.config.services.http?.secureEnabled)throw new ModelError('access-denied','RESTCONF requires the modeled HTTPS service.',403);
+   const authorization=Object.entries(payload.headers??{}).find(([key])=>key.toLowerCase()==='authorization')?.[1];let user='',password='';try{if(typeof authorization==='string'&&/^Basic [A-Za-z0-9+/]+={0,2}$/i.test(authorization)){const raw=new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(authorization.slice(6)),c=>c.charCodeAt(0))),colon=raw.indexOf(':');if(colon>=0){user=raw.slice(0,colon);password=raw.slice(colon+1);}}}catch{}
+   const http=d.config.services.http??{};if(!this.access(d,user,password,http.authentication??'local',http.authenticationList??'default',authenticate))throw new ModelError('access-denied','A valid privilege-15 account is required.',401);
+   if(!['GET','HEAD','PUT','PATCH','POST','DELETE'].includes(method))throw new ModelError('operation-not-supported','Unsupported RESTCONF method.',405);
+   if(path==='/restconf'||path==='/restconf/')return ['GET','HEAD'].includes(method)?respond(200,{'ietf-restconf:restconf':{data:{},operations:{}}}):error(new ModelError('operation-not-supported','This resource is read-only.',405));
+   const state=this.state(d),native=/^\/restconf\/data\/Cisco-IOS-XE-native:native(?:\/hostname)?\/?$/.exec(path),match=/^\/restconf\/data\/ietf-interfaces:interfaces(?:\/interface=([^/]+)(?:\/(enabled|description))?)?\/?$/.exec(path),all=path==='/restconf/data';
+   if(!native&&!match&&!all)throw new ModelError('data-missing','This YANG resource is not implemented.',404);
+   const key=match?.[1]&&decodeURIComponent(match[1]),leaf=match?.[2],row=key&&Object.hasOwn(d.config.interfaces,key)?d.config.interfaces[key]:undefined;if(key&&!row&&['GET','HEAD','DELETE','PATCH'].includes(method))throw new ModelError('data-missing','Interface does not exist.',404);
+   if(['GET','HEAD'].includes(method)){
+    if(native)return respond(200,path.replace(/\/$/,'').endsWith('/hostname')?{'Cisco-IOS-XE-native:hostname':d.config.hostname}:{'Cisco-IOS-XE-native:native':{hostname:d.config.hostname}});
+    if(leaf)return respond(200,{['ietf-interfaces:'+leaf]:leaf==='enabled'?(row as InterfaceConfig).adminUp:(row as InterfaceConfig).description});
+    const data={'ietf-interfaces:interfaces':{interface:Object.values(d.config.interfaces).filter(p=>!key||p.name===key).map(p=>this.interfaceData(d,p,true))}};return respond(200,all?{...data,'Cisco-IOS-XE-native:native':{hostname:d.config.hostname}}:key?{'ietf-interfaces:interface':data['ietf-interfaces:interfaces'].interface}:data);
+   }
+   if(all)throw new ModelError('operation-not-supported','Edit a specific modeled resource.',405);this.unlocked(state,'running',0);if(state.confirmed)throw new ModelError('in-use','A NETCONF confirmed commit is pending.',409);if(state.candidate)throw new ModelError('in-use','Candidate edits exist; commit or discard them first.',409);
+   const contentType=Object.entries(payload.headers??{}).find(([key])=>key.toLowerCase()==='content-type')?.[1];if(method!=='DELETE'&&typeof contentType==='string'&&!contentType.startsWith('application/yang-data+json'))throw new ModelError('operation-not-supported','Only application/yang-data+json request bodies are supported.',415);
+   const next=clone(d.config);let body:any=payload.body;if(typeof body==='string'){try{body=JSON.parse(body);}catch{throw new ModelError('malformed-message','RESTCONF body must contain YANG JSON.');}}if(method!=='DELETE'&&!object(body))throw new ModelError('malformed-message','A YANG JSON object body is required.');
+   if(native){if(['DELETE','POST'].includes(method))throw new ModelError('operation-not-supported','Hostname supports PUT or PATCH.',405);const value=body['Cisco-IOS-XE-native:hostname']??body['Cisco-IOS-XE-native:native']?.hostname;if(value===undefined||Object.keys(body).some(k=>!['Cisco-IOS-XE-native:hostname','Cisco-IOS-XE-native:native'].includes(k)))throw new ModelError('unknown-element','Only native hostname is writable.');if(body['Cisco-IOS-XE-native:native']&&Object.keys(body['Cisco-IOS-XE-native:native']).some(k=>k!=='hostname'))throw new ModelError('unknown-element','Only native hostname is writable.');this.hostname(next,value);}
+   else if(key){if(method==='POST')throw new ModelError('operation-not-supported','POST creates an interface at the interfaces resource.',405);if(method==='DELETE'){if(leaf)this.editInterface(next,{name:key,[leaf]:leaf==='enabled'?true:''},'merge',key);else this.editInterface(next,{name:key},'delete',key);}else if(leaf){const keys=Object.keys(body);if(keys.length!==1||!['ietf-interfaces:'+leaf,leaf].includes(keys[0]))throw new ModelError('unknown-element','Expected only the selected leaf.');this.editInterface(next,{name:key,[leaf]:body[keys[0]]},'merge',key);}else{if(Object.keys(body).length!==1||!Object.hasOwn(body,'ietf-interfaces:interface'))throw new ModelError('unknown-element','Use exactly one qualified interface list.');const list=body['ietf-interfaces:interface'];const item=Array.isArray(list)&&list.length===1?list[0]:undefined;if(!object(item))throw new ModelError('missing-element','ietf-interfaces:interface body is required.');this.editInterface(next,item,method==='PUT'?'replace':'merge',key);}}
+   else{if(method==='DELETE')throw new ModelError('operation-not-supported','Delete a specific virtual interface.',405);if(method==='PUT')throw new ModelError('operation-not-supported','PUT requires a specific interface or leaf resource.',405);if(Object.keys(body).length!==1||!['ietf-interfaces:interfaces','ietf-interfaces:interface'].includes(Object.keys(body)[0]))throw new ModelError('unknown-element','Unexpected interface body member.');const container=body['ietf-interfaces:interfaces'];if(container&&(!object(container)||Object.keys(container).some(k=>k!=='interface')))throw new ModelError('unknown-element','Unexpected interfaces container member.');const items=body['ietf-interfaces:interface']??container?.interface;if(!items)throw new ModelError('missing-element','An interface list is required.');const list=Array.isArray(items)?items:[];if(!list.length||list.length>512)throw new ModelError('invalid-value','Provide 1–512 interface entries.');if(new Set(list.map((item:any)=>item?.name)).size!==list.length)throw new ModelError('invalid-value','Duplicate interface list key.');for(const item of list)this.editInterface(next,item,method==='POST'?'create':method==='PUT'?'replace':'merge');}
+   this.apply(d,next);return respond(method==='POST'||method==='PUT'&&key&&!row?201:204,undefined);
+  }catch(e){return error(e instanceof ModelError?e:new ModelError('invalid-value','Invalid RESTCONF request.'));}
+ }
+}

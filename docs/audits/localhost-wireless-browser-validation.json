@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-10-17T00:18:34.756Z",
+  "browser": "155.0.8059.84",
+  "url": "http://127.0.0.1:4176/",
+  "scope": "wireless and PoE UI; packet inspection excluded",
+  "checks": [
+    "All nine palette icons use one consistent artwork family",
+    "Controller is labelled WLC",
+    "Laptop placement exposes configuration",
+    "Laptop IPv6 form rejects an IPv4 CIDR before applying",
+    "AP inspector has no manual power toggle",
+    "AP context menu has no manual power action",
+    "Unconnected AP is off and exposes only read-only PoE status",
+    "Example joins APs and connects authorized client only",
+    "AP shows received WLC radio/WLAN state without editable local radio controls",
+    "AP IPv6 form rejects an IPv4 CIDR before applying",
+    "Corrected Enterprise credentials connect through RADIUS",
+    "Dragging a laptop roams and moves its actual wireless relationship",
+    "Wireless laptop desktop browser fetches the routed HTTP server through DNS",
+    "PoE GUI budget powers down the denied AP",
+    "PoE GUI budget appears in actual CLI allocation output",
+    "Restoring PoE budget reboots and reconnects the AP",
+    "Controller GUI applies WLAN change",
+    "GUI changes appear in IOS output",
+    "IOS changes appear in GUI",
+    "Optional estimated coverage renders",
+    "No browser page errors"
+  ],
+  "errors": []
+}

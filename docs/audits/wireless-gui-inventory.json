@@ -1,0 +1,1622 @@
+{
+  "schemaVersion": 2,
+  "profile": "Catalyst 9800 IOS XE 17.12 teaching subset; C9115 lightweight inspired; generic PoE+",
+  "generatedAt": "2026-10-17T00:30:05.392Z",
+  "generator": "node scripts/audit-wireless-gui.mjs",
+  "sources": [
+    {
+      "path": "src/wireless-ui.ts",
+      "sha256": "4183bfa803a164032c93856d0c1b61c99d0e7490199ce60db7e941a4801c2c33"
+    },
+    {
+      "path": "src/poe-ui.ts",
+      "sha256": "8e8adb580315ea18b2ea87974b7713822e30b1a5571c3171950fd44f5b44b7b3"
+    },
+    {
+      "path": "src/wireless-controller-form.ts",
+      "sha256": "aac5b1940821971993f9dd90ce7e0050f89015b7d6a4e7df76d09ce2ff590f64"
+    },
+    {
+      "path": "src/ap-controller-view.ts",
+      "sha256": "377c82ab9565acb1c080c9bcd8c3427055c391d62c7fb5a28c05060dd4ff45dc"
+    },
+    {
+      "path": "src/wlc-reference-ui.ts",
+      "sha256": "f1ad18ba589eb7af6939aa14e2c1396111acdb5de7998acefeae337e4864c19e"
+    }
+  ],
+  "counts": {
+    "fieldTemplates": 74,
+    "wlc": 44,
+    "ap": 10,
+    "laptop": 23,
+    "poeswitch": 4,
+    "complete": 0,
+    "partial": 74,
+    "monitoringAndActionHooks": 22,
+    "apReadOnlyDisplayFields": 22
+  },
+  "fields": [
+    {
+      "name": "coverage",
+      "label": "Show estimated radio coverage",
+      "type": "checkbox",
+      "nodes": [
+        "ap"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "config.features.wirelessCoverage",
+      "runtimePath": "main.ts coverage circles; presentation only",
+      "default": "false",
+      "validation": "boolean",
+      "tests": "WL browser optional coverage",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "adapter-enabled",
+      "label": "Wireless adapter enabled",
+      "type": "checkbox",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.adapter.enabled",
+      "runtimePath": "tickClient → disconnect/scan → Wireless0 interface",
+      "default": "true",
+      "validation": "boolean",
+      "tests": "WL-05/06/07/24",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "auto-connect",
+      "label": "Connect automatically",
+      "type": "checkbox",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.adapter.autoConnect",
+      "runtimePath": "tickClient → IDLE/reconnect",
+      "default": "true",
+      "validation": "boolean",
+      "tests": "source trace; dedicated GUI invalid/reload cases pending",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "ssid",
+      "label": "Preferred SSID",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.adapter.ssid",
+      "runtimePath": "advertisement matching → authentication/association",
+      "default": "empty",
+      "validation": "0–32 bytes",
+      "tests": "WL-01/02; WL-04/30",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "security",
+      "label": "Security",
+      "type": "select",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.adapter.security",
+      "runtimePath": "security compatibility + open/WPA2 authentication",
+      "default": "wpa2-personal",
+      "validation": "open | wpa2-personal | wpa2-enterprise",
+      "tests": "WL-18/19; open WLAN",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "passphrase",
+      "label": "Passphrase · lab credential",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.adapter.passphrase",
+      "runtimePath": "PBKDF2 PMK → four-way MIC validation",
+      "default": "empty",
+      "validation": "8–63 ASCII or 64 hex for WPA2 PSK",
+      "tests": "WL-04/30; published IEEE PMK vector",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "username",
+      "label": "802.1X username",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.adapter.username",
+      "runtimePath": "CAPWAP client-auth → delivered RADIUS request",
+      "default": "empty",
+      "validation": "0–128 bytes",
+      "tests": "WL-18/19; WF-07/08/09",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "password",
+      "label": "802.1X password · lab credential",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.adapter.password",
+      "runtimePath": "CAPWAP client-auth → delivered RADIUS request",
+      "default": "empty",
+      "validation": "0–128 bytes",
+      "tests": "WL-18/19; WF-07/08/09",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "hysteresis",
+      "label": "Roaming hysteresis (dB)",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.adapter.roamHysteresis",
+      "runtimePath": "stronger AP threshold in tickClient",
+      "default": "8 dB",
+      "validation": "1–30 dB",
+      "tests": "WL-08/09/10",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "residence",
+      "label": "Minimum AP residence (seconds)",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.adapter.minimumResidence",
+      "runtimePath": "minimum association duration before roaming",
+      "default": "5 seconds",
+      "validation": "1–300 seconds",
+      "tests": "WL-08/09/10",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "mac",
+      "label": "Adapter MAC address",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "Wireless0.features.macAddress",
+      "runtimePath": "frame source + RADIUS association key + duplicate rejection",
+      "default": "deterministic generated unicast",
+      "validation": "valid nonzero unicast MAC",
+      "tests": "duplicate wireless MAC test",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "controller-name",
+      "label": "Primary controller name",
+      "type": "input",
+      "nodes": [
+        "ap"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.controllerName",
+      "runtimePath": "primary-base rendering; name is descriptive, IP selects controller",
+      "default": "unset",
+      "validation": "maximum 32 bytes on persisted configuration",
+      "tests": "source trace; hardware identity validation unsupported",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "controller",
+      "label": "Primary controller IPv4 address · blank enables DHCP/DNS/broadcast discovery",
+      "type": "input",
+      "nodes": [
+        "ap"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.controller",
+      "runtimePath": "CAPWAP IP discovery destination and response source gate",
+      "default": "unset",
+      "validation": "valid IPv4 or blank",
+      "tests": "WL-15/16/27; WF-06",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "address-mode",
+      "label": "IPv4 addressing",
+      "type": "select",
+      "nodes": [
+        "ap",
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "interface.features.dhcp",
+      "runtimePath": "requestDHCP or static address → shared IP engine",
+      "default": "DHCP",
+      "validation": "dhcp | static",
+      "tests": "WL-03/11/12/13/26; GUI validation partial",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "ip",
+      "label": "IPv4 address",
+      "type": "input",
+      "nodes": [
+        "ap",
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "interface.ip",
+      "runtimePath": "shared connected/local routes + IP endpoint + CAPWAP addressing",
+      "default": "unassigned",
+      "validation": "IPv4 or empty",
+      "tests": "WL-15/16/27",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "mask",
+      "label": "Subnet mask",
+      "type": "input",
+      "nodes": [
+        "ap",
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "interface.mask",
+      "runtimePath": "shared subnet/route resolution",
+      "default": "255.255.255.0 in form",
+      "validation": "contiguous IPv4 mask",
+      "tests": "source trace; boundary matrix pending",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "gateway",
+      "label": "Default gateway",
+      "type": "input",
+      "nodes": [
+        "ap",
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "config.defaultGateway",
+      "runtimePath": "shared recursive route and ARP",
+      "default": "unset",
+      "validation": "IPv4 or empty",
+      "tests": "WL-14/28",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "dns",
+      "label": "DNS servers · comma separated",
+      "type": "input",
+      "nodes": [
+        "ap",
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "config.dnsServers",
+      "runtimePath": "shared DNS UDP delivery and CAPWAP DNS discovery",
+      "default": "empty",
+      "validation": "IPv4/IPv6 comma-separated",
+      "tests": "WL-03/11/12/13/26",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "ipv6",
+      "label": "IPv6 addresses · comma separated",
+      "type": "input",
+      "nodes": [
+        "ap",
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "interface.ipv6",
+      "runtimePath": "shared ND/IPv6/ICMPv6",
+      "default": "empty",
+      "validation": "IPv6 CIDR addresses comma-separated; IPv4 CIDR rejected",
+      "tests": "wireless IPv6 central/local test; AP/laptop browser invalid-CIDR checks",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "slaac",
+      "label": "IPv6 SLAAC",
+      "type": "checkbox",
+      "nodes": [
+        "ap",
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "interface.features.ipv6Autoconfig",
+      "runtimePath": "shared RA/SLAAC services",
+      "default": "false",
+      "validation": "boolean",
+      "tests": "source trace; dedicated wireless GUI disable/renew test pending",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "meters",
+      "label": "Meters per canvas unit",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.rf.metersPerUnit",
+      "runtimePath": "RF log-distance path loss",
+      "default": "0.2",
+      "validation": "0.01–10",
+      "tests": "WL-05/06/07/24; deterministic abstraction",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "exponent",
+      "label": "Path-loss exponent",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.rf.pathLossExponent",
+      "runtimePath": "RF log-distance path loss",
+      "default": "3",
+      "validation": "1–6",
+      "tests": "source trace; physical RF validation unsupported",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "noise",
+      "label": "Noise floor (dBm)",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.rf.noiseFloor",
+      "runtimePath": "RF SNR and eligibility",
+      "default": "-95 dBm",
+      "validation": "-120 to -40 dBm",
+      "tests": "source trace; physical RF validation unsupported",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "attenuation",
+      "label": "Additional attenuation (dB)",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.rf.attenuation",
+      "runtimePath": "RF RSSI and eligibility",
+      "default": "0 dB",
+      "validation": "0–80 dB",
+      "tests": "source trace; physical RF validation unsupported",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "sensitivity",
+      "label": "Receiver sensitivity (dBm)",
+      "type": "input",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.rf.sensitivity",
+      "runtimePath": "RF receiver threshold",
+      "default": "-82 dBm",
+      "validation": "-100 to -30 dBm",
+      "tests": "WL-05/06/07/24; approximation",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "interference",
+      "label": "Model co-channel interference",
+      "type": "checkbox",
+      "nodes": [
+        "laptop"
+      ],
+      "source": "src/wireless-ui.ts:20",
+      "repeat": "once",
+      "state": "wireless.rf.interference",
+      "runtimePath": "co-channel noise sum → SNR/eligibility",
+      "default": "true",
+      "validation": "boolean",
+      "tests": "source trace; no collisions/CSMA implementation",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-ui.ts → validateWireless → shared device configuration",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "wlan-name",
+      "label": "Profile name",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:48",
+      "repeat": "per configured row",
+      "state": "wireless.wlans[name].name",
+      "runtimePath": "own dictionary identity → policy-tag → delivered AP WLAN",
+      "default": "empty for new row",
+      "validation": "1–32 letters/digits/._-; duplicate rejected; legal inherited-member names remain data",
+      "tests": "WF-10/11/12; WF-19/20/21 safe names and real traffic/save/load",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "wlan-id",
+      "label": "WLAN ID",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:48",
+      "repeat": "per configured row",
+      "state": "wireless.wlans[name].id",
+      "runtimePath": "BSSID derivation + show output",
+      "default": "first unused ID in GUI",
+      "validation": "1–512 on creation; existing ID read-only; differing ID rejected",
+      "tests": "WF-06/16; exact platform error transcript unverified",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "wlan-ssid",
+      "label": "SSID",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:48",
+      "repeat": "per configured row",
+      "state": "wireless.wlans[name].ssid",
+      "runtimePath": "AP beacon/probe and client match",
+      "default": "empty for new row",
+      "validation": "1–32 bytes",
+      "tests": "WF-12; SSID invalidation test",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "wlan-security",
+      "label": "Layer 2 security",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:48",
+      "repeat": "per configured row",
+      "state": "wireless.wlans[name].security",
+      "runtimePath": "open/WPA2 four-way/EAP+RADIUS",
+      "default": "WPA2 personal GUI; dot1x CLI",
+      "validation": "open | wpa2-personal | wpa2-enterprise",
+      "tests": "WL-18/19; WF-08/10/11",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "wlan-psk",
+      "label": "PSK · lab credential",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:48",
+      "repeat": "per configured row",
+      "state": "wireless.wlans[name].psk",
+      "runtimePath": "WPA2 PMK/MIC validation",
+      "default": "empty",
+      "validation": "8–63 ASCII or 64 hex; lab clear text",
+      "tests": "WL-04/30; WF-10",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "wlan-auth",
+      "label": "802.1X authentication list",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:48",
+      "repeat": "per configured row",
+      "state": "wireless.wlans[name].authenticationList",
+      "runtimePath": "dot1x method list → AAA group → real UDP requests",
+      "default": "default",
+      "validation": "method-list name",
+      "tests": "WF-07/08/09",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "wlan-enabled",
+      "label": "WLAN status",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:48",
+      "repeat": "per configured row",
+      "state": "wireless.wlans[name].enabled",
+      "runtimePath": "AP advertisement and session eligibility",
+      "default": "disabled for new WLAN",
+      "validation": "on | off",
+      "tests": "WF-12; source trace",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "wlan-broadcast",
+      "label": "SSID advertisement",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:48",
+      "repeat": "per configured row",
+      "state": "wireless.wlans[name].broadcast",
+      "runtimePath": "beacon/probe visibility; directed preferred SSID scan",
+      "default": "broadcast",
+      "validation": "on | off",
+      "tests": "WF-17 hidden directed association and unknown-client scan visibility",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "policy-name",
+      "label": "Policy profile name",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:49",
+      "repeat": "per configured row",
+      "state": "wireless.policies[name].name",
+      "runtimePath": "WLAN policy reference",
+      "default": "empty",
+      "validation": "profile name; duplicate rejected",
+      "tests": "WF-11/12",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "policy-vlan",
+      "label": "VLAN ID",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:49",
+      "repeat": "per configured row",
+      "state": "wireless.policies[name].vlan",
+      "runtimePath": "actual Ethernet/VLAN and CAPWAP data encapsulation",
+      "default": "1",
+      "validation": "1–4094",
+      "tests": "WL-14/28; routed ACL test",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "policy-switch",
+      "label": "Switching",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:49",
+      "repeat": "per configured row",
+      "state": "wireless.policies[name].centralSwitching",
+      "runtimePath": "central UDP5247 vs local AP Ethernet path",
+      "default": "central",
+      "validation": "central | local; local requires Flex site",
+      "tests": "WL-12; WF-01/11",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "policy-enabled",
+      "label": "Status",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:49",
+      "repeat": "per configured row",
+      "state": "wireless.policies[name].enabled",
+      "runtimePath": "AP advertisement/session eligibility",
+      "default": "disabled for new policy",
+      "validation": "on | off",
+      "tests": "source trace; parser and form tests",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "policy-timeout",
+      "label": "Session timeout (seconds)",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:49",
+      "repeat": "per configured row",
+      "state": "wireless.policies[name].sessionTimeout",
+      "runtimePath": "session expiration → disconnect/reauth",
+      "default": "1800 seconds",
+      "validation": "1–86400 seconds",
+      "tests": "WF-17 real configured expiry forces a fresh handshake; full timer boundaries pending",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "policy-tag-name",
+      "label": "Policy tag name",
+      "type": "text",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:50",
+      "repeat": "per configured row",
+      "state": "wireless.policyTags[name]",
+      "runtimePath": "WLAN/policy mapping namespace consumed by delivered AP configuration",
+      "default": "default-policy-tag exists",
+      "validation": "unique profile name; selected references must exist",
+      "tests": "WF-10/11/12/20; unsaved reference options remain partial",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "tag-name",
+      "label": "Policy tag",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:51",
+      "repeat": "per configured row",
+      "state": "wireless.policyTags[name]",
+      "runtimePath": "AP WLAN-to-policy mappings",
+      "default": "default-policy-tag exists",
+      "validation": "profile name; maximum 16 WLAN mappings",
+      "tests": "WL-20/29; policy-tag rejoin test",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "tag-wlan",
+      "label": "WLAN profile",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:51",
+      "repeat": "per configured row",
+      "state": "wireless.policyTags[tag][wlan] key",
+      "runtimePath": "WLAN existence → AP advertisement",
+      "default": "empty",
+      "validation": "existing WLAN profile; duplicate pair rejected",
+      "tests": "WF-02/11",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "tag-policy",
+      "label": "Policy profile",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:51",
+      "repeat": "per configured row",
+      "state": "wireless.policyTags[tag][wlan] value",
+      "runtimePath": "policy dependency → forwarding mode/VLAN",
+      "default": "empty",
+      "validation": "existing policy profile",
+      "tests": "WL-14/28; WF-02",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "site-name",
+      "label": "Site tag",
+      "type": "text",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:52",
+      "repeat": "per configured row",
+      "state": "wireless.siteTags[name]",
+      "runtimePath": "AP operating-mode/join/Flex dependency",
+      "default": "default-site-tag exists",
+      "validation": "profile name; duplicate rejected",
+      "tests": "WF-01/02/04",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "site-local",
+      "label": "AP operating mode",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:52",
+      "repeat": "per configured row",
+      "state": "wireless.siteTags[name].localSite",
+      "runtimePath": "local mode vs FlexConnect standalone behavior",
+      "default": "local",
+      "validation": "local | flex",
+      "tests": "WF-01/04/11",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "site-join",
+      "label": "AP join profile",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:52",
+      "repeat": "per configured row",
+      "state": "wireless.siteTags[name].apProfile",
+      "runtimePath": "CAPWAP heartbeat/dead timers; changes rejoin",
+      "default": "default-ap-profile",
+      "validation": "existing AP join profile",
+      "tests": "WF-02/04",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "site-flex",
+      "label": "Flex profile",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:52",
+      "repeat": "per configured row",
+      "state": "wireless.siteTags[name].flexProfile",
+      "runtimePath": "local native VLAN; changes rejoin",
+      "default": "default-flex-profile",
+      "validation": "existing Flex profile",
+      "tests": "WF-02/04",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "join-name",
+      "label": "AP join profile name",
+      "type": "text",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:53",
+      "repeat": "per configured row",
+      "state": "wireless.apProfiles[name]",
+      "runtimePath": "site attachment → CAPWAP timers",
+      "default": "default-ap-profile exists",
+      "validation": "profile name; duplicate rejected",
+      "tests": "WF-02/04/10",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "join-echo",
+      "label": "Heartbeat interval (seconds)",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:53",
+      "repeat": "per configured row",
+      "state": "wireless.apProfiles[name].echoInterval; deadInterval = 3×",
+      "runtimePath": "actual CAPWAP echo scheduling/dead expiry",
+      "default": "30 seconds",
+      "validation": "1–30 seconds; three-echo dead model abstraction",
+      "tests": "WF-01/04; WL-17",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "flex-name",
+      "label": "Flex profile name",
+      "type": "text",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:54",
+      "repeat": "per configured row",
+      "state": "wireless.flexProfiles[name]",
+      "runtimePath": "site attachment → AP local VLAN mapping",
+      "default": "default-flex-profile exists",
+      "validation": "profile name; duplicate rejected",
+      "tests": "WF-02/10",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "flex-native",
+      "label": "Native VLAN ID",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:54",
+      "repeat": "per configured row",
+      "state": "wireless.flexProfiles[name].nativeVlan",
+      "runtimePath": "AP ingress untagged VLAN and egress tag removal",
+      "default": "1",
+      "validation": "1–4094",
+      "tests": "WL-12/14/28; exact native mismatch cases pending",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "rf-name",
+      "label": "RF profile",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:55",
+      "repeat": "per configured row",
+      "state": "wireless.rfProfiles[name]",
+      "runtimePath": "RF tag → effective AP radios",
+      "default": "empty",
+      "validation": "profile name; duplicate rejected",
+      "tests": "WF-02/03/12",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "rf-band",
+      "label": "Band",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:55",
+      "repeat": "per configured row",
+      "state": "wireless.rfProfiles[name].band",
+      "runtimePath": "band-specific tag validation",
+      "default": "5 GHz",
+      "validation": "2.4 | 5",
+      "tests": "WF-03/11",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "rf-channel",
+      "label": "Channel",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:55",
+      "repeat": "per configured row",
+      "state": "wireless.rfProfiles[name].channel",
+      "runtimePath": "received WLC RF profile selects effective radio channel; Auto uses AP selection",
+      "default": "Auto (0)",
+      "validation": "2.4:0/1/6/11; 5:0/36/40/44/48/149/153/157/161/165",
+      "tests": "APCFG-01/03/06 received channel/application/invalid-band transactional rejection; browser boundaries pending",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "rf-power",
+      "label": "Power ceiling (dBm)",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:55",
+      "repeat": "per configured row",
+      "state": "wireless.rfProfiles[name].power",
+      "runtimePath": "received WLC RF profile overrides local AP radio power → RF",
+      "default": "30 dBm",
+      "validation": "integer -10 to 30; teaching range",
+      "tests": "APCFG-01/04 authoritative profile power with actual forwarding; dedicated full power boundary matrix pending",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "rf-width",
+      "label": "Channel width (MHz)",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:55",
+      "repeat": "per configured row",
+      "state": "wireless.rfProfiles[name].width",
+      "runtimePath": "effective radio width → RF estimate/rate",
+      "default": "20 MHz",
+      "validation": "2.4:20; 5:20/40/80 MHz",
+      "tests": "WF-03/12; no PHY implementation",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "rf-enabled",
+      "label": "Status",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:55",
+      "repeat": "per configured row",
+      "state": "wireless.rfProfiles[name].enabled",
+      "runtimePath": "effective radio → advertisement/session removal",
+      "default": "disabled for new profile",
+      "validation": "on | off",
+      "tests": "WF-12",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "rftag-name",
+      "label": "RF tag",
+      "type": "text",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:56",
+      "repeat": "per configured row",
+      "state": "wireless.rfTags[name]",
+      "runtimePath": "AP RF profile selection",
+      "default": "default-rf-tag exists",
+      "validation": "profile name; duplicate rejected",
+      "tests": "WF-02/03/12",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "rftag-24",
+      "label": "2.4 GHz RF profile",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:56",
+      "repeat": "per configured row",
+      "state": "wireless.rfTags[name].band24",
+      "runtimePath": "effective 2.4 GHz radio; blank restores global AP settings",
+      "default": "unset",
+      "validation": "existing matching-band RF profile or blank",
+      "tests": "WF-02/03/12",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "rftag-5",
+      "label": "5 GHz RF profile",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:56",
+      "repeat": "per configured row",
+      "state": "wireless.rfTags[name].band5",
+      "runtimePath": "effective 5 GHz radio; blank restores global AP settings",
+      "default": "unset",
+      "validation": "existing matching-band RF profile or blank",
+      "tests": "WF-02/03/12",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "hostname",
+      "label": "Hostname",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:58",
+      "repeat": "once",
+      "state": "config.hostname",
+      "runtimePath": "shared IOS show/log/AP identity labels",
+      "default": "WLC1",
+      "validation": "IOS hostname validation",
+      "tests": "WF-10/11/12 form → parser",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "management-interface",
+      "label": "Interface",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:58",
+      "repeat": "once",
+      "state": "wireless.managementInterface",
+      "runtimePath": "CAPWAP control source and reachability",
+      "default": "GigabitEthernet1",
+      "validation": "existing interface",
+      "tests": "WL-15/16/27; virtual interface dataplane incomplete",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "management-ip",
+      "label": "IPv4 address",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:58",
+      "repeat": "once",
+      "state": "management interface.ip",
+      "runtimePath": "CAPWAP source + shared IP endpoint",
+      "default": "unset",
+      "validation": "IPv4 or empty",
+      "tests": "WL-15/16/27; WF-10/11/12",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "management-mask",
+      "label": "Subnet mask",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:58",
+      "repeat": "once",
+      "state": "management interface.mask",
+      "runtimePath": "shared route/subnet resolution",
+      "default": "255.255.255.0 in form",
+      "validation": "contiguous mask",
+      "tests": "WF-10/11/12; boundary matrix pending",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "management-gateway",
+      "label": "Default gateway",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:58",
+      "repeat": "once",
+      "state": "config.defaultGateway",
+      "runtimePath": "shared default routing",
+      "default": "unset",
+      "validation": "IPv4 or empty",
+      "tests": "WL-14/28; WF-10/11/12",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "management-dns",
+      "label": "DNS servers",
+      "type": "input",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:58",
+      "repeat": "once",
+      "state": "config.dnsServers",
+      "runtimePath": "shared DNS resolver",
+      "default": "empty",
+      "validation": "IPv4/IPv6 comma-separated",
+      "tests": "WF-10/11/12/18 DNS replacement and clearing; isolated resolver traffic remains partial",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "ap-policy",
+      "label": "Policy tag",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:58",
+      "repeat": "per configured row",
+      "state": "wireless.assignments[MAC].policyTag",
+      "runtimePath": "delivered configure-response; rejoin; WLAN selection",
+      "default": "default-policy-tag",
+      "validation": "existing policy tag",
+      "tests": "AP policy-tag rejoin test; WF-02",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "ap-site",
+      "label": "Site tag",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:58",
+      "repeat": "per configured row",
+      "state": "wireless.assignments[MAC].siteTag",
+      "runtimePath": "delivered AP mode/join/Flex dependencies",
+      "default": "default-site-tag",
+      "validation": "existing site tag",
+      "tests": "WF-01/02/04",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "ap-rf",
+      "label": "RF tag",
+      "type": "select",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:58",
+      "repeat": "per configured row",
+      "state": "wireless.assignments[MAC].rfTag",
+      "runtimePath": "delivered RF profile dependencies",
+      "default": "default-rf-tag",
+      "validation": "existing RF tag",
+      "tests": "WF-02/03/12",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "ap-mac",
+      "label": "AP Ethernet MAC (assignment key)",
+      "type": "hidden",
+      "nodes": [
+        "wlc"
+      ],
+      "source": "src/wireless-ui.ts:58",
+      "repeat": "per AP in current topology",
+      "state": "wireless.assignments[canonicalMAC] key",
+      "runtimePath": "physical AP identity for tag configuration",
+      "default": "generated AP Ethernet MAC",
+      "validation": "12 hex digits in canonical form",
+      "tests": "AP policy-tag rejoin test",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "wireless-controller-form.ts → IOSSession → ios-wireless.ts/shared IOS commands",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "poe-budget",
+      "label": "Available PoE budget (W)",
+      "type": "number",
+      "nodes": [
+        "poeswitch"
+      ],
+      "source": "src/poe-ui.ts:5",
+      "repeat": "once",
+      "state": "config.features.poe.budget",
+      "runtimePath": "recomputePoE → allocations → AP lifecycle → wireless loss/recovery",
+      "default": "370 W",
+      "validation": "0–740 W; 0.1 input step",
+      "tests": "PoE budget integration/persistence tests",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "poe-ui.ts → poe.ts",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "poe-mode",
+      "label": "Power mode",
+      "type": "select",
+      "nodes": [
+        "poeswitch"
+      ],
+      "source": "src/poe-ui.ts:5",
+      "repeat": "24 PoE access ports",
+      "state": "interface.features.powerInline.mode",
+      "runtimePath": "electrical allocation independent from Ethernet shutdown/VLAN/STP",
+      "default": "auto",
+      "validation": "auto | never",
+      "tests": "per-port power-off/reboot test",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "poe-ui.ts → poe.ts",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "poe-max",
+      "label": "Power limit (mW)",
+      "type": "number",
+      "nodes": [
+        "poeswitch"
+      ],
+      "source": "src/poe-ui.ts:5",
+      "repeat": "24 PoE access ports",
+      "state": "interface.features.powerInline.max",
+      "runtimePath": "grant/deny 30 W full AP allocation",
+      "default": "30000 mW",
+      "validation": "integer 4000–30000 mW",
+      "tests": "budget/port maximum integration test",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "poe-ui.ts → poe.ts",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    },
+    {
+      "name": "poe-priority",
+      "label": "Power priority",
+      "type": "select",
+      "nodes": [
+        "poeswitch"
+      ],
+      "source": "src/poe-ui.ts:5",
+      "repeat": "24 PoE access ports",
+      "state": "interface.features.powerPriority",
+      "runtimePath": "budget admission/shedding ranks high before low, then actual detection order among equal priorities",
+      "default": "low",
+      "validation": "high | low",
+      "tests": "POE-12/13 priority/preemption/detection-order/persistence",
+      "persistence": "running topology and startup configuration where saved; derived sessions excluded",
+      "parser": "poe-ui.ts → poe.ts",
+      "status": "partial",
+      "evidenceScope": "Every field has a source-to-state/runtime trace. Tests listed cover behavior subsets; a complete per-field validation/negation/reload matrix and actual Cisco transcript comparison are not yet verified."
+    }
+  ],
+  "actions": [
+    {
+      "attribute": "data-wireless-section",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-row",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-remove",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Removes row on Apply; invalid remaining references reject transaction."
+    },
+    {
+      "attribute": "data-wireless-live-state",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-live-reason",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-console",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-desktop",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-networks",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-scan",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-ap-power-status",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Read-only AP electrical status; no AP power toggle exists."
+    },
+    {
+      "attribute": "data-ap-controller-status",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-clients",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-history",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-coverage-status",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-choose-ssid",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-list",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-add",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-wireless-tab",
+      "source": "src/wireless-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-poe-console",
+      "source": "src/poe-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-poe-summary",
+      "source": "src/poe-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-poe-state",
+      "source": "src/poe-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    },
+    {
+      "attribute": "data-poe-reason",
+      "source": "src/poe-ui.ts",
+      "status": "source-traced",
+      "notes": "Control/monitoring hook; see source binding. Not counted as a configuration field."
+    }
+  ],
+  "operationalViews": [
+    {
+      "node": "ap",
+      "source": "src/ap-controller-view.ts",
+      "fields": [
+        "state",
+        "reason",
+        "controllerName",
+        "controllerAddress",
+        "assignment.policyTag",
+        "assignment.siteTag",
+        "assignment.rfTag",
+        "issues[]",
+        "radios[].band",
+        "radios[].operational",
+        "radios[].enabled",
+        "radios[].channel",
+        "radios[].width",
+        "radios[].power",
+        "radios[].profileName",
+        "wlans[].name",
+        "wlans[].ssid",
+        "wlans[].policyName",
+        "wlans[].security",
+        "wlans[].vlan",
+        "wlans[].central",
+        "wlans[].reason"
+      ],
+      "runtimePath": "wireless.apConfiguration → received CAPWAP configuration + effectiveRadios + advertisementsForAP",
+      "editable": false,
+      "status": "partial",
+      "evidence": "APCFG-01–06 received profile/forwarding/HTML/dependency/channel checks; WF-20 real reserved WLAN identity; 21-check wireless browser run verifies read-only radio/WLAN display; complete per-field boundaries remain partial"
+    }
+  ]
+}

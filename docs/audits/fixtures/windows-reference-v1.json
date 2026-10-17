@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "profile": "Windows 11 24H2 / Windows Server 2025 networking subset",
+  "evidenceKind": "official-documentation-derived facts, not captured native output",
+  "nativeOutputVerified": false,
+  "retrieved": "2026-10-16",
+  "facts": [
+    {"command":"ping","source":"https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ping","defaultCount":4,"defaultDataBytes":32,"maxDataBytes":65500,"continuousStopsOn":"Ctrl+C","testIds":["WIN-02","WIN-03"]},
+    {"command":"tracert","source":"https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/tracert","defaultMaxHops":30,"defaultTimeoutMs":4000,"probe":"ICMP or ICMPv6 echo with increasing TTL; three timing columns per hop","testIds":["WIN-04"]},
+    {"command":"pathping","source":"https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/pathping","defaultMaxHops":30,"defaultQueryCount":100,"defaultPeriodMs":250,"defaultTimeoutMs":3000,"limitation":"NetworkSim implements cumulative hop samples, not per-link loss attribution","testIds":["WIN-05"]},
+    {"command":"route","source":"https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/route_ws2008","persistentSwitch":"-p","metricRange":[1,9999],"defaultMask":"255.255.255.255","testIds":["WIN-10","WIN-17"]},
+    {"command":"netstat","source":"https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netstat","flags":{"a":"connections plus listening TCP/UDP ports","n":"numeric endpoints","r":"routing table"},"testIds":["WIN-11"]},
+    {"command":"netsh wlan connect","source":"https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-wlan","requiredParameter":"name=existingProfile","optionalParameters":["ssid=SSID","interface=adapter"],"testIds":["WIN-14"]}
+  ]
+}

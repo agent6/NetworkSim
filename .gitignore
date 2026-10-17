@@ -1,0 +1,8 @@
+node_modules/
+dist/
+NetworkSim.html
+.research/
+.cache/
+network-sandbox/
+.DS_Store
+*.log

@@ -1,0 +1,57 @@
+# Windows networking CLI audit
+
+Reference profiles: **Windows 11 24H2** for PC/Laptop and **Windows Server 2025** for Server. NetworkSim implements a networking subset. No Windows kernel, executable, registry, PowerShell, process manager, NetBIOS, WINS, or Windows service-control manager runs here.
+
+The shared parser is `src/windows-cli.ts`. The public `IOSSession` facade delegates all three host kinds to it before IOS parsing, uses `C:\>` for all three, and keeps remote Cisco terminal sessions separate. `main.ts` polls continuous output and keeps input read-only while `ping -t` runs; Ctrl+C cancels it. Laptop wireless commands use the same adapter configuration and wireless state machine as Laptop settings.
+
+## Inventory and evidence
+
+`windows-command-inventory.json` records **17 automatically extracted root spellings and 41 audited command-family variants**: **5 complete narrow local/alias behaviors, 33 partial supported networking subsets, and 3 unsupported/legacy entries**. These are not 41 distinct Windows executables. “Partial” means functional tested behavior exists but the full Microsoft option/output/platform contract remains wider. No native Windows golden transcript was captured. Documentation-derived syntax/default facts are stored separately in `fixtures/windows-reference-v1.json`; they are not presented as native output fixtures.
+
+Regenerate locations and source digest with `node scripts/audit-windows-commands.mjs`. Parser roots are automatically extracted from every `command === '...'` dispatch comparison. Variant records explicitly include the original host paths, additions, legacy alias and unsupported requested families. The repository-wide command inventory is a separate artifact.
+
+## Repaired behavior
+
+| Area | Before | Current packet/state behavior | Tests |
+|---|---|---|---|
+| Shared environment | Laptop showed an IOS prompt; host errors leaked IOS caret/percent text | All three host kinds share the Windows subset, quoting and command errors; unsupported OS commands report the boundary | WIN-01, WIN-18 |
+| Ping | `32` passed as total packet size; options required target first | Default four echoes with 32 **data** bytes, 60-byte IPv4 or 80-byte IPv6 packets; flags can precede/follow target; actual ICMP/ND/ARP and forwarding | WIN-02, WIN-13, WIN-15 |
+| Continuous ping | Missing | Clock-driven ICMP sends and reply stream; cancellation stops future sends and returns actual statistics | WIN-03 |
+| Tracert | One generic probe per hop | Three actual TTL-limited echo probes per hop, time-exceeded replies and destination echo replies; failures remain failures | WIN-04 |
+| Pathping | Missing | Actual route discovery and echo samples to discovered hops; cumulative loss shown with explicit per-link attribution limitation | WIN-05 |
+| DHCP | Inaccurate output/options | Shared DHCP renew/release, named adapters, disconnect/manual-address checks; successful release reaches the server and cancels client renewal | WIN-06, WIN-07 |
+| DNS | No cache controls; one name query only | UDP DNS A/AAAA/CNAME/MX/NS/PTR, explicit server, reverse PTR, shared positive/negative TTL cache display and flush; forced IPv6 hostname probes use AAAA | WIN-08, WIN-15 |
+| ARP | Cisco output and indiscriminate clear | Windows columns and selected dynamic IPv4 deletion; static and IPv6 neighbor entries retained | WIN-09 |
+| Routes | Cisco output, print only | Runtime routes change actual reachability; `-p` persists config routes; other added routes clear with runtime reset; deletion withdraws forwarding/default gateway | WIN-10, WIN-17 |
+| Netstat/getmac | Sparse output; `-an` rejected | Actual TCP channels and enabled service listeners, numeric flags, route alias, engine MAC/media state | WIN-11, WIN-19 |
+| Netsh interface | Missing | Static/DHCP address changes, static/DHCP DNS source, add/delete DNS, real admin disable/enable, IPv6 address add/delete and DAD/ND | WIN-12, WIN-13, WIN-16 |
+| Netsh WLAN | Missing | Actual RF scan, association diagnostics, settings-backed profiles and asynchronous connection/disconnection | WIN-14 |
+| CLS | Command accepted without clearing the visible console | Clears rendered output while preserving the current Windows prompt and command history | `windows-browser-validation.json` |
+
+## Server GUI integration
+
+`services-ui.ts` remains an explicit NetworkSim service administrator; it does not claim to be Windows Server Manager. DHCP input validation rejects host bits in network addresses, gateways outside their pool, reversed exclusions and fractional leases before committing any changes. The existing duplicate-pool validation remains. Syslog displays received packet source, hostname, timestamp, facility and severity; local device logs are no longer substituted for received messages. DHCP lease lookup reads actual server leases and updates without discarding unsaved form edits.
+
+The user explicitly approved retaining the recent removal of server TFTP and SCP/SFTP services and their administration pages on October 16, 2026. The desktop File Transfer client is also removed. Older file dictionaries are retained, while server listeners are disabled on load/reload and reject requests even if old enabled flags remain. Tests in `services-ui.test.ts` cover this exclusion alongside DHCP validation and received Syslog metadata. DNS, HTTP, RADIUS/TACACS+, NTP, DHCP and Syslog continue through shared packet handlers. AAA accounting has separate VTY delivery and browser evidence in `aaa-accounting-fidelity.md`.
+
+## Remaining limitations
+
+- Windows command/output equivalence is documentation reviewed; no native Windows 11/Server 2025 comparison session was available. Formatting is an original Windows-style projection of simulator state.
+- `ping -n` is bounded to 100 per command; size is 0–65500 data bytes, timeout 1–60000 ms. Traces are bounded to 64 hops. Many optional Windows source-route/reverse-route/OS-specific flags are unsupported.
+- Tracert currently renders numeric hop addresses even without `-d`; reverse lookup of intermediate hops is pending. Pathping samples one discovered hop at a time and reports source-to-hop loss only, without Windows per-link loss attribution or background multitasking. It cannot distinguish a router refusing ICMP from forwarding loss.
+- `ipconfig /autoconfig6` is retained solely for older lab compatibility, emits an explicit non-Windows notice, and is omitted from supported Windows help. `/release6`, DNS registration, DHCP class IDs and adapter compartments are unsupported. An unaddressed legacy manual PC can request its initial DHCP lease; this is a compatibility choice.
+- Route modification is an IPv4 user-route subset. Connected route deletion, automatic Windows interface metrics, registry persistence, all `route change` forms and full IPv6 `netsh ... route` editing are pending. The portable lab file supplies persistence; no host registry is touched.
+- Netstat does not invent process IDs, executable names, OS sockets or protocol statistics. `-n` uses numeric addresses in both modes; reverse endpoint name lookup is pending. `getmac` uses simulator transport labels rather than native Windows adapter GUIDs.
+- Netsh supports the explicitly listed address/DNS/admin subset. It does not rename physical engine interfaces or model Windows network compartments, WINS, proxies, Teredo/6to4, firewall rules or every command option. DNS validation is not a native Windows asynchronous validation workflow.
+- Wireless profiles originate in Laptop settings/current preference and stored simulator profiles. Native profile XML import/export, Windows profile priority/group policy, WPA3, OS WLAN reports and multiple WLAN adapters are unsupported. A successful connect message acknowledges a **request**; runtime association/security/DHCP must still succeed.
+- NetBIOS/NetBT is unimplemented; `nbtstat` reports this explicitly. Server service administration uses the GUI rather than invented Windows commands. Full OS authorization is outside this networking subset.
+
+## Primary references
+
+The [Microsoft command reference](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/windows-commands) applies to Windows 11 and Server 2025. Command-specific sources used: [ipconfig](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig), [ping](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ping), [tracert](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/tracert), [pathping](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/pathping), [nslookup](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/nslookup), [ARP](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/arp), [route](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/route_ws2008), [netstat](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netstat), [getmac](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/getmac), [netsh interface](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-interface), [netsh WLAN](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-wlan), and [nbtstat](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/nbtstat). These establish syntax and behavior; they do not certify this simulator as Windows.
+
+## Browser validation
+
+`windows-browser-validation.json` records 16 passing checks in isolated headless Chrome, opening the standalone HTML directly from disk and importing a fixture through the public YAML workflow. The run verifies continuous ping streaming/input locking/Ctrl+C, typed DNS GUI-to-query integration, SNMPv2c/v3 manager success and invalid identities, invalid DHCP/DNS rollback, the file-service exclusion, real Windows DHCP acquisition, and CLS clearing with retained history. Screenshots are in `.cache/windows-browser/`. The separate server browser checks cover accessible service tabs and live DHCP lease lookup. This supplements the 21 Windows behavioral tests; it does not establish native Windows output equivalence.
+
+Windows echo replies now originate with TTL/hop-limit 128 for PC/Laptop/Server; an intervening router decrements the delivered value. WIN-21 verifies IPv4 and IPv6. Sources: [Microsoft IPv4 protocol defaults](https://learn.microsoft.com/en-us/powershell/module/nettcpip/set-netipv4protocol?view=windowsserver2025-ps) and [IPv6 protocol defaults](https://learn.microsoft.com/en-us/powershell/module/nettcpip/set-netipv6protocol?view=windowsserver2025-ps). Cisco node defaults and other protocol initial hop limits remain a separate fidelity item.

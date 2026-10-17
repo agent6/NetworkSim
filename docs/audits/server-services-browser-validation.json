@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-10-17T00:36:37.734Z",
+  "checks": [
+    "The server exposes its six remaining service tabs and no TFTP or SCP/SFTP controls",
+    "Service tabs support arrow keys, Home, End and accessible tab selection",
+    "DHCP shows an accurate empty lease state before allocation",
+    "NTP and Syslog edits survive saving across separate tabs",
+    "A real client DHCP exchange appears under the allocating server with IP, client, MAC and pool",
+    "DHCP lookup filters by IP, hostname, pool and MAC, with clear no-match feedback",
+    "Lease times update live without resetting searches or unsaved service settings",
+    "Released leases disappear from the DHCP lookup",
+    "No browser page errors"
+  ],
+  "errors": [],
+  "surface": "Server Services accessible tabs, live DHCP lease lookup and exclusion of TFTP/SCP/SFTP",
+  "fixture": "isolated headless Chrome; public YAML import; ephemeral localhost static HTML preview",
+  "script": "scripts/browser-server-services.mjs",
+  "screenshots": [
+    ".cache/server-services-browser/dhcp-light.png",
+    ".cache/server-services-browser/dhcp-dark.png"
+  ]
+}
