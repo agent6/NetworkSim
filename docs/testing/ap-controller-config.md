@@ -9,7 +9,7 @@ The AP remains powered exclusively by its connected PoE switch/port. Management 
 - TypeScript: `npm run typecheck` passed.
 - Focused regression: `node --test --test-concurrency=1 tests/ap-controller-config.test.ts tests/wireless.test.ts tests/poe.test.ts`: 61 passed, zero failed.
 - Full repository regression: `npm test`: 592 passed, zero failed. This count includes the concurrently developed broader fidelity work; it is the observed suite snapshot, not a count of AP-only tests.
-- Offline build: `npm run build` passed and rebuilt `NetworkSim.html` and `dist/index.html`.
+- Offline build: `npm run build` passed and rebuilt `index.html` and `dist/index.html`.
 - Browser: `node scripts/browser-ap-controller.mjs`: eight checks passed, zero page errors, in an isolated Chrome context using a temporary local static preview. It does not load or modify the user's saved lab. Results and screenshots are written under `.cache/ap-controller-browser/`.
 
 ## New behavioral cases

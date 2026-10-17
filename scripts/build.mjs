@@ -49,18 +49,18 @@ const html = template
   .replace("<!--APP_SCRIPT-->", () => `<script>${script}</script>`);
 // The browser consumes exactly this escaped inline program. Parse it as a classic
 // script to catch packaging regressions independently of the source compilation.
-new Script(script, { filename: "NetworkSim.html" });
+new Script(script, { filename: "index.html" });
 assert.equal((html.match(/<script>/g) || []).length, 1);
 assert.equal((html.match(/<\/script>/g) || []).length, 1);
 assert(!/<script[^>]+src=/.test(html));
 assert(!/<link[^>]+(?:href|rel)=/.test(template));
 assert(template.includes("connect-src 'none'"));
 await writeFile(path.join(root, "dist/index.html"), html);
-await writeFile(path.join(root, "NetworkSim.html"), html);
+await writeFile(path.join(root, "index.html"), html);
 await writeFile(
   path.join(root, ".cache/build-meta.json"),
   JSON.stringify(output.metafile, null, 2),
 );
 console.log(
-  `Built NetworkSim.html and dist/index.html (${Math.round(Buffer.byteLength(html) / 1024)} KiB). Open NetworkSim.html directly in your browser; no server is required.`,
+  `Built index.html and dist/index.html (${Math.round(Buffer.byteLength(html) / 1024)} KiB). Open index.html directly in your browser; no server is required.`,
 );

@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {registerHooks} from 'node:module';
 import {Simulator} from '../src/engine.ts';
-import {wirelessExample} from '../src/wireless-example.ts';
+import {wirelessLabFixture} from './fixtures/wireless-lab.ts';
 import {wirelessConfig} from '../src/wireless-model.ts';
 import {controllerFormDraft} from '../src/wireless-controller-form.ts';
 
@@ -12,7 +12,7 @@ const {showWireless}=await import('../src/wireless-ui.ts');
 assetHook.deregister();
 function advance(e:Simulator,ms=25000){for(let left=ms;left>0;left-=100)e.advance(Math.min(100,left),100000);}
 function fixture(){
- const e=new Simulator();e.load(wirelessExample());
+ const e=new Simulator();e.load(wirelessLabFixture());
  const wlc=e.lab.devices.find(d=>d.kind==='wlc')!,ap=e.lab.devices.find(d=>d.kind==='ap')!,laptop=e.lab.devices.find(d=>d.kind==='laptop')!,server=e.lab.devices.find(d=>d.kind==='server')!,sw=e.lab.devices.find(d=>d.kind==='poeswitch')!;
  const w=wirelessConfig(wlc)!;
  Object.assign(w.wlans.CAMPUS,{security:'wpa2-personal',psk:'correct-password'});

@@ -1,6 +1,6 @@
 # Interface and local workflow coverage
 
-The interface is original TypeScript with locally compiled Tailwind CSS and embedded device artwork and SVG toolbar icons. The runtime is packaged into `NetworkSim.html`. It has no account, cloud storage, CDN, native simulator dependency, server API or external network service. See [validation.md](validation.md) for observed browser checks and the file-URL testing limitation.
+The interface is original TypeScript with locally compiled Tailwind CSS and embedded device artwork and SVG toolbar icons. The runtime is packaged into `index.html`. It has no account, cloud storage, CDN, native simulator dependency, server API or external network service. See [validation.md](validation.md) for observed browser checks and the file-URL testing limitation.
 
 | Reference workflow | New implementation | Verification and limits |
 | --- | --- | --- |

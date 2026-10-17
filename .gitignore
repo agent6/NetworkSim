@@ -1,6 +1,6 @@
 node_modules/
 dist/
-NetworkSim.html
+/index.html
 .research/
 .cache/
 network-sandbox/

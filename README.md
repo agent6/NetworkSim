@@ -6,7 +6,7 @@ An original network learning simulator for CCNA and CCNP Enterprise practice, wi
 
 After cloning this repository, follow **Develop and validate** below to build the standalone HTML file once.
 
-Double-click **NetworkSim.html** in this folder and open it in a current browser. The file contains the program, compiled Tailwind CSS and embedded device artwork and SVG toolbar icons. It needs no server, internet connection, Packet Tracer installation, account or package manager to run. Keep a copy of this one file anywhere you want to use it.
+Double-click **index.html** in this folder and open it in a current browser. The file contains the program, compiled Tailwind CSS and embedded device artwork and SVG toolbar icons. It needs no server, internet connection, Packet Tracer installation, account or package manager to run. Keep a copy of this one file anywhere you want to use it.
 
 The source build targets Safari 17+, Chrome 120+ and Firefox 121+. The current lab saves automatically in this browser and reopens after refresh, including topology, configurations, notes and canvas position. Browser saves and clipboard access depend on browser permissions, especially for files opened from disk. **Export lab** downloads a portable `.netsim.yaml` backup.
 
@@ -19,7 +19,7 @@ The source build targets Safari 17+, Chrome 120+ and Firefox 121+. The current l
 5. Use `ping`, `traceroute`, and `show` commands in a device console to check connectivity and inspect network state.
 6. Save device startup configurations with `write memory`. Exporting a lab preserves both running and startup configuration, but a later simulated power cycle loads the device's startup configuration. Unsaved network devices boot with factory defaults.
 
-For wireless practice, choose **My labs → Open wireless example**. Double-click a WLC or AP for configuration, or place a wireless laptop to configure its adapter. **Packets** shows real simulated protocol events and pause/step controls. See the [wireless guide](docs/features/wireless-nodes.md) and [supported wireless subset](docs/compatibility/cisco-wireless.md).
+For wireless practice, place a WLC, PoE switch, AP and wireless laptop in the workspace, or open your own YAML lab from **My labs**. Double-click a WLC or AP for configuration, or place a wireless laptop to configure its adapter. **Packets** shows real simulated protocol events and pause/step controls. See the [wireless guide](docs/features/wireless-nodes.md) and [supported wireless subset](docs/compatibility/cisco-wireless.md).
 
 The **PoE switch** provides Layer 2 switching and simulated AP power. Double-click it for the total budget, per-port Auto/Never controls, limits and actual allocations. See the [PoE guide](docs/features/poe-switch.md). Layer 2, Layer 3 and PoE switches use distinct rectangular diagram icons.
 
@@ -77,7 +77,7 @@ npm ci
 npm run check
 ```
 
-`npm run check` type-checks TypeScript, runs independent packet/CLI/persistence tests, and creates `NetworkSim.html` plus `dist/index.html`. The build checks that the result has a single inline classic script, no external script/style dependency and no bundled reference code. The Content Security Policy blocks network connections.
+`npm run check` type-checks TypeScript, runs independent packet/CLI/persistence tests, and creates `index.html` plus `dist/index.html`. The build checks that the result has a single inline classic script, no external script/style dependency and no bundled reference code. The Content Security Policy blocks network connections.
 
 For temporary development preview only:
 

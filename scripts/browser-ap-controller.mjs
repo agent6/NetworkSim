@@ -1,3 +1,5 @@
+import {wirelessLabFixture} from '../tests/fixtures/wireless-lab.ts';
+import {serializeLabFile} from '../src/persistence.ts';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
@@ -6,7 +8,7 @@ import {createHash} from 'node:crypto';
 const require=createRequire(import.meta.url),{chromium}=require(process.env.NETWORKSIM_PLAYWRIGHT_PATH||'/Users/erikpope/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const folder='.cache/ap-controller-browser';await mkdir(folder,{recursive:true});
 const html=await readFile('dist/index.html');
-const artifact={path:'dist/index.html',bytes:html.length,sha256:createHash('sha256').update(html).digest('hex')},sourceDigests=await Promise.all(['src/wireless-ui.ts','src/wlc-reference-ui.ts','src/wireless-controller-form.ts','src/wireless.ts','src/ap-controller-view.ts','src/wireless-example.ts'].map(async path=>({path,sha256:createHash('sha256').update(await readFile(path)).digest('hex')})));
+const artifact={path:'dist/index.html',bytes:html.length,sha256:createHash('sha256').update(html).digest('hex')},sourceDigests=await Promise.all(['src/wireless-ui.ts','src/wlc-reference-ui.ts','src/wireless-controller-form.ts','src/wireless.ts','src/ap-controller-view.ts','tests/fixtures/wireless-lab.ts'].map(async path=>({path,sha256:createHash('sha256').update(await readFile(path)).digest('hex')})));
 const server=http.createServer((_req,res)=>{res.writeHead(200,{'Content-Type':'text/html','Cache-Control':'no-store'});res.end(html);});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const url='http://127.0.0.1:'+server.address().port,browser=await chromium.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true}),page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[],checks=[];
@@ -14,7 +16,7 @@ page.on('pageerror',e=>errors.push(e.message));const check=name=>{checks.push(na
 const node=name=>page.locator('#world .device').filter({has:page.locator('text.device-label',{hasText:new RegExp('^'+name+'$')})}).locator('.device-body');
 const close=()=>page.locator('[data-action=close-dialog]').first().click(),apply=()=>page.locator('button[form=dialog-form]').click();
 try{
- await page.goto(url);await page.locator('[data-action=files]').click();await page.locator('[data-action=wireless-example]').click();
+ await page.goto(url);await page.locator('#import-input').setInputFiles({name:'wireless-fixture.netsim.yaml',mimeType:'application/yaml',buffer:Buffer.from(serializeLabFile(wirelessLabFixture()))});
  await page.waitForFunction(()=>document.querySelectorAll('[data-wireless-link]').length===1,null,{timeout:30000});
  await node('AP1').dblclick();assert.match(await page.locator('[data-ap-config-state]').textContent(),/WLC configuration applied/);assert.match(await page.locator('[data-ap-controller]').textContent(),/WLC1.*10\.10\.0\.2/);assert.match(await page.locator('[data-ap-wlan=CAMPUS]').textContent(),/Campus.*WPA2 Enterprise.*20/s);assert.equal(await page.locator('[name^="radio-"]').count(),0);check('AP displays its received WLC, WLAN, security and VLAN without local radio controls');await close();
  await node('WLC1').dblclick();await page.locator('[data-wireless-tab="Tags & profiles"]').click();await page.getByText('RF profiles and RF tags',{exact:true}).click();await page.locator('[data-wireless-add="RF profile"]').click();
@@ -27,5 +29,5 @@ try{
  await page.locator('[name=passphrase]').fill('correct-password');await apply();await node('LAP1').dblclick();await page.waitForFunction(()=>document.querySelector('[data-wireless-live-state]')?.textContent==='CONNECTED',null,{timeout:20000});assert.equal(await page.locator('[data-wireless-link]').count(),1);check('Correcting the WPA2 key connects the laptop and completes DHCP');await page.screenshot({path:folder+'/laptop-connected.png'});
  await page.locator('[data-wireless-desktop]').click();await page.locator('[data-desktop=browser]').click();await page.locator('#browser-url').fill('http://intranet.campus.lab');await page.locator('#browser-url').press('Enter');await page.waitForFunction(()=>document.querySelector('#browser-status')?.textContent?.includes('200'),null,{timeout:20000});assert.match(await page.frameLocator('#browser-page').locator('body').textContent(),/Campus wireless is working/);check('The matching laptop fetches the real routed DNS/HTTP server over the controller WLAN');await close();
  await node('AP1').dblclick();await page.screenshot({path:folder+'/ap-config.png'});assert.match(await page.locator('[data-ap-wlan=CAMPUS]').textContent(),/Managed-Campus/);assert.deepEqual(errors,[]);check('AP monitoring stays synchronized with no browser errors');
- const results=JSON.stringify({generatedAt:new Date().toISOString(),browser:await browser.version(),url,artifact,sourceDigests,fixture:'Built-in wireless example; GUI-created 5GHz RF149/80MHz/25dBm; Enterprise and WPA2 key mismatch/recovery; actual routed DNS/HTTP',checks,errors},null,2)+'\n';await writeFile(folder+'/results.json',results);await writeFile('docs/audits/ap-controller-browser-validation.json',results);
+ const results=JSON.stringify({generatedAt:new Date().toISOString(),browser:await browser.version(),url,artifact,sourceDigests,fixture:'Imported test-only wireless fixture; GUI-created 5GHz RF149/80MHz/25dBm; Enterprise and WPA2 key mismatch/recovery; actual routed DNS/HTTP',checks,errors},null,2)+'\n';await writeFile(folder+'/results.json',results);await writeFile('docs/audits/ap-controller-browser-validation.json',results);
 }catch(error){await page.screenshot({path:folder+'/failure.png'});console.error(error);console.error(errors);process.exitCode=1;}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

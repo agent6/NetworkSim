@@ -1,19 +1,18 @@
 # Wireless nodes
 
-Open the rebuilt `NetworkSim.html` directly from disk. Wireless features, Tailwind styling and all eight generated device icons are embedded; no backend or internet connection is required. The controller is displayed simply as **WLC**.
+Open the rebuilt `index.html` directly from disk. Wireless features, Tailwind styling and all eight generated device icons are embedded; no backend or internet connection is required. The controller is displayed simply as **WLC**.
 
-## Example lab
+## Build a wireless lab
 
-Choose **My labs → Open wireless example**, or import [campus-wireless.netsim.yaml](campus-wireless.netsim.yaml).
+Place a WLC, PoE switch, AP and wireless laptop from the device palette. Connect the AP to a PoE-capable switch port and give the AP and WLC reachable management addresses. Add a router or server when your lab needs routing, DHCP, DNS, RADIUS or HTTP.
 
-It contains one WLC, two APs, a Layer 2 PoE switch, a router, a DHCP/DNS/RADIUS/HTTP/syslog server and two laptops. Management uses 10.10.0.0/24. Wireless clients use VLAN 20 and 192.168.20.0/24 through the router's relay. The APs draw their modeled power from the PoE switch.
+1. Configure an enabled WLAN and policy profile on the WLC, map them in a policy tag, and assign that tag to the AP.
+2. Let virtual time run and confirm that the AP registers and receives its controller configuration.
+3. Configure the laptop with the advertised SSID, matching security mode and credentials. A dotted line appears only after authorization.
+4. Configure DHCP or static client addressing, VLAN trunks and routing as needed. Test a reachable lab host with `ping`, or query a configured DNS record with `nslookup`.
+5. Open **Packets** and filter 802.11, EAPOL, RADIUS, CAPWAP or DHCP. Select an event for fields and related trace records. Pause/step acts on real virtual time.
 
-1. Let virtual time run. AP1 uses a configured controller; AP2 can discover it using the DHCP/DNS configuration. WLC operational monitoring shows registration.
-2. LAP1 uses SSID **Campus**, WPA2 Enterprise, username **student**, password **NetworkLab123**.
-3. LAP2 deliberately starts with a wrong password. Open its settings, correct it to NetworkLab123 and Apply. A dotted line appears only after authorization.
-4. Open the laptop command prompt and run `ping 10.10.0.100` or `nslookup intranet.campus.lab`.
-5. Drag LAP1 toward AP2. After the signal threshold/residence conditions are met, the dotted relationship moves to AP2.
-6. Open **Packets** and filter 802.11, EAPOL, RADIUS, CAPWAP or DHCP. Select an event for fields and related trace records. Pause/step acts on real virtual time.
+Use **My labs** to save your work in the browser or open a YAML lab file.
 
 ## Device controls
 
@@ -21,7 +20,7 @@ It contains one WLC, two APs, a Layer 2 PoE switch, a router, a DHCP/DNS/RADIUS/
 - **AP:** connect GigabitEthernet0 to a working PoE switch port, then configure management addressing or DHCP and an optional primary controller. Its live controller section shows the received WLANs, security, policy/site/RF tags, VLAN mappings and effective radios. Configure WLANs and radio profiles on the WLC; the AP no longer presents conflicting local radio inputs. Estimated radio coverage is optional.
 - **Wireless laptop:** placement opens adapter settings. Choose/scan an SSID, match security and supply lab credentials. Configure DHCP or static IPv4, IPv6/SLAAC, MAC and roaming settings. A configured SSID alone does not create connectivity.
 
-Use **Open desktop** from laptop settings for its simulated web browser and workstation tools. Visit `http://intranet.campus.lab` in the example to exercise DNS and routed HTTP over wireless. AP power is determined entirely by its connected PoE switch and port; the [PoE guide](poe-switch.md) explains budget failures and power cycling.
+Use **Open desktop** from laptop settings for its simulated web browser and workstation tools. Visit a configured lab HTTP server by its DNS name to exercise DNS and routed HTTP over wireless. AP power is determined entirely by its connected PoE switch and port; the [PoE guide](poe-switch.md) explains budget failures and power cycling.
 
 **Show estimated radio coverage** is an immediate workspace toggle. Check it in the AP settings and close the window to see the shaded range, dashed boundary and approximate distance label; Apply is not required for this display preference. It remains selected after reopening the lab. The boundary remains visible while zooming and in both themes. An AP without PoE power displays a reason and shows its coverage when power becomes available.
 

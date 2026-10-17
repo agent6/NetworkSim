@@ -1,6 +1,6 @@
-import{Simulator}from'./engine.ts';import{IOSSession}from'./cli.ts';import{wirelessConfig}from'./wireless-model.ts';
-/** Original demonstration topology, built through the same CLI and service model. */
-export function wirelessExample(){
+import{Simulator}from'../../src/engine.ts';import{IOSSession}from'../../src/cli.ts';import{wirelessConfig}from'../../src/wireless-model.ts';
+/** Test-only wireless topology, built through the CLI and service model. Never bundled in the app. */
+export function wirelessLabFixture(){
  const sim=new Simulator(98001712),router=sim.addDevice('router',130,140),wlc=sim.addDevice('wlc',420,100),sw=sim.addDevice('poeswitch',420,300),server=sim.addDevice('server',790,150),ap1=sim.addDevice('ap',160,440),ap2=sim.addDevice('ap',680,440),client=sim.addDevice('laptop',150,610),failed=sim.addDevice('laptop',690,610);
  sim.lab.name='Campus wireless · WLC';const exec=(id:string,...lines:string[])=>{const cli=new IOSSession(sim,id);for(const line of lines){const output=cli.execute(line);if(output.some(x=>x.startsWith('%')))throw Error(line+': '+output.join(' '));}};
  let i=1;for(const[d,port]of[[router,'GigabitEthernet0/0'],[wlc,'GigabitEthernet1'],[server,'GigabitEthernet0'],[ap1,'GigabitEthernet0'],[ap2,'GigabitEthernet0']]as const)sim.connect({deviceId:d.id,port},{deviceId:sw.id,port:'GigabitEthernet0/'+i++});
