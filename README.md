@@ -4,8 +4,6 @@ An original network learning simulator for CCNA and CCNP Enterprise practice, wi
 
 ## Open the app
 
-After cloning this repository, follow **Develop and validate** below to build the standalone HTML file once.
-
 Double-click **index.html** in this folder and open it in a current browser. The file contains the program, compiled Tailwind CSS and embedded device artwork and SVG toolbar icons. It needs no server, internet connection, Packet Tracer installation, account or package manager to run. Keep a copy of this one file anywhere you want to use it.
 
 The source build targets Safari 17+, Chrome 120+ and Firefox 121+. The current lab saves automatically in this browser and reopens after refresh, including topology, configurations, notes and canvas position. Browser saves and clipboard access depend on browser permissions, especially for files opened from disk. **Export lab** downloads a portable `.netsim.yaml` backup.
