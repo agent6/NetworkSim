@@ -94,7 +94,7 @@ export class Simulator {
     const stem = ({ router: 'R', switch: 'SW', poeswitch:'PSW', l3switch: 'DSW', pc: 'PC', server: 'SRV', wlc:'WLC', ap:'AP', laptop:'LAP' } as const)[kind];
     let n = 1; while (this.lab.devices.some(d => d.config.hostname === stem + n)) n++;
     const device: Device = { id: this.id('device'), kind, x, y, powered: kind!=='ap', config: factoryDeviceConfig(kind, stem + n), runtime: {...emptyRuntime(),features:{bootTime:this.clock.now()}} };
-    this.lab.devices.push(device); this.changed(); return device;
+    this.lab.devices.push(device); this.changed(); if(kind==='pc')this.startAutomaticClients(device); return device;
   }
   removeDevice(id: string): void {
     const d = this.getDevice(id); if (!d) return;
@@ -851,6 +851,8 @@ export class Simulator {
   requestDHCP(sourceId: string, portName?: string): ServiceResult {
     const d = this.getDevice(sourceId); if (!d) throw new Error('Unknown device');
     const port = portName ? (this.interfaceUp(d.id, portName) ? portName : undefined) : Object.keys(d.config.interfaces).find(p => this.interfaceUp(d.id, p));
+    const pending = [...this.dhcpWait.values()].find(request => request.deviceId === d.id && request.port === port && request.status === 'running');
+    if (pending) return pending;
     const result: ServiceResult = { id: this.id('dhcp'), status: 'running' };
     if (!port) { result.status = 'failure'; result.error = 'No operational interface'; return result; }
     result.deviceId = d.id; result.port = port; d.config.interfaces[port].features.dhcp = true;
@@ -1291,12 +1293,13 @@ export class Simulator {
   private startAutomaticClients(d: Device): void {
     if (!d.powered) return;
     for (const [port, c] of Object.entries(d.config.interfaces)) {
+      let dhcpRequest: ServiceResult | undefined;
       const retry = () => {
         if (!d.powered) return;
-        if (c.features.dhcp && !d.runtime.features.dhcpClientLeases?.[port] && this.interfaceUp(d.id, port)) this.requestDHCP(d.id, port);
+        if (c.features.dhcp && !c.ip && dhcpRequest?.status !== 'success' && !d.runtime.features.dhcpClientLeases?.[port] && this.interfaceUp(d.id, port)) dhcpRequest = this.requestDHCP(d.id, port);
         if (c.features.dhcpv6Client?.stateful && !d.runtime.features.dhcpv6Leases?.[port] && this.interfaceUp(d.id, port)) this.requestDHCPv6(d.id, port, c.features.dhcpv6Client.prefixDelegationName);
         if (c.features.ipv6Autoconfig && !c.features.slaacAddresses?.length && this.interfaceUp(d.id, port)) this.requestIPv6(d.id, port);
-        if ((c.features.dhcp && !d.runtime.features.dhcpClientLeases?.[port]) || (c.features.dhcpv6Client?.stateful && !d.runtime.features.dhcpv6Leases?.[port]) || (c.features.ipv6Autoconfig && !c.features.slaacAddresses?.length)) this.clock.schedule(5000, retry, { owner: d.id, label: 'Automatic host configuration retry' });
+        if ((c.features.dhcp && !c.ip && dhcpRequest?.status !== 'success' && !d.runtime.features.dhcpClientLeases?.[port]) || (c.features.dhcpv6Client?.stateful && !d.runtime.features.dhcpv6Leases?.[port]) || (c.features.ipv6Autoconfig && !c.features.slaacAddresses?.length)) this.clock.schedule(5000, retry, { owner: d.id, label: 'Automatic host configuration retry' });
       };
       if (c.features.dhcp || c.features.dhcpv6Client?.stateful || c.features.ipv6Autoconfig) this.clock.schedule(1, retry, { owner: d.id, label: 'Automatic host configuration after boot' });
     }

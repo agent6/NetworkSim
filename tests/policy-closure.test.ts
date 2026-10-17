@@ -145,6 +145,7 @@ test('classic NetFlow aggregates ICMP by packed message type/code and exports re
 
 test('validated DHCP RELEASE passes source guard, removes its binding, and rejects another port or client identity', () => {
   const s = new Simulator(904), pc = s.addDevice('pc'), attacker = s.addDevice('pc'), sw = s.addDevice('switch'), server = s.addDevice('server');
+  attacker.config.interfaces[p].features.dhcp = false;
   ip(server, p, '192.0.2.1'); server.config.services.dhcp = { enabled: true, pools: [{ name: 'LAN', network: '192.0.2.0', prefix: 24, defaultRouter: '192.0.2.1', dnsServers: [] }], excluded: [] };
   sw.config.features.dhcpSnooping = { enabled: true, vlans: [1] };
   sw.config.interfaces[g(1)].features = { portfast: true, sourceGuard: true }; sw.config.interfaces[g(2)].features = { portfast: true, dhcpSnoopingTrust: true }; sw.config.interfaces[g(3)].features.portfast = true;

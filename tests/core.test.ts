@@ -7,7 +7,7 @@ import { maskToPrefix, prefixContains, parseCidr } from '../src/ip.ts';
 import type { TCPChannel } from '../src/tcp-channel.ts';
 
 const g = (n: number) => 'GigabitEthernet0/' + n;
-function ip(d: Device, port: string, address: string, mask = '255.255.255.0') { const c = d.config.interfaces[port] ??= defaultInterface(port); c.ip = address; c.mask = mask; c.adminUp = true; c.switchport = false; }
+function ip(d: Device, port: string, address: string, mask = '255.255.255.0') { const c = d.config.interfaces[port] ??= defaultInterface(port); c.ip = address; c.mask = mask; c.features.dhcp = false; c.adminUp = true; c.switchport = false; }
 function pair() { const s = new Simulator(7), a = s.addDevice('router'), b = s.addDevice('router'); ip(a, g(0), '10.0.0.1'); ip(b, g(0), '10.0.0.2'); s.connect({ deviceId: a.id, port: g(0) }, { deviceId: b.id, port: g(0) }); return { s, a, b }; }
 function routed() {
   const s = new Simulator(42), a = s.addDevice('pc'), r = s.addDevice('router'), b = s.addDevice('server');
