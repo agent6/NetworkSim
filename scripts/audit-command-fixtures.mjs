@@ -121,5 +121,7 @@ export function fixtureContext(mode,path,base){
 export function commandRejected(value){
  const text=String(value??'').split('\n').filter(line=>!/^% configuration stored only:/i.test(line)).join('\n');
  if(/^\s*-{5,}\s+show /i.test(text))return false;
+ // Actual rejection notices that the historical broad regex missed. Keep informational/stored-only output accepted.
+ if(/(?:^|\n)\s*% (?:Supply an interface for this ARP entry\.|Value must be between \d+ and \d+\.|Subnet mask is not contiguous\.|Remove the OSPFv3 process to remove its address family\.|Specify the VRF address family to remove\.)/i.test(text))return true;
  return /(?:^|\n)\s*(?:%\s*(?:Invalid|Incomplete command|Ambiguous command|[^\n]*not implemented|[^\n]*not supported|Unsupported|[^\n]*does not exist(?!\. Creating)|[^\n]*not available|Bad mask|Expected|Please define|Command rejected|[^\n]*requires? )|Command rejected|Bad mask|Inconsistent address)/i.test(text);
 }

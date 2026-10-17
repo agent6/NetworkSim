@@ -7,6 +7,18 @@ import { terminalRows } from '../src/ios-terminal.ts';
 function fixture(){const engine=new Simulator(415),device=engine.addDevice('router'),cli=new IOSSession(engine,device.id);return {engine,device,cli};}
 function run(cli:IOSSession,...lines:string[]){for(const line of lines)assert.ok(!cli.execute(line).some(row=>/^%/.test(row)),line);}
 
+test('invalid no/default navigation cannot leave modes or dispatch EXEC and is absent from help/completion',()=>{
+  const {engine,device,cli}=fixture();
+  for(const setup of [['enable','conf t'],['interface g0/0'],['exit','router bgp 65000','address-family ipv4 unicast']]){
+    run(cli,...setup);const mode=cli.mode,prompt=cli.prompt,configuration=JSON.stringify(device.config),clock=engine.clock.now();
+    for(const command of ['no end','default end','no exit','default exit','no help','default help','no do reload','default do show version',...mode==='address-family'?['no exit-address-family','default exit-address-family']:[]]){
+      assert.match(cli.execute(command).join('\n'),/Invalid input/,command);assert.equal(cli.mode,mode);assert.equal(cli.prompt,prompt);assert.equal(JSON.stringify(device.config),configuration);assert.equal(engine.clock.now(),clock);
+    }
+    assert.ok(!cli.help('no ').some(row=>/^\s*(?:end|exit|help|do)\s/.test(row)));
+    assert.match(cli.help('no do ').join('\n'),/No matching/);assert.equal(cli.complete('no do sh'),'no do sh');assert.equal(cli.complete('no exi'),'no exi');
+  }
+});
+
 test('configure source prompt and cancellation preserve configuration and privilege',()=>{
   const {device,cli}=fixture();run(cli,'enable','configure');assert.match(cli.prompt,/\[terminal\]\?$/);
   run(cli,'');assert.equal(cli.mode,'config');run(cli,'hostname Campus','interface g0/0');

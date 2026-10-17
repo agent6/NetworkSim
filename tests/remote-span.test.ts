@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Simulator } from "../src/engine.ts";
+import { IOSSession } from "../src/cli.ts";
+import { renderConfig } from "../src/config-renderer.ts";
 import type { Device } from "../src/model.ts";
 const g = (n: number) => `GigabitEthernet0/${n}`,
   host = "GigabitEthernet0";
@@ -102,6 +104,28 @@ test("ERSPAN rejects an unmatched session and stops capture when the source is s
   sim.ping(pc.id, "192.0.2.1", { count: 1 });
   sim.advance(1000);
   assert.equal(source.runtime.features.spanStats[1].frames, sent);
+});
+test("ERSPAN peer removal stops real mirrors, preserves the session and replays without a phantom endpoint", () => {
+  const { sim, source, collector, pc, monitor } = erspan();
+  const cli = new IOSSession(sim, source.id), receiver = new IOSSession(sim, collector.id);
+  const run = (session: IOSSession, ...commands: string[]) => { for (const command of commands) assert.ok(!session.execute(command).some(row => /^%/.test(row)), command); };
+  const probe = () => { const ping = sim.ping(pc.id, "192.0.2.1", { count: 1 }); sim.advance(1000); assert.equal(ping.received, 1); };
+  probe();assert.ok(monitor.runtime.features.capturedFrames.length > 0);
+  run(cli, "enable", "conf t", "monitor session 1 type erspan-source", "no destination", "end");
+  const session = source.config.features.spanSessions[1];
+  assert.equal(session.ipAddress, undefined);assert.equal(session.erspanId, undefined);assert.equal(session.originIp, undefined);assert.equal(session.sources.length, 1);
+  monitor.runtime.features.capturedFrames=[];const eventIndex=sim.events.length;probe();assert.ok(!sim.events.slice(eventIndex).some(event=>event.nodeId===source.id&&event.protocol==='GRE'&&event.label==='Frame sent'));assert.equal(monitor.runtime.features.capturedFrames.length, 0);
+  const text = renderConfig(source).join('\n');
+  assert.match(text, /monitor session 1 type erspan-source/);assert.doesNotMatch(text, /^ destination$/m);
+  const copy = sim.addDevice("router"), replay = new IOSSession(sim, copy.id);copy.config.features.files={"removed.cfg":text};
+  run(replay, "enable", "copy flash:removed.cfg running-config");assert.equal(copy.config.features.spanSessions[1].ipAddress, undefined);assert.equal(copy.config.features.spanSessions[1].sources.length, 1);
+  run(receiver, "enable", "conf t", "monitor session 7 type erspan-destination");
+  const before = JSON.stringify(collector.config);assert.match(receiver.execute("no destination").join("\n"), /requires an interface/);assert.equal(JSON.stringify(collector.config), before);
+  run(receiver, "no source", "end");assert.equal(collector.config.features.spanSessions[7].destination, g(1));assert.equal(collector.config.features.spanSessions[7].erspanId, undefined);
+  run(cli, "conf t", "monitor session 1 type erspan-source", "destination", "erspan-id 42", "ip address 10.0.23.2", "origin ip address 10.0.12.1", "end");probe();assert.equal(monitor.runtime.features.capturedFrames.length, 0);
+  run(receiver, "conf t", "monitor session 7 type erspan-destination", "source", "erspan-id 42", "ip address 10.0.23.2", "end");probe();assert.ok(monitor.runtime.features.capturedFrames.length > 0);
+  run(cli, "conf t", "monitor session 1 type erspan-source", "default destination", "end", "write memory");
+  sim.reload(source.id);assert.equal(source.config.features.spanSessions[1].ipAddress, undefined);assert.equal(source.config.features.spanSessions[1].sources.length, 1);
 });
 test("RSPAN traverses the remote VLAN and stops at a trunk that prunes it", () => {
   const sim = new Simulator(822),

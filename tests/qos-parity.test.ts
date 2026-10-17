@@ -33,3 +33,29 @@ test('QoS settings and policer submode round-trip; unsupported and conflicting s
 test('CoPP color actions affect locally delivered traffic while transit bypasses the control-plane policy',()=>{
  const{s,a,r,c}=lab();run(c,'policy-map P','class class-default','police 8 1 conform-action transmit exceed-action drop','end','conf t','control-plane','service-policy input P','end');const local=s.ping(a.id,'10.0.0.1',{count:1});s.advance(1500);assert.equal(local.received,0);const transit=s.ping(a.id,'10.0.1.2',{count:1});s.advance(1500);assert.equal(transit.received,1);assert.match(c.execute('show policy-map control-plane input class class-default').join('\n'),/exceeded 1 packets/);assert.equal(r.runtime.features.qosCounters['P:class-default:control-plane:in'].dropped,1);
 });
+
+test('value-bearing and bare DSCP removals preserve received markings; malformed no forms are atomic',()=>{
+ const{s,a,r,b,c}=lab();run(c,'policy-map P','class class-default','set dscp 10','end','conf t','interface g0/0','service-policy input P','end');
+ const send=()=>{s.events=[];const p=s.ping(a.id,'10.0.1.2',{count:1,tos:72});s.advance(1500);assert.equal(p.received,1);return s.events.find(e=>e.nodeId===b.id&&e.label==='Frame received'&&e.packet?.protocol==='ICMP'&&e.packet.destination==='10.0.1.2')?.packet?.dscp;};
+ assert.equal(send(),10);run(c,'conf t','policy-map P','class class-default');const before=structuredClone(r.config.features.policyMaps);for(const bad of['no set dscp 64','no set dscp -1','no set dscp nonsense','no set dscp 10 extra']){assert.match(c.execute(bad).join('\n'),/%/);assert.deepEqual(r.config.features.policyMaps,before);}
+ assert.match(c.help('no set dscp ').join('\n'),/<cr>/);assert.match(c.help('no set dscp 10 ').join('\n'),/<cr>/);run(c,'no set dscp 10','end');assert.equal(send(),18);run(c,'conf t','policy-map P','class class-default','set dscp ef','no set dscp','set dscp af11','default set dscp 10','end');assert.equal(send(),18);assert.doesNotMatch(renderConfig(r).join('\n'),/set dscp/);
+});
+
+test('nested policer no forms validate actions and restore defaults without disabling three-color metering',()=>{
+ const{s,a,r,c}=lab();run(c,'policy-map P','class class-default','police 800 bc 100 be 100','conform-action drop','exceed-action drop','violate-action drop','end','conf t','interface g0/0','service-policy input P','end');
+ const send=()=>{const p=s.ping(a.id,'10.0.1.2',{count:3,interval:0,size:100});s.advance(2500);return p.received;};assert.equal(send(),0);
+ run(c,'conf t','policy-map P','class class-default','police 800 bc 100 be 100 conform-action drop exceed-action drop violate-action drop');const before=structuredClone(r.config.features.policyMaps);
+ for(const bad of['no conform-action drop extra','no exceed-action set-dscp-transmit 64','no violate-action set-prec-transmit 8','no exceed-action unknown','no conform-action set-dscp-transmit']){assert.match(c.execute(bad).join('\n'),/%/);assert.deepEqual(r.config.features.policyMaps,before);}
+ for(const color of['conform','exceed','violate']){assert.match(c.help(`no ${color}-action `).join('\n'),/<cr>/);assert.match(c.help(`no ${color}-action drop `).join('\n'),/<cr>/);run(c,`no ${color}-action drop`);}run(c,'end');assert.equal(send(),1,'Only default conform/transmit passes; exceed and violate retain default drop');
+ run(c,'conf t','policy-map P','class class-default','police 800 bc 100 be 100 conform-action transmit exceed-action transmit violate-action drop','no violate-action drop','end');assert.equal(send(),2,'Removing explicit violate/drop must not let excess/transmit forward violating packets');const policer=r.config.features.policyMaps.P.classes[0].police;assert.equal(policer.threeColor,true);assert.equal(policer.violate,undefined);assert.ok(counter(r).colors.violate.packets>=3);assert.match(c.execute('show policy-map interface g0/0 input').join('\n'),/violated .*action drop/);
+ run(c,'conf t','policy-map P','class class-default','police 800 bc 100 be 100 conform-action transmit exceed-action transmit violate-action transmit','no exceed-action transmit','no violate-action transmit','end');assert.equal(send(),1);
+ run(c,'write memory');s.reload(r.id);s.advance(7000);assert.equal(r.config.features.policyMaps.P.classes[0].police.threeColor,true);assert.equal(send(),1);
+ const copy=s.addDevice('router'),other=new IOSSession(s,copy.id);copy.config.features.files={snapshot:renderConfig(r).join('\n')};run(other,'enable','copy flash:snapshot running-config');assert.deepEqual(copy.config.features.policyMaps,r.config.features.policyMaps);
+});
+
+test('legacy imported violate actions and explicit excess bursts retain three-color behavior after action removal',()=>{
+ const{s,a,r,c}=lab();r.config.features.policyMaps={P:{classes:[{name:'class-default',police:{rate:800,burst:100,excessBurst:100,conform:{kind:'transmit'},exceed:{kind:'transmit'},violate:{kind:'drop'}}}]}};run(c,'interface g0/0','service-policy input P','end','conf t','policy-map P','class class-default','police 800 bc 100 be 100 conform-action transmit exceed-action transmit violate-action drop');delete r.config.features.policyMaps.P.classes[0].police.threeColor;
+ run(c,'no violate-action','end');const p=s.ping(a.id,'10.0.1.2',{count:3,interval:0,size:100});s.advance(2500);assert.equal(p.received,2);assert.equal(counter(r).colors.violate.packets,1);
+ // An older document can supply Be with implicit actions and no new mode flag.
+ const policer=r.config.features.policyMaps.P.classes[0].police;delete policer.threeColor;delete policer.violate;s.changed();const again=s.ping(a.id,'10.0.1.2',{count:3,interval:0,size:100});s.advance(2500);assert.equal(again.received,2);
+});

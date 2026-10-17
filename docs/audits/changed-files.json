@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-17T00:42:33.731Z",
+  "generatedAt": "2026-10-17T01:04:05.941Z",
   "scope": "Explicit source/test review surface for this audit and retained concurrent work. No immutable pre-audit source snapshot exists; this is not a Git diff, authorship attribution, or exhaustive historical edit count.",
   "baseline": "Checkout was already untracked; no reset or blanket commit was made.",
-  "concurrentWork": "AP controller displays, WLC reference dropdowns and server service removal were introduced concurrently and preserved. This audit also repaired defects in these shared files.",
+  "concurrentWork": "AP controller displays, WLC reference dropdowns and server service removal were introduced concurrently and preserved. The shared packaging now delivers index.html; the wireless lab fixture was moved out of the product into tests/fixtures/wireless-lab.ts and browser workflows use public YAML import. This audit also repaired defects in these shared files.",
   "files": [
     {
       "path": "src/aaa-accounting.ts",
@@ -56,8 +56,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "f9692d54bc0d957433e7c9fd4b2b70c93f4cf5dadaf4a2830a27796fad7c64c8",
-      "bytes": 301621
+      "sha256": "01913600f41280e888b9292a9688067874b8d0d989b2bc668942d61ddfca4e24",
+      "bytes": 302467
     },
     {
       "path": "src/config-renderer.ts",
@@ -65,8 +65,8 @@
       "groups": [
         "shared-engine-and-persistence"
       ],
-      "sha256": "7930a44285ef59006b3453fcb583296a591b0d105ea919b31009d7b234269ec0",
-      "bytes": 62348
+      "sha256": "df2513507e8900503d897a6143dd1fb7eed8a54bb46f947e139181616cd61e26",
+      "bytes": 63037
     },
     {
       "path": "src/control-plane.ts",
@@ -132,6 +132,15 @@
       "bytes": 6083
     },
     {
+      "path": "src/ios-debug.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "dc4ec0c2564fb86456e6e8d112dc4ad38335ea6e27c458ab785117af6e7e67f5",
+      "bytes": 6071
+    },
+    {
       "path": "src/ios-maintenance.ts",
       "role": "source",
       "groups": [
@@ -164,8 +173,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "1bbd5678147a856749da2929ba974cead8b88c330f608fe4980df867dd25ec2f",
-      "bytes": 38856
+      "sha256": "ecaa01117feb441fcb8adbcd9a4223c464ebcb008ff223fedf11d8ac43aa4e26",
+      "bytes": 38915
     },
     {
       "path": "src/ios-show-operational.ts",
@@ -218,8 +227,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "b1c07ad380b6eacdaf992a682d241e8ccad846aac5a4a37427b8a6fc9bd65262",
-      "bytes": 52097
+      "sha256": "fe842f37689cf8b8d4850ebf4b0ed7c59f0db33b1babecb72b4d2907747cfe30",
+      "bytes": 53165
     },
     {
       "path": "src/ios-wireless.ts",
@@ -245,8 +254,8 @@
       "groups": [
         "gui-and-retained-concurrent-work"
       ],
-      "sha256": "9da9a37669fb1863c81377dcba43425d016552b7bcaa038834821976f758fb02",
-      "bytes": 123827
+      "sha256": "1b9710d8a17ec479a87f0f1fb68a9cb779680275893944e748f52ee07e035c48",
+      "bytes": 123636
     },
     {
       "path": "src/management.ts",
@@ -290,8 +299,8 @@
       "groups": [
         "wired-protocols-and-physical-links"
       ],
-      "sha256": "17bc7992af87a7f1c11c56c0b3e8ba3cd95275ac6a12809b15725315b6dc440a",
-      "bytes": 38055
+      "sha256": "9143aa94533ba9d501d60b3033a75a23cf1294bb750d0c1da11c9bb7a0f85c8d",
+      "bytes": 38111
     },
     {
       "path": "src/persistence.ts",
@@ -443,8 +452,8 @@
       "groups": [
         "wireless-and-poe"
       ],
-      "sha256": "cc82998987b648c43e9dd9711ab2b18d0fb576b4b9e956d1a66c4dcd3b57fcc2",
-      "bytes": 11895
+      "sha256": "80d167847c00dd048bb41b53685d581cfc7e81c8e99082a8c1e90f77a87fc3d0",
+      "bytes": 11901
     },
     {
       "path": "tests/bgp-multiprotocol.test.ts",
@@ -483,6 +492,15 @@
       "bytes": 10296
     },
     {
+      "path": "tests/eigrp-bfd-persistence.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "d6251baced1d82b0beaddfa5223bc364f830db5a80708ff17cea4883c929a3f1",
+      "bytes": 3728
+    },
+    {
       "path": "tests/ethernet-physical.test.ts",
       "role": "tests",
       "groups": [
@@ -490,6 +508,15 @@
       ],
       "sha256": "38bf921f3e2a68fceb36bd04a6fa1b1febddfd173ffc48a6e4530423988a03e5",
       "bytes": 11912
+    },
+    {
+      "path": "tests/ios-service-compat.test.ts",
+      "role": "tests",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "f0e41114c9ce494acd0f8b977a2bc082c83c60b79d14aacf33e3b07c7d16e065",
+      "bytes": 10632
     },
     {
       "path": "tests/ios-show-operational.test.ts",
@@ -508,6 +535,15 @@
       ],
       "sha256": "b51fdffa6f9d03e9b6f65d00a8abbb01d154021bba0831c834c4a450f08eefbe",
       "bytes": 15416
+    },
+    {
+      "path": "tests/ios-terminal.test.ts",
+      "role": "tests",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "a0fe6628eacc4d6bd44440790feffa13f79c5c103fe5fd57a55777d0009618d4",
+      "bytes": 10057
     },
     {
       "path": "tests/mac-aging.test.ts",
@@ -560,8 +596,8 @@
       "groups": [
         "wireless-and-poe"
       ],
-      "sha256": "040e769bc743aec048035ebf1fbab73a09978b20695a14028ea7e7c4890b1a11",
-      "bytes": 11199
+      "sha256": "2c26b9863877eed2ac77bf44c35af7ef3fc31a18dbd0e20b94365d39b9f9027b",
+      "bytes": 11205
     },
     {
       "path": "tests/qos-parity.test.ts",
@@ -569,8 +605,8 @@
       "groups": [
         "wired-protocols-and-physical-links"
       ],
-      "sha256": "29a675f07c3b374b3b86b64cd2194aca566965939d686e39d61df86e26b76882",
-      "bytes": 6963
+      "sha256": "9f124e95ec6890ca7e436f2ab9b0a66029ea9d32134a539b64515f3e6fc04a68",
+      "bytes": 11861
     },
     {
       "path": "tests/qos-scheduler.test.ts",
@@ -591,6 +627,15 @@
       "bytes": 8523
     },
     {
+      "path": "tests/remote-span.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "f1c8feecd72afce3983407ccb3d8f52031ae449c4725c3016b2c628749466617",
+      "bytes": 9301
+    },
+    {
       "path": "tests/services-ui.test.ts",
       "role": "tests",
       "groups": [
@@ -605,8 +650,8 @@
       "groups": [
         "windows-and-network-services"
       ],
-      "sha256": "96a0baec91d6a17c6b990d2581b5b1d4929099d2f8006817868f8624e827a925",
-      "bytes": 17401
+      "sha256": "a8c575e1a4941f9fb7c0e35d1c4fee2d85219861d193ea21370c8043fb9d7a44",
+      "bytes": 17407
     },
     {
       "path": "tests/ssh-files.test.ts",
@@ -623,8 +668,8 @@
       "groups": [
         "windows-and-network-services"
       ],
-      "sha256": "a675403746e2373f448430f2736bb2733f0318386f1456153bdb01ae694a65cd",
-      "bytes": 19843
+      "sha256": "b2efa4bca59c5b3b8ffee1515c6c18c7d78f63932bbbc82637fc4ec9a0dbe849",
+      "bytes": 19849
     },
     {
       "path": "tests/wired-fidelity.test.ts",
@@ -641,8 +686,8 @@
       "groups": [
         "wireless-and-poe"
       ],
-      "sha256": "23d643ff5171131ee705e3fdbbb79eaa42f76fcb84135e0406f017d394715947",
-      "bytes": 40260
+      "sha256": "4e3884c27d566426f0ed36fd2d11d8942e2d5974897167406c5bbaa755e94239",
+      "bytes": 40272
     }
   ],
   "evidencePaths": [
@@ -653,7 +698,13 @@
     "docs/audits/audit-summary.json",
     "docs/audits/cisco-compatibility-matrix.md",
     "docs/audits/cli-command-coverage.md",
+    "docs/audits/command-probe-current-triage.json",
+    "docs/audits/command-probe-followups.json",
+    "docs/audits/command-probe-snapshots.json",
+    "docs/audits/command-probe-triage.json",
     "docs/audits/command-probe-validation.json",
+    "docs/audits/command-probe-validation.md",
+    "docs/audits/command-removal-fidelity.md",
     "docs/audits/coverage-inventory.json",
     "docs/audits/cross-device-integration.md",
     "docs/audits/dependency-map.json",
@@ -684,8 +735,10 @@
     "scripts/audit-change-manifest.mjs",
     "scripts/audit-command-contexts.mjs",
     "scripts/audit-command-fixtures.mjs",
+    "scripts/audit-command-followups.mjs",
     "scripts/audit-command-ledger.mjs",
     "scripts/audit-command-parity.mjs",
+    "scripts/audit-command-probe-triage.mjs",
     "scripts/audit-command-probes.mjs",
     "scripts/audit-command-registrations.mjs",
     "scripts/audit-exam-objectives.py",
@@ -705,8 +758,57 @@
     "scripts/report-fidelity-audit.mjs"
   ],
   "standalone": {
-    "path": "NetworkSim.html",
-    "sha256": "6340aa22b114a00c94d12570e66e1c03887189f131ac80b7cf2c3094c722f632",
-    "bytes": 3456643
-  }
+    "path": "index.html",
+    "sha256": "52eb22827f202dfe03db3808912edc1ad2b00b31efc88620a7a3a964b336070a",
+    "bytes": 3455267
+  },
+  "concurrentPaths": [
+    {
+      "path": "src/shell.html",
+      "exists": true,
+      "sha256": "7d7e6e353846ec80d46abeccc3a27ec6a559b4f5301fb9e20eb1bf0b5b3b891a",
+      "bytes": 887,
+      "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
+    },
+    {
+      "path": "src/assets/networksim-logo.png",
+      "exists": true,
+      "sha256": "cc1512fd37c33b2e9f024e1bb90e4d83420648b984024e34be6ac3079c2b93e0",
+      "bytes": 233095,
+      "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
+    },
+    {
+      "path": "scripts/build.mjs",
+      "exists": true,
+      "sha256": "7bda0339515548cd4e0d12212f2df6e7030fb39f3feab1220dcee00f18d310ff",
+      "bytes": 2643,
+      "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
+    },
+    {
+      "path": ".gitignore",
+      "exists": true,
+      "sha256": "02c6d48dff3fc82d9ed10b1a115a1d5898a6e7fa1be5893c315168bef2aa3f0a",
+      "bytes": 72,
+      "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
+    },
+    {
+      "path": "README.md",
+      "exists": true,
+      "sha256": "b8ca4901134a9cfa2672e54f4b755c5b8194b82d7f8f892256077d4e5fc94909",
+      "bytes": 9609,
+      "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
+    },
+    {
+      "path": "tests/fixtures/wireless-lab.ts",
+      "exists": true,
+      "sha256": "53fe6d2f6aff9b116493f4ce1a0a54281eddc06d6ae8ab63dd74c8bb4bc1bcfd",
+      "bytes": 4356,
+      "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
+    },
+    {
+      "path": "src/wireless-example.ts",
+      "exists": false,
+      "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
+    }
+  ]
 }

@@ -204,7 +204,7 @@ export function applyQos(engine: Simulator, device: Device, port: string, direct
     if (policyClass.police) {
       const p = policyClass.police, bytesPerSecond = Math.max(1, Number(p.rate)) / 8;
       const committed = Math.max(1, Number(p.burst ?? Math.max(1500, Math.round(bytesPerSecond / 4))));
-      const excess = Math.max(1, Number(p.excessBurst ?? committed)), threeColor = p.violate !== undefined;
+      const excess = Math.max(1, Number(p.excessBurst ?? committed)), threeColor = p.threeColor === true || p.violate !== undefined || p.excessBurst !== undefined;
       const signature = JSON.stringify([p.rate, committed, excess, threeColor]);
       const meters = device.runtime.features.qosMeters ??= {};
       let meter = meters[key];

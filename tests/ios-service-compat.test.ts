@@ -27,6 +27,13 @@ test('debug emits only real matching events and undebug stops future output',()=
  const ping=engine.ping(a.id,'10.0.0.2',{count:1});engine.advance(1000);assert.equal(ping.received,1);const output=ca.pollOutput().join('\n');assert.match(output,/s=10\.0\.0\./);assert.match(output,/GigabitEthernet0\/0/);assert.deepEqual(ca.pollOutput(),[]);
  run(ca,'no debug ip packet detail');engine.ping(a.id,'10.0.0.2',{count:1});engine.advance(1000);assert.deepEqual(ca.pollOutput(),[]);run(ca,'debug arp','undebug all');assert.ok(!ca.execute('show debugging').some(line=>line.includes('debugging is on')));
 });
+test('no debug interface aliases conditional removal and changes actual event visibility without changing traffic',()=>{
+ const {engine,a,ca}=pair();run(ca,'debug ip packet detail','debug condition interface g0/1');
+ let ping=engine.ping(a.id,'10.0.0.2',{count:1});engine.advance(1000);assert.equal(ping.received,1);assert.deepEqual(ca.pollOutput(),[]);
+ const before=JSON.stringify(a.runtime.features.debug);assert.match(ca.execute('no debug interface invalid-port').join('\n'),/Invalid/);assert.equal(JSON.stringify(a.runtime.features.debug),before);
+ run(ca,'no debug interface g0/1');assert.ok(!ca.execute('show debugging condition').some(row=>row.includes('GigabitEthernet0/1')));
+ ping=engine.ping(a.id,'10.0.0.2',{count:1});engine.advance(1000);assert.equal(ping.received,1);assert.match(ca.pollOutput().join('\n'),/GigabitEthernet0\/0/);assert.doesNotMatch(renderConfig(a).join('\n'),/debug condition/);
+});
 test('clear command filters affect dynamic caches and actual counters, retaining configuration',()=>{
  const {engine,a,ca}=pair();engine.ping(a.id,'10.0.0.2',{count:1});engine.advance(1000);assert.ok(Object.values(a.runtime.arp).some(row=>row.ip==='10.0.0.2'));run(ca,'clear ip arp 10.0.0.2');assert.ok(!Object.values(a.runtime.arp).some(row=>row.ip==='10.0.0.2'));assert.ok(a.runtime.counters['GigabitEthernet0/0'].tx>0);run(ca,'clear counters g0/0');assert.equal(a.runtime.counters['GigabitEthernet0/0'],undefined);
  a.runtime.features.aclHits={'WEB:10':4,'OTHER:10':3};run(ca,'clear access-list counters WEB');assert.deepEqual(a.runtime.features.aclHits,{'OTHER:10':3});a.runtime.features.dhcpLeases=[{address:'192.0.2.2'},{address:'192.0.2.3'}];run(ca,'clear ip dhcp binding 192.0.2.2');assert.deepEqual(a.runtime.features.dhcpLeases,[{address:'192.0.2.3'}]);run(ca,'clear ip dhcp binding *');assert.deepEqual(a.runtime.features.dhcpLeases,[]);

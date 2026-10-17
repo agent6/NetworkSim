@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-17T00:17:29.831Z",
+  "generatedAt": "2026-10-17T00:55:21.056Z",
   "browser": "155.0.8059.84",
-  "url": "http://127.0.0.1:4176/",
+  "url": "file:///Users/erikpope/projects/NetworkSim/index.html",
   "checks": [
     "Imported a routed three-node lab through the public YAML workflow",
     "Initial Windows ping crosses the configured router",

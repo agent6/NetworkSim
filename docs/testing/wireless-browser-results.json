@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-17T00:43:32.916Z",
+  "generatedAt": "2026-10-17T00:54:55.986Z",
   "browser": "155.0.8059.84",
-  "url": "file:///Users/erikpope/projects/NetworkSim/NetworkSim.html",
+  "url": "file:///Users/erikpope/projects/NetworkSim/index.html",
   "scope": "wireless, PoE and packet inspection UI",
   "checks": [
     "All nine palette icons use one consistent artwork family",
@@ -11,7 +11,7 @@
     "AP inspector has no manual power toggle",
     "AP context menu has no manual power action",
     "Unconnected AP is off and exposes only read-only PoE status",
-    "Example joins APs and connects authorized client only",
+    "Imported wireless fixture joins APs and connects authorized client only",
     "AP shows received WLC radio/WLAN state without editable local radio controls",
     "AP IPv6 form rejects an IPv4 CIDR before applying",
     "Corrected Enterprise credentials connect through RADIUS",

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-17T00:36:37.734Z",
+  "generatedAt": "2026-10-17T00:55:22.071Z",
   "checks": [
     "The server exposes its six remaining service tabs and no TFTP or SCP/SFTP controls",
     "Service tabs support arrow keys, Home, End and accessible tab selection",

@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "snapshots": [
+    {
+      "kind": "command-probe-validation",
+      "artifact": "docs/audits/command-probe-validation.59412c44b997.json.gz",
+      "sha256": "59412c44b997b0de251a789505e2b54cdbfc4ff041c576f5dae22f6d04d72618",
+      "generatedAt": "2026-10-17T00:43:18.115Z",
+      "summary": {
+        "executableModelRows": 14555,
+        "uniqueExecutableModePaths": 3666,
+        "positivePaths": 1778,
+        "modifierPaths": 1888,
+        "attempts": 4688,
+        "untestedPaths": 18,
+        "pathsWithNoCurrentCommandExecution": 16,
+        "pathsWithNoReferenceCommandExecution": 2,
+        "pairedAcceptingStateChangeFlagDisagreements": 437,
+        "statuses": {
+          "current-accepts-reference-accepted-representative": 3479,
+          "current-rejects-reference-accepted-representative": 24,
+          "current-context-or-harness-failure": 16,
+          "no-accepting-representative": 47,
+          "current-accepts-without-reference-accepted-representative": 100
+        },
+        "forms": {
+          "positive": 1778,
+          "no": 1028,
+          "default": 860
+        },
+        "freshReferencePaths": 3666,
+        "noReferenceEvidencePaths": 0
+      },
+      "runtimeHash": "98f6523e6010ed4df5588e0e4a30d3d4b459e2ccf8198711b73c9b5094e6f98c"
+    },
+    {
+      "kind": "command-probe-triage",
+      "artifact": "docs/audits/command-probe-triage.6e56aeaf8480.json.gz",
+      "sha256": "6e56aeaf8480145fcabba8c94ecb3104ef08a2d62fecc7caeecf80641889d8a5",
+      "generatedAt": "2026-10-17T00:47:48.474Z",
+      "summary": {
+        "disagreements": 437,
+        "categories": {
+          "invalid-fixture-or-argument-misclassified-by-legacy-regex": 31,
+          "current-additional-rendered-state": 254,
+          "old-navigation-metadata": 71,
+          "invalid-positive-seed-misclassified-by-legacy-regex": 8,
+          "default-or-existing-setting-no-observed-mutation": 50,
+          "stored-only-or-default-physical-setting": 3,
+          "explicit-removal-restriction-misclassified-by-legacy-regex": 6,
+          "configuration-rendering-omission-candidate": 8,
+          "fixed-dot1q-profile-or-default": 6
+        },
+        "rejections": 24,
+        "originalEleven": 11
+      },
+      "runtimeHash": "98f6523e6010ed4df5588e0e4a30d3d4b459e2ccf8198711b73c9b5094e6f98c"
+    }
+  ]
+}

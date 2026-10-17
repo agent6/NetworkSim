@@ -1,9 +1,51 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-17T00:30:42.045Z",
+  "generatedAt": "2026-10-17T01:04:07.266Z",
   "completion": "in-progress; not complete IOS/Windows/exam coverage",
-  "inventoryGeneratedAt": "2026-10-17T00:30:00.612Z",
+  "inventoryGeneratedAt": "2026-10-17T01:00:44.148Z",
   "staleSources": [],
+  "oldProjectComparison": {
+    "file": "command-probe-validation.json",
+    "generatedAt": "2026-10-17T00:55:10.889Z",
+    "validity": "source-snapshots-stable",
+    "staleRuntimeSources": [
+      "src/ios-debug.ts"
+    ],
+    "referenceFresh": true,
+    "referenceHashesVerified": true,
+    "summary": {
+      "executableModelRows": 14555,
+      "uniqueExecutableModePaths": 3666,
+      "positivePaths": 1778,
+      "modifierPaths": 1888,
+      "attempts": 4757,
+      "untestedPaths": 2,
+      "pathsWithNoCurrentCommandExecution": 0,
+      "pathsWithNoReferenceCommandExecution": 2,
+      "pairedAcceptingStateChangeFlagDisagreements": 387,
+      "statuses": {
+        "current-accepts-reference-accepted-representative": 3432,
+        "current-rejects-reference-accepted-representative": 87,
+        "no-accepting-representative": 47,
+        "current-accepts-without-reference-accepted-representative": 100
+      },
+      "forms": {
+        "positive": 1778,
+        "no": 1028,
+        "default": 860
+      },
+      "unseededRemovalPaths": 137,
+      "freshReferencePaths": 3666,
+      "noReferenceEvidencePaths": 0
+    },
+    "supplement": {
+      "file": "command-probe-followups.json",
+      "generatedAt": "2026-10-17T01:03:15.574Z",
+      "checks": 19,
+      "staleRuntimeSources": []
+    },
+    "scope": "Representative parser/configuration probes of old mode/path registrations; not all arguments, packet behavior, persistence or Cisco equivalence."
+  },
   "discovery": {
     "nodes": [
       "router",
@@ -16,32 +58,32 @@
       "laptop",
       "server"
     ],
-    "modules": 87,
+    "modules": 86,
     "contexts": 498,
     "enteredContexts": 407,
-    "iosNodePathHandlerDefinitions": 5926,
-    "distinctIOSPaths": 993,
+    "iosNodePathHandlerDefinitions": 5932,
+    "distinctIOSPaths": 994,
     "distinctIOSHandlers": 725,
     "windowsRoots": 17,
     "windowsVariants": 41,
     "hostVariantInstances": 123,
-    "sourceGUIEntries": 128,
-    "testFiles": 61
+    "sourceGUIEntries": 136,
+    "testFiles": 63
   },
   "strictCommandStatus": {
     "ios": {
       "complete": 0,
-      "partial": 224,
+      "partial": 230,
       "missing": 0,
       "incorrect": 0,
-      "unsupported": 0,
-      "untested": 5702
+      "unsupported": 12,
+      "untested": 5690
     },
     "windowsVariantStatus": {
       "roots": 17,
       "variants": 41,
-      "complete": 4,
-      "partial": 34,
+      "complete": 5,
+      "partial": 33,
       "unsupported": 3
     },
     "fullEightLevelVerifiedIOSDefinitions": 0,
@@ -50,16 +92,16 @@
     "repairedIOSCommandCount": null,
     "changeCountNote": "No immutable pre-audit command/source snapshot exists. Do not invent added/repaired command totals. Concrete repair groups and bounded Windows variant changes are tracked separately.",
     "windowsVariantChanges": {
-      "repaired": 13,
-      "retained": 4,
+      "repaired": 14,
+      "retained": 3,
       "added": 21,
       "legacy": 1,
       "unsupported": 2
     }
   },
   "repairs": {
-    "wiredGroups": 14,
-    "wirelessGroups": 12,
+    "wiredGroups": 17,
+    "wirelessGroups": 14,
     "note": "Groups are findings, not command counts; some fixes are shared across many definitions."
   },
   "gui": {
@@ -71,7 +113,9 @@
     "complete": 0,
     "partial": 74,
     "monitoringAndActionHooks": 22,
-    "apReadOnlyDisplayFields": 22
+    "apReadOnlyDisplayFields": 22,
+    "referenceDropdownTemplates": 12,
+    "hiddenControlMarkers": 1
   },
   "referenceCommandIndex": {
     "chapters": 18,
@@ -135,9 +179,9 @@
       "failed": 0
     },
     "latestCombined": {
-      "log": ".cache/fidelity/current-check.log",
-      "tests": 659,
-      "passed": 659,
+      "log": ".cache/fidelity/final-check.log",
+      "tests": 695,
+      "passed": 695,
       "failed": 0,
       "typecheck": true,
       "build": true
@@ -145,30 +189,58 @@
     "browsers": [
       {
         "file": "windows-browser-validation.json",
-        "url": "http://127.0.0.1:4176/",
-        "generatedAt": "2026-10-17T00:05:27.756Z",
-        "checks": 15,
+        "url": "file:///Users/erikpope/projects/NetworkSim/index.html",
+        "generatedAt": "2026-10-17T01:00:53.410Z",
+        "checks": 16,
         "errors": []
       },
       {
         "file": "model-driven-browser-validation.json",
-        "url": "http://127.0.0.1:4176/",
-        "generatedAt": "2026-10-17T00:17:29.831Z",
+        "url": "file:///Users/erikpope/projects/NetworkSim/index.html",
+        "generatedAt": "2026-10-17T00:55:21.056Z",
         "checks": 10,
         "errors": []
       },
       {
+        "file": "aaa-accounting-browser-validation.json",
+        "url": "public YAML import in isolated headless profile; local static HTML preview",
+        "generatedAt": "2026-10-17T00:55:18.723Z",
+        "checks": 6,
+        "errors": []
+      },
+      {
+        "file": "server-services-browser-validation.json",
+        "url": "isolated headless Chrome; public YAML import; ephemeral localhost static HTML preview",
+        "generatedAt": "2026-10-17T00:55:22.071Z",
+        "checks": 9,
+        "errors": []
+      },
+      {
+        "file": "ap-controller-browser-validation.json",
+        "url": "http://127.0.0.1:59698",
+        "generatedAt": "2026-10-17T00:55:38.089Z",
+        "checks": 8,
+        "errors": []
+      },
+      {
+        "file": "wlc-reference-browser-validation.json",
+        "url": "http://127.0.0.1:59605",
+        "generatedAt": "2026-10-17T00:55:03.996Z",
+        "checks": 14,
+        "errors": []
+      },
+      {
         "file": "../testing/wireless-browser-results.json",
-        "url": "file:///Users/erikpope/projects/NetworkSim/NetworkSim.html",
-        "generatedAt": "2026-10-17T00:22:11.114Z",
+        "url": "file:///Users/erikpope/projects/NetworkSim/index.html",
+        "generatedAt": "2026-10-17T00:54:55.986Z",
         "checks": 24,
         "errors": []
       }
     ],
     "standaloneHTML": {
-      "path": "NetworkSim.html",
-      "bytes": 3453467,
-      "sha256": "3a07111e2da4d8a73c25a9863fa304945dd235c6acf7c2e6fbb705ca257f9c86"
+      "path": "index.html",
+      "bytes": 3455267,
+      "sha256": "52eb22827f202dfe03db3808912edc1ad2b00b31efc88620a7a3a964b336070a"
     }
   },
   "commands": [
@@ -729,6 +801,8 @@
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -754,6 +828,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -806,6 +881,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -1084,7 +1160,9 @@
       "command": "show ip eigrp",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -1135,7 +1213,9 @@
       "command": "show ip protocols",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -2335,7 +2415,9 @@
       "command": "show ip eigrp topology",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -3423,6 +3505,17 @@
       "validationLevels": []
     },
     {
+      "id": "router|no debug interface|2c395972a88639fe41e938461eb9db384104e80c71aa81772a1e521da15b4f30",
+      "node": "router",
+      "command": "no debug interface",
+      "status": "partial",
+      "evidenceKind": "test-source candidates only; no per-option promotion",
+      "testFiles": [
+        "tests/ios-service-compat.test.ts"
+      ],
+      "validationLevels": []
+    },
+    {
       "id": "router|show debugging|6e5546bfc4f1da597845d90439270443bf4e749798aff9a353c116bada813651",
       "node": "router",
       "command": "show debugging",
@@ -3592,6 +3685,8 @@
         "tests/bgp-policy.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -3601,6 +3696,7 @@
         "tests/policy-continuation.test.ts",
         "tests/qos-parity.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -3679,6 +3775,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -3709,6 +3807,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -3766,6 +3866,8 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/mac-aging.test.ts",
@@ -3773,6 +3875,9 @@
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
+        "tests/services-ui.test.ts",
         "tests/ssh-files.test.ts",
         "tests/wireless.test.ts"
       ],
@@ -3800,12 +3905,16 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/mac-aging.test.ts",
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
         "tests/wireless.test.ts"
       ],
       "validationLevels": []
@@ -4439,6 +4548,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -4463,6 +4574,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -4486,6 +4598,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -4542,8 +4655,8 @@
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/routing-vrf.test.ts",
-        "tests/services-ui.test.ts",
-        "tests/windows-cli.test.ts"
+        "tests/windows-cli.test.ts",
+        "tests/wireless.test.ts"
       ],
       "validationLevels": []
     },
@@ -4577,6 +4690,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -4651,6 +4766,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/reference-closure.test.ts",
         "tests/routing-compat.test.ts"
@@ -4739,6 +4855,8 @@
         "tests/core.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -5048,6 +5166,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/routing-vrf.test.ts",
@@ -5678,7 +5797,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -6422,6 +6542,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts"
@@ -6456,6 +6578,7 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/ios-syntax.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -7159,6 +7282,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -7186,6 +7310,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -7198,6 +7324,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -7215,6 +7342,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/reference-closure.test.ts",
@@ -7364,6 +7492,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -7377,6 +7506,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -7517,6 +7647,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/bgp-multiprotocol.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -8497,6 +8628,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -8997,6 +9129,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -9928,6 +10062,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -9951,6 +10086,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -10005,13 +10142,14 @@
       "validationLevels": []
     },
     {
-      "id": "router|auto-summary|485d220bb22b82ec5353aa3092ab2103ba32e7db2a7fbddaeee5fbd133f8afc6",
+      "id": "router|auto-summary|9cfea96b3126c03cf64fad0c9378a989137874160f7aac8c4231b18d02a2ee98",
       "node": "router",
       "command": "auto-summary",
       "status": "partial",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts"
       ],
       "validationLevels": []
     },
@@ -10034,6 +10172,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -10049,7 +10188,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -10066,6 +10208,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -10104,6 +10247,8 @@
       "testFiles": [
         "tests/bgp-dampening.test.ts",
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -10139,7 +10284,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -10401,7 +10549,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -10418,6 +10569,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -10565,6 +10717,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -10589,19 +10742,20 @@
       "validationLevels": []
     },
     {
-      "id": "router|source|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "router|source|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "router",
       "command": "source",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
     {
-      "id": "router|destination|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "router|destination|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "router",
       "command": "destination",
       "status": "untested",
@@ -10609,7 +10763,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -10622,6 +10777,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -10640,7 +10796,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -10660,6 +10817,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -10672,6 +10831,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -10686,7 +10846,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -10701,6 +10862,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -10721,7 +10883,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -10770,7 +10935,9 @@
       "command": "bfd interface",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-bfd-persistence.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -10894,7 +11061,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -10916,6 +11084,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -10935,7 +11104,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -10945,7 +11115,9 @@
       "command": "topology base",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -10987,6 +11159,7 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/control-plane.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/routing-compat.test.ts"
       ],
@@ -11070,6 +11243,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -11344,6 +11518,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -11378,7 +11553,7 @@
       "id": "router|fair-queue|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "router",
       "command": "fair-queue",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -11390,7 +11565,7 @@
       "id": "router|random-detect|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "router",
       "command": "random-detect",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -11427,7 +11602,7 @@
       "validationLevels": []
     },
     {
-      "id": "router|set dscp|8f7b75f8c8d54c24a014b86a6566ad3321ab349c7adde121eab82b36c49b8fbb",
+      "id": "router|set dscp|82b4b45015b8858b5340effa630243626a53321188e41be8b7d894710370378f",
       "node": "router",
       "command": "set dscp",
       "status": "untested",
@@ -11455,7 +11630,7 @@
       "validationLevels": []
     },
     {
-      "id": "router|conform-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "router|conform-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "router",
       "command": "conform-action",
       "status": "untested",
@@ -11466,7 +11641,7 @@
       "validationLevels": []
     },
     {
-      "id": "router|exceed-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "router|exceed-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "router",
       "command": "exceed-action",
       "status": "untested",
@@ -11477,7 +11652,7 @@
       "validationLevels": []
     },
     {
-      "id": "router|violate-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "router|violate-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "router",
       "command": "violate-action",
       "status": "untested",
@@ -11561,7 +11736,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -11573,7 +11749,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -12409,6 +12586,8 @@
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -12434,6 +12613,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -12486,6 +12666,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -12764,7 +12945,9 @@
       "command": "show ip eigrp",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -12815,7 +12998,9 @@
       "command": "show ip protocols",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -14015,7 +14200,9 @@
       "command": "show ip eigrp topology",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -15103,6 +15290,17 @@
       "validationLevels": []
     },
     {
+      "id": "switch|no debug interface|2c395972a88639fe41e938461eb9db384104e80c71aa81772a1e521da15b4f30",
+      "node": "switch",
+      "command": "no debug interface",
+      "status": "partial",
+      "evidenceKind": "test-source candidates only; no per-option promotion",
+      "testFiles": [
+        "tests/ios-service-compat.test.ts"
+      ],
+      "validationLevels": []
+    },
+    {
       "id": "switch|show debugging|6e5546bfc4f1da597845d90439270443bf4e749798aff9a353c116bada813651",
       "node": "switch",
       "command": "show debugging",
@@ -15272,6 +15470,8 @@
         "tests/bgp-policy.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -15281,6 +15481,7 @@
         "tests/policy-continuation.test.ts",
         "tests/qos-parity.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -15359,6 +15560,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -15389,6 +15592,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -15446,6 +15651,8 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/mac-aging.test.ts",
@@ -15453,6 +15660,9 @@
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
+        "tests/services-ui.test.ts",
         "tests/ssh-files.test.ts",
         "tests/wireless.test.ts"
       ],
@@ -15480,12 +15690,16 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/mac-aging.test.ts",
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
         "tests/wireless.test.ts"
       ],
       "validationLevels": []
@@ -16119,6 +16333,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -16143,6 +16359,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -16166,6 +16383,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -16222,8 +16440,8 @@
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/routing-vrf.test.ts",
-        "tests/services-ui.test.ts",
-        "tests/windows-cli.test.ts"
+        "tests/windows-cli.test.ts",
+        "tests/wireless.test.ts"
       ],
       "validationLevels": []
     },
@@ -16257,6 +16475,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -16331,6 +16551,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/reference-closure.test.ts",
         "tests/routing-compat.test.ts"
@@ -16419,6 +16640,8 @@
         "tests/core.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -16728,6 +16951,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/routing-vrf.test.ts",
@@ -17358,7 +17582,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -18102,6 +18327,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts"
@@ -18136,6 +18363,7 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/ios-syntax.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -18839,6 +19067,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -18866,6 +19095,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -18878,6 +19109,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -18895,6 +19127,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/reference-closure.test.ts",
@@ -19044,6 +19277,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -19057,6 +19291,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -19197,6 +19432,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/bgp-multiprotocol.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -20177,6 +20413,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -20692,6 +20929,7 @@
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -20769,6 +21007,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -21700,6 +21940,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -21723,6 +21964,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -21777,13 +22020,14 @@
       "validationLevels": []
     },
     {
-      "id": "switch|auto-summary|485d220bb22b82ec5353aa3092ab2103ba32e7db2a7fbddaeee5fbd133f8afc6",
+      "id": "switch|auto-summary|9cfea96b3126c03cf64fad0c9378a989137874160f7aac8c4231b18d02a2ee98",
       "node": "switch",
       "command": "auto-summary",
       "status": "partial",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts"
       ],
       "validationLevels": []
     },
@@ -21806,6 +22050,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -21821,7 +22066,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -21838,6 +22086,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -21876,6 +22125,8 @@
       "testFiles": [
         "tests/bgp-dampening.test.ts",
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -21911,7 +22162,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -22028,7 +22282,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -22045,6 +22302,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -22192,6 +22450,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -22216,19 +22475,20 @@
       "validationLevels": []
     },
     {
-      "id": "switch|source|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "switch|source|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "switch",
       "command": "source",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
     {
-      "id": "switch|destination|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "switch|destination|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "switch",
       "command": "destination",
       "status": "untested",
@@ -22236,7 +22496,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -22249,6 +22510,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -22267,7 +22529,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -22287,6 +22550,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -22299,6 +22564,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -22313,7 +22579,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -22328,6 +22595,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -22348,7 +22616,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -22397,7 +22668,9 @@
       "command": "bfd interface",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-bfd-persistence.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -22521,7 +22794,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -22543,6 +22817,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -22562,7 +22837,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -22572,7 +22848,9 @@
       "command": "topology base",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -22811,6 +23089,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -22845,7 +23124,7 @@
       "id": "switch|fair-queue|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "switch",
       "command": "fair-queue",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -22857,7 +23136,7 @@
       "id": "switch|random-detect|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "switch",
       "command": "random-detect",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -22894,7 +23173,7 @@
       "validationLevels": []
     },
     {
-      "id": "switch|set dscp|8f7b75f8c8d54c24a014b86a6566ad3321ab349c7adde121eab82b36c49b8fbb",
+      "id": "switch|set dscp|82b4b45015b8858b5340effa630243626a53321188e41be8b7d894710370378f",
       "node": "switch",
       "command": "set dscp",
       "status": "untested",
@@ -22922,7 +23201,7 @@
       "validationLevels": []
     },
     {
-      "id": "switch|conform-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "switch|conform-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "switch",
       "command": "conform-action",
       "status": "untested",
@@ -22933,7 +23212,7 @@
       "validationLevels": []
     },
     {
-      "id": "switch|exceed-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "switch|exceed-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "switch",
       "command": "exceed-action",
       "status": "untested",
@@ -22944,7 +23223,7 @@
       "validationLevels": []
     },
     {
-      "id": "switch|violate-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "switch|violate-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "switch",
       "command": "violate-action",
       "status": "untested",
@@ -23028,7 +23307,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -23040,7 +23320,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -23849,6 +24130,8 @@
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -23874,6 +24157,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -23926,6 +24210,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -24204,7 +24489,9 @@
       "command": "show ip eigrp",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -24255,7 +24542,9 @@
       "command": "show ip protocols",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -25455,7 +25744,9 @@
       "command": "show ip eigrp topology",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -26543,6 +26834,17 @@
       "validationLevels": []
     },
     {
+      "id": "l3switch|no debug interface|2c395972a88639fe41e938461eb9db384104e80c71aa81772a1e521da15b4f30",
+      "node": "l3switch",
+      "command": "no debug interface",
+      "status": "partial",
+      "evidenceKind": "test-source candidates only; no per-option promotion",
+      "testFiles": [
+        "tests/ios-service-compat.test.ts"
+      ],
+      "validationLevels": []
+    },
+    {
       "id": "l3switch|show debugging|6e5546bfc4f1da597845d90439270443bf4e749798aff9a353c116bada813651",
       "node": "l3switch",
       "command": "show debugging",
@@ -26712,6 +27014,8 @@
         "tests/bgp-policy.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -26721,6 +27025,7 @@
         "tests/policy-continuation.test.ts",
         "tests/qos-parity.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -26799,6 +27104,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -26829,6 +27136,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -26886,6 +27195,8 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/mac-aging.test.ts",
@@ -26893,6 +27204,9 @@
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
+        "tests/services-ui.test.ts",
         "tests/ssh-files.test.ts",
         "tests/wireless.test.ts"
       ],
@@ -26920,12 +27234,16 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/mac-aging.test.ts",
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
         "tests/wireless.test.ts"
       ],
       "validationLevels": []
@@ -27559,6 +27877,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -27583,6 +27903,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -27606,6 +27927,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -27662,8 +27984,8 @@
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/routing-vrf.test.ts",
-        "tests/services-ui.test.ts",
-        "tests/windows-cli.test.ts"
+        "tests/windows-cli.test.ts",
+        "tests/wireless.test.ts"
       ],
       "validationLevels": []
     },
@@ -27697,6 +28019,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -27771,6 +28095,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/reference-closure.test.ts",
         "tests/routing-compat.test.ts"
@@ -27859,6 +28184,8 @@
         "tests/core.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -28168,6 +28495,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/routing-vrf.test.ts",
@@ -28798,7 +29126,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -29542,6 +29871,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts"
@@ -29576,6 +29907,7 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/ios-syntax.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -30279,6 +30611,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -30306,6 +30639,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -30318,6 +30653,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -30335,6 +30671,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/reference-closure.test.ts",
@@ -30484,6 +30821,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -30497,6 +30835,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -30637,6 +30976,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/bgp-multiprotocol.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -31617,6 +31957,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -32132,6 +32473,7 @@
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -32209,6 +32551,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -33140,6 +33484,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -33163,6 +33508,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -33217,13 +33564,14 @@
       "validationLevels": []
     },
     {
-      "id": "l3switch|auto-summary|485d220bb22b82ec5353aa3092ab2103ba32e7db2a7fbddaeee5fbd133f8afc6",
+      "id": "l3switch|auto-summary|9cfea96b3126c03cf64fad0c9378a989137874160f7aac8c4231b18d02a2ee98",
       "node": "l3switch",
       "command": "auto-summary",
       "status": "partial",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts"
       ],
       "validationLevels": []
     },
@@ -33246,6 +33594,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -33261,7 +33610,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -33278,6 +33630,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -33316,6 +33669,8 @@
       "testFiles": [
         "tests/bgp-dampening.test.ts",
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -33351,7 +33706,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -33613,7 +33971,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -33630,6 +33991,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -33777,6 +34139,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -33801,19 +34164,20 @@
       "validationLevels": []
     },
     {
-      "id": "l3switch|source|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "l3switch|source|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "l3switch",
       "command": "source",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
     {
-      "id": "l3switch|destination|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "l3switch|destination|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "l3switch",
       "command": "destination",
       "status": "untested",
@@ -33821,7 +34185,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -33834,6 +34199,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -33852,7 +34218,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -33872,6 +34239,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -33884,6 +34253,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -33898,7 +34268,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -33913,6 +34284,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -33933,7 +34305,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -33982,7 +34357,9 @@
       "command": "bfd interface",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-bfd-persistence.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -34106,7 +34483,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -34128,6 +34506,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -34147,7 +34526,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -34157,7 +34537,9 @@
       "command": "topology base",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -34199,6 +34581,7 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/control-plane.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/routing-compat.test.ts"
       ],
@@ -34282,6 +34665,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -34556,6 +34940,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -34590,7 +34975,7 @@
       "id": "l3switch|fair-queue|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "l3switch",
       "command": "fair-queue",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -34602,7 +34987,7 @@
       "id": "l3switch|random-detect|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "l3switch",
       "command": "random-detect",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -34639,7 +35024,7 @@
       "validationLevels": []
     },
     {
-      "id": "l3switch|set dscp|8f7b75f8c8d54c24a014b86a6566ad3321ab349c7adde121eab82b36c49b8fbb",
+      "id": "l3switch|set dscp|82b4b45015b8858b5340effa630243626a53321188e41be8b7d894710370378f",
       "node": "l3switch",
       "command": "set dscp",
       "status": "untested",
@@ -34667,7 +35052,7 @@
       "validationLevels": []
     },
     {
-      "id": "l3switch|conform-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "l3switch|conform-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "l3switch",
       "command": "conform-action",
       "status": "untested",
@@ -34678,7 +35063,7 @@
       "validationLevels": []
     },
     {
-      "id": "l3switch|exceed-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "l3switch|exceed-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "l3switch",
       "command": "exceed-action",
       "status": "untested",
@@ -34689,7 +35074,7 @@
       "validationLevels": []
     },
     {
-      "id": "l3switch|violate-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "l3switch|violate-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "l3switch",
       "command": "violate-action",
       "status": "untested",
@@ -34773,7 +35158,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -34785,7 +35171,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -35632,6 +36019,8 @@
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -35657,6 +36046,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -35709,6 +36099,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -35987,7 +36378,9 @@
       "command": "show ip eigrp",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -36038,7 +36431,9 @@
       "command": "show ip protocols",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -37238,7 +37633,9 @@
       "command": "show ip eigrp topology",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -38326,6 +38723,17 @@
       "validationLevels": []
     },
     {
+      "id": "poeswitch|no debug interface|2c395972a88639fe41e938461eb9db384104e80c71aa81772a1e521da15b4f30",
+      "node": "poeswitch",
+      "command": "no debug interface",
+      "status": "partial",
+      "evidenceKind": "test-source candidates only; no per-option promotion",
+      "testFiles": [
+        "tests/ios-service-compat.test.ts"
+      ],
+      "validationLevels": []
+    },
+    {
       "id": "poeswitch|show debugging|6e5546bfc4f1da597845d90439270443bf4e749798aff9a353c116bada813651",
       "node": "poeswitch",
       "command": "show debugging",
@@ -38495,6 +38903,8 @@
         "tests/bgp-policy.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -38504,6 +38914,7 @@
         "tests/policy-continuation.test.ts",
         "tests/qos-parity.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -38582,6 +38993,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -38612,6 +39025,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -38669,6 +39084,8 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/mac-aging.test.ts",
@@ -38676,6 +39093,9 @@
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
+        "tests/services-ui.test.ts",
         "tests/ssh-files.test.ts",
         "tests/wireless.test.ts"
       ],
@@ -38703,12 +39123,16 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/mac-aging.test.ts",
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
         "tests/wireless.test.ts"
       ],
       "validationLevels": []
@@ -39342,6 +39766,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -39366,6 +39792,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -39389,6 +39816,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -39445,8 +39873,8 @@
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/routing-vrf.test.ts",
-        "tests/services-ui.test.ts",
-        "tests/windows-cli.test.ts"
+        "tests/windows-cli.test.ts",
+        "tests/wireless.test.ts"
       ],
       "validationLevels": []
     },
@@ -39480,6 +39908,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -39554,6 +39984,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/reference-closure.test.ts",
         "tests/routing-compat.test.ts"
@@ -39642,6 +40073,8 @@
         "tests/core.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -39951,6 +40384,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/routing-vrf.test.ts",
@@ -40581,7 +41015,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -41325,6 +41760,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts"
@@ -41359,6 +41796,7 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/ios-syntax.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -42073,6 +42511,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -42100,6 +42539,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -42112,6 +42553,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -42129,6 +42571,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/reference-closure.test.ts",
@@ -42278,6 +42721,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -42291,6 +42735,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -42431,6 +42876,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/bgp-multiprotocol.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -43411,6 +43857,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -43926,6 +44373,7 @@
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -44003,6 +44451,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -44934,6 +45384,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -44957,6 +45408,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -45011,13 +45464,14 @@
       "validationLevels": []
     },
     {
-      "id": "poeswitch|auto-summary|485d220bb22b82ec5353aa3092ab2103ba32e7db2a7fbddaeee5fbd133f8afc6",
+      "id": "poeswitch|auto-summary|9cfea96b3126c03cf64fad0c9378a989137874160f7aac8c4231b18d02a2ee98",
       "node": "poeswitch",
       "command": "auto-summary",
       "status": "partial",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts"
       ],
       "validationLevels": []
     },
@@ -45040,6 +45494,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -45055,7 +45510,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -45072,6 +45530,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -45110,6 +45569,8 @@
       "testFiles": [
         "tests/bgp-dampening.test.ts",
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -45145,7 +45606,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -45262,7 +45726,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -45279,6 +45746,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -45426,6 +45894,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -45450,19 +45919,20 @@
       "validationLevels": []
     },
     {
-      "id": "poeswitch|source|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "poeswitch|source|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "poeswitch",
       "command": "source",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
     {
-      "id": "poeswitch|destination|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "poeswitch|destination|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "poeswitch",
       "command": "destination",
       "status": "untested",
@@ -45470,7 +45940,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -45483,6 +45954,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -45501,7 +45973,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -45521,6 +45994,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -45533,6 +46008,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -45547,7 +46023,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -45562,6 +46039,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -45582,7 +46060,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -45631,7 +46112,9 @@
       "command": "bfd interface",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-bfd-persistence.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -45755,7 +46238,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -45777,6 +46261,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -45796,7 +46281,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -45806,7 +46292,9 @@
       "command": "topology base",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -46045,6 +46533,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -46079,7 +46568,7 @@
       "id": "poeswitch|fair-queue|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "poeswitch",
       "command": "fair-queue",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -46091,7 +46580,7 @@
       "id": "poeswitch|random-detect|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "poeswitch",
       "command": "random-detect",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -46128,7 +46617,7 @@
       "validationLevels": []
     },
     {
-      "id": "poeswitch|set dscp|8f7b75f8c8d54c24a014b86a6566ad3321ab349c7adde121eab82b36c49b8fbb",
+      "id": "poeswitch|set dscp|82b4b45015b8858b5340effa630243626a53321188e41be8b7d894710370378f",
       "node": "poeswitch",
       "command": "set dscp",
       "status": "untested",
@@ -46156,7 +46645,7 @@
       "validationLevels": []
     },
     {
-      "id": "poeswitch|conform-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "poeswitch|conform-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "poeswitch",
       "command": "conform-action",
       "status": "untested",
@@ -46167,7 +46656,7 @@
       "validationLevels": []
     },
     {
-      "id": "poeswitch|exceed-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "poeswitch|exceed-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "poeswitch",
       "command": "exceed-action",
       "status": "untested",
@@ -46178,7 +46667,7 @@
       "validationLevels": []
     },
     {
-      "id": "poeswitch|violate-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "poeswitch|violate-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "poeswitch",
       "command": "violate-action",
       "status": "untested",
@@ -46262,7 +46751,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -46274,7 +46764,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -47157,6 +47648,8 @@
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -47182,6 +47675,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -47234,6 +47728,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -47512,7 +48007,9 @@
       "command": "show ip eigrp",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -47563,7 +48060,9 @@
       "command": "show ip protocols",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -48763,7 +49262,9 @@
       "command": "show ip eigrp topology",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -49851,6 +50352,17 @@
       "validationLevels": []
     },
     {
+      "id": "wlc|no debug interface|2c395972a88639fe41e938461eb9db384104e80c71aa81772a1e521da15b4f30",
+      "node": "wlc",
+      "command": "no debug interface",
+      "status": "partial",
+      "evidenceKind": "test-source candidates only; no per-option promotion",
+      "testFiles": [
+        "tests/ios-service-compat.test.ts"
+      ],
+      "validationLevels": []
+    },
+    {
       "id": "wlc|show debugging|6e5546bfc4f1da597845d90439270443bf4e749798aff9a353c116bada813651",
       "node": "wlc",
       "command": "show debugging",
@@ -50020,6 +50532,8 @@
         "tests/bgp-policy.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -50029,6 +50543,7 @@
         "tests/policy-continuation.test.ts",
         "tests/qos-parity.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -50107,6 +50622,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -50137,6 +50654,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -50194,6 +50713,8 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/mac-aging.test.ts",
@@ -50201,6 +50722,9 @@
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
+        "tests/services-ui.test.ts",
         "tests/ssh-files.test.ts",
         "tests/wireless.test.ts"
       ],
@@ -50228,12 +50752,16 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/mac-aging.test.ts",
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
         "tests/wireless.test.ts"
       ],
       "validationLevels": []
@@ -50998,6 +51526,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -51022,6 +51552,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -51045,6 +51576,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -51101,8 +51633,8 @@
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/routing-vrf.test.ts",
-        "tests/services-ui.test.ts",
-        "tests/windows-cli.test.ts"
+        "tests/windows-cli.test.ts",
+        "tests/wireless.test.ts"
       ],
       "validationLevels": []
     },
@@ -51136,6 +51668,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -51210,6 +51744,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/reference-closure.test.ts",
         "tests/routing-compat.test.ts"
@@ -51298,6 +51833,8 @@
         "tests/core.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -51607,6 +52144,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/routing-vrf.test.ts",
@@ -52237,7 +52775,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -52981,6 +53520,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts"
@@ -53015,6 +53556,7 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/ios-syntax.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -53718,6 +54260,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -53745,6 +54288,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -53757,6 +54302,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -53774,6 +54320,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/reference-closure.test.ts",
@@ -53923,6 +54470,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -53936,6 +54484,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -54076,6 +54625,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/bgp-multiprotocol.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -55056,6 +55606,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -55556,6 +56107,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -56487,6 +57040,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -56510,6 +57064,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -56564,13 +57120,14 @@
       "validationLevels": []
     },
     {
-      "id": "wlc|auto-summary|485d220bb22b82ec5353aa3092ab2103ba32e7db2a7fbddaeee5fbd133f8afc6",
+      "id": "wlc|auto-summary|9cfea96b3126c03cf64fad0c9378a989137874160f7aac8c4231b18d02a2ee98",
       "node": "wlc",
       "command": "auto-summary",
       "status": "partial",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts"
       ],
       "validationLevels": []
     },
@@ -56593,6 +57150,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -56608,7 +57166,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -56625,6 +57186,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -56663,6 +57225,8 @@
       "testFiles": [
         "tests/bgp-dampening.test.ts",
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -56698,7 +57262,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -56815,7 +57382,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -56832,6 +57402,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -56979,6 +57550,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -57003,19 +57575,20 @@
       "validationLevels": []
     },
     {
-      "id": "wlc|source|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "wlc|source|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "wlc",
       "command": "source",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
     {
-      "id": "wlc|destination|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "wlc|destination|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "wlc",
       "command": "destination",
       "status": "untested",
@@ -57023,7 +57596,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -57036,6 +57610,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -57054,7 +57629,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -57074,6 +57650,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -57086,6 +57664,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -57100,7 +57679,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -57115,6 +57695,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -57135,7 +57716,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -57184,7 +57768,9 @@
       "command": "bfd interface",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-bfd-persistence.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -57308,7 +57894,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -57330,6 +57917,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -57349,7 +57937,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -57359,7 +57948,9 @@
       "command": "topology base",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -57598,6 +58189,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -57632,7 +58224,7 @@
       "id": "wlc|fair-queue|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "wlc",
       "command": "fair-queue",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -57644,7 +58236,7 @@
       "id": "wlc|random-detect|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "wlc",
       "command": "random-detect",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -57681,7 +58273,7 @@
       "validationLevels": []
     },
     {
-      "id": "wlc|set dscp|8f7b75f8c8d54c24a014b86a6566ad3321ab349c7adde121eab82b36c49b8fbb",
+      "id": "wlc|set dscp|82b4b45015b8858b5340effa630243626a53321188e41be8b7d894710370378f",
       "node": "wlc",
       "command": "set dscp",
       "status": "untested",
@@ -57709,7 +58301,7 @@
       "validationLevels": []
     },
     {
-      "id": "wlc|conform-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "wlc|conform-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "wlc",
       "command": "conform-action",
       "status": "untested",
@@ -57720,7 +58312,7 @@
       "validationLevels": []
     },
     {
-      "id": "wlc|exceed-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "wlc|exceed-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "wlc",
       "command": "exceed-action",
       "status": "untested",
@@ -57731,7 +58323,7 @@
       "validationLevels": []
     },
     {
-      "id": "wlc|violate-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "wlc|violate-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "wlc",
       "command": "violate-action",
       "status": "untested",
@@ -57815,7 +58407,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -57827,7 +58420,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -58088,6 +58682,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -58939,6 +59534,8 @@
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -58964,6 +59561,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -59016,6 +59614,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -59294,7 +59893,9 @@
       "command": "show ip eigrp",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -59345,7 +59946,9 @@
       "command": "show ip protocols",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -60545,7 +61148,9 @@
       "command": "show ip eigrp topology",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -61642,6 +62247,17 @@
       "validationLevels": []
     },
     {
+      "id": "ap|no debug interface|2c395972a88639fe41e938461eb9db384104e80c71aa81772a1e521da15b4f30",
+      "node": "ap",
+      "command": "no debug interface",
+      "status": "partial",
+      "evidenceKind": "test-source candidates only; no per-option promotion",
+      "testFiles": [
+        "tests/ios-service-compat.test.ts"
+      ],
+      "validationLevels": []
+    },
+    {
       "id": "ap|show debugging|6e5546bfc4f1da597845d90439270443bf4e749798aff9a353c116bada813651",
       "node": "ap",
       "command": "show debugging",
@@ -61811,6 +62427,8 @@
         "tests/bgp-policy.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -61820,6 +62438,7 @@
         "tests/policy-continuation.test.ts",
         "tests/qos-parity.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -61898,6 +62517,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -61928,6 +62549,8 @@
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/http-service.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -61985,6 +62608,8 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/mac-aging.test.ts",
@@ -61992,6 +62617,9 @@
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
+        "tests/services-ui.test.ts",
         "tests/ssh-files.test.ts",
         "tests/wireless.test.ts"
       ],
@@ -62019,12 +62647,16 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/mac-aging.test.ts",
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/platform-fidelity.test.ts",
         "tests/poe.test.ts",
+        "tests/qos-parity.test.ts",
+        "tests/remote-span.test.ts",
         "tests/wireless.test.ts"
       ],
       "validationLevels": []
@@ -62625,6 +63257,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -62649,6 +63283,7 @@
         "tests/qos-scheduler.test.ts",
         "tests/record-maps.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/snmp.test.ts",
@@ -62672,6 +63307,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -62728,8 +63364,8 @@
         "tests/management.test.ts",
         "tests/model-driven-management.test.ts",
         "tests/routing-vrf.test.ts",
-        "tests/services-ui.test.ts",
-        "tests/windows-cli.test.ts"
+        "tests/windows-cli.test.ts",
+        "tests/wireless.test.ts"
       ],
       "validationLevels": []
     },
@@ -62763,6 +63399,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-service-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
@@ -62837,6 +63475,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/reference-closure.test.ts",
         "tests/routing-compat.test.ts"
@@ -62925,6 +63564,8 @@
         "tests/core.test.ts",
         "tests/discovery.test.ts",
         "tests/dns-service.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/http-service.test.ts",
@@ -63234,6 +63875,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/routing-vrf.test.ts",
@@ -63864,7 +64506,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -64608,6 +65251,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts"
@@ -64642,6 +65287,7 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/ios-syntax.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -65345,6 +65991,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -65372,6 +66019,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -65384,6 +66033,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -65401,6 +66051,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-terminal.test.ts",
         "tests/reference-closure.test.ts",
@@ -65550,6 +66201,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -65563,6 +66215,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -65703,6 +66356,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/bgp-multiprotocol.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
       ],
@@ -66683,6 +67337,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -67183,6 +67838,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -68114,6 +68771,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -68137,6 +68795,8 @@
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-service-compat.test.ts",
@@ -68191,13 +68851,14 @@
       "validationLevels": []
     },
     {
-      "id": "ap|auto-summary|485d220bb22b82ec5353aa3092ab2103ba32e7db2a7fbddaeee5fbd133f8afc6",
+      "id": "ap|auto-summary|9cfea96b3126c03cf64fad0c9378a989137874160f7aac8c4231b18d02a2ee98",
       "node": "ap",
       "command": "auto-summary",
       "status": "partial",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts"
       ],
       "validationLevels": []
     },
@@ -68220,6 +68881,7 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -68235,7 +68897,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -68252,6 +68917,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -68290,6 +68956,8 @@
       "testFiles": [
         "tests/bgp-dampening.test.ts",
         "tests/cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts"
       ],
       "validationLevels": []
@@ -68325,7 +68993,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -68442,7 +69113,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -68459,6 +69133,7 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
@@ -68606,6 +69281,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/tracking.test.ts"
       ],
@@ -68630,19 +69306,20 @@
       "validationLevels": []
     },
     {
-      "id": "ap|source|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "ap|source|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "ap",
       "command": "source",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
     {
-      "id": "ap|destination|21d39ab826b3e807f4b358a7482984658c89ce1c30fd2da2b6ef45ae21819393",
+      "id": "ap|destination|e2f4cb53f66daa450ada7477d847583afaa049c994e69bbf6ce62bd09913ef09",
       "node": "ap",
       "command": "destination",
       "status": "untested",
@@ -68650,7 +69327,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -68663,6 +69341,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -68681,7 +69360,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -68701,6 +69381,8 @@
         "tests/control-plane.test.ts",
         "tests/core.test.ts",
         "tests/discovery.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/fhrp-packets.test.ts",
         "tests/ios-platform-compat.test.ts",
@@ -68713,6 +69395,7 @@
         "tests/model-driven-management.test.ts",
         "tests/policy-continuation.test.ts",
         "tests/reference-closure.test.ts",
+        "tests/remote-span.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/switching-compat.test.ts",
@@ -68727,7 +69410,8 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
-        "tests/cli.test.ts"
+        "tests/cli.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -68742,6 +69426,7 @@
         "tests/cli.test.ts",
         "tests/command-parity.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-platform-compat.test.ts",
         "tests/ios-show-enterprise.test.ts",
         "tests/ios-show-switching.test.ts",
@@ -68762,7 +69447,10 @@
         "tests/bgp-multiprotocol.test.ts",
         "tests/cli.test.ts",
         "tests/control-plane-cli.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts",
         "tests/ios-platform-compat.test.ts",
+        "tests/ios-terminal.test.ts",
         "tests/routing-compat.test.ts",
         "tests/routing-vrf.test.ts",
         "tests/wired-fidelity.test.ts"
@@ -68811,7 +69499,9 @@
       "command": "bfd interface",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-bfd-persistence.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -68935,7 +69625,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -68957,6 +69648,7 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ios-show-switching.test.ts",
         "tests/ios-system.test.ts",
         "tests/management.test.ts",
@@ -68976,7 +69668,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/control-plane-cli.test.ts"
+        "tests/control-plane-cli.test.ts",
+        "tests/eigrp-bfd-persistence.test.ts"
       ],
       "validationLevels": []
     },
@@ -68986,7 +69679,9 @@
       "command": "topology base",
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
-      "testFiles": [],
+      "testFiles": [
+        "tests/eigrp-auto-summary.test.ts"
+      ],
       "validationLevels": []
     },
     {
@@ -69225,6 +69920,7 @@
       "status": "untested",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
+        "tests/eigrp-auto-summary.test.ts",
         "tests/ethernet-physical.test.ts",
         "tests/qos-parity.test.ts",
         "tests/qos-scheduler.test.ts"
@@ -69259,7 +69955,7 @@
       "id": "ap|fair-queue|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "ap",
       "command": "fair-queue",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -69271,7 +69967,7 @@
       "id": "ap|random-detect|a6cf1851718f01b2c028dd532879f9817a18114672073346a11b36342ff5765d",
       "node": "ap",
       "command": "random-detect",
-      "status": "untested",
+      "status": "unsupported",
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/qos-parity.test.ts",
@@ -69308,7 +70004,7 @@
       "validationLevels": []
     },
     {
-      "id": "ap|set dscp|8f7b75f8c8d54c24a014b86a6566ad3321ab349c7adde121eab82b36c49b8fbb",
+      "id": "ap|set dscp|82b4b45015b8858b5340effa630243626a53321188e41be8b7d894710370378f",
       "node": "ap",
       "command": "set dscp",
       "status": "untested",
@@ -69336,7 +70032,7 @@
       "validationLevels": []
     },
     {
-      "id": "ap|conform-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "ap|conform-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "ap",
       "command": "conform-action",
       "status": "untested",
@@ -69347,7 +70043,7 @@
       "validationLevels": []
     },
     {
-      "id": "ap|exceed-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "ap|exceed-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "ap",
       "command": "exceed-action",
       "status": "untested",
@@ -69358,7 +70054,7 @@
       "validationLevels": []
     },
     {
-      "id": "ap|violate-action|c16d44f2a8abbae6af9ccb8020847738491de64b117e6b01cc4f0e56f26b3175",
+      "id": "ap|violate-action|b9c15870131c7b872c2b016add6739ff91b53192cfe9839723b3231ee35c1af7",
       "node": "ap",
       "command": "violate-action",
       "status": "untested",
@@ -69442,7 +70138,8 @@
       "testFiles": [
         "tests/cli.test.ts",
         "tests/core.test.ts",
-        "tests/ios-platform-compat.test.ts"
+        "tests/ios-platform-compat.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },
@@ -69454,7 +70151,8 @@
       "evidenceKind": "test-source candidates only; no per-option promotion",
       "testFiles": [
         "tests/cli.test.ts",
-        "tests/core.test.ts"
+        "tests/core.test.ts",
+        "tests/remote-span.test.ts"
       ],
       "validationLevels": []
     },

@@ -18,7 +18,7 @@ import { maintenanceCommands } from './ios-maintenance.ts';
 import { debugCommands } from './ios-debug.ts';
 import { routingCompatibilityCommands } from './ios-routing-compat.ts';
 import { formatIOSShow } from './ios-show.ts';
-import { iosContextHelp, iosArgumentCompletion, iosErrorOffset, iosInvalidInput } from './ios-syntax.ts';
+import { iosContextHelp, iosArgumentCompletion, iosErrorOffset, iosInvalidInput, iosCommandSupportsNegation } from './ios-syntax.ts';
 import { iosClock, iosLogLine, iosLogging, iosNTP, filterIOSOutput } from './ios-system.ts';
 import { resetOSPF } from './ospf-packets.ts';
 import type { Simulator } from './engine.ts';
@@ -298,6 +298,7 @@ export class IOSSession {
     return this.runCommand(cmd,[],negate);
   }
   private runCommand(command:Command,args:string[],no:boolean):string[]{
+    if(no&&!iosCommandSupportsNegation(command.words))fail();
     const name=command.words.join(' '),userCommand=this.mode==='priv'&&this.execCommands(false).some(c=>c.words.join(' ')===name),navigation=['end','exit','do','disable','logout'].includes(name);
     if(this.identity&&this.mode!=='user'&&!userCommand&&!navigation){const f=this.device.config.features,who=this.identity,consoleAllowed=!who.line.startsWith('console')||f.aaa?.authorizeConsole,configAllowed=this.mode==='priv'||f.aaa?.authorizeConfig!==false;if(consoleAllowed&&configAllowed){const list=f.lines?.[who.line]?.authorizationCommands?.['15']||'default',result=this.management.authorize(this.deviceId,'commands',list,who.username,who.authenticated);if(!result.accepted)return ['% Command authorization failed.'];}if(this.privilege<15)return ['% Insufficient privilege level.'];}
     const level=navigation?0:this.mode==='user'||userCommand?1:15,taskId=String(++this.accountingSequence),text=[no?'no':'',name,...args].filter(Boolean).join(' '),hook=name==='do'?undefined:this.accountingHook;
@@ -322,8 +323,8 @@ export class IOSSession {
     const contextual=iosArgumentCompletion(line,this.commands(),this.syntaxContext());if(contextual!==undefined)return contextual;
     const leading=line.match(/^\s*/)?.[0]||'', tokens=line.trimStart().split(/\s+/),last=tokens.pop()||'';
     let specs=this.commands();let prefix='';
-    if(tokens[0]?.toLowerCase()==='no'||tokens[0]?.toLowerCase()==='default'){prefix=tokens.shift()+' ';}
-    if(tokens[0]?.toLowerCase()==='do'&&!['priv','user'].includes(this.mode)){tokens.shift();prefix+='do ';specs=this.execCommands(true);}
+    if(tokens[0]?.toLowerCase()==='no'||tokens[0]?.toLowerCase()==='default'){prefix=tokens.shift()+' ';specs=specs.filter(spec=>iosCommandSupportsNegation(spec.words));}
+    if(!prefix&&tokens[0]?.toLowerCase()==='do'&&!['priv','user'].includes(this.mode)){tokens.shift();prefix+='do ';specs=this.execCommands(true);}
     for(let i=0;i<tokens.length;i++){
       const names=[...new Set(specs.map(s=>s.words[i]).filter(Boolean))];const exact=names.find(x=>x===tokens[i].toLowerCase());
       const found=exact?[exact]:names.filter(x=>x.startsWith(tokens[i].toLowerCase()));if(found.length!==1)return line;
@@ -341,9 +342,9 @@ export class IOSSession {
     if(this.remote)return this.execute(line+'?');
     if(this.device.kind==='pc'||this.device.kind==='server'||this.device.kind==='laptop')return this.host('help');
     const contextual=iosContextHelp(line,this.commands(),this.syntaxContext());if(contextual!==undefined)return contextual;
-    const tokens=line.trimStart().split(/\s+/),last=tokens.pop()||'';let specs=this.commands();
-    if(tokens[0]?.toLowerCase()==='no'||tokens[0]?.toLowerCase()==='default')tokens.shift();
-    if(tokens[0]?.toLowerCase()==='do'&&!['priv','user'].includes(this.mode)){tokens.shift();specs=this.execCommands(true);}
+    const tokens=line.trimStart().split(/\s+/),last=tokens.pop()||'';let specs=this.commands(),negated=false;
+    if(tokens[0]?.toLowerCase()==='no'||tokens[0]?.toLowerCase()==='default'){tokens.shift();negated=true;specs=specs.filter(spec=>iosCommandSupportsNegation(spec.words));}
+    if(!negated&&tokens[0]?.toLowerCase()==='do'&&!['priv','user'].includes(this.mode)){tokens.shift();specs=this.execCommands(true);}
     for(let i=0;i<tokens.length;i++){
       const kw=[...new Set(specs.map(s=>s.words[i]).filter(Boolean))];const exact=kw.find(x=>x===tokens[i].toLowerCase());const matches=exact?[exact]:kw.filter(x=>x.startsWith(tokens[i].toLowerCase()));
       if(matches.length!==1)return ['% No matching command at this position.'];
@@ -820,7 +821,7 @@ export class IOSSession {
     let i=0;if(a[i]==='cir')i++;const rate=integer(a[i++],1,10000000000),police:any={rate};
     if(a[i]==='bc'){i++;police.burst=integer(a[i++],1,100000000);}else if(/^\d+$/.test(a[i]??''))police.burst=integer(a[i++],1,100000000);
     if(a[i]==='be'){i++;police.excessBurst=integer(a[i++],1,100000000);}else if(/^\d+$/.test(a[i]??''))police.excessBurst=integer(a[i++],1,100000000);
-    const seen=new Set<string>();while(i<a.length){const color=keyword(a[i++],['conform-action','exceed-action','violate-action']).replace('-action','');if(seen.has(color))fail();seen.add(color);const start=i;if(a[i]?.startsWith('set-'))i+=2;else i++;police[color]=this.qosAction(a.slice(start,i));}return police;
+    const seen=new Set<string>();while(i<a.length){const color=keyword(a[i++],['conform-action','exceed-action','violate-action']).replace('-action','');if(seen.has(color))fail();seen.add(color);const start=i;if(a[i]?.startsWith('set-'))i+=2;else i++;police[color]=this.qosAction(a.slice(start,i));}if(police.excessBurst!==undefined||police.violate!==undefined){police.threeColor=true;police.excessBurst??=police.burst??Math.max(1500,Math.round(police.rate/32));}return police;
   }
   private validateSchedulingPolicy(name:string):void {
     const policy=this.device.config.features.policyMaps?.[name],error=schedulingError(policy,undefined,undefined,undefined,catalystQueueProfile(this.device));if(error)fail('% '+error);
@@ -844,10 +845,10 @@ export class IOSSession {
       ...[['fair-queue','fairQueue'],['random-detect','randomDetect']].map(([command,field])=>this.c(command,'Unsupported flow-based fair queueing or WRED',(a,no)=>{exactly(a,0);if(!no)return this.unsupported(command+' congestion scheduling');delete c[field];return stored();})),
       this.c('queue-limit','Set the class egress queue capacity',(a,no)=>{if(no){exactly(a,0);delete c.queueLimit;}else{if(a.length>2)fail();const limit=integer(a[0],1,4096);if(a[1])keyword(a[1],['packets']);c.queueLimit=limit;}return stored();},'<1-4096> [packets]'),
       this.c('drop','Drop all packets in this class',(a,no)=>{exactly(a,0);if(no)delete c.drop;else{if(c.police)fail('% Remove policing before configuring drop.');c.drop=true;}this.change();}),
-      this.c('set dscp','Mark classified packets',(a,no)=>{exactly(a,no?0:1);c.dscp=no?undefined:this.dscp(a[0]);this.change();},'<DSCP>'),
+      this.c('set dscp','Mark classified packets',(a,no)=>{if(!no||a.length)exactly(a,1);const value=a.length?this.dscp(a[0]):undefined;c.dscp=no?undefined:value;this.change();},'<DSCP>'),
       this.c('police','Police class traffic using a single-rate token bucket',(a,no)=>{if(no){exactly(a,0);delete c.police;if(this.mode==='policy-police')this.context=this.context.parent!;}else{if(c.drop)fail('% Remove drop before configuring policing.');const police=this.qosPolicer(a);c.police=police;if(this.mode!=='policy-police')this.enter('policy-police',{name:this.context.name,protocol:policyName});}this.change();},'[cir] <bits-per-second> [bc <burst-bytes>] [be <excess-bytes>] [conform-action ...] [exceed-action ...] [violate-action ...]')];
     if(this.mode!=='policy-police')return parentCommands;
-    return [...['conform','exceed','violate'].map(color=>this.c(color+'-action','Set the policer color action',(a,no)=>{if(!c.police)fail('% Configure a policer first.');if(no){exactly(a,0);delete c.police[color];}else c.police[color]=this.qosAction(a);this.change();},'transmit|drop|set-dscp-transmit <DSCP>|set-prec-transmit <precedence>')),...parentCommands];
+    return [...['conform','exceed','violate'].map(color=>this.c(color+'-action','Set the policer color action',(a,no)=>{if(!c.police)fail('% Configure a policer first.');const action=!no||a.length?this.qosAction(a):undefined;if(color==='violate'&&(action||c.police.violate!==undefined||c.police.threeColor)){c.police.threeColor=true;c.police.excessBurst??=c.police.burst??Math.max(1500,Math.round(c.police.rate/32));}if(no)delete c.police[color];else c.police[color]=action;this.change();},'transmit|drop|set-dscp-transmit <DSCP>|set-prec-transmit <precedence>')),...parentCommands];
   }
   private severity(input:string):number{const levels=['emergencies','alerts','critical','errors','warnings','notifications','informational','debugging'];return /^\d+$/.test(input)?integer(input,0,7):levels.indexOf(keyword(input,levels));}
   private passwordValue(args:string[],allow7=true):{value:string;type:number}{if(!args.length)incomplete();if(args.length===1)return {value:args[0],type:0};exactly(args,2);const type=integer(args[0],0,9);if(type===0)return {value:args[1],type:0};if(type===7&&allow7){try{return {value:decodeType7(args[1]),type:7};}catch{return fail('% Invalid Type 7 password.');}}return this.unsupported('Password encoding type '+type);}
@@ -880,7 +881,7 @@ export class IOSSession {
     this.c('ip address','Set destination collector address',(a,no)=>{exactly(a,no?0:1);session.ipAddress=no?undefined:ipv4(a[0]);this.change();},'<address>'),
     this.c('origin ip address','Select the mirrored packet origin',(a,no)=>{exactly(a,no?0:1);session.originIp=no?undefined:ipv4(a[0]);this.change();},'<address>'),
     this.c('vrf','Select remote mirror routing table',(a,no)=>{exactly(a,no?0:1);if(!no&&!this.device.config.features.vrfs?.[a[0]])fail('% VRF does not exist.');session.vrf=no?undefined:a[0];this.change();},'<name>')];
-    return [...['source','destination'].map(direction=>this.c(direction,'Set monitor endpoint',(a,no)=>{if(!a.length){if(no)fail();const expected=session.type==='erspan-source'?'destination':'source';if(direction!==expected)fail('% This endpoint requires an interface.');this.enter('span-peer',{name:this.context.name,protocol:direction});return;}keyword(a[0],['interface']);this.spanInterface(session,direction,a.slice(1),no);},'[interface <port> [rx|tx|both]]')),this.c('shutdown','Disable this mirror session',(a,no)=>{exactly(a,0);session.shutdown=!no;this.change();})];
+    return [...['source','destination'].map(direction=>this.c(direction,'Set monitor endpoint',(a,no)=>{if(!a.length){const expected=session.type==='erspan-source'?'destination':session.type==='erspan-destination'?'source':undefined;if(direction!==expected)fail('% This endpoint requires an interface.');if(no){for(const field of['erspanId','ipAddress','originIp','vrf'])delete session[field];this.change();return;}this.enter('span-peer',{name:this.context.name,protocol:direction});return;}keyword(a[0],['interface']);this.spanInterface(session,direction,a.slice(1),no);},'[interface <port> [rx|tx|both]]')),this.c('shutdown','Disable this mirror session',(a,no)=>{exactly(a,0);session.shutdown=!no;this.change();})];
   }
   private trackModeCommands():Command[]{const t=this.device.config.features.tracks[this.context.name!];return [this.c('delay','Delay tracked state changes',(a,no)=>{if(no&&!a.length){delete t.delayUp;delete t.delayDown;this.change();return;}if(!a.length)incomplete();let i=0;while(i<a.length){const direction=keyword(a[i++],['up','down']),field=direction==='up'?'delayUp':'delayDown';if(no)delete t[field];else t[field]=integer(a[i++],0,180);}this.change();},'up <seconds> [down <seconds>]|down <seconds> [up <seconds>]'),this.c('description','Describe this tracked object',(a,no)=>{if(!no&&!a.length)incomplete();t.description=no?undefined:a.join(' ');this.change();},'<text>'),...t.type==='list'?[this.c('threshold','Set hysteresis thresholds',(a,no)=>{if(!t.thresholdType)fail('% Select a threshold list.');const args=[...a];if(args[0]&&['weight','percentage'].some(x=>x.startsWith(args[0].toLowerCase())))keyword(args.shift(),[t.thresholdType]);if(no&&!args.length){delete t.thresholds;this.change();return;}if(!args.length)incomplete();if(args.length!==2&&args.length!==4)fail();const threshold:Record<string,number>={},seen=new Set<string>();for(let i=0;i<args.length;i+=2){const key=keyword(args[i],['up','down']);if(seen.has(key))fail();seen.add(key);threshold[key]=integer(args[i+1],0,t.thresholdType==='percentage'?100:255);}if(threshold.up!==undefined&&threshold.down!==undefined&&threshold.up<=threshold.down)fail('% Up threshold must exceed down threshold.');if(no)delete t.thresholds;else t.thresholds=threshold;this.change();},'weight|percentage up <value> [down <value>]'),this.c('object','Add a tracked list member',(a,no)=>{if(a.length<1)incomplete();const id=integer(a[0],1,1000);if(String(id)===this.context.name)fail('% A tracked list cannot contain itself.');const member:any={id};if(t.thresholdType){if(a.length!==1&&a.length!==3)fail();if(a.length===3){if(t.thresholdType!=='weight')fail('% Weights apply to weight lists only.');keyword(a[1],['weight']);member.weight=integer(a[2],0,1000);}}else{if(a.length>2)fail();if(a[1]){keyword(a[1],['not']);member.not=true;}}t.objects=(t.objects||[]).filter((x:any)=>x.id!==id);if(!no)t.objects.push(member);this.change();},'<id> [not|weight <value>]')]:[]];}
   private interfaceCommands():Command[] {

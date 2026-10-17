@@ -11,6 +11,7 @@ Audit started October 16, 2026. **The complete requested CCNA/ENCOR/ENARSI audit
 - **User-approved exclusion, October16:** retain the recent removal of server TFTP and SCP/SFTP services, their administration pages and the desktop File Transfer tool. Old file dictionaries remain; server listeners are disabled on load/reload and reject requests. IOS SCP is separate. This supersedes the original brief's preserve-services requirement for those services.
 - The original `network-sandbox` was temporarily moved and is now restored; its 492 JavaScript hashes match the saved reference manifest. Use it read-only; never ship its code in the new app.
 - The checkout was already untracked. Do not reset or blanket-commit concurrent/shared work. Concurrent AP/controller displays, WLC reference dropdowns and server service removals are preserved. No immutable pre-audit source diff exists.
+- Current shared packaging delivers `index.html`; open that file directly offline. The wireless topology now lives in `tests/fixtures/wireless-lab.ts` and browser tests import it through public YAML, rather than depending on a bundled example menu. The explicit path/hash manifest records these retained concurrent changes separately from this audit's source/test review surface.
 
 ## Bounded repairs implemented
 
@@ -24,6 +25,7 @@ Audit started October 16, 2026. **The complete requested CCNA/ENCOR/ENARSI audit
 | Ethernet/bundles | Carrier/speed/duplex negotiation and real mismatch errors/loss; routed VRF/ARP, immediate connected routes and recovery | No PHY/fiber/cable fault model or complete LACP PDU state machine |
 | BGP | Persistent TCP IPv4/IPv6 AF, family policy/withdrawals, VRF-Lite, BFD and actual ECMP/IGP-cost selection | Logical encoding and incomplete full event/catalog matrix |
 | EIGRP | Classic/named IPv4 auto-summary, conditional AD5 Null0/minimum metric, external-route exception, no/default, replay/reload and actual traffic | UPDATE and external numerical seed propagation remain computed; full DUAL/RTP/overlap uncertified |
+| Removal/replay fidelity | QoS value-bearing no forms, persistent three-color/default violation drops, rendered classic/named BFD flags, ERSPAN peer removal and rejected navigation negation | Exact native mismatch/error output remains unverified; see command-removal and wired reports |
 | PoE/AP | Actual priority/detection-order budget allocation; supply-preserving software reload with fresh DHCP/CAPWAP | Single full-power 30W class4 AP profile; no electrical negotiation/fault model |
 | Wireless/WLC | Flex standalone, tag/profile dependencies, RF validation, nondestructive Apply, real counters, delivered RADIUS failover and CAPWAP loss detection | Full Cisco GUI, autonomous AP, WPA3, crypto and advanced roaming absent |
 | SNMP | UDP161 GET/GETNEXT, ACL/views/v3 identity, real MIB/counters; actual link/restart/auth notifications over UDP162 | Read-only logical subset; no BER/USM crypto/GetBulk/informs/full MIB |

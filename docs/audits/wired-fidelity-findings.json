@@ -111,6 +111,20 @@
       "implementation": "Classic router and named IPv4 topology commands now suppress classful-boundary specifics, create conditional fixed-AD5 Null0 routes and choose minimum live component metrics. External-only routes stay specific until an internal component enables aggregation. IPv6 rejects classful summarization.",
       "behavioralEvidence": "Six independent tests in tests/eigrp-auto-summary.test.ts cover real echo failure/recovery and external server traffic, component metric/withdrawal, VRF, topology/protocol output, help, no/default, replay and reload.",
       "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-016",
+      "finding": "Value-bearing QoS no forms rejected; removing violate-action could collapse three-color metering and forward violations under exceed/transmit",
+      "implementation": "Validate DSCP/action arguments before reset; retain persisted three-color mode independently of an explicit violate action, with default drop, operational counters, excess burst rendering and old violate/Be compatibility.",
+      "behavioralEvidence": "Three added qos-parity cases use actual echo marking/drops, help, malformed-input atomicity, legacy mode data, CLI replay and save/reload.",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-017",
+      "finding": "Classic and named EIGRP per-interface BFD flags were omitted from rendered configuration",
+      "implementation": "Render classic bfd interface or named per-AF af-interface blocks with true/false BFD settings scoped to the matching local VRF.",
+      "behavioralEvidence": "Three eigrp-bfd-persistence cases: classic IPv4 and named IPv6 router/AF/af-interface, enable/no/default, real route/echo gating, rendering/copy and save/reload.",
+      "status": "verified-bounded-repair"
     }
   ],
   "subsystems": [
@@ -250,14 +264,18 @@
     "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/configuration_guide/vlan/b_1712_vlan_9300_cg/configuring_vtp.html",
     "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_ire-enhanced-igrp.html",
     "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_eigrp/command/ire-cr-book/ire-a1.html",
-    "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/16406-eigrp-toc.html"
+    "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/16406-eigrp-toc.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/qos/b-quality-of-service/m_qos-mrkg.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/qos/b-quality-of-service/m_qos-policing.html"
   ],
   "tests": [
     "tests/wired-fidelity.test.ts",
     "tests/bgp-multiprotocol.test.ts",
     "tests/ethernet-physical.test.ts",
     "tests/qos-scheduler.test.ts",
-    "tests/eigrp-auto-summary.test.ts"
+    "tests/eigrp-auto-summary.test.ts",
+    "tests/qos-parity.test.ts",
+    "tests/eigrp-bfd-persistence.test.ts"
   ],
   "limitations": "All subsystem rows remain partial; command inventory status must not be inferred from passing a subsystem regression.",
   "validation": {
@@ -277,7 +295,9 @@
       "bgp-multiprotocol": 7,
       "ethernet-physical": 8,
       "qos-scheduler": 8,
-      "eigrp-auto-summary": 6
+      "eigrp-auto-summary": 6,
+      "qos-negation-and-mode": 3,
+      "eigrp-bfd-persistence": 3
     },
     "eigrpFocusedRegression": {
       "tests": 212,
@@ -296,6 +316,14 @@
       "passed": 6,
       "failed": 0,
       "note": "Includes final local Null0 topology display assertions for classic and named IPv4."
+    },
+    "qosNegationAndBfdRegression": {
+      "tests": 116,
+      "passed": 116,
+      "failed": 0,
+      "log": ".cache/wired-negation-regression.log",
+      "note": "QoS policer/scheduler, EIGRP auto-summary/BFD, control-plane CLI, routing VRF, show and CLI syntax suites. Typecheck passed. Parent owns final combined acceptance."
     }
-  }
+  },
+  "negationSemanticsBoundary": "Supplied QoS DSCP/action arguments are validated then reset the single modeled setting; native behavior for valid arguments differing from current configuration is unverified. Named EIGRP standalone autonomous-system remains rejected by selected-reference grammar."
 }

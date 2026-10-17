@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-17T00:30:00.612Z",
+  "generatedAt": "2026-10-17T01:00:44.148Z",
   "modules": [
     {
       "file": "src/aaa-accounting.ts",
@@ -158,9 +158,9 @@
     },
     {
       "file": "src/cli.ts",
-      "sha256": "f128a960f7a78450859299a0ccf2ea9a681f903238c3f8524a515a4f8af5f84d",
-      "lines": 1231,
-      "bytes": 301372,
+      "sha256": "01913600f41280e888b9292a9688067874b8d0d989b2bc668942d61ddfca4e24",
+      "lines": 1233,
+      "bytes": 302467,
       "imports": [
         "./mac-aging.ts",
         "./record-map.ts",
@@ -218,9 +218,9 @@
     },
     {
       "file": "src/config-renderer.ts",
-      "sha256": "741c12ef5c6ddb447c4982b12529de6dd780b1d9ab0709dbc8273a32974754eb",
-      "lines": 405,
-      "bytes": 62212,
+      "sha256": "df2513507e8900503d897a6143dd1fb7eed8a54bb46f947e139181616cd61e26",
+      "lines": 426,
+      "bytes": 63037,
       "imports": [
         "./ethernet.ts",
         "./ios-snmp.ts",
@@ -240,9 +240,9 @@
     },
     {
       "file": "src/control-plane.ts",
-      "sha256": "6c76c52f022a9bf799af141c421b3e37414093af69612110da98a260c18d0acf",
-      "lines": 1940,
-      "bytes": 231958,
+      "sha256": "c3f9c4fd6eeee881736dbd6acabcf548236c4147cf5dccc4322078f24e775c37",
+      "lines": 1995,
+      "bytes": 236620,
       "imports": [
         "./ethernet.ts",
         "./msdp.ts",
@@ -347,9 +347,9 @@
     },
     {
       "file": "src/engine.ts",
-      "sha256": "ebb8bfac27eeeac6a21dd57f48e98cb669da0c6f305a081380bd9e26ceef2ec3",
-      "lines": 1304,
-      "bytes": 169115,
+      "sha256": "c88f5ec22471c66fd22ea211920cbbcbf999f30c090f0e9c05b90bb6aba2ca1c",
+      "lines": 1309,
+      "bytes": 169490,
       "imports": [
         "./record-map.ts",
         "./poe.ts",
@@ -473,9 +473,9 @@
     },
     {
       "file": "src/icons.ts",
-      "sha256": "dad60c7892d75ef510bc6b285e225a9f459e297204ba3db6a6f3086981f8e966",
-      "lines": 65,
-      "bytes": 3399,
+      "sha256": "f81095828090a37ba56ae65c01b45ff0c51f29dc1eda35546396edb64f2c04c2",
+      "lines": 67,
+      "bytes": 3766,
       "imports": [
         "./model.ts",
         "./node-icons.ts"
@@ -513,9 +513,9 @@
     },
     {
       "file": "src/ios-debug.ts",
-      "sha256": "564a71da1321f795627772006614fe3ee302264f9ab79341eb8a88f78d782a51",
+      "sha256": "dc4ec0c2564fb86456e6e8d112dc4ad38335ea6e27c458ab785117af6e7e67f5",
       "lines": 50,
-      "bytes": 6025,
+      "bytes": 6071,
       "imports": [
         "./model.ts"
       ],
@@ -631,9 +631,9 @@
     },
     {
       "file": "src/ios-show-enterprise.ts",
-      "sha256": "1bbd5678147a856749da2929ba974cead8b88c330f608fe4980df867dd25ec2f",
+      "sha256": "ecaa01117feb441fcb8adbcd9a4223c464ebcb008ff223fedf11d8ac43aa4e26",
       "lines": 138,
-      "bytes": 38856,
+      "bytes": 38915,
       "imports": [
         "./qos-scheduler.ts",
         "./bgp-policy.ts",
@@ -647,9 +647,9 @@
     },
     {
       "file": "src/ios-show-operational.ts",
-      "sha256": "0432540bbbc25fbf8de58a80c88750b5650e90baf3e971d184719558a6aa6d6d",
+      "sha256": "1594d1013bb60dd24bb39d3570948cca254a4a833656cead8712f455dfce0d2c",
       "lines": 75,
-      "bytes": 22448,
+      "bytes": 22547,
       "imports": [
         "./engine.ts",
         "./model.ts",
@@ -679,9 +679,9 @@
     },
     {
       "file": "src/ios-show.ts",
-      "sha256": "79f0300be32952fa4752ff944822c9892b84630dfe82426cc4e52ca9eba9a13e",
-      "lines": 300,
-      "bytes": 72460,
+      "sha256": "9c0f97e427736cfa2e26c90ac67497a90bfbaa7ff10267d49e4f2090a932b6d1",
+      "lines": 301,
+      "bytes": 72928,
       "imports": [
         "./ethernet.ts",
         "./bgp-compat.ts",
@@ -743,9 +743,9 @@
     },
     {
       "file": "src/ios-syntax.ts",
-      "sha256": "b1c07ad380b6eacdaf992a682d241e8ccad846aac5a4a37427b8a6fc9bd65262",
-      "lines": 497,
-      "bytes": 52097,
+      "sha256": "fe842f37689cf8b8d4850ebf4b0ed7c59f0db33b1babecb72b4d2907747cfe30",
+      "lines": 507,
+      "bytes": 53165,
       "imports": [
         "./ip.ts"
       ],
@@ -755,6 +755,7 @@
         "IosToken",
         "iosTokens",
         "iosInvalidInput",
+        "iosCommandSupportsNegation",
         "iosContextHelp",
         "iosArgumentCompletion",
         "iosErrorOffset"
@@ -934,15 +935,14 @@
     },
     {
       "file": "src/main.ts",
-      "sha256": "370e8b51f30cd64403f015500e857bd383411699ae2443ac824bf3ef8862b04d",
-      "lines": 2597,
-      "bytes": 123506,
+      "sha256": "1b9710d8a17ec479a87f0f1fb68a9cb779680275893944e748f52ee07e035c48",
+      "lines": 2602,
+      "bytes": 123636,
       "imports": [
         "./network-tools-ui.ts",
         "./poe-ui.ts",
         "./simulation-ui.ts",
         "./assets/networksim-logo.png",
-        "./wireless-example.ts",
         "./wireless-ui.ts",
         "./wireless-model.ts",
         "./link-layout.ts",
@@ -1069,15 +1069,14 @@
     },
     {
       "file": "src/network-tools-ui.ts",
-      "sha256": "1c8eb83df5463be369c4bbd2372eb203e9ff478aadbd4e2f467855fbbfcbf643",
-      "lines": 27,
-      "bytes": 7076,
+      "sha256": "12a7c88e8f8f26a00ec1e1f1c430fa80a84c2bf01b63b0a1e1f5e3872fde4937",
+      "lines": 26,
+      "bytes": 5906,
       "imports": [
         "./engine.ts",
         "./model.ts",
         "./icons.ts",
         "./snmp.ts",
-        "./ssh-files.ts",
         "./http-service.ts",
         "./dns-service.ts",
         "./ip.ts"
@@ -1142,9 +1141,9 @@
     },
     {
       "file": "src/packet-policy.ts",
-      "sha256": "17bc7992af87a7f1c11c56c0b3e8ba3cd95275ac6a12809b15725315b6dc440a",
+      "sha256": "9143aa94533ba9d501d60b3033a75a23cf1294bb750d0c1da11c9bb7a0f85c8d",
       "lines": 345,
-      "bytes": 38055,
+      "bytes": 38111,
       "imports": [
         "./ethernet.ts",
         "./qos-scheduler.ts",
@@ -1331,9 +1330,9 @@
     },
     {
       "file": "src/services-ui.ts",
-      "sha256": "3aaffe15ea5324f2357d945780f8d10ce57b58ed7f22afcd00ad096001083ff3",
-      "lines": 363,
-      "bytes": 27572,
+      "sha256": "d51cb23c472c0d70d54eff3e4e73d5d8713115c854beb24f5e6b0d039beff476",
+      "lines": 348,
+      "bytes": 24579,
       "imports": [
         "./record-map.ts",
         "./dns-service.ts",
@@ -1408,9 +1407,9 @@
     },
     {
       "file": "src/ssh-files.ts",
-      "sha256": "affa8837da482c12eb253b234a4f96c7b5143b3ef01af87b2e7ac187ed4b4136",
+      "sha256": "61512c07418294fa9d00b9e833ef9729088de16656c40ec9b9a4963ecd90bd36",
       "lines": 27,
-      "bytes": 4451,
+      "bytes": 4466,
       "imports": [
         "./engine.ts",
         "./model.ts",
@@ -1479,9 +1478,9 @@
     },
     {
       "file": "src/windows-cli.ts",
-      "sha256": "31e0bc7b87283c830b9da026fb5e50b10d6614bba9601c74388c23bb234c0735",
-      "lines": 128,
-      "bytes": 46262,
+      "sha256": "9902c89fe4cc290db1c9a825cfafa724098cc514c43446b8f13171dfbe351942",
+      "lines": 131,
+      "bytes": 46522,
       "imports": [
         "./engine.ts",
         "./model.ts",
@@ -1500,9 +1499,9 @@
     },
     {
       "file": "src/wireless-controller-form.ts",
-      "sha256": "aac5b1940821971993f9dd90ce7e0050f89015b7d6a4e7df76d09ce2ff590f64",
-      "lines": 120,
-      "bytes": 8860,
+      "sha256": "d2d60084f5d66cab4a2c72669d2194b3037c4d12e13ebb9878cbf40b936a55cc",
+      "lines": 123,
+      "bytes": 9146,
       "imports": [
         "./model.ts",
         "./engine.ts",
@@ -1512,20 +1511,6 @@
       ],
       "exports": [
         "controllerFormDraft"
-      ]
-    },
-    {
-      "file": "src/wireless-example.ts",
-      "sha256": "8819f118e24f886843a18e8f77c052e4e8cc8af50db423f7a2d2b0e7a359ecdc",
-      "lines": 16,
-      "bytes": 4312,
-      "imports": [
-        "./engine.ts",
-        "./cli.ts",
-        "./wireless-model.ts"
-      ],
-      "exports": [
-        "wirelessExample"
       ]
     },
     {
@@ -1569,9 +1554,9 @@
     },
     {
       "file": "src/wireless-ui.ts",
-      "sha256": "4183bfa803a164032c93856d0c1b61c99d0e7490199ce60db7e941a4801c2c33",
+      "sha256": "b20142b67960ceff3b99e482eb08eb201aa3023e9ded1dd84888f1e354accff2",
       "lines": 83,
-      "bytes": 27700,
+      "bytes": 27750,
       "imports": [
         "./ap-controller-view.ts",
         "./wireless-controller-form.ts",
@@ -1606,9 +1591,9 @@
     },
     {
       "file": "src/wlc-reference-ui.ts",
-      "sha256": "f1ad18ba589eb7af6939aa14e2c1396111acdb5de7998acefeae337e4864c19e",
+      "sha256": "4aad65c2165801c5dd330396f8fd978f273b1bda02824a2a965ba17b2657b3fe",
       "lines": 99,
-      "bytes": 8258,
+      "bytes": 8366,
       "imports": [
         "./model.ts",
         "./wireless-model.ts",

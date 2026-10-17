@@ -1,6 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-17T00:21:41.847419+00:00",
+  "generatedAt": "2026-10-17T01:01:04.445639+00:00",
+  "implementationInventory": {
+    "path": "docs/audits/coverage-inventory.json",
+    "generatedAt": "2026-10-17T01:00:44.148Z",
+    "sha256": "d26022d47a7e42c8cd891b9bd7087037f06f0293ad3a31a4f224af814b9725ec"
+  },
   "method": "Automatic extraction of all topictitle2 command headings from all automatically discovered pinned official Catalyst 9300 17.12 command-reference chapters; lexical source-registry and objective-family joins are candidates only. Router and wireless release-specific catalogs still require separate completion. Arguments, no forms and full command semantics are not inferred from headings.",
   "sources": [
     {

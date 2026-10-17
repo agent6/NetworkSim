@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-10-17T00:42:30.694Z",
+  "generatedAt": "2026-10-17T00:55:03.996Z",
   "browser": "155.0.8059.84",
-  "url": "http://127.0.0.1:58556",
+  "url": "http://127.0.0.1:59605",
   "artifact": {
     "path": "dist/index.html",
-    "bytes": 3456643,
-    "sha256": "6340aa22b114a00c94d12570e66e1c03887189f131ac80b7cf2c3094c722f632"
+    "bytes": 3455218,
+    "sha256": "06b4d9a0d2a01837241f9734c85d4f9e2665f49e6f34418bd824d168185029d0"
   },
   "sourceDigests": [
     {
@@ -29,14 +29,14 @@
       "sha256": "377c82ab9565acb1c080c9bcd8c3427055c391d62c7fb5a28c05060dd4ff45dc"
     },
     {
-      "path": "src/wireless-example.ts",
-      "sha256": "8819f118e24f886843a18e8f77c052e4e8cc8af50db423f7a2d2b0e7a359ecdc"
+      "path": "tests/fixtures/wireless-lab.ts",
+      "sha256": "53fe6d2f6aff9b116493f4ce1a0a54281eddc06d6ae8ab63dd74c8bb4bc1bcfd"
     }
   ],
   "fixtures": [
-    "Built-in wireless example with GUI-created Guest WLAN, central VLAN20 mapping and AP tag/RF changes",
+    "Imported test-only wireless fixture with GUI-created Guest WLAN, central VLAN20 mapping and AP tag/RF changes",
     "Fresh empty WLC for missing-reference help",
-    "Wireless example with implicit default dot1x method list; unrelated hostname Apply"
+    "Wireless fixture with implicit default dot1x method list; unrelated hostname Apply"
   ],
   "checks": [
     "Every existing-object reference is a dropdown throughout all five WLC sections",

@@ -169,6 +169,11 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
 
 /** Deliberately explicit: prose in legacy argument hints is not an executable grammar. */
 function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
+  if(['policy-class','policy-police'].includes(context.mode??'')){
+    const names=['default','ef',...Array.from({length:7},(_,i)=>'cs'+(i+1)),...Array.from({length:4},(_,c)=>Array.from({length:3},(_,d)=>`af${c+1}${d+1}`)).flat()],dscp:Form[]=[[number(0,63,'Differentiated Services Code Point')],...choices(names)];
+    if(path==='set dscp')return dscp;
+    if(['conform-action','exceed-action','violate-action'].includes(path))return [...choices(['transmit','drop']),...combine([[word('set-dscp-transmit')]],dscp),[word('set-prec-transmit'),number(0,7,'IP precedence')]];
+  }
   if(path==='ap dot11 24ghz rf-profile'||path==='ap dot11 5ghz rf-profile')return[[text('RF profile name')]];
   if(path==='channel chan-width')return choices(['20','40','80']);
   if(path==='tx-power max')return[[argument('<-10-30>','Transmit power ceiling in dBm',value=>/^-?\d+$/.test(value)&&+value>=-10&&+value<=30)]];
@@ -369,6 +374,7 @@ function specialPosition(path: string, tokens: IosToken[], context: IosSyntaxCon
 }
 
 function negativeForms(path: string, forms: Form[], context: IosSyntaxContext): Form[] {
+  if(['policy-class','policy-police'].includes(context.mode??'')&&['set dscp','conform-action','exceed-action','violate-action'].includes(path))return [[],...forms];
   if(path==='power inline')return [[],...forms];
   if(context.mode?.startsWith('wireless-')&&['tx-power max','channel chan-width','security wpa psk set-key','security dot1x authentication-list','vlan','session-timeout','native-vlan-id','policy-tag','site-tag','rf-tag','ap-profile','flex-profile','24ghz-rf-policy','5ghz-rf-policy','ap capwap timers heartbeat-timeout'].includes(path))return[[],...forms];
   if(path==='wlan'||path==='aaa authentication dot1x')return[[text('Profile or method-list name')],...forms];
@@ -403,11 +409,15 @@ function advanceForms(forms: Form[], tokens: IosToken[]): Position {
 }
 
 interface Lookup { tokens: IosToken[]; specs: IosSyntaxCommand[]; index: number; no: boolean; prefix: string; context: IosSyntaxContext; fallback?: { spec: IosSyntaxCommand; index: number }; bad?: number; badColumn?: number }
+/** Navigation commands have no configuration to negate or restore. */
+export function iosCommandSupportsNegation(words: string[]): boolean {
+  return !['end','exit','do','help','disable','logout'].includes(words[0])&&!words[0]?.startsWith('exit-');
+}
 function lookup(line: string, commands: IosSyntaxCommand[], context: IosSyntaxContext, includeLast: boolean): Lookup {
   const tokens = iosTokens(line), count = tokens.length - (!includeLast && !/\s$/.test(line) ? 1 : 0);
   let index = 0, no = false, specs = commands;
-  if (['no', 'default'].includes(tokens[0]?.text.toLowerCase()) && !['user', 'priv'].includes(context.mode || '')) { index++; no = true; }
-  if (tokens[index]?.text.toLowerCase() === 'do' && !['user', 'priv'].includes(context.mode || '') && context.execCommands) { index++; specs = context.execCommands; context = { ...context, mode: 'priv' }; }
+  if (['no', 'default'].includes(tokens[0]?.text.toLowerCase()) && !['user', 'priv'].includes(context.mode || '')) { index++; no = true; specs=specs.filter(spec=>iosCommandSupportsNegation(spec.words)); }
+  if (!no && tokens[index]?.text.toLowerCase() === 'do' && !['user', 'priv'].includes(context.mode || '') && context.execCommands) { index++; specs = context.execCommands; context = { ...context, mode: 'priv' }; }
   if (context.mode === 'acl' && /^\d+$/.test(tokens[index]?.text || '')) index++;
   const start = index, prefix = line.slice(0, tokens[start]?.start ?? line.length);
   let fallback: Lookup['fallback'];

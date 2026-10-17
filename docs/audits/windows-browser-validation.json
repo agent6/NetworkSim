@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-17T00:36:38.478Z",
+  "generatedAt": "2026-10-17T01:00:53.410Z",
   "browser": "155.0.8059.84",
-  "url": "file:///Users/erikpope/projects/NetworkSim/NetworkSim.html",
+  "url": "file:///Users/erikpope/projects/NetworkSim/index.html",
   "fixture": "four-node public YAML import; isolated headless profile",
   "checks": [
     "Imported a fresh four-node fixture through the public YAML workflow",

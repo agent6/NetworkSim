@@ -43,7 +43,7 @@ All nine nodes use the same `Simulator`, clock, Ethernet/IP admission, forwardin
 | NTP | Delivered peer requests, authentication compatibility, offset/reach/selection/holdover | Logical timestamps and deterministic clock; no wire cryptography or full discipline/oscillator model |
 | TFTP | Retained engine API supports delivered block/ACK/error exchanges, retries, file state and final ACK retention | Server TFTP service is removed by explicit user direction. Retained API tests do not imply a supported server listener. Text files only; no host filesystem or image execution |
 | Syslog | Delivered datagrams carry source, facility, severity, timestamp and bounded received log | No complete RFC encoding/TLS transport or full Windows event subsystem |
-| SPAN/NetFlow | Actual frame copies and delivered routed structured exports with observed counters | No binary RSPAN/ERSPAN/NetFlow interoperability or arbitrary flexible record schemas |
+| SPAN/NetFlow | Actual frame copies and delivered routed structured exports with observed counters; ERSPAN endpoint removal stops GRE/capture and survives replay/reload | No binary RSPAN/ERSPAN/NetFlow interoperability or arbitrary flexible record schemas; see `command-removal-fidelity.md` |
 | IP SLA/tracking/EEM | Real ICMP/HTTP/UDP probes and clock deadlines update tracked routes/FHRP; supported events run real commands | Limited operation/action catalog; no general Tcl/runtime. PTP election is not PTP clock synchronization |
 
 ## Corrections added in this audit
