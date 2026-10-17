@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Simulator } from '../src/engine.ts';
 import { IOSSession } from '../src/cli.ts';
+import {IOS_BOOT_DURATION} from '../src/ios-boot.ts';
 import { renderConfig } from '../src/config-renderer.ts';
 
 function lab(kind: 'router'|'switch'|'l3switch'|'pc'='router') {
@@ -49,7 +50,7 @@ test('startup configuration is separate and reload drops unsaved configuration',
   conf(cli,'hostname Unsaved','interface loopback0','description temporary','end');
   assert.equal(device.startupConfig?.hostname,'Saved');assert.equal(device.config.hostname,'Unsaved');
   ok(cli,'reload','no','');assert.equal(engine.getDevice(device.id)?.config.hostname,'Saved');assert.equal(cli.mode,'user');
-  ok(cli,'enable');assert.ok(!cli.execute('show running-config').join('\n').includes('temporary'));
+  assert.equal(cli.busy,true);engine.advance(IOS_BOOT_DURATION);ok(cli,'','enable');const restored=cli.execute('show running-config').join('\n');assert.match(restored,/hostname Saved/);assert.ok(!restored.includes('temporary'));
 });
 
 test('static route parsing is atomic, supports discard and floating routes',()=>{

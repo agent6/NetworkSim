@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-10-17T03:14:27.860Z",
+  "browser": "155.0.8059.84",
+  "fixture": "Isolated public YAML import and Windows PC/Server desktops in standalone file:// app",
+  "checks": [
+    "Windows command prompt provides SSH help and controlled option errors",
+    "Hostname SSH resolves through DNS, masks passwords and retries the same username after a failed password",
+    "Authenticated Windows SSH controls the remote router and reflects its changed hostname",
+    "Remote IOS Tab and question-mark help work inside the Windows SSH session",
+    "Exit restores the local Windows prompt and local command routing",
+    "Windows -l and -p options authenticate to a configured switch management SVI",
+    "SSH-disabled targets, a Telnet listener, an unopened port and failed DNS do not open a session",
+    "Ctrl-C during login closes the pending SSH session and restores normal input",
+    "Windows Server command prompt also supports the ssh.exe client and returns to its own shell",
+    "No browser page errors"
+  ],
+  "errors": [],
+  "artifact": {
+    "file": "index.html",
+    "sha256": "e1e4cb140fdd9994517233f2ff17c3d5f960b61db5b64b72e7c3cafb29e23ab4"
+  }
+}

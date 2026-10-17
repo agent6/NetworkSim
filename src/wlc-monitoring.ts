@@ -12,7 +12,7 @@ export function bindWLCMonitoring(sim:Simulator,d:Device,root:HTMLFormElement,co
   const target=(event.target as Element).closest<HTMLElement>('[data-wlc-save],[data-wlc-reload],[data-wlc-confirm-reload],[data-wlc-save-reload],[data-wlc-disconnect]');if(!target)return;
   if(target.hasAttribute('data-wlc-save')){save();if(status())status()!.textContent='Running configuration saved to startup configuration.';}
   if(target.hasAttribute('data-wlc-reload')&&status())status()!.innerHTML='Reload the startup configuration? Unsaved running changes will be lost. <button type="button" class="btn" data-wlc-confirm-reload>Reload saved configuration</button> <button type="button" class="btn" data-wlc-save-reload>Save and reload</button>';
-  if(target.hasAttribute('data-wlc-confirm-reload')||target.hasAttribute('data-wlc-save-reload')){if(target.hasAttribute('data-wlc-save-reload'))save();commit(()=>sim.reload(d.id));document.querySelector<HTMLButtonElement>('[data-action=close-dialog]')?.click();}
+  if(target.hasAttribute('data-wlc-confirm-reload')||target.hasAttribute('data-wlc-save-reload')){if(target.hasAttribute('data-wlc-save-reload'))save();commit(()=>sim.reloadIOS(d.id,'Reload requested from WLC management'));document.querySelector<HTMLButtonElement>('[data-action=close-dialog]')?.click();}
   if(target.dataset.wlcDisconnect){const sent=sim.wireless.deauthenticate(d.id,target.dataset.wlcDisconnect);if(status())status()!.textContent=sent?'CAPWAP disconnect request sent. An automatically connecting client may reconnect.':'Client is no longer associated with this controller.';}
  });
  let previous=-Infinity;

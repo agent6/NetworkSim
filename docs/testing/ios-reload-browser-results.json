@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-10-17T02:41:44.189Z",
+  "browser": "155.0.8059.84",
+  "fixture": "Isolated public YAML import in standalone file:// index.html",
+  "checks": [
+    "Save and reload confirmation can still be cancelled before restart",
+    "Confirmed reload locks the console, removes the IOS prompt and marks the diagram node as booting",
+    "Pausing the simulation holds the boot sequence and keeps the console unavailable",
+    "Router streams bootstrap, image loading, initialization and saved-configuration stages before RETURN",
+    "RETURN starts a fresh user session and unsaved configuration stays discarded",
+    "Switch reload uses the switch boot-loader sequence and also requires RETURN",
+    "No browser page errors"
+  ],
+  "errors": [],
+  "artifact": {
+    "file": "index.html",
+    "sha256": "db25244569d24da494a7cec68fe8b067fcaf4f940f1d9d3050bc081a692aec4c"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-10-17T02:51:39.379Z",
+  "browser": "155.0.8059.84",
+  "fixture": "Isolated public YAML import and public GUI/console controls in standalone file:// index.html",
+  "checks": [
+    "DHCP offers an optional validated DNS domain, saved independently of DNS enablement",
+    "Enabling DNS after a real DHCP allocation publishes short and domain A names as read-only rows",
+    "Automatic TTLs refresh without disturbing manual record drafts or service tab navigation",
+    "Applying unrelated service settings preserves automatic ownership and existing manual records",
+    "The client console resolves the automatic A record and successfully pings the leased device by name",
+    "Desktop Network tools returns the same automatic record through simulated DNS traffic",
+    "Delivered DHCP release removes both automatic names, preserves manual records and returns NXDOMAIN",
+    "Renewing after release recreates the lease-owned DNS entries",
+    "Standalone file:// app has no browser page errors"
+  ],
+  "errors": [],
+  "artifact": {
+    "file": "index.html",
+    "sha256": "a933008857908abc47d4accb7c24b3286c75b88c2022d925f8773290b2fcc15d"
+  }
+}

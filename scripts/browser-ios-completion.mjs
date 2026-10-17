@@ -1,0 +1,47 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {mkdir,readFile,writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {pathToFileURL} from 'node:url';
+import {Simulator} from '../src/engine.ts';
+import {serializeLabFile} from '../src/persistence.ts';
+const require=createRequire(import.meta.url),{chromium}=require(process.env.NETWORKSIM_PLAYWRIGHT_PATH||'/Users/erikpope/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const sim=new Simulator(20261017);sim.addDevice('l3switch',500,280);
+const folder='.cache/ios-completion-browser';await mkdir(folder,{recursive:true});
+const browser=await chromium.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true}),page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[],checks=[];
+page.on('pageerror',error=>errors.push(error.message));
+const input=page.locator('#terminal-input'),output=page.locator('#terminal-output'),prompt=page.locator('#terminal-prompt'),check=name=>{checks.push(name);console.log('PASS',name);};
+const command=async line=>{await input.fill(line);await input.press('Enter');};
+const help=async line=>{await input.fill(line);const offset=(await output.textContent()).length;await input.press('?');assert.equal(await input.inputValue(),line);return (await output.textContent()).slice(offset);};
+const tab=async(line,expected,key='Tab')=>{await input.fill(line);await input.press(key);assert.equal(await input.inputValue(),expected);};
+const caret=async start=>input.evaluate((element,start)=>element.setSelectionRange(start,start),start);
+try {
+  await page.goto(pathToFileURL(process.cwd()+'/index.html').href);await page.locator('#import-input').setInputFiles({name:'completion.netsim.yaml',mimeType:'application/yaml',buffer:Buffer.from(serializeLabFile(sim.serialize()))});
+  await page.locator('#world .kind-l3switch .device-body').dblclick();await command('enable');await command('terminal length 0');await command('configure terminal');
+  for(const line of ['int gi','interface gi']){const text=await help(line);assert.match(text,/GigabitEthernet/);assert.doesNotMatch(text,/INTERFACE\s+Interface name/);}
+  check('The exact int gi? and interface gi? reports show GigabitEthernet and preserve the draft');
+  const types=await help('interface ');for(const word of ['GigabitEthernet','Loopback','Port-channel','Vlan','range'])assert.ok(types.includes(word),word);await tab('interface ','interface ');
+  check('interface ? shows supported interface types and range together; Tab on a blank argument does not guess range');
+  assert.match(await help('interface gi '),/<0-1>/);assert.match(await help('interface gi0/'),/<1-24>/);assert.match(await help('interface gi0/3 '),/<cr>/);
+  check('Question-mark help advances from interface type to slot and port numbers, then Enter availability');
+  await tab('int gi','int GigabitEthernet');await tab('int gi0/3','int GigabitEthernet0/3 ');await input.press('Enter');assert.equal(await prompt.textContent(),'DSW1(config-if)#');
+  await command('description COMPLETION-SELECTED');await command('exit');const selectedOffset=(await output.textContent()).length;await command('do show running-config | section ^interface GigabitEthernet0/3$');assert.match((await output.textContent()).slice(selectedOffset),/interface GigabitEthernet0\/3\n description COMPLETION-SELECTED/);
+  check('Tab expands the interface type and preserves the selected port; Enter configures that exact port');
+  await tab('interface gi0/','interface GigabitEthernet0/');await tab('interface lo7','interface Loopback7 ');await tab('interface gi0/999','interface gi0/999');await tab('i','i');assert.match(await help('interface xyz'),/No matching/);
+  check('Tab preserves incomplete or invalid numeric input and ambiguous commands without choosing another interface');
+  await tab('interface range gi','interface range GigabitEthernet');assert.match(await help('interface range gi0/1 - '),/<1-24>/);await command('interface range gi0/1 - 3');assert.equal(await prompt.textContent(),'DSW1(config-if-range)#');await command('exit');
+  check('Interface range supports type completion, bounded last-port help and actual range selection');
+  await input.fill('interface gi0/3');await caret(12);let offset=(await output.textContent()).length;await input.press('?');assert.equal(await input.inputValue(),'interface gi0/3');assert.equal(await input.evaluate(e=>e.selectionStart),12);assert.match((await output.textContent()).slice(offset),/GigabitEthernet/);
+  await input.press('Tab');assert.equal(await input.inputValue(),'interface GigabitEthernet0/3');assert.equal(await input.evaluate(e=>e.selectionStart),25);
+  check('Question mark and Tab at a middle-of-line caret preserve the interface number and cursor position');
+  await command('end');await input.fill('configure terminal');await caret(4);await input.press('Tab');assert.equal(await input.inputValue(),'configure terminal');await input.press('Enter');assert.equal(await prompt.textContent(),'DSW1(config)#');
+  await input.fill('interface placeholder');await input.evaluate(e=>e.setSelectionRange(10,e.value.length));await input.press('Tab');assert.equal(await input.inputValue(),'interface placeholder');
+  check('Completion inside an existing command does not duplicate its suffix or spaces; ambiguous selected text remains intact');
+  await command('interface gi0/3');await tab('no shut','no shutdown ','Control+i');await tab('do show ip rou','do show ip route ');assert.match(await help('do show interfaces | '),/include/);
+  check('Ctrl-I, no, do and output filters use the same contextual completion and help rules');
+  await command('end');await command('terminal length 3');await command('configure terminal');await input.fill('interface ');await input.press('?');assert.equal(await prompt.textContent(),'--More--');await input.press('q');assert.equal(await input.inputValue(),'interface ');assert.equal(await input.evaluate(e=>e.selectionStart),10);assert.equal(await prompt.textContent(),'DSW1(config)#');
+  check('Paged interface help restores the draft and caret after quitting');
+  await command('end');await command('terminal length 0');await command('configure terminal');await help('interface ');await help('interface gi0/');await page.screenshot({path:folder+'/interface-help.png'});
+  assert.deepEqual(errors,[]);check('No browser page errors');
+  await writeFile('docs/testing/ios-completion-browser-results.json',JSON.stringify({generatedAt:new Date().toISOString(),browser:await browser.version(),fixture:'Isolated public YAML import in standalone file:// index.html, real keyboard events and console commands',artifact:{file:'index.html',sha256:createHash('sha256').update(await readFile('index.html')).digest('hex')},checks,errors},null,2)+'\n');
+}catch(error){await page.screenshot({path:folder+'/failure.png'});console.error(error);console.error(errors);process.exitCode=1;}finally{await browser.close();}

@@ -85,7 +85,9 @@ test('LACP active/passive bundles members and passive/passive cannot form a bund
   }
   s.changed();s.advance(1001);
   assert.deepEqual(a.runtime.features.portChannels[1].activeMembers,[sp(1),sp(2)]);
-  assert.equal(a.runtime.stp['1'].ports[sp(1)].role,a.runtime.stp['1'].ports[sp(2)].role);
+  assert.deepEqual(a.runtime.stp['1'].ports['Port-channel1'].members,[sp(1),sp(2)]);
+  assert.equal(a.runtime.stp['1'].ports[sp(1)],undefined);
+  assert.equal(a.runtime.stp['1'].ports[sp(2)],undefined);
   for(const n of[1,2])a.config.interfaces[sp(n)].features.channelMode='passive';s.changed();s.advance(20);
   assert.equal(a.runtime.features.portChannels[1].state,'down');assert.equal(b.runtime.features.portChannels[7].state,'down');
 });

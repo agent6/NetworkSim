@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-10-17T03:38:01.241360+00:00",
+  "feature": "Automatic terminal column sizing, single-pass output formatting and horizontal overflow",
+  "validation": {
+    "typecheck": "passed",
+    "tests": {
+      "passed": 972,
+      "failed": 0,
+      "durationMilliseconds": 59803.860209
+    },
+    "newTerminalWidthTests": 7,
+    "standaloneBrowserChecks": 19,
+    "browserErrors": [],
+    "build": "passed",
+    "previewMatchesArtifact": true
+  },
+  "artifact": {
+    "file": "index.html",
+    "sha256": "94fcadce800075c058ab8a18e9d00de2b54da99754ec5cf8d1bb6a60abdb5bcb",
+    "bytes": 3435419,
+    "distMatches": true
+  },
+  "sourceSnapshot": {
+    "fileCount": 114,
+    "sha256": "7a2176942730026eb3014139a5391fae1b646711a2516d8c9a2a41985f66caef",
+    "scope": "src/**/*.{ts,js,mjs,css}, package.json, package-lock.json, tsconfig.json, scripts/build.mjs"
+  },
+  "browserResults": [
+    "console-width-browser-results.json",
+    "console-width-paging-browser-results.json"
+  ],
+  "measuredColumns": {
+    "wide": 197,
+    "narrow": 73
+  },
+  "reference": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/fundamentals/configuration/xe-16/fundamentals-xe-16-book/cf-cli-basics.html"
+}

@@ -1,5 +1,7 @@
 # Implementation validation results
 
+This is the historical fidelity snapshot delivered in commit `4bf5cda`. The subsequent timed IOS reload feature has its own [current implementation and validation](../testing/ios-reload-validation.md). Source/build “current” labels below apply to this recorded audit snapshot.
+
 Generated 2026-10-17T02:23:18.308Z. This report records the delivered simulator build and measured acceptance. A passing implementation suite does not assert exhaustive native vendor equivalence.
 
 | Check | Result |

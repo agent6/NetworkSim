@@ -26,7 +26,8 @@ export function iosInvalidInput(prompt: string, line: string, offset: number): s
   return [' '.repeat(column) + '^', "% Invalid input detected at '^' marker."];
 }
 
-interface Atom { label: string; description: string; literal?: string; valid?: (text: string) => boolean; values?: string[]; repeat?: boolean }
+interface InterfaceSyntax {context:IosSyntaxContext;create?:boolean;family?:string;range?:boolean}
+interface Atom { label: string; description: string; literal?: string; valid?: (text: string) => boolean; values?: string[]; repeat?: boolean; interface?:InterfaceSyntax }
 type Form = Atom[];
 const word = (literal: string, description = literal): Atom => ({ label: literal, literal, description });
 const argument = (label: string, description: string, valid?: Atom['valid'], values?: string[]): Atom => ({ label, description, valid, values });
@@ -38,14 +39,62 @@ const number = (min: number, max: number, description: string) => argument(`<${m
 const tail = (description = 'Text') => ({ ...argument('LINE', description), repeat: true });
 const optional = (...atoms: Atom[]): Form[] => [[], atoms];
 const combine = (head: Form[], suffix: Form[]): Form[] => head.flatMap(a => suffix.map(b => [...a, ...b]));
-function interfacePrefix(value: string, candidate: string): boolean {
-  const typed = /^([a-z-]+)([\d/.]*)$/i.exec(value), full = /^([a-z-]+)([\d/.]*)$/i.exec(candidate);
-  return !!typed && !!full && full[1].toLowerCase().startsWith(typed[1].toLowerCase()) && full[2].startsWith(typed[2]);
+const virtualInterfaces:Record<string,[number,number]>={Loopback:[0,2147483647],Vlan:[1,4094],Tunnel:[0,2147483647],'Port-channel':[1,48]};
+const interfaceParts=(name:string)=>/^(.*?[a-z-])(\d[\d/.]*)$/i.exec(name);
+function interfaceFamilies(syntax:InterfaceSyntax):string[] {
+  return [...new Set([...(syntax.context.interfaces??[]).map(name=>interfaceParts(name)?.[1]).filter((name):name is string=>!!name),...syntax.create?Object.keys(virtualInterfaces):[]])];
 }
-const iface = (context: IosSyntaxContext) => argument('INTERFACE', 'Interface name', value => {
-  if (!/^[a-z][a-z-]*\d[\d/.]*$/i.test(value)) return false;
-  return !context.interfaces || context.interfaces.some(name => interfacePrefix(value, name) && name.match(/[\d/.]+$/)?.[0] === value.match(/[\d/.]+$/)?.[0]) || /^(?:lo(?:opback)?|vl(?:an)?|tu(?:nnel)?|po(?:rt-channel)?)\d+$/i.test(value);
-}, context.interfaces);
+function interfaceFragment(value:string,syntax:InterfaceSyntax):{families:string[];number?:string} {
+  if(syntax.family)return {families:[syntax.family],number:value};
+  const families=interfaceFamilies(syntax),prefix=families.filter(family=>family.toLowerCase().startsWith(value.toLowerCase()));
+  if(prefix.length)return {families:prefix};
+  const parts=interfaceParts(value);
+  return {families:parts?families.filter(family=>family.toLowerCase().startsWith(parts[1].toLowerCase())):[],number:parts?.[2]};
+}
+function interfaceNumberValid(family:string,value:string,syntax:InterfaceSyntax):boolean {
+  if(!/^\d[\d/.]*$/.test(value))return false;
+  if(syntax.context.interfaces?.some(name=>name.toLowerCase()===(family+value).toLowerCase()))return true;
+  if(!syntax.context.interfaces)return true;
+  const range=syntax.create&&virtualInterfaces[family];
+  if(range&&/^\d+$/.test(value)&&Number.isSafeInteger(+value)&&+value>=range[0]&&+value<=range[1])return true;
+  return !!syntax.create&&family==='GigabitEthernet'&&/^\d+\/\d+\.\d+$/.test(value)&&+value.split('.')[1]<=2147483647&&syntax.context.interfaces.includes(family+value.split('.')[0]);
+}
+function interfaceValid(value:string,syntax:InterfaceSyntax):boolean {
+  const {families,number}=interfaceFragment(value,syntax);
+  return families.length===1&&number!==undefined&&interfaceNumberValid(families[0],number,syntax);
+}
+const iface = (context: IosSyntaxContext,create=false,family?:string):Atom => {
+  const syntax:InterfaceSyntax={context,create,family};
+  return {...argument('INTERFACE','Interface name',value=>interfaceValid(value,syntax)),interface:syntax};
+};
+function interfaceHelp(value:string,syntax:InterfaceSyntax):[string,string][] {
+  if(syntax.range&&value.includes(','))value=value.slice(value.lastIndexOf(',')+1);
+  const {families,number}=interfaceFragment(value,syntax),rows:[string,string][]=[];
+  for(const family of families) {
+    if(number===undefined){rows.push([family,`${family} interface`]);continue;}
+    const virtual=syntax.create&&virtualInterfaces[family];
+    if(virtual){rows.push([`<${virtual[0]}-${virtual[1]}>`,`${family} interface number`]);continue;}
+    const separator=Math.max(number.lastIndexOf('/'),number.lastIndexOf('.')),stem=number.slice(0,separator+1),partial=number.slice(separator+1);
+    const ids=(syntax.context.interfaces??[]).flatMap(name=>{const parts=interfaceParts(name);return parts?.[1]===family?[parts[2]]:[];});
+    const numbers=[...new Set(ids.filter(id=>id.startsWith(stem)).map(id=>id.slice(stem.length).split(/[/.]/)[0]).filter(n=>n.startsWith(partial)).map(Number))].sort((a,b)=>a-b);
+    for(let i=0;i<numbers.length;i++){const start=numbers[i];let end=start;while(numbers[i+1]===end+1)end=numbers[++i];rows.push([`<${start}-${end}>`,`${family} interface number`]);}
+    for(const punctuation of ['/','.'])if(number&&ids.some(id=>id.startsWith(number+punctuation)))rows.push([punctuation,'Continue interface number']);
+    if(syntax.create&&family==='GigabitEthernet'&&/^\d+\/\d+$/.test(number)&&ids.includes(number))rows.push(['.','Subinterface number']);
+    if(syntax.create&&family==='GigabitEthernet'&&/^\d+\/\d+\.\d*$/.test(number)&&ids.includes(number.split('.')[0]))rows.push(['<0-2147483647>','Subinterface number']);
+  }
+  return rows;
+}
+/** Complete the type, preserving the exact number typed; never guess a port or virtual ID. */
+function interfaceCompletion(value:string,syntax:InterfaceSyntax):string|undefined {
+  const comma=syntax.range?value.lastIndexOf(','):-1,head=value.slice(0,comma+1),fragment=value.slice(comma+1);
+  if(!fragment||syntax.family)return;
+  const {families,number}=interfaceFragment(fragment,syntax);
+  if(families.length!==1)return;
+  const family=families[0];
+  if(number===undefined)return head+family;
+  if(!interfaceHelp(fragment,syntax).length)return;
+  return head+family+number+(interfaceNumberValid(family,number,syntax)?' ':'');
+}
 const prefix = () => argument('X:X:X:X::X/<0-128>', 'IPv6 prefix');
 
 interface SyntaxGraph { edges: { atom: Atom; next: SyntaxGraph }[]; complete: boolean }
@@ -214,8 +263,8 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   if (path === 'ip address' && ['interface', 'range'].includes(context.mode || '')) return [[ip(), ip('Subnet mask')], [ip(), ip('Subnet mask'), word('secondary', 'Secondary IP address')], [word('dhcp', 'Obtain an IP address using DHCP')]];
   if (path === 'ip address') return [[ip()]];
   if (path === 'ipv6 address') return [[prefix()], [prefix(), word('eui-64', 'Use the interface identifier')], [argument('X:X:X:X::X', 'IPv6 address'), word('link-local', 'Link-local address')], ...choices(['autoconfig', 'dhcp'])];
-  if (path === 'interface') return [[iface(context)]];
-  if (path === 'interface range') return [[{ ...argument('INTERFACE', 'Interface range, for example GigabitEthernet0/1 - 3'), repeat: true }]];
+  if (path === 'interface') return [[iface(context,true)]];
+  if (path === 'interface range') return [[{...iface(context),valid:undefined,repeat:true,interface:{context,range:true}}]];
   if (path === 'hostname') return [[text('System hostname')]];
   if (path === 'description' || path === 'remark') return [[tail()]];
   if (path === 'terminal length') return [[number(0, 512, 'Number of lines on screen (0 disables paging)')]];
@@ -317,6 +366,7 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   if (path === 'ip arp inspection validate') return [[{ ...argument('src-mac|dst-mac|ip', 'ARP fields to validate', value => ['src-mac', 'dst-mac', 'ip'].includes(value), ['src-mac', 'dst-mac', 'ip']), repeat: true }]];
   if(path==='tracking'&&(['device-tracking','ipv6-snooping'].includes(context.mode||'')||context.mode==='ipv6-guard'&&context.protocol==='ndInspection'))return ['enable','disable'].flatMap(value=>[[word(value)],...[number(1,86400,'Binding lifetime in seconds'),word('infinite','Keep the binding indefinitely')].map(lifetime=>[word(value),word(value==='enable'?'reachable-lifetime':'stale-lifetime'),lifetime])]);
   if(path==='ipv6 neighbor binding')return [[],[word('logging')],[word('max-entries'),number(1,1000000,'Maximum binding entries')],...['reachable-lifetime','stale-lifetime','down-lifetime'].flatMap(value=>[[word(value),number(1,86400,'Binding lifetime in seconds')],[word(value),word('infinite')]]),[word('vlan'),number(1,4094,'VLAN ID'),argument('X:X:X:X::X','IPv6 address',value=>value.includes(':')),word('interface'),iface(context),argument('H.H.H','48-bit hardware address')]];
+  if(path==='spanning-tree mst'&&context.mode==='config')return [[word('configuration')],[argument('<0-4094>','MST instance or instance list',value=>/^\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*$/.test(value)),word('priority'),number(0,61440,'Bridge priority in increments of 4096')]];
   if(path==='spanning-tree portfast')return ['interface','range'].includes(context.mode||'')?[[],...choices(['edge','network','normal','trunk','disable']),[word('edge'),word('trunk')]]:[[word('default')],...combine(choices(['edge','network','normal']),[[word('default')]]),...combine([[],[word('edge')]],combine(choices(['bpduguard','bpdufilter']),[[word('default')]]))];
   return undefined;
 }
@@ -359,6 +409,27 @@ function signatureForms(signature: string | undefined, context: IosSyntaxContext
 }
 
 function specialPosition(path: string, tokens: IosToken[], context: IosSyntaxContext, no: boolean): Position | undefined {
+  if(path==='interface'||path==='interface range') {
+    const syntax:InterfaceSyntax={context,create:path==='interface'&&!no},first=tokens[0]?.text;
+    if(first) {
+      const fragment=interfaceFragment(first,syntax);
+      if(fragment.number===undefined&&fragment.families.length===1&&(path==='interface'||tokens.length<=2)) {
+        const position=advanceForms([[iface(context,syntax.create,fragment.families[0])]],tokens.slice(1));
+        if(path==='interface range'&&position.complete)position.atoms=[word('-','Last interface in range'),word(',','Add another interface range')];
+        return position;
+      }
+    }
+    if(path==='interface range'&&tokens.length) {
+      const joined=tokens.map(token=>token.text).join(''),last=joined.slice(joined.lastIndexOf(',')+1),dash=/^(.*\d)-(\d*)$/.exec(last);
+      if(dash&&interfaceValid(dash[1],syntax)) {
+        const parts=interfaceParts(dash[1])!,family=interfaceFragment(dash[1],syntax).families[0],parent=parts[2].replace(/\d+$/,''),start=Number(parts[2].match(/\d+$/)![0]);
+        const ends=(context.interfaces??[]).flatMap(name=>{const p=interfaceParts(name);return p?.[1]===family&&p[2].replace(/\d+$/,'')===parent?[Number(p[2].match(/\d+$/)![0])]:[];});
+        if(!dash[2])return {atoms:[number(start,Math.max(start,...ends),'Last interface in range')],complete:false};
+        if(ends.includes(+dash[2])&&+dash[2]>=start)return {atoms:[word(',','Add another interface range')],complete:true};
+      }
+      if(interfaceValid(last,syntax))return {atoms:[word('-','Last interface in range'),word(',','Add another interface range')],complete:true};
+    }
+  }
   if(path==='reload at'){
     const months=['january','february','march','april','may','june','july','august','september','october','november','december'],month=argument('MONTH','Month name',value=>value.length>=3&&months.some(m=>m.startsWith(value.toLowerCase())),months),day=number(1,31,'Day of month'),time=argument('HH:MM','24-hour local reload time',value=>/^(?:[01]?\d|2[0-3]):[0-5]\d$/.test(value)),reason=tail('Reason for reload');
     if(!tokens.length)return {atoms:[time],complete:false};if(!time.valid!(tokens[0].text))return {atoms:[],complete:false,bad:0};if(tokens.length===1)return {atoms:[day,month,reason],complete:true};
@@ -491,9 +562,16 @@ export function iosContextHelp(line: string, commands: IosSyntaxCommand[], conte
   if (!position) return undefined;
   if (position.bad !== undefined) return undefined;
   const value = partial ? state.tokens.at(-1)!.text.toLowerCase() : '', rows = new Map<string, string>();
-  for (const atom of position.atoms) if (!atom.literal || atom.literal.toLowerCase().startsWith(value)) rows.set(atom.label, atom.description);
+  for (const atom of position.atoms) {
+    if(atom.interface){for(const [label,description]of interfaceHelp(value,atom.interface))rows.set(label,description);}
+    else if (!atom.literal || atom.literal.toLowerCase().startsWith(value)) rows.set(atom.label, atom.description);
+  }
+  // A command may accept an argument and also have keyword branches (interface range,
+  // show interfaces status). Both are valid at the same source position.
+  const consumed=state.tokens.length-(partial?1:0);
+  if(state.fallback&&consumed===state.fallback.index)for(const spec of state.specs){const child=spec.words[state.fallback.spec.words.length];if(child&&child.startsWith(value))rows.set(child,spec.description);}
   if (!partial && position.complete) rows.set('<cr>', '');
-  if (!rows.size) return undefined;
+  if (!rows.size) return position.atoms.some(atom=>atom.interface)?['% No matching command at this position.']:undefined;
   return [...rows].sort(([a], [b]) => a === '<cr>' ? 1 : b === '<cr>' ? -1 : a.localeCompare(b)).map(([label, description]) => `  ${label.padEnd(22)} ${description}`.trimEnd());
 }
 
@@ -507,7 +585,10 @@ export function iosArgumentCompletion(line: string, commands: IosSyntaxCommand[]
   const state = lookup(line, commands, context, false), position = argumentPosition(state, true);
   if (!position || position.bad !== undefined) return undefined;
   const last = state.tokens.at(-1)!, prefix = last.text.toLowerCase();
-  const values = [...new Set(position.atoms.flatMap(atom => (atom.literal ? [atom.literal] : atom.values || []).filter(value => value.toLowerCase().startsWith(prefix) || atom.label === 'INTERFACE' && interfacePrefix(last.text, value))))];
+  const interfaces=[...new Set(position.atoms.flatMap(atom=>atom.interface?interfaceCompletion(last.text,atom.interface)??[]:[]))];
+  const values = [...new Set(position.atoms.flatMap(atom => (atom.literal ? [atom.literal] : atom.values || []).filter(value => value.toLowerCase().startsWith(prefix))))];
+  if(interfaces.length===1&&!values.length)return line.slice(0,last.start)+interfaces[0];
+  if(interfaces.length)return line;
   if (values.length !== 1) return undefined;
   return line.slice(0, last.start) + values[0] + ' ';
 }

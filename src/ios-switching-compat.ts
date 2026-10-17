@@ -104,7 +104,9 @@ export function switchingInterfaceLines(port:InterfaceConfig):string[]{const f=p
 
 export function portfastConfigured(device:Device,port:InterfaceConfig):boolean{
   const f=port.features,type=f.portfastType??(f.portfast===undefined?device.config.features.stp?.portfastTypeDefault??(device.config.features.stp?.portfastDefault?'edge':'normal'):f.portfast?'edge':'normal');
-  return type==='edge'&&(port.mode!=='trunk'||!!f.portfastTrunk);
+  const members:string[]=/^Port-channel/i.test(port.name)?device.runtime.features.portChannels?.[port.name.slice(12)]?.activeMembers??[]:[];
+  const trunk=port.mode==='trunk'||device.runtime.features.trunks?.[port.name]?.operational||members.some(name=>device.runtime.features.trunks?.[name]?.operational);
+  return type==='edge'&&(!trunk||!!f.portfastTrunk);
 }
 export function loopguardEnabled(device:Device,port:InterfaceConfig):boolean{return !port.features.rootGuard&&(port.features.loopGuard??device.config.features.stp?.loopguardDefault??false);}
 export function bpduguardEnabled(device:Device,port:InterfaceConfig):boolean{return port.features.bpduguard??(!!device.config.features.stp?.bpduguardDefault&&portfastConfigured(device,port));}

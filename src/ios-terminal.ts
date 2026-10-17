@@ -21,3 +21,16 @@ export function terminalPage(lines: string[], options: { columns: number; rows: 
   const count = Math.min(options.length, Math.max(1, Math.floor(options.rows) - (options.reservedRows ?? 1)));
   return { visible: wrapped.slice(0, count), pending: wrapped.slice(count) };
 }
+
+/** Apply completion at the caret without duplicating a word's existing suffix or separator. */
+export function terminalCompletionEdit(value:string,start:number,end:number,completion:string):{value:string;start:number;end:number} {
+  const prefix=value.slice(0,start);
+  if(completion===prefix)return {value,start,end};
+  let suffix=value.slice(end),insert=completion;
+  const typed=prefix.match(/\S*$/)![0],completed=completion.trimEnd().match(/\S*$/)![0],remainder=suffix.match(/^\S*/)![0];
+  if(remainder&&completed.toLowerCase().startsWith((typed+remainder).toLowerCase()))suffix=suffix.slice(remainder.length);
+  const separator=/\s$/.test(insert)&&/^\s/.test(suffix);
+  if(separator)insert=insert.slice(0,-1);
+  const cursor=insert.length+(separator?1:0);
+  return {value:insert+suffix,start:cursor,end:cursor};
+}

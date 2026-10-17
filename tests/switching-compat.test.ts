@@ -75,7 +75,7 @@ test('binding lifetimes transition through reachable, stale and down on simulati
 });
 
 test('new security and switching syntax help matches accepted choices and invalid values preserve policy state',()=>{
-  const s=new Simulator(936),d=s.addDevice('switch'),c=cli(s,d);assert.match(c.help('ipv6 neighbor binding ').join('\n'),/max-entries/);assert.match(c.help('ipv6 neighbor binding vlan 10 2001:db8::1 interface ').join('\n'),/INTERFACE/);run(c,'device-tracking policy EDGE');assert.match(c.help('tracking enable ').join('\n'),/reachable-lifetime/);assert.match(c.help('tracking disable stale-lifetime ').join('\n'),/infinite/);assert.equal(c.complete('tracking enable reach'),'tracking enable reachable-lifetime ');
+  const s=new Simulator(936),d=s.addDevice('switch'),c=cli(s,d);assert.match(c.help('ipv6 neighbor binding ').join('\n'),/max-entries/);assert.match(c.help('ipv6 neighbor binding vlan 10 2001:db8::1 interface ').join('\n'),/GigabitEthernet/);run(c,'device-tracking policy EDGE');assert.match(c.help('tracking enable ').join('\n'),/reachable-lifetime/);assert.match(c.help('tracking disable stale-lifetime ').join('\n'),/infinite/);assert.equal(c.complete('tracking enable reach'),'tracking enable reachable-lifetime ');
   const before=JSON.stringify(d.config);for(const command of ['tracking enable stale-lifetime 10','limit address-count 32001','device-role router','security-level invalid']){assert.match(c.execute(command).join('\n'),/Invalid/);assert.equal(JSON.stringify(d.config),before,command);}run(c,'exit');assert.match(c.execute('ipv6 neighbor binding max-entries 0').join('\n'),/Invalid/);assert.equal(JSON.stringify(d.config),before);
 });
 

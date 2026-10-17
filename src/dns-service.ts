@@ -25,8 +25,8 @@ export function validateDNSRecords(records:DNSRecord[]):DNSRecord[]{
  return result;
 }
 /** Bounded authoritative teaching server, reached only through delivered UDP/53. */
-export function answerDNS(service:any,hostname:string,type:DNSRecordType='A'):DNSAnswer {
- const original=dnsName(hostname),all=dnsRecords(service),records:DNSRecord[]=[],visited=new Set<string>();let name=original,ttl=2147483647;
+export function answerDNS(service:any,hostname:string,type:DNSRecordType='A',additionalRecords:DNSRecord[]=[]):DNSAnswer {
+ const original=dnsName(hostname),all=[...dnsRecords(service),...additionalRecords.map(validateDNSRecord)],records:DNSRecord[]=[],visited=new Set<string>();let name=original,ttl=2147483647;
  const answer=(rcode:DNSAnswer['rcode'],error?:string):DNSAnswer=>{const positive=records.some(r=>r.type===type),negativeTTL=Math.max(0,Math.min(86400,service?.negativeTTL??30));return {hostname:original,type,records,address:records.find(r=>r.type===type&&(type==='A'||type==='AAAA'))?.value,canonicalName:name,ttl:rcode==='SERVFAIL'?0:positive?ttl:Math.min(ttl,negativeTTL),rcode,...error?{error}:{}};};
  for(let step=0;step<16;step++){
   if(visited.has(name))return answer('SERVFAIL','SERVFAIL');visited.add(name);

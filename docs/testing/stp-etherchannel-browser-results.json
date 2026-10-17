@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-10-17T03:29:26.070Z",
+  "browser": "155.0.8059.84",
+  "fixture": "Disposable public YAML import and IOS consoles in standalone file:// app; no user lab modified",
+  "checks": [
+    "Port-channel has one logical Root/FWD row with correct Gigabit bundle cost and port ID",
+    "A physical member query resolves to its logical STP port",
+    "Changing cost on Port-channel changes actual root-port selection to the backup link",
+    "Both physical cables show the logical channel’s blocked state in the diagram",
+    "Blocked-port view counts the bundle as one segment",
+    "Removing the configured cost restores automatic cost and the preferred root port",
+    "The remaining member retains the logical root port and automatic cost changes to a single Gigabit link",
+    "Manual cost stays fixed after member restoration and both diagram sockets return to forwarding",
+    "Logical shutdown reports the aggregate down and no shutdown restores its STP port",
+    "MST uses the Port-channel’s configured instance cost and port priority",
+    "No browser page errors"
+  ],
+  "errors": [],
+  "artifact": {
+    "file": "index.html",
+    "sha256": "c9667ab35e832d6e926ded8f0ff18260a7f5bc43581ef56157c72a8874054771"
+  }
+}

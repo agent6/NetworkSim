@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-10-17T03:30:23.710316+00:00",
+  "feature": "Logical STP EtherChannel ports, operational logical settings and consistent displays",
+  "validation": {
+    "typecheck": "passed",
+    "tests": {
+      "passed": 965,
+      "failed": 0,
+      "durationMilliseconds": 61019.9165
+    },
+    "newSTPTests": 19,
+    "standaloneBrowserChecks": 11,
+    "browserErrors": [],
+    "build": "passed",
+    "previewMatchesArtifact": true
+  },
+  "artifact": {
+    "file": "index.html",
+    "sha256": "c9667ab35e832d6e926ded8f0ff18260a7f5bc43581ef56157c72a8874054771",
+    "bytes": 3433358,
+    "distMatches": true,
+    "previewMatches": true
+  },
+  "sourceSnapshot": {
+    "fileCount": 114,
+    "sha256": "053d3a62ef3d06c954173bdefefcd9fbd9be41d9236850aad84180e4f4039427",
+    "scope": "src/**/*.{ts,js,mjs,css}, package.json, package-lock.json, tsconfig.json, scripts/build.mjs"
+  },
+  "browserResults": "stp-etherchannel-browser-results.json",
+  "references": [
+    "https://www.cisco.com/c/en/us/support/docs/lan-switching/etherchannel/20625-127.html",
+    "https://www.cisco.com/c/en/us/support/docs/switches/catalyst-6500-series-switches/24330-185.html",
+    "https://www.cisco.com/c/en/us/support/docs/lan-switching/spanning-tree-protocol-stp-8021d/218321-configure-stp-with-loop-guard-and-bpdu-s.html",
+    "https://community.cisco.com/t5/switching/stp-port-cost-and-etherchannel/td-p/2795286"
+  ]
+}

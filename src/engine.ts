@@ -1,4 +1,6 @@
+import {stpPortState,stpMemberActive} from './stp-ports.ts';
 import {installFTPServices,validateFTPConfiguration} from './ftp-files.ts';
+import {iosBooting,iosBootStages,type IOSBootState,IOS_BOOT_DURATION} from './ios-boot.ts';
 import {phoneIngress,validatePhone} from './phone.ts';
 import {validateHostOS} from './host-os.ts';
 import {endpointUsesPoE,endpointProfile,endpointNetworkPort,endpointEgressVlan,endpointIngressAllowed,endpointVoicePolicy,switchVoiceVlan,validateEndpoint} from './endpoint.ts';
@@ -6,6 +8,7 @@ import {learnMac,installStaticMac} from './mac-table.ts';
 import {ownRecordValue,setRecordValue} from './record-map.ts';
 import {recomputePoE,validatePoE,type PoEPower}from './poe.ts';
 import {answerDNS,dnsName,type DNSRecordType} from './dns-service.ts';
+import {automaticDHCPDNSRecords} from './dhcp-dns.ts';
 import {installSNMPServices} from './snmp.ts';
 import {installSSHFileService} from './ssh-files.ts';
 import {ModelDrivenManagement} from './model-driven-management.ts';
@@ -36,7 +39,7 @@ export interface IPPacket {
   sourcePort?: number; destinationPort?: number; dscp?: number; ecn?: 0|1|2|3; pimTree?: 'rpt' | 'spt'; body: any; vrf?: string; fragment?: { id: string; offset: number; length: number; more: boolean; total: number };
 }
 interface ArpMessage { kind: 'arp'; operation: 'request' | 'reply'; source: string; target: string; mac: string; targetMac?: string; family: 4 | 6 }
-interface DHCPMessage { kind: 'dhcp'; operation: 'discover' | 'offer' | 'request' | 'ack' | 'nak' | 'decline' | 'release'; clientId: string; transaction: string; serverId?: string; address?: string; prefix?: number; gateway?: string; dns?: string[]; lease?: number; domain?: string; bootfile?: string; nextServer?: string; options?: Record<string, any>; routers?: string[]; relay?: string; relayPort?: string; serverAddress?: string; unicast?: string; phase?: string; reason?: string; option82?: { circuitId: string; remoteId: string } }
+interface DHCPMessage { kind: 'dhcp'; operation: 'discover' | 'offer' | 'request' | 'ack' | 'nak' | 'decline' | 'release'; clientId: string; transaction: string; hostname?: string; serverId?: string; address?: string; prefix?: number; gateway?: string; dns?: string[]; lease?: number; domain?: string; bootfile?: string; nextServer?: string; options?: Record<string, any>; routers?: string[]; relay?: string; relayPort?: string; serverAddress?: string; unicast?: string; phase?: string; reason?: string; option82?: { circuitId: string; remoteId: string } }
 export interface Frame { id: string; sourceMac: string; destinationMac: string; vlan?: number; cos?:number; payload: IPPacket | ArpMessage | DHCPMessage | LinkControl; hops: number; mirrored?: boolean; remoteSpan?: { sourceDevice: string; session: string; vlan: number } }
 interface Resolution { deviceId: string; port: string; target: string; packets: IPPacket[]; attempts: number; timer?: TimerHandle }
 interface ProbeWait { deviceId: string; timer: TimerHandle; sentAt: number; callback: (reply: ProbeReply) => void; expectedData?: string }
@@ -151,6 +154,24 @@ export class Simulator {
     this.emit({nodeId:d.id,protocol:'SYSTEM',label:'PoE device restarted',detail:'Software restart; PoE supply remains available',disposition:'info'});
     this.changed();this.startAutomaticClients(d);
   }
+  /** Interactive IOS restart: the chassis stays powered while software is unavailable. */
+  reloadIOS(id:string,reason='Reload Command'):void {
+    const d=this.getDevice(id);if(!d||!this.devicePowered(d.id)||iosBooting(d)||!['router','switch','l3switch','poeswitch','wlc','ap'].includes(d.kind))return;
+    this.reload(d.id);
+    const runtime=d.runtime,startedAt=this.clock.now();
+    const boot:IOSBootState={phase:'restarting',startedAt,readyAt:startedAt+IOS_BOOT_DURATION,reason:reason.replace(/[\r\n]+/g,' ').slice(0,256),lines:[]};
+    boot.lines.push(`%SYS-5-RELOAD: Reload requested. Reload Reason: ${boot.reason}.`);
+    runtime.features.iosBoot=boot;runtime.features.reloadReason=boot.reason;
+    for(const stage of iosBootStages(d))this.clock.schedule(stage.after,()=>{
+      if(this.getDevice(d.id)!==d||d.runtime!==runtime||!this.devicePowered(d.id)||runtime.features.iosBoot!==boot)return;
+      boot.phase=stage.phase;boot.lines.push(...stage.lines);
+      if(stage.phase==='ready')runtime.features.bootTime=this.clock.now();
+      this.emit({nodeId:d.id,protocol:'SYSTEM',label:stage.phase==='ready'?'IOS ready':'IOS boot',detail:stage.lines.join('\n'),disposition:'info'});
+      this.changed();
+      if(stage.phase==='ready')this.startAutomaticClients(d);
+    },{owner:d.id,label:'IOS boot: '+stage.phase});
+    this.changed();
+  }
   recompute(): void {
     this.wireless.sync();
     if (this.computing) return;
@@ -224,7 +245,7 @@ export class Simulator {
   }
   interfaceUp(deviceId: string, port: string, seen = new Set<string>()): boolean {
     const d = this.getDevice(deviceId), cfg = d?.config.interfaces[port];
-    if (!d || !this.devicePowered(d.id) || !cfg?.adminUp || cfg.features.errDisabled) return false;
+    if (!d || !this.devicePowered(d.id) || iosBooting(d) || !cfg?.adminUp || cfg.features.errDisabled) return false;
     const key = d.id + ':' + port; if (seen.has(key)) return false; seen.add(key);
     if(port==='Wireless0'&&d.kind==='laptop')return this.wireless.interfaceUp(d);
     if (/^Loopback/i.test(port)) return true;
@@ -239,7 +260,7 @@ export class Simulator {
     const link = this.linkAt(d.id, port); if (!link || !link.enabled) return false;
     const peer = link.a.deviceId === d.id && link.a.port === port ? link.b : link.a;
     const pd = this.getDevice(peer.deviceId), pc = pd?.config.interfaces[peer.port];
-    return !!pd&&this.devicePowered(pd.id) && !!pc?.adminUp && !pc.features.errDisabled && negotiateEthernet(cfg, pc,link.physical).carrier;
+    return !!pd&&this.devicePowered(pd.id) && !iosBooting(pd) && !!pc?.adminUp && !pc.features.errDisabled && negotiateEthernet(cfg, pc,link.physical).carrier;
   }
   ethernetState(deviceId: string, port: string): EthernetState | undefined {
     const d = this.getDevice(deviceId), cfg = d?.config.interfaces[port], link = d && this.linkAt(d.id, port);
@@ -272,7 +293,7 @@ export class Simulator {
     const c = d.config.interfaces[port]; const state = d.runtime.features.trunks?.[port];
     return state?.operational ? state : c?.mode === 'trunk' ? { nativeVlan: c.nativeVlan, allowedVlans: c.allowedVlans } : undefined;
   }
-  private stpAllows(d: Device, port: string, vlan: number): boolean { const s = d.runtime.stp[String(vlan)]?.ports[port]; return !s || s.state === 'forwarding'; }
+  private stpAllows(d: Device, port: string, vlan: number): boolean { const s = stpPortState(d,port,vlan); return stpMemberActive(d,port)&&(!s || s.state === 'forwarding'); }
   private ensureAging(d: Device): void {
     if (d.runtime.features.agingScheduled) return; d.runtime.features.agingScheduled = true;
     this.clock.schedule(1000, () => { for (const [key, row] of Object.entries(d.runtime.arp)) if (!row.static && row.expires <= this.clock.now()) delete d.runtime.arp[key]; for (const [key, row] of Object.entries(d.runtime.mac)) if (!row.static && row.expires <= this.clock.now()) delete d.runtime.mac[key]; }, { owner: d.id, repeat: 1000, label: 'ARP and MAC aging' });
@@ -882,7 +903,7 @@ export class Simulator {
     if (!port) { result.status = 'failure'; result.error = 'No operational interface'; return result; }
     result.deviceId = d.id; result.port = port; d.config.interfaces[port].features.dhcp = true;
     this.dhcpWait.set(result.id, result);
-    this.transmit(d, port, BROADCAST, { kind: 'dhcp', operation: 'discover', clientId: d.id, transaction: result.id });
+    this.transmit(d, port, BROADCAST, { kind: 'dhcp', operation: 'discover', clientId: d.id, transaction: result.id, hostname: d.config.hostname });
     this.clock.schedule(4000, () => { if (result.status === 'running') { result.status = 'failure'; result.error = 'No DHCP server answered on this broadcast domain'; this.dhcpWait.delete(result.id); this.notify(); } }, { owner:d.id,label: 'DHCP timeout' });
     return result;
   }
@@ -895,7 +916,7 @@ export class Simulator {
     const renew = (rebind: boolean) => {
       if (!current() || this.clock.now() >= lease.expires) return; lease.state = rebind ? 'REBINDING' : 'RENEWING';
       const result: ServiceResult = { id: this.id('dhcp-renew'), status: 'running', deviceId: d.id, port, selectedServer: rebind ? undefined : lease.serverId, selectedAddress: lease.address }; this.dhcpWait.set(result.id, result); lease.transactions.push(result.id);
-      const request: DHCPMessage = { kind: 'dhcp', operation: 'request', clientId: d.id, transaction: result.id, address: lease.address, serverId: rebind ? undefined : lease.serverId, phase: lease.state };
+      const request: DHCPMessage = { kind: 'dhcp', operation: 'request', clientId: d.id, transaction: result.id, hostname: d.config.hostname, address: lease.address, serverId: rebind ? undefined : lease.serverId, phase: lease.state };
       this.emit({ nodeId: d.id, port, protocol: 'DHCP', label: rebind ? 'Lease rebinding' : 'Lease renewal', detail: lease.address ?? '', disposition: 'info' });
       if (!rebind && lease.serverAddress) { request.unicast = lease.address; const packet = this.makePacket(lease.address ?? '', lease.serverAddress, 'udp', 328, { kind: 'dhcp-unicast', message: request }); packet.sourcePort = 68; packet.destinationPort = 67; this.originate(d, packet); }
       else this.transmit(d, port, BROADCAST, request);
@@ -924,7 +945,7 @@ export class Simulator {
       this.transmit(d, port, BROADCAST, decline); this.emit({ nodeId: d.id, port, protocol: 'DHCP', label: 'Address declined', detail: message.address + ' is already claimed by ' + check.conflict + '.', disposition: 'warning' });
       result.conflicts = (result.conflicts ?? 0) + 1; delete result.selectedServer; delete result.selectedAddress;
       if (result.conflicts >= 4) { result.status = 'failure'; result.error = 'Repeated DHCP address conflicts'; this.dhcpWait.delete(message.transaction); return; }
-      this.clock.schedule(100, () => { if (this.dhcpWait.get(message.transaction) === result && result.status === 'running') this.transmit(d, port, BROADCAST, { kind: 'dhcp', operation: 'discover', clientId: d.id, transaction: message.transaction }); }, { owner: d.id, label: 'DHCP discovery after decline' });
+      this.clock.schedule(100, () => { if (this.dhcpWait.get(message.transaction) === result && result.status === 'running') this.transmit(d, port, BROADCAST, { kind: 'dhcp', operation: 'discover', clientId: d.id, transaction: message.transaction, hostname: d.config.hostname }); }, { owner: d.id, label: 'DHCP discovery after decline' });
     }, { owner: d.id, label: 'DHCP conflict check' });
   }
   private replyDHCP(d: Device, port: string, request: DHCPMessage, response: DHCPMessage): void {
@@ -947,7 +968,7 @@ export class Simulator {
         this.clock.schedule(1000, () => { if (d.powered && c.features.dhcp && !c.ip) this.requestDHCP(d.id, logical); }, { owner: d.id, label: 'DHCP discovery after NAK' }); return;
       }
       if (!message.address || !isIPv4(message.address) || message.prefix === undefined || message.prefix < 0 || message.prefix > 32) return;
-      if (message.operation === 'offer') { if (result.selectedServer) return; result.selectedServer = message.serverId; result.selectedAddress = message.address; const request: DHCPMessage = { ...message, operation: 'request' }; delete request.relay; delete request.relayPort; delete request.option82; this.transmit(d, logical, BROADCAST, request); }
+      if (message.operation === 'offer') { if (result.selectedServer) return; result.selectedServer = message.serverId; result.selectedAddress = message.address; const request: DHCPMessage = { ...message, operation: 'request', hostname: d.config.hostname }; delete request.relay; delete request.relayPort; delete request.option82; this.transmit(d, logical, BROADCAST, request); }
       else { if (!result.selectedAddress || result.selectedAddress !== message.address) return; result.selectedServer = message.serverId; this.checkDHCPAddress(d, logical, message, result); }
       return;
     }
@@ -990,7 +1011,11 @@ export class Simulator {
       }
     }
     if (lease) {
-      lease.option82 = message.option82; lease.expires = this.clock.now() + (pool.leaseSeconds ?? 86400) * 1000;
+      lease.option82 = message.option82;
+      if(message.operation==='request') {
+        lease.state='BOUND'; lease.hostname=message.hostname; lease.domain=pool.domain;
+      } else if(lease.state!=='BOUND') lease.state='OFFERED';
+      if(message.operation==='request'||lease.state==='OFFERED')lease.expires = this.clock.now() + (pool.leaseSeconds ?? 86400) * 1000;
       const leased = lease, expiry = lease.expires; this.clock.schedule(Math.max(0, expiry - this.clock.now()), () => { if (leased.expires === expiry) d.runtime.features.dhcpLeases = (d.runtime.features.dhcpLeases ?? []).filter((x: any) => x !== leased); }, { owner: d.id, label: 'DHCP server lease expiry' });
       const response: DHCPMessage = { kind: 'dhcp', operation: message.operation === 'discover' ? 'offer' : 'ack', clientId: message.clientId, transaction: message.transaction, serverId: d.id, serverAddress: c.ip, option82: message.option82, address: lease.address, prefix: pool.prefix, gateway: pool.defaultRouter, routers: pool.defaultRouters ?? (pool.defaultRouter?[pool.defaultRouter]:[]), domain:pool.domain, bootfile:pool.bootfile, nextServer:pool.nextServers?.[Math.max(0,leases.indexOf(lease))%pool.nextServers.length], options:JSON.parse(JSON.stringify(pool.options??{})), dns: pool.dnsServers ?? [], lease: pool.leaseSeconds ?? 86400, relay: message.relay, relayPort: message.relayPort };
       this.replyDHCP(d, logical, message, response);
@@ -1273,7 +1298,7 @@ export class Simulator {
     else if (b.kind === 'netflow-export') { if (!d.config.services.netflow?.enabled) { this.icmpError(d, p, 'Port unreachable'); return; } const records = d.runtime.features.netflowReceived ??= []; records.push(...b.records.map((record: any) => ({ ...record, exporter: p.source, received: this.clock.now() }))); if (records.length > 2000) records.splice(0, records.length - 2000); }
     else if (b.kind === 'dns-query') {
       const dns=d.config.services.dns;if(!dns?.enabled||p.destinationPort!==53){this.icmpError(d,p,'Port unreachable');return;}
-      let answer;try{answer=answerDNS(dns,b.hostname,b.type??'A');}catch{answer={hostname:dnsName(b.hostname),type:b.type??'A',records:[],ttl:0,rcode:'SERVFAIL',error:'SERVFAIL'};}
+      let answer;try{answer=answerDNS(dns,b.hostname,b.type??'A',automaticDHCPDNSRecords(d,this.clock.now()));}catch{answer={hostname:dnsName(b.hostname),type:b.type??'A',records:[],ttl:0,rcode:'SERVFAIL',error:'SERVFAIL'};}
       const requests=d.runtime.features.dnsQueries??=[];requests.push({time:this.clock.now(),source:p.source,name:b.hostname,type:b.type??'A',rcode:answer.rcode});if(requests.length>1000)requests.shift();
       this.serviceReply(d,p,{kind:'dns-response',transaction:b.transaction,...answer},80+JSON.stringify(answer.records).length);
     }
@@ -1283,8 +1308,8 @@ export class Simulator {
       const type=pending.result.type??'A',ttl=Math.max(0,Math.min(2147483647,Number(b.ttl??300))),cache=d.runtime.features.dnsCache??={};
       if(ttl>0&&b.rcode!=='SERVFAIL'){
         const row={address:b.address,error:b.error,records:b.records??[],type,rcode:b.rcode,created:this.clock.now(),expires:this.clock.now()+ttl*1000};
-        cache[dnsName(name)+'|'+type]=row;
-        const prior=cache[dnsName(name)];if(b.rcode==='NXDOMAIN'||b.address&&(type==='A'||!prior||prior.expires<=this.clock.now()||!prior.address))cache[dnsName(name)]=row;
+        setRecordValue(cache,dnsName(name)+'|'+type,row);
+        const prior=ownRecordValue(cache,dnsName(name));if(b.rcode==='NXDOMAIN'||b.address&&(type==='A'||!prior||prior.expires<=this.clock.now()||!prior.address))setRecordValue(cache,dnsName(name),row);
       }
       this.finishService(b.transaction,{address:b.address,records:b.records??[],canonicalName:b.canonicalName,ttl,rcode:b.rcode},b.error);
     }

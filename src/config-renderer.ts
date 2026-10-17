@@ -221,6 +221,7 @@ export function renderConfig(device: Device, config: DeviceConfig = device.confi
       lines.push('spanning-tree mst configuration', ` name ${stp.mst.name || ''}`, ` revision ${stp.mst.revision || 0}`);
       for (const i of stp.mst.instances || []) lines.push(` instance ${i.id} vlan ${i.vlans.join(',')}`);
       lines.push(' exit');
+      for(const [id,priority]of Object.entries(stp.mst.priorities||{}))lines.push(`spanning-tree mst ${id} priority ${priority}`);
     }
   }
   if (c.features.vtp) for (const k of ['domain','mode','version','password']) {const value=c.features.vtp[k];if(value!==undefined&&value!==''&&!(k==='mode'&&value==='server')&&!(k==='version'&&value===1))lines.push(`vtp ${k} ${value}`);}

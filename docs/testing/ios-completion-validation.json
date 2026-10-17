@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-10-17T03:03:02.992Z",
+  "feature": "IOS interface context help, Tab completion and cursor-safe terminal editing",
+  "validation": {
+    "typecheck": "passed",
+    "tests": {
+      "passed": 930,
+      "failed": 0,
+      "durationMilliseconds": 58744.343
+    },
+    "build": "passed",
+    "browser": {
+      "completion": 11,
+      "paging": 9,
+      "errors": []
+    },
+    "previewMatchesArtifact": true
+  },
+  "artifact": {
+    "file": "index.html",
+    "sha256": "7ee19f50b6d7120d514987f43a8fd06ed0ac8496770bcbb2079477ab43f140df",
+    "bytes": 3423257,
+    "distMatches": true
+  },
+  "sourceSnapshot": {
+    "fileCount": 203,
+    "sha256": "6c21de56a107d1e9c37e552f71e10fac26f26fc0ca09dd903a58aa14d15ce1f7"
+  },
+  "references": [
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/fundamentals/configuration/xe-16-12/fundamentals-xe-16-12-book/cf-cli-basics.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/asr903/software/guide/chassis/17-1-1/b-config-guide-xe-17-1-1-asr900/using_cisco_ios_xe_software.html"
+  ]
+}

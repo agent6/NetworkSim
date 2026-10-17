@@ -1,6 +1,7 @@
 import {ftpFormFields,ftpDraft,bindFTPForm} from './ftp-ui.ts';
 import {ownRecordValue,setRecordValue} from './record-map.ts';
-import {dnsRecords,validateDNSRecords,type DNSRecord} from './dns-service.ts';
+import {dnsName,dnsRecords,validateDNSRecord,validateDNSRecords,type DNSRecord} from './dns-service.ts';
+import {automaticDHCPDNSRecords} from './dhcp-dns.ts';
 import type { Device } from "./model.ts";
 import type { Simulator } from "./engine.ts";
 import { isIPv4, isIPv6, ipToInt, networkAddress, inSubnet } from "./ip.ts";
@@ -19,7 +20,7 @@ const toggle = (name: string, label: string, enabled: boolean) =>
 const dnsRow = (record:Partial<DNSRecord> = {}) =>
   `<div class="rounded-xl border border-slate-200 p-3" data-dns-row><div class="grid grid-cols-[1fr_100px_30px] items-end gap-2">${input("Record name", "record-name", record.name, "intranet.lab")}<label class="field">Type<select name="record-type">${['A','AAAA','CNAME','MX','NS','PTR'].map(type=>`<option ${(record.type??'A')===type?'selected':''}>${type}</option>`).join('')}</select></label><button class="icon-btn" type="button" data-remove-row aria-label="Remove DNS record">${icon("trash", 15)}</button></div><div class="mt-3 grid grid-cols-[1fr_100px_120px] gap-2">${input("Address or target name", "record-address", record.value)}<label class="field">TTL (seconds)<input type="number" min="0" max="2147483647" name="record-ttl" value="${record.ttl??300}"></label><label class="field">MX preference<input type="number" min="0" max="65535" name="record-preference" value="${record.preference??10}"></label></div></div>`;
 const poolRow = (p: any = {}) =>
-  `<div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3" data-pool-row><div class="mb-3 flex items-center justify-between"><span class="section-label">Address pool</span><button class="icon-btn" type="button" data-remove-row aria-label="Remove DHCP pool">${icon("trash", 15)}</button></div><div class="grid grid-cols-2 gap-3">${input("Pool name", "pool-name", p.name, "OFFICE")}${input("Network address", "pool-network", p.network, "192.168.10.0")}${input("Prefix length", "pool-prefix", p.prefix ?? 24)}${input("Default gateway", "pool-gateway", p.defaultRouter)}${input("DNS servers, separated by commas", "pool-dns", (p.dnsServers || []).join(", "))}${input("Lease duration (seconds)", "pool-lease", p.leaseSeconds ?? 86400)}</div></div>`;
+  `<div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3" data-pool-row><div class="mb-3 flex items-center justify-between"><span class="section-label">Address pool</span><button class="icon-btn" type="button" data-remove-row aria-label="Remove DHCP pool">${icon("trash", 15)}</button></div><div class="grid grid-cols-2 gap-3">${input("Pool name", "pool-name", p.name, "OFFICE")}${input("Network address", "pool-network", p.network, "192.168.10.0")}${input("Prefix length", "pool-prefix", p.prefix ?? 24)}${input("Default gateway", "pool-gateway", p.defaultRouter)}${input("DNS servers, separated by commas", "pool-dns", (p.dnsServers || []).join(", "))}${input("Lease duration (seconds)", "pool-lease", p.leaseSeconds ?? 86400)}${input("DNS domain (optional)", "pool-domain", p.domain, "lab.example")}</div></div>`;
 const fileRow = (path = "", body = "") =>
   `<div class="rounded-xl border border-slate-200 p-3" data-file-row><div class="flex items-end gap-2"><div class="flex-1">${input("Path", "http-path", path, "/about.html")}</div><button class="icon-btn" type="button" data-remove-row aria-label="Remove HTTP file">${icon("trash", 15)}</button></div><label class="field mt-3">HTML or text<textarea name="http-body" rows="4" class="font-mono text-xs">${esc(body)}</textarea></label></div>`;
 
@@ -47,6 +48,13 @@ function leaseDuration(milliseconds: number): string {
 function accountingView(d:Device):string{
   const records:any[]=d.runtime.features.aaaAccountingReceived??[],stats=d.runtime.features.aaaAccountingReceiverStats??{};
   return `<div class="section-label mb-2">Received accounting records</div><p class="mb-2 text-[11px] text-slate-400">${records.length} stored · ${stats.duplicates??0} duplicate retries · ${stats.rejected??0} rejected. RADIUS supports EXEC; TACACS+ also supports command records.</p><pre class="max-h-52 overflow-auto rounded-lg bg-slate-50 p-3 text-[10px] whitespace-pre-wrap">${esc(records.slice(-100).map(row=>`sim ${row.received} ms ${row.protocol} ${row.source} ${row.username||'(line)'} ${row.line} ${row.kind} ${row.status} session=${row.sessionId}${row.command?' command='+row.command:''}${row.reason?' reason='+row.reason:''}`).join('\n')||'No accounting records received.')}</pre>`;
+}
+
+function dhcpDNSView(d:Device,sim:Simulator):string {
+  const records=automaticDHCPDNSRecords(d,sim.clock.now());
+  return `<div class="flex items-center justify-between gap-3"><span class="section-label">DHCP A records</span><span class="text-xs text-slate-500" data-dhcp-dns-count>${records.length} ${records.length===1?'record':'records'}</span></div>
+    <p class="text-[11px] leading-5 text-slate-400">Created automatically when DHCP and DNS are enabled on this server. Lease renewals update these records; release or expiry removes them. Manual A and CNAME records take precedence.</p>
+    ${records.length?`<div class="wireless-table-wrap"><table class="wireless-table" aria-label="Automatic DHCP DNS records"><thead><tr><th scope="col">Name</th><th scope="col">Type</th><th scope="col">IP address</th><th scope="col">TTL</th></tr></thead><tbody>${records.map(r=>`<tr data-dhcp-dns-row="${esc(r.name)}"><td class="font-mono">${esc(r.name)}</td><td>A</td><td class="font-mono whitespace-nowrap">${esc(r.value)}</td><td class="whitespace-nowrap">${r.ttl}s</td></tr>`).join('')}</tbody></table></div>`:`<p class="text-xs text-slate-500" data-dhcp-dns-empty>${!d.config.services.dhcp?.enabled||!d.config.services.dns?.enabled?'Enable DHCP and DNS, then apply settings to publish lease records.':'No active DHCP hostnames to publish. Clients appear here after receiving a lease.'}</p>`}`;
 }
 
 function dhcpLeaseView(d: Device, sim: Simulator, filter = ""): string {
@@ -77,7 +85,7 @@ export function showServices(
     `${d.config.hostname} · Services`,
     `
     <div class="flex flex-wrap gap-1 border-b border-slate-100 pb-3" role="tablist" aria-label="Server services">${["DNS", "DHCP", "HTTP", "AAA", "NTP", "FTP", "Syslog"].map((label, i) => `<button class="btn ${i === 0 ? "tool-active" : ""}" type="button" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-service-tab="${label}">${label}</button>`).join("")}</div>
-    <section data-service-section="DNS" class="space-y-3">${toggle("dns-enabled", "DNS server enabled", svc.dns?.enabled)}<p class="text-[11px] leading-5 text-slate-400">Serve A, AAAA, CNAME, MX, NS and PTR records through simulated DNS. TTL controls resolver caching. Enter reverse-zone names for PTR records; MX preference applies only to MX.</p><div id="dns-rows" class="space-y-3">${dnsRecords(svc.dns).map(record=>dnsRow(record)).join('')}</div><button type="button" class="btn" id="add-dns">${icon("plus", 14)} Add record</button></section>
+    <section data-service-section="DNS" class="space-y-3">${toggle("dns-enabled", "DNS server enabled", svc.dns?.enabled)}<p class="text-[11px] leading-5 text-slate-400">Serve A, AAAA, CNAME, MX, NS and PTR records through simulated DNS. TTL controls resolver caching. Enter reverse-zone names for PTR records; MX preference applies only to MX.</p><div class="space-y-3 rounded-xl border border-slate-200 p-3" data-dhcp-dns>${dhcpDNSView(d,sim)}</div><div class="section-label">Manual records</div><div id="dns-rows" class="space-y-3">${dnsRecords(svc.dns).map(record=>dnsRow(record)).join('')}</div><button type="button" class="btn" id="add-dns">${icon("plus", 14)} Add record</button></section>
     <section data-service-section="DHCP" class="hidden space-y-3">${toggle("dhcp-enabled", "DHCP server enabled", svc.dhcp?.enabled)}<div class="space-y-3 rounded-xl border border-slate-200 p-3"><label class="field">Find a lease<input type="search" data-dhcp-lease-search aria-label="Search DHCP leases" placeholder="IP address, client, MAC address, or pool"></label><div class="space-y-3" data-dhcp-leases>${dhcpLeaseView(d,sim)}</div><p class="text-[11px] text-slate-400">Live allocations from this server. Remaining time follows the simulation clock.</p></div><div id="pool-rows" class="space-y-3">${(svc.dhcp?.pools || []).map(poolRow).join("")}</div><button type="button" class="btn" id="add-pool">${icon("plus", 14)} Add address pool</button><label class="field">Excluded addresses · one address or start–end range per line<textarea name="dhcp-excluded" rows="3" class="font-mono text-xs" placeholder="192.168.10.1 - 192.168.10.20">${esc((svc.dhcp?.excluded || []).map((r: any) => (r.start === r.end ? r.start : `${r.start} - ${r.end}`)).join("\n"))}</textarea></label></section>
     <section data-service-section="HTTP" class="hidden space-y-3">${toggle("http-enabled", "HTTP server enabled", svc.http?.enabled)}<div class="grid grid-cols-2 gap-3"><label class="field">HTTP authentication<select name="http-auth">${["none", "local", "enable", "aaa"].map((mode) => `<option value="${mode}" ${(svc.http?.authentication || "none") === mode ? "selected" : ""}>${{ none: "Public", local: "Local users", enable: "Enable password", aaa: "AAA method list" }[mode]}</option>`).join("")}</select></label>${input("AAA login method list", "http-auth-list", svc.http?.authenticationList || "default")}${input("Flash base path (optional)", "http-base", svc.http?.basePath || "", "flash:/www")}<label class="field">Enable password (lab only)<input type="password" autocomplete="off" name="http-enable-password" value="${esc(d.config.features.enableSecret ?? d.config.features.enablePassword ?? "")}"></label></div><details><summary class="cursor-pointer text-xs">Local device users</summary><p class="my-2 text-[11px] text-slate-400">Use lab-only credentials. These users are also available to device login; exported labs include them.</p><div id="http-local-users" class="space-y-3">${Object.entries(
       d.config.features.users || {},
@@ -127,6 +135,7 @@ export function showServices(
           .map((s) => s.trim())
           .filter(Boolean),
         leaseSeconds: Number(data.getAll("pool-lease")[i]),
+        domain: dnsName(String(data.getAll("pool-domain")[i]??'')) || undefined,
       }));
       if (
         pools.some(
@@ -149,6 +158,10 @@ export function showServices(
       if (new Set(pools.map((p) => p.name)).size !== pools.length)
         throw Error("DHCP pool names must be unique.");
       for (const pool of pools) {
+        if(pool.domain) {
+          try {validateDNSRecord({name:pool.domain,type:'A',value:'0.0.0.0',ttl:0});}
+          catch {throw Error(`The DNS domain for DHCP pool ${pool.name} is invalid.`);}
+        }
         if (networkAddress(pool.network, pool.prefix) !== pool.network)
           throw Error(`DHCP pool ${pool.name} needs a network address with no host bits set.`);
         if (pool.defaultRouter && !inSubnet(pool.defaultRouter, pool.network, pool.prefix))
@@ -296,10 +309,12 @@ export function showServices(
     if (output.innerHTML !== markup) output.innerHTML = markup;
   };
   const refreshAccounting=()=>{const output=root.querySelector<HTMLElement>('[data-aaa-accounting]');if(output){const markup=accountingView(d);if(output.innerHTML!==markup)output.innerHTML=markup;}};
+  const refreshDNS=()=>{const output=root.querySelector<HTMLElement>('[data-dhcp-dns]');if(output){const markup=dhcpDNSView(d,sim);if(output.innerHTML!==markup)output.innerHTML=markup;}};
   root.querySelector("[data-dhcp-lease-search]")?.addEventListener("input", refreshLeases);
   const off = sim.subscribe(() => {
     if (!root.isConnected || sim.getDevice(d.id) !== d) { off(); return; }
     if (!sections.find(panel => panel.dataset.serviceSection === "DHCP")?.classList.contains("hidden")) refreshLeases();
+    if (!sections.find(panel => panel.dataset.serviceSection === "DNS")?.classList.contains("hidden")) refreshDNS();
     if (!sections.find(panel => panel.dataset.serviceSection === "AAA")?.classList.contains("hidden")) refreshAccounting();
   });
   root.addEventListener("keydown", (event) => {
@@ -323,6 +338,7 @@ export function showServices(
         b.tabIndex = b === tab ? 0 : -1;
       }
       if (tab.dataset.serviceTab === "DHCP") refreshLeases();
+      if (tab.dataset.serviceTab === "DNS") refreshDNS();
       if (tab.dataset.serviceTab === "AAA") refreshAccounting();
     }
     if (target.closest("[data-remove-row]"))

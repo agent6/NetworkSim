@@ -301,6 +301,7 @@
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-color: #43535e #142128;
+  scrollbar-gutter: stable;
   cursor: text;
   padding: 15px 20px 28px;
   font: 14px/1.5 var(--font-mono);
@@ -310,8 +311,9 @@
 .terminal-surface { min-height: 100%; }
 .terminal-output {
   font: inherit;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
   margin: 0;
   padding: 0;
 }

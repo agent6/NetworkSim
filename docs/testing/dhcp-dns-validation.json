@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-10-17T02:52:44.818Z",
+  "feature": "Server DHCP lease-owned DNS A records",
+  "validation": {
+    "typecheck": "passed",
+    "fullTests": {
+      "passed": 918,
+      "failed": 0,
+      "durationMilliseconds": 59090.113625
+    },
+    "build": "passed",
+    "standaloneBrowserChecks": 9,
+    "browserErrors": [],
+    "preview": "127.0.0.1:4173 serves the same tested artifact"
+  },
+  "artifact": {
+    "file": "index.html",
+    "sha256": "a933008857908abc47d4accb7c24b3286c75b88c2022d925f8773290b2fcc15d",
+    "bytes": 3415871,
+    "distMatches": true
+  },
+  "sourceSnapshot": {
+    "fileCount": 201,
+    "sha256": "bc7c7e44da7cb4cbbde3767a4733ec03d57cdcea83c0c61c143d7756553b24cd"
+  },
+  "browserResults": "dhcp-dns-browser-results.json"
+}

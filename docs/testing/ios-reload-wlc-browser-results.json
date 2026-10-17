@@ -1,0 +1,60 @@
+{
+  "generatedAt": "2026-10-17T02:42:57.559Z",
+  "browser": "155.0.8059.84",
+  "url": "http://127.0.0.1:51537",
+  "artifact": {
+    "path": "dist/index.html",
+    "bytes": 3411443,
+    "sha256": "db25244569d24da494a7cec68fe8b067fcaf4f940f1d9d3050bc081a692aec4c"
+  },
+  "sourceDigests": [
+    {
+      "path": "src/wireless-ui.ts",
+      "sha256": "47177246aea4d41522d74537c3ac333006f25fd7619f66af0f8d28853ca78ce4"
+    },
+    {
+      "path": "src/wlc-administration.ts",
+      "sha256": "ec0770870b64d78057f9215f3a50979cb3a21bd5d3d895c88124e5a9e887e046"
+    },
+    {
+      "path": "src/wlc-monitoring.ts",
+      "sha256": "e27c43970d23fcce740b0d69a5062fe7ea0f4b31dc27b122826149901beac68b"
+    },
+    {
+      "path": "src/wireless-controller-form.ts",
+      "sha256": "c18dcde3b56776c6d8c5f2d177794c4e6f2b75b192554cd093c19c4dc42cf1d7"
+    },
+    {
+      "path": "src/wireless.ts",
+      "sha256": "16093f3f0876a462d5021a5d004988ae5237061c766cf7ad58f69eb2afb7bda3"
+    },
+    {
+      "path": "src/wireless-policy.ts",
+      "sha256": "b22a7d7458fc512931a701c3437ce2be086e5b17741905d908e291094acbaca5"
+    },
+    {
+      "path": "src/ios-wireless.ts",
+      "sha256": "1718d0298290f13c143ba5d4c8d028e954d7aa387575c808a78bb181852fae3e"
+    },
+    {
+      "path": "src/wireless-model.ts",
+      "sha256": "5269ce51919ab50b80a48023d8e1f240ad3c1b0be1a74317f97b942e68bc6e4e"
+    },
+    {
+      "path": "tests/fixtures/wireless-lab.ts",
+      "sha256": "53fe6d2f6aff9b116493f4ce1a0a54281eddc06d6ae8ab63dd74c8bb4bc1bcfd"
+    }
+  ],
+  "fixture": "Imported test-only wireless fixture with enabled NTP service; administration and WPA3 created through production forms; local AP MAC admission exercised after actual PoE loss/reboot",
+  "securityScope": "SAE commit/confirm and PMF admission are logical teaching behavior; no elliptic-curve SAE, AES-CCMP or TLS/DTLS interoperability claim",
+  "checks": [
+    "Seven WLC sections include GUI-created RADIUS server/group/802.1X list, local account, NTP/syslog/SNMP and HTTPS settings; the selected list reauthenticates a real laptop",
+    "Monitoring shows real NTP synchronization and SNMP state, and delivered administrative disconnect removes and automatically reconnects a client",
+    "Save writes startup configuration and an explicit reload discards an unsaved hostname using the actual controller lifecycle",
+    "GUI AP authorization list and Ethernet MAC database are enforced during a fresh PoE-powered CAPWAP join and reported in monitoring",
+    "WPA3/PMF GUI settings run logical SAE: wrong passwords fail confirmation and correcting the key completes association and DHCP",
+    "The GUI-configured WPA3 laptop fetches the actual routed DNS/HTTP endpoint",
+    "No browser page errors"
+  ],
+  "errors": []
+}

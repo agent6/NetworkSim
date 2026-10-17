@@ -70,8 +70,8 @@ test('BGP help depends on neighbor argument position and accepts only a unique k
 
 test('interface completion reads the live interface list and help keeps do in EXEC context', () => {
   const { session, specs, context } = lab('enable', 'configure terminal', 'interface loopback70', 'exit');
-  assert.equal(iosArgumentCompletion('interface Loop', specs(), context()), 'interface Loopback70 ');
-  assert.equal(iosArgumentCompletion('interface lo7', specs(), context()), 'interface Loopback70 ');
+  assert.equal(iosArgumentCompletion('interface Loop', specs(), context()), 'interface Loopback');
+  assert.equal(iosArgumentCompletion('interface lo7', specs(), context()), 'interface Loopback7 ');
   const exec = (session as unknown as { execCommands(privileged: boolean): IosSyntaxCommand[] }).execCommands(true);
   assert.match(iosContextHelp('DO show ip route ', specs(), context({ execCommands: exec }))!.join('\n'), /<cr>/);
   assert.equal(session.mode, 'config');

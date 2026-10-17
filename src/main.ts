@@ -14,7 +14,7 @@ import { nodeIconDefinitions } from "./node-icons.ts";
 import { alignMove, type AlignmentGuide, type AlignmentItem } from "./alignment.ts";
 import { Simulator } from "./engine.ts";
 import { IOSSession, CLI_CAPABILITIES } from "./cli.ts";
-import { terminalRows, terminalPage } from "./ios-terminal.ts";
+import { terminalRows, terminalPage, terminalCompletionEdit } from "./ios-terminal.ts";
 import { CONTROL_PLANE_CAPABILITIES } from "./control-plane.ts";
 import { isIPv6, parseCidr } from "./ip.ts";
 import { showServices } from "./services-ui.ts";
@@ -94,6 +94,7 @@ type TerminalSession = {
   draftEnd?: number;
   historyDraft?: string;
   scrollTop?: number;
+  scrollLeft?: number;
 };
 const sessions = new Map<string, TerminalSession>();
 const undoStack: string[] = [],
@@ -510,7 +511,7 @@ function renderTopology() {
   const nodes = sim.lab.devices
     .map(
       (d) =>
-        `<g class="device kind-${d.kind} ${selected.has(d.id) ? "selected" : ""} ${sim.devicePowered(d.id) ? "" : "off"}" data-device="${esc(d.id)}" transform="translate(${d.x},${d.y})"><rect class="selection-glow" x="-39" y="-34" width="78" height="103" rx="10" fill="none" stroke="none"/><rect class="device-body" x="-30" y="-26" width="60" height="52" rx="12" tabindex="0" role="button" aria-label="${esc(d.config.hostname)}, ${deviceLabels[d.kind]}, ${sim.devicePowered(d.id) ? "powered on" : "powered off"}"/><g class="node-icon" transform="translate(-22,-23)">${icon(d.kind, 44)}</g><circle cx="21" cy="17" r="3" fill="${sim.devicePowered(d.id) ? "#31b397" : "#a7b4bd"}"/><text class="device-label" y="46">${esc(d.config.hostname)}</text><text class="device-sub" y="60">${esc(Object.values(d.config.interfaces).find((p) => p.ip)?.ip || (d.kind === "router" ? "Router" : d.kind === "switch" ? "L2 switch" : d.kind === "l3switch" ? "L3 switch" : deviceLabels[d.kind]))}</text>${d.config.features.positionLocked ? `<g transform="translate(-35,-34)" color="#6b7d88">${icon("lock", 12)}</g>` : ""}${linkStart === d.id ? '<circle cx="0" cy="0" r="40" fill="none" stroke="#0d9488" stroke-dasharray="4 4"/>' : ""}</g>`,
+        `<g class="device kind-${d.kind} ${selected.has(d.id) ? "selected" : ""} ${sim.devicePowered(d.id) ? "" : "off"}" data-device="${esc(d.id)}" transform="translate(${d.x},${d.y})"><rect class="selection-glow" x="-39" y="-34" width="78" height="103" rx="10" fill="none" stroke="none"/><rect class="device-body" x="-30" y="-26" width="60" height="52" rx="12" tabindex="0" role="button" aria-label="${esc(d.config.hostname)}, ${deviceLabels[d.kind]}, ${sim.devicePowered(d.id) ? "powered on" : "powered off"}"/><g class="node-icon" transform="translate(-22,-23)">${icon(d.kind, 44)}</g><circle cx="21" cy="17" r="3" fill="${d.runtime.features.iosBoot&&d.runtime.features.iosBoot.phase!=="ready" ? "#d99b32" : sim.devicePowered(d.id) ? "#31b397" : "#a7b4bd"}"/><text class="device-label" y="46">${esc(d.config.hostname)}</text><text class="device-sub" y="60">${esc(d.runtime.features.iosBoot&&d.runtime.features.iosBoot.phase!=="ready" ? "Booting…" : Object.values(d.config.interfaces).find((p) => p.ip)?.ip || (d.kind === "router" ? "Router" : d.kind === "switch" ? "L2 switch" : d.kind === "l3switch" ? "L3 switch" : deviceLabels[d.kind]))}</text>${d.config.features.positionLocked ? `<g transform="translate(-35,-34)" color="#6b7d88">${icon("lock", 12)}</g>` : ""}${linkStart === d.id ? '<circle cx="0" cy="0" r="40" fill="none" stroke="#0d9488" stroke-dasharray="4 4"/>' : ""}</g>`,
     )
     .join("");
   const wirelessLinks=sim.lab.devices.filter(d=>d.kind==='laptop').map(d=>{const association=sim.wireless.association(d.id),ap=association&&sim.getDevice(association.apId);return association&&ap?`<g class="wireless-association" data-wireless-link="${esc(d.id)}" aria-label="${esc(d.config.hostname)} associated with ${esc(ap.config.hostname)} on ${esc(association.ssid)}"><line x1="${d.x}" y1="${d.y}" x2="${ap.x}" y2="${ap.y}"/><title>${esc(association.ssid)} · ${association.band} GHz · ${association.rssi} dBm</title></g>`:'';}).join('');
@@ -554,12 +555,19 @@ function renderWorkspaceControls() {
   renderLinkDetails();
 }
 
+function deviceOpenAction(kind:DeviceKind):{glyph:string;label:string} {
+  if(kind==='pc'||kind==='server')return {glyph:'pc',label:'Open desktop'};
+  const settings:Partial<Record<DeviceKind,string>>={poeswitch:'Open PoE settings',wlc:'Open WLC settings',ap:'Open AP settings',laptop:'Open wireless adapter',phone:'Open phone settings'};
+  return settings[kind]?{glyph:'settings',label:settings[kind]!}:{glyph:'terminal',label:'Open console'};
+}
+
 function renderInspector() {
   const el = $("#inspector"),
     d = selectedDevice();
   el.hidden = !inspectorOpen || !d;
   if (!d) return;
-  const markup = `<div class="flex items-center justify-between border-b border-slate-100 p-4"><span class="section-label">Device details</span>${button("inspector", "close", "Hide details")}</div><div class="p-4"><div class="flex items-center gap-3"><span class="palette-symbol">${icon(d.kind, 32)}</span><div><div class="text-sm font-semibold">${esc(d.config.hostname)}</div><div class="mt-1 text-[10px] text-slate-400">${deviceLabels[d.kind]}</div></div></div><div class="mt-4 flex gap-2"><button class="btn-primary flex-1" data-action="open-device">${icon("terminal", 14)} Open ${d.kind === "pc" || d.kind === "server" ? "desktop" : ["wlc","ap","laptop","poeswitch","phone"].includes(d.kind) ? "settings" : "console"}</button>${d.kind==='ap'||endpointUsesPoE(d)?'':button("power-device", "power", d.powered ? "Power off device" : "Power on device")}</div>${["pc","laptop"].includes(d.kind)?`<button class="btn mt-3 w-full" data-action="host-profile">Client profile</button>`:""}<div class="mt-3 flex items-center justify-between"><button data-action="rename-device" class="text-[10px] text-slate-400 hover:text-teal">Rename device</button><button data-action="lock-device" class="text-[10px] text-slate-400 hover:text-teal">${d.config.features.positionLocked ? "Unlock position" : "Lock position"}</button></div></div><div class="p-4"><button data-action="delete" class="text-[10px] text-rose-500">Remove device</button></div>`;
+  const openAction=deviceOpenAction(d.kind);
+  const markup = `<div class="flex items-center justify-between border-b border-slate-100 p-4"><span class="section-label">Device details</span>${button("inspector", "close", "Hide details")}</div><div class="p-4"><div class="flex items-center gap-3"><span class="palette-symbol">${icon(d.kind, 32)}</span><div><div class="text-sm font-semibold">${esc(d.config.hostname)}</div><div class="mt-1 text-[10px] text-slate-400">${deviceLabels[d.kind]}</div></div></div><div class="mt-4 flex gap-2"><button class="btn-primary flex-1" data-action="open-device">${icon(openAction.glyph, 14)} ${openAction.label}</button>${d.kind==='ap'||endpointUsesPoE(d)?'':button("power-device", "power", d.powered ? "Power off device" : "Power on device")}</div>${["pc","laptop"].includes(d.kind)?`<button class="btn mt-3 w-full" data-action="host-profile">Client profile</button>`:""}<div class="mt-3 flex items-center justify-between"><button data-action="rename-device" class="text-[10px] text-slate-400 hover:text-teal">Rename device</button><button data-action="lock-device" class="text-[10px] text-slate-400 hover:text-teal">${d.config.features.positionLocked ? "Unlock position" : "Lock position"}</button></div></div><div class="p-4"><button data-action="delete" class="text-[10px] text-rose-500">Remove device</button></div>`;
   if (markup !== lastInspectorMarkup) {
     el.innerHTML = markup;
     lastInspectorMarkup = markup;
@@ -591,11 +599,12 @@ function stashTerminal() {
   state.draftStart = state.pendingDraft?.start ?? input.selectionStart ?? input.value.length;
   state.draftEnd = state.pendingDraft?.end ?? input.selectionEnd ?? input.value.length;
   state.scrollTop = $("#console-panel").scrollTop;
+  state.scrollLeft = $("#console-panel").scrollLeft;
 }
 function focusTerminal(scroll = false) {
   if (!activeDevice || !sessions.has(activeDevice) || !dockOpen) return;
   $("#terminal-input").focus({ preventScroll: true });
-  if (scroll) $("#console-panel").scrollTop = $("#console-panel").scrollHeight;
+  if (scroll) { $("#console-panel").scrollTop = $("#console-panel").scrollHeight; $("#console-panel").scrollLeft = 0; }
   updateTerminalJump();
 }
 function setDock(open: boolean) {
@@ -672,6 +681,7 @@ function renderTerminal(forceBottom = false) {
   $("#terminal-empty").hidden = !!state;
   $("#terminal-surface").hidden = !state;
   if (!state) { renderedSession = null; renderDock(); return; }
+  syncTerminalColumns(state);
   const text = state.lines.length ? state.lines.join("\n") + "\n" : "";
   const previous = output.textContent ?? "";
   if (text !== previous) {
@@ -690,14 +700,20 @@ function renderTerminal(forceBottom = false) {
   renderDock();
   if (switched) panel.scrollTop = state.scrollTop ?? panel.scrollHeight;
   else if (follow && !selecting) panel.scrollTop = panel.scrollHeight;
+  if (switched) panel.scrollLeft = state.scrollLeft ?? 0;
+  if (forceBottom) panel.scrollLeft = 0;
   updateTerminalJump();
 }
 function pollTerminal() {
   const state = activeDevice ? sessions.get(activeDevice) : undefined;
   if (!state || state.pending?.length || !dockOpen) return;
+  syncTerminalColumns(state);
   try {
     const output = state.cli.pollOutput();
-    if (!output.length) return;
+    if (!output.length) {
+      if ($<HTMLInputElement>("#terminal-input").readOnly !== state.cli.busy || $("#terminal-prompt").textContent !== state.cli.prompt) renderTerminal();
+      return;
+    }
     state.lines.push(...terminalRows(output,state.cli.pageWidth));
     if (state.lines.length > 2500) state.lines = state.lines.slice(-2000);
     renderTerminal();
@@ -706,8 +722,11 @@ function pollTerminal() {
     renderTerminal();
   }
 }
-function fitTerminalPage(lines: string[], length: number, echo: string[] = []) {
+let terminalGeometryCache:{key:string;columns:number;rows:number}|undefined;
+function terminalGeometry() {
   const panel = $("#console-panel"), style = getComputedStyle(panel);
+  const key=[panel.clientWidth,panel.clientHeight,style.font,style.lineHeight,style.padding].join('|');
+  if(terminalGeometryCache?.key===key)return terminalGeometryCache;
   const probe = document.createElement("span");
   probe.textContent = "0".repeat(100);
   probe.style.cssText = "position:absolute;visibility:hidden;white-space:pre;pointer-events:none";
@@ -716,7 +735,15 @@ function fitTerminalPage(lines: string[], length: number, echo: string[] = []) {
   probe.remove();
   const columns = Math.max(1, Math.floor((panel.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)) / columnWidth));
   const rows = Math.floor((panel.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom)) / parseFloat(style.lineHeight));
-  return terminalPage(lines, { columns, rows, length, reservedRows: 1 + terminalRows(echo, columns).length });
+  return terminalGeometryCache={key,columns,rows};
+}
+function syncTerminalColumns(state:TerminalSession) {
+  if(dockOpen&&$("#console-panel").clientWidth>0)state.cli.setViewportColumns(terminalGeometry().columns);
+}
+function fitTerminalPage(lines: string[], length: number, echo: string[] = []) {
+  // Output already has the session's one permitted wrap. Paging must not wrap it again.
+  const {rows}=terminalGeometry();
+  return terminalPage(lines, { columns:0, rows, length, reservedRows:1+echo.length });
 }
 function appendTerminalPage(state: TerminalSession, lines: string[], length: number, echo: string[] = []) {
   const page = fitTerminalPage(lines, length, echo);
@@ -728,7 +755,9 @@ function appendTerminalPage(state: TerminalSession, lines: string[], length: num
 // Shrinking the console returns overflow to the queue instead of hiding or skipping it.
 new ResizeObserver(() => {
   const state = activeDevice ? sessions.get(activeDevice) : undefined;
-  if (!dockOpen || !state?.pending?.length || state.pageStart === undefined) return;
+  if (!dockOpen || !state) return;
+  syncTerminalColumns(state);
+  if (!state.pending?.length || state.pageStart === undefined) return;
   const page = fitTerminalPage(state.lines.splice(state.pageStart), state.cli.pageLength, state.pageEcho);
   state.lines.push(...page.visible);
   state.pending.unshift(...page.pending);
@@ -738,6 +767,7 @@ function runCommand(line: string) {
   if (!activeDevice) return;
   const state = sessions.get(activeDevice);
   if (!state) return;
+  syncTerminalColumns(state);
   const secret = !!(state.cli as any).passwordInput;
   const echo = [secret ? state.cli.prompt : `${state.cli.prompt}${line}`];
   if (!secret && state.cli.commandTimestamp) echo.push(state.cli.commandTimestamp);
@@ -787,6 +817,7 @@ function cliComplete(help = false) {
   const input = $<HTMLInputElement>("#terminal-input"),
     state = activeDevice ? sessions.get(activeDevice) : null;
   if (!state) return;
+  syncTerminalColumns(state);
   if ((state.cli as any).passwordInput) {
     if (help)
       input.setRangeText(
@@ -799,8 +830,7 @@ function cliComplete(help = false) {
     return;
   }
   const caret = input.selectionStart ?? input.value.length,
-    prefix = input.value.slice(0, caret),
-    suffix = input.value.slice(caret);
+    prefix = input.value.slice(0, caret);
   if (help) {
     const output=terminalRows(state.cli.help(prefix),state.cli.pageWidth),echo=[`${state.cli.prompt}${prefix}?`];
     state.lines.push(...echo);
@@ -812,8 +842,9 @@ function cliComplete(help = false) {
     renderTerminal(true);
   } else {
     const result = state.cli.complete(prefix);
-    input.value = result + suffix;
-    input.setSelectionRange(result.length, result.length);
+    const edit=terminalCompletionEdit(input.value,caret,input.selectionEnd??caret,result);
+    input.value = edit.value;
+    input.setSelectionRange(edit.start, edit.end);
   }
   input.focus();
 }
@@ -2311,8 +2342,9 @@ svg.addEventListener("contextmenu", (e) => {
   let items: ContextMenuItem[];
   if (d) {
     label = d.config.hostname;
+    const openAction=deviceOpenAction(d.kind);
     items = [
-      ["open-device", "terminal", d.kind === "pc" || d.kind === "server" ? "Open desktop" : d.kind === "phone" ? "Open phone settings" : "Open console", "Enter"],
+      ["open-device", openAction.glyph, openAction.label, "Enter"],
       ["connect-device", "link", "Connect to another device"],
       null,
       ["rename-device", "edit", "Rename device", "F2"],
@@ -2632,7 +2664,8 @@ function frame(now: number) {
     }
     lastPaint = now;
   }
-  if (playing && now - lastTerminalPoll >= 1000) {
+  const localBootConsole = activeDevice && !sessions.get(activeDevice)?.cli.remoteConnected && sim.getDevice(activeDevice)?.runtime.features.iosBoot;
+  if ((playing || localBootConsole) && now - lastTerminalPoll >= 1000) {
     lastTerminalPoll = now;
     pollTerminal();
   }

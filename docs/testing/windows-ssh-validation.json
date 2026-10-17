@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-10-17T03:16:19.987Z",
+  "feature": "Interactive Windows SSH client to configured network nodes",
+  "validation": {
+    "typecheck": "passed",
+    "tests": {
+      "passed": 946,
+      "failed": 0,
+      "durationMilliseconds": 59552.90825
+    },
+    "newSSHTests": 16,
+    "standaloneBrowserChecks": 10,
+    "browserErrors": [],
+    "build": "passed",
+    "previewMatchesArtifact": true
+  },
+  "artifact": {
+    "file": "index.html",
+    "sha256": "e1e4cb140fdd9994517233f2ff17c3d5f960b61db5b64b72e7c3cafb29e23ab4",
+    "bytes": 3427735,
+    "distMatches": true
+  },
+  "sourceSnapshot": {
+    "fileCount": 203,
+    "sha256": "7a3a633bdac2fc31f9da1da640caa398b438bf451f66dd205c3243b99dabfe7c"
+  },
+  "reference": "https://learn.microsoft.com/en-us/windows/terminal/tutorials/ssh",
+  "browserResults": "windows-ssh-browser-results.json"
+}

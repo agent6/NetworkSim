@@ -2,6 +2,8 @@
 
 Reviewed 2026-10-16. This is the interaction portion of the older-sandbox comparison, not a claim of complete Cisco IOS support.
 
+The later [interface help and completion correction](testing/ios-completion-validation.md) supersedes the original interface-completion behavior described below, including numeric-ID guessing and generic interface placeholders. It records the current standalone artifact and regression evidence separately.
+
 ## Evidence and boundary
 
 The supplied reference is a complete JavaScript source tree. Following REA's source-repository rule, this portion used direct source inspection and executable probes rather than starting a binary analysis session. Reference files: `network-sandbox/js/cli/parser.js`, `network-sandbox/js/cli/registry.js`, `network-sandbox/js/ui/device-console.js`, and the mode declarations in `network-sandbox/js/cli/commands/{acl,aaa,ipv6-fhs}.js`. Original runtime code and help metadata were written independently; none of the reference's implementation or command catalogs are imported.

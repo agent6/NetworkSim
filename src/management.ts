@@ -21,6 +21,7 @@ export interface ManagedCLI {
   readonly commandHistory?:string[];
   readonly commandTimestamp?:string;
   readonly remoteConnected?:boolean;
+  setViewportColumns?(columns:number):void;
   complete(line:string):string;
   cancel():string[];
   pollOutput():string[];
@@ -195,7 +196,7 @@ export class ManagementController {
     if(loginBlocked(device,this.engine.clock.now())){this.close(session);return {closed:true,output:['% Login blocked: quiet mode is active.']};}
     session.attempts++;
     if (session.attempts >= (session.port===22?device.config.features.ssh?.retries??3:3)) { this.close(session); return { closed: true, output: ['% Bad passwords', 'Connection closed.'] }; }
-    if (session.method === 'local'||session.method==='aaa') session.phase = 'username';
+    if (session.method === 'local'||session.method==='aaa') session.phase = session.port===22?'password':'username';
     return this.reply(session, [(session.method === 'local'||session.method==='aaa') ? '% Login invalid' : '% Bad password']);
   }
   private handle(d: Device, port: number, payload: any, source: string, destination: string): Record<string, any> {
@@ -210,6 +211,7 @@ export class ManagementController {
     });
     if(!this.vty(d,port))return {closed:true,output:['% Interactive shell is unavailable on this file-only listener.']};
     if (payload?.operation === 'open') {
+      if(payload.transport&&payload.transport!==(port===22?'ssh':'telnet'))return {closed:true,output:['% Remote terminal protocol negotiation failed.']};
       if(loginBlocked(d,this.engine.clock.now()))return {closed:true,output:['% Login blocked: quiet mode is active.']};
       const [name, line] = this.vty(d, port)!;
       const accessClass=isIPv6(source)?line.ipv6AccessClassIn:line.accessClassIn;
@@ -224,6 +226,7 @@ export class ManagementController {
       const session: RemoteSession = {lineNumber,lastActivity:this.engine.clock.now(), id: `vty-${++this.sequence}`, deviceId: d.id, source, port, line: name, cli: this.factory(d.id), method, phase: method === 'none' ? 'ready' : (method === 'local'||method==='aaa') && !payload.username ? 'username' : 'password', username: payload.username, attempts: 0, expires: this.engine.clock.now() + (line.execTimeout === 0 ? Number.MAX_SAFE_INTEGER : (line.execTimeout ?? 600) * 1000) };
       if(port===22)session.authDeadline=this.engine.clock.now()+(d.config.features.ssh?.timeout??120)*1000;
       this.sessions.set(session.id, session); (d.runtime.features.managementSessions ??= []).push(session.id);
+      if(Number.isInteger(payload.columns)&&payload.columns>0&&payload.columns<=512)session.cli.setViewportColumns?.(payload.columns);
       if (session.phase === 'ready'){const authorization=this.execPrivilege(d.id,name,session.username,false,line.privilege||1);if(!authorization.accepted){this.close(session);return {closed:true,output:['% EXEC authorization failed.']};}session.cli.setPrivilege(authorization.privilege);session.cli.setIdentity(session.username,false,name);this.beginAccounting(session,d,authorization.privilege);}
       const messages = [d.config.features.banners?.motd, d.config.features.banners?.login].filter(Boolean);
       if (port === 22) messages.unshift('Simulated SSH session; this teaching transport does not implement cryptographic encryption.');
@@ -234,6 +237,7 @@ export class ManagementController {
       if (session) this.close(session);
       return { closed: true, output: ['% Session expired or device restarted.'] };
     }
+    if(Number.isInteger(payload.columns)&&payload.columns>0&&payload.columns<=512)session.cli.setViewportColumns?.(payload.columns);
     if(payload.operation==='poll')return this.reply(session,session.phase==='ready'?session.cli.pollOutput():[]);
     if(payload.operation==='status')return this.reply(session);
     if(payload.operation==='complete')return {...this.reply(session),completion:session.phase==='ready'?session.cli.complete(String(payload.line||'')):String(payload.line||'')};
@@ -251,15 +255,15 @@ export class ManagementController {
     if (!this.alive(session)) { this.close(session); return { closed: true, output: [...output, 'Connection closed.'] }; }
     return this.reply(session, output);
   }
-  open(sourceId: string, address: string, port: number, username?: string): ServiceResult {
-    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'open', username });
+  open(sourceId: string, address: string, port: number, username?: string,transport?:'ssh'|'telnet',columns?:number): ServiceResult {
+    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'open', username,transport,columns });
     this.wait(result);return result;
   }
-  send(sourceId: string, address: string, port: number, sessionId: string, line: string): ServiceResult {
-    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'line', sessionId, line });
+  send(sourceId: string, address: string, port: number, sessionId: string, line: string,columns?:number): ServiceResult {
+    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'line', sessionId, line,columns });
     this.wait(result);return result;
   }
-  query(sourceId:string,address:string,port:number,sessionId:string,operation:string,line:string):ServiceResult{const result=this.engine.tcpRequest(sourceId,address,port,{operation,sessionId,line});this.wait(result);return result;}
+  query(sourceId:string,address:string,port:number,sessionId:string,operation:string,line:string,columns?:number):ServiceResult{const result=this.engine.tcpRequest(sourceId,address,port,{operation,sessionId,line,columns});this.wait(result);return result;}
   disconnect(sourceId: string, address: string, port: number, sessionId: string): ServiceResult {
     const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'close', sessionId });
     this.wait(result);return result;

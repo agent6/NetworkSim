@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-10-17T03:35:44.505Z",
+  "artifact": {
+    "path": "index.html",
+    "sha256": "94fcadce800075c058ab8a18e9d00de2b54da99754ec5cf8d1bb6a60abdb5bcb"
+  },
+  "checks": [
+    "terminal length 0 retains complete unpaged output",
+    "Every page of a long command fits the normal console, without missing or repeated output",
+    "Enter advances one screen row and Q restores the command prompt",
+    "Shrinking an active page requeues overflow and preserves every unread line",
+    "Expanded consoles use their extra rows for subsequent pages",
+    "Narrow consoles count wrapped physical rows and retain all command output",
+    "Explicit shorter terminal length still limits the page, and Escape exits the pager",
+    "Paged context help restores the command draft and caret after quitting",
+    "No browser errors"
+  ],
+  "errors": []
+}

@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-10-17T03:02:03.940Z",
+  "browser": "155.0.8059.84",
+  "fixture": "Isolated public YAML import in standalone file:// index.html, real keyboard events and console commands",
+  "artifact": {
+    "file": "index.html",
+    "sha256": "7ee19f50b6d7120d514987f43a8fd06ed0ac8496770bcbb2079477ab43f140df"
+  },
+  "checks": [
+    "The exact int gi? and interface gi? reports show GigabitEthernet and preserve the draft",
+    "interface ? shows supported interface types and range together; Tab on a blank argument does not guess range",
+    "Question-mark help advances from interface type to slot and port numbers, then Enter availability",
+    "Tab expands the interface type and preserves the selected port; Enter configures that exact port",
+    "Tab preserves incomplete or invalid numeric input and ambiguous commands without choosing another interface",
+    "Interface range supports type completion, bounded last-port help and actual range selection",
+    "Question mark and Tab at a middle-of-line caret preserve the interface number and cursor position",
+    "Completion inside an existing command does not duplicate its suffix or spaces; ambiguous selected text remains intact",
+    "Ctrl-I, no, do and output filters use the same contextual completion and help rules",
+    "Paged interface help restores the draft and caret after quitting",
+    "No browser page errors"
+  ],
+  "errors": []
+}

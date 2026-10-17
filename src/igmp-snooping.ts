@@ -1,3 +1,4 @@
+import {stpPortState,stpMemberActive} from './stp-ports.ts';
 import type { Simulator, Frame } from "./engine.ts";
 import type { Device } from "./model.ts";
 import type { SimulationClock, TimerHandle } from "./clock.ts";
@@ -83,12 +84,12 @@ function usable(
   port: string,
   vlan: number,
 ): boolean {
-  const stp = device.runtime.stp[String(vlan)]?.ports[port];
+  const stp = stpPortState(device,port,vlan);
   return (
     !!device.config.interfaces[port]?.switchport &&
     engine.interfaceUp(device.id, port) &&
     engine.carriesVlan(device, port, vlan) &&
-    (!stp || stp.state === "forwarding")
+    stpMemberActive(device,port) && (!stp || stp.state === "forwarding")
   );
 }
 function age(engine: Simulator, device: Device): boolean {

@@ -1,3 +1,4 @@
+import {stpPortName,stpMemberActive} from './stp-ports.ts';
 import type { Simulator } from './engine.ts';
 import type { Device, Link } from './model.ts';
 
@@ -17,11 +18,13 @@ export function portIndicator(sim: Simulator, device: Device, port: string, link
   if (!sim.interfaceUp(device.id, port)) return { state: 'down', description: 'Physical link down' };
   if (!config.switchport) return { state: 'up', description: 'Link up' };
 
+  if (!stpMemberActive(device,port)) return {state:'blocked',description:'EtherChannel member is not forwarding'};
+  const stpPort=stpPortName(device,port);
   const trees = Object.entries(device.runtime.stp)
-    .filter(([vlan, tree]) => tree.ports[port] && sim.carriesVlan(device, port, Number(vlan)));
-  const blocked = trees.filter(([, tree]) => ['blocking', 'discarding', 'disabled'].includes(tree.ports[port].state));
-  const transitioning = trees.filter(([, tree]) => ['listening', 'learning'].includes(tree.ports[port].state));
-  const forwarding = trees.filter(([, tree]) => tree.ports[port].state === 'forwarding');
+    .filter(([vlan, tree]) => tree.ports[stpPort] && sim.carriesVlan(device, port, Number(vlan)));
+  const blocked = trees.filter(([, tree]) => ['blocking', 'discarding', 'disabled'].includes(tree.ports[stpPort].state));
+  const transitioning = trees.filter(([, tree]) => ['listening', 'learning'].includes(tree.ports[stpPort].state));
+  const forwarding = trees.filter(([, tree]) => tree.ports[stpPort].state === 'forwarding');
   const vlans = (rows: typeof trees) => rows.map(([vlan]) => vlan).join(', ');
   if (blocked.length) return {
     state: forwarding.length ? 'partial' : 'blocked',
