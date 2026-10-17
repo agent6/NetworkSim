@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-10-17T02:14:44.090Z",
+  "browser": "155.0.8059.84",
+  "url": "http://127.0.0.1:49376",
+  "artifact": {
+    "path": "dist/index.html",
+    "bytes": 3406080,
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+  },
+  "sourceDigests": [
+    {
+      "path": "src/wireless.ts",
+      "sha256": "5edfe969791ff34ec80260b44bd345cd41de5088163abcb6334cd132c6bb3a23"
+    },
+    {
+      "path": "src/wireless-ui.ts",
+      "sha256": "47177246aea4d41522d74537c3ac333006f25fd7619f66af0f8d28853ca78ce4"
+    },
+    {
+      "path": "src/wireless-model.ts",
+      "sha256": "5269ce51919ab50b80a48023d8e1f240ad3c1b0be1a74317f97b942e68bc6e4e"
+    },
+    {
+      "path": "src/standalone-ap.ts",
+      "sha256": "6f8281fbb5afbac341fdd79b335727bcd62a75663619719bb68fe5c34c6e9c97"
+    },
+    {
+      "path": "src/ios-standalone-ap.ts",
+      "sha256": "9e4a7c4a5e384591ab86e24d7a4d2e7fd530bc40ec4c22f4822d1e837059a3c6"
+    },
+    {
+      "path": "src/ios-wireless.ts",
+      "sha256": "1718d0298290f13c143ba5d4c8d028e954d7aa387575c808a78bb181852fae3e"
+    },
+    {
+      "path": "src/ap-controller-view.ts",
+      "sha256": "59ee059361c53187b55a25f9db19b0b8ceaed720a8d445d36c8d9840479f606e"
+    }
+  ],
+  "fixture": "Imported existing campus fixture with WLC and second AP removed; standalone profile, SSID/security/VLAN/radio created through production GUI; native radio and real PoE controls",
+  "scope": "Generic standalone teaching AP, not C9115 autonomous firmware or full autonomous IOS emulation",
+  "checks": [
+    "Existing AP node explicitly selects a distinct standalone profile and configures local SSID, WPA2, VLAN20 and radio149 with no WLC",
+    "Wrong standalone PSK rejects; correcting it authorizes the real laptop and obtains the relayed VLAN20 DHCP lease",
+    "Standalone local Ethernet bridging carries actual routed DNS and HTTP without a controller",
+    "Standalone diagnostics show local VLAN/security; native radio shutdown removes service and no shutdown restores real association",
+    "Standalone AP remains PoE-only: real port power loss stops service and restoring allocation rebuilds it",
+    "Changing back to lightweight removes local SSID forwarding and requires a genuine controller join",
+    "No browser page errors"
+  ],
+  "errors": []
+}

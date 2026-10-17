@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-10-17T02:18:19.519Z",
+  "browser": "155.0.8059.84",
+  "artifact": {
+    "file": "index.html",
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+  },
+  "checks": [
+    "Campus fan-out and parallel links have separate sockets and badges in the offline app",
+    "Dragging a shared switch recomputes collision-free endpoints and labels",
+    "Connection points and labels remain separate across zoom levels",
+    "Dark theme retains clear, separated connection points",
+    "Saved workspace reload preserves the layout",
+    "A switch with 24 different neighbors has no stacked connection points or badges",
+    "No browser page errors"
+  ],
+  "errors": []
+}

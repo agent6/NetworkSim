@@ -186,7 +186,7 @@ export function classifyQosPolicy(device: Device, policyName: string, packet: IP
 export function applyQos(engine: Simulator, device: Device, port: string, direction: 'in' | 'out', packet: IPPacket, aclMatches: (name: string, packet: IPPacket) => boolean): boolean {
   const iface = device.config.interfaces[port], policyName = port === 'control-plane' && direction === 'in' ? device.config.features.controlPlanePolicyIn : iface?.features[direction === 'in' ? 'servicePolicyIn' : 'servicePolicyOut'];
   const policy = device.config.features.policyMaps?.[policyName]; if (!policy) return true;
-  const unsupported = schedulingError(policy, port, direction, iface ? interfaceBandwidth(device, iface) * 1000 : undefined,catalystQueueProfile(device)); if (unsupported) { engine.emit({ nodeId: device.id, port, protocol: 'QOS', label: 'Unsupported queued policy', detail: unsupported, disposition: 'drop' }); return false; }
+  const unsupported = schedulingError(policy, port, direction, iface ? interfaceBandwidth(device, iface) * 1000 : undefined,catalystQueueProfile(device),device.kind==='router'); if (unsupported) { engine.emit({ nodeId: device.id, port, protocol: 'QOS', label: 'Unsupported queued policy', detail: unsupported, disposition: 'drop' }); return false; }
   // class-default is a fallback regardless of where it appeared in the configuration.
   const ordered = [...(policy.classes ?? [])].sort((a, b) => Number(a.name === 'class-default') - Number(b.name === 'class-default'));
   for (const policyClass of ordered) {

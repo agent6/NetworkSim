@@ -29,6 +29,17 @@ These are executable behavioral scenarios, not claims of exhaustive vendor equiv
 | Simultaneous flows | `core.test.ts`, `bgp-multiprotocol.test.ts`, `qos-scheduler.test.ts` | Real ECMP/channel hashing, weighted bytes, priority/shaping and queue drops under congestion |
 | Physical errors | `ethernet-physical.test.ts` | Forced speed mismatch removes routes; overlapping duplex-mismatched traffic produces real loss/error counters; correction restores forwarding |
 | Management/API operations | `model-driven-management.test.ts`, `snmp.test.ts`, `ssh-files.test.ts` | ACLs/credentials/privilege and actual delivered requests control outcomes across IOS profiles and wireless hosts |
+| Reliable EIGRP delivery | `eigrp-updates.test.ts`, `eigrp-summary-metric.test.ts` | Lost/retried INIT/UPDATE/ACK, IPv4/IPv6/VRF summaries and received metric policy change actual routes and forwarding |
+| OSPF authentication and practical routes | `ospf-area-auth.test.ts`, `exam-routing-practicals.test.ts` | Area/interface authentication inheritance and real IPv6 static/default/floating and OSPFv2/v3 network-type workflows |
+| Congestion feedback | `qos-congestion.test.ts` | Independent flows use fair queues; WRED drops/ECN marks actual frames under congestion |
+| MAC capacity / cable faults | `mac-capacity.test.ts`, `link-medium.test.ts` | Shared CAM exhaustion floods unknown traffic; wrong media/reach/open/short faults and CRC errors affect reception |
+| Voice edge and dedicated Phone | `endpoint.test.ts`, `phone.test.ts`, `phone-audit.test.ts` | PoE, received voice policy and DHCP transitions; Network/PC bridge preserves MAC, IPv6 TTL and DSCP; PC port cannot power an AP |
+| Standalone wireless | `standalone-ap.test.ts` | Local SSID/radio/VLAN configuration supports real DHCP, DNS and HTTP without a WLC; uplink/power errors stop delivery |
+| WLC administration and WPA3 | `wlc-administration.test.ts`, `wireless-wpa3.test.ts` | Delivered management authentication, authorization, client disconnect/rejoin, logical security and radio power policies |
+| SNMP manager/notifications | `snmp-advanced.test.ts`, `wired-integration-review.test.ts` | GETBULK bounds/views, inform ACK/retry/duplicate handling, stable interface identity and actual unicast/group/error counters |
+| FTP configuration transfer | `ftp-files.test.ts`, `ios-ftp.test.ts`, `ftp-gui.test.ts` | Independent control/data TCP channels, authentication, file operations, routed ACL/source selection and atomic configuration import |
+| Client OS profiles | `unix-cli.test.ts`, Client profile browser | Real Linux/macOS IPv4/IPv6 routes, ICMP/DNS and Wi-Fi operations share the same simulated links; cancellation stops active probes |
+| Offline automation | `automation.test.ts`, Automation browser | YAML/JSON tasks use actual SSH authentication/authorization, configuration/save and verification; failures stop tasks and secrets are redacted |
 | Removal/load safety | `wireless.test.ts`, `persistence.test.ts`, `record-maps.test.ts` | Removed APs lose associations; stale callbacks cannot revive old runtime; literal identifiers survive save/load without inherited values |
 
 CLI help, syntax, invalid input, mode transitions and negation are covered by `ios-syntax`, `ios-terminal`, `command-parity`, `platform-fidelity` and service-specific suites. These cover selected argument paths. They are not an exhaustive validation of every inventory row/parameter or all eight audit levels.

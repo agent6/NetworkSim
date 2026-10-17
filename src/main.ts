@@ -1,5 +1,6 @@
 import {showPhone} from './phone-ui.ts';
-import {endpointUsesPoE} from './endpoint.ts';
+import {endpointUsesPoE,validateEndpoint} from './endpoint.ts';
+import {linkMediumFields,readLinkMedium} from './link-medium.ts';
 import {showNetworkTools} from './network-tools-ui.ts';
 import{showPoE}from'./poe-ui.ts';
 import{showSimulation}from'./simulation-ui.ts';
@@ -558,7 +559,7 @@ function renderInspector() {
     d = selectedDevice();
   el.hidden = !inspectorOpen || !d;
   if (!d) return;
-  const markup = `<div class="flex items-center justify-between border-b border-slate-100 p-4"><span class="section-label">Device details</span>${button("inspector", "close", "Hide details")}</div><div class="p-4"><div class="flex items-center gap-3"><span class="palette-symbol">${icon(d.kind, 32)}</span><div><div class="text-sm font-semibold">${esc(d.config.hostname)}</div><div class="mt-1 text-[10px] text-slate-400">${deviceLabels[d.kind]}</div></div></div><div class="mt-4 flex gap-2"><button class="btn-primary flex-1" data-action="open-device">${icon("terminal", 14)} Open ${d.kind === "pc" || d.kind === "server" ? "desktop" : ["wlc","ap","laptop","poeswitch","phone"].includes(d.kind) ? "settings" : "console"}</button>${d.kind==='ap'||endpointUsesPoE(d)?'':button("power-device", "power", d.powered ? "Power off device" : "Power on device")}</div><div class="mt-3 flex items-center justify-between"><button data-action="rename-device" class="text-[10px] text-slate-400 hover:text-teal">Rename device</button><button data-action="lock-device" class="text-[10px] text-slate-400 hover:text-teal">${d.config.features.positionLocked ? "Unlock position" : "Lock position"}</button></div></div><div class="p-4"><button data-action="delete" class="text-[10px] text-rose-500">Remove device</button></div>`;
+  const markup = `<div class="flex items-center justify-between border-b border-slate-100 p-4"><span class="section-label">Device details</span>${button("inspector", "close", "Hide details")}</div><div class="p-4"><div class="flex items-center gap-3"><span class="palette-symbol">${icon(d.kind, 32)}</span><div><div class="text-sm font-semibold">${esc(d.config.hostname)}</div><div class="mt-1 text-[10px] text-slate-400">${deviceLabels[d.kind]}</div></div></div><div class="mt-4 flex gap-2"><button class="btn-primary flex-1" data-action="open-device">${icon("terminal", 14)} Open ${d.kind === "pc" || d.kind === "server" ? "desktop" : ["wlc","ap","laptop","poeswitch","phone"].includes(d.kind) ? "settings" : "console"}</button>${d.kind==='ap'||endpointUsesPoE(d)?'':button("power-device", "power", d.powered ? "Power off device" : "Power on device")}</div>${["pc","laptop"].includes(d.kind)?`<button class="btn mt-3 w-full" data-action="host-profile">Client profile</button>`:""}<div class="mt-3 flex items-center justify-between"><button data-action="rename-device" class="text-[10px] text-slate-400 hover:text-teal">Rename device</button><button data-action="lock-device" class="text-[10px] text-slate-400 hover:text-teal">${d.config.features.positionLocked ? "Unlock position" : "Lock position"}</button></div></div><div class="p-4"><button data-action="delete" class="text-[10px] text-rose-500">Remove device</button></div>`;
   if (markup !== lastInspectorMarkup) {
     el.innerHTML = markup;
     lastInspectorMarkup = markup;
@@ -618,7 +619,7 @@ function ensureConsoleSession(id: string) {
   if (renderedSession === id) renderedSession = null;
 }
 function syncConsoleDevices() {
-  const deviceIds = new Set(sim.lab.devices.map(device => device.id));
+  const deviceIds = new Set(sim.lab.devices.filter(device=>device.kind!=='phone').map(device => device.id));
   for (const id of sessions.keys()) if (!deviceIds.has(id)) sessions.delete(id);
   if (activeDevice && !deviceIds.has(activeDevice)) activeDevice = null;
   if (!activeDevice && dockOpen)
@@ -1004,7 +1005,7 @@ function editLink(id: string) {
   if (!l) return;
   formDialog(
     "Ethernet link",
-    `<p class="text-xs text-slate-500">${esc(sim.getDevice(l.a.deviceId)?.config.hostname)} ${esc(l.a.port)} ↔ ${esc(sim.getDevice(l.b.deviceId)?.config.hostname)} ${esc(l.b.port)}</p><div class="grid grid-cols-2 gap-4">${textField("One-way delay (ms)", "delay", l.delay)}${textField("Packet loss (%)", "loss", l.loss * 100)}</div><details class="text-xs"><summary class="cursor-pointer text-slate-500">Directional failure settings</summary><div class="mt-3 grid grid-cols-2 gap-4">${textField("A → B loss (%)", "lossAB", l.lossAB === undefined ? "" : l.lossAB * 100, "Use shared loss")}${textField("B → A loss (%)", "lossBA", l.lossBA === undefined ? "" : l.lossBA * 100, "Use shared loss")}</div><p class="mt-2 text-[10px] text-slate-400">A is the first endpoint above. Useful for UDLD and asymmetric failure labs.</p></details><label class="flex items-center gap-2"><input type="checkbox" name="enabled" ${l.enabled ? "checked" : ""}> Link enabled</label>`,
+    `<p class="text-xs text-slate-500">${esc(sim.getDevice(l.a.deviceId)?.config.hostname)} ${esc(l.a.port)} ↔ ${esc(sim.getDevice(l.b.deviceId)?.config.hostname)} ${esc(l.b.port)}</p><div class="grid grid-cols-2 gap-4">${textField("One-way delay (ms)", "delay", l.delay)}${textField("Packet loss (%)", "loss", l.loss * 100)}</div><details class="text-xs"><summary class="cursor-pointer text-slate-500">Directional failure settings</summary><div class="mt-3 grid grid-cols-2 gap-4">${textField("A → B loss (%)", "lossAB", l.lossAB === undefined ? "" : l.lossAB * 100, "Use shared loss")}${textField("B → A loss (%)", "lossBA", l.lossBA === undefined ? "" : l.lossBA * 100, "Use shared loss")}</div><p class="mt-2 text-[10px] text-slate-400">A is the first endpoint above. Useful for UDLD and asymmetric failure labs.</p></details><label class="flex items-center gap-2"><input type="checkbox" name="enabled" ${l.enabled ? "checked" : ""}> Link enabled</label>${linkMediumFields(l)}`,
     (f) => {
       const delay = Number(f.get("delay")),
         loss = Number(f.get("loss")) / 100;
@@ -1025,9 +1026,11 @@ function editLink(id: string) {
           throw Error("Directional loss must be 0–100%.");
         return result;
       };
+      const physical=readLinkMedium(f);
       const lossAB = direction("lossAB"),
         lossBA = direction("lossBA");
       transaction(() => {
+        l.physical=physical;
         l.lossAB = lossAB;
         l.lossBA = lossBA;
         l.delay = delay;
@@ -1193,8 +1196,19 @@ function filesDialog() {
 function desktop(d: Device) {
   dialog(
     `${d.config.hostname} · Desktop`,
-    `<div class="desktop-grid"><button class="desktop-card" data-desktop="ip" data-id="${d.id}"><span class="text-teal">${icon("settings", 28)}</span>IP configuration</button><button class="desktop-card" data-desktop="cli" data-id="${d.id}"><span class="text-teal">${icon("terminal", 28)}</span>Command prompt</button><button class="desktop-card" data-desktop="tools" data-id="${d.id}"><span class="text-teal">${icon("settings", 28)}</span>Network tools</button><button class="desktop-card" data-desktop="browser" data-id="${d.id}"><span class="text-teal">${icon("globe", 28)}</span>Web browser</button>${d.kind === "server" ? `<button class="desktop-card" data-desktop="services" data-id="${d.id}"><span class="text-teal">${icon("server", 28)}</span>Services</button>` : ""}</div><p class="mt-5 text-[11px] leading-5 text-slate-400">These tools operate inside your simulated network.</p>`,
+    `<div class="desktop-grid"><button class="desktop-card" data-desktop="ip" data-id="${d.id}"><span class="text-teal">${icon("settings", 28)}</span>IP configuration</button><button class="desktop-card" data-desktop="cli" data-id="${d.id}"><span class="text-teal">${icon("terminal", 28)}</span>Command prompt</button><button class="desktop-card" data-desktop="tools" data-id="${d.id}"><span class="text-teal">${icon("settings", 28)}</span>Network tools</button><button class="desktop-card" data-desktop="browser" data-id="${d.id}"><span class="text-teal">${icon("globe", 28)}</span>Web browser</button>${d.kind !== "server" ? `<button class="desktop-card" data-desktop="profile" data-id="${d.id}"><span class="text-teal">${icon("pc", 28)}</span>Client profile</button>`:""}${d.kind === "server" ? `<button class="desktop-card" data-desktop="services" data-id="${d.id}"><span class="text-teal">${icon("server", 28)}</span>Services</button>` : ""}</div><p class="mt-5 text-[11px] leading-5 text-slate-400">These tools operate inside your simulated network.</p>`,
   );
+}
+function hostProfile(d: Device) {
+  if(!['pc','laptop'].includes(d.kind))return;
+  const endpoint=d.config.features.endpoint??{role:'computer',power:'external'},roles=d.kind==='pc'?[['computer','Computer'],['printer','Printer'],['iot','IoT appliance'],['phone','VoIP phone']]:[['computer','Computer']];
+  const select=(label:string,name:string,value:string,options:string[][])=>`<label class="field">${label}<select name="${name}">${options.map(([id,text])=>`<option value="${id}" ${id===value?'selected':''}>${text}</option>`).join('')}</select></label>`;
+  formDialog(`${d.config.hostname} · Client profile`,`${select('Operating system','host-os',d.config.features.hostOS??'windows',[['windows','Windows'],['linux','Linux'],['macos','macOS']])}${select('Endpoint role','endpoint-role',endpoint.role,roles)}${d.kind==='pc'?select('Power source','endpoint-power',endpoint.power,[['external','External power'],['poe','PoE from switch']]):''}<p class="text-xs leading-5 text-slate-500">The operating system selects the network console commands. Printers, appliances and phones use the same network stack. Phones require PoE and learn their voice VLAN from the connected switch.</p>`,f=>{
+    const hostOS=String(f.get('host-os')),role=String(f.get('endpoint-role')),power=role==='phone'?'poe':role==='computer'?'external':d.kind==='pc'?String(f.get('endpoint-power')):'external';
+    if(!['windows','linux','macos'].includes(hostOS)||!roles.some(([id])=>id===role)||!['external','poe'].includes(power))throw Error('Select a valid client profile.');
+    validateEndpoint(d.kind,{...d.config,features:{...d.config.features,endpoint:{role,power}}});const wasPoE=endpointUsesPoE(d),hardwareChanged=endpoint.role!==role||endpoint.power!==power;sessions.get(d.id)?.cli.cancel();transaction(()=>{d.config.features.hostOS=hostOS;d.config.features.endpoint={role,power};if(wasPoE&&!endpointUsesPoE(d)){d.powered=true;delete d.runtime.features.poePower;}if(hardwareChanged)sim.restartEndpointInterface(d.id);});sessions.delete(d.id);ensureConsoleSession(d.id);dirty=true;
+  });
+  const role=$<HTMLSelectElement>('[name="endpoint-role"]'),power=document.querySelector<HTMLSelectElement>('[name="endpoint-power"]');if(power){const update=()=>{if(role.value==='phone')power.value='poe';if(role.value==='computer')power.value='external';power.disabled=['phone','computer'].includes(role.value);};role.addEventListener('change',update);update();}
 }
 function hostConfig(d: Device) {
   const p = d.kind==='phone'?d.config.interfaces.Network:Object.values(d.config.interfaces)[0];
@@ -1684,6 +1698,7 @@ const actions: Record<string, () => void> = {
   "edit-selected-link": () => { if (selectedLink) editLink(selectedLink); },
   "previous-link": () => cycleLink(-1),
   "next-link": () => cycleLink(1),
+  "host-profile": () => {const d=selectedDevice();if(d)hostProfile(d);},
   "deselect-link": () => {selectedLink=null;dirty=true;},
   "manage-pair-links": () => { const link=sim.lab.links.find(l=>l.id===selectedLink);if(link)connectDialog(link.a.deviceId,link.b.deviceId); },
   "terminal-keys": () => {
@@ -1788,6 +1803,7 @@ document.addEventListener("click", (e) => {
     const d = sim.getDevice(desktop.dataset.id!);
     if (d) {
       const fn = desktop.dataset.desktop;
+      if (fn === "profile") hostProfile(d);
       if (fn === "ip") hostConfig(d);
       if (fn === "services") servicesDialog(d);
       if (fn === "tools") showNetworkTools(sim,d,dialog);

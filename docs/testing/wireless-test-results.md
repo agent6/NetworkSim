@@ -1,12 +1,14 @@
 # Wireless and PoE validation
 
+The 2026-10-17 UTC follow-up adds WLC administration/monitoring, native AP authorization, wireless ACL/QoS, logical WPA3/transition/PMF, PoE stream-rate validation and a distinct generic standalone AP profile. The focused current set passes **99/99 tests**: wireless48, AP controller8, PoE14, administration16, WPA3 five and standalone AP eight. A later combined run with the dedicated Phone's 18 cases passes **117/117**; TypeScript also passes. The final parent combined run/build determines repository-wide status. Reproducible commands, source/runtime field mapping and actual limitations are in the [current WLC audit](../audits/wlc-gui-coverage.md). Current browser evidence records reference controls14, AP configuration8, administration/WPA3 seven, standalone AP seven, [broader wireless24](wireless-browser-results.json) and [radio coverage8](../audits/radio-browser-validation.json): **68 checks**, no page errors, all tied to HTML SHA256 `230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499`. The broader run now verifies all ten icons plus actual packet inspection/pause/step; the two legacy workflows ran sequentially. These are bounded simulator invariants, not Cisco runtime goldens. The dated runs below remain historical evidence for their recorded source.
+
 Recorded 2026-10-16 on macOS ARM64, Node 24.22.0 and Chrome 155.0.8059.84.
 
 ## Executed checks
 
 - `npm run check`: TypeScript passed; **517 tests passed, 0 failed**; offline build passed.
 - Targeted `tests/wireless.test.ts` and `tests/poe.test.ts`: **37 tests passed**, including AP movement after the full run.
-- `scripts/browser-wireless.mjs --wireless-only`: **18 checks passed, no page errors**: real palette placement, adapter configuration, absent AP manual-power controls, disconnected AP power state, RADIUS failure/correction, canvas drag/roam, laptop DNS/HTTP browsing after IP acquisition, WLC GUI/CLI updates and PoE budget denial/restoration. Machine-readable results: [browser results](wireless-browser-results.json). This run excludes packet inspection and pause/step controls because the current toolbar does not expose their entry point; the earlier browser run exercised them.
+- Historical `scripts/browser-wireless.mjs --wireless-only`: **18 checks passed, no page errors**: palette placement, adapter configuration, absent AP manual-power controls, disconnected AP power state, RADIUS failure/correction, canvas drag/roam, laptop DNS/HTTP browsing, WLC GUI/CLI updates and PoE budget denial/restoration. That run omitted packet inspection/pause/step while their entry point was unavailable. The current full 24-check run linked above exercises those controls successfully; the shared result file now records that newer run.
 - `scripts/benchmark-wireless.mjs`: three deterministic engine workloads, using 100 ms advances with the normal 10,000-event budget. See [raw benchmark results](wireless-benchmarks.json).
 
 All nine images were checked in the actual palette/canvas. All use one embedded ImageGen atlas; switch symbols distinguish opposing arrows, routing arrows and PoE lightning. The controller label is WLC.

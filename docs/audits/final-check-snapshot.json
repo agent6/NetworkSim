@@ -1,0 +1,1660 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-17T02:20:03.584566+00:00",
+  "scope": "Final npm run check: product, test fixtures and build inputs hashed before and after; source stability does not certify native Cisco/OS equivalence.",
+  "before": [
+    {
+      "file": "src/aaa-accounting.ts",
+      "sha256": "50f9f7622911f0ae0fe73f7ecb3b192cb0961b6c1fefd59a77f830959f2fa6ba"
+    },
+    {
+      "file": "src/aaa-service.ts",
+      "sha256": "e8f3f5fbb89d4a281d5039243a84f743834cb4f0804701a3275dfad5c2c4f2d0"
+    },
+    {
+      "file": "src/alignment.ts",
+      "sha256": "f24e493c7cd8fb5e094ad38b690e59ab6422c61bf6a28afbde9bbab5caa4eee2"
+    },
+    {
+      "file": "src/ap-controller-view.ts",
+      "sha256": "59ee059361c53187b55a25f9db19b0b8ceaed720a8d445d36c8d9840479f606e"
+    },
+    {
+      "file": "src/arp-binding-acl.ts",
+      "sha256": "938d480f0574916adb4c35b92c4e4a8ce8d685ececf4c647325877cb3d5b76ae"
+    },
+    {
+      "file": "src/assets/networksim-logo.png",
+      "sha256": "cc1512fd37c33b2e9f024e1bb90e4d83420648b984024e34be6ac3079c2b93e0"
+    },
+    {
+      "file": "src/assets/node-icons.png",
+      "sha256": "b1b1c1dbc628291f73b1a17e30a21d15f927d659423b1a8a9799ac7cdc7c9a1c"
+    },
+    {
+      "file": "src/assets/server-icon.png",
+      "sha256": "20938b46fac50aef1bedb839fcea9786f03d553fb4acfe8fa1d30929ec0069c9"
+    },
+    {
+      "file": "src/assets/wireless-icons.png",
+      "sha256": "c62b2cc337e24db91b46d8a9cc39363d42435424690bd5bda89c742d6cff33c7"
+    },
+    {
+      "file": "src/automation.ts",
+      "sha256": "35335e64d32da7ff3fba92eb7850732fdc10268e99fde6806f251ca283610518"
+    },
+    {
+      "file": "src/bgp-compat.ts",
+      "sha256": "dba4307b6a07846dfea522dce3e5b3bac21d55375558637d2ff2202f17af9657"
+    },
+    {
+      "file": "src/bgp-dampening.ts",
+      "sha256": "e62e78b6f5d579ab31a4ab9afa70936d622ce957a6c1e41d4f6594be67b5b2a3"
+    },
+    {
+      "file": "src/bgp-policy.ts",
+      "sha256": "0a329f1ae81e161f0278071828e98a927e3baca91856822e8783eaf9739d97a0"
+    },
+    {
+      "file": "src/bgp-session.ts",
+      "sha256": "a12dfc5920cc0c00bf9e678fc8860cd6f834ec99e2c6956d6a74afca7be8f4fa"
+    },
+    {
+      "file": "src/cli.ts",
+      "sha256": "43eac0ea22100892175146b727badf420524997fb4be88f10a1ede48a5111095"
+    },
+    {
+      "file": "src/clock.ts",
+      "sha256": "23384b393d2ca982bfa69c702bf476ec063e85473a74b33dbaf9d648b91cda69"
+    },
+    {
+      "file": "src/config-renderer.ts",
+      "sha256": "79fdeb1bea16b17ab8594bc720f88ba3d11eef96a4951ac88e0e12fba51cad38"
+    },
+    {
+      "file": "src/control-plane.ts",
+      "sha256": "67f79f10fc4815e3f31c68789e479187eeaa6a04d12ae409c62a90283b0601fd"
+    },
+    {
+      "file": "src/credentials.ts",
+      "sha256": "7281bddf40e9917cfcde5521d0a70eb39c2b30b1aac26674fd1e5b1462a4a0b4"
+    },
+    {
+      "file": "src/crypto.ts",
+      "sha256": "29276403efef07892e93f228da7ec580c0f3385a9f2d5a903d009567df09a8b0"
+    },
+    {
+      "file": "src/discovery.ts",
+      "sha256": "d5dcb722034015246a8ba4e732e6bb26dbf5f16aae091d2448b0b6a8fd2eb0ed"
+    },
+    {
+      "file": "src/dns-service.ts",
+      "sha256": "bee8cf88869436e471420f8229ea75f8a135de9eaef45e5e827f3ad81ac61d29"
+    },
+    {
+      "file": "src/eigrp-updates.ts",
+      "sha256": "7b48db7f68486285a35766655c45e38c4268e4f059835593a49d009f31356f03"
+    },
+    {
+      "file": "src/endpoint.ts",
+      "sha256": "1a83ed29d862340f2fd6e7ded10bca4de2c06fecd1678e2042c4c887c936887f"
+    },
+    {
+      "file": "src/engine.ts",
+      "sha256": "d3b507fad1cdab29d6e07deb36d2fd05586e5fd46de4e55e4fe9296e69399042"
+    },
+    {
+      "file": "src/ethernet.ts",
+      "sha256": "073e8c822c41abe2d04614399217e9f984b92ff14610bd97f8dda9b8c1796cf3"
+    },
+    {
+      "file": "src/fhrp-packets.ts",
+      "sha256": "d2dd12154798c931393099641ed006261de102ab32f4a3f6e5f8ca1fac5b9be6"
+    },
+    {
+      "file": "src/fhs-tracking.ts",
+      "sha256": "c21c80e13f4a9ed94e9b0fa9444489713951fd9be55fc2d97270b3e3742621fa"
+    },
+    {
+      "file": "src/filesystem.ts",
+      "sha256": "1b6ad1181e37079313a21a31eb231f4e7bf4c1ec82996c032713fa1b8efb6a3e"
+    },
+    {
+      "file": "src/ftp-files.ts",
+      "sha256": "ba40cb167453e6b983eeaf5c8b482afd2a0cda98c1cf14695b0ae607503a6356"
+    },
+    {
+      "file": "src/ftp-ui.ts",
+      "sha256": "6a34d0d477ebbb32eb6936181c6b22e6834ac8610d179dac8794ae5d5dcdb2f9"
+    },
+    {
+      "file": "src/host-os.ts",
+      "sha256": "1a9803771c5488ec910fb90d04f2c51100648ea52d9f8cd70b7632f149e14be1"
+    },
+    {
+      "file": "src/http-service.ts",
+      "sha256": "a916159a3dc89c28eea73d5639d0f8a7b50abc033a4f4327ec1fbaed04780e0f"
+    },
+    {
+      "file": "src/icons.ts",
+      "sha256": "d6881d5abc2ba029d7a62162388a2bdce9cfa5a23b990b20720e6c9141b37099"
+    },
+    {
+      "file": "src/igmp-snooping.ts",
+      "sha256": "26ef2dfd0538313ccff6ecc1ea3ba1ab05d635e0d99ac1c7202a1c04a5152e33"
+    },
+    {
+      "file": "src/image-assets.d.ts",
+      "sha256": "ca3b7e0af4e2f14b1facb63ceb1bfaaf017cfb0592e987695bee37d8c9151240"
+    },
+    {
+      "file": "src/ios-debug.ts",
+      "sha256": "dc4ec0c2564fb86456e6e8d112dc4ad38335ea6e27c458ab785117af6e7e67f5"
+    },
+    {
+      "file": "src/ios-endpoint.ts",
+      "sha256": "fa005c985648727ab79feb9e0b8eafeac15a334431efafdd4f25251ca3d7662d"
+    },
+    {
+      "file": "src/ios-errdisable.ts",
+      "sha256": "9d08e54a0a3e7d3fdc188254fe5e5aec6b9503b9c7d6fa3157df6297e66bd6fa"
+    },
+    {
+      "file": "src/ios-exec-compat.ts",
+      "sha256": "6fd0cbde85c8900ad715cedd6f7030113f02939f80476a31c7ed1a39453154a4"
+    },
+    {
+      "file": "src/ios-ftp.ts",
+      "sha256": "0419330366b2272120d54d829426289a9125c3e69d44303fcdcf6d3ee3478a59"
+    },
+    {
+      "file": "src/ios-maintenance.ts",
+      "sha256": "5fa8d81f092f6d3b585c9df533aead68e15fb47d2e77550d64b0eee7a43909c1"
+    },
+    {
+      "file": "src/ios-platform-compat.ts",
+      "sha256": "bf6d5a1ec930de3187a2b2337d76cda56d4071357878102b4609cdf799f1348c"
+    },
+    {
+      "file": "src/ios-poe.ts",
+      "sha256": "243e833e19f65b70b68a3441a89f7d1c811d41d67248e69e8c083112a85b847d"
+    },
+    {
+      "file": "src/ios-routing-compat.ts",
+      "sha256": "29dc503b0b66a8df8fd7d479c80159d874acded24330d8d3936cfb25677ba5e0"
+    },
+    {
+      "file": "src/ios-show-enterprise.ts",
+      "sha256": "f6f9fdd0be17b371cbc1eca69c1f5a148eb5060bdc5be11bc1685fc3518e70c1"
+    },
+    {
+      "file": "src/ios-show-operational.ts",
+      "sha256": "da35752f04608497ea4e5f71e3eb413f5b6221eabff8d39507bc20f4df901c01"
+    },
+    {
+      "file": "src/ios-show-switching.ts",
+      "sha256": "a97abb93cadcdf2942a153c354448ccc663d5f53a3ad5cd24270b0afb3c2bcce"
+    },
+    {
+      "file": "src/ios-show.ts",
+      "sha256": "73e27e2792a9167566489e9c38c0a474c88b0071af2f245186c210d70e1b269d"
+    },
+    {
+      "file": "src/ios-snmp.ts",
+      "sha256": "f0b24f295be375803b915b59d0727dcf9f3c4ea9fe5c58b579f9b75ba7061cfb"
+    },
+    {
+      "file": "src/ios-standalone-ap.ts",
+      "sha256": "9e4a7c4a5e384591ab86e24d7a4d2e7fd530bc40ec4c22f4822d1e837059a3c6"
+    },
+    {
+      "file": "src/ios-switching-compat.ts",
+      "sha256": "67ca71e82cd2d52c82be45561e21190c668f84cf46a39e09b085a5450a38bafd"
+    },
+    {
+      "file": "src/ios-syntax.ts",
+      "sha256": "17e308ba9a3a11beb177c99eb20c56942f9633e6ac1d483b2afff97bdffeb564"
+    },
+    {
+      "file": "src/ios-system.ts",
+      "sha256": "9b5964cfe4b5e9727b42437f1a65cd92524d54310697a4e2af10da69e6766680"
+    },
+    {
+      "file": "src/ios-terminal.ts",
+      "sha256": "3be2d786796511b6f0671f6df7ec8e2a83d76e3189896e33a9fc67800c6fd9fd"
+    },
+    {
+      "file": "src/ios-wireless.ts",
+      "sha256": "1718d0298290f13c143ba5d4c8d028e954d7aa387575c808a78bb181852fae3e"
+    },
+    {
+      "file": "src/ip.ts",
+      "sha256": "304052c6f510ca0c510b4f3ffeda0d71605c901dbced2c2df0468502a5129d93"
+    },
+    {
+      "file": "src/ipv6-general-prefix.ts",
+      "sha256": "925849fe2a3d13e5e4e770bf9017c0f6a59877d6647b80b4e3e553bf8763f95c"
+    },
+    {
+      "file": "src/ipv6-services.ts",
+      "sha256": "3769f0e13db21613da8c44731829e00bbd76a3ca4cf0182e564326e34e23ca29"
+    },
+    {
+      "file": "src/lessons.ts",
+      "sha256": "8c9d76a81267cccccc3e93e249c064d51daab5c4b5be3c7be47c4e19a09c33b9"
+    },
+    {
+      "file": "src/link-indicators.ts",
+      "sha256": "62fbff5b2b8b690329f338b43af6768dfdcd52dec218ef304a3aeb5b8e9238ec"
+    },
+    {
+      "file": "src/link-layout.ts",
+      "sha256": "320492a043400b914185a81b6b91ecde8de54fa004c14dff71f3b9cd755eaf68"
+    },
+    {
+      "file": "src/link-medium.ts",
+      "sha256": "ac8d49ae8389ffb1c7714f06909797c010bbd5d45d82799276561cdcda164814"
+    },
+    {
+      "file": "src/mac-aging.ts",
+      "sha256": "c55db97eb731b4928e9fb6a6fdb8e7d989ef3e8323a971d4d17645776e6a0688"
+    },
+    {
+      "file": "src/mac-table.ts",
+      "sha256": "8ad8ae4c9bcd770f4b63e4e2ea578bc716280999f77e915b048775175fc946f2"
+    },
+    {
+      "file": "src/main.ts",
+      "sha256": "01fabb18e86c80dc326dcafcebbd73710ff41985cf78420973ff802004f23d29"
+    },
+    {
+      "file": "src/management.ts",
+      "sha256": "6235bb352b2e22bd86e27b4235f9aa71570905ae9c9b8e60d796fa0bbb84bc58"
+    },
+    {
+      "file": "src/model-driven-management.ts",
+      "sha256": "e0b70f8492a9115a595069faeb17fb8d060d8967c5d9ec71f56140cf4ea73690"
+    },
+    {
+      "file": "src/model.ts",
+      "sha256": "bea6197aaeea4aa6b3171547653a6a76d562ee0b5884bbbfdd30e26b9477e114"
+    },
+    {
+      "file": "src/msdp.ts",
+      "sha256": "f6bcd268fac623a6e8b6437f21388b2ce17dbbf34366df1ac82548df82464fcc"
+    },
+    {
+      "file": "src/network-tools-ui.ts",
+      "sha256": "95ed577f071ce4e0eddcf2a02395dedae84b58408c055bf59e9358b87e9f9c17"
+    },
+    {
+      "file": "src/node-icons.ts",
+      "sha256": "780a8bffdc12776e5d3b666e2836e3a3fd81ef85836de5c7dbee03d777d8ac58"
+    },
+    {
+      "file": "src/ntp-auth.ts",
+      "sha256": "8b8e77f34a276eebfe9d73c910741c6553382d05d1c7456eb50bab6593c3f0ae"
+    },
+    {
+      "file": "src/ospf-packets.ts",
+      "sha256": "0b4d95c8e5eb07990a6614fd7d03570a141b0f7284cc1b2123e291c4587d5e82"
+    },
+    {
+      "file": "src/packet-policy.ts",
+      "sha256": "935a268673869e4bf064e5b36a9169a3774a79bcc24e3b04daac2f5e1c655ab4"
+    },
+    {
+      "file": "src/packet-view.ts",
+      "sha256": "48664ecfa7b84e7ff41dd723acd286a3f574dfc63a9fc9422a5f4c13d3ec1927"
+    },
+    {
+      "file": "src/persistence.ts",
+      "sha256": "6481ec7b59c72ada82eceaf2f3729b891be9c1110d34cb02a3a613e42d8e32bc"
+    },
+    {
+      "file": "src/phone-ui.ts",
+      "sha256": "b9e09ffa3bee5e0605438ae94af9644e21226d258b9324046bdb73e89f2ee0c2"
+    },
+    {
+      "file": "src/phone.ts",
+      "sha256": "bb723918b9c8c57498d2d2318eaeb8405b13e262a0793aca05aa100e5ac29f1c"
+    },
+    {
+      "file": "src/poe-ui.ts",
+      "sha256": "9c1732894bd6f49d2b5d82b2ada24db7d4f1acb99892c56707b8797a45323e55"
+    },
+    {
+      "file": "src/poe.ts",
+      "sha256": "aed9cfaadfa18f8a3cd74c256fd342a06a48cc3d7357f084ee08cf411c29d57c"
+    },
+    {
+      "file": "src/qos-congestion.ts",
+      "sha256": "bd8b99a3a2205f7b578029198e002d257b8e5df7720107456685eac061dd91e8"
+    },
+    {
+      "file": "src/qos-scheduler.ts",
+      "sha256": "47726bc175f916d8dfabbc7a1b9fccc2fc44ae015bd62660eaadea5d87c77976"
+    },
+    {
+      "file": "src/record-map.ts",
+      "sha256": "5353bedc6a269437c82f3d4f5188c6270498065fb82f989681f6c3e220fa1426"
+    },
+    {
+      "file": "src/remote-span.ts",
+      "sha256": "d5f076d36a1160e57da3a55d33909f643ebbe615af9b65b04c0e23c48084cdbf"
+    },
+    {
+      "file": "src/route-resolver.ts",
+      "sha256": "54beaa567bc81328a374dc85066c35d2c9e80f194fdd4c236120f137609675db"
+    },
+    {
+      "file": "src/routing-scope.ts",
+      "sha256": "39275e751111417475bc1cd406dce0ee0b10cb0971e9c4c2107e860ff4f9f3d2"
+    },
+    {
+      "file": "src/services-ui.ts",
+      "sha256": "fa694fe754f07535d25aaf4129695435f3adfd4a4677d0140e18d0ce5b611601"
+    },
+    {
+      "file": "src/shell.html",
+      "sha256": "7d7e6e353846ec80d46abeccc3a27ec6a559b4f5301fb9e20eb1bf0b5b3b891a"
+    },
+    {
+      "file": "src/simulation-ui.ts",
+      "sha256": "67dec69c3f8d9da32ce551faf08ceb7715faf3054756587ca22d869e10573985"
+    },
+    {
+      "file": "src/sla.ts",
+      "sha256": "6e3cf38cfe37fb95133ab0dce8ddac94c2517f56d6c4d500751fa51fd37c9ddc"
+    },
+    {
+      "file": "src/snmp-manager-config.ts",
+      "sha256": "c2c05e72b7b7132c4a5b2a4d29274d4ec1c828917364cb8d8ffecd2f175e234b"
+    },
+    {
+      "file": "src/snmp-manager-ui.ts",
+      "sha256": "86bade24b7039c84c8e4ddf9de6e4c624bc6d4af0d938f86e93cf76fe3a701df"
+    },
+    {
+      "file": "src/snmp.ts",
+      "sha256": "12201cdec8c6e3febf4c80721d0bfdc7057b209bdfcc5a416eb5e669f8746b82"
+    },
+    {
+      "file": "src/ssh-files.ts",
+      "sha256": "61512c07418294fa9d00b9e833ef9729088de16656c40ec9b9a4963ecd90bd36"
+    },
+    {
+      "file": "src/standalone-ap.ts",
+      "sha256": "6f8281fbb5afbac341fdd79b335727bcd62a75663619719bb68fe5c34c6e9c97"
+    },
+    {
+      "file": "src/styles.css",
+      "sha256": "c608c29165f5abcebdda3c8c46ab7bf5ddbb6b0c1cf07ddc6b82a3310f979cc7"
+    },
+    {
+      "file": "src/switching-messages.ts",
+      "sha256": "c1e111cff284048bdb85056969131e53c37a66803941397d00cf4f2d9ecde463"
+    },
+    {
+      "file": "src/tcp-channel.ts",
+      "sha256": "e467ff8277e7fdfdc4da7d1071206df2714752e5fba3d85bd0090b0a1fc7950f"
+    },
+    {
+      "file": "src/tooltips.ts",
+      "sha256": "5b413b64dc0614b2d87420d672d341448c918fe6e9392a4780a1d114fedff9a2"
+    },
+    {
+      "file": "src/tracking.ts",
+      "sha256": "adc5885a0b12d9bdf1fe0a8fcadcde6a0687c40637234ef311cca3f16e5bba81"
+    },
+    {
+      "file": "src/unix-cli.ts",
+      "sha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+    },
+    {
+      "file": "src/windows-cli.ts",
+      "sha256": "b2fa25f7bd12dafe2439498d936c45a17ee15920bb1f72d241da9fd681a8c2b2"
+    },
+    {
+      "file": "src/wireless-controller-form.ts",
+      "sha256": "c18dcde3b56776c6d8c5f2d177794c4e6f2b75b192554cd093c19c4dc42cf1d7"
+    },
+    {
+      "file": "src/wireless-model.ts",
+      "sha256": "5269ce51919ab50b80a48023d8e1f240ad3c1b0be1a74317f97b942e68bc6e4e"
+    },
+    {
+      "file": "src/wireless-policy.ts",
+      "sha256": "b22a7d7458fc512931a701c3437ce2be086e5b17741905d908e291094acbaca5"
+    },
+    {
+      "file": "src/wireless-security.ts",
+      "sha256": "a02acc9f2cb3749f9db69236185ba6b3a57c3b2065f6df4242269eefb1cfd29b"
+    },
+    {
+      "file": "src/wireless-ui.ts",
+      "sha256": "47177246aea4d41522d74537c3ac333006f25fd7619f66af0f8d28853ca78ce4"
+    },
+    {
+      "file": "src/wireless.ts",
+      "sha256": "5edfe969791ff34ec80260b44bd345cd41de5088163abcb6334cd132c6bb3a23"
+    },
+    {
+      "file": "src/wlc-administration.ts",
+      "sha256": "ec0770870b64d78057f9215f3a50979cb3a21bd5d3d895c88124e5a9e887e046"
+    },
+    {
+      "file": "src/wlc-monitoring.ts",
+      "sha256": "b027ae073db9fd236d7fcbbde67cfd3425b9c96008382ed7a500ae4939a606f4"
+    },
+    {
+      "file": "src/wlc-reference-ui.ts",
+      "sha256": "620d546024a7c019705c6d4f3327757124720a8e9e56c5af31fe60b8b150375c"
+    },
+    {
+      "file": "tests/aaa-accounting.test.ts",
+      "sha256": "a9fffaef9424f8234ba247661ff4ed0ab733e42967886a09c899ad53f1b52bf8"
+    },
+    {
+      "file": "tests/alignment.test.ts",
+      "sha256": "171c77be85b1c0dcee80ad3999f022a971015cd00a08ee5e0b7d093751a6ece4"
+    },
+    {
+      "file": "tests/ap-controller-config.test.ts",
+      "sha256": "f4a7789d8361015435f9a4e46abb17cf3112c1ae6130180490fd48d0f20c286d"
+    },
+    {
+      "file": "tests/automation.test.ts",
+      "sha256": "0ade102f7dd2eb0fe8cea0f87a6e411a0160efedcff759b327b3f807cca512cc"
+    },
+    {
+      "file": "tests/bgp-compat.test.ts",
+      "sha256": "22c84b3298d7244495c42ffc809ba36c201ac92e2b1028157c4a6bb7ae3af1e0"
+    },
+    {
+      "file": "tests/bgp-dampening.test.ts",
+      "sha256": "b3bc0b7877a2c6a3ddce0cdb11a05770b192b84b6e9a41dfe73910f1e5cf1b66"
+    },
+    {
+      "file": "tests/bgp-multiprotocol.test.ts",
+      "sha256": "c8a762ed6568ad8336bfe4795ae80d6441c87f4b5919e4018d02339652d7ebb4"
+    },
+    {
+      "file": "tests/bgp-policy.test.ts",
+      "sha256": "a5034b8860e6688187372b8a2fa136c25076b0fa880bdd752e826d4ec54e48cc"
+    },
+    {
+      "file": "tests/bgp-session.test.ts",
+      "sha256": "da67a751645784674de2f836a0d58219d3b2068a3c40e64c99f36cedc5265904"
+    },
+    {
+      "file": "tests/cli.test.ts",
+      "sha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f"
+    },
+    {
+      "file": "tests/command-parity.test.ts",
+      "sha256": "6151e0c352d55d1dcb03b102efc526023fe87314abaccff46ab40879ad32b7a1"
+    },
+    {
+      "file": "tests/control-plane-cli.test.ts",
+      "sha256": "2711c213adb96d85c866f6a4273122292814c223d9e4dd29ffc2b32abfaf873e"
+    },
+    {
+      "file": "tests/control-plane.test.ts",
+      "sha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6"
+    },
+    {
+      "file": "tests/core.test.ts",
+      "sha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5"
+    },
+    {
+      "file": "tests/discovery.test.ts",
+      "sha256": "eb033cee0df666bee8e72b581ebf746c5eb209de5eb7e13d248e304baa2f6774"
+    },
+    {
+      "file": "tests/dns-service.test.ts",
+      "sha256": "b48b0fb69d6bc6f9aca107486cec6b6f1e027c7958d5753ea90f3aaa1201a563"
+    },
+    {
+      "file": "tests/eigrp-auto-summary.test.ts",
+      "sha256": "e9508738a54df6badfd8035adcd3ba7475586b1490fd07ba715730781f48e384"
+    },
+    {
+      "file": "tests/eigrp-bfd-persistence.test.ts",
+      "sha256": "d6251baced1d82b0beaddfa5223bc364f830db5a80708ff17cea4883c929a3f1"
+    },
+    {
+      "file": "tests/eigrp-summary-metric.test.ts",
+      "sha256": "a1930a598e1151b958711395212b45342a17d402188bfd5945e4284ab53913f6"
+    },
+    {
+      "file": "tests/eigrp-updates.test.ts",
+      "sha256": "ca83da2b73a694302e20a8e9f89fac0e4b6b3000668b312e23d2818653cae47f"
+    },
+    {
+      "file": "tests/endpoint.test.ts",
+      "sha256": "e7b798699ab697b4f32003ab12dfc8f17eccd9b13a9f8eefd3b1be7969ba3782"
+    },
+    {
+      "file": "tests/ethernet-physical.test.ts",
+      "sha256": "2a9f54733868a0e7e3b1349f70dcb09b42b23eb949df1839e848e4bf1d698eb6"
+    },
+    {
+      "file": "tests/exam-routing-practicals.test.ts",
+      "sha256": "9f009b714bac49c6bb471872f5f75a559e99347db02104bcc5406eab9fc6c3c7"
+    },
+    {
+      "file": "tests/fhrp-packets.test.ts",
+      "sha256": "b99907d381419edfc88a8869d3ce666f42c8b3429d6fdeedab8b7af3cffd82e9"
+    },
+    {
+      "file": "tests/fixtures/phone-lab.ts",
+      "sha256": "42366e1833e4d61fdfc185dc52b1720588e7cb3529da486e34998a635c1f80cc"
+    },
+    {
+      "file": "tests/fixtures/wireless-lab.ts",
+      "sha256": "53fe6d2f6aff9b116493f4ce1a0a54281eddc06d6ae8ab63dd74c8bb4bc1bcfd"
+    },
+    {
+      "file": "tests/ftp-files.test.ts",
+      "sha256": "f2b3e0ce3be69e2792e7a89f042f9d0e685b4e4f39333107717196ad492e2909"
+    },
+    {
+      "file": "tests/ftp-gui.test.ts",
+      "sha256": "f96e9c94e519a59321e974de9d3a9bef351b03bd38959c76da25adfdc8005d6d"
+    },
+    {
+      "file": "tests/http-service.test.ts",
+      "sha256": "7191c99a7c270f861d94143049a78cffc924c4f3f928a6bb57a74a878a35b6d0"
+    },
+    {
+      "file": "tests/igmp-snooping.test.ts",
+      "sha256": "590243a485ecc0799ba9583a86d344f84070547c47ed8f713ac889afb47c93fc"
+    },
+    {
+      "file": "tests/ios-ftp.test.ts",
+      "sha256": "dd9a5f1ededd8d2422d491278283dae8a7f8529c70432ddb5833f30d1b44346d"
+    },
+    {
+      "file": "tests/ios-platform-compat.test.ts",
+      "sha256": "fde0c6662df65699f906c182a220c2f6eb4310dbfe718c4d5397e527170e115d"
+    },
+    {
+      "file": "tests/ios-service-compat.test.ts",
+      "sha256": "f0e41114c9ce494acd0f8b977a2bc082c83c60b79d14aacf33e3b07c7d16e065"
+    },
+    {
+      "file": "tests/ios-show-enterprise.test.ts",
+      "sha256": "ded5ee1f01ee13603867223687462327e6f93ee99391210adb559c9eba6d6181"
+    },
+    {
+      "file": "tests/ios-show-operational.test.ts",
+      "sha256": "3faca0a39a84f1089aad57c846f16061305429c4afd3de014b3a4146f730e35e"
+    },
+    {
+      "file": "tests/ios-show-switching.test.ts",
+      "sha256": "85a65edc92c73b43bc51d5e5b18e88ab06356ceadcb3aa3384aac5b2bff7cd95"
+    },
+    {
+      "file": "tests/ios-show.test.ts",
+      "sha256": "53d7e46300b5850536a1d905b631153eab9c89709b2d252ba4b088b99abd93e6"
+    },
+    {
+      "file": "tests/ios-syntax.test.ts",
+      "sha256": "536b35ca8f1f6308d28a3f4558e25cbb9eae6cfdb2a0a685915790d73bd76362"
+    },
+    {
+      "file": "tests/ios-system.test.ts",
+      "sha256": "990b8bb6b6455aec374973d546bdbf6dc3e69ccc9d7faf251b84221e4ceeab6b"
+    },
+    {
+      "file": "tests/ios-terminal.test.ts",
+      "sha256": "a0fe6628eacc4d6bd44440790feffa13f79c5c103fe5fd57a55777d0009618d4"
+    },
+    {
+      "file": "tests/lessons.test.ts",
+      "sha256": "4b081a40a308504aa4eb652c654dab80059e9903317df8e71bf4b06399d539b7"
+    },
+    {
+      "file": "tests/link-indicators.test.ts",
+      "sha256": "5f2f9459328de9e73ff9fa2bf6bf496341ccb996c8675ec66f596c5c4397164b"
+    },
+    {
+      "file": "tests/link-layout.test.ts",
+      "sha256": "f65f61bb2805b2759a72b2e99da28b55f9cd7b56580216511d9b55829423b284"
+    },
+    {
+      "file": "tests/link-medium.test.ts",
+      "sha256": "c302866cf07e6aebc436026c9cc6b533457b639dea3be11e08eb75354a91d226"
+    },
+    {
+      "file": "tests/mac-aging.test.ts",
+      "sha256": "f3f4ed3cc127d9da472cd07164547f4aa68a41183baaff8c2b6fd8d27c6f9147"
+    },
+    {
+      "file": "tests/mac-capacity.test.ts",
+      "sha256": "d1e5472320a6994c4573a2c0777f0a23c70a0df0e7fc10b90ea0936831a6d962"
+    },
+    {
+      "file": "tests/management.test.ts",
+      "sha256": "8c3e96cfd78ed8cf680dfa74bf4b0bf2c2b849330dc45dbac1456cdc714d9e1f"
+    },
+    {
+      "file": "tests/model-driven-management.test.ts",
+      "sha256": "414c1c7d7a3956443ffd615fdbd6c03e8646f8a3106b5135145f6a6581d81fe3"
+    },
+    {
+      "file": "tests/msdp.test.ts",
+      "sha256": "5a832ebb80ca2cba9fb8291abe562987b4518e8f3136675c3fd983e57ca978dc"
+    },
+    {
+      "file": "tests/ospf-area-auth.test.ts",
+      "sha256": "23a15027ec6d4704f623fafce8cb78bea85035dbcf80b01912512e0652dc1d63"
+    },
+    {
+      "file": "tests/ospf-control-plane.test.ts",
+      "sha256": "d34ba15ed6c72fb3cee9b0bba5e1623bee0811de59995917f168b22e46860bbc"
+    },
+    {
+      "file": "tests/ospf-packets.test.ts",
+      "sha256": "a46e927cde0e6e1862a99689d943f354a6310922019be0177844861d2232bb97"
+    },
+    {
+      "file": "tests/packet-view.test.ts",
+      "sha256": "e382a0016470f0a7cf84b89c99db9e604ee85ddaba5707a14404df48e1a1d674"
+    },
+    {
+      "file": "tests/parser-audit-regressions.test.ts",
+      "sha256": "29a0df8603f0b4e1a5008c070bb142d6b5db2d726b241eb97919559c2639a7cc"
+    },
+    {
+      "file": "tests/pc-dhcp-default.test.ts",
+      "sha256": "1dc3c7a0b093c8989470511c77e85666da747a951be0b7e8538ec2d9649d0dff"
+    },
+    {
+      "file": "tests/persistence.test.ts",
+      "sha256": "b9a836b5dfbba71f93a0aa47ff6ee5729ea079fdc59f766583553c32abf09425"
+    },
+    {
+      "file": "tests/phone-audit.test.ts",
+      "sha256": "03686a4f30164420b5a47b86afb242eedd97d91768500332347353f4cd7dbd36"
+    },
+    {
+      "file": "tests/phone.test.ts",
+      "sha256": "00436d1c7e4a4aafc65770ba012a1df9b8d864b647abe77eb33d8c211fae3372"
+    },
+    {
+      "file": "tests/pim-shared-tree.test.ts",
+      "sha256": "4fd19a4034169c258d4c796af9571044b80c350e544cbba291a459e9172007ff"
+    },
+    {
+      "file": "tests/platform-fidelity.test.ts",
+      "sha256": "7d2e68279294de7c1e8d2d5c6997d18c09616b437db1e4a0a9810a5c10f039dc"
+    },
+    {
+      "file": "tests/poe.test.ts",
+      "sha256": "31a2804d9e8b9b3b95ce5a12b21f430b1729ed2d9690355c92fc3f8c2d043f73"
+    },
+    {
+      "file": "tests/policy-closure.test.ts",
+      "sha256": "ec4445d3c580cb3f7f918ff210aecdbe48e7ed7552efb4c8c3cabdd46da888f9"
+    },
+    {
+      "file": "tests/policy-continuation.test.ts",
+      "sha256": "0e567b5a86cab0d18a8909061a13e694ba1f225bcb475e1d8fda46062a87994f"
+    },
+    {
+      "file": "tests/qos-congestion.test.ts",
+      "sha256": "5f210fd7529ecb89832e408f1035c2763432a18f78e97aa2e986a782bcab9040"
+    },
+    {
+      "file": "tests/qos-parity.test.ts",
+      "sha256": "9f124e95ec6890ca7e436f2ab9b0a66029ea9d32134a539b64515f3e6fc04a68"
+    },
+    {
+      "file": "tests/qos-scheduler.test.ts",
+      "sha256": "ea211c2dacd70e0866b139e58c95f6b263373cb77b5d1f4a9050e7ebbd8c5775"
+    },
+    {
+      "file": "tests/record-maps.test.ts",
+      "sha256": "0a4f6e6df7b8987d6a39ef8d6f4cbf8741f8fc7a5e16ae3e1ac156f094650872"
+    },
+    {
+      "file": "tests/reference-closure.test.ts",
+      "sha256": "0c8ff6a28a7e27e2dce3033ec922218ed056295058b0e8f536a7b399d5e4b7cc"
+    },
+    {
+      "file": "tests/remote-span.test.ts",
+      "sha256": "f1c8feecd72afce3983407ccb3d8f52031ae449c4725c3016b2c628749466617"
+    },
+    {
+      "file": "tests/route-resolver.test.ts",
+      "sha256": "f70694e7e8c52bf3531d46c51e3d4c194e5ee56a6211a386328bd6f2e05a8fba"
+    },
+    {
+      "file": "tests/routing-compat.test.ts",
+      "sha256": "be2b63d1174d191919bcc353b15e954e872eae0243312c85d348b46de0a2771c"
+    },
+    {
+      "file": "tests/routing-vrf.test.ts",
+      "sha256": "0afb49e51d6e9088f8aeb3c5b4ba87a90dbc94870d542554d50e32830eaac1b5"
+    },
+    {
+      "file": "tests/services-ui.test.ts",
+      "sha256": "d18c85e7a18861ab4059eedfa01546295870f3ff0ced08c1c4e85918fcc997bc"
+    },
+    {
+      "file": "tests/snmp-advanced.test.ts",
+      "sha256": "8ecec49241daed90111db5f77da85ec0c3c94ece8a369754bc4d44abf7716597"
+    },
+    {
+      "file": "tests/snmp.test.ts",
+      "sha256": "a8c575e1a4941f9fb7c0e35d1c4fee2d85219861d193ea21370c8043fb9d7a44"
+    },
+    {
+      "file": "tests/ssh-files.test.ts",
+      "sha256": "0b114df56be61dabc7b21bf964f9613a01227fd3ed7bc9889f6364c90fe3c939"
+    },
+    {
+      "file": "tests/standalone-ap.test.ts",
+      "sha256": "0062fa4906d5327a3db0a972e4748b6a98b93623ea141651550bb3b80fac1ad2"
+    },
+    {
+      "file": "tests/switching-compat.test.ts",
+      "sha256": "068e693053b769e104449417cb31b24ec3275f3ffe73bb2c0f54d1d019b1927e"
+    },
+    {
+      "file": "tests/switching-messages.test.ts",
+      "sha256": "18a4c808fa7f19fadb966e7afedf5eb688ed269751887362f111ee4b2bfe4928"
+    },
+    {
+      "file": "tests/terminal-viewport.test.ts",
+      "sha256": "c23ca760dd7b5eed0f57a55a4be5804a1af5c46b56aca5915da670f01b76e030"
+    },
+    {
+      "file": "tests/tracking.test.ts",
+      "sha256": "ef65e75159cbaee4b57af793feaf1972856fd90fceed6b1c443a7456881872b7"
+    },
+    {
+      "file": "tests/unix-cli.test.ts",
+      "sha256": "0ef80be3ea96e1e2df5bc41420d251e45fc05120005181300e192eabd605e1cb"
+    },
+    {
+      "file": "tests/windows-cli.test.ts",
+      "sha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e"
+    },
+    {
+      "file": "tests/wired-fidelity.test.ts",
+      "sha256": "38df6a5c2b4c45953eb55d9c2f2d93e1ca6f1d3fc95a79e2dc8808212de8e68d"
+    },
+    {
+      "file": "tests/wired-integration-review.test.ts",
+      "sha256": "30a022fc8a48c074dfb79210cf52fbaace9e13ab11fd7059d728f059b53a8776"
+    },
+    {
+      "file": "tests/wireless-wpa3.test.ts",
+      "sha256": "1021b09aca958ce8cb413c8dfd29b41a3e0c90a820ba067b33514050dd020675"
+    },
+    {
+      "file": "tests/wireless.test.ts",
+      "sha256": "4e3884c27d566426f0ed36fd2d11d8942e2d5974897167406c5bbaa755e94239"
+    },
+    {
+      "file": "tests/wlc-administration.test.ts",
+      "sha256": "e55eef7014833ae68bf0b4b77c400f2ab5db27bbe711ce31ccbfdb7c1dc11099"
+    },
+    {
+      "file": "tests/yaml-files.test.ts",
+      "sha256": "0e3c130f24d040584807a293fb8c34e2fd99f22e4c16b90951cb0ba6d18a8097"
+    },
+    {
+      "file": "package.json",
+      "sha256": "168bc30cd402b65e0839d45bae5938d72bc327fd355586e8a0297228a1cdede7"
+    },
+    {
+      "file": "package-lock.json",
+      "sha256": "d5a4c388b67927a3fcc685d8312e69b2883ca01b738f550262c2f047d8981e41"
+    },
+    {
+      "file": "tsconfig.json",
+      "sha256": "d8ed4e8648bed14458a848eadac4109feb0cd4ccf88dbc82fd94d5ed5c7b3dfb"
+    },
+    {
+      "file": "scripts/build.mjs",
+      "sha256": "7bda0339515548cd4e0d12212f2df6e7030fb39f3feab1220dcee00f18d310ff"
+    }
+  ],
+  "after": [
+    {
+      "file": "src/aaa-accounting.ts",
+      "sha256": "50f9f7622911f0ae0fe73f7ecb3b192cb0961b6c1fefd59a77f830959f2fa6ba"
+    },
+    {
+      "file": "src/aaa-service.ts",
+      "sha256": "e8f3f5fbb89d4a281d5039243a84f743834cb4f0804701a3275dfad5c2c4f2d0"
+    },
+    {
+      "file": "src/alignment.ts",
+      "sha256": "f24e493c7cd8fb5e094ad38b690e59ab6422c61bf6a28afbde9bbab5caa4eee2"
+    },
+    {
+      "file": "src/ap-controller-view.ts",
+      "sha256": "59ee059361c53187b55a25f9db19b0b8ceaed720a8d445d36c8d9840479f606e"
+    },
+    {
+      "file": "src/arp-binding-acl.ts",
+      "sha256": "938d480f0574916adb4c35b92c4e4a8ce8d685ececf4c647325877cb3d5b76ae"
+    },
+    {
+      "file": "src/assets/networksim-logo.png",
+      "sha256": "cc1512fd37c33b2e9f024e1bb90e4d83420648b984024e34be6ac3079c2b93e0"
+    },
+    {
+      "file": "src/assets/node-icons.png",
+      "sha256": "b1b1c1dbc628291f73b1a17e30a21d15f927d659423b1a8a9799ac7cdc7c9a1c"
+    },
+    {
+      "file": "src/assets/server-icon.png",
+      "sha256": "20938b46fac50aef1bedb839fcea9786f03d553fb4acfe8fa1d30929ec0069c9"
+    },
+    {
+      "file": "src/assets/wireless-icons.png",
+      "sha256": "c62b2cc337e24db91b46d8a9cc39363d42435424690bd5bda89c742d6cff33c7"
+    },
+    {
+      "file": "src/automation.ts",
+      "sha256": "35335e64d32da7ff3fba92eb7850732fdc10268e99fde6806f251ca283610518"
+    },
+    {
+      "file": "src/bgp-compat.ts",
+      "sha256": "dba4307b6a07846dfea522dce3e5b3bac21d55375558637d2ff2202f17af9657"
+    },
+    {
+      "file": "src/bgp-dampening.ts",
+      "sha256": "e62e78b6f5d579ab31a4ab9afa70936d622ce957a6c1e41d4f6594be67b5b2a3"
+    },
+    {
+      "file": "src/bgp-policy.ts",
+      "sha256": "0a329f1ae81e161f0278071828e98a927e3baca91856822e8783eaf9739d97a0"
+    },
+    {
+      "file": "src/bgp-session.ts",
+      "sha256": "a12dfc5920cc0c00bf9e678fc8860cd6f834ec99e2c6956d6a74afca7be8f4fa"
+    },
+    {
+      "file": "src/cli.ts",
+      "sha256": "43eac0ea22100892175146b727badf420524997fb4be88f10a1ede48a5111095"
+    },
+    {
+      "file": "src/clock.ts",
+      "sha256": "23384b393d2ca982bfa69c702bf476ec063e85473a74b33dbaf9d648b91cda69"
+    },
+    {
+      "file": "src/config-renderer.ts",
+      "sha256": "79fdeb1bea16b17ab8594bc720f88ba3d11eef96a4951ac88e0e12fba51cad38"
+    },
+    {
+      "file": "src/control-plane.ts",
+      "sha256": "67f79f10fc4815e3f31c68789e479187eeaa6a04d12ae409c62a90283b0601fd"
+    },
+    {
+      "file": "src/credentials.ts",
+      "sha256": "7281bddf40e9917cfcde5521d0a70eb39c2b30b1aac26674fd1e5b1462a4a0b4"
+    },
+    {
+      "file": "src/crypto.ts",
+      "sha256": "29276403efef07892e93f228da7ec580c0f3385a9f2d5a903d009567df09a8b0"
+    },
+    {
+      "file": "src/discovery.ts",
+      "sha256": "d5dcb722034015246a8ba4e732e6bb26dbf5f16aae091d2448b0b6a8fd2eb0ed"
+    },
+    {
+      "file": "src/dns-service.ts",
+      "sha256": "bee8cf88869436e471420f8229ea75f8a135de9eaef45e5e827f3ad81ac61d29"
+    },
+    {
+      "file": "src/eigrp-updates.ts",
+      "sha256": "7b48db7f68486285a35766655c45e38c4268e4f059835593a49d009f31356f03"
+    },
+    {
+      "file": "src/endpoint.ts",
+      "sha256": "1a83ed29d862340f2fd6e7ded10bca4de2c06fecd1678e2042c4c887c936887f"
+    },
+    {
+      "file": "src/engine.ts",
+      "sha256": "d3b507fad1cdab29d6e07deb36d2fd05586e5fd46de4e55e4fe9296e69399042"
+    },
+    {
+      "file": "src/ethernet.ts",
+      "sha256": "073e8c822c41abe2d04614399217e9f984b92ff14610bd97f8dda9b8c1796cf3"
+    },
+    {
+      "file": "src/fhrp-packets.ts",
+      "sha256": "d2dd12154798c931393099641ed006261de102ab32f4a3f6e5f8ca1fac5b9be6"
+    },
+    {
+      "file": "src/fhs-tracking.ts",
+      "sha256": "c21c80e13f4a9ed94e9b0fa9444489713951fd9be55fc2d97270b3e3742621fa"
+    },
+    {
+      "file": "src/filesystem.ts",
+      "sha256": "1b6ad1181e37079313a21a31eb231f4e7bf4c1ec82996c032713fa1b8efb6a3e"
+    },
+    {
+      "file": "src/ftp-files.ts",
+      "sha256": "ba40cb167453e6b983eeaf5c8b482afd2a0cda98c1cf14695b0ae607503a6356"
+    },
+    {
+      "file": "src/ftp-ui.ts",
+      "sha256": "6a34d0d477ebbb32eb6936181c6b22e6834ac8610d179dac8794ae5d5dcdb2f9"
+    },
+    {
+      "file": "src/host-os.ts",
+      "sha256": "1a9803771c5488ec910fb90d04f2c51100648ea52d9f8cd70b7632f149e14be1"
+    },
+    {
+      "file": "src/http-service.ts",
+      "sha256": "a916159a3dc89c28eea73d5639d0f8a7b50abc033a4f4327ec1fbaed04780e0f"
+    },
+    {
+      "file": "src/icons.ts",
+      "sha256": "d6881d5abc2ba029d7a62162388a2bdce9cfa5a23b990b20720e6c9141b37099"
+    },
+    {
+      "file": "src/igmp-snooping.ts",
+      "sha256": "26ef2dfd0538313ccff6ecc1ea3ba1ab05d635e0d99ac1c7202a1c04a5152e33"
+    },
+    {
+      "file": "src/image-assets.d.ts",
+      "sha256": "ca3b7e0af4e2f14b1facb63ceb1bfaaf017cfb0592e987695bee37d8c9151240"
+    },
+    {
+      "file": "src/ios-debug.ts",
+      "sha256": "dc4ec0c2564fb86456e6e8d112dc4ad38335ea6e27c458ab785117af6e7e67f5"
+    },
+    {
+      "file": "src/ios-endpoint.ts",
+      "sha256": "fa005c985648727ab79feb9e0b8eafeac15a334431efafdd4f25251ca3d7662d"
+    },
+    {
+      "file": "src/ios-errdisable.ts",
+      "sha256": "9d08e54a0a3e7d3fdc188254fe5e5aec6b9503b9c7d6fa3157df6297e66bd6fa"
+    },
+    {
+      "file": "src/ios-exec-compat.ts",
+      "sha256": "6fd0cbde85c8900ad715cedd6f7030113f02939f80476a31c7ed1a39453154a4"
+    },
+    {
+      "file": "src/ios-ftp.ts",
+      "sha256": "0419330366b2272120d54d829426289a9125c3e69d44303fcdcf6d3ee3478a59"
+    },
+    {
+      "file": "src/ios-maintenance.ts",
+      "sha256": "5fa8d81f092f6d3b585c9df533aead68e15fb47d2e77550d64b0eee7a43909c1"
+    },
+    {
+      "file": "src/ios-platform-compat.ts",
+      "sha256": "bf6d5a1ec930de3187a2b2337d76cda56d4071357878102b4609cdf799f1348c"
+    },
+    {
+      "file": "src/ios-poe.ts",
+      "sha256": "243e833e19f65b70b68a3441a89f7d1c811d41d67248e69e8c083112a85b847d"
+    },
+    {
+      "file": "src/ios-routing-compat.ts",
+      "sha256": "29dc503b0b66a8df8fd7d479c80159d874acded24330d8d3936cfb25677ba5e0"
+    },
+    {
+      "file": "src/ios-show-enterprise.ts",
+      "sha256": "f6f9fdd0be17b371cbc1eca69c1f5a148eb5060bdc5be11bc1685fc3518e70c1"
+    },
+    {
+      "file": "src/ios-show-operational.ts",
+      "sha256": "da35752f04608497ea4e5f71e3eb413f5b6221eabff8d39507bc20f4df901c01"
+    },
+    {
+      "file": "src/ios-show-switching.ts",
+      "sha256": "a97abb93cadcdf2942a153c354448ccc663d5f53a3ad5cd24270b0afb3c2bcce"
+    },
+    {
+      "file": "src/ios-show.ts",
+      "sha256": "73e27e2792a9167566489e9c38c0a474c88b0071af2f245186c210d70e1b269d"
+    },
+    {
+      "file": "src/ios-snmp.ts",
+      "sha256": "f0b24f295be375803b915b59d0727dcf9f3c4ea9fe5c58b579f9b75ba7061cfb"
+    },
+    {
+      "file": "src/ios-standalone-ap.ts",
+      "sha256": "9e4a7c4a5e384591ab86e24d7a4d2e7fd530bc40ec4c22f4822d1e837059a3c6"
+    },
+    {
+      "file": "src/ios-switching-compat.ts",
+      "sha256": "67ca71e82cd2d52c82be45561e21190c668f84cf46a39e09b085a5450a38bafd"
+    },
+    {
+      "file": "src/ios-syntax.ts",
+      "sha256": "17e308ba9a3a11beb177c99eb20c56942f9633e6ac1d483b2afff97bdffeb564"
+    },
+    {
+      "file": "src/ios-system.ts",
+      "sha256": "9b5964cfe4b5e9727b42437f1a65cd92524d54310697a4e2af10da69e6766680"
+    },
+    {
+      "file": "src/ios-terminal.ts",
+      "sha256": "3be2d786796511b6f0671f6df7ec8e2a83d76e3189896e33a9fc67800c6fd9fd"
+    },
+    {
+      "file": "src/ios-wireless.ts",
+      "sha256": "1718d0298290f13c143ba5d4c8d028e954d7aa387575c808a78bb181852fae3e"
+    },
+    {
+      "file": "src/ip.ts",
+      "sha256": "304052c6f510ca0c510b4f3ffeda0d71605c901dbced2c2df0468502a5129d93"
+    },
+    {
+      "file": "src/ipv6-general-prefix.ts",
+      "sha256": "925849fe2a3d13e5e4e770bf9017c0f6a59877d6647b80b4e3e553bf8763f95c"
+    },
+    {
+      "file": "src/ipv6-services.ts",
+      "sha256": "3769f0e13db21613da8c44731829e00bbd76a3ca4cf0182e564326e34e23ca29"
+    },
+    {
+      "file": "src/lessons.ts",
+      "sha256": "8c9d76a81267cccccc3e93e249c064d51daab5c4b5be3c7be47c4e19a09c33b9"
+    },
+    {
+      "file": "src/link-indicators.ts",
+      "sha256": "62fbff5b2b8b690329f338b43af6768dfdcd52dec218ef304a3aeb5b8e9238ec"
+    },
+    {
+      "file": "src/link-layout.ts",
+      "sha256": "320492a043400b914185a81b6b91ecde8de54fa004c14dff71f3b9cd755eaf68"
+    },
+    {
+      "file": "src/link-medium.ts",
+      "sha256": "ac8d49ae8389ffb1c7714f06909797c010bbd5d45d82799276561cdcda164814"
+    },
+    {
+      "file": "src/mac-aging.ts",
+      "sha256": "c55db97eb731b4928e9fb6a6fdb8e7d989ef3e8323a971d4d17645776e6a0688"
+    },
+    {
+      "file": "src/mac-table.ts",
+      "sha256": "8ad8ae4c9bcd770f4b63e4e2ea578bc716280999f77e915b048775175fc946f2"
+    },
+    {
+      "file": "src/main.ts",
+      "sha256": "01fabb18e86c80dc326dcafcebbd73710ff41985cf78420973ff802004f23d29"
+    },
+    {
+      "file": "src/management.ts",
+      "sha256": "6235bb352b2e22bd86e27b4235f9aa71570905ae9c9b8e60d796fa0bbb84bc58"
+    },
+    {
+      "file": "src/model-driven-management.ts",
+      "sha256": "e0b70f8492a9115a595069faeb17fb8d060d8967c5d9ec71f56140cf4ea73690"
+    },
+    {
+      "file": "src/model.ts",
+      "sha256": "bea6197aaeea4aa6b3171547653a6a76d562ee0b5884bbbfdd30e26b9477e114"
+    },
+    {
+      "file": "src/msdp.ts",
+      "sha256": "f6bcd268fac623a6e8b6437f21388b2ce17dbbf34366df1ac82548df82464fcc"
+    },
+    {
+      "file": "src/network-tools-ui.ts",
+      "sha256": "95ed577f071ce4e0eddcf2a02395dedae84b58408c055bf59e9358b87e9f9c17"
+    },
+    {
+      "file": "src/node-icons.ts",
+      "sha256": "780a8bffdc12776e5d3b666e2836e3a3fd81ef85836de5c7dbee03d777d8ac58"
+    },
+    {
+      "file": "src/ntp-auth.ts",
+      "sha256": "8b8e77f34a276eebfe9d73c910741c6553382d05d1c7456eb50bab6593c3f0ae"
+    },
+    {
+      "file": "src/ospf-packets.ts",
+      "sha256": "0b4d95c8e5eb07990a6614fd7d03570a141b0f7284cc1b2123e291c4587d5e82"
+    },
+    {
+      "file": "src/packet-policy.ts",
+      "sha256": "935a268673869e4bf064e5b36a9169a3774a79bcc24e3b04daac2f5e1c655ab4"
+    },
+    {
+      "file": "src/packet-view.ts",
+      "sha256": "48664ecfa7b84e7ff41dd723acd286a3f574dfc63a9fc9422a5f4c13d3ec1927"
+    },
+    {
+      "file": "src/persistence.ts",
+      "sha256": "6481ec7b59c72ada82eceaf2f3729b891be9c1110d34cb02a3a613e42d8e32bc"
+    },
+    {
+      "file": "src/phone-ui.ts",
+      "sha256": "b9e09ffa3bee5e0605438ae94af9644e21226d258b9324046bdb73e89f2ee0c2"
+    },
+    {
+      "file": "src/phone.ts",
+      "sha256": "bb723918b9c8c57498d2d2318eaeb8405b13e262a0793aca05aa100e5ac29f1c"
+    },
+    {
+      "file": "src/poe-ui.ts",
+      "sha256": "9c1732894bd6f49d2b5d82b2ada24db7d4f1acb99892c56707b8797a45323e55"
+    },
+    {
+      "file": "src/poe.ts",
+      "sha256": "aed9cfaadfa18f8a3cd74c256fd342a06a48cc3d7357f084ee08cf411c29d57c"
+    },
+    {
+      "file": "src/qos-congestion.ts",
+      "sha256": "bd8b99a3a2205f7b578029198e002d257b8e5df7720107456685eac061dd91e8"
+    },
+    {
+      "file": "src/qos-scheduler.ts",
+      "sha256": "47726bc175f916d8dfabbc7a1b9fccc2fc44ae015bd62660eaadea5d87c77976"
+    },
+    {
+      "file": "src/record-map.ts",
+      "sha256": "5353bedc6a269437c82f3d4f5188c6270498065fb82f989681f6c3e220fa1426"
+    },
+    {
+      "file": "src/remote-span.ts",
+      "sha256": "d5f076d36a1160e57da3a55d33909f643ebbe615af9b65b04c0e23c48084cdbf"
+    },
+    {
+      "file": "src/route-resolver.ts",
+      "sha256": "54beaa567bc81328a374dc85066c35d2c9e80f194fdd4c236120f137609675db"
+    },
+    {
+      "file": "src/routing-scope.ts",
+      "sha256": "39275e751111417475bc1cd406dce0ee0b10cb0971e9c4c2107e860ff4f9f3d2"
+    },
+    {
+      "file": "src/services-ui.ts",
+      "sha256": "fa694fe754f07535d25aaf4129695435f3adfd4a4677d0140e18d0ce5b611601"
+    },
+    {
+      "file": "src/shell.html",
+      "sha256": "7d7e6e353846ec80d46abeccc3a27ec6a559b4f5301fb9e20eb1bf0b5b3b891a"
+    },
+    {
+      "file": "src/simulation-ui.ts",
+      "sha256": "67dec69c3f8d9da32ce551faf08ceb7715faf3054756587ca22d869e10573985"
+    },
+    {
+      "file": "src/sla.ts",
+      "sha256": "6e3cf38cfe37fb95133ab0dce8ddac94c2517f56d6c4d500751fa51fd37c9ddc"
+    },
+    {
+      "file": "src/snmp-manager-config.ts",
+      "sha256": "c2c05e72b7b7132c4a5b2a4d29274d4ec1c828917364cb8d8ffecd2f175e234b"
+    },
+    {
+      "file": "src/snmp-manager-ui.ts",
+      "sha256": "86bade24b7039c84c8e4ddf9de6e4c624bc6d4af0d938f86e93cf76fe3a701df"
+    },
+    {
+      "file": "src/snmp.ts",
+      "sha256": "12201cdec8c6e3febf4c80721d0bfdc7057b209bdfcc5a416eb5e669f8746b82"
+    },
+    {
+      "file": "src/ssh-files.ts",
+      "sha256": "61512c07418294fa9d00b9e833ef9729088de16656c40ec9b9a4963ecd90bd36"
+    },
+    {
+      "file": "src/standalone-ap.ts",
+      "sha256": "6f8281fbb5afbac341fdd79b335727bcd62a75663619719bb68fe5c34c6e9c97"
+    },
+    {
+      "file": "src/styles.css",
+      "sha256": "c608c29165f5abcebdda3c8c46ab7bf5ddbb6b0c1cf07ddc6b82a3310f979cc7"
+    },
+    {
+      "file": "src/switching-messages.ts",
+      "sha256": "c1e111cff284048bdb85056969131e53c37a66803941397d00cf4f2d9ecde463"
+    },
+    {
+      "file": "src/tcp-channel.ts",
+      "sha256": "e467ff8277e7fdfdc4da7d1071206df2714752e5fba3d85bd0090b0a1fc7950f"
+    },
+    {
+      "file": "src/tooltips.ts",
+      "sha256": "5b413b64dc0614b2d87420d672d341448c918fe6e9392a4780a1d114fedff9a2"
+    },
+    {
+      "file": "src/tracking.ts",
+      "sha256": "adc5885a0b12d9bdf1fe0a8fcadcde6a0687c40637234ef311cca3f16e5bba81"
+    },
+    {
+      "file": "src/unix-cli.ts",
+      "sha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+    },
+    {
+      "file": "src/windows-cli.ts",
+      "sha256": "b2fa25f7bd12dafe2439498d936c45a17ee15920bb1f72d241da9fd681a8c2b2"
+    },
+    {
+      "file": "src/wireless-controller-form.ts",
+      "sha256": "c18dcde3b56776c6d8c5f2d177794c4e6f2b75b192554cd093c19c4dc42cf1d7"
+    },
+    {
+      "file": "src/wireless-model.ts",
+      "sha256": "5269ce51919ab50b80a48023d8e1f240ad3c1b0be1a74317f97b942e68bc6e4e"
+    },
+    {
+      "file": "src/wireless-policy.ts",
+      "sha256": "b22a7d7458fc512931a701c3437ce2be086e5b17741905d908e291094acbaca5"
+    },
+    {
+      "file": "src/wireless-security.ts",
+      "sha256": "a02acc9f2cb3749f9db69236185ba6b3a57c3b2065f6df4242269eefb1cfd29b"
+    },
+    {
+      "file": "src/wireless-ui.ts",
+      "sha256": "47177246aea4d41522d74537c3ac333006f25fd7619f66af0f8d28853ca78ce4"
+    },
+    {
+      "file": "src/wireless.ts",
+      "sha256": "5edfe969791ff34ec80260b44bd345cd41de5088163abcb6334cd132c6bb3a23"
+    },
+    {
+      "file": "src/wlc-administration.ts",
+      "sha256": "ec0770870b64d78057f9215f3a50979cb3a21bd5d3d895c88124e5a9e887e046"
+    },
+    {
+      "file": "src/wlc-monitoring.ts",
+      "sha256": "b027ae073db9fd236d7fcbbde67cfd3425b9c96008382ed7a500ae4939a606f4"
+    },
+    {
+      "file": "src/wlc-reference-ui.ts",
+      "sha256": "620d546024a7c019705c6d4f3327757124720a8e9e56c5af31fe60b8b150375c"
+    },
+    {
+      "file": "tests/aaa-accounting.test.ts",
+      "sha256": "a9fffaef9424f8234ba247661ff4ed0ab733e42967886a09c899ad53f1b52bf8"
+    },
+    {
+      "file": "tests/alignment.test.ts",
+      "sha256": "171c77be85b1c0dcee80ad3999f022a971015cd00a08ee5e0b7d093751a6ece4"
+    },
+    {
+      "file": "tests/ap-controller-config.test.ts",
+      "sha256": "f4a7789d8361015435f9a4e46abb17cf3112c1ae6130180490fd48d0f20c286d"
+    },
+    {
+      "file": "tests/automation.test.ts",
+      "sha256": "0ade102f7dd2eb0fe8cea0f87a6e411a0160efedcff759b327b3f807cca512cc"
+    },
+    {
+      "file": "tests/bgp-compat.test.ts",
+      "sha256": "22c84b3298d7244495c42ffc809ba36c201ac92e2b1028157c4a6bb7ae3af1e0"
+    },
+    {
+      "file": "tests/bgp-dampening.test.ts",
+      "sha256": "b3bc0b7877a2c6a3ddce0cdb11a05770b192b84b6e9a41dfe73910f1e5cf1b66"
+    },
+    {
+      "file": "tests/bgp-multiprotocol.test.ts",
+      "sha256": "c8a762ed6568ad8336bfe4795ae80d6441c87f4b5919e4018d02339652d7ebb4"
+    },
+    {
+      "file": "tests/bgp-policy.test.ts",
+      "sha256": "a5034b8860e6688187372b8a2fa136c25076b0fa880bdd752e826d4ec54e48cc"
+    },
+    {
+      "file": "tests/bgp-session.test.ts",
+      "sha256": "da67a751645784674de2f836a0d58219d3b2068a3c40e64c99f36cedc5265904"
+    },
+    {
+      "file": "tests/cli.test.ts",
+      "sha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f"
+    },
+    {
+      "file": "tests/command-parity.test.ts",
+      "sha256": "6151e0c352d55d1dcb03b102efc526023fe87314abaccff46ab40879ad32b7a1"
+    },
+    {
+      "file": "tests/control-plane-cli.test.ts",
+      "sha256": "2711c213adb96d85c866f6a4273122292814c223d9e4dd29ffc2b32abfaf873e"
+    },
+    {
+      "file": "tests/control-plane.test.ts",
+      "sha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6"
+    },
+    {
+      "file": "tests/core.test.ts",
+      "sha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5"
+    },
+    {
+      "file": "tests/discovery.test.ts",
+      "sha256": "eb033cee0df666bee8e72b581ebf746c5eb209de5eb7e13d248e304baa2f6774"
+    },
+    {
+      "file": "tests/dns-service.test.ts",
+      "sha256": "b48b0fb69d6bc6f9aca107486cec6b6f1e027c7958d5753ea90f3aaa1201a563"
+    },
+    {
+      "file": "tests/eigrp-auto-summary.test.ts",
+      "sha256": "e9508738a54df6badfd8035adcd3ba7475586b1490fd07ba715730781f48e384"
+    },
+    {
+      "file": "tests/eigrp-bfd-persistence.test.ts",
+      "sha256": "d6251baced1d82b0beaddfa5223bc364f830db5a80708ff17cea4883c929a3f1"
+    },
+    {
+      "file": "tests/eigrp-summary-metric.test.ts",
+      "sha256": "a1930a598e1151b958711395212b45342a17d402188bfd5945e4284ab53913f6"
+    },
+    {
+      "file": "tests/eigrp-updates.test.ts",
+      "sha256": "ca83da2b73a694302e20a8e9f89fac0e4b6b3000668b312e23d2818653cae47f"
+    },
+    {
+      "file": "tests/endpoint.test.ts",
+      "sha256": "e7b798699ab697b4f32003ab12dfc8f17eccd9b13a9f8eefd3b1be7969ba3782"
+    },
+    {
+      "file": "tests/ethernet-physical.test.ts",
+      "sha256": "2a9f54733868a0e7e3b1349f70dcb09b42b23eb949df1839e848e4bf1d698eb6"
+    },
+    {
+      "file": "tests/exam-routing-practicals.test.ts",
+      "sha256": "9f009b714bac49c6bb471872f5f75a559e99347db02104bcc5406eab9fc6c3c7"
+    },
+    {
+      "file": "tests/fhrp-packets.test.ts",
+      "sha256": "b99907d381419edfc88a8869d3ce666f42c8b3429d6fdeedab8b7af3cffd82e9"
+    },
+    {
+      "file": "tests/fixtures/phone-lab.ts",
+      "sha256": "42366e1833e4d61fdfc185dc52b1720588e7cb3529da486e34998a635c1f80cc"
+    },
+    {
+      "file": "tests/fixtures/wireless-lab.ts",
+      "sha256": "53fe6d2f6aff9b116493f4ce1a0a54281eddc06d6ae8ab63dd74c8bb4bc1bcfd"
+    },
+    {
+      "file": "tests/ftp-files.test.ts",
+      "sha256": "f2b3e0ce3be69e2792e7a89f042f9d0e685b4e4f39333107717196ad492e2909"
+    },
+    {
+      "file": "tests/ftp-gui.test.ts",
+      "sha256": "f96e9c94e519a59321e974de9d3a9bef351b03bd38959c76da25adfdc8005d6d"
+    },
+    {
+      "file": "tests/http-service.test.ts",
+      "sha256": "7191c99a7c270f861d94143049a78cffc924c4f3f928a6bb57a74a878a35b6d0"
+    },
+    {
+      "file": "tests/igmp-snooping.test.ts",
+      "sha256": "590243a485ecc0799ba9583a86d344f84070547c47ed8f713ac889afb47c93fc"
+    },
+    {
+      "file": "tests/ios-ftp.test.ts",
+      "sha256": "dd9a5f1ededd8d2422d491278283dae8a7f8529c70432ddb5833f30d1b44346d"
+    },
+    {
+      "file": "tests/ios-platform-compat.test.ts",
+      "sha256": "fde0c6662df65699f906c182a220c2f6eb4310dbfe718c4d5397e527170e115d"
+    },
+    {
+      "file": "tests/ios-service-compat.test.ts",
+      "sha256": "f0e41114c9ce494acd0f8b977a2bc082c83c60b79d14aacf33e3b07c7d16e065"
+    },
+    {
+      "file": "tests/ios-show-enterprise.test.ts",
+      "sha256": "ded5ee1f01ee13603867223687462327e6f93ee99391210adb559c9eba6d6181"
+    },
+    {
+      "file": "tests/ios-show-operational.test.ts",
+      "sha256": "3faca0a39a84f1089aad57c846f16061305429c4afd3de014b3a4146f730e35e"
+    },
+    {
+      "file": "tests/ios-show-switching.test.ts",
+      "sha256": "85a65edc92c73b43bc51d5e5b18e88ab06356ceadcb3aa3384aac5b2bff7cd95"
+    },
+    {
+      "file": "tests/ios-show.test.ts",
+      "sha256": "53d7e46300b5850536a1d905b631153eab9c89709b2d252ba4b088b99abd93e6"
+    },
+    {
+      "file": "tests/ios-syntax.test.ts",
+      "sha256": "536b35ca8f1f6308d28a3f4558e25cbb9eae6cfdb2a0a685915790d73bd76362"
+    },
+    {
+      "file": "tests/ios-system.test.ts",
+      "sha256": "990b8bb6b6455aec374973d546bdbf6dc3e69ccc9d7faf251b84221e4ceeab6b"
+    },
+    {
+      "file": "tests/ios-terminal.test.ts",
+      "sha256": "a0fe6628eacc4d6bd44440790feffa13f79c5c103fe5fd57a55777d0009618d4"
+    },
+    {
+      "file": "tests/lessons.test.ts",
+      "sha256": "4b081a40a308504aa4eb652c654dab80059e9903317df8e71bf4b06399d539b7"
+    },
+    {
+      "file": "tests/link-indicators.test.ts",
+      "sha256": "5f2f9459328de9e73ff9fa2bf6bf496341ccb996c8675ec66f596c5c4397164b"
+    },
+    {
+      "file": "tests/link-layout.test.ts",
+      "sha256": "f65f61bb2805b2759a72b2e99da28b55f9cd7b56580216511d9b55829423b284"
+    },
+    {
+      "file": "tests/link-medium.test.ts",
+      "sha256": "c302866cf07e6aebc436026c9cc6b533457b639dea3be11e08eb75354a91d226"
+    },
+    {
+      "file": "tests/mac-aging.test.ts",
+      "sha256": "f3f4ed3cc127d9da472cd07164547f4aa68a41183baaff8c2b6fd8d27c6f9147"
+    },
+    {
+      "file": "tests/mac-capacity.test.ts",
+      "sha256": "d1e5472320a6994c4573a2c0777f0a23c70a0df0e7fc10b90ea0936831a6d962"
+    },
+    {
+      "file": "tests/management.test.ts",
+      "sha256": "8c3e96cfd78ed8cf680dfa74bf4b0bf2c2b849330dc45dbac1456cdc714d9e1f"
+    },
+    {
+      "file": "tests/model-driven-management.test.ts",
+      "sha256": "414c1c7d7a3956443ffd615fdbd6c03e8646f8a3106b5135145f6a6581d81fe3"
+    },
+    {
+      "file": "tests/msdp.test.ts",
+      "sha256": "5a832ebb80ca2cba9fb8291abe562987b4518e8f3136675c3fd983e57ca978dc"
+    },
+    {
+      "file": "tests/ospf-area-auth.test.ts",
+      "sha256": "23a15027ec6d4704f623fafce8cb78bea85035dbcf80b01912512e0652dc1d63"
+    },
+    {
+      "file": "tests/ospf-control-plane.test.ts",
+      "sha256": "d34ba15ed6c72fb3cee9b0bba5e1623bee0811de59995917f168b22e46860bbc"
+    },
+    {
+      "file": "tests/ospf-packets.test.ts",
+      "sha256": "a46e927cde0e6e1862a99689d943f354a6310922019be0177844861d2232bb97"
+    },
+    {
+      "file": "tests/packet-view.test.ts",
+      "sha256": "e382a0016470f0a7cf84b89c99db9e604ee85ddaba5707a14404df48e1a1d674"
+    },
+    {
+      "file": "tests/parser-audit-regressions.test.ts",
+      "sha256": "29a0df8603f0b4e1a5008c070bb142d6b5db2d726b241eb97919559c2639a7cc"
+    },
+    {
+      "file": "tests/pc-dhcp-default.test.ts",
+      "sha256": "1dc3c7a0b093c8989470511c77e85666da747a951be0b7e8538ec2d9649d0dff"
+    },
+    {
+      "file": "tests/persistence.test.ts",
+      "sha256": "b9a836b5dfbba71f93a0aa47ff6ee5729ea079fdc59f766583553c32abf09425"
+    },
+    {
+      "file": "tests/phone-audit.test.ts",
+      "sha256": "03686a4f30164420b5a47b86afb242eedd97d91768500332347353f4cd7dbd36"
+    },
+    {
+      "file": "tests/phone.test.ts",
+      "sha256": "00436d1c7e4a4aafc65770ba012a1df9b8d864b647abe77eb33d8c211fae3372"
+    },
+    {
+      "file": "tests/pim-shared-tree.test.ts",
+      "sha256": "4fd19a4034169c258d4c796af9571044b80c350e544cbba291a459e9172007ff"
+    },
+    {
+      "file": "tests/platform-fidelity.test.ts",
+      "sha256": "7d2e68279294de7c1e8d2d5c6997d18c09616b437db1e4a0a9810a5c10f039dc"
+    },
+    {
+      "file": "tests/poe.test.ts",
+      "sha256": "31a2804d9e8b9b3b95ce5a12b21f430b1729ed2d9690355c92fc3f8c2d043f73"
+    },
+    {
+      "file": "tests/policy-closure.test.ts",
+      "sha256": "ec4445d3c580cb3f7f918ff210aecdbe48e7ed7552efb4c8c3cabdd46da888f9"
+    },
+    {
+      "file": "tests/policy-continuation.test.ts",
+      "sha256": "0e567b5a86cab0d18a8909061a13e694ba1f225bcb475e1d8fda46062a87994f"
+    },
+    {
+      "file": "tests/qos-congestion.test.ts",
+      "sha256": "5f210fd7529ecb89832e408f1035c2763432a18f78e97aa2e986a782bcab9040"
+    },
+    {
+      "file": "tests/qos-parity.test.ts",
+      "sha256": "9f124e95ec6890ca7e436f2ab9b0a66029ea9d32134a539b64515f3e6fc04a68"
+    },
+    {
+      "file": "tests/qos-scheduler.test.ts",
+      "sha256": "ea211c2dacd70e0866b139e58c95f6b263373cb77b5d1f4a9050e7ebbd8c5775"
+    },
+    {
+      "file": "tests/record-maps.test.ts",
+      "sha256": "0a4f6e6df7b8987d6a39ef8d6f4cbf8741f8fc7a5e16ae3e1ac156f094650872"
+    },
+    {
+      "file": "tests/reference-closure.test.ts",
+      "sha256": "0c8ff6a28a7e27e2dce3033ec922218ed056295058b0e8f536a7b399d5e4b7cc"
+    },
+    {
+      "file": "tests/remote-span.test.ts",
+      "sha256": "f1c8feecd72afce3983407ccb3d8f52031ae449c4725c3016b2c628749466617"
+    },
+    {
+      "file": "tests/route-resolver.test.ts",
+      "sha256": "f70694e7e8c52bf3531d46c51e3d4c194e5ee56a6211a386328bd6f2e05a8fba"
+    },
+    {
+      "file": "tests/routing-compat.test.ts",
+      "sha256": "be2b63d1174d191919bcc353b15e954e872eae0243312c85d348b46de0a2771c"
+    },
+    {
+      "file": "tests/routing-vrf.test.ts",
+      "sha256": "0afb49e51d6e9088f8aeb3c5b4ba87a90dbc94870d542554d50e32830eaac1b5"
+    },
+    {
+      "file": "tests/services-ui.test.ts",
+      "sha256": "d18c85e7a18861ab4059eedfa01546295870f3ff0ced08c1c4e85918fcc997bc"
+    },
+    {
+      "file": "tests/snmp-advanced.test.ts",
+      "sha256": "8ecec49241daed90111db5f77da85ec0c3c94ece8a369754bc4d44abf7716597"
+    },
+    {
+      "file": "tests/snmp.test.ts",
+      "sha256": "a8c575e1a4941f9fb7c0e35d1c4fee2d85219861d193ea21370c8043fb9d7a44"
+    },
+    {
+      "file": "tests/ssh-files.test.ts",
+      "sha256": "0b114df56be61dabc7b21bf964f9613a01227fd3ed7bc9889f6364c90fe3c939"
+    },
+    {
+      "file": "tests/standalone-ap.test.ts",
+      "sha256": "0062fa4906d5327a3db0a972e4748b6a98b93623ea141651550bb3b80fac1ad2"
+    },
+    {
+      "file": "tests/switching-compat.test.ts",
+      "sha256": "068e693053b769e104449417cb31b24ec3275f3ffe73bb2c0f54d1d019b1927e"
+    },
+    {
+      "file": "tests/switching-messages.test.ts",
+      "sha256": "18a4c808fa7f19fadb966e7afedf5eb688ed269751887362f111ee4b2bfe4928"
+    },
+    {
+      "file": "tests/terminal-viewport.test.ts",
+      "sha256": "c23ca760dd7b5eed0f57a55a4be5804a1af5c46b56aca5915da670f01b76e030"
+    },
+    {
+      "file": "tests/tracking.test.ts",
+      "sha256": "ef65e75159cbaee4b57af793feaf1972856fd90fceed6b1c443a7456881872b7"
+    },
+    {
+      "file": "tests/unix-cli.test.ts",
+      "sha256": "0ef80be3ea96e1e2df5bc41420d251e45fc05120005181300e192eabd605e1cb"
+    },
+    {
+      "file": "tests/windows-cli.test.ts",
+      "sha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e"
+    },
+    {
+      "file": "tests/wired-fidelity.test.ts",
+      "sha256": "38df6a5c2b4c45953eb55d9c2f2d93e1ca6f1d3fc95a79e2dc8808212de8e68d"
+    },
+    {
+      "file": "tests/wired-integration-review.test.ts",
+      "sha256": "30a022fc8a48c074dfb79210cf52fbaace9e13ab11fd7059d728f059b53a8776"
+    },
+    {
+      "file": "tests/wireless-wpa3.test.ts",
+      "sha256": "1021b09aca958ce8cb413c8dfd29b41a3e0c90a820ba067b33514050dd020675"
+    },
+    {
+      "file": "tests/wireless.test.ts",
+      "sha256": "4e3884c27d566426f0ed36fd2d11d8942e2d5974897167406c5bbaa755e94239"
+    },
+    {
+      "file": "tests/wlc-administration.test.ts",
+      "sha256": "e55eef7014833ae68bf0b4b77c400f2ab5db27bbe711ce31ccbfdb7c1dc11099"
+    },
+    {
+      "file": "tests/yaml-files.test.ts",
+      "sha256": "0e3c130f24d040584807a293fb8c34e2fd99f22e4c16b90951cb0ba6d18a8097"
+    },
+    {
+      "file": "package.json",
+      "sha256": "168bc30cd402b65e0839d45bae5938d72bc327fd355586e8a0297228a1cdede7"
+    },
+    {
+      "file": "package-lock.json",
+      "sha256": "d5a4c388b67927a3fcc685d8312e69b2883ca01b738f550262c2f047d8981e41"
+    },
+    {
+      "file": "tsconfig.json",
+      "sha256": "d8ed4e8648bed14458a848eadac4109feb0cd4ccf88dbc82fd94d5ed5c7b3dfb"
+    },
+    {
+      "file": "scripts/build.mjs",
+      "sha256": "7bda0339515548cd4e0d12212f2df6e7030fb39f3feab1220dcee00f18d310ff"
+    }
+  ],
+  "changedSources": [],
+  "validity": "source-snapshots-stable",
+  "log": {
+    "file": ".cache/fidelity/phase2/final-check.log",
+    "sha256": "d944e1923e70a142975cbaa879f34696c48e44ecb7f5024ae348810d356c3382"
+  },
+  "standalone": {
+    "file": "index.html",
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499",
+    "distMatches": true
+  }
+}

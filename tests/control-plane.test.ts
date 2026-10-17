@@ -28,7 +28,7 @@ test('rapid spanning tree blocks one triangle edge and converges after link fail
   const s=new Simulator(1),a=s.addDevice('switch'),b=s.addDevice('switch'),c=s.addDevice('switch');
   a.config.features.stp={priority:0};b.config.features.stp={priority:4096};c.config.features.stp={priority:8192};
   const ab=link(s,a,sp(1),b,sp(1));link(s,b,sp(2),c,sp(1));link(s,c,sp(2),a,sp(2));
-  s.changed();s.advance(1001);
+  s.changed();s.advance(31000);
   for(const d of[a,b,c])assert.equal(d.runtime.stp['1'].rootId,a.id);
   const ports=[a,b,c].flatMap(d=>Object.values(d.runtime.stp['1'].ports));
   assert.equal(ports.filter(p=>p.role==='alternate').length,1);
@@ -70,9 +70,9 @@ test('BPDU guard prevents a PortFast link to another switch from forwarding',()=
 test('DTP negotiates desirable/auto, while auto/auto stays access',()=>{
   const s=new Simulator(5),a=s.addDevice('switch'),b=s.addDevice('switch');
   a.config.interfaces[sp(1)].mode='dynamic-desirable';b.config.interfaces[sp(1)].mode='dynamic-auto';
-  link(s,a,sp(1),b,sp(1));
+  link(s,a,sp(1),b,sp(1));s.advance(20);
   assert.equal(a.runtime.features.trunks[sp(1)].operational,true);assert.equal(b.runtime.features.trunks[sp(1)].operational,true);
-  a.config.interfaces[sp(1)].mode='dynamic-auto';s.changed();
+  a.config.interfaces[sp(1)].mode='dynamic-auto';s.changed();s.advance(20);
   assert.equal(a.runtime.features.trunks[sp(1)].operational,false);assert.equal(b.runtime.features.trunks[sp(1)].operational,false);
 });
 
@@ -86,7 +86,7 @@ test('LACP active/passive bundles members and passive/passive cannot form a bund
   s.changed();s.advance(1001);
   assert.deepEqual(a.runtime.features.portChannels[1].activeMembers,[sp(1),sp(2)]);
   assert.equal(a.runtime.stp['1'].ports[sp(1)].role,a.runtime.stp['1'].ports[sp(2)].role);
-  for(const n of[1,2])a.config.interfaces[sp(n)].features.channelMode='passive';s.changed();
+  for(const n of[1,2])a.config.interfaces[sp(n)].features.channelMode='passive';s.changed();s.advance(20);
   assert.equal(a.runtime.features.portChannels[1].state,'down');assert.equal(b.runtime.features.portChannels[7].state,'down');
 });
 
@@ -95,7 +95,7 @@ test('VTP client accepts matching-domain revision and rejects another password',
   trunk(a,sp(1));trunk(b,sp(1));
   a.config.features.vtp={mode:'server',domain:'campus',version:2,password:'lab',revision:1};
   b.config.features.vtp={mode:'client',domain:'campus',version:2,password:'lab',revision:0};
-  a.config.vlans[99]={id:99,name:'management',active:true};link(s,a,sp(1),b,sp(1));
+  a.config.vlans[99]={id:99,name:'management',active:true};link(s,a,sp(1),b,sp(1));s.advance(20);
   assert.equal(b.config.vlans[99]?.name,'management');
   a.config.features.vtp.password='different';a.config.features.vtp.revision=2;a.config.vlans[100]={id:100,name:'other',active:true};s.changed();
   assert.equal(b.config.vlans[100],undefined);
@@ -266,8 +266,8 @@ test('EIGRP variance admits only feasible alternates and stub routers cannot bec
   link(s,a,rp(0),b,rp(0));link(s,a,rp(1),c,rp(0));link(s,b,rp(1),d,rp(0));const cd=link(s,c,rp(1),d,rp(1));
   s.advance(100);const routes=()=>a.runtime.routes.filter(r=>r.protocol==='D'&&r.network==='192.0.2.4');assert.equal(routes().length,1);
   a.config.protocols.eigrp.variance=2;s.changed();assert.equal(routes().length,2);
-  c.config.interfaces[rp(1)].features.delay=100;s.changed();assert.equal(routes().length,1);
-  b.config.protocols.eigrp.stub=['connected','summary'];s.disconnect(cd.id);assert.equal(routes().length,0);
+  c.config.interfaces[rp(1)].features.delay=100;s.changed();s.advance(100);assert.equal(routes().length,1);
+  b.config.protocols.eigrp.stub=['connected','summary'];s.disconnect(cd.id);s.advance(100);assert.equal(routes().length,0);
 });
 
 test('EIGRP interface summaries replace specifics and install a conditional discard route',()=>{
@@ -276,7 +276,7 @@ test('EIGRP interface summaries replace specifics and install a conditional disc
   address(b,'Loopback1','172.16.1.1');address(b,'Loopback2','172.16.2.1');igp(a,'eigrp');igp(b,'eigrp');link(s,a,rp(0),b,rp(0));s.advance(100);
   assert.equal(route(a,'172.16.0.0','D')?.prefix,16);assert.equal(route(a,'172.16.1.0','D'),undefined);
   assert.equal(route(b,'172.16.0.0','D')?.interface,'Null0');
-  b.config.interfaces.Loopback1.adminUp=false;b.config.interfaces.Loopback2.adminUp=false;s.changed();assert.equal(route(a,'172.16.0.0','D'),undefined);
+  b.config.interfaces.Loopback1.adminUp=false;b.config.interfaces.Loopback2.adminUp=false;s.changed();s.advance(100);assert.equal(route(a,'172.16.0.0','D'),undefined);
 });
 
 test('BGP inbound/outbound route maps filter prefixes and change path/local preference',()=>{
@@ -326,7 +326,7 @@ test('NHRP registers spokes over the underlay and resolves an on-demand direct m
   }
   s.advance(6500);assert.equal(hub.runtime.features.nhrp.Tunnel0.cache.filter((m:any)=>m.type==='dynamic').length,2);
   assert.equal(a.runtime.features.nhrp.Tunnel0.registrations[0].state,'UP');assert.ok(route(a,'172.16.3.0','D'));
-  hub.config.interfaces.Tunnel0.features.eigrp.nextHopSelf=false;s.changed();assert.equal(route(a,'172.16.3.0','D')?.nextHop,'10.0.0.3');
+  hub.config.interfaces.Tunnel0.features.eigrp.nextHopSelf=false;s.changed();s.advance(100);assert.equal(route(a,'172.16.3.0','D')?.nextHop,'10.0.0.3');
   a.config.staticRoutes.push({network:'172.16.3.0',prefix:24,nextHop:'10.0.0.3',interface:'Tunnel0',ad:1});s.changed();
   const ping=s.ping(a.id,'172.16.3.1',{count:1,source:'172.16.2.1'});s.advance(3000);assert.equal(ping.received,1);
   assert.equal(a.runtime.features.nhrp.Tunnel0.cache.find((m:any)=>m.address==='10.0.0.3')?.nbma,'192.0.2.3');
@@ -481,7 +481,7 @@ test('RIP filters apply at intermediate advertisements and offsets can make a ro
 test('LACP chooses at most eight matching members using controlling system and port priority',()=>{
   const s=new Simulator(74),a=s.addDevice('switch'),b=s.addDevice('switch');a.config.features.lacpSystemPriority=1;b.config.features.lacpSystemPriority=100;
   for(let n=1;n<=9;n++){a.config.interfaces[sp(n)]??=defaultInterface(sp(n),true);b.config.interfaces[sp(n)]??=defaultInterface(sp(n),true);a.config.interfaces[sp(n)].features={channelGroup:1,channelMode:'active',lacpPortPriority:n===9?1:32768};b.config.interfaces[sp(n)].features={channelGroup:2,channelMode:'passive'};link(s,a,sp(n),b,sp(n));}
-  const ca=a.runtime.features.portChannels[1],cb=b.runtime.features.portChannels[2];assert.equal(ca.activeMembers.length,8);assert.ok(ca.activeMembers.includes(sp(9)));assert.deepEqual(ca.standbyMembers,[sp(8)]);assert.deepEqual(ca.activeMembers,cb.activeMembers);assert.equal(ca.controllingSystem,a.id);
+  s.advance(100);const ca=a.runtime.features.portChannels[1],cb=b.runtime.features.portChannels[2];assert.equal(ca.activeMembers.length,8);assert.ok(ca.activeMembers.includes(sp(9)));assert.deepEqual(ca.standbyMembers,[sp(8)]);assert.deepEqual(ca.activeMembers,cb.activeMembers);assert.equal(ca.controllingSystem,a.id);
   a.config.interfaces[sp(9)].adminUp=false;s.changed();assert.equal(a.runtime.features.portChannels[1].activeMembers.length,8);assert.ok(a.runtime.features.portChannels[1].activeMembers.includes(sp(8)));
 });
 
@@ -565,7 +565,7 @@ test('EIGRP SIA busy replies extend ACTIVE processing but three extensions canno
 
 test('configured PVST forward timers and UplinkFast alternate promotion change convergence time',()=>{
   const s=new Simulator(88),a=s.addDevice('switch'),b=s.addDevice('switch'),c=s.addDevice('switch');a.config.features.stp={mode:'pvst',priority:0,forwardTime:4};b.config.features.stp={mode:'pvst',priority:4096,forwardTime:4};c.config.features.stp={mode:'pvst',uplinkFast:true,forwardTime:4};
-  link(s,a,sp(1),b,sp(1));const ac=link(s,a,sp(2),c,sp(1));link(s,b,sp(2),c,sp(2));s.advance(3999);assert.equal(c.runtime.stp['1'].ports[sp(1)].state,'listening');s.advance(1);assert.equal(c.runtime.stp['1'].ports[sp(1)].state,'learning');s.advance(4000);assert.equal(c.runtime.stp['1'].ports[sp(1)].state,'forwarding');assert.equal(c.runtime.stp['1'].ports[sp(2)].role,'alternate');
+  link(s,a,sp(1),b,sp(1));const ac=link(s,a,sp(2),c,sp(1));link(s,b,sp(2),c,sp(2));s.advance(3999);assert.equal(c.runtime.stp['1'].ports[sp(1)].state,'listening');s.advance(20);assert.equal(c.runtime.stp['1'].ports[sp(1)].state,'learning');s.advance(4000);assert.equal(c.runtime.stp['1'].ports[sp(1)].state,'forwarding');assert.equal(c.runtime.stp['1'].ports[sp(2)].role,'alternate');
   s.disconnect(ac.id);assert.equal(c.runtime.stp['1'].ports[sp(2)].role,'root');assert.equal(c.runtime.stp['1'].ports[sp(2)].state,'forwarding');s.changed();assert.equal(c.runtime.stp['1'].ports[sp(2)].state,'forwarding');assert.ok(s.events.some(e=>e.label==='UplinkFast failover'));
 });
 

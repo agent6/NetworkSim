@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-17T00:52:48.756Z",
+  "generatedAt": "2026-10-17T02:18:35.762Z",
   "profiles": {
     "pc": "Windows 11 24H2 networking subset",
     "laptop": "Windows 11 24H2 networking subset",
@@ -8,12 +8,12 @@
   },
   "nativeWindowsObserved": false,
   "referenceMethod": "Official Microsoft command documentation; original simulation tests. No native Windows output captures were available.",
-  "sourceSha256": "9902c89fe4cc290db1c9a825cfafa724098cc514c43446b8f13171dfbe351942",
+  "sourceSha256": "b2fa25f7bd12dafe2439498d936c45a17ee15920bb1f72d241da9fd681a8c2b2",
   "counts": {
     "roots": 17,
-    "variants": 41,
+    "variants": 44,
     "complete": 5,
-    "partial": 33,
+    "partial": 36,
     "unsupported": 3
   },
   "automaticallyExtractedRoots": [
@@ -279,7 +279,7 @@
       },
       "status": "partial",
       "testIds": [
-        "existing tests/cli.test.ts SLAAC/DHCPv6"
+        "WIN-26"
       ],
       "state": "shared DHCPv6 client",
       "packetBehavior": "UDP546/547",
@@ -290,6 +290,33 @@
     },
     {
       "id": "WIN-CMD-008",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "ipconfig /release6 [adapter]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 52,
+        "method": "ipconfig"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-26",
+        "WIN-27"
+      ],
+      "state": "only leased IPv6 address/prefix removed; static DNS/address preserved; server reclaim only after delivered release",
+      "packetBehavior": "DHCPv6 release/reply/retry through shared frames and relay",
+      "saveReload": "runtime lease removed, no automatic re-acquire until renew",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-009",
       "node": [
         "pc",
         "laptop",
@@ -315,7 +342,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-009",
+      "id": "WIN-CMD-010",
       "node": [
         "pc",
         "laptop",
@@ -342,7 +369,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-010",
+      "id": "WIN-CMD-011",
       "node": [
         "pc",
         "laptop",
@@ -368,7 +395,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-011",
+      "id": "WIN-CMD-012",
       "node": [
         "pc",
         "laptop",
@@ -396,7 +423,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-012",
+      "id": "WIN-CMD-013",
       "node": [
         "pc",
         "laptop",
@@ -423,7 +450,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-013",
+      "id": "WIN-CMD-014",
       "node": [
         "pc",
         "laptop",
@@ -434,44 +461,19 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 91,
+        "line": 98,
         "method": "trace"
       },
       "status": "partial",
       "testIds": [
-        "WIN-04"
+        "WIN-04",
+        "WIN-23"
       ],
-      "state": "three TTL probes/hop; replies from delivered ICMP",
-      "packetBehavior": "ICMP TTL exceeded and echo reply",
+      "state": "three TTL probes/hop; delivered ICMP plus reverse PTR unless -d",
+      "packetBehavior": "ICMP TTL exceeded/echo and UDP53",
       "saveReload": "runtime diagnostics",
       "change": "repaired",
       "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/tracert",
-      "referenceComparison": "Documentation-reviewed; native golden output unverified"
-    },
-    {
-      "id": "WIN-CMD-014",
-      "node": [
-        "pc",
-        "laptop",
-        "server"
-      ],
-      "platform": "Windows 11 24H2 / Server 2025 networking subset",
-      "command": "pathping [-n] [-h hops] [-q count] [-p ms] [-w ms] [-4|-6] target",
-      "mode": "CMD",
-      "parser": {
-        "file": "src/windows-cli.ts",
-        "line": 92,
-        "method": "pathping"
-      },
-      "status": "partial",
-      "testIds": [
-        "WIN-05"
-      ],
-      "state": "actual hop echo samples; cumulative loss only",
-      "packetBehavior": "ICMP/ICMPv6",
-      "saveReload": "runtime diagnostics",
-      "change": "added",
-      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/pathping",
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
@@ -482,11 +484,38 @@
         "server"
       ],
       "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "pathping [-n] [-h hops] [-q count] [-p ms] [-w ms] [-4|-6] target",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 99,
+        "method": "pathping"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-05",
+        "WIN-23"
+      ],
+      "state": "actual hop echo samples; cumulative loss only; reverse PTR unless -n",
+      "packetBehavior": "ICMP/ICMPv6 and UDP53",
+      "saveReload": "runtime diagnostics",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/pathping",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-016",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
       "command": "nslookup [-type=A|AAAA|CNAME|MX|NS|PTR] name [server]",
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 93,
+        "line": 100,
         "method": "nslookup"
       },
       "status": "partial",
@@ -502,7 +531,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-016",
+      "id": "WIN-CMD-017",
       "node": [
         "pc",
         "laptop",
@@ -513,7 +542,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 107,
+        "line": 114,
         "method": "arp"
       },
       "status": "partial",
@@ -528,7 +557,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-017",
+      "id": "WIN-CMD-018",
       "node": [
         "pc",
         "laptop",
@@ -539,7 +568,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 107,
+        "line": 114,
         "method": "arp"
       },
       "status": "partial",
@@ -554,7 +583,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-018",
+      "id": "WIN-CMD-019",
       "node": [
         "pc",
         "laptop",
@@ -565,7 +594,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 109,
+        "line": 131,
         "method": "routePrint"
       },
       "status": "partial",
@@ -581,7 +610,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-019",
+      "id": "WIN-CMD-020",
       "node": [
         "pc",
         "laptop",
@@ -592,7 +621,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 108,
+        "line": 115,
         "method": "route"
       },
       "status": "partial",
@@ -607,7 +636,33 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-020",
+      "id": "WIN-CMD-021",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "route change destination [mask mask] gateway [metric N] [if index]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 115,
+        "method": "route"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-22"
+      ],
+      "state": "replace existing next-hop/metric/interface without changing persistence; invalid values rejected before writes",
+      "packetBehavior": "actual delivered forwarding changes",
+      "saveReload": "preserves existing static or runtime store",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/route_ws2008",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-022",
       "node": [
         "pc",
         "laptop",
@@ -618,7 +673,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 108,
+        "line": 115,
         "method": "route"
       },
       "status": "partial",
@@ -634,7 +689,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-021",
+      "id": "WIN-CMD-023",
       "node": [
         "pc",
         "laptop",
@@ -645,14 +700,15 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 110,
+        "line": 132,
         "method": "netstat"
       },
       "status": "partial",
       "testIds": [
-        "WIN-11"
+        "WIN-11",
+        "FTPCLI-05"
       ],
-      "state": "actual TCP channel snapshots + active service listeners",
+      "state": "actual TCP channel snapshots + active service listeners, including enabled Server FTP TCP21",
       "packetBehavior": "none; listeners backed by server handlers",
       "saveReload": "runtime sessions/config listeners",
       "change": "repaired",
@@ -660,7 +716,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-022",
+      "id": "WIN-CMD-024",
       "node": [
         "pc",
         "laptop",
@@ -671,7 +727,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 110,
+        "line": 132,
         "method": "netstat"
       },
       "status": "complete",
@@ -686,7 +742,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-023",
+      "id": "WIN-CMD-025",
       "node": [
         "pc",
         "laptop",
@@ -697,7 +753,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 111,
+        "line": 133,
         "method": "ethernetStatistics"
       },
       "status": "partial",
@@ -712,7 +768,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-024",
+      "id": "WIN-CMD-026",
       "node": [
         "pc",
         "laptop",
@@ -723,7 +779,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 115,
+        "line": 137,
         "method": "getmac"
       },
       "status": "partial",
@@ -738,7 +794,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-025",
+      "id": "WIN-CMD-027",
       "node": [
         "pc",
         "laptop",
@@ -749,7 +805,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 118,
+        "line": 140,
         "method": "netsh"
       },
       "status": "partial",
@@ -764,7 +820,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-026",
+      "id": "WIN-CMD-028",
       "node": [
         "pc",
         "laptop",
@@ -775,7 +831,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 118,
+        "line": 140,
         "method": "netsh"
       },
       "status": "partial",
@@ -790,7 +846,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-027",
+      "id": "WIN-CMD-029",
       "node": [
         "pc",
         "laptop",
@@ -801,7 +857,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 119,
+        "line": 141,
         "method": "netshIP"
       },
       "status": "partial",
@@ -816,7 +872,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-028",
+      "id": "WIN-CMD-030",
       "node": [
         "pc",
         "laptop",
@@ -827,7 +883,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 119,
+        "line": 141,
         "method": "netshIP"
       },
       "status": "partial",
@@ -842,7 +898,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-029",
+      "id": "WIN-CMD-031",
       "node": [
         "pc",
         "laptop",
@@ -853,7 +909,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 119,
+        "line": 141,
         "method": "netshIP"
       },
       "status": "partial",
@@ -868,7 +924,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-030",
+      "id": "WIN-CMD-032",
       "node": [
         "pc",
         "laptop",
@@ -879,7 +935,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 119,
+        "line": 141,
         "method": "netshIP"
       },
       "status": "partial",
@@ -895,7 +951,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-031",
+      "id": "WIN-CMD-033",
       "node": [
         "pc",
         "laptop",
@@ -906,7 +962,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 119,
+        "line": 141,
         "method": "netshIP"
       },
       "status": "partial",
@@ -921,25 +977,26 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-032",
+      "id": "WIN-CMD-034",
       "node": [
         "pc",
         "laptop",
         "server"
       ],
       "platform": "Windows 11 24H2 / Server 2025 networking subset",
-      "command": "netsh interface ipv6 add|delete address interface=adapter address=IPv6/prefix",
+      "command": "netsh interface ipv6 add|set|delete address interface=adapter address=IPv6/prefix [store=persistent]",
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 119,
+        "line": 141,
         "method": "netshIP"
       },
       "status": "partial",
       "testIds": [
-        "WIN-13"
+        "WIN-13",
+        "WIN-25"
       ],
-      "state": "actual IPv6 config; shared DAD/ND",
+      "state": "actual persistent IPv6 config; named/indexed adapters; shared DAD/ND",
       "packetBehavior": "actual IPv6 ICMP reachability",
       "saveReload": "lab config",
       "change": "added",
@@ -947,7 +1004,33 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-033",
+      "id": "WIN-CMD-035",
+      "node": [
+        "pc",
+        "laptop",
+        "server"
+      ],
+      "platform": "Windows 11 24H2 / Server 2025 networking subset",
+      "command": "netsh interface ipv6 add|set|delete route prefix=IPv6/prefix interface=adapter [nexthop=IPv6] [metric=N] [store=active|persistent]",
+      "mode": "CMD",
+      "parser": {
+        "file": "src/windows-cli.ts",
+        "line": 152,
+        "method": "netshIPv6Route"
+      },
+      "status": "partial",
+      "testIds": [
+        "WIN-24"
+      ],
+      "state": "IPv6 static route table shared with packet forwarding; selector/next-hop validated",
+      "packetBehavior": "real IPv6 forwarding and ICMPv6 failure/recovery",
+      "saveReload": "active resets, persistent lab config survives save/load",
+      "change": "added",
+      "reference": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-interface",
+      "referenceComparison": "Documentation-reviewed; native golden output unverified"
+    },
+    {
+      "id": "WIN-CMD-036",
       "node": [
         "pc",
         "laptop",
@@ -958,7 +1041,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 125,
+        "line": 160,
         "method": "wlan"
       },
       "status": "partial",
@@ -973,7 +1056,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-034",
+      "id": "WIN-CMD-037",
       "node": [
         "pc",
         "laptop",
@@ -984,7 +1067,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 125,
+        "line": 160,
         "method": "wlan"
       },
       "status": "partial",
@@ -999,7 +1082,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-035",
+      "id": "WIN-CMD-038",
       "node": [
         "pc",
         "laptop",
@@ -1010,7 +1093,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 125,
+        "line": 160,
         "method": "wlan"
       },
       "status": "partial",
@@ -1025,7 +1108,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-036",
+      "id": "WIN-CMD-039",
       "node": [
         "pc",
         "laptop",
@@ -1036,7 +1119,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 125,
+        "line": 160,
         "method": "wlan"
       },
       "status": "partial",
@@ -1051,7 +1134,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-037",
+      "id": "WIN-CMD-040",
       "node": [
         "pc",
         "laptop",
@@ -1062,7 +1145,7 @@
       "mode": "CMD",
       "parser": {
         "file": "src/windows-cli.ts",
-        "line": 125,
+        "line": 160,
         "method": "wlan"
       },
       "status": "partial",
@@ -1077,7 +1160,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-038",
+      "id": "WIN-CMD-041",
       "node": [
         "pc",
         "laptop",
@@ -1103,7 +1186,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-039",
+      "id": "WIN-CMD-042",
       "node": [
         "pc",
         "laptop",
@@ -1129,7 +1212,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-040",
+      "id": "WIN-CMD-043",
       "node": [
         "pc",
         "laptop",
@@ -1155,7 +1238,7 @@
       "referenceComparison": "Documentation-reviewed; native golden output unverified"
     },
     {
-      "id": "WIN-CMD-041",
+      "id": "WIN-CMD-044",
       "node": [
         "pc",
         "laptop",

@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-10-17T02:14:48.992Z",
+  "browser": "155.0.8059.84",
+  "fixture": "Standalone file:// index.html; isolated public YAML import",
+  "checks": [
+    "Separate FTP account and text-file controls save through Server services",
+    "IOS copy uses configured credentials and sends the configuration through real FTP control/data channels",
+    "A remote text file is downloaded into actual simulated flash",
+    "Invalid FTP credentials fail without creating the destination file",
+    "Received upload appears in Server files while excluded services remain absent",
+    "Disabling the FTP listener prevents a later transfer",
+    "No browser page errors"
+  ],
+  "errors": [],
+  "artifact": {
+    "file": "index.html",
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+  }
+}

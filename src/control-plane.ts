@@ -1,13 +1,16 @@
+import {switchVoiceVlan} from './endpoint.ts';
+import { syncSwitchingMessages, switchingPeer, receiveSwitchingMessage } from './switching-messages.ts';
 import { interfaceSpeed, interfaceBandwidth, interfaceDuplex } from './ethernet.ts';
 import {syncMsdp,observeMsdpSource,msdpSourceAvailable,msdpRemoteSource} from './msdp.ts';
 import { bgpPathSuppressed } from './bgp-dampening.ts';
 import { disableInterface, errdisableDetectionEnabled, reconcileErrdisable } from './ios-errdisable.ts';
 import { resolveForwardingPaths } from './route-resolver.ts';
 import {routingDevice,routingConfig} from './routing-scope.ts';
+import {eigrpUpdateEpoch,invalidateEigrpUpdateEpoch,synchronizeEigrpUpdatePeers,advertiseEigrpUpdates,receivedEigrpUpdates,eigrpUpdateReady,receiveEigrpUpdate,type EigrpFamily,type EigrpUpdatePeer,type EigrpAdvertisement,type EigrpVector} from './eigrp-updates.ts';
 import { communityListMatches, canonicalCommunity, matchIOSExpression } from './bgp-policy.ts';
 import { selectBgpCandidate, removePrivateAS, scopedBgpConfig, bgpAddressFamily, bgpMultipathEligible } from './bgp-compat.ts';
 import { syncFhrpPackets, receiveFhrpControl, fhrpPeerView } from './fhrp-packets.ts';
-import { syncOSPF, verifiedOSPFAdjacency, ospfDatabaseView, receiveOSPFControl, type OSPFProtocol, type OSPFEndpoint, type OSPFOrigin, type OSPFSnapshot } from './ospf-packets.ts';
+import { syncOSPF, configuredOSPFNeighbors, verifiedOSPFAdjacency, ospfDatabaseView, receiveOSPFControl, type OSPFProtocol, type OSPFEndpoint, type OSPFOrigin, type OSPFSnapshot } from './ospf-packets.ts';
 import { synchronizeBgpSessions, sendBgpAdvertisements, rejectBgpMaximumPrefix, type BgpPeerConfig } from './bgp-session.ts';
 import type { TCPChannel, TCPChannelOptions } from './tcp-channel.ts';
 import { settleTrackStates } from './tracking.ts';
@@ -43,11 +46,11 @@ type Simulator = ControlPlaneHost;
 
 /** Original educational models; computed convergence and transmitted control messages are distinguished. */
 export const CONTROL_PLANE_CAPABILITIES = {
-  stp: 'Computed per-VLAN roots/roles, root guard, BPDU filtering, configurable hello/max-age/forward timers, UplinkFast alternate promotion and simplified rapid convergence. Actual designated BPDU heartbeats drive loop guard under directional loss. MST instances within matching regions; conservative boundary tree. No full proposal/agreement, BPDU election FSM, UplinkFast MAC-update frames or complete CIST model.',
-  dtpVtp: 'Computed DTP compatibility and VTP domain/password/version/revision propagation over operational trunks. No periodic DTP/VTP packet FSM or VTPv3 primary-server role.',
-  etherchannel: 'Computed static/LACP/PAgP compatibility, consistency and failover; LACP system/port priorities choose up to eight active members. Switched and routed aggregates use configured source/destination MAC/IP flow hashes, default src-dst-mac. No wire negotiation PDUs or independent member throughput model.',
+  stp: 'Delivered per-VLAN BPDU vectors elect roots, root/designated/alternate ports and path costs. Received proposals/agreements, root-port synchronization, hello/max-age/forward timers, rapid three-Hello expiry, root/BPDU/loop guards, transmit hold count, topology-change MAC flushing and UplinkFast alternate promotion affect forwarding. Matching MST region instances and remaining-hop budgets are modeled; region boundaries use a conservative per-VLAN boundary tree. Logical envelopes; no complete CIST/M-record encoding, every IEEE event transition or UplinkFast station-update frames. Non-PortFast endpoint links use a bounded one-second silent-neighbor transition.',
+  dtpVtp: 'Delivered DTP advertisements, 30-second transmission and 300-second neighbor expiry drive dynamic trunks. Delivered periodic/triggered VTP database messages enforce domain/password/version/revision and normal-range VLAN propagation, preserving local extended VLANs. Transparent forwarding and per-port controls operate. Logical snapshots rather than binary summary/subset/request fragments; no VTPv3 primary server or pruning.',
+  etherchannel: 'Delivered LACP/PAgP actor/partner advertisements and synchronization gate dynamic membership. Slow/fast LACP receive timeouts, passive negotiation, local member consistency, advertised system/port priorities, eight active members and standby promotion drive actual switched/routed hashing and failure. Static on/on uses physical compatibility. Logical PDUs and bounded state model; no complete IEEE mux/marker machine or independent aggregate throughput model.',
   ospf: 'Actual OSPFv2/v3 Hello/dead, database description/request/update/ack, reliable flooding and received LSDB aging drive per-router SPF. Computed DR/BDR, areas/stubs/NSSA, summaries and virtual links. Logical segmented router records rather than full scoped binary LSA types; no complete NSSA forwarding-address/translator FSM.',
-  eigrp: 'Actual IPv4/IPv6 Hellos and advertised hold timers gate neighbors; actual reliable QUERY/REPLY and SIA messages gate ACTIVE/PASSIVE convergence. Computed metric advertisements, feasibility/variance, summaries, stubs and redistribution. Named wide metrics and RIB scaling with default K1/K3. No normal UPDATE packet FSM, complete DUAL/RTP matrix or K-value negotiation.',
+  eigrp: 'Delivered IPv4/IPv6 Hello, INIT/UPDATE/ACK vectors and hold timers drive per-neighbor topology/RIB state. Ordered deltas/withdrawals, duplicate/stale suppression, restart refresh and retry limits operate through protocol88. Reliable QUERY/REPLY/SIA gates ACTIVE/PASSIVE; local policy, feasibility/variance, summaries, stubs and redistribution remain operational. Named wide metrics and RIB scaling use default K1/K3. Logical stop-and-wait model with fixed retries; no binary TLVs, unified complete DUAL/RTP matrix, adaptive RTO, control-bandwidth pacing or all K-values.',
   rip: 'Actual RIPv1 broadcast and RIPv2/RIPng multicast updates, periodic/triggered timers, invalid/hold-down/flush, split horizon and poison reverse. Version controls, classful auto-summary, manual summaries, filters, offsets and redistribution affect real advertisements. Single selected path; no ECMP, binary encoding or request/full-table exchange.',
   msdp: 'Persistent TCP639 peers, actual KEEPALIVE/Source-Active delivery, keepalive/hold/reconnect timers, source observation at the RP, source-cache aging and inter-RP PIM receiver trees. Configured connect-source/originator-id and real peer/cache counters. Logical envelopes; bounded single-peer/unicast-next-hop RPF, no binary TLVs, mesh groups, SA filters/request/response, MD5 or optional encapsulated first data packet.',
   bgp: 'Actual persistent TCP179, OPEN/KEEPALIVE/UPDATE/NOTIFICATION, negotiated hold expiry, reconnect and advertised-prefix withdrawals. IPv4/IPv6 unicast capabilities are negotiated on each shared transport; per-AF activation, policy, VRF isolation, origination and withdrawals drive real forwarding. Eligible eBGP/iBGP maximum-paths install actual ECMP and IGP next-hop cost precedes router-ID selection. Received paths drive IPv4/IPv6 policy, weight/local preference, deterministic/cross-AS MED, administrative distance, per-neighbor defaults, private-AS removal, allowas-in, soft policy refresh and retained inbound/outbound views. Conditional aggregates, recursive next hops, reflection and maximum-prefix shutdown remain operational. GTSM checks actual TTL; single-hop BFD and modeled TCP key equality can gate sessions. Neighbor logging follows configuration. Delivered eBGP withdrawal history drives configurable dampening, decay/reuse and administrative history clears. Logical message encoding and authentication tokens, not real TCP-MD5; no complete RFC event matrix, MRAI, graceful restart, confederations, VPN families or complete IOS policy language.',
@@ -86,31 +89,35 @@ const igmpTimers=new WeakMap<Simulator,Map<string,{timer:any;runtime:Device['run
 const multicastFlows=new WeakMap<Simulator,Map<string,{source:string;group:string;expires:number;timer?:any}>>();
 type UdldSession={deviceId:string;port:string;mode:string;messageTime:number;state:string;neighborDeviceId?:string;neighborPort?:string;lastReceived?:number;retries:number;tx?:any;expiry?:any;retry?:any;runtime:Device['runtime']};
 const udldSessions=new WeakMap<Simulator,Map<string,UdldSession>>();
-type StpHeartbeat={deviceId:string;port:string;runtime:Device['runtime'];created:number;received:Map<string,number>;blocked:Set<string>;lastSent:Map<string,number>;tx?:any;expiry?:any};
+type StpBPDU={vlan:string;rootId:string;rootBridgeId:string;bridgeId:string;cost:number;portId:string;mode:string;region:string;age:number;maxAge:number;helloTime:number;forwardTime:number;received:number;role:string;proposal?:boolean;agreement?:string;tc?:string;hops?:number};
+type StpHeartbeat={deviceId:string;port:string;runtime:Device['runtime'];created:number;received:Map<string,StpBPDU>;blocked:Set<string>;lastSent:Map<string,number>;sent:Map<string,string>;agreements:Map<string,string>;accepted:Map<string,string>;lost:Set<string>;window?:number;sentCount?:number;triggerSignature?:string;trigger?:any;tx?:any;expiry?:any};
 const stpHeartbeats=new WeakMap<Simulator,Map<string,StpHeartbeat>>();
 
-type EigrpHelloPort={endpoint:RoutedPort;protocol:string;runtime:Device['runtime'];signature:string;timer:any};
-type EigrpHelloPeer={edge:Adj;runtime:Device['runtime'];lastReceived:number;holdTime:number;expiry:any};
+type EigrpHelloPort={endpoint:RoutedPort;protocol:string;runtime:Device['runtime'];signature:string;timer:any;send?:()=>void};
+type EigrpHelloPeer={edge:Adj;runtime:Device['runtime'];lastReceived:number;holdTime:number;expiry:any;updateEpoch?:string};
 const eigrpHellos=new WeakMap<Simulator,{ports:Map<string,EigrpHelloPort>;peers:Map<string,EigrpHelloPeer>;candidates:Map<string,Adj[]>}>();
 function helloContext(engine:Simulator){let c=eigrpHellos.get(engine);if(!c){c={ports:new Map(),peers:new Map(),candidates:new Map()};eigrpHellos.set(engine,c);}return c;}
 function synchronizeEigrpHellos(engine:Simulator,endpoints:RoutedPort[],candidates:Adj[],protocol:string):Adj[]{
   const c=helloContext(engine);c.candidates.set(protocol,candidates);const wanted=new Set<string>();
   for(const ep of endpoints.filter(p=>p.family===protocolFamily(protocol)&&networkMatch(p,protocol)&&!passive(p,protocol)&&!/^loopback/i.test(p.name))){
     const key=`${ep.device.id}|${protocol}|${ep.name}`;if(wanted.has(key))continue;wanted.add(key);const f=ep.iface.features[protocol]??{},hello=Math.max(.1,Number(f.helloInterval??5)),hold=Math.max(.1,Number(f.holdTime??15)),signature=JSON.stringify([ep.ip,config(ep.device,protocol)?.asn,hello,hold,config(ep.device,protocol)?.metricWeights,config(ep.device,protocol)?.neighbors,protocolAuthentication(engine,ep,protocol)]),old=c.ports.get(key);if(old?.runtime===ep.device.runtime&&old.signature===signature){old.endpoint=ep;continue;}if(old){engine.clock.cancel(old.timer);for(const[peerKey,p]of c.peers)if(peerKey.startsWith(key+'|')){engine.clock.cancel(p.expiry);c.peers.delete(peerKey);}}
-    const row:EigrpHelloPort={endpoint:ep,protocol,runtime:ep.device.runtime,signature,timer:undefined};const send=()=>{if(row.runtime!==ep.device.runtime||!engine.interfaceUp(ep.device.id,ep.name))return;const neighbors=(config(ep.device,protocol)?.neighbors??[]).filter((n:any)=>n.interface===ep.name),destinations=neighbors.length?neighbors.map((n:any)=>n.address):[ep.family===6?'ff02::a':'224.0.0.10'];for(const destination of destinations){eigrpTraffic(ep.device,protocol,'sent','hello');engine.sendControlDatagram?.(ep.device.id,ep.ip,destination,0,{protocol:'eigrp-hello',family:protocol,sender:ep.device.id,port:ep.name,asn:config(ep.device,protocol)?.asn,holdTime:hold,metricWeights:config(ep.device,protocol)?.metricWeights??[1,0,1,0,0]},{interface:ep.name,vrf:ep.iface.vrf,ttl:1,protocol:'eigrp'});}};row.timer=engine.clock.schedule(0,send,{owner:ep.device.id,repeat:hello*1000,label:'EIGRP Hello'});c.ports.set(key,row);
+    const row:EigrpHelloPort={endpoint:ep,protocol,runtime:ep.device.runtime,signature,timer:undefined};const send=()=>{if(row.runtime!==ep.device.runtime||!engine.interfaceUp(ep.device.id,ep.name))return;const neighbors=(config(ep.device,protocol)?.neighbors??[]).filter((n:any)=>n.interface===ep.name),destinations=neighbors.length?neighbors.map((n:any)=>n.address):[ep.family===6?'ff02::a':'224.0.0.10'];for(const destination of destinations){eigrpTraffic(ep.device,protocol,'sent','hello',ep.iface.vrf);engine.sendControlDatagram?.(ep.device.id,ep.ip,destination,0,{protocol:'eigrp-hello',family:protocol,sender:ep.device.id,port:ep.name,asn:config(ep.device,protocol)?.asn,holdTime:hold,updateEpoch:eigrpUpdateEpoch(engine,key,ep.device.runtime,signature),metricWeights:config(ep.device,protocol)?.metricWeights??[1,0,1,0,0]},{interface:ep.name,vrf:ep.iface.vrf,ttl:1,protocol:'eigrp'});}};row.send=send;row.timer=engine.clock.schedule(0,send,{owner:ep.device.id,repeat:hello*1000,label:'EIGRP Hello'});c.ports.set(key,row);
   }
   for(const[key,p]of c.ports)if(p.protocol===protocol&&!wanted.has(key)){engine.clock.cancel(p.timer);c.ports.delete(key);}
   for(const[key,p]of c.peers)if(p.edge.from.family===protocolFamily(protocol)&&(p.runtime!==p.edge.from.device.runtime||!wanted.has(`${p.edge.from.device.id}|${protocol}|${p.edge.from.name}`))){engine.clock.cancel(p.expiry);c.peers.delete(key);}
   for(const d of engine.lab.devices){const rows=[...c.peers.values()].filter(p=>p.edge.from.device.id===d.id&&p.edge.from.family===protocolFamily(protocol)&&p.runtime===d.runtime).map(p=>({interface:p.edge.from.name,vrf:p.edge.from.iface.vrf,address:p.edge.to.ip,lastReceived:p.lastReceived,holdTime:p.holdTime,expires:p.lastReceived+p.holdTime*1000}));d.runtime.features[`${protocol}HelloNeighbors`]=rows;for(const n of d.runtime.neighbors)if(n.protocol===protocol.toUpperCase()&&n.state==='UP'&&!rows.some(r=>r.interface===n.interface&&sameAddress(r.address,n.address??'')))n.state='INIT (HELLO)';}
   return candidates.filter(edge=>c.peers.has(dualPeerKey(edge,protocol)));
 }
-function eigrpTraffic(d:Device|undefined,protocol:string,direction:string,type:string):void{if(!d)return;const stats=d.runtime.features[`${protocol}Traffic`]??={};stats[direction]??={};stats[direction][type]=(stats[direction][type]??0)+1;}
-function receiveEigrpHello(engine:Simulator,deviceId:string,source:string,p:any,ttl:number,input?:string):void {
-  if(eigrpProtocol(p.family))eigrpTraffic(engine.getDevice(deviceId),p.family,'received','hello');
-  if(ttl!==1||!eigrpProtocol(p.family)||!Number.isFinite(p.holdTime)||p.holdTime<=0||p.holdTime>65535)return;const c=helloContext(engine),edge=c.candidates.get(p.family)?.find(e=>e.from.device.id===deviceId&&(!input||e.from.name===input)&&sameAddress(e.to.ip,source)&&e.to.device.id===p.sender&&e.to.name===p.port&&config(e.from.device,p.family)?.asn===p.asn);if(!edge||JSON.stringify(p.metricWeights??[1,0,1,0,0])!==JSON.stringify(config(edge.from.device,p.family)?.metricWeights??[1,0,1,0,0]))return;
-  const key=dualPeerKey(edge,p.family),old=c.peers.get(key),fresh=!old||old.runtime!==edge.from.device.runtime;engine.clock.cancel(old?.expiry);const peer:EigrpHelloPeer={edge,runtime:edge.from.device.runtime,lastReceived:engine.clock.now(),holdTime:p.holdTime,expiry:undefined};c.peers.set(key,peer);peer.expiry=engine.clock.schedule(p.holdTime*1000,()=>{if(c.peers.get(key)!==peer)return;c.peers.delete(key);event(engine,edge.from.device,p.family.toUpperCase(),'Hold timer expired',`${source} on ${edge.from.name}: no Hello received.`,true);engine.recompute();engine.notify();},{owner:deviceId,label:'EIGRP neighbor hold'});if(fresh){event(engine,edge.from.device,p.family.toUpperCase(),'Hello neighbor up',`${source} on ${edge.from.name}.`);engine.recompute();}else{const rows=edge.from.device.runtime.features[`${p.family}HelloNeighbors`]??[],row=rows.find((r:any)=>r.interface===edge.from.name&&r.address===source);if(row){row.lastReceived=peer.lastReceived;row.expires=peer.lastReceived+p.holdTime*1000;}}engine.notify();
+function eigrpTraffic(d:Device|undefined,protocol:string,direction:string,type:string,vrf?:string):void{if(!d)return;const scoped=d.runtime.features[protocol+'TrafficByVrf']??={};for(const stats of[d.runtime.features[`${protocol}Traffic`]??={},scoped[vrf??'']??={}]){stats[direction]??={};stats[direction][type]=(stats[direction][type]??0)+1;}}
+function refreshEigrpHold(engine:Simulator,key:string):void{
+  const c=helloContext(engine),peer=c.peers.get(key);if(!peer)return;const edge=peer.edge,protocol=key.split('|')[1];engine.clock.cancel(peer.expiry);peer.lastReceived=engine.clock.now();peer.expiry=engine.clock.schedule(peer.holdTime*1000,()=>{if(c.peers.get(key)!==peer)return;c.peers.delete(key);event(engine,edge.from.device,protocol.toUpperCase(),'Hold timer expired',`${edge.to.ip} on ${edge.from.name}: no EIGRP packet received.`,true);engine.recompute();engine.notify();},{owner:edge.from.device.id,label:'EIGRP neighbor hold'});const row=(edge.from.device.runtime.features[`${protocol}HelloNeighbors`]??[]).find((r:any)=>r.interface===edge.from.name&&sameAddress(r.address,edge.to.ip));if(row){row.lastReceived=peer.lastReceived;row.expires=peer.lastReceived+peer.holdTime*1000;}
 }
-type DualRoute=Route&{reportedDistance?:number;dependencyNodes?:string[]};
+function receiveEigrpHello(engine:Simulator,deviceId:string,source:string,p:any,ttl:number,input?:string):void {
+  if(eigrpProtocol(p.family))eigrpTraffic(engine.getDevice(deviceId),p.family,'received','hello',input?engine.getDevice(deviceId)?.config.interfaces[input]?.vrf:undefined);
+  if(ttl!==1||!eigrpProtocol(p.family)||!Number.isFinite(p.holdTime)||p.holdTime<=0||p.holdTime>65535)return;const c=helloContext(engine),edge=c.candidates.get(p.family)?.find(e=>e.from.device.id===deviceId&&(!input||e.from.name===input)&&sameAddress(e.to.ip,source)&&e.to.device.id===p.sender&&e.to.name===p.port&&config(e.from.device,p.family)?.asn===p.asn);if(!edge||JSON.stringify(p.metricWeights??[1,0,1,0,0])!==JSON.stringify(config(edge.from.device,p.family)?.metricWeights??[1,0,1,0,0]))return;
+  const key=dualPeerKey(edge,p.family),old=c.peers.get(key),fresh=!old||old.runtime!==edge.from.device.runtime||old.updateEpoch!==p.updateEpoch;engine.clock.cancel(old?.expiry);const peer:EigrpHelloPeer={edge,runtime:edge.from.device.runtime,lastReceived:engine.clock.now(),holdTime:p.holdTime,expiry:undefined,updateEpoch:typeof p.updateEpoch==='string'?p.updateEpoch:undefined};c.peers.set(key,peer);refreshEigrpHold(engine,key);if(fresh){c.ports.get(`${edge.from.device.id}|${p.family}|${edge.from.name}`)?.send?.();event(engine,edge.from.device,p.family.toUpperCase(),'Hello neighbor up',`${source} on ${edge.from.name}.`);engine.recompute();}else{const rows=edge.from.device.runtime.features[`${p.family}HelloNeighbors`]??[],row=rows.find((r:any)=>r.interface===edge.from.name&&r.address===source);if(row){row.lastReceived=peer.lastReceived;row.expires=peer.lastReceived+p.holdTime*1000;}}engine.notify();
+}
+type DualRoute=Route&{reportedDistance?:number;dependencyNodes?:string[];eigrpUpdate?:EigrpAdvertisement};
 type DualEntry={key:string;deviceId:string;protocol:string;vrf?:string;network:string;prefix:number;runtime:Device['runtime'];state:'PASSIVE'|'ACTIVE';fd:number;successors:DualRoute[];candidates:DualRoute[];pending:Map<string,{edge:Adj;siaSent:number;siaAnswered:boolean}>;upstream:Map<string,{edge:Adj;token:string}>;replies:Map<string,number>;token:string;activeSince?:number;timer?:any;lastReason?:string;signature?:string};
 type DualContext={entries:Map<string,DualEntry>;candidates:Map<string,DualRoute[]>;graphs:Map<string,Adj[]>;sequence:number;received:Set<string>;inflight:Map<string,{edge:Adj;body:any;attempts:number;runtime:Device['runtime'];timer?:any}>;blocked:Map<string,{edge:Adj;timer?:any;runtime:Device['runtime']}>};
 const dualContexts=new WeakMap<Simulator,DualContext>();
@@ -127,7 +134,7 @@ function dualPeer(engine:Simulator,deviceId:string,source:string,destination:str
   return{from,to,cost:1,bandwidth:interfaceBandwidth(d,iface),delay:Number(iface.features.delay??10)*10};
 }
 function dualTransmit(engine:Simulator,edge:Adj,body:any):void {
-  eigrpTraffic(edge.from.device,body.family,'sent',String(body.operation??'unknown').toLowerCase());
+  eigrpTraffic(edge.from.device,body.family,'sent',String(body.operation??'unknown').toLowerCase(),edge.from.iface.vrf);
   engine.sendControlDatagram?.(edge.from.device.id,edge.from.ip,edge.to.ip,0,body,{interface:edge.from.name,vrf:edge.from.iface.vrf,ttl:1,protocol:'eigrp'});
 }
 function dualSend(engine:Simulator,edge:Adj,protocol:string,message:any,reliable=true):void {
@@ -220,10 +227,10 @@ function reconcileDual(engine:Simulator,graphs:Map<string,Adj[]>):void {
   for(const[key,p]of c.inflight)if(p.runtime!==p.edge.from.device.runtime||!p.edge.from.device.runtime.neighbors.some(n=>n.protocol===p.body.family.toUpperCase()&&n.interface===p.edge.from.name&&sameAddress(n.address??'',p.edge.to.ip)&&n.state==='UP')){engine.clock.cancel(p.timer);c.inflight.delete(key);}
   for(const[key,b]of c.blocked)if(b.runtime!==b.edge.from.device.runtime||!config(b.edge.from.device,key.split('|')[1])){engine.clock.cancel(b.timer);c.blocked.delete(key);}
 }
-function receiveDual(engine:Simulator,deviceId:string,source:string,destination:string,payload:any,input?:string):void {
-  if(eigrpProtocol(payload.family))eigrpTraffic(engine.getDevice(deviceId),payload.family,'received',String(payload.operation??'unknown').toLowerCase());
-  const protocol=payload.family;if(!eigrpProtocol(protocol))return;const edge=dualPeer(engine,deviceId,source,destination,protocol,input);if(!edge||payload.asn!==config(edge.from.device,protocol)?.asn||payload.sender!==edge.to.device.id)return;
-  const c=dualContext(engine),operation=payload.operation;
+function receiveDual(engine:Simulator,deviceId:string,source:string,destination:string,payload:any,ttl:number,input?:string):void {
+  if(eigrpProtocol(payload.family))eigrpTraffic(engine.getDevice(deviceId),payload.family,'received',String(payload.operation??'unknown').toLowerCase(),input?engine.getDevice(deviceId)?.config.interfaces[input]?.vrf:undefined);
+  const protocol=payload.family;if(ttl!==1||!eigrpProtocol(protocol))return;const edge=dualPeer(engine,deviceId,source,destination,protocol,input);if(!edge||payload.asn!==config(edge.from.device,protocol)?.asn||payload.sender!==edge.to.device.id)return;
+  const c=dualContext(engine),operation=payload.operation;if(!['ACK','HELLO','HELLO-ACK','QUERY','REPLY','SIA-QUERY','SIA-REPLY'].includes(operation)||!Number.isSafeInteger(payload.id)||payload.id<1)return;if(!['HELLO','HELLO-ACK'].includes(operation)&&!eigrpUpdateReady(engine,dualPeerKey(edge,protocol)))return;refreshEigrpHold(engine,dualPeerKey(edge,protocol));
   if(operation==='ACK'){const key=`${deviceId}|${protocol}|${payload.ack}`,pending=c.inflight.get(key);if(pending&&sameAddress(pending.edge.to.ip,source)){engine.clock.cancel(pending.timer);c.inflight.delete(key);}return;}
   if(operation==='HELLO'){dualSend(engine,edge,protocol,{operation:'HELLO-ACK'},false);return;}
   if(operation==='HELLO-ACK'){const key=dualPeerKey(edge,protocol),blocked=c.blocked.get(key);if(blocked){engine.clock.cancel(blocked.timer);c.blocked.delete(key);event(engine,edge.from.device,protocol.toUpperCase(),'Neighbor recovered',`${source}: bidirectional recovery hello completed.`);engine.recompute();engine.notify();}return;}
@@ -440,7 +447,7 @@ function event(engine: Simulator, d: Device, protocol: string, label: string, de
 }
 function effectiveTrunk(p: Port): boolean { return !!p.device.runtime.features.trunks?.[p.name]?.operational; }
 function carries(p: Port, vlan: number): boolean {
-  return p.iface.switchport && (effectiveTrunk(p) ? p.iface.allowedVlans === null || p.iface.allowedVlans.includes(vlan) : p.iface.vlan === vlan || p.iface.features.voiceVlan === vlan);
+  return p.iface.switchport && (effectiveTrunk(p) ? p.iface.allowedVlans === null || p.iface.allowedVlans.includes(vlan) : p.iface.vlan === vlan || switchVoiceVlan(p.device,p.iface) === vlan);
 }
 function channelActive(p: Port): boolean {
   const group = p.iface.features.channelGroup;
@@ -448,70 +455,10 @@ function channelActive(p: Port): boolean {
 }
 function vlanActive(d: Device, vlan: number): boolean { return d.config.vlans[vlan]?.active !== false && (!!d.config.vlans[vlan] || vlan === 1); }
 
-function negotiateTrunks(engine: Simulator, ws: Wire[]): void {
-  for (const d of engine.lab.devices) {
-    d.runtime.features.trunks = {};
-    for (const [name, iface] of Object.entries(d.config.interfaces)) if (iface.switchport) {
-      d.runtime.features.trunks[name] = { operational: iface.mode === 'trunk', nativeVlan: iface.nativeVlan, allowedVlans: iface.allowedVlans };
-    }
-  }
-  for (const {a,b} of ws) {
-    if (!a.iface.switchport || !b.iface.switchport) continue;
-    for (const [local, peer] of [[a,b],[b,a]]) {
-      const m = local.iface.mode, pm = peer.iface.mode;
-      const sameDomain = (local.device.config.features.vtp?.domain ?? '') === (peer.device.config.features.vtp?.domain ?? '');
-      const negotiation = !local.iface.features.nonegotiate && !peer.iface.features.nonegotiate && sameDomain;
-      const operational = m === 'trunk' || negotiation && (m === 'dynamic-desirable' && pm !== 'access' || m === 'dynamic-auto' && (pm === 'trunk' || pm === 'dynamic-desirable'));
-      local.device.runtime.features.trunks[local.name].operational = operational;
-    }
-  }
+function negotiateTrunks(engine:Simulator,_ws:Wire[]):void{
+  for(const d of engine.lab.devices){d.runtime.features.trunks={};for(const[name,iface]of Object.entries(d.config.interfaces))if(iface.switchport){const peer=switchingPeer(engine,d.id,name,'DTP'),m=iface.mode,negotiation=!iface.features.nonegotiate&&peer&&peer.domain===(d.config.features.vtp?.domain??'');const operational=m==='trunk'||!!negotiation&&(m==='dynamic-desirable'&&peer.mode!=='access'||m==='dynamic-auto'&&['trunk','dynamic-desirable'].includes(peer.mode));d.runtime.features.trunks[name]={operational,nativeVlan:iface.nativeVlan,allowedVlans:iface.allowedVlans,partner:peer};}}
 }
-
-function synchronizeVtp(engine: Simulator, ws: Wire[]): void {
-  const switches = engine.lab.devices.filter(switching);
-  let known = vtpDatabases.get(engine);
-  if (!known) { known = new Map(); vtpDatabases.set(engine, known); }
-  const database = (d: Device, version: number) => JSON.stringify(Object.values(d.config.vlans).filter(v => version === 3 || v.id <= 1005).sort((a,b) => a.id - b.id));
-  // A local server VLAN edit advances the advertised revision. A learned
-  // database is recorded below and must not be mistaken for a local edit.
-  for (const d of switches) {
-    const c = d.config.features.vtp;
-    if (!c) continue;
-    const version = c.version ?? 2, previous = known.get(d.id), current = database(d, version);
-    if (version !== 3 && c.mode === 'server' && previous && previous.domain === c.domain && previous.version === version && previous.database !== current && previous.revision === (c.revision ?? 0)) c.revision = ((c.revision ?? 0) + 1) >>> 0;
-  }
-  for (const client of switches) {
-    const c = client.config.features.vtp;
-    if (!c || !['client', 'server'].includes(c.mode) || (c.version === 3 && c.mode !== 'client') || !c.domain || !client.powered) continue;
-    const visited = new Set([client.id]), queue = [client.id], sources: Device[] = [];
-    while (queue.length) {
-      const current = queue.shift()!;
-      const d = engine.getDevice(current)!;
-      const v = d.config.features.vtp;
-      if (['server', 'client'].includes(v?.mode) && (c.version !== 3 || v.mode === 'server') && d.id !== client.id && v.domain === c.domain && (v.password ?? '') === (c.password ?? '') && (v.version ?? 2) === (c.version ?? 2)) sources.push(d);
-      for (const w of ws) {
-        const p = w.a.device.id === current ? w.a : w.b.device.id === current ? w.b : undefined;
-        if (!p) continue; const q = p === w.a ? w.b : w.a;
-        if (!switching(q.device) || visited.has(q.device.id) || !effectiveTrunk(p) || !effectiveTrunk(q) || p.iface.features.vtp===false || q.iface.features.vtp===false) continue;
-        const qv = q.device.config.features.vtp;
-        if (!qv || qv.mode === 'off' || (qv.mode !== 'transparent' && (qv.domain !== c.domain || (qv.password ?? '') !== (c.password ?? '') || (qv.version ?? 2) !== (c.version ?? 2)))) continue;
-        visited.add(q.device.id); queue.push(q.device.id);
-      }
-    }
-    sources.sort((a,b) => (b.config.features.vtp.revision ?? 0) - (a.config.features.vtp.revision ?? 0) || natural(a.id,b.id));
-    const source = sources[0];
-    if (source && (source.config.features.vtp.revision ?? 0) > (c.revision ?? 0)) {
-      const version = c.version ?? 2, payload = Object.fromEntries(Object.entries(source.config.vlans).filter(([id]) => version === 3 || Number(id) <= 1005));
-      const adopted = { ...Object.fromEntries(Object.entries(client.config.vlans).filter(([id]) => version !== 3 && Number(id) > 1005)), ...payload };
-      const changed = JSON.stringify(adopted) !== JSON.stringify(client.config.vlans);
-      c.revision = source.config.features.vtp.revision ?? 0;
-      if (changed) client.config.vlans = structuredClone(adopted);
-      client.runtime.features.vtpSyncCount=(client.runtime.features.vtpSyncCount??0)+1;client.runtime.features.vtpLastSync={hostname:source.config.hostname,revision:c.revision,at:engine.clock.now()};
-      event(engine,client,'VTP','VLAN database synchronized',`Accepted revision ${c.revision} from ${source.config.hostname} in domain ${c.domain}.`);
-    }
-  }
-  for (const d of switches) { const c = d.config.features.vtp; if (c) known.set(d.id, { domain: c.domain, version: c.version ?? 2, database: database(d, c.version ?? 2), revision: c.revision ?? 0 }); }
-}
+function synchronizeVtp(_engine:Simulator,_ws:Wire[]):void{/* VLAN databases change only on a delivered VTP message. */}
 
 function channelProtocol(a: string, b: string): string | undefined {
   if (a === 'on' && b === 'on') return 'static';
@@ -523,51 +470,17 @@ function channelSignature(p: Port, wire = false): string {
   // neighboring router may use a different VRF name for the same routed link.
   return JSON.stringify([p.iface.switchport,effectiveTrunk(p),p.iface.vlan,p.iface.nativeVlan,p.iface.allowedVlans === null ? null : [...p.iface.allowedVlans].sort((a,b)=>a-b),interfaceSpeed(p.device,p.iface),interfaceDuplex(p.device,p.iface),wire ? '' : p.iface.vrf ?? '']);
 }
-function negotiateChannels(engine: Simulator, ws: Wire[]): void {
-  for (const d of engine.lab.devices) {
-    d.runtime.features.portChannels = {};
-    for (const [name, iface] of Object.entries(d.config.interfaces)) {
-      const group = iface.features.channelGroup; if (!group) continue;
-      const channel = d.runtime.features.portChannels[group] ??= { protocol: 'static', members: [], activeMembers: [], state: 'down' };
-      channel.members.push(name);
-    }
+function negotiateChannels(engine:Simulator,ws:Wire[]):void{
+ for(const d of engine.lab.devices){d.runtime.features.portChannels={};for(const[name,iface]of Object.entries(d.config.interfaces)){const group=iface.features.channelGroup;if(!group)continue;const c=d.runtime.features.portChannels[group]??={protocol:iface.features.channelMode==='on'?'static':['active','passive'].includes(iface.features.channelMode)?'lacp':'pagp',members:[],activeMembers:[],standbyMembers:[],state:'down'};c.members.push(name);}
+  for(const[group,c]of Object.entries<any>(d.runtime.features.portChannels)){const configured=c.members.filter((name:string)=>engine.interfaceUp(d.id,name));if(configured.some((name:string)=>channelSignature({device:d,iface:d.config.interfaces[name],name})!==channelSignature({device:d,iface:d.config.interfaces[configured[0]],name:configured[0]}))){c.state='suspended';c.inconsistent=true;continue;}
+   for(const name of configured){const iface=d.config.interfaces[name],local={device:d,iface,name},mode=iface.features.channelMode??'on';let peer:any;
+    if(mode==='on'){const w=ws.find(w=>w.a.device.id===d.id&&w.a.name===name||w.b.device.id===d.id&&w.b.name===name),remote=w&&(w.a.device.id===d.id?w.b:w.a);if(remote&&remote.iface.features.channelGroup&&(remote.iface.features.channelMode??'on')==='on'&&channelSignature(local,true)===channelSignature(remote,true))peer={deviceId:remote.device.id,port:remote.name,group:remote.iface.features.channelGroup};}
+    else{const protocol=c.protocol==='lacp'?'LACP':'PAGP',received=switchingPeer(engine,d.id,name,protocol);if(received&&channelProtocol(mode,received.mode)===c.protocol&&received.signature===channelSignature(local,true)&&received.partner?.deviceId===d.id&&received.partner?.port===name&&received.partner?.group===Number(group)&&received.synchronized&&interfaceDuplex(d,iface)==='full')peer=received;}
+    if(!peer)continue;if(c.peerDeviceId&&(c.peerDeviceId!==peer.deviceId||c.peerGroup!==peer.group)){c.state='suspended';c.inconsistent=true;c.activeMembers=[];break;}c.peerDeviceId=peer.deviceId;c.peerGroup=peer.group;c.activeMembers.push(name);c.state='up';
+   }
+   if(c.protocol==='lacp'&&c.activeMembers.length){const first=switchingPeer(engine,d.id,c.activeMembers[0],'LACP'),localSystem=[Number(d.config.features.lacpSystemPriority??32768),bridgeMac(d)],remoteSystem=[Number(first?.systemPriority??32768),first?.systemMac??''],localControls=Number(localSystem[0])-Number(remoteSystem[0])<0||localSystem[0]===remoteSystem[0]&&natural(String(localSystem[1]),String(remoteSystem[1]))<=0;c.controllingSystem=localControls?d.id:first?.deviceId;c.activeMembers.sort((a:string,b:string)=>{const pa=d.config.interfaces[a],pb=d.config.interfaces[b],ra=switchingPeer(engine,d.id,a,'LACP'),rb=switchingPeer(engine,d.id,b,'LACP');return Number(localControls?pa.features.lacpPortPriority??32768:ra?.portPriority??32768)-Number(localControls?pb.features.lacpPortPriority??32768:rb?.portPriority??32768)||natural(localControls?a:ra?.port??a,localControls?b:rb?.port??b);});c.standbyMembers=c.activeMembers.slice(8);c.activeMembers=c.activeMembers.slice(0,8);}
   }
-  for (const {a,b} of ws) {
-    const ga = a.iface.features.channelGroup, gb = b.iface.features.channelGroup;
-    if (!ga || !gb) continue;
-    const protocol = channelProtocol(a.iface.features.channelMode ?? 'on',b.iface.features.channelMode ?? 'on');
-    if (!protocol || channelSignature(a, true) !== channelSignature(b, true)) continue;
-    for (const [local,peer,group,peerGroup] of [[a,b,ga,gb],[b,a,gb,ga]] as [Port,Port,number,number][]) {
-      const c = local.device.runtime.features.portChannels[group];
-      const consistent = c.members.filter((name:string)=>engine.interfaceUp(local.device.id,name)).every((name: string) => channelSignature({device:local.device,iface:local.device.config.interfaces[name],name}) === channelSignature(local));
-      if (!consistent || c.peerDeviceId && (c.peerDeviceId !== peer.device.id || c.peerGroup !== peerGroup)) {
-        c.state = 'suspended'; c.activeMembers = []; c.inconsistent = true; continue;
-      }
-      if (c.inconsistent) continue;
-      c.protocol = protocol; c.peerDeviceId = peer.device.id; c.peerGroup = peerGroup; c.activeMembers.push(local.name); c.state = 'up';
-    }
-  }
-  // A one-sided inconsistent group cannot leave its peer forwarding that member.
-  for (const {a,b} of ws) {
-    if (!a.iface.features.channelGroup || !b.iface.features.channelGroup) continue;
-    if (!channelActive(a) || !channelActive(b)) for (const p of [a,b]) {
-      const c = p.device.runtime.features.portChannels[p.iface.features.channelGroup];
-      c.activeMembers = c.activeMembers.filter((n: string) => n !== p.name); if (!c.activeMembers.length && c.state !== 'suspended') c.state = 'down';
-    }
-  }
-  // LACP selects the same eight links at both ends using the controlling system's priorities.
-  const selected=new Set<string>();
-  for(const {a,b}of ws){
-    const ga=a.iface.features.channelGroup,gb=b.iface.features.channelGroup;if(!ga||!gb)continue;
-    const ca=a.device.runtime.features.portChannels[ga],cb=b.device.runtime.features.portChannels[gb];if(ca.protocol!=='lacp'||!ca.activeMembers.length)continue;
-    const key=[`${a.device.id}:${ga}`,`${b.device.id}:${gb}`].sort().join('|');if(selected.has(key))continue;selected.add(key);
-    const compareSystem=(x:Device,y:Device)=>Number(x.config.features.lacpSystemPriority??32768)-Number(y.config.features.lacpSystemPriority??32768)||natural(bridgeMac(x),bridgeMac(y));
-    const controller=compareSystem(a.device,b.device)<=0?a.device:b.device;
-    const pairs=ws.filter(w=>[w.a,w.b].some(p=>p.device===a.device&&p.iface.features.channelGroup===ga)&&[w.a,w.b].some(p=>p.device===b.device&&p.iface.features.channelGroup===gb)&&channelActive(w.a)&&channelActive(w.b));
-    const controllingPort=(w:Wire)=>w.a.device===controller?w.a:w.b;
-    pairs.sort((x,y)=>Number(controllingPort(x).iface.features.lacpPortPriority??32768)-Number(controllingPort(y).iface.features.lacpPortPriority??32768)||natural(controllingPort(x).name,controllingPort(y).name));
-    for(const[d,c]of[[a.device,ca],[b.device,cb]] as [Device,any][]){c.activeMembers=pairs.slice(0,8).map(w=>w.a.device===d?w.a.name:w.b.name);c.standbyMembers=pairs.slice(8).map(w=>w.a.device===d?w.a.name:w.b.name);c.controllingSystem=controller.id;}
-  }
+ }
 }
 
 function mstRegion(d: Device): string {
@@ -593,142 +506,116 @@ function portCost(p: Port,vlan=1): number {
   return cost+(p.device.config.features.stp?.uplinkFast?3000:0);
 }
 function stpTimer(d:Device,vlan:string|number,name:string,fallback:number):number {return Math.max(1,Number(d.config.features.stp?.vlanTimers?.[vlan]?.[name]??d.config.features.stp?.[name]??fallback))*1000;}
+/** Election uses only locally delivered BPDU vectors. No remote configuration or graph SPF. */
+function stpVector(root:string,cost:number,bridge:string,port:string):[string,number,string,string]{return[root,cost,bridge,port];}
+function compareStp(a:[string,number,string,string],b:[string,number,string,string]):number{return natural(a[0],b[0])||a[1]-b[1]||natural(a[2],b[2])||natural(a[3],b[3]);}
+function stpPortId(p:Port,vlan:number):string{return String(portPriority(p,vlan)).padStart(3,'0')+'.'+p.name;}
+function stpProposal(tree:any,p:Port,vlan:number):string{return JSON.stringify([tree.rootBridgeId,tree.cost,tree.bridgeId,stpPortId(p,vlan)]);}
+function flushStpMac(d:Device,vlan:number,except?:string):void{for(const[key,row]of Object.entries(d.runtime.mac))if(!row.static&&row.vlan===vlan&&row.port!==except)delete d.runtime.mac[key];}
 function spanningTree(engine: Simulator, ws: Wire[]): number | undefined {
-  const session = state.get(engine)!;
-  const now = engine.clock.now(); let next: number | undefined;
-  const switches = engine.lab.devices.filter(d=>switching(d) && d.powered);
-  const old = new Map(switches.map(d=>[d.id,d.runtime.stp]));
-  const vlans = new Set<number>([1]);
-  for (const d of switches) {
-    d.runtime.stp = {};
-    for (const v of Object.values(d.config.vlans)) if (v.active) vlans.add(v.id);
-    for (const i of Object.values(d.config.interfaces)) if(i.switchport) { vlans.add(i.vlan); vlans.add(i.nativeVlan); }
-  }
-  for (const vlan of [...vlans].sort((a,b)=>a-b)) {
-    const members = switches.filter(d=>vlanActive(d,vlan));
-    const memberIds = new Set(members.map(d=>d.id));
-    const candidates = ws.filter(w=>memberIds.has(w.a.device.id) && memberIds.has(w.b.device.id) && carries(w.a,vlan) && carries(w.b,vlan) && channelActive(w.a) && channelActive(w.b));
-    const seenBundles = new Set<string>();
-    let edges = candidates.filter(w=> {
-      if(w.a.iface.features.bpdufilter||w.b.iface.features.bpdufilter||bpduguardEnabled(w.a.device,w.a.iface)||bpduguardEnabled(w.b.device,w.b.iface))return false;
-      const group = w.a.iface.features.channelGroup; if (!group) return true;
-      const key = [w.a.device.id+':'+group,w.b.device.id+':'+w.b.iface.features.channelGroup].sort().join('|');
-      if(seenBundles.has(key)) return false; seenBundles.add(key); return true;
-    });
-    const boundary = edges.some(w=>(w.a.device.config.features.stp?.mode === 'mst' || w.b.device.config.features.stp?.mode === 'mst') && (mstRegion(w.a.device)!==mstRegion(w.b.device) || w.a.device.config.features.stp?.mode!==w.b.device.config.features.stp?.mode));
-    const bridgeId = (d:Device) => `${String(stpPriority(d,vlan,boundary)).padStart(6,'0')}.${bridgeMac(d)}`;
-    const rootGuardPorts=new Set<string>();
-    // Evaluate superior bridge/root information, then remove inconsistent guarded links before SPF.
-    for(const seed of members.filter(d=>Object.values(d.config.interfaces).some(i=>i.features.rootGuard))){
-      const reached=new Set<string>([seed.id]),queue=[seed.id];while(queue.length){const id=queue.shift()!;for(const w of edges){const peer=w.a.device.id===id?w.b.device.id:w.b.device.id===id?w.a.device.id:undefined;if(peer&&!reached.has(peer)){reached.add(peer);queue.push(peer);}}}
-      const root=members.filter(d=>reached.has(d.id)).sort((a,b)=>natural(bridgeId(a),bridgeId(b)))[0];
-      const costs=new Map<string,number>([...reached].map(id=>[id,id===root.id?0:Infinity]));
-      for(let n=0;n<reached.size;n++)for(const w of edges)for(const[local,peer]of[[w.a,w.b],[w.b,w.a]])if(costs.has(local.device.id)&&costs.has(peer.device.id))costs.set(local.device.id,Math.min(costs.get(local.device.id)!,costs.get(peer.device.id)!+portCost(local,vlan)));
-      for(const w of edges)for(const[local,peer]of[[w.a,w.b],[w.b,w.a]])if(local.device===seed&&local.iface.features.rootGuard&&(costs.get(peer.device.id)!<costs.get(seed.id)!||costs.get(peer.device.id)===costs.get(seed.id)&&natural(bridgeId(peer.device),bridgeId(seed))<0))rootGuardPorts.add(portKey(local));
-    }
-    edges=edges.filter(w=>!rootGuardPorts.has(portKey(w.a))&&!rootGuardPorts.has(portKey(w.b)));
-    const pending = new Set(members.map(d=>d.id));
-    while (pending.size) {
-      const component:Device[] = [], q=[pending.values().next().value!]; pending.delete(q[0]);
-      while(q.length) { const id=q.shift()!; component.push(engine.getDevice(id)!); for(const w of edges) {
-        const peer=w.a.device.id===id?w.b.device.id:w.b.device.id===id?w.a.device.id:undefined;
-        if(peer && pending.delete(peer)) q.push(peer);
-      }}
-      component.sort((a,b)=>natural(bridgeId(a),bridgeId(b))); const root=component[0];
-      const distance=new Map<string,number>(component.map(d=>[d.id,Infinity])); distance.set(root.id,0);
-      const rootPorts=new Map<string,Port>();
-      for(let pass=0;pass<component.length;pass++) for(const w of edges) for(const [local,peer] of [[w.a,w.b],[w.b,w.a]]) {
-        if(!distance.has(local.device.id) || !Number.isFinite(distance.get(peer.device.id))) continue;
-        const candidate=distance.get(peer.device.id)!+portCost(local,vlan), current=distance.get(local.device.id)!;
-        const oldPort=rootPorts.get(local.device.id);
-        const oldWire=oldPort && edges.find(e=>portKey(e.a)===portKey(oldPort)||portKey(e.b)===portKey(oldPort));
-        const oldPeer=oldWire && (oldWire.a.device.id===local.device.id?oldWire.b:oldWire.a);
-        const tie=oldPeer?natural(bridgeId(peer.device),bridgeId(oldPeer.device))||portPriority(peer,vlan)-portPriority(oldPeer,vlan)||natural(peer.name,oldPeer.name)||portPriority(local,vlan)-portPriority(oldPort!,vlan)||natural(local.name,oldPort!.name):-1;
-        if(candidate<current || candidate===current && tie<0) { distance.set(local.device.id,candidate); rootPorts.set(local.device.id,local); }
+  const session=state.get(engine)!,now=engine.clock.now();let next:number|undefined;
+  for(const d of engine.lab.devices.filter(switching)){
+    const old=d.runtime.stp;d.runtime.stp={};if(!d.powered)continue;
+    const vlans=new Set([1,...Object.values(d.config.vlans).filter(v=>v.active).map(v=>v.id),...Object.values(d.config.interfaces).filter(i=>i.switchport).flatMap(i=>[i.vlan,i.nativeVlan])]);
+    for(const vlan of [...vlans].sort((a,b)=>a-b)){
+      if(!vlanActive(d,vlan))continue;
+      const localPorts=Object.entries(d.config.interfaces).filter(([name,iface])=>iface.switchport&&!/^(Vlan|Port-channel)/i.test(name)&&carries({device:d,iface,name},vlan)).map(([name,iface])=>({device:d,iface,name}));
+      const valid=(p:Port)=>{const rx=stpHeartbeats.get(engine)?.get(`${d.id}|${p.name}`)?.received.get(String(vlan));return rx&&engine.interfaceUp(d.id,p.name)&&channelActive(p)&&!p.iface.features.bpdufilter&&rx.received+stpLifetime(rx)>now&&(rx.mode!=='mst'||(rx.hops??20)>0)?rx:undefined;};
+      const boundary=localPorts.some(p=>{const rx=valid(p);return rx&&(d.config.features.stp?.mode==='mst'||rx.mode==='mst')&&(rx.mode!==(d.config.features.stp?.mode??'rapid-pvst')||rx.region!==mstRegion(d));});
+      const bridgeId=`${String(stpPriority(d,vlan,boundary)).padStart(6,'0')}.${bridgeMac(d)}`;
+      let rootId=d.id,rootBridgeId=bridgeId,cost=0,rootPort:Port|undefined,rootRx:StpBPDU|undefined;
+      let best=stpVector(bridgeId,0,bridgeId,'');
+      for(const p of localPorts){const rx=valid(p),guard=stpHeartbeats.get(engine)?.get(`${d.id}|${p.name}`)?.blocked.has(String(vlan));if(!rx||guard||p.iface.features.rootGuard||rx.rootId===d.id||rx.role!=='designated')continue;
+        const candidate=stpVector(rx.rootBridgeId,rx.cost+portCost(p,vlan),rx.bridgeId,rx.portId);
+        const cmp=compareStp(candidate,best);if(cmp<0||cmp===0&&rootPort&&natural(stpPortId(p,vlan),stpPortId(rootPort,vlan))<0){best=candidate;rootId=rx.rootId;rootBridgeId=rx.rootBridgeId;cost=candidate[1];rootPort=p;rootRx=rx;}
       }
-      for(const d of component) {
-        const ports:Record<string,StpPortState>={};
-        d.runtime.stp[String(vlan)]={rootId:root.id,bridgeId:bridgeId(d),rootBridgeId:bridgeId(root),cost:distance.get(d.id),mode:d.config.features.stp?.mode??'rapid-pvst',boundary,ports};
-        for(const [name,iface] of Object.entries(d.config.interfaces)) {
-          const p={device:d,iface,name}; if(!carries(p,vlan)) continue;
-          let role='designated';
-          const physical=ws.find(w=>portKey(w.a)===portKey(p)||portKey(w.b)===portKey(p));
-          const physicalPeer=physical&&(physical.a.device.id===d.id?physical.b:physical.a);
-          const group=iface.features.channelGroup;
-          const representative=group?d.runtime.features.portChannels[group]?.activeMembers[0]:name;
-          const e=edges.find(w=>w.a.device.id===d.id&&w.a.name===representative||w.b.device.id===d.id&&w.b.name===representative);
-          if(e) {
-            const local=e.a.device.id===d.id?e.a:e.b, peer=local===e.a?e.b:e.a;
-            if(rootPorts.get(d.id)?.name===local.name) role='root';
-            else if((distance.get(d.id)!-distance.get(peer.device.id)!)>0 || distance.get(d.id)===distance.get(peer.device.id) && natural(bridgeId(d),bridgeId(peer.device))>0) role='alternate';
-          }
-          const up=engine.interfaceUp(d.id,name)&&channelActive(p);
-          const bpduGuard=up&&errdisableDetectionEnabled(d,'bpduguard')&&bpduguardEnabled(d,iface)&&!iface.features.bpdufilter&&!!physicalPeer&&switching(physicalPeer.device)&&!physicalPeer.iface.features.bpdufilter;
-          const rootGuard=rootGuardPorts.has(portKey(p)),loopGuard=loopguardEnabled(d,iface)&&!iface.features.bpdufilter&&!!stpHeartbeats.get(engine)?.get(`${d.id}|${name}`)?.blocked.has(String(vlan));
-          const blocked=role==='alternate'||!up||bpduGuard||rootGuard||loopGuard;
-          const key=`${d.id}|${vlan}|${name}`;
-          const signature=JSON.stringify([root.id,role,up,bpduGuard,rootGuard,loopGuard,iface.features.bpdufilter,portfastConfigured(d,iface),iface.features.stpLinkType,interfaceDuplex(d,iface),d.runtime.features.stpLegacy?.[name],d.config.features.stp?.mode,physical?.link.id]);
-          let transition=session.transitions.get(key);
-          if(!transition || transition.signature!==signature || transition.start>now || !old.get(d.id)?.[String(vlan)]?.ports[name]) { transition={signature,start:now};session.transitions.set(key,transition); }
-          const classic=d.config.features.stp?.mode==='pvst'||!!d.runtime.features.stpLegacy?.[name]||iface.features.stpLinkType==='shared'||iface.features.stpLinkType!=='point-to-point'&&interfaceDuplex(d,iface)==='half';
-          const edge=!!iface.features.bpdufilter||portfastConfigured(d,iface)&&(!physicalPeer||!switching(physicalPeer.device));
-          const forwardDelay=stpTimer(d,vlan,'forwardTime',15),previousPort=old.get(d.id)?.[String(vlan)]?.ports[name];
-          if(classic&&d.config.features.stp?.uplinkFast&&role==='root'&&previousPort?.role==='alternate'&&Object.entries(old.get(d.id)?.[String(vlan)]?.ports??{}).some(([n,p])=>p.role==='root'&&!engine.interfaceUp(d.id,n))){transition.start=now-2*forwardDelay;event(engine,d,'STP','UplinkFast failover',`VLAN ${vlan}: alternate ${name} becomes the forwarding root port.`);}
-          const elapsed=now-transition.start;
-          let status:StpPortState['state']=blocked?(up?'blocking':'disabled'):edge?'forwarding':classic?(elapsed<forwardDelay?'listening':elapsed<2*forwardDelay?'learning':'forwarding'):(elapsed<1000?'discarding':'forwarding');
-          if(bpduGuard) { disableInterface(engine,d,name,'bpduguard'); status='disabled'; role='bpdu-inconsistent'; }
-          else if(iface.features.errDisabled&&d.runtime.features.errdisableCauses?.[name]==='bpduguard'){status='disabled';role='bpdu-inconsistent';}
-          else if(rootGuard){status='blocking';role='root-inconsistent';}
-          else if(loopGuard){status='blocking';role='loop-inconsistent';}
-          if(!blocked&&!edge&&status!=='forwarding') {
-            const ready=transition.start+(classic?(elapsed<forwardDelay?forwardDelay:2*forwardDelay):1000);
-            next=next===undefined?ready:Math.min(next,ready);
-          }
-          ports[name]={state:status,role,rootId:root.id,cost:portCost(p,vlan),edge,bpduGuard};
-          const previous=old.get(d.id)?.[String(vlan)]?.ports[name];
-          if(previous?.state!==status || previous?.role!==role) event(engine,d,'STP',`${name} ${status}`,`VLAN ${vlan}: ${role} port; root ${root.config.hostname}.`,bpduGuard);
-        }
+      const tree=d.runtime.stp[String(vlan)]={rootId,bridgeId,rootBridgeId,cost,mode:d.config.features.stp?.mode??'rapid-pvst',boundary,hops:rootRx?.mode==='mst'&&rootRx.region===mstRegion(d)?Math.max(0,(rootRx.hops??20)-1):d.config.features.stp?.mst?.maxHops??20,rootPort:rootPort?.name,ports:{} as Record<string,StpPortState>,messageAge:rootRx?rootRx.age+1000+now-rootRx.received:0,maxAge:rootRx?.maxAge??stpTimer(d,vlan,'maxAge',20),helloTime:rootRx?.helloTime??stpTimer(d,vlan,'helloTime',2),forwardTime:rootRx?.forwardTime??stpTimer(d,vlan,'forwardTime',15)};
+      const rootChanged=old[String(vlan)]?.rootBridgeId!==rootBridgeId||old[String(vlan)]?.cost!==cost;
+      let topologyChanged=false;
+      for(const p of localPorts){const{name,iface}=p,previous=old[String(vlan)]?.ports[name],rx=valid(p),heartbeat=stpHeartbeats.get(engine)?.get(`${d.id}|${name}`),group=iface.features.channelGroup;
+        const representative=group?d.runtime.features.portChannels[group]?.activeMembers[0]:name;
+        const rootGroup=rootPort?.iface.features.channelGroup;
+        let role=rootPort&&(rootPort.name===name||group&&group===rootGroup)?'root':'designated';
+        if(role!=='root'&&rx&&rx.role==='designated'&&compareStp(stpVector(rx.rootBridgeId,rx.cost,rx.bridgeId,rx.portId),stpVector(rootBridgeId,cost,bridgeId,stpPortId(p,vlan)))<0)role=rx.bridgeId===bridgeId?'backup':'alternate';
+        const up=engine.interfaceUp(d.id,name)&&channelActive(p),rootGuard=!!iface.features.rootGuard&&!!rx&&compareStp(stpVector(rx.rootBridgeId,rx.cost,rx.bridgeId,rx.portId),stpVector(rootBridgeId,cost,bridgeId,stpPortId(p,vlan)))<0;
+        const loopGuard=loopguardEnabled(d,iface)&&!iface.features.bpdufilter&&!!(heartbeat?.blocked.has(String(vlan))||heartbeat?.lost.has(String(vlan)));
+        const bpduGuard=!!iface.features.errDisabled&&d.runtime.features.errdisableCauses?.[name]==='bpduguard';
+        const edge=!!iface.features.bpdufilter||portfastConfigured(d,iface)&&!rx;
+        const classic=d.config.features.stp?.mode==='pvst'||!!d.runtime.features.stpLegacy?.[name]||iface.features.stpLinkType==='shared'||iface.features.stpLinkType!=='point-to-point'&&interfaceDuplex(d,iface)==='half';
+        const signature=JSON.stringify([rootBridgeId,role,up,rootGuard,loopGuard,bpduGuard,edge,classic,iface.features.bpdufilter,ws.find(w=>w.a.device.id===d.id&&w.a.name===name||w.b.device.id===d.id&&w.b.name===name)?.link.id]);
+        const key=`${d.id}|${vlan}|${name}`;let transition=session.transitions.get(key);
+        if(!transition||transition.signature!==signature||transition.start>now||!previous){transition={signature,start:now};session.transitions.set(key,transition);}
+        if(classic&&d.config.features.stp?.uplinkFast&&role==='root'&&previous?.role==='alternate'&&Object.entries(old[String(vlan)]?.ports??{}).some(([n,p])=>p.role==='root'&&!engine.interfaceUp(d.id,n))){transition.start=now-2*tree.forwardTime;event(engine,d,'STP','UplinkFast failover',`VLAN ${vlan}: alternate ${name} becomes the forwarding root port.`);}
+        const elapsed=now-transition.start,blocked=['alternate','backup'].includes(role)||!up||rootGuard||loopGuard||bpduGuard;
+        // A delivered proposal synchronizes this bridge before the root-port agreement.
+        const receivedProposal=rx&&JSON.stringify([rx.rootBridgeId,rx.cost,rx.bridgeId,rx.portId]);
+        if(role==='root'&&rx?.proposal&&!classic)heartbeat?.accepted.set(String(vlan),receivedProposal!);
+        const proposed=role==='root'&&!classic&&!!receivedProposal&&heartbeat?.accepted.get(String(vlan))===receivedProposal;
+        const agreed=heartbeat?.agreements.get(String(vlan))===stpProposal(tree,p,vlan);
+        const readyRapid=role==='root'&&!!rx||proposed||agreed||!rx&&elapsed>=1000;
+        let status:StpPortState['state']=blocked?(up?'blocking':'disabled'):edge?'forwarding':classic?(elapsed<tree.forwardTime?'listening':elapsed<2*tree.forwardTime?'learning':'forwarding'):readyRapid?'forwarding':elapsed<2*tree.forwardTime?'discarding':'forwarding';
+        if(rootChanged&&role==='designated'&&!edge&&!classic&&!agreed)status='discarding';
+        if(bpduGuard){status='disabled';role='bpdu-inconsistent';}else if(rootGuard){status='blocking';role='root-inconsistent';}else if(loopGuard){status='blocking';role='loop-inconsistent';}
+        if(!blocked&&!edge&&status!=='forwarding'){const ready=transition.start+(classic?(elapsed<tree.forwardTime?tree.forwardTime:2*tree.forwardTime):!rx?1000:2*tree.forwardTime);if(ready>now)next=next===undefined?ready:Math.min(next,ready);}
+        tree.ports[name]={state:status,role,rootId,cost:portCost(p,vlan),edge,bpduGuard,proposal:!classic&&role==='designated'&&!agreed,agreement:proposed?JSON.stringify([rx!.rootBridgeId,rx!.cost,rx!.bridgeId,rx!.portId]):undefined,representative};
+        if(previous?.state!==status||previous?.role!==role){event(engine,d,'STP',`${name} ${status}`,`VLAN ${vlan}: ${role} port; root ${rootId}.`,bpduGuard);if(previous&&!edge&&(status==='forwarding'||classic&&previous.state==='forwarding'))topologyChanged=true;}
       }
+      if(topologyChanged){flushStpMac(d,vlan);const changes=d.runtime.features.stpTopology??={};changes[String(vlan)]={count:(changes[String(vlan)]?.count??0)+1,time:now,id:`${d.id}:${vlan}:${now}`};}
     }
   }
   return next;
 }
-
-function stpExpiry(engine:Simulator,s:StpHeartbeat):void {
-  engine.clock.cancel(s.expiry);s.expiry=undefined;
-  const d=engine.getDevice(s.deviceId),iface=d?.config.interfaces[s.port];if(!d||!iface||!loopguardEnabled(d,iface)||iface.features.bpdufilter)return;
-  let next=Infinity,changed=false;
-  for(const[vlan,tree]of Object.entries(d.runtime.stp)){
-    const p=tree.ports[s.port];if(!p||!['root','alternate','loop-inconsistent'].includes(p.role??''))continue;
-    const expires=(s.received.get(vlan)??s.created)+stpTimer(d,vlan,'maxAge',20);
-    if(expires<=engine.clock.now()){if(!s.blocked.has(vlan)){s.blocked.add(vlan);changed=true;}}
-    else next=Math.min(next,expires);
-  }
-  if(Number.isFinite(next))s.expiry=engine.clock.schedule(next-engine.clock.now(),()=>stpExpiry(engine,s),{owner:d.id,label:'STP loop guard BPDU expiry'});
-  if(changed){event(engine,d,'STP',`${s.port} loop-inconsistent`,'The configured BPDU max-age expired; loop guard blocks data forwarding.',true);engine.recompute();engine.clock.schedule(0,()=>{engine.recompute();engine.notify();},{owner:d.id,label:'Apply STP loop guard state'});engine.notify();}
+function stpLifetime(rx:StpBPDU):number{return Math.max(0,Math.min(rx.maxAge-rx.age,rx.mode==='pvst'?Infinity:3*rx.helloTime));}
+function stpExpiry(engine:Simulator,s:StpHeartbeat):void{
+  engine.clock.cancel(s.expiry);s.expiry=undefined;const d=engine.getDevice(s.deviceId),iface=d?.config.interfaces[s.port];if(!d||!iface)return;
+  const now=engine.clock.now();let next=Infinity,changed=false;
+  for(const[vlan,rx]of s.received){const at=rx.received+stpLifetime(rx);if(at<=now){const previous=d.runtime.stp[vlan]?.ports[s.port];if(['root','alternate','loop-inconsistent'].includes(previous?.role??''))s.lost.add(vlan);if(loopguardEnabled(d,iface)&&s.lost.has(vlan)&&!iface.features.bpdufilter)s.blocked.add(vlan);s.received.delete(vlan);s.agreements.delete(vlan);s.accepted.delete(vlan);changed=true;}else next=Math.min(next,at);}
+  if(Number.isFinite(next))s.expiry=engine.clock.schedule(next-now,()=>stpExpiry(engine,s),{owner:d.id,label:'STP received BPDU expiry'});
+  if(changed){event(engine,d,'STP',s.blocked.size?`${s.port} loop-inconsistent`:`${s.port} BPDU expired`,'Received spanning-tree information aged out.',!!s.blocked.size);engine.recompute();engine.notify();}
 }
-function synchronizeStpHeartbeats(engine:Simulator):void {
+function sendStp(engine:Simulator,s:StpHeartbeat):void{
+  const d=engine.getDevice(s.deviceId),iface=d?.config.interfaces[s.port];if(!d||!iface||!engine.interfaceUp(d.id,s.port)||iface.features.bpdufilter)return;
+  const now=engine.clock.now(),vlans:any[]=[];
+  const window=Math.floor(now/1000);if(s.window!==window){s.window=window;s.sentCount=0;}if((s.sentCount??0)>=Number(d.config.features.stp?.transmitHoldCount??6))return;
+  for(const[vlan,tree]of Object.entries(d.runtime.stp)){const p=tree.ports[s.port];if(!p||!['designated','root'].includes(p.role??'')||p.state==='disabled')continue;
+    if(iface.features.bpdufilter!==false&&d.config.features.stp?.bpdufilterDefault&&p.edge&&now-s.created>3000)continue;
+    const rootRx=tree.rootPort&&stpHeartbeats.get(engine)?.get(`${d.id}|${tree.rootPort}`)?.received.get(vlan),age=rootRx?rootRx.age+1000+now-rootRx.received:0;
+    const port={device:d,iface,name:s.port},proposal=stpProposal(tree,port,Number(vlan)),tc=d.runtime.features.stpTopology?.[vlan],body={vlan,rootId:tree.rootId,rootBridgeId:tree.rootBridgeId,bridgeId:tree.bridgeId,cost:tree.cost,portId:stpPortId(port,Number(vlan)),mode:d.config.features.stp?.mode??'rapid-pvst',region:mstRegion(d),hops:tree.hops,age,maxAge:tree.maxAge,helloTime:tree.helloTime,forwardTime:tree.forwardTime,role:p.role,proposal:p.proposal,agreement:p.agreement,tc:tc&&now-tc.time<2*tree.helloTime?tc.id:undefined};
+    const sig=JSON.stringify([proposal,body.role,body.proposal,body.agreement,body.mode,body.region,body.maxAge,body.helloTime,body.forwardTime,body.tc]);
+    if(s.sent.get(vlan)===sig&&now-(s.lastSent.get(vlan)??-Infinity)<tree.helloTime)continue;
+    s.sent.set(vlan,sig);s.lastSent.set(vlan,now);vlans.push(body);
+  }
+  if(vlans.length){s.sentCount=(s.sentCount??0)+1;const counters=(d.runtime.features.stpCounters??={})[s.port]??={sent:0,received:0};counters.sent++;engine.sendLinkControl?.(d.id,s.port,{kind:'link-control',protocol:'STP',body:{deviceId:d.id,port:s.port,vlans}});}
+}
+function synchronizeStpHeartbeats(engine:Simulator):void{
   let sessions=stpHeartbeats.get(engine);if(!sessions){sessions=new Map();stpHeartbeats.set(engine,sessions);}const wanted=new Set<string>();
   for(const d of engine.lab.devices.filter(switching))for(const[name,iface]of Object.entries(d.config.interfaces)){
     if(!iface.switchport||!engine.interfaceUp(d.id,name)||/^(Vlan|Port-channel)/i.test(name)||iface.features.bpdufilter)continue;
-    if(iface.features.bpdufilter!==false&&d.config.features.stp?.bpdufilterDefault&&portfastConfigured(d,iface)&&Object.values(d.runtime.stp).every(tree=>!tree.ports[name]||tree.ports[name].edge))continue;
     const key=`${d.id}|${name}`;wanted.add(key);let s=sessions.get(key);
-    if(s&&s.runtime!==d.runtime){engine.clock.cancel(s.tx);engine.clock.cancel(s.expiry);sessions.delete(key);s=undefined;}
-    if(!s){s={deviceId:d.id,port:name,runtime:d.runtime,created:engine.clock.now(),received:new Map(),blocked:new Set(),lastSent:new Map()};sessions.set(key,s);}
-    if(!loopguardEnabled(d,iface))s.blocked.clear();
-    if(!s.tx){s.tx=engine.clock.schedule(0,()=>{
-      const vlans=Object.entries(d.runtime.stp).filter(([vlan,tree])=>tree.ports[name]?.role==='designated'&&engine.clock.now()-(s!.lastSent.get(vlan)??-Infinity)>=stpTimer(d,vlan,'helloTime',2)).map(([vlan,tree])=>{s!.lastSent.set(vlan,engine.clock.now());return{vlan,rootId:tree.rootId,rootBridgeId:tree.rootBridgeId,bridgeId:tree.bridgeId,cost:tree.cost};});
-      if(vlans.length)engine.sendLinkControl?.(d.id,name,{kind:'link-control',protocol:'STP',body:{deviceId:d.id,port:name,mode:d.config.features.stp?.mode??'rapid-pvst',vlans}});
-    },{owner:d.id,repeat:1000,label:'STP designated BPDU heartbeat'});}
-    stpExpiry(engine,s);
+    if(s&&s.runtime!==d.runtime){engine.clock.cancel(s.tx);engine.clock.cancel(s.trigger);engine.clock.cancel(s.expiry);sessions.delete(key);s=undefined;}
+    if(!s){s={deviceId:d.id,port:name,runtime:d.runtime,created:engine.clock.now(),received:new Map(),blocked:new Set(),lastSent:new Map(),sent:new Map(),agreements:new Map(),accepted:new Map(),lost:new Set()};sessions.set(key,s);}
+    if(!loopguardEnabled(d,iface))s.blocked.clear();else for(const vlan of s.lost)s.blocked.add(vlan);
+    if(!s.tx)s.tx=engine.clock.schedule(0,()=>sendStp(engine,s!),{owner:d.id,repeat:1000,label:'STP received-vector BPDU'});
+    // Changed information is sent immediately, independently of the periodic heartbeat.
+    const triggerSignature=JSON.stringify([d.config.features.stp,mstRegion(d),Object.entries(d.runtime.stp).map(([v,t])=>[v,t.rootId,t.rootBridgeId,t.bridgeId,t.cost,t.helloTime,t.maxAge,t.forwardTime,t.hops,t.ports[name],d.runtime.features.stpTopology?.[v]?.id])]);
+    if(s.triggerSignature!==triggerSignature){s.triggerSignature=triggerSignature;if(!s.trigger)s.trigger=engine.clock.schedule(0,()=>{s!.trigger=undefined;sendStp(engine,s!);},{owner:d.id,label:'STP triggered BPDU'});}
   }
-  for(const[key,s]of sessions)if(!wanted.has(key)){engine.clock.cancel(s.tx);engine.clock.cancel(s.expiry);sessions.delete(key);}
+  for(const[key,s]of sessions)if(!wanted.has(key)){engine.clock.cancel(s.tx);engine.clock.cancel(s.trigger);engine.clock.cancel(s.expiry);sessions.delete(key);}
 }
-function receiveStpHeartbeat(engine:Simulator,d:Device,port:string,payload:any):void {
-  const iface=d.config.interfaces[port];if(!iface?.switchport||iface.features.bpdufilter)return;
-  const s=stpHeartbeats.get(engine)?.get(`${d.id}|${port}`);if(!s||!Array.isArray(payload?.vlans))return;
-  let recovered=false,migrated=false;if(payload.mode==='pvst'&&d.config.features.stp?.mode!=='pvst'&&!d.runtime.features.stpLegacy?.[port]){(d.runtime.features.stpLegacy??={})[port]=true;migrated=true;}for(const bpdu of payload.vlans){const vlan=String(bpdu.vlan);if(!d.runtime.stp[vlan]?.ports[port])continue;s.received.set(vlan,engine.clock.now());if(s.blocked.delete(vlan))recovered=true;}
-  stpExpiry(engine,s);if(migrated){engine.recompute();engine.notify();}if(recovered){event(engine,d,'STP',`${port} loop guard recovered`,'Designated BPDU reception restored.');engine.recompute();engine.notify();}
+function receiveStpHeartbeat(engine:Simulator,d:Device,port:string,payload:any):void{
+  const iface=d.config.interfaces[port];if(!iface?.switchport||iface.features.bpdufilter||!Array.isArray(payload?.vlans))return;
+  const counters=(d.runtime.features.stpCounters??={})[port]??={sent:0,received:0};counters.received++;
+  if(errdisableDetectionEnabled(d,'bpduguard')&&bpduguardEnabled(d,iface)){disableInterface(engine,d,port,'bpduguard');engine.recompute();engine.notify();return;}
+  const s=stpHeartbeats.get(engine)?.get(`${d.id}|${port}`);if(!s)return;let changed=false;
+  for(const body of payload.vlans){const vlan=String(body.vlan),tree=d.runtime.stp[vlan];if(!tree?.ports[port]||typeof body.rootId!=='string'||typeof body.rootBridgeId!=='string'||typeof body.bridgeId!=='string'||!Number.isFinite(body.cost)||body.cost<0||!Number.isFinite(body.maxAge)||body.maxAge<=0||body.age>=body.maxAge)continue;
+    const rx={...body,vlan,received:engine.clock.now()} as StpBPDU,old=s.received.get(vlan);
+    const fields=(r:StpBPDU|undefined)=>r&&JSON.stringify([r.rootId,r.rootBridgeId,r.cost,r.bridgeId,r.portId,r.mode,r.region,r.role,r.proposal,r.agreement,r.tc,r.maxAge,r.helloTime,r.forwardTime]);
+    if(fields(old)!==fields(rx))changed=true;s.received.set(vlan,rx);s.lost.delete(vlan);if(s.blocked.delete(vlan))changed=true;
+    if(rx.mode==='pvst'&&d.config.features.stp?.mode!=='pvst'&&!d.runtime.features.stpLegacy?.[port]){(d.runtime.features.stpLegacy??={})[port]=true;changed=true;}
+    if(rx.agreement&&rx.agreement===stpProposal(tree,{device:d,iface,name:port},Number(vlan))&&s.agreements.get(vlan)!==rx.agreement){s.agreements.set(vlan,rx.agreement);changed=true;}
+    const seen=d.runtime.features.stpReceivedTC??={},tcKey=vlan+'|'+rx.tc;if(rx.tc&&!seen[tcKey]){seen[tcKey]=engine.clock.now()+60000;flushStpMac(d,Number(vlan),port);const changes=d.runtime.features.stpTopology??={};changes[vlan]={count:changes[vlan]?.count??0,time:engine.clock.now(),id:rx.tc};changed=true;}for(const[k,at]of Object.entries<number>(seen))if(at<engine.clock.now())delete seen[k];
+  }
+  stpExpiry(engine,s);if(changed){engine.recompute();engine.notify();}
 }
 function forwardAllowed(p: Port, vlan:number):boolean {
   return carries(p,vlan)&&vlanActive(p.device,vlan)&&channelActive(p)&&p.device.runtime.stp[String(vlan)]?.ports[p.name]?.state==='forwarding';
@@ -832,7 +719,7 @@ function keychainStates(engine:Simulator):number|undefined {
   return next;
 }
 function protocolAuthentication(engine:Simulator,p:RoutedPort,protocol:string):{mode:string|boolean;send?:{id:string;keyString:string;algorithm?:string};accept:{id:string;keyString:string;algorithm?:string}[]} {
-  const f=p.iface.features[protocol]??{},mode=f.authenticationMode??f.authentication??(f.authenticationKeyChain||f.keyChain?(ospfProtocol(protocol)?'message-digest':'md5'):'none');
+  const f=p.iface.features[protocol]??{},area:any=protocol==='ospf'?Object.entries(config(p.device,protocol)?.areas??{}).find(([id])=>areaId(id)===areaId(networkMatch(p,protocol)?.area))?.[1]:undefined,configured=f.authenticationMode??f.authentication??(f.authenticationKeyChain||f.keyChain?(ospfProtocol(protocol)?'message-digest':'md5'):area?.authentication??'none'),mode=configured==='null'?'none':configured;
   if(mode==='none'||mode===false)return{mode,accept:[]};if(mode==='simple'||mode==='text'){const key=typeof f.authenticationKey==='string'&&f.authenticationKey.length?{id:'0',keyString:f.authenticationKey}:undefined;return{mode,send:key,accept:key?[key]:[]};}
   const keys=(direction:'send'|'accept')=>{const name=f.authenticationKeyChain??f.keyChain;if(name){const list=activeKeys(engine,p.device,name,direction);return ospfProtocol(protocol)?list.sort((a,b)=>a.sendEnd===b.sendEnd?Number(b.id)-Number(a.id):a.sendEnd===Infinity?-1:b.sendEnd===Infinity?1:b.sendEnd-a.sendEnd).map(({id,keyString,algorithm})=>({id,keyString,algorithm})):list.map(({id,keyString})=>({id,keyString}));}return Object.entries(f.messageDigestKeys??{}).map(([id,k])=>({id,keyString:typeof k==='string'?k:(k as any).keyString})).filter(k=>typeof k.keyString==='string'&&k.keyString.length).sort((a,b)=>Number(a.id)-Number(b.id));};
   return{mode,send:keys('send')[0],accept:keys('accept')};
@@ -849,7 +736,7 @@ function ospfElections(engine:Simulator,endpoints:RoutedPort[],peers:Map<string,
   for(const p of endpoints){
     const network=networkMatch(p,protocol);if(!network||passive(p,protocol)||visited.has(portKey(p)))continue;
     const pf=p.iface.features[protocol]??{};
-    if(String(pf.networkType??'').startsWith('point-to-')){p.device.runtime.features[field][p.name]={role:'POINT-TO-POINT',area:areaId(network.area)};visited.add(portKey(p));continue;}
+    if(String(pf.networkType??'').startsWith('point-to-')){p.device.runtime.features[field][p.name]={role:'POINT-TO-POINT',area:areaId(network.area),authenticationMode:protocolAuthentication(engine,p,protocol).mode};visited.add(portKey(p));continue;}
     const members=[p,...(peers.get(endpointKey(p))??[]).filter(q=>{
       const qn=networkMatch(q,protocol),qf=q.iface.features[protocol]??{};
       return qn&&!passive(q,protocol)&&!String(qf.networkType??'').startsWith('point-to-')&&areaId(qn.area)===areaId(network.area)&&(p.family===6||q.prefix===p.prefix&&contains(p.ip,p.prefix,q.ip))&&ospfTimers(p,protocol).hello===ospfTimers(q,protocol).hello&&ospfTimers(p,protocol).dead===ospfTimers(q,protocol).dead&&authenticationCompatible(engine,p,q,protocol);
@@ -862,7 +749,7 @@ function ospfElections(engine:Simulator,endpoints:RoutedPort[],peers:Map<string,
     let dr=prior.map(r=>eligible.find(q=>q.device.id===r.drDeviceId)).find(Boolean);
     if(!dr)dr=prior.map(r=>eligible.find(q=>q.device.id===r.bdrDeviceId)).find(Boolean)??eligible[0];
     const bdr=prior.map(r=>eligible.find(q=>q.device.id!==dr?.device.id&&q.device.id===r.bdrDeviceId)).find(Boolean)??eligible.find(q=>q.device.id!==dr?.device.id);
-    for(const q of members){visited.add(portKey(q));q.device.runtime.features[field][q.name]={role:q.device.id===dr?.device.id?'DR':q.device.id===bdr?.device.id?'BDR':'DROTHER',drDeviceId:dr?.device.id,drRouterId:dr?routerId(dr.device,protocol):undefined,bdrDeviceId:bdr?.device.id,bdrRouterId:bdr?routerId(bdr.device,protocol):undefined,area:areaId(network.area),members:members.length,electedAt:prior.find(r=>r.drDeviceId===dr?.device.id)?.electedAt??engine.clock.now()};}
+    for(const q of members){visited.add(portKey(q));q.device.runtime.features[field][q.name]={role:q.device.id===dr?.device.id?'DR':q.device.id===bdr?.device.id?'BDR':'DROTHER',drDeviceId:dr?.device.id,drRouterId:dr?routerId(dr.device,protocol):undefined,bdrDeviceId:bdr?.device.id,bdrRouterId:bdr?routerId(bdr.device,protocol):undefined,area:areaId(network.area),authenticationMode:protocolAuthentication(engine,q,protocol).mode,members:members.length,electedAt:prior.find(r=>r.drDeviceId===dr?.device.id)?.electedAt??engine.clock.now()};}
   }
 }
 function adjacency(engine:Simulator,endpoints:RoutedPort[],peers:Map<string,RoutedPort[]>,protocol:string):Adj[] {
@@ -893,7 +780,7 @@ function adjacency(engine:Simulator,endpoints:RoutedPort[],peers:Map<string,Rout
       if(eigrpProtocol(protocol)&&dualContext(engine).blocked.has(`${from.device.id}|${protocol}|${from.name}|${to.ip}`)){from.device.runtime.neighbors.at(-1)!.state='SIA-DOWN';continue;}
       if(neighborState==='EXSTART'||neighborState==='BFD-DOWN'||neighborState==='AUTH-FAILED')continue;
       if(ospfProtocol(protocol)&&neighborState==='2WAY'&&!from.device.runtime.features[`${protocol}Interfaces`]?.[from.name]?.drDeviceId)continue;
-      edges.push({from,to,area,cost:ospfProtocol(protocol)?String(from.iface.features[protocol]?.networkType??'').startsWith('point-to-multipoint')?Number(a.neighbors?.find((n:any)=>n.address===to.ip)?.cost??ospfCost(from,false,protocol)):ospfCost(from,false,protocol):1,bandwidth:Math.max(1,interfaceBandwidth(from.device,from.iface)),delay:Math.max(1,Number(from.iface.features.delay??10))*10});
+      edges.push({from,to,area,cost:ospfProtocol(protocol)?String(from.iface.features[protocol]?.networkType??'').startsWith('point-to-multipoint')?Number(configuredOSPFNeighbors(engine,from.device.id,protocol as OSPFProtocol,from.iface.vrf,from.name).find((n:any)=>sameAddress(n.address,to.ip))?.cost??ospfCost(from,false,protocol)):ospfCost(from,false,protocol):1,bandwidth:Math.max(1,interfaceBandwidth(from.device,from.iface)),delay:Math.max(1,Number(from.iface.features.delay??10))*10});
     }
   }
   return edges;
@@ -942,7 +829,7 @@ function ospfVirtualLinks(engine:Simulator,endpoints:RoutedPort[],base:Adj[],pro
     const area=areaId(cfg.transitArea),remote=[...nodes.values()].find(p=>p.node!==local.node&&routerId(p.device,protocol)===cfg.routerId),rc=remote&&config(remote.device,protocol);
     const reverse=rc?.virtualLinks?.find((v:any)=>areaId(v.transitArea)===area&&v.routerId===routerId(local.device,protocol));
     const normal=area!=='0'&&(config(local.device,protocol)?.areas?.[area]?.type??'normal')==='normal'&&(rc?.areas?.[area]?.type??'normal')==='normal';
-    const matching=reverse&&(cfg.helloInterval??10)===(reverse.helloInterval??10)&&(cfg.deadInterval??40)===(reverse.deadInterval??40)&&(cfg.authentication??'none')===(reverse.authentication??'none')&&(cfg.authenticationKey??'')===(reverse.authenticationKey??'');
+    const virtualEndpoint=(p:RoutedPort,link:any):RoutedPort=>({...p,iface:{...p.iface,features:{...p.iface.features,ospf:{...link,area:'0'}}}}),matching=reverse&&remote&&(cfg.helloInterval??10)===(reverse.helloInterval??10)&&(cfg.deadInterval??40)===(reverse.deadInterval??40)&&authenticationCompatible(engine,virtualEndpoint(local,cfg),virtualEndpoint(remote,reverse),protocol);
     const backbone=remote&&endpoints.some(p=>(p.node===local.node||p.node===remote.node)&&networkMatch(p,protocol)&&areaId(networkMatch(p,protocol)?.area)==='0');
     const path=remote&&normal&&matching&&backbone?(pathsFrom(local.node,base.filter(e=>e.area===area),protocol).get(remote.node)??[]).sort((a,b)=>a.cost-b.cost)[0]:undefined;
     const first=path?.edges[0],last=path?.edges.at(-1),up=!!first&&!!last;
@@ -955,12 +842,12 @@ function ospfVirtualLinks(engine:Simulator,endpoints:RoutedPort[],base:Adj[],pro
   return[...base,...virtual];
 }
 
-function eigrpVectorMetric(d:Device,protocol:string,components:{bandwidth:number;delay:number;reliability?:number;load?:number}[]):number {
+function eigrpVectorMetric(d:Device,protocol:string,components:{bandwidth:number;delay:number;wideLatency?:number;reliability?:number;load?:number}[]):number {
   const bandwidth=Math.min(...components.map(c=>Math.max(1,c.bandwidth)));if(!Number.isFinite(bandwidth))return 0;
   const [k1,k2,k3,k4,k5]=config(d,protocol)?.metricWeights??[1,0,1,0,0],load=Math.max(1,...components.map(c=>c.load??1)),reliability=Math.min(255,...components.map(c=>c.reliability??255)),factor=k5?k5/Math.max(1,reliability+k4):1;
   if(!config(d,protocol)?.name)return Math.floor(256*(k1*10000000/bandwidth+k2*10000000/bandwidth/Math.max(1,256-load)+k3*components.reduce((n,c)=>n+c.delay/10,0))*factor);
   // Default K1/K3 wide vectors use the documented 65536 scale. Links up to 1 Gbit/s use configured delay in microseconds; higher-speed latency derives from bandwidth.
-  const latency=components.reduce((n,c)=>n+(c.bandwidth>1000000?10000000*65536/10/c.bandwidth:c.delay*65536/10),0);
+  const latency=components.reduce((n,c)=>n+(c.wideLatency??(c.bandwidth>1000000?10000000*65536/10/c.bandwidth:c.delay*65536/10)),0);
   return Math.floor((k1*10000000*65536/bandwidth+k2*10000000*65536/bandwidth/Math.max(1,256-load)+k3*latency)*factor);
 }
 function defaultSeedMetric(d:Device,protocol:string,fallback:number|undefined):number|undefined {const m=config(d,protocol)?.defaultMetric;if(m===undefined)return fallback;return typeof m==='number'?m:eigrpVectorMetric(d,protocol,[{bandwidth:m.bandwidth,delay:m.delay*10,reliability:m.reliability,load:m.load}]);}
@@ -969,7 +856,7 @@ function igpMetric(path:Path,target:RoutedPort,protocol:string):number {
   return ospfProtocol(protocol)?path.cost+ospfCost(target,true,protocol):eigrpProtocol(protocol)?eigrpVectorMetric(path.edges[0]?.from.device??target.device,protocol,[...path.edges.map(e=>({bandwidth:e.bandwidth,delay:e.delay})),{bandwidth:interfaceBandwidth(target.device,target.iface),delay:Number(target.iface.features.delay??10)*10}]):path.cost;
 }
 function summaryVectorMetric(path:Path,prefix:{network:string;prefix:number},protocol:string,reported=false):number|undefined {
-  for(let i=0;i<path.edges.length;i++){const edge=path.edges[i],summary=edge.to.iface.features[protocol]?.summaries?.find((r:any)=>subnet(r.network,r.prefix)===prefix.network&&r.prefix===prefix.prefix),vector=config(edge.to.device,protocol)?.summaryMetrics?.[`${prefix.network}/${prefix.prefix}`];if(!summary||!vector)continue;
+  for(let i=0;i<path.edges.length;i++){const edge=path.edges[i],summary=edge.to.iface.features[protocol]?.summaries?.find((r:any)=>subnet(r.network,r.prefix)===prefix.network&&r.prefix===prefix.prefix),vector=config(edge.to.device,protocol)?.summaryMetrics?.[`${prefix.network}/${prefix.prefix}`];if(!summary||vector?.bandwidth===undefined)continue;
     return eigrpVectorMetric(path.edges[0].from.device,protocol,[...path.edges.slice(reported?1:0,i+1).map(e=>({bandwidth:e.bandwidth,delay:e.delay})),{bandwidth:vector.bandwidth,delay:vector.delay*10,reliability:vector.reliability,load:vector.load}]);
   }
 }
@@ -1018,8 +905,9 @@ function installEigrpSummaries(engine:Simulator,endpoints:RoutedPort[],protocol:
       for(const summary of summaries){
         const specific=components.filter(r=>r.prefix>summary.prefix&&contains(summary.network,summary.prefix,r.network)&&r.interface!==p.name);if(!specific.length)continue;
         const m=summary.automatic?undefined:config(d,protocol)?.summaryMetrics?.[`${summary.network}/${summary.prefix}`];
-        const metric=m?eigrpVectorMetric(d,protocol,[{bandwidth:m.bandwidth,delay:m.delay*10,reliability:m.reliability,load:m.load}]):Math.min(...specific.map(r=>r.componentMetric));
-        addProtocolRoute(d,{network:subnet(summary.network,summary.prefix),prefix:summary.prefix,interface:'Null0',protocol:'D summary',ad:summary.automatic?5:summary.ad??5,metric:eigrpRibMetric(d,protocol,metric),...(config(d,protocol)?.name?{wideMetric:metric}:{}),vrf:p.iface.vrf} as Route);
+        const distance=m?.distance??(summary.automatic?5:summary.ad??5);if(distance===255)continue;
+        const metric=m?.bandwidth!==undefined?eigrpVectorMetric(d,protocol,[{bandwidth:m.bandwidth,delay:m.delay*10,reliability:m.reliability,load:m.load}]):Math.min(...specific.map(r=>r.componentMetric));
+        addProtocolRoute(d,{network:subnet(summary.network,summary.prefix),prefix:summary.prefix,interface:'Null0',protocol:'D summary',ad:distance,metric:eigrpRibMetric(d,protocol,metric),...(config(d,protocol)?.name?{wideMetric:metric}:{}),vrf:p.iface.vrf} as Route);
       }
     }
   }
@@ -1084,6 +972,59 @@ function eigrpPolicyMetric(path:Path,route:Pick<Route,'network'|'prefix'>,metric
     }
   }
   return metric;
+}
+
+function eigrpLocalPolicy(d:Device,protocol:string,direction:'in'|'out',port:string,route:Pick<Route,'network'|'prefix'>,metric:number):number|undefined{
+  if(!protocolPolicyPermits(d,protocol,direction,port,{...route,interface:port,protocol:'D',ad:90,metric} as Route))return;
+  const all=(config(d,protocol)?.offsetLists??[]).filter((r:any)=>r.direction===direction&&(!r.interface||r.interface===port)),rules=all.some((r:any)=>r.interface)?all.filter((r:any)=>r.interface):all;
+  for(const rule of rules)if(!rule.acl||routeAclPermits(d,rule.acl,route))metric+=Number(rule.offset??0);return metric;
+}
+function eigrpAdvertisementMetric(d:Device,protocol:string,r:EigrpAdvertisement):number{return eigrpVectorMetric(d,protocol,[r.vector])+Number(r.vector.offset??0)+Number(r.vector.seedMetric??0);}
+function eigrpWideLatency(v:{bandwidth:number;delay:number;wideLatency?:number}):number{return v.wideLatency??(v.bandwidth>1000000?10000000*65536/10/v.bandwidth:v.delay*65536/10);}
+function eigrpUpdatePeers(engine:Simulator,edges:Adj[],protocol:EigrpFamily):EigrpUpdatePeer[]{
+  const c=helloContext(engine);return edges.flatMap(edge=>{const key=dualPeerKey(edge,protocol),hello=c.peers.get(key),portKey=`${edge.from.device.id}|${protocol}|${edge.from.name}`,port=c.ports.get(portKey);if(!hello?.updateEpoch||!port)return[];return[{key,protocol,deviceId:edge.from.device.id,peerDeviceId:edge.to.device.id,interface:edge.from.name,source:edge.from.ip,destination:edge.to.ip,vrf:edge.from.iface.vrf,asn:Number(config(edge.from.device,protocol)?.asn),localEpoch:eigrpUpdateEpoch(engine,portKey,edge.from.device.runtime,port.signature),remoteEpoch:hello.updateEpoch,runtime:edge.from.device.runtime}];});
+}
+function installReceivedEigrp(engine:Simulator,endpoints:RoutedPort[],edges:Adj[],protocol:EigrpFamily):void{
+  const peers=eigrpUpdatePeers(engine,edges,protocol);synchronizeEigrpUpdatePeers(engine,protocol,peers,peer=>{const c=helloContext(engine),hello=c.peers.get(peer.key);engine.clock.cancel(hello?.expiry);c.peers.delete(peer.key);invalidateEigrpUpdateEpoch(engine,`${peer.deviceId}|${protocol}|${peer.interface}`);const d=engine.getDevice(peer.deviceId);if(d)event(engine,d,protocol.toUpperCase(),'UPDATE retry limit',`${peer.destination} on ${peer.interface}: reliable UPDATE acknowledgement was not received.`,true);engine.recompute();engine.notify();});
+  for(const d of engine.lab.devices)d.runtime.features[protocol==='eigrp6'?'eigrp6Topology':'eigrpTopology']=[];
+  for(const peer of peers){if(!eigrpUpdateReady(engine,peer.key))continue;const edge=edges.find(e=>dualPeerKey(e,protocol)===peer.key)!,d=edge.from.device,cfg=config(d,protocol)!;
+    for(const received of receivedEigrpUpdates(engine,peer.key)){
+      if(received.path.includes(edge.from.node)||received.hopCount+1>Number(cfg.maximumHops??100))continue;
+      const vector={...received.vector,bandwidth:Math.min(received.vector.bandwidth,edge.bandwidth),delay:received.vector.delay+edge.delay,wideLatency:eigrpWideLatency(received.vector)+eigrpWideLatency(edge)},advertised={...received,vector,hopCount:received.hopCount+1,path:[...received.path,edge.from.node]},raw=eigrpAdvertisementMetric(d,protocol,advertised),metric=eigrpLocalPolicy(d,protocol,'in',peer.interface,received,raw);if(metric===undefined)continue;vector.offset=Number(vector.offset??0)+metric-raw;
+      const nextHop=received.nextHop&&contains(edge.from.ip,edge.from.prefix,received.nextHop)?received.nextHop:peer.destination;advertised.nextHop=nextHop;const route:DualRoute={network:received.network,prefix:received.prefix,nextHop,interface:peer.interface,protocol:received.external?'D EX':'D',ad:received.external?170:90,metric,reportedDistance:eigrpAdvertisementMetric(d,protocol,received),dependencyNodes:received.path.map(node=>node.split('\0')[0]),vrf:peer.vrf,learnedFrom:received.origin,tag:received.tag,candidateDefault:received.candidateDefault&&cfg.defaultInformationIn!==false||undefined,eigrpUpdate:advertised};
+      route.ad=configuredDistance(d,protocol,route,(name,r)=>routeAclPermits(d,name,r));if(route.ad===255)continue;const c=dualContext(engine),key=dualKey(d,protocol,route.network,route.prefix,peer.vrf),rows=c.candidates.get(key)??[];rows.push(route);c.candidates.set(key,rows);
+    }
+  }
+}
+function eigrpLocalOrigins(engine:Simulator,d:Device,vrf:string|undefined,protocol:EigrpFamily,endpoints:RoutedPort[]):EigrpAdvertisement[]{
+  const own=endpoints.filter(p=>p.node===nodeOf(d,vrf)&&networkMatch(p,protocol)&&!p.ip.toLowerCase().startsWith('fe80:')),cfg=config(d,protocol)!,origins:EigrpAdvertisement[]=[];
+  for(const p of own){const network=subnet(p.ip,p.prefix);if(origins.some(r=>r.network===network&&r.prefix===p.prefix))continue;origins.push({network,prefix:p.prefix,origin:d.id,path:[p.node],hopCount:0,vector:{bandwidth:interfaceBandwidth(d,p.iface),delay:Number(p.iface.features.delay??10)*10},candidateDefault:protocol==='eigrp'&&p.prefix===classfulPrefix(network)&&(d.config.features.defaultNetworks??[]).includes(network)||undefined});}
+  for(const exported of redistributionExports(d,protocol,vrf)){
+    if(origins.some(r=>r.network===exported.network&&r.prefix===exported.prefix))continue;
+    const seed=cfg.defaultMetric,seedVector=seed&&typeof seed==='object'?{bandwidth:seed.bandwidth,delay:seed.delay*10,reliability:seed.reliability,load:seed.load}:undefined,vector:EigrpVector=seedVector&&eigrpVectorMetric(d,protocol,[seedVector])===exported.metric?seedVector:{bandwidth:Number.MAX_SAFE_INTEGER,delay:0,seedMetric:exported.metric};
+    origins.push({network:exported.network,prefix:exported.prefix,origin:d.id,path:[nodeOf(d,vrf)],hopCount:0,vector,external:true,tag:exported.tag,redistributionHistory:exported.redistributionHistory});
+  }
+  if(cfg.defaultOriginate&&(cfg.defaultAlways||d.runtime.routes.some(r=>r.prefix===0&&(r.vrf??'')===(vrf??'')&&(isIPv6(r.network)?6:4)===protocolFamily(protocol))))origins.push({network:protocol==='eigrp6'?'::':'0.0.0.0',prefix:0,origin:d.id,path:[nodeOf(d,vrf)],hopCount:0,vector:{bandwidth:Number.MAX_SAFE_INTEGER,delay:0},external:true});
+  return origins;
+}
+function advertiseSelectedEigrp(engine:Simulator,endpoints:RoutedPort[],protocol:EigrpFamily):void{
+  advertiseEigrpUpdates(engine,protocol,peer=>{
+    const original=engine.getDevice(peer.deviceId);if(!original)return[];const d=routingDevice(original,peer.vrf),cfg=config(d,protocol),iface=d.config.interfaces[peer.interface];if(!cfg||!iface)return[];
+    const p:RoutedPort={device:d,iface,name:peer.interface,ip:peer.source,prefix:protocol==='eigrp'?prefixOf(iface.mask):64,node:nodeOf(d,peer.vrf),family:protocolFamily(protocol)},stub=cfg.stub;if(stub&&(!Array.isArray(stub)||stub.includes('receive-only')))return[];
+    const routes=eigrpLocalOrigins(engine,d,peer.vrf,protocol,endpoints).map(r=>({r,input:undefined as string|undefined}));
+    if(!stub)for(const route of d.runtime.routes.filter(r=>(r.vrf??'')===(peer.vrf??'')&&protocolOf(r)===protocol&&['D','D EX'].includes(r.protocol))){const r=(route as DualRoute).eigrpUpdate;if(r)routes.push({r:structuredClone(r),input:route.interface});}
+    const output=new Map<string,EigrpAdvertisement>();
+    for(const {r,input}of routes){
+      if(input===peer.interface&&iface.features[protocol]?.splitHorizon!==false||r.path.some(node=>node.split('\0')[0]===peer.peerDeviceId))continue;
+      const manual=(iface.features[protocol]?.summaries??[]).filter((s:any)=>s.prefix<r.prefix&&contains(s.network,s.prefix,r.network)).sort((a:any,b:any)=>a.prefix-b.prefix)[0],automatic=protocol==='eigrp'?automaticEigrpSummary(p,r.network,r.prefix,!!r.external):undefined,summary=manual??automatic;
+      if(stub&&Array.isArray(stub)&&!(summary?stub.includes('summary'):r.external?stub.includes('redistributed')||stub.includes('static'):stub.includes('connected')))continue;
+      let advertised:EigrpAdvertisement={...r,vector:{...r.vector},nextHop:iface.features[protocol]?.nextHopSelf===false&&r.nextHop&&contains(peer.source,p.prefix,r.nextHop)?r.nextHop:undefined,candidateDefault:r.candidateDefault&&cfg.defaultInformationOut!==false||undefined};
+      if(summary){const metric=manual&&cfg.summaryMetrics?.[`${subnet(summary.network,summary.prefix)}/${summary.prefix}`];if((metric?.distance??summary.ad)===255)continue;advertised={...advertised,network:subnet(summary.network,summary.prefix),prefix:summary.prefix,origin:d.id,path:[p.node],hopCount:0,external:false,vector:metric?.bandwidth!==undefined?{bandwidth:metric.bandwidth,delay:metric.delay*10,reliability:metric.reliability,load:metric.load}:advertised.vector};}
+      const raw=eigrpAdvertisementMetric(d,protocol,advertised),metric=eigrpLocalPolicy(d,protocol,'out',peer.interface,advertised,raw);if(metric===undefined)continue;advertised.vector.offset=Number(advertised.vector.offset??0)+metric-raw;
+      const key=`${advertised.network}/${advertised.prefix}`,old=output.get(key);if(!old||Number(!!old.external)>Number(!!advertised.external)||!!old.external===!!advertised.external&&eigrpAdvertisementMetric(d,protocol,old)>metric)output.set(key,advertised);
+    }
+    return [...output.values()].sort((a,b)=>natural(a.network,b.network)||a.prefix-b.prefix);
+  });
 }
 function installIgp(engine:Simulator,endpoints:RoutedPort[],edges:Adj[],protocol:string,observer?:string):void {
   const nodes=new Map<string,RoutedPort>();for(const p of endpoints)if(p.family===protocolFamily(protocol)&&config(p.device,protocol))nodes.set(p.node,p);
@@ -1268,7 +1209,7 @@ function redistributionExports(d:Device,protocol:string,vrf?:string,routes=selec
 function redistribute(engine:Simulator,endpoints:RoutedPort[],graphs:Map<string,Adj[]>):void {
   const snapshots=new Map(engine.lab.devices.map(d=>[d.id,selectedRoutes(d)]));
   for(const [protocol,edges]of graphs) {
-    if(ripProtocol(protocol)||ospfProtocol(protocol))continue;
+    if(ripProtocol(protocol)||ospfProtocol(protocol)||eigrpProtocol(protocol))continue;
     const nodes=new Map<string,RoutedPort>();for(const p of endpoints)if(p.family===protocolFamily(protocol)&&config(p.device,protocol))nodes.set(p.node,p);
     const paths=new Map([...nodes.keys()].map(node=>[node,pathsFrom(node,edges,protocol)]));
     for(const source of nodes.values())for(const exported of redistributionExports(source.device,protocol,source.iface.vrf,snapshots.get(source.device.id)??[])) {
@@ -1492,7 +1433,8 @@ export function receiveControlDatagram(engine:Simulator,deviceId:string,source:s
   if(payload?.protocol==='ospf-packets'){receiveOSPFControl(engine,deviceId,source,destination,payload,ttl,input);return;}
   if(payload?.protocol==='rip-update'){receiveRip(engine,deviceId,source,payload,ttl,input);return;}
   if(payload?.protocol==='eigrp-hello'){receiveEigrpHello(engine,deviceId,source,payload,ttl,input);return;}
-  if(payload?.protocol==='eigrp-dual'){receiveDual(engine,deviceId,source,destination,payload,input);return;}
+  if(receiveEigrpUpdate(engine,deviceId,source,destination,payload,ttl,input,peer=>refreshEigrpHold(engine,peer.key)))return;
+  if(payload?.protocol==='eigrp-dual'){receiveDual(engine,deviceId,source,destination,payload,ttl,input);return;}
   if(payload?.protocol==='nhrp'){receiveNhrp(engine,deviceId,source,destination,payload);return;}
   if(payload?.protocol==='pim'){receivePim(engine,deviceId,source,destination,payload,input);return;}
   if(payload?.protocol==='igmp'){receiveIgmp(engine,deviceId,source,payload,ttl,input);return;}
@@ -1821,6 +1763,7 @@ function synchronizeUdld(engine:Simulator):void {
 /** UDLD PDUs terminate on the physical link before VLAN/STP data forwarding. */
 export function receiveLinkControl(engine:Simulator,d:Device,port:string,message:{protocol:string;body:any}):boolean {
   if(receiveDiscoveryControl(engine,d.id,port,message))return true;
+  if(receiveSwitchingMessage(engine,d,port,message))return true;
   if(message.protocol==='STP'){receiveStpHeartbeat(engine,d,port,message.body);return true;}
   if(message.protocol!=='UDLD')return false;
   const s=udldSessions.get(engine)?.get(`${d.id}|${port}`);if(!s||s.state==='ERR-DISABLED')return true;
@@ -1943,7 +1886,7 @@ function ptpElection(engine:Simulator,ws:Wire[]):void {
 
 /** Prepare operational trunks and bundles before the core builds connected routes. */
 export function prepareLinkState(engine:Simulator):void {
-  const ws=wires(engine);negotiateTrunks(engine,ws);synchronizeVtp(engine,ws);negotiateChannels(engine,ws);
+  const ws=wires(engine);negotiateTrunks(engine,ws);negotiateChannels(engine,ws);syncSwitchingMessages(engine,(d,iface)=>channelSignature({device:d,iface,name:iface.name},true));
 }
 
 /** Core rebuilds connected/static routes before calling this function. */
@@ -1956,7 +1899,7 @@ export function recomputeControlPlane(engine:Simulator):void {
   for(const d of engine.lab.devices){refreshTrackingBindings(engine,d);reconcileErrdisable(engine,d);d.runtime.neighbors=[];d.runtime.features.capabilities=CONTROL_PLANE_CAPABILITIES;d.runtime.features.ospfNssa={};d.runtime.features.ospfv3Nssa={};}
   synchronizeUdld(engine);
   const ws=wires(engine);
-  negotiateTrunks(engine,ws);synchronizeVtp(engine,ws);negotiateChannels(engine,ws);
+  negotiateTrunks(engine,ws);negotiateChannels(engine,ws);syncSwitchingMessages(engine,(d,iface)=>channelSignature({device:d,iface,name:iface.name},true));
   let next=spanningTree(engine,ws);synchronizeStpHeartbeats(engine);const keyBoundary=keychainStates(engine);if(keyBoundary!==undefined)next=next===undefined?keyBoundary:Math.min(next,keyBoundary);
   ptpElection(engine,ws);
   syncDiscovery(engine);
@@ -1968,6 +1911,7 @@ export function recomputeControlPlane(engine:Simulator):void {
   for(const protocol of ['ospf','eigrp','rip','ospfv3','ospfv3ipv4','eigrp6','ripng']) {
     let graph=adjacency(engine,endpoints,peers,protocol);if(eigrpProtocol(protocol))graph=synchronizeEigrpHellos(engine,endpoints,graph,protocol);graphs.set(protocol,graph);
     if(ospfProtocol(protocol)){for(const d of engine.lab.devices)for(const n of d.runtime.neighbors)if(n.protocol===protocol.toUpperCase()&&!['AUTH-FAILED','BFD-DOWN','EXSTART'].includes(n.state))n.state=verifiedOSPFAdjacency(engine,protocol as OSPFProtocol,d.id,n.interface,n.deviceId,n.peerInterface??'');installOspfPackets(engine,endpoints,protocol as OSPFProtocol);}
+    else if(eigrpProtocol(protocol)){installReceivedEigrp(engine,endpoints,graph,protocol as EigrpFamily);graphs.set(protocol,graph.filter(edge=>eigrpUpdateReady(engine,dualPeerKey(edge,protocol))));for(const d of engine.lab.devices)for(const n of d.runtime.neighbors)if(n.protocol===protocol.toUpperCase()&&n.state==='UP'&&!eigrpUpdateReady(engine,`${d.id}|${protocol}|${n.interface}|${n.address}`))n.state='INIT (UPDATE)';}
     else if(!ripProtocol(protocol))installIgp(engine,endpoints,graph,protocol);
   }
   synchronizeRip(engine,endpoints,peers);
@@ -1977,6 +1921,7 @@ export function recomputeControlPlane(engine:Simulator):void {
   // conditional discards from the final RIB, retaining no stale minimum metric.
   for(const d of engine.lab.devices)d.runtime.routes=d.runtime.routes.filter(r=>r.protocol!=='D summary');
   for(const p of ['eigrp','eigrp6'])installEigrpSummaries(engine,endpoints,p);
+  for(const p of ['eigrp','eigrp6'] as EigrpFamily[])advertiseSelectedEigrp(engine,endpoints,p);
   for(const p of ['ospf','ospfv3','ospfv3ipv4'] as OSPFProtocol[])syncOSPF(engine,ospfPacketSnapshot(engine,endpoints,graphs.get(p)??[],p));fhrp(engine,endpoints,peers,ws);glbp(engine,endpoints,peers,ws);syncMsdp(engine);synchronizeMulticast(engine);
   for(const d of engine.lab.devices) {
     const neighbors=d.runtime.neighbors.filter(n=>routingProtocols.includes(n.protocol));

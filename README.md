@@ -23,7 +23,7 @@ The **PoE switch** provides Layer 2 switching and simulated AP power. Double-cli
 
 The **VoIP phone** has a PoE-powered **Network** uplink and an untagged **PC** passthrough port. It learns the voice VLAN through received CDP or LLDP-MED policy, obtains its own DHCP lease, and bridges PC data without changing its MAC address or IP TTL. Double-click it for live power, VLAN, IP and port status. See the [phone guide](docs/features/voip-phone.md).
 
-PC, laptop and server desktops also provide **Network tools** for typed DNS, SNMP and RESTCONF requests through the actual simulated network. Hosts share a Windows-style networking console. Physical copper negotiation, real egress queues, IPv6 BGP and PoE priorities affect traffic. See the [management services guide](docs/features/management-services.md).
+PC, laptop and server desktops also provide **Network tools** for typed DNS, SNMP and RESTCONF requests through the actual simulated network. PCs and laptops offer Windows, Ubuntu or macOS networking profiles through **Client profile**. Network tools also provides bounded offline YAML/JSON automation over simulated SSH. Physical copper negotiation, real egress queues, IPv6 BGP and PoE priorities affect traffic. See the [management services guide](docs/features/management-services.md).
 
 ## Working with the editor and console
 

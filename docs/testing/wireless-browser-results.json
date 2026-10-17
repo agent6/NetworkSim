@@ -1,10 +1,66 @@
 {
-  "generatedAt": "2026-10-17T00:54:55.986Z",
+  "generatedAt": "2026-10-17T02:19:45.680Z",
   "browser": "155.0.8059.84",
-  "url": "file:///Users/erikpope/projects/NetworkSim/index.html",
+  "url": "http://127.0.0.1:50033",
+  "artifact": {
+    "path": "dist/index.html",
+    "bytes": 3406080,
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+  },
+  "sourceDigests": [
+    {
+      "path": "src/main.ts",
+      "sha256": "01fabb18e86c80dc326dcafcebbd73710ff41985cf78420973ff802004f23d29"
+    },
+    {
+      "path": "src/wireless.ts",
+      "sha256": "5edfe969791ff34ec80260b44bd345cd41de5088163abcb6334cd132c6bb3a23"
+    },
+    {
+      "path": "src/wireless-ui.ts",
+      "sha256": "47177246aea4d41522d74537c3ac333006f25fd7619f66af0f8d28853ca78ce4"
+    },
+    {
+      "path": "src/wireless-model.ts",
+      "sha256": "5269ce51919ab50b80a48023d8e1f240ad3c1b0be1a74317f97b942e68bc6e4e"
+    },
+    {
+      "path": "src/wireless-controller-form.ts",
+      "sha256": "c18dcde3b56776c6d8c5f2d177794c4e6f2b75b192554cd093c19c4dc42cf1d7"
+    },
+    {
+      "path": "src/ap-controller-view.ts",
+      "sha256": "59ee059361c53187b55a25f9db19b0b8ceaed720a8d445d36c8d9840479f606e"
+    },
+    {
+      "path": "src/poe.ts",
+      "sha256": "aed9cfaadfa18f8a3cd74c256fd342a06a48cc3d7357f084ee08cf411c29d57c"
+    },
+    {
+      "path": "src/poe-ui.ts",
+      "sha256": "9c1732894bd6f49d2b5d82b2ada24db7d4f1acb99892c56707b8797a45323e55"
+    },
+    {
+      "path": "src/engine.ts",
+      "sha256": "d3b507fad1cdab29d6e07deb36d2fd05586e5fd46de4e55e4fe9296e69399042"
+    },
+    {
+      "path": "src/simulation-ui.ts",
+      "sha256": "67dec69c3f8d9da32ce551faf08ceb7715faf3054756587ca22d869e10573985"
+    },
+    {
+      "path": "src/node-icons.ts",
+      "sha256": "780a8bffdc12776e5d3b666e2836e3a3fd81ef85836de5c7dbee03d777d8ac58"
+    },
+    {
+      "path": "tests/fixtures/wireless-lab.ts",
+      "sha256": "53fe6d2f6aff9b116493f4ce1a0a54281eddc06d6ae8ab63dd74c8bb4bc1bcfd"
+    }
+  ],
+  "fixture": "Imported campus wireless fixture; actual placement, security correction, roaming, DNS/HTTP, PoE budget, bidirectional GUI/CLI and packet-inspection operations",
   "scope": "wireless, PoE and packet inspection UI",
   "checks": [
-    "All nine palette icons use one consistent artwork family",
+    "All ten palette icons use one consistent artwork family",
     "Controller is labelled WLC",
     "Laptop placement exposes configuration",
     "Laptop IPv6 form rejects an IPv4 CIDR before applying",

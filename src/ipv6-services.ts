@@ -4,7 +4,7 @@ import type { TimerHandle } from './clock.ts';
 import { bigIntToIPv6, ipv6ToBigInt, isIPv6, parseCidr, prefixContains, sameAddress } from './ip.ts';
 
 export interface LinkControl { kind: 'link-control'; protocol: string; body: any }
-interface Pending { deviceId: string; port: string; result: ServiceResult; timer: TimerHandle; delegationName?: string; information?: boolean; offers?: any[]; selection?: TimerHandle; selectedServer?: string }
+interface Pending { deviceId: string; port: string; result: ServiceResult; timer: TimerHandle; delegationName?: string; information?: boolean; offers?: any[]; selection?: TimerHandle; selectedServer?: string; release?: boolean }
 /** Original, packet-delivered IPv6 host configuration. No topology-wide lease shortcuts. */
 export class IPv6Services {
   private sequence = 0;
@@ -41,6 +41,22 @@ export class IPv6Services {
     const pending = this.start(d.id, port, 'DHCPv6'); pending.delegationName = delegationName; pending.information = information;
     const message = { type: information ? 'information-request' : 'solicit', transaction: pending.result.id, clientId: d.id, clientPort: port, delegationName, information };
     this.send(d, port, 'DHCPV6', message); this.engine.clock.schedule(2000, () => { if (this.requests.has(pending.result.id)) this.send(d, port, 'DHCPV6', message); }, { owner: d.id, label: 'DHCPv6 client retry' }); this.engine.changed(); return pending.result;
+  }
+  /** Release stops using only the leased resources before transmitting (RFC 8415 §18.2.7). */
+  releaseDHCPv6(deviceId:string,selected:string):ServiceResult {
+    const d=this.engine.getDevice(deviceId),c=d?.config.interfaces[selected],lease=d?.runtime.features.dhcpv6Leases?.[selected];
+    if(!d||!c||!lease)return {id:'dhcpv6-release-error',status:'failure',error:'No DHCPv6 lease exists on this interface'};
+    for(const[id,pending]of this.requests)if(pending.deviceId===deviceId&&pending.port===selected)this.finish(id,undefined,'DHCPv6 lease released by client');
+    if(lease.address)c.ipv6=c.ipv6.filter(value=>!sameAddress(value.split('/')[0],lease.address));
+    if(lease.delegationName&&d.config.features.delegatedPrefixes?.[lease.delegationName]?.prefix===lease.delegatedPrefix)delete d.config.features.delegatedPrefixes[lease.delegationName];
+    if(c.features.windowsDNSMode!=='static'&&JSON.stringify(d.config.dnsServers)===JSON.stringify(lease.dnsServers??[]))d.config.dnsServers=[];
+    delete c.features.dhcpv6Lease;delete c.features.dhcpv6Client;delete d.runtime.features.dhcpv6Leases[selected];delete d.runtime.features.deprecatedIPv6?.[selected];
+    c.features._dhcpv6Autostart=true;
+    const pending=this.start(deviceId,selected,'DHCPv6 release');pending.release=true;pending.selectedServer=lease.serverId;
+    const message={type:'release',transaction:pending.result.id,clientId:deviceId,clientPort:selected,serverId:lease.serverId,address:lease.address,delegatedPrefix:lease.delegatedPrefix};
+    this.engine.changed();this.send(d,selected,'DHCPV6',message);
+    this.engine.clock.schedule(2000,()=>{if(this.requests.has(pending.result.id))this.send(d,selected,'DHCPV6',message);},{owner:deviceId,label:'DHCPv6 release retry'});
+    return pending.result;
   }
   /** DAD leaves the candidate out of the operational interface until the quiet interval expires. */
   probeAddress(d: Device, port: string, address: string, complete: (ok: boolean) => void): void {
@@ -137,7 +153,7 @@ export class IPv6Services {
     this.engine.clock.schedule(duration, () => {
       if (!current()) return; lease.state = 'EXPIRED'; if (lease.address) c.ipv6 = c.ipv6.filter(value => !sameAddress(value.split('/')[0], lease.address));
       if (lease.delegationName && d.config.features.delegatedPrefixes?.[lease.delegationName]?.prefix === lease.delegatedPrefix) delete d.config.features.delegatedPrefixes[lease.delegationName];
-      if (JSON.stringify(d.config.dnsServers) === JSON.stringify(lease.dnsServers ?? [])) d.config.dnsServers = [];
+      if (c.features.windowsDNSMode!=='static'&&JSON.stringify(d.config.dnsServers) === JSON.stringify(lease.dnsServers ?? [])) d.config.dnsServers = [];
       this.engine.emit({ nodeId: d.id, port, protocol: 'DHCPV6', label: 'Lease expired', detail: 'Leased address and delegated prefix removed after renewal and rebind failed.', disposition: 'warning' }); this.engine.changed();
       const retry = () => { if (!current()) return; this.requestDHCPv6(d.id, port, lease.delegationName, lease.information); this.engine.clock.schedule(5000, retry, { owner: d.id, label: 'DHCPv6 reacquisition retry' }); }; this.engine.clock.schedule(1000, retry, { owner: d.id, label: 'DHCPv6 reacquisition' });
     }, { owner: d.id, label: 'DHCPv6 lease expiry' });
@@ -151,9 +167,10 @@ export class IPv6Services {
         if (Number(b.preference) === 255) { this.engine.clock.cancel(pending.selection); choose(); } else if (!pending.selection) pending.selection = this.engine.clock.schedule(200, choose, { owner: d.id, label: 'DHCPv6 advertised server selection' }); return;
       }
       if (pending.selectedServer && pending.selectedServer !== b.serverId) return;
+      if(pending.release){if(b.releaseReply)this.finish(b.transaction,{released:true,serverId:b.serverId});return;}
       const apply = () => {
         const c = d.config.interfaces[port]; if (b.address && !c.ipv6.some(v => sameAddress(v.split('/')[0], b.address))) c.ipv6.push(b.address + '/' + (b.prefix ?? 128));
-        if (b.dnsServers?.length) d.config.dnsServers = [...b.dnsServers]; if (b.domain) d.config.features.dnsDomain = b.domain;
+        if (b.dnsServers?.length&&c.features.windowsDNSMode!=='static') d.config.dnsServers = [...b.dnsServers]; if (b.domain) d.config.features.dnsDomain = b.domain;
         const now = this.engine.clock.now(), valid = Math.max(1, Number(b.lifetime) || 86400), preferred = Math.max(0, Math.min(valid, Number.isFinite(b.preferredLifetime) ? b.preferredLifetime : valid)), pdValid = Math.max(1, Number(b.pdLifetime) || valid), pdPreferred = Math.max(0, Math.min(pdValid, Number.isFinite(b.pdPreferredLifetime) ? b.pdPreferredLifetime : pdValid));
         if (b.delegatedPrefix && pending.delegationName) (d.config.features.delegatedPrefixes ??= {})[pending.delegationName] = { prefix: b.delegatedPrefix, expires: now + pdValid * 1000, preferredUntil: now + pdPreferred * 1000 };
         const deprecated = d.runtime.features.deprecatedIPv6 ??= {}; deprecated[port] = (deprecated[port] ?? []).filter((address: string) => !b.address || !sameAddress(address, b.address));
@@ -163,7 +180,7 @@ export class IPv6Services {
       };
       if (b.address && !d.config.interfaces[port].ipv6.some(v => sameAddress(v.split('/')[0], b.address))) this.probeAddress(d, port, b.address, ok => ok ? apply() : this.finish(b.transaction, undefined, 'DHCPv6 assigned a duplicate address')); else apply(); return;
     }
-    if (!['solicit', 'request', 'information-request', 'renew', 'rebind'].includes(b.type)) return;
+    if (!['solicit', 'request', 'information-request', 'renew', 'rebind', 'release'].includes(b.type)) return;
     const c = d.config.interfaces[port], service = d.config.services.dhcpv6;
     const poolName = c.features.dhcpv6Server;
     const pool = service?.enabled && (service.pools ?? []).find((p: any) => poolName ? p.name === poolName : relay?.address && p.prefix ? prefixContains(parseCidr(p.prefix).network, parseCidr(p.prefix).prefix, relay.address) : !relay && !!p.prefix && c.ipv6.some(v => { const a = parseCidr(v), network = parseCidr(p.prefix); return prefixContains(a.network, a.prefix, network.address); }));
@@ -176,6 +193,14 @@ export class IPv6Services {
       return;
     }
     const now=this.engine.clock.now(),leases:any[]=d.runtime.features.dhcpv6ServerLeases??=[],offers:any[]=d.runtime.features.dhcpv6Offers=(d.runtime.features.dhcpv6Offers??[]).filter((entry:any)=>entry.expires>now);
+    if(b.type==='release'){
+      const assigned=(entry:any)=>entry.clientId===b.clientId&&entry.clientPort===b.clientPort&&entry.pool===pool.name&&(!b.address||entry.address===b.address)&&(!b.delegatedPrefix||entry.delegatedPrefix===b.delegatedPrefix);
+      d.runtime.features.dhcpv6ServerLeases=leases.filter(entry=>!assigned(entry));d.runtime.features.dhcpv6Offers=offers.filter(entry=>!assigned(entry));
+      const response={...b,type:'reply',releaseReply:true,serverId:d.id};
+      if(relay){const source=c.ipv6[0]?.split('/')[0];if(source)this.engine.sendIPv6ServicePacket(d.id,source,relay.replyTo,{kind:'ipv6-service',operation:'relay-return',message:response,relay});}
+      else this.send(d,port,'DHCPV6',response);
+      this.engine.emit({nodeId:d.id,port,protocol:'DHCPV6',label:'Lease released',detail:b.address??b.delegatedPrefix??'',disposition:'info'});return;
+    }
     const belongs=(entry:any)=>entry.clientId===b.clientId&&entry.clientPort===b.clientPort&&entry.pool===pool.name&&entry.expires>now;
     let lease=leases.find(belongs),offer=offers.find(belongs);
     if(['renew','rebind'].includes(b.type)&&(!lease||b.address&&lease.address!==b.address))return;

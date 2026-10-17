@@ -14,7 +14,7 @@ export function platformCompatibilityCommands(h:PlatformHost){
   add('ip dhcp relay information trusted',(a,no)=>{exact(a,0);for(const port of h.ports())port.features.dhcpRelayTrusted=!no;h.changed();});
   add('ip local-proxy-arp',(a,no)=>{exact(a,0);for(const port of h.ports())port.features.localProxyArp=!no;h.changed();});
   add('mac-address',(a,no)=>{exact(a,no?0:1);const value=no?'':a[0].replace(/[:.\-]/g,'').toLowerCase();if(!no&&(!/^[a-f0-9]{12}$/.test(value)||(parseInt(value.slice(0,2),16)&1)||/^0+$/.test(value)))h.fail('% Invalid unicast MAC address.');for(const port of h.ports()){if(no)delete port.features.macAddress;else port.features.macAddress=value.match(/../g)!.join(':');}h.changed();},'<MAC-address>');
-  add('media-type',(a,no)=>{exact(a,no?0:1);const value=no?undefined:option(a[0],['rj45','sfp','auto-select']);for(const port of h.ports())port.features.mediaType=value;h.changed();return stored('Physical media selection');},'rj45|sfp|auto-select');
+  add('media-type',(a,no)=>{exact(a,no?0:1);const value=no?undefined:option(a[0],['rj45','sfp','auto-select']);for(const port of h.ports())port.features.mediaType=value;h.changed();return [];},'rj45|sfp|auto-select');
   add('keepalive',(a,no)=>{if(a.length>2)h.fail();const seconds=no?0:a.length?number(a[0],0,32767):10,retries=a[1]?number(a[1],1,255):3;for(const port of h.ports())port.features.keepalive={seconds,retries};h.changed();return ['% Ethernet keepalive configuration stored only; physical loopback signaling is not simulated.'];},'[seconds] [retries]');
  }
  if(h.mode==='config'){

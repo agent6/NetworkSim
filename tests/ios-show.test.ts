@@ -54,7 +54,7 @@ test('OSPF views use received router IDs, role states, dead deadlines and learne
 
 test('EIGRP output distinguishes measured hold timers from untracked transport statistics',()=>{
  const{s,a,b}=pair();for(const d of[a,b])d.config.protocols.eigrp={asn:100,networks:[{network:'0.0.0.0',prefix:0}]};address(b,'Loopback0','192.0.2.2','255.255.255.255');s.changed();s.advance(200);
- assert.match(show(s,a,'ip eigrp','neighbors'),/10\.0\.0\.2\s+Gi0\/0\s+15\s+\?\s+\?\s+\?\s+\?\s+\?/);assert.match(show(s,a,'ip eigrp','topology'),/P 192\.0\.2\.2\/32, 1 successors, FD is/);assert.doesNotMatch(show(s,a,'ip eigrp','topology','192.0.2.0','255.255.255.0'),/P 192/);assert.match(show(s,a,'ip eigrp','traffic'),/hello\s+1\s+1/);
+ assert.match(show(s,a,'ip eigrp','neighbors'),/10\.0\.0\.2\s+Gi0\/0\s+15\s+\?\s+\?\s+\?\s+\?\s+\?/);assert.match(show(s,a,'ip eigrp','topology'),/P 192\.0\.2\.2\/32, 1 successors, FD is/);assert.doesNotMatch(show(s,a,'ip eigrp','topology','192.0.2.0','255.255.255.0'),/P 192/);const traffic=show(s,a,'ip eigrp','traffic'),stats=a.runtime.features.eigrpTraffic;assert.match(traffic,/EIGRP-IPv4 Traffic Statistics for AS\(100\)/);for(const[label,key]of[['Hellos','hello'],['Updates','update'],['Acks','ack']]){assert.ok(stats.sent[key]>0&&stats.received[key]>0);assert.ok(traffic.includes(`${label} sent/received: ${stats.sent[key]}/${stats.received[key]}`));}assert.doesNotMatch(traffic,/computed|normal UPDATE/);
 });
 
 test('BGP summary uses actual established prefix count and live session state',()=>{

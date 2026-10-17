@@ -1,31 +1,23 @@
-# Executable command probe validation
+# Executable old/current command comparison
 
-Generated 2026-10-17T01:03:15.715Z. These are parser, configuration and bounded runtime-condition observations. They do not establish full protocol behavior or native Cisco/Windows equivalence.
+Generated 2026-10-17T02:17:37.104Z. This comparison measures parser, mode, prompt and rendered-configuration changes. It does not certify all parameters, native Cisco output or packet behavior.
 
-## Complete paired snapshot
+The full snapshot executed 4748 old/current pairs across 3666 old executable mode/path registrations (1778 positive and 1888 no/default paths). Model/context deduplication is explicit; these units differ from the current node/path/handler inventory.
 
-The complete run measured **4,757 old/current command pairs across 3,666 unique executable mode/path registrations**: 1,778 positive paths and 1,888 no/default paths. The old inventory contains 14,555 model-expanded executable rows. Deduplication does not test every argument on every model.
-
-Fresh old VM execution was attempted for all 3,666 paths. The restored reference's 492 JavaScript hashes match the prior inventory; index.html is separately hashed. DOM, storage and wall-clock timers are inert VM adapters. Reference code is read only and excluded from the simulator build.
-
-Captured 2026-10-17T00:51:32.456Z through 2026-10-17T00:55:10.889Z. Validity: **source-snapshots-stable**. The runtime import graph contains 67 inputs, including package/configuration provenance. Its immutable hash is `b6cc881bc1d33e1a4e76dfee5f6567497c861bd390e4b8d89b3997795f37c4ee`. Reference input hash: `09a65c44ad6f185035cc803f1111ce90348f1b77ebfcc573e4217732be3fd111`. Whole-source hash: `d872009f96f310dc8b61e73a974deec3b369de6f2f19058879f03d6a0d5eb3a3`.
-
-Workspace files changed during the complete run: none. Runtime dependency changes: none. Unrelated UI modules are recorded in the whole-source snapshot but do not invalidate CLI/engine/config-renderer probes. Later focused results are separately bound to their own source snapshot.
+Snapshot validity: **source-snapshots-stable**. Current runtime hash: `00665b72e0c631e9769dd3f3b14c515c4879082f5e7269d21dec912aad1e46b2`. Runtime sources stale at report generation: none. Reference execution fresh: true; all492 reference JavaScript hashes verified: true. Reference input hash: `09a65c44ad6f185035cc803f1111ce90348f1b77ebfcc573e4217732be3fd111`. The reference is read-only and excluded from the delivered app.
 
 | Observation | Paths |
 | --- | ---: |
-| current-accepts-reference-accepted-representative | 3432 |
-| current-rejects-reference-accepted-representative | 87 |
-| no-accepting-representative | 47 |
-| current-accepts-without-reference-accepted-representative | 100 |
+| current-accepts-reference-accepted-representative | 3434 |
+| current-rejects-reference-accepted-representative | 85 |
+| no-accepting-representative | 46 |
+| current-accepts-without-reference-accepted-representative | 101 |
 
-0 paths lack current command execution. 2 paths lack old execution in the complete snapshot: `priv / no debug all` and `priv / no debug interface` used a NETLAB-R2 fixture without a port inventory. The focused followups use the actually registered NETLAB-R4 model and reach both handlers; both current commands accept. The complete snapshot retains the original fixture errors.
+0 registrations had no current command execution; 2 had no reference execution. 135 removal paths include an unseeded direct-context attempt. Such acceptance does not prove removal of an installed value. Exact setup failures and raw output hashes remain in the JSON.
 
-137 removal paths include an unseeded direct-context attempt. Parser acceptance there does not prove removal of an installed value. Failed positive preparation is retained, and navigation end/exit is never used to seed a removal test. Exact outputs, setup failures, prompts, modes, configuration deltas and hashes remain inspectable. Known notices for missing ARP interface, invalid MTU/mask/baud and explicit address-family removal restrictions are classified as rejection.
+## Rejection review
 
-## Refreshed rejection triage
-
-The 87 accepted-old/rejected-current forms below are classification results, not 87 confirmed runtime defects. A stricter native-style command profile can legitimately reject an old sandbox form. Every exact fixture/output is in the supplemental JSON.
+85 accepted-old/rejected-current fixtures remain. Old acceptance is not the chosen Cisco profile. Invalid arguments, privileged-mode requirements, physical-port restrictions and intentionally unsupported features are retained separately.
 
 | Observation | Paths |
 | --- | ---: |
@@ -38,18 +30,103 @@ The 87 accepted-old/rejected-current forms below are classification results, not
 | EIGRP-summary-legacy-CIDR-or-mask-grammar | 3 |
 | OSPF-VRF-capability-root-gap | 3 |
 | explicit-address-family-removal-restriction | 6 |
-| explicitly-unsupported-congestion-scheduling | 2 |
 | EtherChannel-diagnostic-root-gap | 1 |
 | fixed-dot1q-current-profile | 12 |
 | subinterface-UDLD-removal-profile-needs-native-check | 2 |
 
-Demonstrated positive parser gaps remain for OSPF VRF `capability vrf-lite`, `test etherchannel load-balance`, and the explicitly unsupported `fair-queue`/`random-detect` congestion schedulers. The old EtherChannel diagnostic returned “No members bundled”; that is handler evidence, not proof of an equivalent working algorithm. `negotiation auto` needs a port/profile-specific native assessment. Legacy ISL/negotiate forms are outside the current fixed-dot1q switch profile. User-mode show debugging/AAA/tech-support rejections are separately available after enable. Malformed MTU, masks, baud and CIDR summary fixtures are not evidence of missing routing behavior.
+| Exact reference mode/path | Measured invocation | Classification |
+| --- | --- | --- |
+| config\|arp | `arp 192.0.2.1 0200.0000.0001` | ARP-legacy-argument-or-prerequisite |
+| config\|no snmp-server | `no snmp-server chassis-id AUDIT` | removal-operand-compatibility-needs-native-check |
+| config\|no exit | `no exit` | IOS-navigation-no-form-restriction |
+| config\|no end | `no end` | IOS-navigation-no-form-restriction |
+| config\|default snmp-server | `default snmp-server chassis-id AUDIT` | removal-operand-compatibility-needs-native-check |
+| config\|default exit | `default exit` | IOS-navigation-no-form-restriction |
+| config\|default end | `default end` | IOS-navigation-no-form-restriction |
+| config-if\|negotiation | `negotiation auto` | current-port-command-profile-needs-native-check |
+| config-if\|mtu | `mtu 64` | invalid-legacy-argument-or-prerequisite |
+| config-vlan\|no exit | `no exit` | IOS-navigation-no-form-restriction |
+| config-if-range\|negotiation | `negotiation auto` | current-port-command-profile-needs-native-check |
+| config-if-range\|mtu | `mtu 64` | invalid-legacy-argument-or-prerequisite |
+| config-subif\|mtu | `mtu 64` | invalid-legacy-argument-or-prerequisite |
+| user\|show debugging | `show debugging` | privileged-mode-available-followup |
+| user\|show aaa | `show aaa servers` | privileged-mode-available-followup |
+| user\|show tech-support | `show tech-support` | privileged-mode-available-followup |
+| config-if\|ip summary-address eigrp | `ip summary-address eigrp 10 192.0.2.0/24` | EIGRP-summary-legacy-CIDR-or-mask-grammar |
+| config-if\|no ip summary-address eigrp | `no ip summary-address eigrp 10 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-if\|default ip summary-address eigrp | `default ip summary-address eigrp 10 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-if-range\|ip summary-address eigrp | `ip summary-address eigrp 10 192.0.2.0/24` | EIGRP-summary-legacy-CIDR-or-mask-grammar |
+| config-if-range\|no ip summary-address eigrp | `no ip summary-address eigrp 10 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-if-range\|default ip summary-address eigrp | `default ip summary-address eigrp 10 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-subif\|ip address | `ip address 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-subif\|ip summary-address eigrp | `ip summary-address eigrp 10 192.0.2.0/24` | EIGRP-summary-legacy-CIDR-or-mask-grammar |
+| config-subif\|no ip address | `no ip address 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-subif\|no ip summary-address eigrp | `no ip summary-address eigrp 10 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-subif\|default ip address | `default ip address 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-subif\|default ip summary-address eigrp | `default ip summary-address eigrp 10 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-line\|speed | `speed 10` | invalid-legacy-argument-or-prerequisite |
+| config-line\|txspeed | `txspeed 10` | invalid-legacy-argument-or-prerequisite |
+| config-line\|rxspeed | `rxspeed 10` | invalid-legacy-argument-or-prerequisite |
+| config-line\|no speed | `no speed 10` | invalid-legacy-argument-or-prerequisite |
+| config-line\|no txspeed | `no txspeed 10` | invalid-legacy-argument-or-prerequisite |
+| config-line\|no rxspeed | `no rxspeed 10` | invalid-legacy-argument-or-prerequisite |
+| config-line\|default speed | `default speed 10` | invalid-legacy-argument-or-prerequisite |
+| config-line\|default txspeed | `default txspeed 10` | invalid-legacy-argument-or-prerequisite |
+| config-line\|default rxspeed | `default rxspeed 10` | invalid-legacy-argument-or-prerequisite |
+| config-router\|network | `network 192.0.2.1 192.0.2.1 area 10` | invalid-legacy-argument-or-prerequisite |
+| config-router\|capability vrf-lite | `capability vrf-lite` | OSPF-VRF-capability-root-gap |
+| config-router\|no network | `no network 192.0.2.1 192.0.2.1 area 10` | invalid-legacy-argument-or-prerequisite |
+| config-router\|no address-family | `no address-family ipv4 unicast` | explicit-address-family-removal-restriction |
+| config-router\|no capability vrf-lite | `no capability vrf-lite` | OSPF-VRF-capability-root-gap |
+| config-router\|default network | `default network 192.0.2.1 192.0.2.1 area 10` | invalid-legacy-argument-or-prerequisite |
+| config-router\|default address-family | `default address-family ipv4 unicast` | explicit-address-family-removal-restriction |
+| config-router\|default capability vrf-lite | `default capability vrf-lite` | OSPF-VRF-capability-root-gap |
+| config-router-ospfv3\|no address-family | `no address-family ipv4` | explicit-address-family-removal-restriction |
+| config-router-ospfv3\|default address-family | `default address-family ipv4` | explicit-address-family-removal-restriction |
+| config-router-ospfv3-af\|no exit-address-family | `no exit-address-family` | IOS-navigation-no-form-restriction |
+| config-router-ospfv3-af\|default exit-address-family | `default exit-address-family` | IOS-navigation-no-form-restriction |
+| config-router-bgp\|aggregate-address | `aggregate-address 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-router-bgp\|no aggregate-address | `no aggregate-address 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-router-bgp\|default aggregate-address | `default aggregate-address 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-router-af\|aggregate-address | `aggregate-address 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-router-af\|no aggregate-address | `no aggregate-address 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-router-af\|no exit-address-family | `no exit-address-family` | IOS-navigation-no-form-restriction |
+| config-router-af\|default aggregate-address | `default aggregate-address 192.0.2.1 192.0.2.1` | invalid-legacy-argument-or-prerequisite |
+| config-router-af\|default exit-address-family | `default exit-address-family` | IOS-navigation-no-form-restriction |
+| config-vrf-af\|no exit-address-family | `no exit-address-family` | IOS-navigation-no-form-restriction |
+| config-router-eigrp-vaf\|no autonomous-system | `no autonomous-system 10` | removal-operand-compatibility-needs-native-check |
+| config-router-eigrp-vaf\|no exit-address-family | `no exit-address-family` | IOS-navigation-no-form-restriction |
+| config-router-eigrp-named\|no address-family | `no address-family ipv4 autonomous-system 10` | explicit-address-family-removal-restriction |
+| config-router-eigrp-named\|default address-family | `default address-family ipv4 autonomous-system 10` | explicit-address-family-removal-restriction |
+| config-router-eigrp-af\|no exit-address-family | `no exit-address-family` | IOS-navigation-no-form-restriction |
+| config-router-eigrp-af\|default exit-address-family | `default exit-address-family` | IOS-navigation-no-form-restriction |
+| config-router-eigrp-afi\|no exit-af-interface | `no exit-af-interface` | IOS-navigation-no-form-restriction |
+| config-router-eigrp-afi\|default exit-af-interface | `default exit-af-interface` | IOS-navigation-no-form-restriction |
+| config-router-eigrp-aft\|no exit-af-topology | `no exit-af-topology` | IOS-navigation-no-form-restriction |
+| config-router-eigrp-aft\|default exit-af-topology | `default exit-af-topology` | IOS-navigation-no-form-restriction |
+| config-router-rip-af\|no exit-address-family | `no exit-address-family` | IOS-navigation-no-form-restriction |
+| config-router-rip-af\|default exit-address-family | `default exit-address-family` | IOS-navigation-no-form-restriction |
+| priv\|test etherchannel load-balance | `test etherchannel load-balance interface Port-channel1 ip 192.0.2.1 192.0.2.2` | EtherChannel-diagnostic-root-gap |
+| config-if\|switchport trunk encapsulation isl | `switchport trunk encapsulation isl` | fixed-dot1q-current-profile |
+| config-if\|switchport trunk encapsulation negotiate | `switchport trunk encapsulation negotiate` | fixed-dot1q-current-profile |
+| config-if\|no switchport trunk encapsulation isl | `no switchport trunk encapsulation isl` | fixed-dot1q-current-profile |
+| config-if\|no switchport trunk encapsulation negotiate | `no switchport trunk encapsulation negotiate` | fixed-dot1q-current-profile |
+| config-if\|default switchport trunk encapsulation isl | `default switchport trunk encapsulation isl` | fixed-dot1q-current-profile |
+| config-if\|default switchport trunk encapsulation negotiate | `default switchport trunk encapsulation negotiate` | fixed-dot1q-current-profile |
+| config-if-range\|switchport trunk encapsulation isl | `switchport trunk encapsulation isl` | fixed-dot1q-current-profile |
+| config-if-range\|switchport trunk encapsulation negotiate | `switchport trunk encapsulation negotiate` | fixed-dot1q-current-profile |
+| config-if-range\|no switchport trunk encapsulation isl | `no switchport trunk encapsulation isl` | fixed-dot1q-current-profile |
+| config-if-range\|no switchport trunk encapsulation negotiate | `no switchport trunk encapsulation negotiate` | fixed-dot1q-current-profile |
+| config-if-range\|default switchport trunk encapsulation isl | `default switchport trunk encapsulation isl` | fixed-dot1q-current-profile |
+| config-if-range\|default switchport trunk encapsulation negotiate | `default switchport trunk encapsulation negotiate` | fixed-dot1q-current-profile |
+| config-subif\|no udld | `no udld` | subinterface-UDLD-removal-profile-needs-native-check |
+| config-subif\|default udld | `default udld` | subinterface-UDLD-removal-profile-needs-native-check |
 
-The three removal-operand cases are `no/default snmp-server chassis-id AUDIT` and `no autonomous-system 10`. The current implementation requires the bare removal form; the primary-reference review confirmed that grammar. Subinterface UDLD and explicit address-family removal restrictions remain profile-specific observations. These classifications do not establish correctness for all native hardware/release variants.
+Router fair-queue/WRED now have packet-backed teaching implementations; rejection on a Catalyst or incompatible class/placement is a measured profile gate. Native OSPF VRF capability/DN-bit behavior, older EtherChannel test syntax and ISL hardware remain bounded or unsupported as documented. No static success response was added to match the old sandbox.
 
-## Refreshed configuration-change triage
+## Configuration review
 
-The refreshed complete snapshot has 387 paired rendered-configuration changed-flag disagreements:
+387 accepted-pair rendered-change-flag differences were reviewed against actual configuration objects where necessary:
 
 | Observation | Paths |
 | --- | ---: |
@@ -59,87 +136,30 @@ The refreshed complete snapshot has 387 paired rendered-configuration changed-fl
 | stored-only-or-default-physical-setting | 3 |
 | fixed-dot1q-profile-or-default | 6 |
 
-No actual config-object mutation omitted from running configuration remains among these refreshed candidates. The 257 current-additional changes are not missing current mutations; semantic equivalence is still unproven. Fifty no-change fixtures were separately checked against actual config objects and were already configured/default values. Old timestamps account for 71 navigation differences. The physical keepalive notices are explicitly stored-only/default behavior. Fixed-dot1q notices do not demonstrate legacy ISL support. Native default equivalence is not inferred for modeled defaults such as IGMP v3, RIP v2 or IKE settings.
+Potential object mutation omitted from rendering: 0. Already-set/default values and old metadata changes do not prove missing packet behavior. Additional current rendering does not prove semantic equivalence. All exact before/after hashes, relevant fields and original eleven mutation candidates remain inspectable in the triage artifact.
 
-The eleven earlier “old config changed/new did not” cases were freshly rechecked. VTP version 2 and VRF IPv4 address-family now mutate and render correctly. The other nine are already configured/default values or navigation metadata: switchport access twice, modeled IKE pre-share/group 14, end twice, default exporter UDP 2055, event none and RIP version 2. No missing configuration mutation was demonstrated among those eleven.
+## Focused removal and replay checks
 
-## Focused repairs at the final source snapshot
+19 current assertions passed for installed debug-interface removal, populated ERSPAN peer removal, DSCP/policer action negation, invalid navigation and EIGRP BFD export/import. Runtime hash: `00665b72e0c631e9769dd3f3b14c515c4879082f5e7269d21dec912aad1e46b2`; stale inputs: none. Changed inputs relative to the full paired snapshot: none. Reference setup failures are retained rather than counted as paired passes.
 
-The separate followup artifact records **19 passing current assertions**. Its stable runtime graph hash is `b3da3cf8221cacab5bc94f168d5ab1eb494de2d2fb70e3bfebfc2f69404da4c2`. Relative to the complete paired snapshot, only `src/ios-debug.ts` changed. The complete snapshot is not silently rewritten or presented as a complete rerun of this later source.
+See [command removal evidence](command-removal-fidelity.md), [congestion evidence](qos-congestion-fidelity.md), [current parser sweep](current-ios-parser-validation.json) and [cross-device integration](cross-device-integration.md). Behavioral and reference levels are separate from this comparison.
 
-- Both `no debug interface GigabitEthernet0/0` and `undebug interface GigabitEthernet0/0` accept and remove an installed modeled runtime interface condition. Before/after condition arrays are recorded. The old R4 VM reaches both spellings too; its interactive last-condition message is retained. This is a bounded condition-removal assertion, not full native debug output coverage.
-- Four populated ERSPAN source/destination endpoint removals cover no/default forms and verify actual endpoint fields disappear and running configuration changes.
-- Configured DSCP and all three policer color actions can be removed with the legacy optional operand; actual properties and running configuration are checked.
-- No/default end/exit reject without leaving configuration mode or changing configuration.
-- Three EIGRP BFD contexts change configuration and survive running-config export/import, including classic, VRF and named-interface contexts.
+## Evidence and reproduction
 
-The four populated ERSPAN preparations are current-only followups: the old router fixture rejects their ERSPAN setup (4 explicitly retained old setup errors). They are not counted as old/current paired passes. No native packet-convergence claim follows from these configuration tests.
+- [Paired outcomes](command-probe-validation.json)
+- [Current triage](command-probe-current-triage.json)
+- [Focused followups](command-probe-followups.json)
+- [Earlier immutable snapshot index](command-probe-snapshots.json)
+- [command-probe-validation 59412c44b997](command-probe-validation.59412c44b997.json.gz)
+- [command-probe-triage 6e56aeaf8480](command-probe-triage.6e56aeaf8480.json.gz)
 
-Cisco IOS XE 17.12 documents the no-debug/undebug interface alias in its [Catalyst 9300 interface command reference](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/command_reference/b_1712_9300_cr/interface_and_hardware_commands.html), debug interface usage guidelines. The final source supports that alias in its bounded model; it must not be reported as currently unsupported.
-
-## Archived initial triage
-
-The initial immutable paired snapshot had 4,688 attempts, 24 accepted-old/rejected-current forms and 437 changed-flag disagreements. These are historical observations before classifier, BFD, ERSPAN, QoS and navigation repairs, not current defect counts. Exact source/artifact hashes and compressed copies are retained in the snapshot index.
-
-| Observation | Paths |
-| --- | ---: |
-| invalid-fixture-or-argument-misclassified-by-legacy-regex | 31 |
-| current-additional-rendered-state | 254 |
-| old-navigation-metadata | 71 |
-| invalid-positive-seed-misclassified-by-legacy-regex | 8 |
-| default-or-existing-setting-no-observed-mutation | 50 |
-| stored-only-or-default-physical-setting | 3 |
-| explicit-removal-restriction-misclassified-by-legacy-regex | 6 |
-| configuration-rendering-omission-candidate | 8 |
-| fixed-dot1q-profile-or-default | 6 |
-
-The eight actual rendering candidates were EIGRP interface BFD flags: config changed but running configuration omitted them. The refreshed corpus records their rendered changes, and focused export/import checks confirm the three contexts. Thirty-one invalid-argument notices, eight invalid removal seeds and six explicit AF-removal notices were previously classified too permissively; the refreshed helper fixes that classification without modifying stored outputs.
-
-| Initial reference mode/path | Invocation | Historical triage |
-| --- | --- | --- |
-| config / no snmp-server | `no snmp-server chassis-id AUDIT` | removal-operand-compatibility-needs-native-check |
-| config / default snmp-server | `default snmp-server chassis-id AUDIT` | removal-operand-compatibility-needs-native-check |
-| config-if / negotiation | `negotiation auto` | current-port-command-profile-needs-native-check |
-| config-if-range / negotiation | `negotiation auto` | current-port-command-profile-needs-native-check |
-| user / show debugging | `show debugging` | privileged-mode-available-followup |
-| user / show aaa | `show aaa servers` | privileged-mode-available-followup |
-| user / show tech-support | `show tech-support` | privileged-mode-available-followup |
-| config-router / capability vrf-lite | `capability vrf-lite` | OSPF-VRF-capability-root-gap |
-| config-router-eigrp-vaf / no autonomous-system | `no autonomous-system 10` | removal-operand-compatibility-needs-native-check |
-| config-pmap-c / fair-queue | `fair-queue` | explicitly-unsupported-congestion-scheduling |
-| config-pmap-c / random-detect | `random-detect` | explicitly-unsupported-congestion-scheduling |
-| config-pmap-c / no set | `no set dscp 10` | removal-operand-compatibility-needs-native-check |
-| config-pmap-c-police / no conform-action | `no conform-action drop` | removal-operand-compatibility-needs-native-check |
-| config-pmap-c-police / no exceed-action | `no exceed-action drop` | removal-operand-compatibility-needs-native-check |
-| config-pmap-c-police / no violate-action | `no violate-action drop` | removal-operand-compatibility-needs-native-check |
-| priv / test etherchannel load-balance | `test etherchannel load-balance interface Port-channel1 ip 192.0.2.1 192.0.2.2` | EtherChannel-diagnostic-root-gap |
-| config-if / switchport trunk encapsulation isl | `switchport trunk encapsulation isl` | fixed-dot1q-current-profile |
-| config-if / switchport trunk encapsulation negotiate | `switchport trunk encapsulation negotiate` | fixed-dot1q-current-profile |
-| config-if-range / switchport trunk encapsulation isl | `switchport trunk encapsulation isl` | fixed-dot1q-current-profile |
-| config-if-range / switchport trunk encapsulation negotiate | `switchport trunk encapsulation negotiate` | fixed-dot1q-current-profile |
-| config-subif / no udld | `no udld` | subinterface-UDLD-removal-profile-needs-native-check |
-| config-subif / default udld | `default udld` | subinterface-UDLD-removal-profile-needs-native-check |
-| config-mon-erspan-src / no destination | `no destination` | ERSPAN-endpoint-removal-grammar-gap |
-| config-mon-erspan-dst / no source | `no source` | ERSPAN-endpoint-removal-grammar-gap |
-
-## Reproduction and evidence
-
-Use the project Node version (captured v24.22.0 on darwin/arm64). Audit commands operate on isolated in-memory devices and read the old source without modifying or bundling it. Running the corpus overwrites the working latest artifact; archive it first if preserving another observation.
+Run with the project Node24 runtime:
 
 ```sh
-node scripts/audit-command-ledger.mjs
 node scripts/audit-command-probes.mjs
 node scripts/audit-command-probe-triage.mjs --output=docs/audits/command-probe-current-triage.json
 node scripts/audit-command-followups.mjs
 node scripts/report-command-probes.mjs
 ```
 
-- [Complete paired outcomes](command-probe-validation.json): canonical path, mode, node/context, exact commands, outputs, state deltas and exact source hashes. Truncation retains full-output hashes and lengths.
-- [Current supplemental triage](command-probe-current-triage.json): all 87 exact rejection fixtures, 387 classifications, actual config-object checks and original eleven-case recheck.
-- [Final focused followups](command-probe-followups.json): final runtime source hashes, the one changed module, bounded assertions, explicit old setup errors and BFD import evidence.
-- [Initial supplemental triage](command-probe-triage.json): historical 437 classifications and 24 rejection fixtures; use its basis hash and archive index to retrieve the exact old main snapshot.
-- [Immutable snapshot index](command-probe-snapshots.json): full hashes and compressed earlier observations.
-- [command-probe-validation 59412c44b997](command-probe-validation.59412c44b997.json.gz): runtime `98f6523e6010ed4df5588e0e4a30d3d4b459e2ccf8198711b73c9b5094e6f98c`.
-- [command-probe-triage 6e56aeaf8480](command-probe-triage.6e56aeaf8480.json.gz): runtime `98f6523e6010ed4df5588e0e4a30d3d4b459e2ccf8198711b73c9b5094e6f98c`.
-
-This audit does not establish packet forwarding, protocol convergence, GUI behavior, complete saved-lab persistence, native output formatting, all arguments, every hardware model or complete CCNA/CCNP coverage. Separate behavior tests and primary references remain necessary.
+Preserve an earlier latest artifact before rerunning it. Every result binds its actual runtime source graph. Passing old/current probes does not establish complete native firmware, operating-system or exam equivalence.

@@ -87,7 +87,7 @@ test('RIP validates the received source subnet until explicitly disabled',()=>{
 test('EIGRP configured neighbors use unicast Hellos and default-information filters external defaults',()=>{
   const s=new Simulator(411),a=make(s,1),b=make(s,2);for(const r of[a,b])run(r.cli,'router eigrp 100','network 0.0.0.0 255.255.255.255','exit');run(a.cli,'router eigrp 100','neighbor 10.0.0.2 g0/0','end');run(b.cli,'ip route 0.0.0.0 0.0.0.0 Null0','router eigrp 100','redistribute static','end');link(s,a.d,b.d);s.advance(1000);
   assert.ok(s.events.some(e=>e.nodeId===a.d.id&&e.packet?.destination==='10.0.0.2'&&e.protocol==='EIGRP'));assert.ok(a.d.runtime.routes.some(r=>r.prefix===0&&r.protocol==='D EX'));
-  run(b.cli,'configure terminal','router eigrp 100','no default-information out','end');assert.ok(!a.d.runtime.routes.some(r=>r.prefix===0&&r.protocol==='D EX'));run(b.cli,'configure terminal','router eigrp 100','default-information out','end');s.advance(1000);assert.ok(a.d.runtime.routes.some(r=>r.prefix===0&&r.protocol==='D EX'));
+  run(b.cli,'configure terminal','router eigrp 100','no default-information out','end');s.advance(100);assert.ok(!a.d.runtime.routes.some(r=>r.prefix===0&&r.protocol==='D EX'));run(b.cli,'configure terminal','router eigrp 100','default-information out','end');s.advance(1000);assert.ok(a.d.runtime.routes.some(r=>r.prefix===0&&r.protocol==='D EX'));
   run(a.cli,'configure terminal','router eigrp 100','no default-information in','eigrp upgrade-cli CAMPUS','end');assert.ok(!a.d.runtime.routes.some(r=>r.prefix===0&&r.protocol==='D EX'));assert.match(renderConfig(a.d).join('\n'),/router eigrp CAMPUS/);
 });
 
@@ -127,7 +127,7 @@ test('EIGRP candidate default network forwards otherwise unknown destinations an
   assert.equal(a.d.runtime.routes.find(r=>r.network==='192.0.2.0')?.candidateDefault,true);assert.ok(!a.d.runtime.routes.some(r=>r.prefix===0));
   let probe=s.ping(a.d.id,'203.0.113.1',{count:1});s.advance(1000);assert.equal(probe.received,1);
   run(a.cli,'configure terminal','router eigrp 100','no default-information in','end');s.advance(100);assert.ok(!a.d.runtime.routes.find(r=>r.network==='192.0.2.0')?.candidateDefault);probe=s.ping(a.d.id,'203.0.113.1',{count:1});s.advance(1000);assert.equal(probe.received,0);
-  run(a.cli,'configure terminal','router eigrp 100','default-information in','end');run(b.cli,'configure terminal','no ip default-network 192.0.2.0','end');assert.ok(!a.d.runtime.routes.find(r=>r.network==='192.0.2.0')?.candidateDefault);
+  run(a.cli,'configure terminal','router eigrp 100','default-information in','end');run(b.cli,'configure terminal','no ip default-network 192.0.2.0','end');s.advance(100);assert.ok(!a.d.runtime.routes.find(r=>r.network==='192.0.2.0')?.candidateDefault);
 });
 
 test('RIPng process timers and split-horizon aliases change emitted updates and persist',()=>{

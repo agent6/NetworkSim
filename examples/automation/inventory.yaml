@@ -1,0 +1,12 @@
+# Teaching subset. Set the lab SSH account and reachable management address.
+all:
+  vars:
+    ansible_connection: ansible.netcommon.network_cli
+    ansible_network_os: cisco.ios.ios
+    ansible_user: admin
+    ansible_password: lab-password
+  children:
+    routers:
+      hosts:
+        edge:
+          ansible_host: 192.0.2.1

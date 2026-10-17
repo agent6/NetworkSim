@@ -16,6 +16,10 @@ Management IP and a working Ethernet uplink are required. Discovery uses configu
 
 Site join/Flex profile reference and operating-mode changes also require rejoin. Explicit missing site/join/Flex/RF dependencies disable the affected WLAN; wrong-band RF mappings reject rather than borrowing another band's profile. In Flex standalone operation, centrally switched WLANs stop serving clients while existing locally switched sessions remain operational. The controller expires AP registrations from its last delivered CAPWAP message, without consulting the AP's global power flag.
 
+Optional AP MAC authorization gates delivered join requests using native credential-download lists and local Ethernet-MAC records or actual RADIUS UDP requests. Timeouts/retransmissions are bounded, explicit rejection stops failover, and AP/controller lifecycle or AAA dependency changes invalidate pending callbacks. Only short duplicate-join retries can reuse a completed result; a later controller-loss/rejoin checks the live database again. Derived results are displayed in WLC monitoring and are never persisted as configuration.
+
+The distinct `generic-standalone` AP profile builds its operational snapshot from local SSID/policy/radio configuration through `standalone-ap.ts`. No WLC configuration or CAPWAP message is manufactured. It uses the same advertisement, shared Open/WPA2 authentication, RF/admission, client association and local Ethernet bridge paths as the lightweight/Flex engine. The AP may associate local clients without an AP management IP; real Ethernet/DHCP/routing requirements still determine data connectivity. `ios-standalone-ap.ts` exposes a documented autonomous-style SSID/radio subset, while profile selection and the simplified native-VLAN bridge remain explicit GUI/model choices. Radio SSID attachment, open-system authentication and per-VLAN AES configuration gate actual advertisements. Power/reset and profile changes invalidate old service and rebuild the selected lifecycle.
+
 ## Client lifecycle
 
 IDLE/ADAPTER_DISABLED → SCANNING → NETWORK_FOUND → AUTHENTICATING → ASSOCIATING → KEY_NEGOTIATING → ASSOCIATED → OBTAINING_IP → CONNECTED.
@@ -23,6 +27,8 @@ IDLE/ADAPTER_DISABLED → SCANNING → NETWORK_FOUND → AUTHENTICATING → ASSO
 Open WLANs omit key negotiation. Enterprise exchanges perform association, logical EAP identity/RADIUS authentication, then key establishment. Failures retain distinct reasons and use exponential retry capped at 30 seconds. DHCP failure keeps a valid wireless association separate from IP availability.
 
 Enterprise requests respect each RADIUS server's timeout and retransmit count, then try the next configured group member only when no usable reply arrives. A delivered Access-Reject stops the group. The association deadline includes the configured bounded retry chain; AP/controller runtime and client generation checks invalidate stale replies after resets. This is logical password-based EAP, without TLS/PEAP or a physical RADIUS implementation.
+
+WPA3 Personal adds logical SAE client/AP commit and confirmation stages before association and the four-way exchange. Session nonces, BSSID, client identity and generation bind password confirmation/key proofs. This is not the IEEE elliptic-curve SAE/H2E algorithm. Wrong passwords fail before EAPOL and data authorization. Pure SAE requires mandatory PMF; transition mode negotiates WPA2 or WPA3 per client and enforces capability. Associations retain the negotiated mode and logical PMF flag for monitoring/deauthentication.
 
 Adapter, WLAN, radio and policy changes invalidate affected sessions. Duplicate client MACs and radio admission limits reject association. History is bounded to 80 rows.
 
@@ -35,6 +41,10 @@ Local: laptop Wireless0 → scheduled 802.11 data record → AP → Ethernet/VLA
 Return traffic follows the reverse path. Same-AP and inter-AP client traffic use these same frame handlers. ARP, IPv6 neighbor discovery, DHCP, DNS, ICMP, TCP and HTTP use existing implementations. `aaa-service.ts` registers the existing RADIUS/TACACS service handlers independently of whether a console has been opened.
 
 Authorized wireless transmission and reception update shared Wireless0 packet/byte counters and frame observations. Radio contention/retry/FCS counters are not synthesized.
+
+`wireless-policy.ts` enforces IPv4 ACL and aggregate/per-client QoS bindings on actual inner IP packets. Central ingress/egress uses the WLC's current shared definitions. CAPWAP carries ACL/class/policy/time-range snapshots for Flex local enforcement; dependency edits trigger delivery. Actual ACL hits, QoS meters/counters, DSCP marking and policer loss belong to the real enforcement device. Queuing actions require physical Ethernet output and are rejected for wireless attachments. Downlink copies are per client, so one recipient's marking/policer cannot mutate another's packet.
+
+`wlc-administration.ts` applies validated GUI settings to an isolated controller draft through native/shared IOS handlers before WLAN references are checked. `wlc-monitoring.ts` reads actual operational output, sends delivered CAPWAP disconnect, invokes native startup save and uses `Simulator.reload` with an explicit saved/save-and-reload choice. These share the same configuration, services and lifecycle as the console.
 
 ## RF, roaming and presentation
 
@@ -51,6 +61,8 @@ Packet events carry only modeled fields, with inner-frame and parent IDs linking
 The ninth device kind is `poeswitch`. It shares the Layer 2 switch classification. `poe.ts` recomputes electrical allocations from direct copper connections, per-port limits and a total budget. Effective device power gates AP interfaces, scanning/advertisement, CAPWAP and console access. Losing supply cancels AP sessions and invalidates client associations; recovery starts addressing and join again. AP power is derived entirely from PoE availability. Manual and bulk power requests skip APs; older saved AP flags and source selections cannot override supply. PoE events are electrical status records, not fabricated Ethernet packets.
 
 High-priority ports receive budget before low-priority ports. Equal-priority devices are admitted in actual detection order. Priorities are persistent interface settings, while detection/allocation records are transient. Budget changes can shed a powered AP and thereby stop its actual wireless service.
+
+The parent PoE allocator exposes a four-stream 802.3at/30 W profile or an explicit reduced two-stream 802.3af/15.4 W profile. Wireless RF rate and actual scheduled data delay consume the allocated stream count, and AP diagnostics expose it. There is no hardware PHY/MIMO emulation.
 
 Running/startup configuration is serialized; runtime, handshakes, AP registrations and wireless lines rebuild after load. Wireless0 is not a physical cable endpoint. Saved topology validation rejects malformed radio/configuration values transactionally. WLC power cycles load startup configuration or factory defaults. AP/laptop settings are retained as endpoint properties unless a startup snapshot is present.
 

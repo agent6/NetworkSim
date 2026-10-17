@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-17T00:44:06.696Z",
+  "generatedAt": "2026-10-17T02:21:43.902Z",
   "generator": "node scripts/audit-model-driven-management.mjs",
   "scope": "Original IOS XE 17.12 teaching datastore subset over actual simulated TCP/ACL paths",
   "status": "partial",
@@ -28,11 +28,11 @@
     },
     {
       "path": "src/ios-platform-compat.ts",
-      "sha256": "4a9b5d4eeab04c5ff4fa8e8c9fbeba0992cbd3ac584c2f09364466fc871055f3"
+      "sha256": "bf6d5a1ec930de3187a2b2337d76cda56d4071357878102b4609cdf799f1348c"
     },
     {
       "path": "src/network-tools-ui.ts",
-      "sha256": "12a7c88e8f8f26a00ec1e1f1c430fa80a84c2bf01b63b0a1e1f5e3872fde4937"
+      "sha256": "95ed577f071ce4e0eddcf2a02395dedae84b58408c055bf59e9358b87e9f9c17"
     },
     {
       "path": "tests/model-driven-management.test.ts",

@@ -1,3 +1,4 @@
+import {ftpFormFields,ftpDraft,bindFTPForm} from './ftp-ui.ts';
 import {ownRecordValue,setRecordValue} from './record-map.ts';
 import {dnsRecords,validateDNSRecords,type DNSRecord} from './dns-service.ts';
 import type { Device } from "./model.ts";
@@ -75,7 +76,7 @@ export function showServices(
   formDialog(
     `${d.config.hostname} · Services`,
     `
-    <div class="flex flex-wrap gap-1 border-b border-slate-100 pb-3" role="tablist" aria-label="Server services">${["DNS", "DHCP", "HTTP", "AAA", "NTP", "Syslog"].map((label, i) => `<button class="btn ${i === 0 ? "tool-active" : ""}" type="button" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-service-tab="${label}">${label}</button>`).join("")}</div>
+    <div class="flex flex-wrap gap-1 border-b border-slate-100 pb-3" role="tablist" aria-label="Server services">${["DNS", "DHCP", "HTTP", "AAA", "NTP", "FTP", "Syslog"].map((label, i) => `<button class="btn ${i === 0 ? "tool-active" : ""}" type="button" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-service-tab="${label}">${label}</button>`).join("")}</div>
     <section data-service-section="DNS" class="space-y-3">${toggle("dns-enabled", "DNS server enabled", svc.dns?.enabled)}<p class="text-[11px] leading-5 text-slate-400">Serve A, AAAA, CNAME, MX, NS and PTR records through simulated DNS. TTL controls resolver caching. Enter reverse-zone names for PTR records; MX preference applies only to MX.</p><div id="dns-rows" class="space-y-3">${dnsRecords(svc.dns).map(record=>dnsRow(record)).join('')}</div><button type="button" class="btn" id="add-dns">${icon("plus", 14)} Add record</button></section>
     <section data-service-section="DHCP" class="hidden space-y-3">${toggle("dhcp-enabled", "DHCP server enabled", svc.dhcp?.enabled)}<div class="space-y-3 rounded-xl border border-slate-200 p-3"><label class="field">Find a lease<input type="search" data-dhcp-lease-search aria-label="Search DHCP leases" placeholder="IP address, client, MAC address, or pool"></label><div class="space-y-3" data-dhcp-leases>${dhcpLeaseView(d,sim)}</div><p class="text-[11px] text-slate-400">Live allocations from this server. Remaining time follows the simulation clock.</p></div><div id="pool-rows" class="space-y-3">${(svc.dhcp?.pools || []).map(poolRow).join("")}</div><button type="button" class="btn" id="add-pool">${icon("plus", 14)} Add address pool</button><label class="field">Excluded addresses · one address or start–end range per line<textarea name="dhcp-excluded" rows="3" class="font-mono text-xs" placeholder="192.168.10.1 - 192.168.10.20">${esc((svc.dhcp?.excluded || []).map((r: any) => (r.start === r.end ? r.start : `${r.start} - ${r.end}`)).join("\n"))}</textarea></label></section>
     <section data-service-section="HTTP" class="hidden space-y-3">${toggle("http-enabled", "HTTP server enabled", svc.http?.enabled)}<div class="grid grid-cols-2 gap-3"><label class="field">HTTP authentication<select name="http-auth">${["none", "local", "enable", "aaa"].map((mode) => `<option value="${mode}" ${(svc.http?.authentication || "none") === mode ? "selected" : ""}>${{ none: "Public", local: "Local users", enable: "Enable password", aaa: "AAA method list" }[mode]}</option>`).join("")}</select></label>${input("AAA login method list", "http-auth-list", svc.http?.authenticationList || "default")}${input("Flash base path (optional)", "http-base", svc.http?.basePath || "", "flash:/www")}<label class="field">Enable password (lab only)<input type="password" autocomplete="off" name="http-enable-password" value="${esc(d.config.features.enableSecret ?? d.config.features.enablePassword ?? "")}"></label></div><details><summary class="cursor-pointer text-xs">Local device users</summary><p class="my-2 text-[11px] text-slate-400">Use lab-only credentials. These users are also available to device login; exported labs include them.</p><div id="http-local-users" class="space-y-3">${Object.entries(
@@ -101,6 +102,7 @@ export function showServices(
     <section data-service-section="NTP" class="hidden space-y-3"><div class="grid grid-cols-2 items-end gap-3">${toggle("ntp-enabled", "NTP server enabled", svc.ntp?.enabled)}${input("NTP stratum", "stratum", svc.ntp?.stratum || 1)}</div></section>
 
 
+    <section data-service-section="FTP" class="hidden space-y-3">${ftpFormFields(svc.ftp)}</section>
     <section data-service-section="Syslog" class="hidden space-y-3">${toggle("syslog-enabled", "Syslog receiver enabled", svc.syslog?.enabled)}<div><div class="section-label mb-2">Received logs</div><pre class="max-h-44 overflow-auto rounded-lg bg-slate-50 p-3 text-[10px] whitespace-pre-wrap">${esc((d.runtime.features.syslogReceived || []).map((entry: any) => `${entry.timestamp ?? `sim ${entry.received ?? 0} ms`} ${entry.source}${entry.hostname ? ` (${entry.hostname})` : ""} facility=${entry.facility ?? "?"} severity=${entry.severity ?? "?"}: ${entry.message}`).join("\n") || "No messages received.")}</pre></div></section>`,
     (data) => {
       const records:Record<string,string>=Object.create(null),names=data.getAll("record-name"),addresses=data.getAll("record-address");
@@ -220,7 +222,9 @@ export function showServices(
         throw Error(
           "Use a simulated flash directory without parent path segments.",
         );
+      const ftp=ftpDraft(data,d.config);
       commit(() => {
+        if(ftp!==undefined)svc.ftp=ftp;
         const localUsers: Record<string, any> = Object.create(null);
         for (const [user, value] of Object.entries<any>(
           aaa["http-local"].users,
@@ -272,6 +276,7 @@ export function showServices(
     },
   );
   const root = document.querySelector<HTMLFormElement>("#dialog-form")!;
+  bindFTPForm(root);
   const tabs = [...root.querySelectorAll<HTMLButtonElement>("[data-service-tab]")];
   const sections = [...root.querySelectorAll<HTMLElement>("[data-service-section]")];
   tabs.forEach((tab, index) => {

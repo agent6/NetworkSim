@@ -1,7 +1,13 @@
 {
-  "generatedAt": "2026-10-17T00:55:22.071Z",
+  "generatedAt": "2026-10-17T02:16:53.808Z",
+  "browser": "155.0.8059.84",
+  "fixture": "Isolated public YAML import in local static HTML preview",
+  "artifact": {
+    "path": "dist/index.html",
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+  },
   "checks": [
-    "The server exposes its six remaining service tabs and no TFTP or SCP/SFTP controls",
+    "The server exposes its seven service tabs and no TFTP or SCP/SFTP controls",
     "Service tabs support arrow keys, Home, End and accessible tab selection",
     "DHCP shows an accurate empty lease state before allocation",
     "NTP and Syslog edits survive saving across separate tabs",
@@ -11,12 +17,5 @@
     "Released leases disappear from the DHCP lookup",
     "No browser page errors"
   ],
-  "errors": [],
-  "surface": "Server Services accessible tabs, live DHCP lease lookup and exclusion of TFTP/SCP/SFTP",
-  "fixture": "isolated headless Chrome; public YAML import; ephemeral localhost static HTML preview",
-  "script": "scripts/browser-server-services.mjs",
-  "screenshots": [
-    ".cache/server-services-browser/dhcp-light.png",
-    ".cache/server-services-browser/dhcp-dark.png"
-  ]
+  "errors": []
 }

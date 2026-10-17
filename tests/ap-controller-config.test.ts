@@ -26,7 +26,7 @@ function fixture(){
  return {e,wlc,ap,laptop,server,sw,w};
 }
 function captureAP(e:Simulator,ap:ReturnType<Simulator['addDevice']>){
- let markup='',save=(_f:FormData)=>{};const original=globalThis.document,root={isConnected:false,addEventListener(){}};
+ let markup='',save=(_f:FormData)=>{};const original=globalThis.document,root={isConnected:false,addEventListener(){},querySelector(){return null;}};
  Object.assign(globalThis,{document:{querySelector:(selector:string)=>selector==='#dialog-form'?root:selector==='.dialog'?{classList:{add(){}}}:null}});
  try{showWireless(e,ap,(_title,html,callback)=>{markup=html;save=callback;},work=>{work();e.changed();},()=>{});}finally{Object.assign(globalThis,{document:original});}
  return {markup,save};
@@ -48,7 +48,7 @@ function wlcForm(wlc:ReturnType<Simulator['addDevice']>){
 test('APCFG-01 delivered WLC profiles override stale AP radio settings, and matching laptop carries routed traffic',()=>{
  const {e,ap,laptop,server}=fixture();advance(e);
  const view=e.wireless.apConfiguration(ap.id)!;assert.equal(view.state,'RUN');assert.equal(view.configured,true);assert.ok(view.appliedAt!>0);assert.equal(view.controllerName,'WLC1');
- assert.deepEqual(view.radios.find(r=>r.band==='5'),{band:'5',enabled:true,channel:149,width:80,power:25,maxClients:100,profileName:'MANAGED5',operational:true});
+ assert.deepEqual(view.radios.find(r=>r.band==='5'),{band:'5',enabled:true,channel:149,width:80,power:25,maxClients:100,profileName:'MANAGED5',operational:true,spatialStreams:4});
  assert.equal(wirelessConfig(ap)!.radios.find(r=>r.band==='5')!.channel,36);
  assert.ok(view.wlans.some(w=>w.ssid==='Campus'&&w.vlan===20&&w.active));
  assert.equal(e.wireless.association(laptop.id)?.channel,149);assert.equal(laptop.runtime.features.wireless.state,'CONNECTED');

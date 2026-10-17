@@ -1,55 +1,38 @@
-# NetworkSim fidelity implementation progress
+# NetworkSim audit implementation ledger
 
-Audit started October 16, 2026. **The complete requested CCNA/ENCOR/ENARSI audit remains unfinished.** Continue this ledger across contexts. Parser discovery, test-name matches and a passing suite do not establish full Cisco/Windows equivalence.
+This continuation completes concrete implementation and executable audit work across the nine original node families and the newly included dedicated Phone node. It distinguishes delivered teaching workflows from exhaustive native Cisco/OS equivalence. The generated [validation report](final-validation-report.md) and [command coverage](cli-command-coverage.md) contain final measured counts and source identities.
 
-## Baseline and authority
+## Preserved requirements and provenance
 
-- Baseline: 517/517 tests, typecheck and offline build passed; `.cache/fidelity-baseline.log`. Latest combined results are generated from the actual log in [validation report](final-validation-report.md).
-- References: current CCNA 1.1; published CCNA 2.0 effective February 3, 2027; ENCOR 1.2; ENARSI 1.1. All 284 numbered parent/child rows are indexed. Describe-only competencies remain distinct from practical requirements. The newer ENCOR removed its older wireless domain; user-requested wireless remains application scope.
-- Targets: ISR4331/IOS XE17.12; Catalyst9300/17.12 for three switch kinds; Catalyst9800/17.12; lightweight Catalyst9115; Windows11 24H2 / Server2025 networking subsets. These are compatibility targets, not executed vendor firmware/operating systems.
-- Requirements: nine nodes, original implementation, Tailwind, matching icons, double-click offline HTML, no backend and PoE-only AP power.
-- **User-approved exclusion, October16:** retain the recent removal of server TFTP and SCP/SFTP services, their administration pages and the desktop File Transfer tool. Old file dictionaries remain; server listeners are disabled on load/reload and reject requests. IOS SCP is separate. This supersedes the original brief's preserve-services requirement for those services.
-- The original `network-sandbox` was temporarily moved and is now restored; its 492 JavaScript hashes match the saved reference manifest. Use it read-only; never ship its code in the new app.
-- The checkout was already untracked. Do not reset or blanket-commit concurrent/shared work. Concurrent AP/controller displays, WLC reference dropdowns and server service removals are preserved. No immutable pre-audit source diff exists.
-- Current shared packaging delivers `index.html`; open that file directly offline. The wireless topology now lives in `tests/fixtures/wireless-lab.ts` and browser tests import it through public YAML, rather than depending on a bundled example menu. The explicit path/hash manifest records these retained concurrent changes separately from this audit's source/test review surface.
+- Original source, Tailwind UI, matching node styles, deterministic shared engine, direct-disk `index.html`, fully offline and no backend.
+- AP power is exclusively supplied by a working PoE port. Local AP power toggles/adapters remain absent.
+- Explicitly preserve the user-approved removal of Server TFTP/SCP/SFTP listeners/admin pages and the desktop File Transfer tool.
+- Old sandbox reference is read-only and independent of the shipped app. REA Packet Tracer evidence remains versioned and genuine. No unavailable vendor runtime output is fabricated.
+- `.cache/fidelity/phase2/pre-source.tar.gz` is the immutable continuation baseline. [Exact file changes](phase2-changed-files.json) and [registry changes](phase2-command-registry-delta.json) compare against it. The overall earlier audit had no equivalent initial archive. Concurrent shared edits remain preserved; no blanket reset/stage/commit is used.
 
-## Bounded repairs implemented
+## Implemented and audited continuation groups
 
-| Group | Actual behavior and evidence | Remaining scope |
+| Group | Concrete behavior | Evidence |
 | --- | --- | --- |
-| Windows | Shared PC/Laptop/Server parser; actual ICMP/trace/path samples, DHCP, DNS/cache, ARP/routes, sockets, adapter/WLAN state; browser continuous ping/Ctrl+C and CLS | Native outputs and many OS options absent; NetBIOS/OS administration excluded |
-| Server GUI/services | Transactional DHCP/typed DNS, received Syslog metadata, live lease lookup, actual AAA receiver log | Explicit NetworkSim GUI; no complete Windows Server or recursive DNS |
-| MAC/VTP | Zero/global/per-VLAN aging changes expiry; static exemption. Fresh Catalyst server/v1, client/extended-VLAN constraints and correct revisions | VTPv3/pruning and full vendor error parity remain partial |
-| Wired policies | Physical bridge/SVI QoS precedence, routed control policies, routing ACL consumers affect traffic/counters | Full match/set/platform catalog still open |
-| Queues | Real class queues, byte-weighted bandwidth, congestion LLQ, average shaping, tail drops and timing | Physical output subset; no WRED/fair-queue/full hierarchy/ASIC queues |
-| Ethernet/bundles | Carrier/speed/duplex negotiation and real mismatch errors/loss; routed VRF/ARP, immediate connected routes and recovery | No PHY/fiber/cable fault model or complete LACP PDU state machine |
-| BGP | Persistent TCP IPv4/IPv6 AF, family policy/withdrawals, VRF-Lite, BFD and actual ECMP/IGP-cost selection | Logical encoding and incomplete full event/catalog matrix |
-| EIGRP | Classic/named IPv4 auto-summary, conditional AD5 Null0/minimum metric, external-route exception, no/default, replay/reload and actual traffic | UPDATE and external numerical seed propagation remain computed; full DUAL/RTP/overlap uncertified |
-| Removal/replay fidelity | QoS value-bearing no forms, persistent three-color/default violation drops, rendered classic/named BFD flags, ERSPAN peer removal and rejected navigation negation | Exact native mismatch/error output remains unverified; see command-removal and wired reports |
-| PoE/AP | Actual priority/detection-order budget allocation; supply-preserving software reload with fresh DHCP/CAPWAP | Single full-power 30W class4 AP profile; no electrical negotiation/fault model |
-| Wireless/WLC | Flex standalone, tag/profile dependencies, RF validation, nondestructive Apply, real counters, delivered RADIUS failover and CAPWAP loss detection | Full Cisco GUI, autonomous AP, WPA3, crypto and advanced roaming absent |
-| SNMP | UDP161 GET/GETNEXT, ACL/views/v3 identity, real MIB/counters; actual link/restart/auth notifications over UDP162 | Read-only logical subset; no BER/USM crypto/GetBulk/informs/full MIB |
-| IOS SCP | Real segmented TCP22, credentials/VTY/EXEC privilege, text files, persistence and literal names | No encrypted wire interoperability; server services deliberately excluded |
-| Model management | TCP830 RPC / HTTPS datastore updates, candidate/locks/commit/discard/confirmed rollback and real monitoring | Limited interface/hostname YANG; no general schemas/NETCONF1.1/real SSH/TLS |
-| AAA accounting | RADIUS EXEC / TACACS EXEC and command records; ACK/reject/timeout/fallback, receiver GUI, redaction and VTY Stop lifecycle | RADIUS command accounting rejects; console/connection/network/system remain configured-only |
-| Persistence/maps | Literal user/file/SNMP/wireless names through packet paths/save/load; strict speedAuto validation | Audited dictionary paths only |
+| Received switching | Per-observer STP vectors, rapid proposal/agreement, guard/TC/timers; delivered DTP, LACP/PAgP and VTP, requests/expiry/recovery and measured counters | switching-message-fidelity; switching-messages and independent wired-integration-review cases |
+| Reliable EIGRP | INIT/UPDATE/ACK vectors, retransmission, policy/withdrawal, classic/named IPv4/IPv6, VRF; native IPv6 summary vectors and distance | eigrp-update-fidelity; eigrp-updates and summary-metric cases |
+| OSPF authentication | Area inheritance, interface null override, received Hello gating, routed failure/recovery, virtual-link keys/overrides and persistence | ospf-authentication-fidelity; ospf-area-auth cases |
+| Congestion | Actual per-flow fair queues and precedence/DSCP WRED/ECN admission, counters and removals on supported router output profiles | qos-congestion-fidelity and14 independent congestion cases |
+| Physical/CAM | Optional cable/fiber/reach/media/fault/FCS effects; actual receiving CRC;32k shared CAM and flooding under exhaustion | physical-medium-fidelity; link-medium, mac-capacity and browser cases |
+| SNMP | GETBULK, size bounds, real inform ACK/retry/dedup/queue behavior, logical v3 notifications, receiver GUI, stable ifIndex, correct unicast/group/error counters | snmp-fidelity; snmp-advanced, independent review and browser cases |
+| WLC/security | Administration/monitoring, local/RADIUS/TACACS management, NTP/syslog/SNMP, AP authorization, save/reload, actual client lifecycle, four QoS directions, logical WPA3/PMF | wlc-administration, wireless-wpa3, bounded GUI traces and browser evidence |
+| Standalone AP | Explicit generic profile, native-shaped SSID/radio configuration, local bridge with open/WPA2, VLANs and PoE, no controller dependency | standalone-ap tests and browser workflow; no native autonomous firmware claim |
+| Host diagnostics | Shared Windows repairs plus optional Ubuntu/macOS client profiles; real IPv4/IPv6 addressing/routes/ICMP/DNS/Wi-Fi and Ctrl+C | windows/unix CLI ledgers and packet-backed tests; Client profile browser workflow |
+| Edge endpoints | Phone/printer/IoT roles, actual class3 PoE, received CDP/LLDP-MED, voice VLAN/COS/DSCP, DHCP domain changes and physical shutdown/recovery | endpoint-edge-fidelity and15 independent endpoint cases |
+| Automation/JSON | Bounded YAML/JSON inventory/tasks, real SSH VTY/authz/config/save/verification, structured output/redaction, JSON editing | automation-fidelity; automation tests and browser cases |
+| File transfer | Passive text-file FTP over separate control/data TCP channels, Server accounts/files GUI, native IOS URL/default/prompt workflows and source selection; excluded Server listeners stay disabled | ftp-files, ios-ftp, ftp-gui and isolated browser cases |
+| Dedicated Phone | Network/PC bridge, received voice policy, PoE-only lifecycle, DHCP/settings, IPv6 data passthrough and import safety | phone, independent phone-audit and reversed-interface-order browser cases |
+| Parser/validation | Exact handler/path execution, all six IOS registries and local submodes, read-only help/completion; repaired WLC help mutation, IGMP show dispatch, duplicate SNMP show and DTP conflicts | current-ios-parser-validation, parser regressions and generated inventories |
 
-Causes, references and tests are in [wired findings](wired-fidelity-findings.json), [wireless findings](wireless-fidelity-findings.json), [Windows audit](windows-cli-coverage.md), [SNMP audit](snmp-fidelity.md), [accounting audit](aaa-accounting-fidelity.md) and [model management coverage](model-driven-management-coverage.json).
+Earlier retained work includes actual BGP TCP/family policy, OSPF packet/LSDB operations, IPv6 services, NAT/ACLs, DHCP/DNS, FHRP, snooping/inspection, remote SPAN, model-driven management, IOS SCP, AAA accounting and literal-name persistence. Existing behavioral assertions remain in the combined regression.
 
-## Audit status
+## Acceptance and limits
 
-- Repository discovery covers every source/import/export, six IOS node registries across 83 contexts and three Windows profiles. Keep context failures; regenerate hashes after product edits.
-- All 18 pinned Catalyst command-book chapters are indexed. Headings/prefix matches are candidates; complete router/WLC catalog and objective argument reconciliation remain open.
-- Current wireless editable templates, including every current WLC field, are inventoried. New dropdown references, implicit default authentication and received-controller AP views have focused checks; full per-field eight-level reference fidelity remains open.
-- Standalone disk launch passed Windows and wireless/PoE/packet-inspector workflows in isolated profiles. Model management, AAA and live service lease workflows have separate browser evidence. Never reset the user's browser labs.
-- REA captured genuine Packet Tracer ISR4331 observations and binary identity. Its IOS16.6.4 behavior is secondary to the selected17.12 profile. No real IOSXE17.12/CML or native Windows environment was available; do not fabricate goldens.
+Run `npm run check` using Node24, then source-bound command/objective/GUI generators and isolated direct-disk browser workflows. Inventories must match final source hashes. Parser acceptance, current-state assertions, packet/cross-device tests, persistence and primary-reference rationale are reported independently; none is silently promoted into full firmware equivalence.
 
-## Remaining priorities and resume procedure
-
-1. Reconcile fresh restored-sandbox positive/no/default probes, exact setup and selected-platform applicability. Parser agreement is not runtime parity.
-2. Finish per-command argument/help/error/default/negation and configuration-to-packet traces. Extend bounded evidence through all required validation levels. Untested rows remain untested.
-3. Complete router/WLC reference catalogs and practical objective reconciliation. Each missing practical capability needs implementation or an agreed exclusion; lexical matches cannot certify an exam.
-4. Continue required received-message state machines: STP/LACP/DTP/VTP, OSPF area/LSA adapters, EIGRP UPDATE/RTP/DUAL, policy corners and physical troubleshooting.
-5. Finish relevant WLC management/security/monitoring workflows and outstanding Windows networking options. Add genuine selected-release fixtures if an authorized reference becomes available.
-
-Read this ledger, [machine summary](audit-summary.json), current findings, old/current probe validation and `.cache/fidelity/*` logs. Reuse completed work. Hold shared source while taking a final snapshot; run `npm run check`, regenerate inventories, validate hashes and refresh the checkpoint. Do not restart discovery or certify completion solely from a green suite. Group exact paths and hashes by subsystem; preserve unrelated concurrent edits.
+The tenth Phone node also has a dedicated Network/PC bridge and settings workflow; no IOS/Windows console is invented for it. The practical ledgers identify concrete lab workflows and external-product exclusions. Remaining [compatibility limits](known-limitations.md) concern native option/output/state-machine breadth, unsupported hardware/crypto, deliberately excluded services and unavailable reference environments. They are not hidden behind a passing suite or static success output.

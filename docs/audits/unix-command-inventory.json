@@ -1,0 +1,1185 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-17T02:18:35.767Z",
+  "profiles": {
+    "linux": "Ubuntu 24.04 LTS (iproute2/iputils/NetworkManager; bounded teaching subset)",
+    "macos": "macOS 15 Sequoia (Darwin networking tools; bounded teaching subset)"
+  },
+  "method": "Explicit syntax variants are independently declared; each row points to actual parser method/source and bounded test assertions. Variants are not native command counts. No IOS/Windows rows are included.",
+  "counts": {
+    "variants": 43,
+    "byOS": {
+      "linux": 23,
+      "macos": 20
+    },
+    "roots": 26
+  },
+  "sources": [
+    {
+      "file": "src/unix-cli.ts",
+      "sha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+    },
+    {
+      "file": "src/host-os.ts",
+      "sha256": "1a9803771c5488ec910fb90d04f2c51100648ea52d9f8cd70b7632f149e14be1"
+    },
+    {
+      "file": "src/cli.ts",
+      "sha256": "43eac0ea22100892175146b727badf420524997fb4be88f10a1ede48a5111095"
+    },
+    {
+      "file": "src/engine.ts",
+      "sha256": "d3b507fad1cdab29d6e07deb36d2fd05586e5fd46de4e55e4fe9296e69399042"
+    },
+    {
+      "file": "src/persistence.ts",
+      "sha256": "6481ec7b59c72ada82eceaf2f3729b891be9c1110d34cb02a3a613e42d8e32bc"
+    },
+    {
+      "file": "tests/unix-cli.test.ts",
+      "sha256": "0ef80be3ea96e1e2df5bc41420d251e45fc05120005181300e192eabd605e1cb"
+    }
+  ],
+  "localAppleManuals": [
+    {
+      "file": "/usr/share/man/man8/ifconfig.8",
+      "sha256": "b8e44622877646b4908a041ad4454b29806305845d1deb304f9b8d776ecf3e1d",
+      "scope": "Locally installed Apple grammar reference only; no claim this is a captured macOS15 binary transcript."
+    },
+    {
+      "file": "/usr/share/man/man8/ping.8",
+      "sha256": "dc1935812351d7ec6cc8bb1b1ef22685f75d500f9ebdb051cc3e802279e31703",
+      "scope": "Locally installed Apple grammar reference only; no claim this is a captured macOS15 binary transcript."
+    },
+    {
+      "file": "/usr/share/man/man8/ping6.8",
+      "sha256": "1c54ddb2d7dfb8b8b25d953f916a14e16e07f9ae8791f670eb51aa5e05728a5b",
+      "scope": "Locally installed Apple grammar reference only; no claim this is a captured macOS15 binary transcript."
+    },
+    {
+      "file": "/usr/share/man/man8/route.8",
+      "sha256": "72d3cd9317e02a1c819cd2e42e4d51ff6a1b73f1f4689c4d5f28a4635423eb1e",
+      "scope": "Locally installed Apple grammar reference only; no claim this is a captured macOS15 binary transcript."
+    },
+    {
+      "file": "/usr/share/man/man8/traceroute.8",
+      "sha256": "780fd1937cf0692ec963906d79a74d81256f4dbdf2a341b683eb6617c030f3ab",
+      "scope": "Locally installed Apple grammar reference only; no claim this is a captured macOS15 binary transcript."
+    },
+    {
+      "file": "/usr/share/man/man8/traceroute6.8",
+      "sha256": "4e1383451f1d4d12624628bf2c72451e0cec98aebbc20391aae2621da234fbf2",
+      "scope": "Locally installed Apple grammar reference only; no claim this is a captured macOS15 binary transcript."
+    },
+    {
+      "file": "/usr/share/man/man8/networksetup.8",
+      "sha256": "56119cf0f2e85bc375f36661e5d51917bd50d13899aa8455846eba2f38681162",
+      "scope": "Locally installed Apple grammar reference only; no claim this is a captured macOS15 binary transcript."
+    }
+  ],
+  "commands": [
+    {
+      "id": "UNIX-01-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "help | ?",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 17,
+        "method": "help",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-07"
+      ],
+      "state": "Supported subset, simulated root session and exclusions",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No native help transcript claim",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/help.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-01-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "help | ?",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 17,
+        "method": "help",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-07"
+      ],
+      "state": "Supported subset, simulated root session and exclusions",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No native help transcript claim",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-02-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "hostname | whoami",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 16,
+        "method": "execute",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-07"
+      ],
+      "state": "Actual lab hostname / explicitly simulated root identity",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No OS account database",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/hostname.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-02-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "hostname | whoami",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 16,
+        "method": "execute",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-07"
+      ],
+      "state": "Actual lab hostname / explicitly simulated root identity",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No OS account database",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-03-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "clear",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 16,
+        "method": "execute",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-03"
+      ],
+      "state": "Shared console clear-screen action",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Display only",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/clear.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-03-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "clear",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 16,
+        "method": "execute",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-03"
+      ],
+      "state": "Shared console clear-screen action",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Display only",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-04-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ip [-4|-6] address show [dev eth0]",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 25,
+        "method": "ip",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-01",
+        "UNIX-06"
+      ],
+      "state": "Actual primary IPv4, operational IPv6/DAD and MAC/interface state",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Finite modeled interfaces; no Linux namespaces/kernel",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/ip.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-05-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ip [-4|-6] address add|del ADDRESS/PREFIX dev eth0",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 25,
+        "method": "ip",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-06",
+        "UNIX-08"
+      ],
+      "state": "Primary IPv4/static IPv6 configuration, actual ND/DAD; failed inputs atomic",
+      "packetBehavior": "Subsequent real forwarding; IPv6 DAD/NA",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "One primary IPv4; portable lab retains configuration rather than native init scripts",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/ip.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-06-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ip link show [dev eth0] | set [dev] eth0 up|down",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 25,
+        "method": "ip",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-01",
+        "UNIX-08"
+      ],
+      "state": "Actual administrative/carrier state; changes actual delivery",
+      "packetBehavior": "Real forwarding stops/recovers",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No kernel device creation, queue disciplines or netns",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/ip.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-07-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ip [-4|-6] route show | get ADDRESS",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 25,
+        "method": "ip",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-01",
+        "UNIX-04",
+        "UNIX-06"
+      ],
+      "state": "Shared RIB and recursive forwarding lookup",
+      "packetBehavior": "Read-only lookup",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Selected single table only",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/ip.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-08-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ip [-4|-6] route add|del PREFIX via GATEWAY [dev eth0] [metric N]",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 35,
+        "method": "routeEdit",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-04",
+        "UNIX-06",
+        "UNIX-10"
+      ],
+      "state": "Actual volatile host routes; validated connected gateway and selected interface",
+      "packetBehavior": "Real IPv4/IPv6 routed echo changes",
+      "saveReload": "Volatile routes clear on restart/load; OS profile persists in lab",
+      "limits": "No policy routing/multiple tables; runtime routes intentionally clear on load/restart",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/ip.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-09-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ip [-4|-6] neigh show [dev eth0] | flush dev eth0",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 25,
+        "method": "ip",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-01"
+      ],
+      "state": "Actual dynamic/static ARP/ND table; only dynamic entries flushed",
+      "packetBehavior": "Next packet performs actual ARP/ND",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No complete Linux NUD state machine",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/ip.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-10-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ifconfig [-a] [INTERFACE]",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 30,
+        "method": "ifconfig",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-02",
+        "UNIX-06"
+      ],
+      "state": "Actual addressing, mask, MAC and link flags",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Only modeled interfaces/fields",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/ifconfig.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-10-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ifconfig [-a] [INTERFACE]",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 30,
+        "method": "ifconfig",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-02",
+        "UNIX-06"
+      ],
+      "state": "Actual addressing, mask, MAC and link flags",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Only modeled interfaces/fields",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-11-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ifconfig INTERFACE up|down | INTERFACE inet ADDRESS netmask MASK",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 30,
+        "method": "ifconfig",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-02",
+        "UNIX-08"
+      ],
+      "state": "Actual interface configuration; validates all values before mutation",
+      "packetBehavior": "Real packet path affected",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Portable-lab config persistence; no native kernel/startup configuration lifecycle",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/ifconfig.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-11-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ifconfig INTERFACE up|down | INTERFACE inet ADDRESS netmask MASK",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 30,
+        "method": "ifconfig",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-02",
+        "UNIX-08"
+      ],
+      "state": "Actual interface configuration; validates all values before mutation",
+      "packetBehavior": "Real packet path affected",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Portable-lab config persistence; no native kernel/startup configuration lifecycle",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-12-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "route [-n] get [-inet6] default|ADDRESS",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 34,
+        "method": "macRoute",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-02",
+        "UNIX-04"
+      ],
+      "state": "Actual selected RIB route, gateway and egress",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No fabricated route performance statistics",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-13-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "route [-n] add|delete [-inet6] default|PREFIX GATEWAY",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 35,
+        "method": "routeEdit",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-04",
+        "UNIX-10"
+      ],
+      "state": "Actual volatile host route add/delete",
+      "packetBehavior": "Real IPv4/IPv6 routed echo changes",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Only explicit prefixes or default and a connected gateway",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-14-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "arp -a | arp -d ADDRESS",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 36,
+        "method": "arp",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-01"
+      ],
+      "state": "Actual IPv4 neighbor records and selected dynamic deletion",
+      "packetBehavior": "No direct packets; later traffic re-resolves",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No static neighbor creation/complete native switches",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/arp.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-14-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "arp -a | arp -d ADDRESS",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 36,
+        "method": "arp",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-01"
+      ],
+      "state": "Actual IPv4 neighbor records and selected dynamic deletion",
+      "packetBehavior": "No direct packets; later traffic re-resolves",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No static neighbor creation/complete native switches",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-15-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "netstat -rn",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 32,
+        "method": "routeTable",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-01",
+        "UNIX-02"
+      ],
+      "state": "Actual shared IPv4/IPv6 route rows",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No processes/native socket statistics",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/netstat.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-15-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "netstat -rn",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 32,
+        "method": "routeTable",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-01",
+        "UNIX-02"
+      ],
+      "state": "Actual shared IPv4/IPv6 route rows",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No processes/native socket statistics",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-16-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ping [-c COUNT] [-s DATA_BYTES] [-i SECONDS] [-W WAIT] HOST",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 39,
+        "method": "ping",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-01",
+        "UNIX-02",
+        "UNIX-03"
+      ],
+      "state": "Actual echoes and observed RTT/loss; count absent streams until Ctrl+C",
+      "packetBehavior": "ICMP/ICMPv6 via ARP/ND/routes/ACLs",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Linux -W seconds; macOS IPv4 -W milliseconds; macOS ping6 has no -W timeout switch",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/ping.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-16-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ping [-c COUNT] [-s DATA_BYTES] [-i SECONDS] [-W WAIT] HOST",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 39,
+        "method": "ping",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-01",
+        "UNIX-02",
+        "UNIX-03"
+      ],
+      "state": "Actual echoes and observed RTT/loss; count absent streams until Ctrl+C",
+      "packetBehavior": "ICMP/ICMPv6 via ARP/ND/routes/ACLs",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Linux -W seconds; macOS IPv4 -W milliseconds; macOS ping6 has no -W timeout switch",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-17-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ping [-4|-6] [-t TTL] [-I INTERFACE] [-M do] HOST | ping6 HOST",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 39,
+        "method": "ping",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-01",
+        "UNIX-06",
+        "UNIX-10"
+      ],
+      "state": "Actual family, packet size, source interface, TTL/DF",
+      "packetBehavior": "Real ICMP/ICMPv6 delivery",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Explicit listed options only; no complete iputils implementation",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/ping.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-18-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ping [-m TTL] [-b INTERFACE] [-S ADDRESS] [-D] HOST | ping6 [-h HOPLIMIT] [-B INTERFACE] HOST",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 39,
+        "method": "ping",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-02",
+        "UNIX-06",
+        "UNIX-10"
+      ],
+      "state": "Distinct native IPv4/IPv6 flag semantics; actual family/source/hop limit",
+      "packetBehavior": "Real ICMP/ICMPv6 delivery",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "IPv6 DF/fragmentation control unsupported; no native Darwin stack",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-19-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "traceroute -I [-n] [-m HOPS] [-q COUNT] [-w SECONDS] HOST | traceroute6 -I HOST",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 47,
+        "method": "trace",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-05"
+      ],
+      "state": "Delivered ICMP hop expiry/echo and optional actual PTR lookup",
+      "packetBehavior": "Real ICMP/ICMPv6 + DNS",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Default native UDP/TCP probes explicitly unsupported; use -I",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/traceroute.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-19-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "traceroute -I [-n] [-m HOPS] [-q COUNT] [-w SECONDS] HOST | traceroute6 -I HOST",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 47,
+        "method": "trace",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-05"
+      ],
+      "state": "Delivered ICMP hop expiry/echo and optional actual PTR lookup",
+      "packetBehavior": "Real ICMP/ICMPv6 + DNS",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Default native UDP/TCP probes explicitly unsupported; use -I",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-20-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "nslookup [-type=A|AAAA|CNAME|MX|NS|PTR] NAME [SERVER]",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 48,
+        "method": "dns",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-05",
+        "UNIX-06"
+      ],
+      "state": "Shared delivered typed DNS with explicit server",
+      "packetBehavior": "Actual UDP53 over IPv4/IPv6",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Noninteractive six-record subset; no DNSSEC/full resolver OS",
+      "reference": "https://bind9.readthedocs.io/en/v9.20.0/manpages.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-20-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "nslookup [-type=A|AAAA|CNAME|MX|NS|PTR] NAME [SERVER]",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 48,
+        "method": "dns",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-05",
+        "UNIX-06"
+      ],
+      "state": "Shared delivered typed DNS with explicit server",
+      "packetBehavior": "Actual UDP53 over IPv4/IPv6",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Noninteractive six-record subset; no DNSSEC/full resolver OS",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-21-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "dig [@SERVER] NAME [TYPE] [+short] | dig [@SERVER] -x ADDRESS [+short]",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 48,
+        "method": "dns",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-05",
+        "UNIX-06"
+      ],
+      "state": "Actual typed records/TTL/preference/rcode; reverse PTR",
+      "packetBehavior": "Actual UDP53 over IPv4/IPv6",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No invented query IDs/flags; unmodeled DNS types/options reject",
+      "reference": "https://bind9.readthedocs.io/en/v9.20.0/manpages.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-21-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "dig [@SERVER] NAME [TYPE] [+short] | dig [@SERVER] -x ADDRESS [+short]",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 48,
+        "method": "dns",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-05",
+        "UNIX-06"
+      ],
+      "state": "Actual typed records/TTL/preference/rcode; reverse PTR",
+      "packetBehavior": "Actual UDP53 over IPv4/IPv6",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No invented query IDs/flags; unmodeled DNS types/options reject",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-22-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "nmcli device status | show [INTERFACE]",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 51,
+        "method": "nmcli",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-09"
+      ],
+      "state": "Actual carrier/association, addresses and configured DNS",
+      "packetBehavior": "No direct packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "NetworkManager-compatible teaching view, no daemon/process",
+      "reference": "https://networkmanager.dev/docs/api/latest/nmcli.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-23-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "nmcli device wifi list [ifname wlan0]",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 51,
+        "method": "nmcli",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-09"
+      ],
+      "state": "Actual shared AP scan/BSSID/SSID/channel/rate/security",
+      "packetBehavior": "Shared wireless model",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "No calibrated RF or native driver",
+      "reference": "https://networkmanager.dev/docs/api/latest/nmcli.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-24-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "nmcli device wifi connect SSID [password PASSWORD] [ifname wlan0] | device disconnect wlan0",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 51,
+        "method": "nmcli",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-09"
+      ],
+      "state": "Actual association/key success/failure, live correction/disconnect",
+      "packetBehavior": "Shared association/EAPOL and delivered DHCP/ICMP",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Open/personal subset; enterprise identity configured in adapter GUI",
+      "reference": "https://networkmanager.dev/docs/api/latest/nmcli.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-25-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "nmcli device connect eth0",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 51,
+        "method": "nmcli",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-11"
+      ],
+      "state": "DHCP activation requests actual lease; reports timeout/error",
+      "packetBehavior": "Actual DHCP packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Explicit Ethernet/DHCP subset; no arbitrary NM profile operations",
+      "reference": "https://networkmanager.dev/docs/api/latest/nmcli.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-26-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "networksetup -listallhardwareports | -getinfo SERVICE | -getdnsservers SERVICE",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 52,
+        "method": "networksetup",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-02"
+      ],
+      "state": "Actual interface/service mapping/address/gateway/DNS",
+      "packetBehavior": "No packets",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Ethernet/en0 and Wi-Fi/en1 are declared simulation aliases",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-27-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "networksetup -setmanual SERVICE ADDRESS MASK GATEWAY | -setdhcp SERVICE",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 52,
+        "method": "networksetup",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-02",
+        "UNIX-11"
+      ],
+      "state": "Actual configured/manual address or delivered DHCP lease",
+      "packetBehavior": "Real DHCP / forwarding changes",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Optional native client ID unsupported; no native preferences service",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-28-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "networksetup -setdnsservers SERVICE ADDRESS...|Empty",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 52,
+        "method": "networksetup",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-02"
+      ],
+      "state": "Changes actual shared resolver list and DHCP/static DNS policy",
+      "packetBehavior": "Later DNS queries use selected list",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "One host DNS list, not independent OS per-service resolver scopes",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-29-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "networksetup -getairportnetwork DEVICE | -setairportnetwork DEVICE SSID [PASSWORD]",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 52,
+        "method": "networksetup",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-09"
+      ],
+      "state": "Actual negotiated wireless association and failed credentials",
+      "packetBehavior": "Actual association/authentication and routed traffic",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Open/personal subset; enterprise identity uses GUI",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-30-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "networksetup -getairportpower DEVICE | -setairportpower DEVICE on|off",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 52,
+        "method": "networksetup",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "UNIX-09"
+      ],
+      "state": "Actual adapter enable/disable state",
+      "packetBehavior": "Association/data path starts/stops",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Radio hardware/driver stack not emulated",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-31-linux",
+      "os": "linux",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ssh | telnet",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 16,
+        "method": "execute",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "tests/management.test.ts"
+      ],
+      "state": "Uses the existing actual simulated management connection callback",
+      "packetBehavior": "TCP22/23 with VTY/AAA/authz",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Logical management transport, no native cryptography/host shell",
+      "reference": "https://manpages.ubuntu.com/manpages/noble/en/man8/ssh.8.html",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    },
+    {
+      "id": "UNIX-31-macos",
+      "os": "macos",
+      "node": [
+        "pc",
+        "laptop"
+      ],
+      "command": "ssh | telnet",
+      "parser": {
+        "file": "src/unix-cli.ts",
+        "line": 16,
+        "method": "execute",
+        "sourceSha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c"
+      },
+      "status": "partial",
+      "testIds": [
+        "tests/management.test.ts"
+      ],
+      "state": "Uses the existing actual simulated management connection callback",
+      "packetBehavior": "TCP22/23 with VTY/AAA/authz",
+      "saveReload": "Host OS/profile and explicit device configuration persist in portable lab; runtime observations re-form",
+      "limits": "Logical management transport, no native cryptography/host shell",
+      "reference": "https://github.com/apple-oss-distributions/network_cmds",
+      "referenceComparison": "Pinned profile target and public grammar reviewed; no captured native Ubuntu/macOS execution fixture or complete OS output equivalence."
+    }
+  ]
+}

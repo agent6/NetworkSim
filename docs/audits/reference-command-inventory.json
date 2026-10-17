@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-17T01:01:04.445639+00:00",
+  "generatedAt": "2026-10-17T02:22:24.048252+00:00",
   "implementationInventory": {
     "path": "docs/audits/coverage-inventory.json",
-    "generatedAt": "2026-10-17T01:00:44.148Z",
-    "sha256": "d26022d47a7e42c8cd891b9bd7087037f06f0293ad3a31a4f224af814b9725ec"
+    "generatedAt": "2026-10-17T02:21:22.556Z",
+    "sha256": "7cecb6a3d895ddef433f4179674956b8d5b68f4ee618245d24acd56995a76c07"
   },
   "method": "Automatic extraction of all topictitle2 command headings from all automatically discovered pinned official Catalyst 9300 17.12 command-reference chapters; lexical source-registry and objective-family joins are candidates only. Router and wireless release-specific catalogs still require separate completion. Arguments, no forms and full command semantics are not inferred from headings.",
   "sources": [
@@ -103,10 +103,10 @@
     "chapters": 18,
     "headings": 1328,
     "distinctHeadings": 1307,
-    "exactRegistryMatches": 271,
+    "exactRegistryMatches": 277,
     "prefixHandlerCandidates": 187,
-    "withoutRegistryMatch": 870,
-    "objectiveCandidates": 106
+    "withoutRegistryMatch": 864,
+    "objectiveCandidates": 118
   },
   "commands": [
     {
@@ -1728,6 +1728,7 @@
       "sourceDigest": "c25e2484bdb6ac1b04f339e8f4b69fbcdb6d0ae68a00a022a2add15804b53e50",
       "registryCandidates": [
         "lldp holdtime",
+        "lldp med-tlv-select network-policy",
         "lldp receive",
         "lldp run",
         "lldp timer",
@@ -1974,8 +1975,10 @@
       "commandHeading": "network-policy",
       "reference": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/command_reference/b_1712_9300_cr/interface_and_hardware_commands.html#ariaid-title41",
       "sourceDigest": "c25e2484bdb6ac1b04f339e8f4b69fbcdb6d0ae68a00a022a2add15804b53e50",
-      "registryCandidates": [],
-      "registryMatch": "no registry match",
+      "registryCandidates": [
+        "network-policy"
+      ],
+      "registryMatch": "exact registration",
       "objectiveCandidates": [],
       "applicability": "additional platform candidate; exam applicability not established",
       "status": "unverified-reference-candidate",
@@ -1986,8 +1989,10 @@
       "commandHeading": "network-policy profile (global configuration)",
       "reference": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/command_reference/b_1712_9300_cr/interface_and_hardware_commands.html#ariaid-title42",
       "sourceDigest": "c25e2484bdb6ac1b04f339e8f4b69fbcdb6d0ae68a00a022a2add15804b53e50",
-      "registryCandidates": [],
-      "registryMatch": "no registry match",
+      "registryCandidates": [
+        "network-policy profile"
+      ],
+      "registryMatch": "exact registration",
       "objectiveCandidates": [],
       "applicability": "additional platform candidate; exam applicability not established",
       "status": "unverified-reference-candidate",
@@ -2398,8 +2403,10 @@
       "commandHeading": "show network-policy profile",
       "reference": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/command_reference/b_1712_9300_cr/interface_and_hardware_commands.html#ariaid-title71",
       "sourceDigest": "c25e2484bdb6ac1b04f339e8f4b69fbcdb6d0ae68a00a022a2add15804b53e50",
-      "registryCandidates": [],
-      "registryMatch": "no registry match",
+      "registryCandidates": [
+        "show network-policy profile"
+      ],
+      "registryMatch": "exact registration",
       "objectiveCandidates": [],
       "applicability": "additional platform candidate; exam applicability not established",
       "status": "unverified-reference-candidate",
@@ -2961,8 +2968,10 @@
       "commandHeading": "voice vlan (network-policy configuration)",
       "reference": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/command_reference/b_1712_9300_cr/interface_and_hardware_commands.html#ariaid-title115",
       "sourceDigest": "c25e2484bdb6ac1b04f339e8f4b69fbcdb6d0ae68a00a022a2add15804b53e50",
-      "registryCandidates": [],
-      "registryMatch": "no registry match",
+      "registryCandidates": [
+        "voice vlan"
+      ],
+      "registryMatch": "exact registration",
       "objectiveCandidates": [],
       "applicability": "additional platform candidate; exam applicability not established",
       "status": "unverified-reference-candidate",
@@ -3363,8 +3372,24 @@
         "ip address"
       ],
       "registryMatch": "prefix handler candidate",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "1.10",
+          "competency": "Verify"
+        },
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "2.9",
+          "competency": "Interpret"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
+          "id": "1.6",
+          "competency": "Troubleshoot"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -3377,8 +3402,24 @@
         "ip address"
       ],
       "registryMatch": "prefix handler candidate",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "1.10",
+          "competency": "Verify"
+        },
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "2.9",
+          "competency": "Interpret"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
+          "id": "1.6",
+          "competency": "Troubleshoot"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -3391,8 +3432,24 @@
         "ip address"
       ],
       "registryMatch": "exact registration",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "1.10",
+          "competency": "Verify"
+        },
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "2.9",
+          "competency": "Interpret"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
+          "id": "1.6",
+          "competency": "Troubleshoot"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -5398,8 +5455,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -5503,8 +5575,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -5608,8 +5695,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -5713,8 +5815,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -5818,8 +5935,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -5923,8 +6055,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -6028,8 +6175,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -6133,8 +6295,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -6238,8 +6415,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -6343,8 +6535,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -6448,8 +6655,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -6553,8 +6775,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -7087,22 +7324,22 @@
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.i",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.ii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iv",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -8243,6 +8480,11 @@
         },
         {
           "exam": "CCNA 200-301 v2.0",
+          "id": "2.1.d",
+          "competency": "Configure"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
           "id": "2.2.a",
           "competency": "Configure"
         },
@@ -8566,8 +8808,10 @@
       "commandHeading": "lacp rate",
       "reference": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/command_reference/b_1712_9300_cr/layer_2_3_commands.html#ariaid-title22",
       "sourceDigest": "2fc51bf0b3b6c4f3d96cd0655d0c8f5a2c0db77c01d35aa2f93ba2921ca174f2",
-      "registryCandidates": [],
-      "registryMatch": "no registry match",
+      "registryCandidates": [
+        "lacp rate"
+      ],
+      "registryMatch": "exact registration",
       "objectiveCandidates": [],
       "applicability": "additional platform candidate; exam applicability not established",
       "status": "unverified-reference-candidate",
@@ -9391,6 +9635,11 @@
         },
         {
           "exam": "CCNA 200-301 v2.0",
+          "id": "2.1.d",
+          "competency": "Configure"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
           "id": "2.2.a",
           "competency": "Configure"
         },
@@ -9582,6 +9831,11 @@
         {
           "exam": "CCNA 200-301 v2.0",
           "id": "2.1.c",
+          "competency": "Configure"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
+          "id": "2.1.d",
           "competency": "Configure"
         },
         {
@@ -10195,6 +10449,11 @@
         {
           "exam": "CCNA 200-301 v2.0",
           "id": "2.1.c",
+          "competency": "Configure"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
+          "id": "2.1.d",
           "competency": "Configure"
         },
         {
@@ -11750,6 +12009,11 @@
         },
         {
           "exam": "CCNA 200-301 v2.0",
+          "id": "2.1.d",
+          "competency": "Configure"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
           "id": "2.2.a",
           "competency": "Configure"
         },
@@ -11848,8 +12112,10 @@
       "commandHeading": "voice vlan (service template)",
       "reference": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/command_reference/b_1712_9300_cr/m9_1712_security_ibns_cr.html#wp6723530600__GUID-8A588780-6F3F-4B4C-9CB1-C3489D79E000",
       "sourceDigest": "bc23c7f5a3bf04cd5b39aea273bb5e4a49f5db83829360aefe2553bb57e1b5b2",
-      "registryCandidates": [],
-      "registryMatch": "no registry match",
+      "registryCandidates": [
+        "voice vlan"
+      ],
+      "registryMatch": "exact registration",
       "objectiveCandidates": [],
       "applicability": "additional platform candidate; exam applicability not established",
       "status": "unverified-reference-candidate",
@@ -12952,8 +13218,19 @@
         "flow exporter"
       ],
       "registryMatch": "exact registration",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "4.6",
+          "competency": "Troubleshoot"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -12966,8 +13243,19 @@
         "flow monitor"
       ],
       "registryMatch": "exact registration",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "4.6",
+          "competency": "Troubleshoot"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -12980,8 +13268,19 @@
         "flow record"
       ],
       "registryMatch": "exact registration",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "4.6",
+          "competency": "Troubleshoot"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -13018,8 +13317,19 @@
         "ip flow-export destination"
       ],
       "registryMatch": "exact registration",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "4.6",
+          "competency": "Troubleshoot"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -13044,8 +13354,19 @@
         "ip flow monitor"
       ],
       "registryMatch": "exact registration",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "4.6",
+          "competency": "Troubleshoot"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -13678,6 +13999,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -13871,6 +14197,11 @@
           "exam": "ENCOR 350-401 v1.2",
           "id": "4.1",
           "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -15320,18 +15651,8 @@
         },
         {
           "exam": "CCNA 200-301 v2.0",
-          "id": "3.3.a",
-          "competency": "Configure"
-        },
-        {
-          "exam": "CCNA 200-301 v2.0",
           "id": "4.1",
           "competency": "Configure"
-        },
-        {
-          "exam": "CCNA 200-301 v2.0",
-          "id": "4.4",
-          "competency": "Troubleshoot"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -15413,18 +15734,8 @@
         },
         {
           "exam": "CCNA 200-301 v2.0",
-          "id": "3.3.a",
-          "competency": "Configure"
-        },
-        {
-          "exam": "CCNA 200-301 v2.0",
           "id": "4.1",
           "competency": "Configure"
-        },
-        {
-          "exam": "CCNA 200-301 v2.0",
-          "id": "4.4",
-          "competency": "Troubleshoot"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -15515,18 +15826,8 @@
         },
         {
           "exam": "CCNA 200-301 v2.0",
-          "id": "3.3.a",
-          "competency": "Configure"
-        },
-        {
-          "exam": "CCNA 200-301 v2.0",
           "id": "4.1",
           "competency": "Configure"
-        },
-        {
-          "exam": "CCNA 200-301 v2.0",
-          "id": "4.4",
-          "competency": "Troubleshoot"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -16974,8 +17275,39 @@
       "sourceDigest": "609ae7e26abea601ae76fd47fc99e8857899e26ba89a8dca42cb5ce4e235b717",
       "registryCandidates": [],
       "registryMatch": "no registry match",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "2.8",
+          "competency": "Describe"
+        },
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "4.8",
+          "competency": "Configure"
+        },
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "5.5",
+          "competency": "Describe"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
+          "id": "4.5",
+          "competency": "Describe"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "3.3",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "4.1.b",
+          "competency": "Troubleshoot"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -16986,8 +17318,39 @@
       "sourceDigest": "609ae7e26abea601ae76fd47fc99e8857899e26ba89a8dca42cb5ce4e235b717",
       "registryCandidates": [],
       "registryMatch": "no registry match",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "2.8",
+          "competency": "Describe"
+        },
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "4.8",
+          "competency": "Configure"
+        },
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "5.5",
+          "competency": "Describe"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
+          "id": "4.5",
+          "competency": "Describe"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "3.3",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "4.1.b",
+          "competency": "Troubleshoot"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -18139,18 +18502,8 @@
         },
         {
           "exam": "CCNA 200-301 v2.0",
-          "id": "3.3.a",
-          "competency": "Configure"
-        },
-        {
-          "exam": "CCNA 200-301 v2.0",
           "id": "4.1",
           "competency": "Configure"
-        },
-        {
-          "exam": "CCNA 200-301 v2.0",
-          "id": "4.4",
-          "competency": "Troubleshoot"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -18966,8 +19319,39 @@
       "sourceDigest": "c295945dad0e7879b065759a84c75401661a8d04757992aef7e61cd64eaf304c",
       "registryCandidates": [],
       "registryMatch": "no registry match",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "2.8",
+          "competency": "Describe"
+        },
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "4.8",
+          "competency": "Configure"
+        },
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "5.5",
+          "competency": "Describe"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
+          "id": "4.5",
+          "competency": "Describe"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "3.3",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "4.1.b",
+          "competency": "Troubleshoot"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -19496,6 +19880,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -19794,6 +20183,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -19921,6 +20315,11 @@
           "exam": "ENCOR 350-401 v1.2",
           "id": "4.1",
           "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -20102,8 +20501,19 @@
         "show running-config"
       ],
       "registryMatch": "exact registration",
-      "objectiveCandidates": [],
-      "applicability": "additional platform candidate; exam applicability not established",
+      "objectiveCandidates": [
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "6.6",
+          "competency": "Interpret"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
+          "id": "5.5",
+          "competency": "Configure"
+        }
+      ],
+      "applicability": "objective-family candidate; per-option/platform verification pending",
       "status": "unverified-reference-candidate",
       "notes": "A generic parent handler may reject this subcommand. Neither title presence nor a lexical match establishes support, required exam scope or behavioral equivalence."
     },
@@ -20592,6 +21002,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -20719,6 +21134,11 @@
           "exam": "ENCOR 350-401 v1.2",
           "id": "4.1",
           "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -20852,6 +21272,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -20979,6 +21404,11 @@
           "exam": "ENCOR 350-401 v1.2",
           "id": "4.1",
           "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -21112,6 +21542,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -21239,6 +21674,11 @@
           "exam": "ENCOR 350-401 v1.2",
           "id": "4.1",
           "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -21372,6 +21812,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -21499,6 +21944,11 @@
           "exam": "ENCOR 350-401 v1.2",
           "id": "4.1",
           "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -21632,6 +22082,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -21759,6 +22214,11 @@
           "exam": "ENCOR 350-401 v1.2",
           "id": "4.1",
           "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -21892,6 +22352,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -22019,6 +22484,11 @@
           "exam": "ENCOR 350-401 v1.2",
           "id": "4.1",
           "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -22152,6 +22622,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -22279,6 +22754,11 @@
           "exam": "ENCOR 350-401 v1.2",
           "id": "4.1",
           "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -22412,6 +22892,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -22542,6 +23027,11 @@
         },
         {
           "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
           "id": "4.3",
           "competency": "Configure"
         },
@@ -22669,6 +23159,11 @@
           "exam": "ENCOR 350-401 v1.2",
           "id": "4.1",
           "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENCOR 350-401 v1.2",
+          "id": "4.2",
+          "competency": "Configure"
         },
         {
           "exam": "ENCOR 350-401 v1.2",
@@ -23304,8 +23799,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -23409,8 +23919,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -23504,6 +24029,11 @@
           "exam": "CCNA 200-301 v1.1",
           "id": "1.9.d",
           "competency": "Describe"
+        },
+        {
+          "exam": "CCNA 200-301 v1.1",
+          "id": "1.10",
+          "competency": "Verify"
         },
         {
           "exam": "CCNA 200-301 v1.1",
@@ -23613,6 +24143,11 @@
         {
           "exam": "CCNA 200-301 v2.0",
           "id": "1.4",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
+          "id": "1.6",
           "competency": "Troubleshoot"
         },
         {
@@ -23773,22 +24308,22 @@
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.i",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.ii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iv",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -24158,22 +24693,22 @@
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.i",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.ii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iv",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -24673,8 +25208,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -25092,8 +25642,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -25197,8 +25762,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -25302,8 +25882,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -25407,8 +26002,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -25512,8 +26122,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -25617,8 +26242,23 @@
         },
         {
           "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.i",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.ii",
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
           "id": "1.10.c.iii",
-          "competency": "Describe"
+          "competency": "Troubleshoot"
+        },
+        {
+          "exam": "ENARSI 300-410 v1.1",
+          "id": "1.10.c.iv",
+          "competency": "Troubleshoot"
         },
         {
           "exam": "ENARSI 300-410 v1.1",
@@ -25990,6 +26630,11 @@
         {
           "exam": "CCNA 200-301 v2.0",
           "id": "2.1.c",
+          "competency": "Configure"
+        },
+        {
+          "exam": "CCNA 200-301 v2.0",
+          "id": "2.1.d",
           "competency": "Configure"
         },
         {

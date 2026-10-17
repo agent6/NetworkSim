@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-10-17T02:14:57.986Z",
+  "browser": "155.0.8059.84",
+  "fixture": "Standalone file:// index.html, isolated profile, public YAML import",
+  "checks": [
+    "Standalone file HTML imports the seven-node routed edge topology, including the dedicated Phone",
+    "Linux profile displays real adapter state and resolves/pings through the simulated DNS service",
+    "Linux continuous ping uses terminal Ctrl+C",
+    "Dedicated Phone GUI shows received voice policy and independent DHCP while Linux PC traffic passes untagged",
+    "Phone IP settings choose Network even when imported interfaces put PC first",
+    "macOS profile uses native-shaped commands and actual routed ICMP",
+    "Phone role obtains voice-subnet DHCP through received switch discovery and forwards real traffic",
+    "PoE switch GUI accounts for both generic and dedicated phone powered-device allocations",
+    "A PoE-powered endpoint exposes no misleading manual power toggle",
+    "Client operating-system selection survives browser reload",
+    "No browser page errors"
+  ],
+  "errors": [],
+  "artifact": {
+    "file": "index.html",
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+  }
+}

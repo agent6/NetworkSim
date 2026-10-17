@@ -1,12 +1,15 @@
 import type {Device} from './model.ts';
 import type {WirelessConfiguration} from './wireless-model.ts';
 import {escapeHTML as esc} from './icons.ts';
+import {queuePolicy} from './qos-scheduler.ts';
 
 type Choice = [value: string, label: string];
-type Reference = 'interface'|'wlan'|'policy'|'policy-tag'|'site-tag'|'rf-tag'|'join'|'flex'|'rf24'|'rf5'|'dot1x';
+type Reference = 'interface'|'wlan'|'policy'|'policy-tag'|'site-tag'|'rf-tag'|'join'|'flex'|'rf24'|'rf5'|'dot1x'|'ipv4-acl'|'qos';
 type Catalog = Record<Reference, Choice[]>;
 const names = (table: object): Choice[] => Object.keys(table).map(name => [name, name]);
 const definitions: Record<Reference, {placeholder: string; guidance: string; optional?: boolean}> = {
+  'ipv4-acl':{placeholder:'No wireless IPv4 ACL',guidance:'Create an IPv4 ACL in the IOS console.',optional:true},
+  qos:{placeholder:'No wireless QoS policy',guidance:'Create a policing/marking policy map in the console. Physical queue policies are unavailable here.',optional:true},
   interface: {placeholder: 'Select a management interface', guidance: 'Select an existing interface. Configure additional interfaces in the IOS XE console.'},
   wlan: {placeholder: 'Select a WLAN profile', guidance: 'Create a WLAN in the WLANs tab.'},
   policy: {placeholder: 'Select a policy profile', guidance: 'Create a policy in the Policy profiles tab.'},
@@ -22,6 +25,8 @@ const definitions: Record<Reference, {placeholder: string; guidance: string; opt
 
 export function wlcReferenceCatalog(w: WirelessConfiguration, device: Device): Catalog {
   return {
+    'ipv4-acl':Object.entries<any>(device.config.features.acls??{}).filter(([,value])=>value.type!=='ipv6').map(([name])=>[name,name]),
+    qos:Object.entries(device.config.features.policyMaps??{}).filter(([,value])=>!queuePolicy(value)).map(([name])=>[name,name]),
     interface: names(device.config.interfaces),
     wlan: Object.entries(w.wlans).map(([name, p]) => [name, `${name} · ${p.ssid || 'No SSID'} · ${p.enabled ? 'Enabled' : 'Disabled'}`]),
     policy: Object.entries(w.policies).map(([name, p]) => [name, `${name} · VLAN ${p.vlan} · ${p.enabled ? 'Enabled' : 'Disabled'}`]),
@@ -55,6 +60,7 @@ export function bindWLCReferences(root: HTMLFormElement, w: WirelessConfiguratio
   const refresh = () => {
     const catalog = wlcReferenceCatalog(w,device);
     catalog.wlan = unique(rows('WLAN').map(row => [value(row,'wlan-name'), `${value(row,'wlan-name')} · ${row.querySelector<HTMLInputElement>('[name=wlan-ssid]')?.value || 'No SSID'} · ${checked(row,'wlan-enabled') ? 'Enabled' : 'Disabled'}`]));
+    if(root.querySelector('[name=wlc-administration]'))catalog.dot1x=unique(rows('802.1X list').map(row=>[value(row,'admin-dot1x-name'),`${value(row,'admin-dot1x-name')} · ${value(row,'admin-dot1x-group')}`]));
     catalog.policy = unique(rows('Policy').map(row => [value(row,'policy-name'), `${value(row,'policy-name')} · VLAN ${value(row,'policy-vlan')} · ${checked(row,'policy-enabled') ? 'Enabled' : 'Disabled'}`]));
     catalog['policy-tag'] = unique(named('Policy tag','policy-tag-name'));
     catalog['site-tag'] = unique(named('Site tag','site-name'));
@@ -79,7 +85,7 @@ export function bindWLCReferences(root: HTMLFormElement, w: WirelessConfiguratio
       label.classList.toggle('hidden', !relevant);
       if (help) help.textContent = missing && relevant ? 'This item was removed, renamed, or has an incompatible radio band. Select an available item.' : !choices.length ? definitions[kind].guidance : '';
     }
-    for (const row of rows('WLAN')) row.querySelector('[name=wlan-psk]')?.closest('label')?.classList.toggle('hidden', value(row,'wlan-security') !== 'wpa2-personal');
+    for (const row of rows('WLAN')) row.querySelector('[name=wlan-psk]')?.closest('label')?.classList.toggle('hidden', !['wpa2-personal','wpa3-personal','wpa2-wpa3-personal'].includes(value(row,'wlan-security')));
     // A policy VLAN can be carried upstream without a local WLC VLAN object;
     // its numeric field intentionally accepts any valid VLAN ID.
   };

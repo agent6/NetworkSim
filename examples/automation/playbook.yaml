@@ -1,0 +1,20 @@
+- name: Configure and verify an uplink
+  hosts: routers
+  gather_facts: false
+  tasks:
+    - name: Describe the uplink
+      cisco.ios.ios_config:
+        parents:
+          - interface GigabitEthernet0/0
+        lines:
+          - description Managed by NetworkSim
+        match: line
+        save_when: changed
+    - name: Verify the interface address
+      cisco.ios.ios_command:
+        commands:
+          - show ip interface brief
+        wait_for:
+          - result[0] contains 192.0.2.1
+        retries: 2
+        interval: 1

@@ -1,4 +1,4 @@
-import {isIPv6} from './ip.ts';
+import {isIPv6,parseCidr} from './ip.ts';
 /** Original IOS interaction helpers. These inspect syntax and never execute a command. */
 export interface IosSyntaxCommand { words: string[]; description: string; args?: string }
 export interface IosSyntaxContext {
@@ -106,16 +106,17 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
   if(context.mode==='line'&&path==='accounting exec')return no?done:chain([text('EXEC accounting list')],done);
   if(context.mode==='line'&&path==='accounting commands')return chain([number(0,15,'Command privilege level')],no?done:chain([text('TACACS command accounting list')],done));
   if(path==='snmp-server'){
+    const informOptions=optionGraph(['retries','timeout','pending'].flatMap(key=>{const arg=number(key==='timeout'?0:1,key==='retries'?100:key==='timeout'?42949671:4294967295,'Inform '+key);return no?[[word(key)],[word(key),arg]]:[[word(key),arg]];}));
     const name=text('SNMP name'),acl=text('Manager access-list'),subtree=text('Numeric or supported symbolic MIB subtree');
     const levels=choices(['noauth','auth','priv']),categories=optionGraph(choices(['snmp','linkdown','linkup','coldstart','warmstart','authentication']));
-    if(no)return union(done,chain([word('community'),name],done),chain([word('group'),name],union(done,chain([word('v3')],union(done,...levels.map(form=>chain(form,done)))))),chain([word('user'),name],union(done,chain([name],union(done,chain([word('v3')],done))))),chain([word('view'),name],union(done,chain([subtree],union(done,...choices(['included','excluded']).map(form=>chain(form,done)))))),chain([word('enable'),word('traps')],categories),...['location','contact','chassis-id','trap-source','source-interface','packetsize','queue-length'].map(value=>chain([word(value)],done)),chain([word('engineid'),word('local')],done),chain([word('ifindex'),word('persist')],done),chain([word('host'),ip('Notification host')],done));
+    if(no)return union(done,chain([word('informs')],informOptions),chain([word('community'),name],done),chain([word('group'),name],union(done,chain([word('v3')],union(done,...levels.map(form=>chain(form,done)))))),chain([word('user'),name],union(done,chain([name],union(done,chain([word('v3')],done))))),chain([word('view'),name],union(done,chain([subtree],union(done,...choices(['included','excluded']).map(form=>chain(form,done)))))),chain([word('enable'),word('traps')],categories),...['location','contact','chassis-id','trap-source','source-interface','packetsize','queue-length'].map(value=>chain([word(value)],done)),chain([word('engineid'),word('local')],done),chain([word('ifindex'),word('persist')],done),chain([word('host'),ip('Notification host')],done));
     const access=union(done,chain([acl],done)),permission=union(access,...choices(['ro','rw']).map(form=>chain(form,access)));
     const groupOptions=optionGraph(['read','write','notify'].map(value=>[word(value),text('MIB view name')]).concat([[word('access'),acl]]));
     const userAccess=union(done,chain([word('access'),acl],done)),password=text('Lab password, 8–64 characters');
     const privacy=union(userAccess,...['des','3des'].map(value=>chain([word('priv'),word(value),password],userAccess)),...['128','192','256'].map(bits=>chain([word('priv'),word('aes'),word(bits),password],userAccess)));
     const authentication=union(userAccess,...['md5','sha'].map(value=>chain([word('auth'),word(value),password],privacy)),...['256','384','512'].map(bits=>chain([word('auth'),word('sha-2'),word(bits),password],privacy)));
     const notificationVersion=union(chain([word('version'),word('2c'),text('Community string')],categories),...levels.map(form=>chain([word('version'),word('3'),...form,text('SNMPv3 username')],categories)));
-    return union(chain([word('community'),name],union(permission,chain([word('view'),text('MIB view name')],permission))),...['location','contact','chassis-id'].map(value=>chain([word(value),tail('Text')],done)),chain([word('group'),name,word('v3')],union(...levels.map(form=>chain(form,groupOptions)))),chain([word('user'),name,text('Group name'),word('v3')],authentication),chain([word('view'),name,subtree],union(...choices(['included','excluded']).map(form=>chain(form,done)))),chain([word('engineid'),word('local'),argument('HEX','5–32 hexadecimal bytes',value=>/^(?:[0-9a-f]{2}){5,32}$/i.test(value))],done),chain([word('host'),ip('Notification host')],union(notificationVersion,chain([word('traps')],notificationVersion),chain([word('informs')],notificationVersion))),chain([word('enable'),word('traps')],categories),...['trap-source','source-interface'].map(value=>chain([word(value),iface(context)],done)),chain([word('ifindex'),word('persist')],done),chain([word('packetsize'),number(484,17940,'Stored packet-size setting')],done),chain([word('queue-length'),number(1,1000,'Stored queue-length setting')],done));
+    return union(chain([word('informs')],informOptions),chain([word('community'),name],union(permission,chain([word('view'),text('MIB view name')],permission))),...['location','contact','chassis-id'].map(value=>chain([word(value),tail('Text')],done)),chain([word('group'),name,word('v3')],union(...levels.map(form=>chain(form,groupOptions)))),chain([word('user'),name,text('Group name'),word('v3')],authentication),chain([word('view'),name,subtree],union(...choices(['included','excluded']).map(form=>chain(form,done)))),chain([word('engineid'),word('local'),argument('HEX','5–32 hexadecimal bytes',value=>/^(?:[0-9a-f]{2}){5,32}$/i.test(value))],done),chain([word('host'),ip('Notification host')],union(notificationVersion,chain([word('traps')],notificationVersion),chain([word('informs')],notificationVersion))),chain([word('enable'),word('traps')],categories),...['trap-source','source-interface'].map(value=>chain([word(value),iface(context)],done)),chain([word('ifindex'),word('persist')],done),chain([word('packetsize'),number(484,17940,'Stored packet-size setting')],done),chain([word('queue-length'),number(1,1000,'Stored queue-length setting')],done));
   }
   if (path === 'redistribute') {
     const options = optionGraph([[word('metric'), number(0, 4294967295, 'Redistributed metric')], [word('metric-type'), number(1, 2, 'OSPF external type')], [word('route-map'), text('Route map name')], [word('tag'), number(0, 4294967295, 'Route tag')], [word('subnets')]]);
@@ -124,10 +125,11 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
   }
   if (path === 'area' && context.protocol === 'ospf') {
     return chain([area], union(
+      chain([word('authentication')], union(done, chain([word('message-digest')],done))),
       chain([word('stub')], optionGraph([[word('no-summary')]])),
       chain([word('nssa')], optionGraph(choices(['no-summary', 'default-information-originate', 'no-redistribution']))),
       chain([word('range'), ip('Network address'), ip('Subnet mask')], optionGraph([[word('not-advertise')], [word('cost'), number(0, 16777215, 'Summary cost')]])),
-      chain([word('virtual-link'), ip('Remote router ID')], optionGraph([[word('hello-interval'), number(1, 65535, 'Hello seconds')], [word('dead-interval'), number(1, 65535, 'Dead seconds')], [word('authentication')], [word('authentication-key'), text('Authentication key')]])),
+      chain([word('virtual-link'), ip('Remote router ID')], optionGraph([[word('hello-interval'), number(1, 65535, 'Hello seconds')], [word('dead-interval'), number(1, 65535, 'Dead seconds')], [word('authentication')], [word('authentication'),word('message-digest')], [word('authentication'),word('null')], [word('authentication'),word('key-chain'),text('Key chain name')], [word('authentication-key'), text('Authentication key')], [word('message-digest-key'),number(1,255,'Key ID'),word('md5'),text('Authentication key')]])),
     ));
   }
   if (path === 'ip route') {
@@ -169,12 +171,23 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
 
 /** Deliberately explicit: prose in legacy argument hints is not an executable grammar. */
 function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
+  if(path==='ip ftp username')return [[text('Default remote FTP username')]];
+  if(path==='ip ftp password')return [[text('FTP password')],...combine(choices(['0','7']),[[text('FTP password')]])];
+  if(path==='ip ftp source-interface')return [[iface(context)]];
+  if(path==='ip ftp passive')return [[]];
+  if(path==='ospfv3'&&['interface','range'].includes(context.mode??''))return combine([[number(1,65535,'OSPFv3 process ID')]],[[word('ipv4'),word('area'),text('Area ID')],[word('ipv6'),word('area'),text('Area ID')],...choices(['broadcast','non-broadcast','point-to-point','point-to-multipoint']).map(form=>[word('network'),...form]),[word('network'),word('point-to-multipoint'),word('non-broadcast')]]);
+  if(path==='ipv6 ospf network'||path==='ospfv3 network')return [...choices(['broadcast','non-broadcast','point-to-point','point-to-multipoint']),[word('point-to-multipoint'),word('non-broadcast')]];
+  if(path==='ipv6 ospf neighbor')return combine([[argument('X:X:X:X::X','Link-local neighbor IPv6 address',value=>isIPv6(value)&&/^fe[89ab]/i.test(value))]],combine(optional(word('poll-interval'),number(1,65535,'Down neighbor poll interval')),optional(word('cost'),number(1,65535,'Point-to-multipoint neighbor cost'))));
+  if(path==='ipv6 ospf hello-interval'||path==='ipv6 ospf dead-interval'||path==='ipv6 ospf cost')return [[number(1,65535,'OSPF interface value')]];
+  if(path==='ipv6 ospf priority')return [[number(0,255,'DR election interface priority')]];
   if(path==='network-policy'||path==='network-policy profile')return[[number(1,4294967295,'LLDP-MED network-policy profile')]];
   if(path==='show network-policy profile')return[[],[word('detail')],[number(1,4294967295,'Network-policy profile')],[number(1,4294967295,'Network-policy profile'),word('detail')]];
   if(path==='voice vlan'&&context.mode==='network-policy')return [...combine([[number(1,4094,'Voice VLAN')],[word('dot1p')]], [[],[word('cos'),number(0,7,'Layer2 CoS priority')],[word('dscp'),number(0,63,'IP differentiated services code point')]]),...choices(['none','untagged'])];
   if(['policy-class','policy-police'].includes(context.mode??'')){
     const names=['default','ef',...Array.from({length:7},(_,i)=>'cs'+(i+1)),...Array.from({length:4},(_,c)=>Array.from({length:3},(_,d)=>`af${c+1}${d+1}`)).flat()],dscp:Form[]=[[number(0,63,'Differentiated Services Code Point')],...choices(names)];
     if(path==='set dscp')return dscp;
+    if(path==='fair-queue')return [[]];
+    if(path==='random-detect')return [[],...choices(['dscp-based','precedence-based','ecn']),[word('exponential-weighting-constant'),number(1,16,'Exponential weighting constant')],...combine(combine([[word('dscp')]],dscp),combine([[number(1,4095,'Minimum threshold in packets'),number(1,4095,'Maximum threshold in packets')]],optional(number(1,65536,'Mark probability denominator')))),[word('precedence'),number(0,7,'IP precedence'),number(1,4095,'Minimum threshold in packets'),number(1,4095,'Maximum threshold in packets'),number(1,65536,'Mark probability denominator')]];
     if(['conform-action','exceed-action','violate-action'].includes(path))return [...choices(['transmit','drop']),...combine([[word('set-dscp-transmit')]],dscp),[word('set-prec-transmit'),number(0,7,'IP precedence')]];
   }
   if(path==='ap dot11 24ghz rf-profile'||path==='ap dot11 5ghz rf-profile')return[[text('RF profile name')]];
@@ -224,6 +237,7 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   if (['ip default-gateway', 'ip helper-address', 'router-id', 'bgp router-id', 'tunnel destination', 'default-router'].includes(path)) return [[ip()]];
   if (path === 'ip name-server' || path === 'dns-server') return [[{ ...ip('DNS server address'), repeat: true }]];
   if (path === 'router') return [[word('ospf'), number(1, 65535, 'OSPF process ID')], [word('eigrp'), number(1, 65535, 'Autonomous system number')], [word('eigrp'), text('Named EIGRP instance')], [word('bgp'), number(1, 4294967295, 'Autonomous system number')], [word('rip')]];
+  if(path==='summary-metric'){const keys=summaryMetricKeys(context),distance=[word('distance'),number(1,255,'Administrative distance for local summary')],metric=[number(1,4294967295,'Bandwidth in kilobits per second'),number(1,4294967295,'Delay in tens of microseconds'),number(0,255,'Reliability'),number(1,255,'Load'),number(1,65535,'Path MTU')];return combine(keys,[metric,[...metric,...distance],distance]);}
   if (path === 'network') {
     if (context.mode === 'pool') return [[ip('Network address'), ip('Subnet mask')]];
     if (context.protocol === 'ospf') return [[ip('Network address'), ip('Wildcard mask'), word('area'), argument('AREA', 'Area ID, integer or dotted decimal', value => ipv4(value) || /^\d+$/.test(value))]];
@@ -287,7 +301,7 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   if(['transport input','transport output'].includes(path))return [...choices(['ssh','telnet','all','none']),[word('ssh'),word('telnet')],[word('telnet'),word('ssh')]];
   if(path==='transport preferred')return choices(['ssh','telnet','none']);
   if (path === 'ip ospf') {
-    return [[number(1, 65535, 'OSPF process ID'), word('area'), argument('AREA', 'Area ID')], ...combine(choices(['cost', 'hello-interval', 'dead-interval']), [[number(1, 65535, 'Value')]]), [word('priority'), number(0, 255, 'Router priority')], ...combine([[word('network')]], choices(['broadcast', 'point-to-point', 'non-broadcast', 'point-to-multipoint'])), [word('bfd')], [word('mtu-ignore')], [word('authentication')], [word('authentication'), word('message-digest')], [word('authentication'), word('key-chain'), text('Key chain name')]];
+    return [[number(1, 65535, 'OSPF process ID'), word('area'), argument('AREA', 'Area ID')], ...combine(choices(['cost', 'hello-interval', 'dead-interval']), [[number(1, 65535, 'Value')]]), [word('priority'), number(0, 255, 'Router priority')], ...combine([[word('network')]], choices(['broadcast', 'point-to-point', 'non-broadcast', 'point-to-multipoint'])), [word('bfd')], [word('mtu-ignore')], [word('authentication')], [word('authentication'), word('message-digest')], [word('authentication'), word('null')], [word('authentication'), word('key-chain'), text('Key chain name')]];
   }
   if (path === 'crypto key generate rsa') return [[], [word('modulus'), number(512, 4096, 'RSA modulus bits')], [word('general-keys'), word('modulus'), number(512, 4096, 'RSA modulus bits')]];
   if (path === 'crypto ipsec transform-set') return combine([[text('Transform set name'), word('esp-3des')], [text('Transform set name'), word('esp-aes')], ...combine([[text('Transform set name'), word('esp-aes')]], choices(['128', '192', '256']))], choices(['esp-sha-hmac', 'esp-md5-hmac']));
@@ -376,8 +390,14 @@ function specialPosition(path: string, tokens: IosToken[], context: IosSyntaxCon
   return undefined;
 }
 
+function summaryMetricKeys(context:IosSyntaxContext):Form[]{const six=context.protocol==='eigrp6',key=argument(six?'X:X:X:X::X/<0-128>':'A.B.C.D/<0-32>',six?'IPv6 summary prefix':'IPv4 summary prefix',value=>{try{return value.includes('/')&&parseCidr(value).family===(six?6:4);}catch{return false;}});return [[key],...(six?[]:[[ip('Summary network address'),ip('Contiguous subnet mask')]])];}
+
 function negativeForms(path: string, forms: Form[], context: IosSyntaxContext): Form[] {
+  if(path.startsWith('ip ftp '))return [[]];
   if(path==='network-policy'||path==='network-policy profile'&&['interface','range'].includes(context.mode??'')||path==='voice vlan'&&context.mode==='network-policy')return[[],...forms];
+  if(path==='ipv6 ospf network'||path==='ospfv3 network'||['ipv6 ospf hello-interval','ipv6 ospf dead-interval','ipv6 ospf cost','ipv6 ospf priority'].includes(path))return[[],...forms];
+  if(path==='summary-metric')return summaryMetricKeys(context);
+  if(['policy-class','policy-police'].includes(context.mode??'')&&path==='random-detect')return[[],...forms.filter(f=>f[0]?.literal!=='exponential-weighting-constant'),[word('exponential-weighting-constant')],[word('precedence')]];
   if(['policy-class','policy-police'].includes(context.mode??'')&&['set dscp','conform-action','exceed-action','violate-action'].includes(path))return [[],...forms];
   if(path==='power inline')return [[],...forms];
   if(context.mode?.startsWith('wireless-')&&['tx-power max','channel chan-width','security wpa psk set-key','security dot1x authentication-list','vlan','session-timeout','native-vlan-id','policy-tag','site-tag','rf-tag','ap-profile','flex-profile','24ghz-rf-policy','5ghz-rf-policy','ap capwap timers heartbeat-timeout'].includes(path))return[[],...forms];

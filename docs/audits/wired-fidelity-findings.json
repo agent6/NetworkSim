@@ -125,6 +125,20 @@
       "implementation": "Render classic bfd interface or named per-AF af-interface blocks with true/false BFD settings scoped to the matching local VRF.",
       "behavioralEvidence": "Three eigrp-bfd-persistence cases: classic IPv4 and named IPv6 router/AF/af-interface, enable/no/default, real route/echo gating, rendering/copy and save/reload.",
       "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-018",
+      "finding": "Normal EIGRP route vectors were computed across remote topology instead of learned from delivered UPDATEs",
+      "implementation": "IPv4/IPv6 per-neighbor INIT/UPDATE/ACK transport with ordered delta/withdrawal, duplicate/stale suppression, restart refresh, retry reset and valid-packet hold refresh now drives received vectors and the local DUAL/RIB; transit advertisements use local selected routes.",
+      "behavioralEvidence": "14 independent tests/eigrp-updates.test.ts cases cover classic/named AFs, UPDATE/ACK loss, queued withdrawal, stale sequence/session replay, retry exhaustion, hold, ACL, restart, transit policy/no-form and actual echo. Existing DUAL/SIA/summary/VRF/metric tests pass.",
+      "status": "verified-bounded-repair"
+    },
+    {
+      "id": "WIRED-019",
+      "finding": "Router policy-class fair-queue/random-detect remained explicitly unsupported despite target curriculum congestion scope",
+      "implementation": "16 hashed byte-fair FIFO flow buckets, per-bucket capacity, actual EWMA precedence/DSCP early/max WRED drops and IPv4/IPv6 ECN marking. Router grammar/help/reset/render/replay and per-flow/per-curve counters are connected to actual egress admission/dequeues. Catalyst/priority/placement and unsupported modes reject.",
+      "behavioralEvidence": "14 independent tests/qos-congestion.test.ts cases cover greedy/small flow protection, unequal-size byte fairness/FIFO, per-flow tail isolation, DSCP preferential drops, IPv4/IPv6 ECT/CE/hard-drop, no/default, replay/reload, atomic invalid input, legacy imports and ping ToS.",
+      "status": "verified-bounded-repair"
     }
   ],
   "subsystems": [
@@ -165,10 +179,10 @@
       "limits": "Logical router records, not full area-scoped RFC LSA-type databases. DR election and area adapters are computed; complete NBMA/wait and NSSA translator/P-bit/forwarding-address FSMs absent"
     },
     {
-      "subsystem": "EIGRP, `control-plane.ts`",
-      "operationalTrace": "Actual Hello/hold and reliable QUERY/REPLY/ACK/SIA gate computed vectors and convergence. Operational classic/named IPv4 classful/manual summaries, conditional AD5 and minimum live metrics affect real traffic; dedicated auto-summary, routing/VRF/control tests.",
+      "subsystem": "EIGRP, `control-plane.ts`, `eigrp-updates.ts`",
+      "operationalTrace": "Delivered Hello/INIT/UPDATE/ACK received vectors drive local topology/RIB and transit advertisement; actual QUERY/REPLY/SIA gates DUAL. Summaries, local policy, metric/variance/stub, VRF and BFD retain actual traffic tests.",
       "status": "partial",
-      "limits": "Normal UPDATE advertisements remain computed. No complete RTP/DUAL input matrix or control bandwidth pacing; bounded numerical wide metrics and external scalar seed propagation. Manual-versus-automatic summary overlap and every external vector corner case are not device-certified."
+      "limits": "Logical stop-and-wait UPDATE and separate DUAL transactions, fixed retries, computed discovery/auth eligibility, no binary TLVs/adaptive RTO/conditional-receive multicast/unified complete DUAL matrix/control bandwidth pacing; bounded safe-number metrics and external scalar seeds."
     },
     {
       "subsystem": "RIP/RIPng, `control-plane.ts`",
@@ -202,9 +216,9 @@
     },
     {
       "subsystem": "QoS/CoPP, `packet-policy.ts`, `qos-scheduler.ts`, `engine.ts`",
-      "operationalTrace": "Actual classification, marking/policing, physical/L3/control drops; physical output CBWFQ/LLQ/shaper queues with real delivery timing and congestion counters",
+      "operationalTrace": "Actual classification, marking/policing, physical/L3/control drops; physical output CBWFQ/LLQ/shaper queues with real delivery timing and congestion counters; router 16-flow queues and actual precedence/DSCP WRED/ECN admission/dequeue/header counters",
       "status": "partial",
-      "limits": "Bounded byte-weighted scheduler, not a Cisco ASIC recreation. Physical Ethernet output only, one priority class, maximum 64 router classes/eight Catalyst queues including class-default, queue-limit 1\u20134096 and aggregate safety limit 16,384 queued frames. Shapers allow one initial packet, meter IP bytes, and do not implement IOS burst/overhead/hierarchy options. LLQ uses a documented simulator 200 ms token allowance (minimum 1500 bytes), active under congestion. Catalyst mixed bandwidth types and bandwidth+shape conflict reject; remaining-percent weights may total above 100. Per-flow fair-queue, WRED and queueing on input/CoPP/logical interfaces reject. Older imported unsupported policies retain their configuration but fail closed with explicit diagnostics; CLI replay must remove/replace them"
+      "limits": "Bounded byte-weighted scheduler, not a Cisco ASIC recreation. Physical Ethernet output only, one priority class, maximum 64 router classes/eight Catalyst queues including class-default, queue-limit 1\u20134096 and aggregate safety limit 16,384 queued frames. Shapers allow one initial packet, meter IP bytes, and do not implement IOS burst/overhead/hierarchy options. LLQ uses a documented simulator 200 ms token allowance (minimum 1500 bytes), active under congestion. Catalyst mixed bandwidth types and bandwidth+shape conflict reject; remaining-percent weights may total above 100. Router fixed 16-flow fair-queue and actual EWMA precedence/DSCP WRED/ECN are operational. Default curves, linear probability, idle decay and finish-tag scheduling are teaching approximations, not hardware-certified. Catalyst router syntax, priority flow/WRED, byte/time/discard-class options and input/CoPP/logical queues reject. Older imported unsupported policies retain their configuration but fail closed with explicit diagnostics; CLI replay must remove/replace them"
     },
     {
       "subsystem": "HSRP/VRRP/GLBP, `fhrp-packets.ts`, `control-plane.ts`",
@@ -266,7 +280,14 @@
     "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_eigrp/command/ire-cr-book/ire-a1.html",
     "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/16406-eigrp-toc.html",
     "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/qos/b-quality-of-service/m_qos-mrkg.html",
-    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/qos/b-quality-of-service/m_qos-policing.html"
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/qos/b-quality-of-service/m_qos-policing.html",
+    "https://www.rfc-editor.org/rfc/rfc7868.html",
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_eigrp/command/ire-cr-book/ire-s1.html",
+    "https://www.cisco.com/c/en/us/products/collateral/routers/4000-series-integrated-services-routers-isr/data_sheet-c78-732542.pdf",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/qos/b-quality-of-service/m_qos-queue_management_and_congestion_avoidance.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/qos/b-quality-of-service/m_qos-conavd-diffserv-wred.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/qos/b-quality-of-service/m_qos-conavd-wred-ecn-0.html",
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/qos/command/qos-cr-book/qos-q1.html"
   ],
   "tests": [
     "tests/wired-fidelity.test.ts",
@@ -275,7 +296,9 @@
     "tests/qos-scheduler.test.ts",
     "tests/eigrp-auto-summary.test.ts",
     "tests/qos-parity.test.ts",
-    "tests/eigrp-bfd-persistence.test.ts"
+    "tests/eigrp-bfd-persistence.test.ts",
+    "tests/eigrp-updates.test.ts",
+    "tests/qos-congestion.test.ts"
   ],
   "limitations": "All subsystem rows remain partial; command inventory status must not be inferred from passing a subsystem regression.",
   "validation": {
@@ -297,7 +320,9 @@
       "qos-scheduler": 8,
       "eigrp-auto-summary": 6,
       "qos-negation-and-mode": 3,
-      "eigrp-bfd-persistence": 3
+      "eigrp-bfd-persistence": 3,
+      "eigrp-updates": 14,
+      "qos-congestion": 14
     },
     "eigrpFocusedRegression": {
       "tests": 212,
@@ -323,6 +348,22 @@
       "failed": 0,
       "log": ".cache/wired-negation-regression.log",
       "note": "QoS policer/scheduler, EIGRP auto-summary/BFD, control-plane CLI, routing VRF, show and CLI syntax suites. Typecheck passed. Parent owns final combined acceptance."
+    },
+    "eigrpDeliveredUpdateRegression": {
+      "tests": 218,
+      "passed": 218,
+      "failed": 0,
+      "typecheck": "passed",
+      "log": ".cache/eigrp-updates-broad.log",
+      "note": "Bounded routed/control/core/VRF/policy/show/wired/BGP regression; parent owns final all-node acceptance."
+    },
+    "qosCongestionRegression": {
+      "tests": 134,
+      "passed": 134,
+      "failed": 0,
+      "typecheck": "passed",
+      "log": ".cache/qos-congestion-acceptance.log",
+      "note": "Congestion/scheduler/policer/wired/physical/CLI/help/show/control-plane/reference-policy suites. Parent owns final all-node acceptance."
     }
   },
   "negationSemanticsBoundary": "Supplied QoS DSCP/action arguments are validated then reset the single modeled setting; native behavior for valid arguments differing from current configuration is unverified. Named EIGRP standalone autonomous-system remains rejected by selected-reference grammar."

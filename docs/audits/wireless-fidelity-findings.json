@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "auditDate": "2026-10-16",
-  "referenceProfile": "Catalyst 9800 IOS XE 17.12 teaching subset / 9115 lightweight inspired / generic PoE+",
+  "auditDate": "2026-10-17",
+  "referenceProfile": "Catalyst 9800 IOS XE 17.12 teaching subset / 9115 lightweight inspired / explicit generic standalone AP / generic PoE+",
   "scope": [
     "wlc",
     "ap",
@@ -31,7 +31,7 @@
         "WL-17"
       ],
       "status": "repaired",
-      "remaining": "New client authentication while standalone is not supported."
+      "remaining": "Fresh FlexConnect authentication without its controller is not supported. The distinct generic standalone AP profile supports fresh local Open/WPA2-personal clients."
     },
     {
       "id": "WFA-02",
@@ -338,6 +338,159 @@
       ],
       "status": "repaired",
       "remaining": "Full GUI preservation matrix for every optional CLI-only setting remains partial."
+    },
+    {
+      "id": "WFA-15",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P1",
+      "feature": "Controller service administration",
+      "reference": "Pinned Catalyst9800 IOS XE17.12 configuration guides and source-backed shared simulator services; documented teaching invariants only.",
+      "before": "Existing shared AAA, clock, log, SNMP and HTTPS services had no WLC administration workflow.",
+      "rootCause": "No WLC form-to-shared-command binding.",
+      "fix": "Add validated atomic administration for named RADIUS/TACACS servers/groups and dot1x lists, management users/default login, NTP/syslog/SNMPv2c/HTTPS; retain advanced properties.",
+      "status": "repaired within stated simulation subset",
+      "evidence": "WADM-01/02/12/15; seven-check WLC administration browser artifact"
+    },
+    {
+      "id": "WFA-16",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P0",
+      "feature": "Wireless IPv4 ACL and QoS binding",
+      "reference": "Pinned Catalyst9800 IOS XE17.12 configuration guides and source-backed shared simulator services; documented teaching invariants only.",
+      "before": "Wireless policy profiles carried VLAN/switching only; existing shared ACL/QoS could not be attached at the wireless edge.",
+      "rootCause": "No wireless packet policy integration or delivered Flex dependency snapshot.",
+      "fix": "Bind existing IPv4 ACLs and four aggregate/client direction QoS slots to actual packets. CAPWAP delivers ACL/class/policy/time-range dependencies to Flex APs; real shared counters and policers apply; queue-only policies reject.",
+      "status": "repaired within stated simulation subset",
+      "evidence": "WADM-06/07/08/14 both central and Flex and all direction slots"
+    },
+    {
+      "id": "WFA-17",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P0",
+      "feature": "AP join authorization and controller actions",
+      "reference": "Pinned Catalyst9800 IOS XE17.12 configuration guides and source-backed shared simulator services; documented teaching invariants only.",
+      "before": "Joining APs bypassed configurable MAC authorization; controller UI lacked deauthentication and startup save/reload.",
+      "rootCause": "No AP local/RADIUS admission gate or management action lifecycle bindings.",
+      "fix": "Add native local/RADIUS AP authorization with delivered retries/failover, explicit-reject stop, lifecycle/AAA dependency cancellation, remote-database recovery and fresh authorization after a later rejoin; completed result reuse is bounded to duplicate retries. Monitor actual results. Send real CAPWAP disconnect; save through write memory and reload actual startup lifecycle.",
+      "status": "repaired within stated simulation subset",
+      "evidence": "WADM-03/04/05/10/11/13/16; live remote MAC revocation after a 95-second WLC outage; WLC administration browser AP PoE restart, disconnect and save/reload"
+    },
+    {
+      "id": "WFA-18",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P0",
+      "feature": "WPA3 personal and transition negotiation",
+      "reference": "Pinned Catalyst9800 IOS XE17.12 configuration guides and source-backed shared simulator services; documented teaching invariants only.",
+      "before": "Only open and WPA2 modes could associate; SAE/PMF workflow absent.",
+      "rootCause": "Missing security schema, native SAE/PMF parser, negotiation and handshake lifecycle.",
+      "fix": "Add native WPA3/SAE and transition modes; logical commit/confirm bound to randomized session context, password mismatch before association/key exchange, PMF admission, negotiated per-client mode, persistence and GUI. This is not elliptic-curve SAE, CCMP encryption or interoperability.",
+      "status": "repaired within stated simulation subset",
+      "evidence": "WPA3-01\u201304 real central/Flex DHCP/ICMP/HTTP, failures, Windows/Cisco labels, export/reload; WLC administration browser wrong/correct SAE key"
+    },
+    {
+      "id": "WFA-19",
+      "nodes": [
+        "wlc",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P1",
+      "feature": "Read-only wireless policy help",
+      "reference": "Pinned Catalyst9800 IOS XE17.12 configuration guides and source-backed shared simulator services; documented teaching invariants only.",
+      "before": "Requesting context help assigned policy.name during command registry construction.",
+      "rootCause": "Policy name initialization occurred outside command execution.",
+      "fix": "Initialize the name only in the native create command; registry/help/completion have no configuration writes.",
+      "status": "repaired within stated simulation subset",
+      "evidence": "WPA3-05 config byte equality before/after policy/WLAN help and completion"
+    },
+    {
+      "id": "WFA-20",
+      "nodes": [
+        "poeswitch",
+        "ap",
+        "laptop"
+      ],
+      "priority": "P1",
+      "feature": "Reduced PoE effective radio rate",
+      "reference": "Pinned Catalyst9800 IOS XE17.12 configuration guides and source-backed shared simulator services; documented teaching invariants only.",
+      "before": "The added 802.3af reduced-power supply exposed two streams but wireless data rate and AP diagnostics did not consume it.",
+      "rootCause": "Rate calculation had no electrical stream constraint.",
+      "fix": "Apply allocated spatial-stream ratio to actual wireless delivery rate and expose effective streams in received AP diagnostics; default four-stream rate stays unchanged.",
+      "status": "repaired within stated simulation subset",
+      "evidence": "WADM-09 actual half-rate, diagnostics and ping; parent POE-14 supply/save-load"
+    },
+    {
+      "id": "WFA-21",
+      "nodes": [
+        "ap",
+        "laptop",
+        "poeswitch"
+      ],
+      "priority": "P1",
+      "feature": "Standalone AP edge-host workflow",
+      "reference": "CCNA v2.0 objective 2.2.b and Cisco autonomous SSID/VLAN configuration reference; explicit generic teaching profile, not autonomous C9115 firmware.",
+      "before": "A fresh AP could only receive WLANs through a WLC. Cached Flex outage sessions did not provide a fresh standalone AP configuration/authentication workflow.",
+      "rootCause": "AP operating profile, local SSID/radio bindings and local configuration authority were absent. Factory reload also replaced an unsaved standalone profile with the default lightweight profile.",
+      "fix": "Add an explicit generic-standalone profile and atomic local SSID/security/VLAN/radio GUI/native subset. Reuse real RF/authentication/association/Ethernet bridging, require working PoE, remove local service when returning to lightweight, and retain the selected profile independently of saved configuration during software reload.",
+      "status": "repaired within stated simulation subset",
+      "evidence": "SAP-01 through SAP-08; docs/audits/standalone-ap-browser-validation.json seven production-GUI checks; combined wireless scoped run99/99",
+      "remaining": "Open/WPA2-personal local security only; full autonomous IOS firmware, BVI/subinterfaces/bridge groups and native radio cryptography are outside this profile."
+    },
+    {
+      "id": "WFA-22",
+      "nodes": [
+        "ap"
+      ],
+      "priority": "P1",
+      "feature": "Standalone GUI preserves native radio/cipher configuration",
+      "before": "An SSID with no radio attachments rendered as attached to both radios. Mixed per-band AES settings rendered Disabled, and unrepresented cipher VLAN entries were rebuilt away on Apply.",
+      "rootCause": "The initial GUI collapsed no attachment and mixed per-band states into defaults and reconstructed the full cipher list from represented SSIDs.",
+      "fix": "Represent Unattached and Keep existing per-radio ciphers explicitly. Preserve native cipher VLAN entries, applying Enabled/Disabled only to the selected VLAN and radios.",
+      "status": "repaired within stated simulation subset",
+      "evidence": "Existing SAP-06 now asserts unchanged unattached and asymmetric settings, retention of unrepresented VLAN77, and explicit AES disable; SAP-02 asserts actual attachment/cipher data dependencies."
+    },
+    {
+      "id": "WFA-23",
+      "nodes": [
+        "ap",
+        "wlc"
+      ],
+      "priority": "P2",
+      "feature": "Native ASCII versus hexadecimal PSK boundaries",
+      "before": "The ASCII native key form accepted64 hexadecimal characters because the generic key validator also accepts a raw64-digit hexadecimal PSK.",
+      "rootCause": "The ASCII branch did not apply its distinct8\u201363 printable-character length requirement.",
+      "fix": "Apply the ASCII8\u201363 and hexadecimal64-digit constraints to their respective native forms before any configuration mutation.",
+      "status": "repaired within stated simulation subset",
+      "evidence": "Existing SAP-05 and WPA3-05 reject ASCII64-hex and short-hex input and assert unchanged configuration."
+    },
+    {
+      "id": "WFA-24",
+      "nodes": [
+        "ap"
+      ],
+      "priority": "P2",
+      "feature": "Fixed standalone radio interface negation",
+      "before": "No interface Dot11Radio0/1, including the spaced interface dot11radio form, entered the radio context instead of rejecting removal of a fixed physical interface.",
+      "rootCause": "The dedicated radio entry handlers ignored the negation flag.",
+      "fix": "Reject fixed radio removal before mode or configuration changes; normal interface entry remains supported. Default forms already reject before the handler.",
+      "status": "repaired within stated simulation subset",
+      "evidence": "Windows parser retained observations reproduced all three advertised variants; existing SAP-05 now checks four fixed-radio no forms preserve configuration and remain in config mode."
     }
   ],
   "additionalVerifiedScenarios": [
@@ -369,15 +522,38 @@
   "targetedFollowUp": {
     "productionSourceHeld": true,
     "nodeTests": {
-      "command": "node --test --test-concurrency=1 tests/wireless.test.ts tests/ap-controller-config.test.ts tests/poe.test.ts",
-      "passed": 69,
+      "command": "node --test --test-concurrency=1 tests/standalone-ap.test.ts tests/ap-controller-config.test.ts tests/wireless.test.ts tests/wireless-wpa3.test.ts tests/wlc-administration.test.ts tests/poe.test.ts",
+      "passed": 99,
       "failed": 0,
-      "log": ".cache/wlc-reference-targeted-node-tests.log"
+      "log": ".cache/standalone-wireless-regression.log"
     },
     "browserEvidence": [
       "docs/audits/wlc-reference-browser-validation.json",
-      "docs/audits/ap-controller-browser-validation.json"
+      "docs/audits/ap-controller-browser-validation.json",
+      "docs/audits/wlc-administration-browser-validation.json",
+      "docs/audits/standalone-ap-browser-validation.json"
     ],
-    "boundary": "No new WLC pages or main/CLI/control-plane implementation added; explicit server TFTP/SCP/SFTP exclusion preserved."
+    "boundary": "Seven bounded WLC sections and a distinct generic standalone AP profile are implemented with actual shared services and packet effects. Parent owns core CLI mode/reload integration. Explicit server TFTP/SCP/SFTP exclusion preserved; full Cisco GUI/firmware equivalence is not claimed.",
+    "relatedPhoneAudit": {
+      "report": "docs/audits/phone-fidelity.md",
+      "tests": "tests/phone-audit.test.ts",
+      "combinedWirelessAndPhonePassed": 117,
+      "combinedLog": ".cache/wireless-phone-final-targeted.log"
+    },
+    "heldBrowserSnapshot": {
+      "htmlSha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499",
+      "checksPassed": 36,
+      "pageErrors": 0,
+      "retry": "Initial overloaded WLC-reference attempt timed out after7checks at the20second CAPWAP-tag wait. Sequential unchanged-script rerun passed14checks on the same artifact; no assertion or timeout was weakened."
+    },
+    "broaderBrowserRefresh": {
+      "wireless": "docs/testing/wireless-browser-results.json",
+      "wirelessPassed": 24,
+      "radio": "docs/audits/radio-browser-validation.json",
+      "radioPassed": 8,
+      "pageErrors": 0,
+      "htmlSha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499",
+      "method": "Existing meaningful assertions preserved; sequential held-artifact runs. Broader test now includes all ten icons and actual packet inspection/pause/step; only test-harness metadata/static hosting was refreshed."
+    }
   }
 }

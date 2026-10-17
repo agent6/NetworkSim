@@ -1,32 +1,32 @@
 {
-  "generatedAt": "2026-10-17T00:55:38.089Z",
+  "generatedAt": "2026-10-17T02:14:57.260Z",
   "browser": "155.0.8059.84",
-  "url": "http://127.0.0.1:59698",
+  "url": "http://127.0.0.1:49377",
   "artifact": {
     "path": "dist/index.html",
-    "bytes": 3455218,
-    "sha256": "06b4d9a0d2a01837241f9734c85d4f9e2665f49e6f34418bd824d168185029d0"
+    "bytes": 3406080,
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
   },
   "sourceDigests": [
     {
       "path": "src/wireless-ui.ts",
-      "sha256": "b20142b67960ceff3b99e482eb08eb201aa3023e9ded1dd84888f1e354accff2"
+      "sha256": "47177246aea4d41522d74537c3ac333006f25fd7619f66af0f8d28853ca78ce4"
     },
     {
       "path": "src/wlc-reference-ui.ts",
-      "sha256": "4aad65c2165801c5dd330396f8fd978f273b1bda02824a2a965ba17b2657b3fe"
+      "sha256": "620d546024a7c019705c6d4f3327757124720a8e9e56c5af31fe60b8b150375c"
     },
     {
       "path": "src/wireless-controller-form.ts",
-      "sha256": "d2d60084f5d66cab4a2c72669d2194b3037c4d12e13ebb9878cbf40b936a55cc"
+      "sha256": "c18dcde3b56776c6d8c5f2d177794c4e6f2b75b192554cd093c19c4dc42cf1d7"
     },
     {
       "path": "src/wireless.ts",
-      "sha256": "aa7b4e36fe3bb2ba5bc33f6b02da2256e6b5b34dfd7f74fc384e974286437b78"
+      "sha256": "5edfe969791ff34ec80260b44bd345cd41de5088163abcb6334cd132c6bb3a23"
     },
     {
       "path": "src/ap-controller-view.ts",
-      "sha256": "377c82ab9565acb1c080c9bcd8c3427055c391d62c7fb5a28c05060dd4ff45dc"
+      "sha256": "59ee059361c53187b55a25f9db19b0b8ceaed720a8d445d36c8d9840479f606e"
     },
     {
       "path": "tests/fixtures/wireless-lab.ts",

@@ -2,6 +2,7 @@ import type { Device, DeviceConfig } from './model.ts';
 import { Simulator } from './engine.ts';
 import { IOSSession } from './cli.ts';
 import { wirelessConfig, validateWireless, canonicalMAC, wirelessEntry as entry, setWirelessEntry as put, type WirelessConfiguration } from './wireless-model.ts';
+import {applyWLCAdministration} from './wlc-administration.ts';
 import { isIPv4, isIPv6, maskToPrefix } from './ip.ts';
 
 /** Validate a complete WLC form on a disposable device. Only represented fields
@@ -11,11 +12,12 @@ export function controllerFormDraft(seed: number, device: Device, form: FormData
   const draft = new Simulator(seed), copy = draft.addDevice('wlc');
   copy.config = structuredClone(device.config);
   const cli = new IOSSession(draft, copy.id), original = wirelessConfig(device)!;
-  cli.execute('enable'); cli.execute('configure terminal');
+  cli.setPrivilege(15); cli.execute('configure terminal');
   const exec = (line: string) => {
     const result = cli.execute(line);
     if (result.some(r => /^%/.test(r) || r.includes('Invalid input detected'))) throw Error(line + ': ' + result.join(' '));
   };
+  applyWLCAdministration(copy,form,exec);
   const read = (field: string) => String(form.get(field) ?? '').trim();
   const at = (field: string, i: number) => String(form.getAll(field)[i] ?? '').trim();
   const each = (field: string, callback: (i: number, name: string) => void, unique = true) => {
@@ -54,13 +56,17 @@ export function controllerFormDraft(seed: number, device: Device, form: FormData
   for (const [field, name] of [['apProfiles', 'default-ap-profile'], ['flexProfiles', 'default-flex-profile'], ['siteTags', 'default-site-tag'], ['rfTags', 'default-rf-tag']] as const) retain(field, name);
   if (explicitTags) each('policy-tag-name', (_i, name) => { exec('wireless tag policy ' + name); exec('exit'); });
   each('wlan-name', (i, name) => {
-    const old = entry(original.wlans,name), security = selected(at('wlan-security', i), ['open', 'wpa2-personal', 'wpa2-enterprise'], 'wireless security mode');
+    const old = entry(original.wlans,name), security = selected(at('wlan-security', i), ['open', 'wpa2-personal', 'wpa2-enterprise', 'wpa3-personal', 'wpa2-wpa3-personal'], 'wireless security mode');
     retain('wlans', name);
     exec(`wlan ${name} ${at('wlan-id', i)} ${JSON.stringify(String(form.getAll('wlan-ssid')[i] ?? ''))}`);
     if (security === 'open') exec('no security wpa');
     else {
-      exec('security wpa wpa2'); exec('security wpa akm ' + (security === 'wpa2-personal' ? 'psk' : 'dot1x'));
-      if (security === 'wpa2-personal') {
+      const sae = security === 'wpa3-personal' || security === 'wpa2-wpa3-personal';
+      exec('no security wpa akm sae'); exec('no security wpa wpa3');
+      if (security === 'wpa3-personal') { exec('no security wpa akm psk'); exec('no security wpa akm dot1x'); exec('no security wpa wpa2'); }
+      else { exec('security wpa wpa2'); exec('security wpa akm ' + (security === 'wpa2-enterprise' ? 'dot1x' : 'psk')); }
+      if(sae){exec('security wpa wpa3');exec('security wpa akm sae');}
+      if (security !== 'wpa2-enterprise') {
         const key = String(form.getAll('wlan-psk')[i] ?? '');
         if (key) exec('security wpa psk set-key ' + (/^[a-f0-9]{64}$/i.test(key) ? 'hex' : 'ascii') + ' 0 ' + JSON.stringify(key));
         else exec('no security wpa psk set-key');
@@ -73,16 +79,22 @@ export function controllerFormDraft(seed: number, device: Device, form: FormData
       if (old?.security === security) {
         if (old.akmEnabled === undefined) delete next.wlans[name].akmEnabled;
         if (old.wpa2Enabled === undefined) delete next.wlans[name].wpa2Enabled;
-        if (old.akmEnabled === false) exec('no security wpa akm ' + (security === 'wpa2-personal' ? 'psk' : 'dot1x'));
+        if (old.saeEnabled === undefined) delete next.wlans[name].saeEnabled;
+        if (old.wpa3Enabled === undefined) delete next.wlans[name].wpa3Enabled;
+        if (old.akmEnabled === false) exec('no security wpa akm ' + (security === 'wpa2-enterprise' ? 'dot1x' : 'psk'));
         if (old.wpa2Enabled === false) exec('no security wpa wpa2');
+        if (old.saeEnabled === false) exec('no security wpa akm sae');
+        if (old.wpa3Enabled === false) exec('no security wpa wpa3');
       }
     }
+    if(form.getAll('wlan-pmf')[i]!==undefined){const pmf=selected(at('wlan-pmf',i),['','disabled','optional','required'],'Protected Management Frames mode');exec(pmf?'security pmf '+({disabled:'disable',optional:'optional',required:'mandatory'}[pmf]):'no security pmf');}
     exec(selected(at('wlan-enabled', i), ['on', 'off'], 'WLAN status') === 'on' ? 'no shutdown' : 'shutdown');
     exec(selected(at('wlan-broadcast', i), ['on', 'off'], 'SSID advertisement') === 'on' ? 'broadcast-ssid' : 'no broadcast-ssid'); exec('exit');
   });
   each('policy-name', (i, name) => {
     retain('policies', name); exec('wireless profile policy ' + name); exec('vlan ' + at('policy-vlan', i));
     exec(selected(at('policy-switch', i), ['central', 'local'], 'switching mode') === 'central' ? 'central switching' : 'no central switching');
+    for(const[field,command]of [['policy-acl','ipv4 acl'],['policy-input','service-policy input'],['policy-output','service-policy output'],['policy-client-input','service-policy client input'],['policy-client-output','service-policy client output']])if(form.has(field))exec(at(field,i)?command+' '+at(field,i):'no '+command);
     exec('session-timeout ' + at('policy-timeout', i)); exec(selected(at('policy-enabled', i), ['on', 'off'], 'policy status') === 'on' ? 'no shutdown' : 'shutdown'); exec('exit');
   });
   each('join-name', (i, name) => { retain('apProfiles', name); exec('ap profile ' + name); exec('ap capwap timers heartbeat-timeout ' + at('join-echo', i)); exec('exit'); });

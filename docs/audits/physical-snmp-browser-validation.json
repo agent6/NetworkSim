@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-10-17T02:14:56.939Z",
+  "browser": "155.0.8059.84",
+  "fixture": "Standalone file:// HTML, public YAML import, isolated headless profile",
+  "checks": [
+    "Standalone offline HTML imports the routed test topology",
+    "SNMP GETBULK GUI sends and displays a real MIB walk",
+    "Host notification receiver settings apply through the visible form",
+    "Actual router shutdown delivers a received inform to the host monitor",
+    "Link editor applies an open-circuit copper fault",
+    "Physical fault prevents actual host traffic across the diagram cable",
+    "Correcting the cable restores packet delivery",
+    "Medium settings reopen correctly in the other theme",
+    "No browser page errors"
+  ],
+  "errors": [],
+  "artifact": {
+    "file": "index.html",
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+  }
+}

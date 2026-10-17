@@ -1,5 +1,8 @@
+import {validateFTPConfiguration} from './ftp-files.ts';
 import {validateEndpoint} from './endpoint.ts';
 import {validatePhone} from './phone.ts';
+import {validateHostOS} from './host-os.ts';
+import{validateSNMPConfiguration}from'./snmp-manager-config.ts';
 import {validateLinkMedium} from './link-medium.ts';
 import{validatePoE}from'./poe.ts';
 import {dnsRecords,validateDNSRecords} from './dns-service.ts';
@@ -44,6 +47,7 @@ function validateConfig(c: any) {
     typeof c.ipv6Routing !== "boolean"
   )
     throw Error("A device configuration is incomplete.");
+  validateSNMPConfiguration(c);
   if(c.services.dns?.resourceRecords!==undefined){
     if(!Array.isArray(c.services.dns.resourceRecords)||c.services.dns.resourceRecords.length>10000)throw Error('Invalid DNS resource record table.');
     validateDNSRecords(dnsRecords(c.services.dns));
@@ -167,10 +171,10 @@ function validateDocument(doc: any): LabDocument {
   const dictionary=(path:string[]):boolean=>{
     if(path[0]!=='lab'||path[1]!=='devices'||!/^\d+$/.test(path[2]??'')||!['config','startupConfig'].includes(path[3]))return false;
     const tail=path.slice(4);
-    if(tail.length===2&&tail[0]==='features'&&['users','files'].includes(tail[1]))return true;
+    if(tail.length===2&&tail[0]==='features'&&['users','files','windowsWlanProfiles'].includes(tail[1]))return true;
     if(tail.length===3&&tail[0]==='features'&&tail[1]==='snmp'&&['communities','users','groups','views','viewEntries'].includes(tail[2]))return true;
-    if(tail.length===3&&tail[0]==='services'&&(['radius','tacacs'].includes(tail[1])&&tail[2]==='users'||['tftp','sshFiles','http'].includes(tail[1])&&tail[2]==='files'))return true;
-    if(tail[0]==='features'&&tail[1]==='wireless')return tail.length===3&&['wlans','policies','policyTags','siteTags','rfTags','apProfiles','flexProfiles','rfProfiles','dot1xLists'].includes(tail[2])||tail.length===4&&tail[2]==='policyTags';
+    if(tail.length===3&&tail[0]==='services'&&(['radius','tacacs','ftp'].includes(tail[1])&&tail[2]==='users'||['tftp','sshFiles','http','ftp'].includes(tail[1])&&tail[2]==='files'))return true;
+    if(tail[0]==='features'&&tail[1]==='wireless')return tail.length===3&&['wlans','policies','policyTags','siteTags','rfTags','apProfiles','flexProfiles','rfProfiles','dot1xLists'].includes(tail[2])||tail.length===4&&(tail[2]==='policyTags'||tail[2]==='apAuthorization'&&tail[3]==='lists');
     return false;
   };
   const inspect = (value: any, depth = 0,path:string[]=[]) => {
@@ -225,9 +229,9 @@ function validateDocument(doc: any): LabDocument {
     position(d);
     if (!KINDS.has(d.kind) || typeof d.powered !== "boolean")
       throw Error("A device has an unknown type or power state.");
-    validateConfig(d.config);validateEndpoint(d.kind,d.config);validatePhone(d.kind,d.config);validatePoE(d.kind,d.config);
+    validateConfig(d.config);validateFTPConfiguration(d.config);validateHostOS(d.kind,d.config);validateEndpoint(d.kind,d.config);validatePhone(d.kind,d.config);validatePoE(d.kind,d.config);
     validateWireless(d.kind,d.config.features.wireless);
-    if (d.startupConfig !== undefined) {validateConfig(d.startupConfig);validateEndpoint(d.kind,d.startupConfig);validatePhone(d.kind,d.startupConfig);validatePoE(d.kind,d.startupConfig);validateWireless(d.kind,d.startupConfig.features.wireless);}
+    if (d.startupConfig !== undefined) {validateConfig(d.startupConfig);validateFTPConfiguration(d.startupConfig);validateHostOS(d.kind,d.startupConfig);validateEndpoint(d.kind,d.startupConfig);validatePhone(d.kind,d.startupConfig);validatePoE(d.kind,d.startupConfig);validateWireless(d.kind,d.startupConfig.features.wireless);}
     if (d.configurationRegister !== undefined && !['current','next'].every(key=>Number.isInteger(d.configurationRegister[key])&&d.configurationRegister[key]>=0&&d.configurationRegister[key]<=65535))
       throw Error("A device has an invalid configuration register.");
     d.runtime = emptyRuntime();

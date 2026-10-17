@@ -20,7 +20,7 @@ test('STP configured pathcost scales change actual root path metrics and survive
 });
 
 test('global PortFast applies to access hosts, BPDU guard protects switch links and interface disable overrides the default',()=>{
-  const s=new Simulator(926),a=s.addDevice('switch'),b=s.addDevice('switch'),pc=s.addDevice('pc');const c=cli(s,a);run(c,'spanning-tree mode pvst','spanning-tree portfast edge default','spanning-tree portfast edge bpduguard default');link(s,a,g(1),pc,host);link(s,a,g(2),b,g(1));
+  const s=new Simulator(926),a=s.addDevice('switch'),b=s.addDevice('switch'),pc=s.addDevice('pc');const c=cli(s,a);run(c,'spanning-tree mode pvst','spanning-tree portfast edge default','spanning-tree portfast edge bpduguard default');link(s,a,g(1),pc,host);link(s,a,g(2),b,g(1));s.advance(20);
   assert.equal(a.runtime.stp['1'].ports[g(1)].state,'forwarding');assert.equal(a.runtime.stp['1'].ports[g(2)].role,'bpdu-inconsistent');
   run(c,'interface g0/2','spanning-tree bpduguard disable','shutdown','no shutdown');s.advance(31000);assert.equal(a.runtime.stp['1'].ports[g(2)].state,'forwarding');assert.equal(a.runtime.stp['1'].ports[g(2)].edge,false);
   run(c,'interface g0/1','switchport mode trunk');assert.equal(a.runtime.stp['1'].ports[g(1)].edge,false);

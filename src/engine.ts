@@ -1,9 +1,11 @@
+import {installFTPServices,validateFTPConfiguration} from './ftp-files.ts';
 import {phoneIngress,validatePhone} from './phone.ts';
+import {validateHostOS} from './host-os.ts';
 import {endpointUsesPoE,endpointProfile,endpointNetworkPort,endpointEgressVlan,endpointIngressAllowed,endpointVoicePolicy,switchVoiceVlan,validateEndpoint} from './endpoint.ts';
+import {learnMac,installStaticMac} from './mac-table.ts';
 import {ownRecordValue,setRecordValue} from './record-map.ts';
 import {recomputePoE,validatePoE,type PoEPower}from './poe.ts';
 import {answerDNS,dnsName,type DNSRecordType} from './dns-service.ts';
-import {macAgingSeconds} from './mac-aging.ts';
 import {installSNMPServices} from './snmp.ts';
 import {installSSHFileService} from './ssh-files.ts';
 import {ModelDrivenManagement} from './model-driven-management.ts';
@@ -31,7 +33,7 @@ import { EgressScheduler, inheritQosClass } from './qos-scheduler.ts';
 
 export interface IPPacket {
   id: string; parentId?: string; source: string; destination: string; protocol: string; ttl: number; size: number; df: boolean;
-  sourcePort?: number; destinationPort?: number; dscp?: number; ecn?:0|1|2|3; pimTree?: 'rpt' | 'spt'; body: any; vrf?: string; fragment?: { id: string; offset: number; length: number; more: boolean; total: number };
+  sourcePort?: number; destinationPort?: number; dscp?: number; ecn?: 0|1|2|3; pimTree?: 'rpt' | 'spt'; body: any; vrf?: string; fragment?: { id: string; offset: number; length: number; more: boolean; total: number };
 }
 interface ArpMessage { kind: 'arp'; operation: 'request' | 'reply'; source: string; target: string; mac: string; targetMac?: string; family: 4 | 6 }
 interface DHCPMessage { kind: 'dhcp'; operation: 'discover' | 'offer' | 'request' | 'ack' | 'nak' | 'decline' | 'release'; clientId: string; transaction: string; serverId?: string; address?: string; prefix?: number; gateway?: string; dns?: string[]; lease?: number; domain?: string; bootfile?: string; nextServer?: string; options?: Record<string, any>; routers?: string[]; relay?: string; relayPort?: string; serverAddress?: string; unicast?: string; phase?: string; reason?: string; option82?: { circuitId: string; remoteId: string } }
@@ -79,6 +81,7 @@ export class Simulator {
     installAAAServices(this);
     installSNMPServices(this);
     installSSHFileService(this);
+    installFTPServices(this);
     this.modelDriven=new ModelDrivenManagement(this,(deviceId,list,user,password)=>this.httpAuthenticator?.(deviceId,list,user,password)??{accepted:false});
   }
   subscribe(listener: () => void): () => void { this.listeners.add(listener); return () => this.listeners.delete(listener); }
@@ -142,7 +145,7 @@ export class Simulator {
     for(const[key,row]of this.serviceWait)if(row.deviceId===d.id)this.finishService(key,undefined,'PoE device restarted');
     for(const[key,result]of this.dhcpWait)if(result.deviceId===d.id){result.status='failure';result.error='PoE device restarted';this.dhcpWait.delete(key);}
     this.wireless.devicePowerChanged(d.id);
-    d.config=clone(d.startupConfig??(d.kind==='ap'?factoryDeviceConfig('ap',d.config.hostname):d.config));
+    const apProfile=d.config.features.wireless?.profile,endpoint=d.config.features.endpoint,hostOS=d.config.features.hostOS;d.config=clone(d.startupConfig??(d.kind==='ap'?factoryDeviceConfig('ap',d.config.hostname):d.config));if(d.kind==='pc'){if(endpoint)d.config.features.endpoint=clone(endpoint);if(hostOS)d.config.features.hostOS=hostOS;}if(d.kind==='ap'&&['generic-standalone','c9115-lightweight'].includes(apProfile))d.config.features.wireless.profile=apProfile;
     d.runtime=emptyRuntime();d.runtime.features.bootTime=this.clock.now();d.runtime.features.poePower=supply;d.powered=true;
     this.resetAutomaticAddresses(d);
     this.emit({nodeId:d.id,protocol:'SYSTEM',label:'PoE device restarted',detail:'Software restart; PoE supply remains available',disposition:'info'});
@@ -166,9 +169,9 @@ export class Simulator {
       this.ipv6Services.syncStaticDAD();
       for (const d of this.lab.devices) {
         for (const [key, row] of Object.entries(d.runtime.arp)) if (row.static) delete d.runtime.arp[key];
-        for (const [key, row] of Object.entries(d.runtime.mac)) if (row.static) delete d.runtime.mac[key];
+        installStaticMac(d);
         for (const row of d.config.features.staticArp ?? []) { const port = row.interface; if (d.config.interfaces[port]) d.runtime.arp[port + '|' + row.ip] = { ip: row.ip, mac: row.mac.toLowerCase(), port, vrf: row.vrf, expires: Number.MAX_SAFE_INTEGER, static: true }; }
-        for (const row of d.config.features.staticMac ?? []) if (d.config.interfaces[row.interface]) d.runtime.mac[row.vlan + '|' + row.mac.toLowerCase()] = { mac: row.mac.toLowerCase(), vlan: row.vlan, port: row.interface, expires: Number.MAX_SAFE_INTEGER, static: true };
+
         d.runtime.routes = [];
         d.runtime.features.linkLocalAddresses = {};
         for (const [port, cfg] of Object.entries(d.config.interfaces)) {
@@ -274,7 +277,10 @@ export class Simulator {
     if (d.runtime.features.agingScheduled) return; d.runtime.features.agingScheduled = true;
     this.clock.schedule(1000, () => { for (const [key, row] of Object.entries(d.runtime.arp)) if (!row.static && row.expires <= this.clock.now()) delete d.runtime.arp[key]; for (const [key, row] of Object.entries(d.runtime.mac)) if (!row.static && row.expires <= this.clock.now()) delete d.runtime.mac[key]; }, { owner: d.id, repeat: 1000, label: 'ARP and MAC aging' });
   }
-  private count(d: Device, port: string, kind: 'tx' | 'rx' | 'drops', bytes = 0): void { const c = d.runtime.counters[port] ??= { tx: 0, rx: 0, drops: 0, txBytes: 0, rxBytes: 0 }; c[kind]++; if (kind === 'tx') c.txBytes += bytes; if (kind === 'rx') c.rxBytes += bytes; }
+  private count(d: Device, port: string, kind: 'tx' | 'rx' | 'drops', bytes = 0, destinationMac?: string): void {
+    const c = d.runtime.counters[port] ??= { tx: 0, rx: 0, drops: 0, txBytes: 0, rxBytes: 0 }; c[kind]++; if (kind === 'tx') c.txBytes += bytes; if (kind === 'rx') c.rxBytes += bytes;
+    if(kind!=='drops'&&destinationMac){const normalized=destinationMac.replace(/[^0-9a-f]/gi,'').toLowerCase(),category=normalized==='ffffffffffff'?'Broadcast':(parseInt(normalized.slice(0,2),16)&1)?'Multicast':'Unicast',field=`${kind}${category}` as 'txUnicast'|'txMulticast'|'txBroadcast'|'rxUnicast'|'rxMulticast'|'rxBroadcast';c[field]=(c[field]??0)+1;}
+  }
   private packetSummary(p: IPPacket): PacketSummary {
     const b = p.body ?? {}, v6 = isIPv6(p.destination), ports = ['tcp', 'udp'].includes(p.protocol), result: PacketSummary = { id: p.id, parentId: p.parentId, source: p.source, destination: p.destination, protocol: p.protocol.toUpperCase(), ipVersion: v6 ? 6 : 4, ttl: p.ttl, size: p.size, df: p.df, dscp: p.dscp ?? 0, ecn:p.ecn??0, sourcePort: ports ? p.sourcePort : undefined, destinationPort: ports ? p.destinationPort : undefined, messageType: b.kind };
     if(b.kind==='netflow-export')result.netflowVersion=b.version;
@@ -303,7 +309,7 @@ export class Simulator {
   }
   private event(d: Device, port: string | undefined, frame: Frame, label: string, detail: string, disposition: NewSimEvent['disposition'], peerId?: string): void { this.emit({ nodeId: d.id, peerId, port, protocol: this.summary(frame).protocol, label, detail, disposition, packet: this.summary(frame) }); }
   private sendWire(d: Device, port: string, frame: Frame, dequeued = false): void {
-    if(d.kind==='laptop'&&port==='Wireless0'){if(!this.interfaceUp(d.id,port)||frame.hops<=0){this.count(d,port,'drops');this.event(d,port,frame,'Wireless link unavailable','The wireless interface has no authorized operational association.','drop');return;}this.count(d,port,'tx','size' in frame.payload?frame.payload.size+18:64);observeFrame(this,d,port,'tx',frame);this.wireless.sendClientFrame(d,frame);return;}
+    if(d.kind==='laptop'&&port==='Wireless0'){if(!this.interfaceUp(d.id,port)||frame.hops<=0){this.count(d,port,'drops');this.event(d,port,frame,'Wireless link unavailable','The wireless interface has no authorized operational association.','drop');return;}this.count(d,port,'tx','size' in frame.payload?frame.payload.size+18:64,frame.destinationMac);observeFrame(this,d,port,'tx',frame);this.wireless.sendClientFrame(d,frame);return;}
     const c = d.config.interfaces[port], link = this.linkAt(d.id, port);
     if (!c || !link || !this.interfaceUp(d.id, port)) { this.event(d, port, frame, 'Link unavailable', 'The egress port has no operational peer.', 'drop'); return; }
     if (frame.hops <= 0) { this.event(d, port, frame, 'Layer 2 loop guard', 'The frame exceeded the simulator forwarding limit.', 'drop'); return; }
@@ -316,7 +322,7 @@ export class Simulator {
     const key = d.id + ':' + port;
     const peerKey = pd.id + ':' + peer.port;
     const start = Math.max(this.clock.now(), this.wireAvailable.get(key) ?? 0, physical.duplex === 'half' && physical.peerDuplex === 'half' ? this.wireAvailable.get(peerKey) ?? 0 : 0), finish = start + Math.max(64, bytes) * 8 / (speed * 1000);
-    this.wireAvailable.set(key, finish); this.count(d, port, 'tx', bytes);
+    this.wireAvailable.set(key, finish); this.count(d, port, 'tx', bytes, frame.destinationMac);
     const inFlight = (this.wireTransmissions.get(link.id) ?? []).filter(tx => tx.finish > this.clock.now() && tx.runtime === tx.source.runtime);
     const transmission = { start, finish, source: d, runtime: d.runtime, port, peer: pd, peerPort: peer.port, duplex: physical.duplex, failed: false };
     if (physical.mismatch) for (const other of inFlight) {
@@ -346,7 +352,7 @@ export class Simulator {
       const ber=currentPhysical.bitErrorRate??0;if(ber>0&&this.clock.random()<-Math.expm1(bytes*8*Math.log1p(-ber))){this.count(d,port,'drops');const counters=pd.runtime.counters[peer.port]??={tx:0,rx:0,drops:0,txBytes:0,rxBytes:0};counters.inputErrors=(counters.inputErrors??0)+1;counters.crc=(counters.crc??0)+1;this.event(pd,peer.port,copy,'Ethernet signal error','The configured physical signal model corrupted the frame FCS.','drop',d.id);return;}
       const directionalLoss = (link.a.deviceId === d.id && link.a.port === port ? link.lossAB : link.lossBA) ?? link.loss;
       if (directionalLoss > 0 && this.clock.random() < directionalLoss) { this.count(d, port, 'drops'); this.event(d, port, copy, 'Link loss', 'The link loss model discarded this frame.', 'drop', pd.id); return; }
-      this.count(pd, peer.port, 'rx', bytes); this.event(pd, peer.port, copy, 'Frame received', pd.config.hostname + ' received a frame on ' + peer.port, 'receive', d.id); this.receiveFrame(pd, peer.port, copy);
+      this.count(pd, peer.port, 'rx', bytes, copy.destinationMac); this.event(pd, peer.port, copy, 'Frame received', pd.config.hostname + ' received a frame on ' + peer.port, 'receive', d.id); this.receiveFrame(pd, peer.port, copy);
     }, { owner: pd.id, label: 'frame delivery' });
   }
   private logicalPorts(d: Device, physical: string, vlan?: number): string[] {
@@ -397,7 +403,7 @@ export class Simulator {
       }
       if (frame.remoteSpan) { if (frame.remoteSpan.vlan !== vlan || !(d.config.features.rspanVlans ?? []).includes(vlan)) { this.event(d, port, frame, 'RSPAN VLAN rejected', 'Mirrored transit requires a VLAN configured for remote SPAN.', 'drop'); return; } receiveRemoteSpanFrame(this, d, port, vlan, frame); this.bridge(d, port, frame, vlan); return; }
       observeMulticastFrame(this, d, port, vlan, frame);
-      if (!d.runtime.mac[vlan + '|' + frame.sourceMac]?.static) {const seconds=macAgingSeconds(d,vlan);d.runtime.mac[vlan + '|' + frame.sourceMac] = { mac: frame.sourceMac, port, vlan,lastSeen:this.clock.now(), expires:seconds===0?Number.MAX_SAFE_INTEGER:this.clock.now()+seconds*1000 };} this.ensureAging(d);
+      const learned=learnMac(d,port,vlan,frame.sourceMac,this.clock.now());if(learned==='full'&&(d.runtime.features.macCapacityLog??-Infinity)+1000<=this.clock.now()){d.runtime.features.macCapacityLog=this.clock.now();this.log(d.id,'%L2FM-4-MAC_TABLE_FULL: MAC learning capacity exhausted; unknown unicast continues to flood.',4);}this.ensureAging(d);
     }
     const logical = this.logicalPorts(d, port, vlan);
     const payload = frame.payload;
@@ -413,7 +419,7 @@ export class Simulator {
     if (c.switchport && (!delivered || (!('kind' in payload) && (this.isMulticast(payload.destination) || (payload.body?.kind === 'control-plane' && payload.destination === '255.255.255.255'))))) this.bridge(d, port, frame, vlan!);
   }
   sendWirelessEthernet(deviceId:string,port:string,frame:Frame):void{const d=this.getDevice(deviceId);if(d&&frame.hops>0)this.sendWire(d,port,frame);}
-  receiveWirelessEthernet(deviceId:string,frame:Frame):void{const d=this.getDevice(deviceId);if(d?.powered&&this.interfaceUp(d.id,'Wireless0')){this.count(d,'Wireless0','rx','size' in frame.payload?frame.payload.size+18:64);this.event(d,'Wireless0',frame,'Frame received',d.config.hostname+' received a frame on Wireless0','receive',this.wireless.association(d.id)?.apId);this.receiveFrame(d,'Wireless0',frame);}}
+  receiveWirelessEthernet(deviceId:string,frame:Frame):void{const d=this.getDevice(deviceId);if(d?.powered&&this.interfaceUp(d.id,'Wireless0')){this.count(d,'Wireless0','rx','size' in frame.payload?frame.payload.size+18:64,frame.destinationMac);this.event(d,'Wireless0',frame,'Frame received',d.config.hostname+' received a frame on Wireless0','receive',this.wireless.association(d.id)?.apId);this.receiveFrame(d,'Wireless0',frame);}}
   mirrorFrame(deviceId: string, destination: string, frame: Frame): void { const d = this.getDevice(deviceId); if (d) this.sendWire(d, destination, { ...clone(frame), id: this.id('mirror'), mirrored: true }); }
   sendRemoteSpanPacket(deviceId: string, source: string, destination: string, body: any, vrf?: string): void { const d = this.getDevice(deviceId); if (!d) return; const p = this.makePacket(source, destination, 'gre', 44 + ('size' in body.frame.payload ? body.frame.payload.size : 64), { ...clone(body), kind: 'remote-span' }); p.vrf = vrf; this.originate(d, p); }
   sendRemoteSpanVlan(deviceId: string, vlan: number, frame: Frame): void {
@@ -482,6 +488,7 @@ export class Simulator {
   }
   requestIPv6(deviceId: string, port?: string): ServiceResult { return this.ipv6Services.requestIPv6(deviceId, port); }
   requestDHCPv6(deviceId: string, port?: string, delegationName?: string): ServiceResult { return this.ipv6Services.requestDHCPv6(deviceId, port, delegationName); }
+  releaseDHCPv6(deviceId:string,port:string):ServiceResult { return this.ipv6Services.releaseDHCPv6(deviceId,port); }
   stopAutomaticAddressing(deviceId: string, port: string, family: 'ipv4' | 'ipv6' | 'all' = 'all'): void {
     const d = this.getDevice(deviceId), c = d?.config.interfaces[port]; if (!d || !c) throw new Error('Unknown device or interface');
     if (family === 'ipv4' || family === 'all') {
@@ -716,7 +723,7 @@ export class Simulator {
       }else this.packetEvent(d,packet,'ICMP redirect ignored','Redirect does not match the current next hop or local subnet.','drop',input);
     }else if (body?.kind === 'echo-request') {
       this.packetEvent(d, packet, 'Echo request accepted', 'The destination will route an echo reply back to the source.', 'receive');
-      const reply = this.makePacket(packet.destination, packet.source, packet.protocol, packet.size, { ...body, kind: 'echo-reply' }); if(['pc','laptop','server'].includes(d.kind))reply.ttl=128; reply.parentId = packet.id; reply.sourcePort = packet.destinationPort; reply.destinationPort = packet.sourcePort; reply.vrf = packet.vrf; this.originate(d, reply, input);
+      const reply = this.makePacket(packet.destination, packet.source, packet.protocol, packet.size, { ...body, kind: 'echo-reply' }); if(['pc','laptop','server'].includes(d.kind))reply.ttl=d.kind==='server'||!d.config.features.hostOS||d.config.features.hostOS==='windows'?128:64; reply.parentId = packet.id; reply.sourcePort = packet.destinationPort; reply.destinationPort = packet.sourcePort; reply.vrf = packet.vrf; this.originate(d, reply, input);
     } else if (body?.kind === 'echo-reply' || body?.kind === 'icmp-error') {
       const original = body.kind === 'icmp-error' ? body.original : body;
       const key = original.probeId + '|' + original.sequence, wait = this.probes.get(key);
@@ -760,7 +767,7 @@ export class Simulator {
         const timeout = this.clock.schedule(options.timeout ?? 3000, () => { this.probes.delete(result.id + '|' + sequence); complete({ sequence, error: 'Request timed out' }); }, { label: 'echo timeout' });
         this.probes.set(result.id + '|' + sequence, { deviceId: d.id, timer: timeout, sentAt: this.clock.now(), callback: complete, expectedData: options.validateData ? dataHex : undefined });
         const packet = this.makePacket(options.source ?? '', target, isIPv6(target) ? 'icmpv6' : 'icmp', size, { kind: 'echo-request', probeId: result.id, sequence, dataHex });
-        packet.df = !!options.df; packet.ttl = options.ttl ?? 64; packet.vrf = options.vrf; packet.dscp = options.tos === undefined ? undefined : options.tos >>> 2; packet.ecn=options.tos===undefined?undefined:(options.tos&3) as 0|1|2|3; packet.sourcePort = 10000 + this.hash(result.id) % 50000; packet.destinationPort = packet.sourcePort;
+        packet.df = !!options.df; packet.ttl = options.ttl ?? 64; packet.vrf = options.vrf; packet.dscp = options.tos === undefined ? undefined : options.tos >>> 2; packet.ecn=((options.tos??0)&3) as 0|1|2|3; packet.sourcePort = 10000 + this.hash(result.id) % 50000; packet.destinationPort = packet.sourcePort;
         this.originate(d, packet, options.interface);
       }, { label: 'echo send' });
     }
@@ -780,20 +787,21 @@ export class Simulator {
   }
   cefLookup(deviceId: string, target: string, vrf?: string, flow?: { source?: string; sourcePort?: number; destinationPort?: number; protocol?: string }): ResolvedRoute | undefined { const d = this.getDevice(deviceId), result = d && this.resolveRoute(d, target, vrf, new Set(), flow); return result ? clone(result) : undefined; }
   aclPermits(deviceId: string, name: string | undefined, source: string, destination: string, protocol: string, ports: { sourcePort?: number; destinationPort?: number } = {}): boolean { const d = this.getDevice(deviceId); return !!d && this.aclAllows(d, name, { id: 'acl-query', source, destination, protocol, ttl: 64, size: 0, df: false, body: {}, ...ports }); }
-  timeRangeActive(deviceId: string, name: string): boolean {
-    const d = this.getDevice(deviceId), range = d?.config.features.timeRanges?.[name]; if (!d || !range) return false;
-    const now = (d.config.features.clockEpoch ?? Date.UTC(2026, 0, 1)) + this.clock.now() + (d.runtime.features.clockOffset ?? d.config.features.clockOffset ?? 0);
+  timeRangeActive(deviceId: string, name: string, override?: Device['config']): boolean {
+    const d = this.getDevice(deviceId), config = override ?? d?.config, range = config?.features.timeRanges?.[name]; if (!d || !config || !range) return false;
+    const now = (config.features.clockEpoch ?? Date.UTC(2026, 0, 1)) + this.clock.now() + (d.runtime.features.clockOffset ?? config.features.clockOffset ?? 0);
     if (range.absolute && ((range.absolute.start !== undefined && now < range.absolute.start) || (range.absolute.end !== undefined && now >= range.absolute.end))) return false;
     if (!range.periodic?.length) return !!range.absolute;
     const date = new Date(now), day = date.getUTCDay(), minute = date.getUTCHours() * 60 + date.getUTCMinutes();
     return range.periodic.some((p: any) => p.startMinutes <= p.endMinutes ? (p.days.includes(day) && minute >= p.startMinutes && minute < p.endMinutes) : (p.days.includes(day) && minute >= p.startMinutes) || (p.days.includes((day + 6) % 7) && minute < p.endMinutes));
   }
+  packetACLPermits(d: Device, name: string | undefined, packet: IPPacket): boolean { return this.aclAllows(d, name, packet); }
   private aclAllows(d: Device, name: string | undefined, packet: IPPacket): boolean {
     if (!name) return true;
     const acl = d.config.features.acls?.[name]; if (!acl) return true;
     for (const entry of [...(acl.entries ?? [])].sort((a: any, b: any) => a.sequence - b.sequence)) {
       if (entry.action === 'remark' || entry.remark !== undefined) continue;
-      if (entry.timeRange && !this.timeRangeActive(d.id, entry.timeRange)) continue;
+      if (entry.timeRange && !this.timeRangeActive(d.id, entry.timeRange, d.config)) continue;
       if (entry.protocol && !['ip', 'ipv6', 'any'].includes(entry.protocol) && entry.protocol !== packet.protocol && !(entry.protocol === 'icmp' && packet.protocol === 'icmpv6')) continue;
       if (!this.addressMatches(packet.source, entry.source, entry.wildcard)) continue;
       if (acl.type !== 'standard' && !this.addressMatches(packet.destination, entry.destination, entry.destinationWildcard)) continue;
@@ -1225,8 +1233,9 @@ export class Simulator {
     this.sendReliable(d, packet, () => !d.runtime.features.tftpTransfers?.[transaction] || transfer.block !== block);
   }
   private startService(d: Device, kind: string, timeout=10000): ServiceResult {
-    const result: ServiceResult = { id: this.id(kind), status: 'running' }; const timer = this.clock.schedule(Math.max(1,Math.min(1000000,timeout)), () => this.finishService(result.id, undefined, 'Service request timed out'), { label: kind + ' timeout' }); this.serviceWait.set(result.id, { deviceId: d.id, result, timer }); return result;
+    const result: ServiceResult = { id: this.id(kind), status: 'running' }; const timer = this.clock.schedule(Number.isFinite(timeout)?Math.max(1,Math.min(Number.MAX_SAFE_INTEGER-this.clock.now(),timeout)):10000, () => this.finishService(result.id, undefined, 'Service request timed out'), { label: kind + ' timeout' }); this.serviceWait.set(result.id, { deviceId: d.id, result, timer }); return result;
   }
+  cancelServiceRequest(id:string,reason='Service request cancelled'):boolean{if(!this.serviceWait.has(id))return false;this.finishService(id,undefined,reason);return true;}
   private finishService(id: string, fields?: Record<string, any>, error?: string): void { const pending = this.serviceWait.get(id); if (!pending) return; this.clock.cancel(pending.timer); this.serviceWait.delete(id); Object.assign(pending.result, fields ?? {}, { status: error ? 'failure' : 'success', ...(error ? { error } : {}) }); pending.callback?.(pending.result); this.notify(); }
   private serviceReply(d: Device, incoming: IPPacket, body: any, size: number): void { this.originate(d, this.replyPacket(incoming, body, size)); }
   private deliverService(d: Device, p: IPPacket, input?: string): void {
@@ -1292,7 +1301,7 @@ export class Simulator {
     if (parsed?.format !== 'netsim-lab' || parsed.version !== 1 || !parsed.lab || !Array.isArray(parsed.lab.devices) || !Array.isArray(parsed.lab.links) || !Array.isArray(parsed.lab.notes)) throw new Error('This is not a supported NetworkSim lab document');
     if (parsed.lab.devices.length > 500 || parsed.lab.links.length > 2000) throw new Error('Lab exceeds simulator limits');
     const ids = new Set<string>();
-    for (const d of parsed.lab.devices) { if (!d.id || ids.has(d.id) || !['router', 'switch', 'poeswitch', 'l3switch', 'pc', 'server', 'wlc', 'ap', 'laptop', 'phone'].includes(d.kind) || !d.config?.interfaces || !d.config?.vlans || !Array.isArray(d.config.staticRoutes) || !d.config.protocols || !d.config.services || !d.config.features) throw new Error('Invalid or duplicate device'); ids.add(d.id); for (const [port, c] of Object.entries(d.config.interfaces) as [string, InterfaceConfig][]) { if (!port || !c || !Array.isArray(c.ipv6) || !c.features || !Number.isFinite(c.mtu) || !Number.isFinite(c.speed) || c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean' || (c.ip && !isIPv4(c.ip))) throw new Error('Invalid interface configuration'); } validateEndpoint(d.kind,d.config);validatePhone(d.kind,d.config);validatePoE(d.kind,d.config);validateWireless(d.kind,d.config.features.wireless);if(d.startupConfig){for(const c of Object.values(d.startupConfig.interfaces) as InterfaceConfig[])if(c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean')throw Error('Invalid saved Ethernet autonegotiation setting');validateWireless(d.kind,d.startupConfig.features.wireless);validateEndpoint(d.kind,d.startupConfig);validatePhone(d.kind,d.startupConfig);validatePoE(d.kind,d.startupConfig);}d.runtime = emptyRuntime();d.runtime.features.bootTime=this.clock.now(); }
+    for (const d of parsed.lab.devices) { if (!d.id || ids.has(d.id) || !['router', 'switch', 'poeswitch', 'l3switch', 'pc', 'server', 'wlc', 'ap', 'laptop', 'phone'].includes(d.kind) || !d.config?.interfaces || !d.config?.vlans || !Array.isArray(d.config.staticRoutes) || !d.config.protocols || !d.config.services || !d.config.features) throw new Error('Invalid or duplicate device'); ids.add(d.id); for (const [port, c] of Object.entries(d.config.interfaces) as [string, InterfaceConfig][]) { if (!port || !c || !Array.isArray(c.ipv6) || !c.features || !Number.isFinite(c.mtu) || !Number.isFinite(c.speed) || c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean' || (c.ip && !isIPv4(c.ip))) throw new Error('Invalid interface configuration'); } validateFTPConfiguration(d.config);validateHostOS(d.kind,d.config);validateEndpoint(d.kind,d.config);validatePhone(d.kind,d.config);validatePoE(d.kind,d.config);validateWireless(d.kind,d.config.features.wireless);if(d.startupConfig){for(const c of Object.values(d.startupConfig.interfaces) as InterfaceConfig[])if(c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean')throw Error('Invalid saved Ethernet autonegotiation setting');validateWireless(d.kind,d.startupConfig.features.wireless);validateFTPConfiguration(d.startupConfig);validateHostOS(d.kind,d.startupConfig);validateEndpoint(d.kind,d.startupConfig);validatePhone(d.kind,d.startupConfig);validatePoE(d.kind,d.startupConfig);}d.runtime = emptyRuntime();d.runtime.features.bootTime=this.clock.now(); }
     const occupied = new Set<string>();
     for (const link of parsed.lab.links) { if (!link?.a || !link?.b || !Number.isFinite(link.delay) || !Number.isFinite(link.loss)) throw new Error('Invalid link'); for (const e of [link.a, link.b]) { const d = parsed.lab.devices.find((x: Device) => x.id === e.deviceId); const key = e.deviceId + '|' + e.port; if (!d?.config.interfaces[e.port] || occupied.has(key)) throw new Error('Invalid or occupied cable endpoint'); occupied.add(key); } }
     this.lab = parsed.lab; this.seed = Number.isInteger(parsed.seed) ? parsed.seed >>> 0 || 1 : this.seed; this.clock = new SimulationClock(this.seed);

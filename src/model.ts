@@ -75,7 +75,7 @@ export interface DeviceConfig {
 export interface ArpEntry { ip: string; mac: string; port: string; vlan?: number; vrf?: string; expires: number; static?: boolean; reachableUntil?:number }
 export interface MacEntry { mac: string; port: string; vlan: number; expires: number; lastSeen?:number; static?: boolean }
 export interface Neighbor { protocol: string; deviceId: string; interface: string; peerInterface?: string; address?: string; state: string; [key: string]: any }
-export interface PortCounters { tx: number; rx: number; drops: number; txBytes: number; rxBytes: number; inputErrors?: number; crc?: number; collisions?: number; lateCollisions?: number; outputErrors?: number }
+export interface PortCounters { tx: number; rx: number; drops: number; txBytes: number; rxBytes: number; txUnicast?: number; txMulticast?: number; txBroadcast?: number; rxUnicast?: number; rxMulticast?: number; rxBroadcast?: number; inputErrors?: number; crc?: number; collisions?: number; lateCollisions?: number; outputErrors?: number }
 export interface StpPortState { state: 'forwarding' | 'blocking' | 'discarding' | 'learning' | 'listening' | 'disabled'; role?: string; rootId?: string; cost?: number; [key: string]: any }
 export interface StpVlanState { rootId: string; ports: Record<string, StpPortState>; [key: string]: any }
 export interface DeviceRuntime {

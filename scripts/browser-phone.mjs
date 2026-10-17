@@ -33,7 +33,7 @@ try{
  assert.equal(await page.locator('.palette-card').count(),10);
  assert.equal(new Set(await page.locator('.palette-card .node-artwork').evaluateAll(icons=>icons.map(icon=>icon.getAttribute('viewBox')))).size,10);
  for(const kind of kinds){await page.locator(`[data-kind=${kind}]`).click();if(await page.locator('.dialog').count())await close();}
- await page.locator('[data-action=fit]').click();await page.waitForFunction(()=>document.querySelectorAll('#world .device').length===10);await settle();assert.equal(await page.locator('#world .device').count(),10);
+ await page.waitForFunction(()=>document.querySelectorAll('#world .device').length===10);await page.locator('[data-action=fit]').click();await settle();assert.equal(await page.locator('#world .device').count(),10);
  await page.locator('.palette-grid').screenshot({path:folder+'/ten-icons-light.png'});await page.screenshot({path:folder+'/ten-nodes-light.png'});
  check('Ten distinct ImageGen icons render in the palette and workspace');
  await page.locator('[data-action=toggle-theme]').click();await settle();await page.locator('.palette-grid').screenshot({path:folder+'/ten-icons-dark.png'});await page.screenshot({path:folder+'/ten-nodes-dark.png'});

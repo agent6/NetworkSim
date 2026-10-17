@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-17T02:18:35.769Z",
+  "profile": "NetworkSim Ansible-compatible offline teaching subset",
+  "referenceProfile": "cisco.ios 11.6.0 documentation reviewed; no native Ansible execution or golden output captures",
+  "objective": "CCNA 200-301 v2.0 5.5; JSON construction/validation/interpretation practice",
+  "nativeAnsible": false,
+  "backendRequired": false,
+  "destinationMutation": "Only authenticated/authorized shared simulated management CLI commands over ordinary TCP22",
+  "sources": [
+    {
+      "file": "src/automation.ts",
+      "sha256": "35335e64d32da7ff3fba92eb7850732fdc10268e99fde6806f251ca283610518"
+    },
+    {
+      "file": "src/network-tools-ui.ts",
+      "sha256": "95ed577f071ce4e0eddcf2a02395dedae84b58408c055bf59e9358b87e9f9c17"
+    },
+    {
+      "file": "src/management.ts",
+      "sha256": "6235bb352b2e22bd86e27b4235f9aa71570905ae9c9b8e60d796fa0bbb84bc58"
+    },
+    {
+      "file": "src/cli.ts",
+      "sha256": "43eac0ea22100892175146b727badf420524997fb4be88f10a1ede48a5111095"
+    },
+    {
+      "file": "src/engine.ts",
+      "sha256": "d3b507fad1cdab29d6e07deb36d2fd05586e5fd46de4e55e4fe9296e69399042"
+    },
+    {
+      "file": "src/ipv6-services.ts",
+      "sha256": "3769f0e13db21613da8c44731829e00bbd76a3ca4cf0182e564326e34e23ca29"
+    },
+    {
+      "file": "tests/automation.test.ts",
+      "sha256": "0ade102f7dd2eb0fe8cea0f87a6e411a0160efedcff759b327b3f807cca512cc"
+    },
+    {
+      "file": "examples/automation/inventory.yaml",
+      "sha256": "e71bd2ee8acf04fadbc99e89edb7d9f7c92e2ca2615c4292bc76766129e971a6"
+    },
+    {
+      "file": "examples/automation/playbook.yaml",
+      "sha256": "1c3cadcffbee09de721953713cb7d00161db9a150243a80bbdacee38ac1a7021"
+    }
+  ],
+  "references": [
+    "https://learningcontent.cisco.com/documents/marketing/exam-topics/200-301_CCNA_v2.0_Exam_Topics_PDF.pdf",
+    "https://docs.ansible.com/projects/ansible/latest/collections/cisco/ios/ios_command_module.html",
+    "https://docs.ansible.com/projects/ansible/latest/collections/cisco/ios/ios_config_module.html",
+    "https://docs.ansible.com/projects/ansible/latest/network/user_guide/platform_ios.html"
+  ],
+  "features": [
+    {
+      "id": "AUTO-INV",
+      "feature": "YAML/JSON inventory and playbook preflight",
+      "status": "partial",
+      "parser": {
+        "file": "src/automation.ts",
+        "line": 26
+      },
+      "tests": [
+        "AUTO-05",
+        "AUTO-09"
+      ],
+      "evidence": "Validation completes before opening a connection; unsupported options/types/templates/aliases reject."
+    },
+    {
+      "id": "AUTO-SSH",
+      "feature": "Logical SSH connection/authentication/authorization",
+      "status": "partial",
+      "parser": {
+        "file": "src/automation.ts",
+        "line": 42
+      },
+      "tests": [
+        "AUTO-01",
+        "AUTO-03",
+        "AUTO-04",
+        "AUTO-08"
+      ],
+      "evidence": "Ordinary TCP22 management service, VTY/ACL/AAA/EXEC+command authorization; no direct destination writes."
+    },
+    {
+      "id": "AUTO-CMD",
+      "feature": "cisco.ios.ios_command commands",
+      "status": "partial",
+      "parser": {
+        "file": "src/automation.ts",
+        "line": 51
+      },
+      "tests": [
+        "AUTO-01",
+        "AUTO-07"
+      ],
+      "evidence": "Actual remote EXEC output; failed command stops later tasks for that host."
+    },
+    {
+      "id": "AUTO-WAIT",
+      "feature": "ios_command wait_for literal contains/not contains",
+      "status": "partial",
+      "parser": {
+        "file": "src/automation.ts",
+        "line": 51
+      },
+      "tests": [
+        "AUTO-07"
+      ],
+      "evidence": "Actual output predicates and simulated-clock retries; unavailable output never fabricated."
+    },
+    {
+      "id": "AUTO-CONFIG",
+      "feature": "cisco.ios.ios_config lines/parents/match line|none",
+      "status": "partial",
+      "parser": {
+        "file": "src/automation.ts",
+        "line": 52
+      },
+      "tests": [
+        "AUTO-01",
+        "AUTO-02",
+        "AUTO-06"
+      ],
+      "evidence": "Remote before/after configuration read and real CLI writes; partial changes/failure retained."
+    },
+    {
+      "id": "AUTO-SAVE",
+      "feature": "ios_config save_when never|changed|always",
+      "status": "partial",
+      "parser": {
+        "file": "src/automation.ts",
+        "line": 52
+      },
+      "tests": [
+        "AUTO-01"
+      ],
+      "evidence": "Actual remote copy running-config startup-config; acknowledged saved flag; portable lab preserves destination configuration."
+    },
+    {
+      "id": "AUTO-JSON",
+      "feature": "JSON construction/schema validation/result interpretation",
+      "status": "partial",
+      "parser": {
+        "file": "src/automation.ts",
+        "line": 39
+      },
+      "tests": [
+        "AUTO-09"
+      ],
+      "evidence": "No-network conversion/validation; strict JSON syntax, typed schema; structured original results."
+    },
+    {
+      "id": "AUTO-SECRET",
+      "feature": "Credential/secret command redaction and no_log",
+      "status": "partial",
+      "parser": {
+        "file": "src/automation.ts",
+        "line": 35
+      },
+      "tests": [
+        "AUTO-01",
+        "AUTO-08"
+      ],
+      "evidence": "Known inventory credentials redacted; secret-bearing commands hidden; no_log suppresses task details. Other show-config secrets require no_log."
+    }
+  ],
+  "limitations": [
+    "No Ansible/Python/Jinja/roles/facts/collections/arbitrary module runtime",
+    "Logical SSH teaching transport without native cryptographic interoperability",
+    "Exact-line matching subset, not all config diff/replacement semantics",
+    "Partial changes remain after failure; unavailable post-failure config produces unknown change status",
+    "Server file-service exclusion preserved"
+  ]
+}

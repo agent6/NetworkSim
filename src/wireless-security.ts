@@ -18,3 +18,6 @@ export function wpa2PMK(passphrase:string,ssid:string):Uint8Array {
 export function keyProof(key:Uint8Array,context:unknown):string {return [...hmacSha1(key,bytes(JSON.stringify(context)))].map(x=>x.toString(16).padStart(2,'0')).join('');}
 export function sessionKey(pmk:Uint8Array,bssid:string,client:string,anonce:string,snonce:string):Uint8Array {return hmacSha1(pmk,bytes(JSON.stringify(['Pairwise key expansion',...[bssid,client].sort(),...[anonce,snonce].sort()])));}
 export function validPSK(value:string):boolean{return /^[\x20-\x7e]{8,63}$/.test(value)||/^[a-f0-9]{64}$/i.test(value);}
+/** Logical SAE teaching proof, deliberately not the elliptic-curve SAE key
+ * agreement. Commit nonces bind the simulated confirmation and installed key. */
+export function logicalSAEKey(password:string,context:unknown):Uint8Array{return cat(hmacSha1(bytes(password),bytes(JSON.stringify(['logical SAE',context,1]))),hmacSha1(bytes(password),bytes(JSON.stringify(['logical SAE',context,2])))).slice(0,32);}

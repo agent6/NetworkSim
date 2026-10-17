@@ -1,7 +1,11 @@
 {
-  "generatedAt": "2026-10-17T00:55:21.056Z",
+  "generatedAt": "2026-10-17T02:14:53.381Z",
   "browser": "155.0.8059.84",
   "url": "file:///Users/erikpope/projects/NetworkSim/index.html",
+  "artifact": {
+    "file": "index.html",
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+  },
   "checks": [
     "Imported a routed three-node lab through the public YAML workflow",
     "Initial Windows ping crosses the configured router",

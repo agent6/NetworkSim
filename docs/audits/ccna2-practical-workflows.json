@@ -1,0 +1,1497 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-17",
+  "generatorSha256": "3fa6dc2bfbf7b72a0c1b04ff77784eb0917128f6258d53aef43493fe35c300c8",
+  "blueprint": {
+    "exam": "CCNA 200-301 v2.0",
+    "effective": "published; effective 2027-02-03",
+    "source": "https://learningcontent.cisco.com/documents/marketing/exam-topics/200-301_CCNA_v2.0_Exam_Topics_PDF.pdf",
+    "sourcePDFDigest": "5f0bf00d2d459c1f2b52c54c9680fd7c5bb261b6842641a1f445fb0a0ca9923e",
+    "sourceTextFile": ".cache/fidelity/references/ccna-2.0.txt",
+    "sourceTextDigest": "e70e9fa41fecc69d18bbbf643b299bbb7f70e4dc6a3bd25b2530e0072bcdd107",
+    "indexedRows": 59,
+    "parentObjectives": 29,
+    "leafObjectives": 52,
+    "practicalLeaves": 39,
+    "fullyVerifiedLeaves": 0
+  },
+  "practicalLeaves": 39,
+  "method": "Independently read each practical blueprint leaf and inspect available configuration/runtime paths and named test assertions. Supplemental workflow assessment does not promote the broad matrix to native-equivalent or complete. This generator validates selector existence and hashes; it does not execute tests.",
+  "executionBoundary": "Consult the final combined regression and durable browser records. The owned focused run passed117 cases (wireless99 plus dedicated Phone18). Wired owner separately reported4 direct routing-practical cases passing. This generator only indexes inspected assertions and never executes them.",
+  "newlyClosedGaps": [
+    {
+      "objective": "1.6",
+      "repair": "Actual Windows/Linux/macOS diagnostic profiles share host addressing, routed IP/DNS and WLAN security state.",
+      "evidence": "UNIX-01 through11; WIN host/WLAN cases"
+    },
+    {
+      "objective": "2.2.a/c",
+      "repair": "Generic endpoint roles plus a dedicated two-port Phone, PoE class3 allocation, received CDP/LLDP-MED voice policy, real voice DHCP and isolated IPv4/IPv6 PC passthrough.",
+      "evidence": "ENDPOINT-01 through15; PHONE-01 through13; PHONE-AUDIT-01 through05"
+    },
+    {
+      "objective": "2.2.b",
+      "repair": "Explicit generic standalone AP profile has local SSID/radio/security/VLAN datapath with no controller; software reload retains the selected profile and PoE supply.",
+      "evidence": "SAP-01 through08; standalone-ap-browser-validation.json"
+    }
+  ],
+  "broadMatrixCorrections": [
+    "2.1.d: SVI requires direct switching/management-autostate evidence, not only generic routing candidates.",
+    "3.3.a: authentication is explicitly excluded; semantic AAA matches are not required OSPF evidence.",
+    "4.4: DNS mail-name diagnosis does not imply unrelated AAA; six typed DNS cases are the direct evidence.",
+    "4.2: IOS SCP server is supported; IOS SFTP server is not. SFTP-client exercises use an eligible non-IOS endpoint; excluded Server file-service GUI is not restored.",
+    "2.2.b: generic standalone now exists independently of lightweight Flex controller-outage fallback."
+  ],
+  "newlyStrengthenedAcceptanceEvidence": [
+    "PRACTICAL-STATIC6 directly asserts native IPv6 network/default/host route selection, floating failover, actual UDP receiver and saved/portable recovery.",
+    "Parameterized PRACTICAL-P2P directly asserts native OSPFv2/v3 point-to-point FULL/P2P, real echo, Hello-loss withdrawal and saved recovery."
+  ],
+  "unresolvedAcceptanceEvidence": [
+    "Root-primary/secondary macros, every ACL form/direction and every native option/output have not each received exhaustive boundary/reload/platform reference comparisons.",
+    "Virtualized-host and network-appliance edge workflows use modeled network peers; no external hypervisor/appliance operating system is supplied."
+  ],
+  "implementationConclusion": "No additional fundamental practical workflow gap was demonstrated in the39-leaf source review after the repairs above. Several leaves still have composed or peer-substitute evidence; this is not a complete exam/Simlet guarantee.",
+  "exclusions": [
+    "Native crypto interoperability and measured hardware/RF parity.",
+    "Full external hypervisor/appliance/Ansible products and arbitrary operating-system shells.",
+    "User-approved Server TFTP/SCP/SFTP service/GUI removal."
+  ],
+  "objectives": [
+    {
+      "id": "1.1",
+      "workflow": "Create copper/fiber medium faults, observe carrier/counters and restore real packets.",
+      "remainingBoundary": "Distance/category/media compatibility and logical BER are modeled; calibrated optical dBm/DOM, optical transceiver inventory and analog pin measurements are not.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/link-medium.test.ts",
+          "selector": "cable open/short/miswire",
+          "line": 12,
+          "fileSha256": "c302866cf07e6aebc436026c9cc6b533457b639dea3be11e08eb75354a91d226",
+          "assertionExcerptSha256": "95b6c6aaaf7336441d9a10b90ba5ed93e83a83241ceb16a5b4d97e2a00805f8b"
+        },
+        {
+          "file": "tests/link-medium.test.ts",
+          "selector": "signal corruption",
+          "line": 13,
+          "fileSha256": "c302866cf07e6aebc436026c9cc6b533457b639dea3be11e08eb75354a91d226",
+          "assertionExcerptSha256": "eafab4e31584b9a506c38c7ee61c9a3e5c2689d46de32fe2e5ed9222a3a7db3a"
+        },
+        {
+          "file": "tests/ethernet-physical.test.ts",
+          "selector": "duplex mismatch causes actual",
+          "line": 39,
+          "fileSha256": "2a9f54733868a0e7e3b1349f70dcb09b42b23eb949df1839e848e4bf1d698eb6",
+          "assertionExcerptSha256": "11a4a98319759449993a1d09c57ff4690a6646417896bacc6cf19ca459ca43dd"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "1.3",
+      "workflow": "Change IPv4 host/router addressing, subnet or gateway and diagnose real reachability.",
+      "remainingBoundary": "Native OS and every IOS address option are not reproduced; public/private addresses use the same simulated forwarding rules.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/windows-cli.test.ts",
+          "selector": "WIN-12",
+          "line": 54,
+          "fileSha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e",
+          "assertionExcerptSha256": "85fd510948ed7163af647c53df6492e265e9c6ce6cd342e4d79c0dc12dfee199"
+        },
+        {
+          "file": "tests/windows-cli.test.ts",
+          "selector": "WIN-22",
+          "line": 74,
+          "fileSha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e",
+          "assertionExcerptSha256": "453b82ca9a503871c7cfdf6b97f73eecae72beadae96a610e1d4b58881ae5710"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "IP parsing validates contiguous",
+          "line": 38,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "14148a41ccbb831439f115332c3f0dcad7aaf4fe78c4af4928cd8202a4623c0d"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [
+        "host4"
+      ],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "1.4",
+      "workflow": "Configure static, EUI-64, link-local and dynamic IPv6 addresses; diagnose DAD/prefix/route faults.",
+      "remainingBoundary": "Bounded IPv6 address/route implementations; complete native stack and all prefix-sizing exercises have not been reference-verified.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/cli.test.ts",
+          "selector": "manual link-local and EUI-64",
+          "line": 226,
+          "fileSha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f",
+          "assertionExcerptSha256": "7ddc8c6df7e48fb96ab4e0f4e4d522438568b7868668ee2ad1735f3e2ce969e4"
+        },
+        {
+          "file": "tests/reference-closure.test.ts",
+          "selector": "static IPv6 DAD",
+          "line": 27,
+          "fileSha256": "0c8ff6a28a7e27e2dce3033ec922218ed056295058b0e8f536a7b399d5e4b7cc",
+          "assertionExcerptSha256": "f98b63fc0b4efe5244ce04d9efe547caa090d0b841897d905ed0deef1e3eaf3c"
+        },
+        {
+          "file": "tests/windows-cli.test.ts",
+          "selector": "WIN-24",
+          "line": 79,
+          "fileSha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e",
+          "assertionExcerptSha256": "b66312935550aa7ad45c9334bef0ed5486bee74b97379c2bf45848217a744a72"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [
+        "host6",
+        "host-dhcp6"
+      ],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "1.6",
+      "workflow": "Use Windows, Linux and macOS teaching terminals to diagnose wired/WLAN IP, DNS and security.",
+      "remainingBoundary": "These terminals project actual simulator state, not native OS execution. Enterprise supplicant provisioning and every platform flag are not implemented.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/windows-cli.test.ts",
+          "selector": "WIN-14",
+          "line": 58,
+          "fileSha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e",
+          "assertionExcerptSha256": "a8419dcdb8018ff35869e86dd2f95d8cbf9105e93eaa1d411e6fe513d4c49c3b"
+        },
+        {
+          "file": "tests/unix-cli.test.ts",
+          "selector": "UNIX-01",
+          "line": 5,
+          "fileSha256": "0ef80be3ea96e1e2df5bc41420d251e45fc05120005181300e192eabd605e1cb",
+          "assertionExcerptSha256": "854acc7339e098fd2260fd250eb188e7f6b8f27cfb46c084ee80c3369794532d"
+        },
+        {
+          "file": "tests/unix-cli.test.ts",
+          "selector": "UNIX-02",
+          "line": 7,
+          "fileSha256": "0ef80be3ea96e1e2df5bc41420d251e45fc05120005181300e192eabd605e1cb",
+          "assertionExcerptSha256": "dcc765752e2292cc0515377c7a80b4c170ba43263612589bb2fb159d2358365f"
+        },
+        {
+          "file": "tests/unix-cli.test.ts",
+          "selector": "UNIX-06",
+          "line": 15,
+          "fileSha256": "0ef80be3ea96e1e2df5bc41420d251e45fc05120005181300e192eabd605e1cb",
+          "assertionExcerptSha256": "e0be8e0e576244e232aa7e76e58bb6f95d458019c2e98a5a445b32d91a9efcdb"
+        },
+        {
+          "file": "tests/unix-cli.test.ts",
+          "selector": "UNIX-09",
+          "line": 21,
+          "fileSha256": "0ef80be3ea96e1e2df5bc41420d251e45fc05120005181300e192eabd605e1cb",
+          "assertionExcerptSha256": "4573156c9fb5a3033349be19d5761d42e0f4fb5c966b74dc722896eb45cad98f"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [
+        "host4",
+        "host6",
+        "host-wlan",
+        "unix-linux",
+        "unix-macos",
+        "unix-ipv6",
+        "unix-wireless",
+        "wpa3",
+        "wpa3-failure",
+        "wpa-transition"
+      ],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "1.7",
+      "workflow": "Configure IOS DHCP pool/client/relay, obtain a delivered lease and diagnose failed or expired leases.",
+      "remainingBoundary": "Bounded DHCP messages/options, exclusions, relay and lease timers; not every IOS server/relay option.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/cli.test.ts",
+          "selector": "DHCP CLI configuration drives",
+          "line": 90,
+          "fileSha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f",
+          "assertionExcerptSha256": "6642c7d8f3c71b423e0caf27d6a24901f5f6d078ac93efa2a5e4f322658c288d"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "DHCP relay reaches",
+          "line": 115,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "e82aec17d159ff79dfaa5511449eb809f2b6e32bb47b20b874da7367659ee0b5"
+        },
+        {
+          "file": "tests/reference-closure.test.ts",
+          "selector": "router DHCP installs",
+          "line": 18,
+          "fileSha256": "0c8ff6a28a7e27e2dce3033ec922218ed056295058b0e8f536a7b399d5e4b7cc",
+          "assertionExcerptSha256": "fe3d49539bae93fd9b5b6cb408e38dba210902660ef6ad3e2e039aceea6251c3"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "DHCPv4 T1 renewal",
+          "line": 281,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "d4fe4788478c63b0b11a2dda91805d7e1b12df88a0db075ae417edb1facb4f33"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.1.a",
+      "workflow": "Configure switched or routed physical interfaces; incorrect carrier/speed/duplex prevents real traffic.",
+      "remainingBoundary": "Modeled device/port capabilities only; hardware-specific interface types and counters differ.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/ethernet-physical.test.ts",
+          "selector": "fixed Ethernet speed mismatch",
+          "line": 18,
+          "fileSha256": "2a9f54733868a0e7e3b1349f70dcb09b42b23eb949df1839e848e4bf1d698eb6",
+          "assertionExcerptSha256": "d66d8ccf476e18601a3f698871ac37c3b0f7b7c6a7a3d279a33a206a90d71545"
+        },
+        {
+          "file": "tests/wired-fidelity.test.ts",
+          "selector": "L2, L3 and PoE switch physical",
+          "line": 34,
+          "fileSha256": "38df6a5c2b4c45953eb55d9c2f2d93e1ca6f1d3fc95a79e2dc8808212de8e68d",
+          "assertionExcerptSha256": "cc0990c682c18409d6074ba8d9740ff12b39ed26bbf2e8752f00fac2361b883a"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.1.b",
+      "workflow": "Configure access/trunk/native/allowed VLAN attributes and inspect real tagged forwarding/pruning.",
+      "remainingBoundary": "VLAN forwarding is executable; complete per-platform negotiation and exact native show formatting remain bounded.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/cli.test.ts",
+          "selector": "interface ranges, VLAN creation",
+          "line": 37,
+          "fileSha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f",
+          "assertionExcerptSha256": "d6c24a44dd7dc8c566c8b5884a20e4bb48d0e58004a6acf449bcde60a7df0ab4"
+        },
+        {
+          "file": "tests/switching-compat.test.ts",
+          "selector": "voice VLAN carries tagged",
+          "line": 95,
+          "fileSha256": "068e693053b769e104449417cb31b24ec3275f3ffe73bb2c0f54d1d019b1927e",
+          "assertionExcerptSha256": "03d1375119efd96564401c1940052648235e91bf55b9bcbbe987e42852d86896"
+        },
+        {
+          "file": "tests/remote-span.test.ts",
+          "selector": "RSPAN traverses",
+          "line": 130,
+          "fileSha256": "f1c8feecd72afce3983407ccb3d8f52031ae449c4725c3016b2c628749466617",
+          "assertionExcerptSha256": "624fc1a217072f8995e97df39bfb7f83949678218c6a770ec6d1647aa467a196"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.1.c",
+      "workflow": "Form L2 and routed LACP bundles, carry real flows, and observe member loss/eligibility.",
+      "remainingBoundary": "LACP is packet-driven with bounded member/hash behavior; full hardware hashing and all channel options are not modeled.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "LACP active/passive",
+          "line": 79,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "0e42a332b6cb73a167521e2764815276435c006dfd47c1befdc00bff04914a9a"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "switched EtherChannel hashes",
+          "line": 376,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "9d46b3d77a18e07aa5d1a7313780de82c66eda5748bab547120f5199ff7a4ad0"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "routed EtherChannel applies",
+          "line": 389,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "418e53c3109cca178fe2f926917ddfcccf14e3387d8d2dc6ed8759f7f963505a"
+        },
+        {
+          "file": "tests/wired-fidelity.test.ts",
+          "selector": "routed LACP peers may",
+          "line": 139,
+          "fileSha256": "38df6a5c2b4c45953eb55d9c2f2d93e1ca6f1d3fc95a79e2dc8808212de8e68d",
+          "assertionExcerptSha256": "ce01bc8f3683ca0adb8120ca18d11458429807e1df97b1597db8a405a257cc3b"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.1.d",
+      "workflow": "Configure a switch SVI and use its actual autostate, routed traffic and management reachability.",
+      "remainingBoundary": "Direct SVI assertions are required here; generic routing candidates in the broad semantic matrix do not by themselves establish this workflow.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/cli.test.ts",
+          "selector": "interface ranges, VLAN creation",
+          "line": 37,
+          "fileSha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f",
+          "assertionExcerptSha256": "d6c24a44dd7dc8c566c8b5884a20e4bb48d0e58004a6acf449bcde60a7df0ab4"
+        },
+        {
+          "file": "tests/switching-compat.test.ts",
+          "selector": "voice VLAN carries tagged",
+          "line": 95,
+          "fileSha256": "068e693053b769e104449417cb31b24ec3275f3ffe73bb2c0f54d1d019b1927e",
+          "assertionExcerptSha256": "03d1375119efd96564401c1940052648235e91bf55b9bcbbe987e42852d86896"
+        },
+        {
+          "file": "tests/wired-fidelity.test.ts",
+          "selector": "Catalyst physical marking",
+          "line": 50,
+          "fileSha256": "38df6a5c2b4c45953eb55d9c2f2d93e1ca6f1d3fc95a79e2dc8808212de8e68d",
+          "assertionExcerptSha256": "3e8e5d641efec7fbe02ec38b94a713ac37aad6954c203c70fc35c9e3b7bd43d6"
+        },
+        {
+          "file": "tests/snmp.test.ts",
+          "selector": "SNMP-11",
+          "line": 39,
+          "fileSha256": "a8c575e1a4941f9fb7c0e35d1c4fee2d85219861d193ea21370c8043fb9d7a44",
+          "assertionExcerptSha256": "67852aab3a292a87ce05bf96087799cbd85a8320b0205afeb4e218ce17fb330b"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.2.a",
+      "workflow": "Connect desktop, printer and IoT role endpoints on configured access ports and enforce actual PoE supply.",
+      "remainingBoundary": "Printer/IoT roles reuse host IP/service traffic and class3 power. Native printing protocols, sensors and every appliance OS are outside this connectivity exercise.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/endpoint.test.ts",
+          "selector": "ENDPOINT-01",
+          "line": 14,
+          "fileSha256": "e7b798699ab697b4f32003ab12dfc8f17eccd9b13a9f8eefd3b1be7969ba3782",
+          "assertionExcerptSha256": "5f38bba87c3be271fc73b30b66004d2dff71485a341a3c2a9cd13dc4594b3028"
+        },
+        {
+          "file": "tests/endpoint.test.ts",
+          "selector": "ENDPOINT-11",
+          "line": 48,
+          "fileSha256": "e7b798699ab697b4f32003ab12dfc8f17eccd9b13a9f8eefd3b1be7969ba3782",
+          "assertionExcerptSha256": "20762aa3d90aef807ab6276231a00be4e84d4d5abbfc6ef5297cc52521128c6e"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.2.b",
+      "workflow": "Connect PoE-only lightweight or explicit generic standalone APs; configure VLAN/SSID security and carry real client traffic.",
+      "remainingBoundary": "Generic standalone is distinct from C9115 lightweight firmware. Shared radio/auth/bridge behavior is bounded; full autonomous IOS BVI/subinterface/image features are not claimed.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/standalone-ap.test.ts",
+          "selector": "SAP-01",
+          "line": 6,
+          "fileSha256": "0062fa4906d5327a3db0a972e4748b6a98b93623ea141651550bb3b80fac1ad2",
+          "assertionExcerptSha256": "7bedfd9e80b45ba237d638cde1aa8deb08c0959c1b571f4a840f1af3fe290da9"
+        },
+        {
+          "file": "tests/standalone-ap.test.ts",
+          "selector": "SAP-02",
+          "line": 7,
+          "fileSha256": "0062fa4906d5327a3db0a972e4748b6a98b93623ea141651550bb3b80fac1ad2",
+          "assertionExcerptSha256": "993c2baf662a5c9b05510d1d4aef49325403077fc553e95c1e10515200aa21ac"
+        },
+        {
+          "file": "tests/standalone-ap.test.ts",
+          "selector": "SAP-07",
+          "line": 14,
+          "fileSha256": "0062fa4906d5327a3db0a972e4748b6a98b93623ea141651550bb3b80fac1ad2",
+          "assertionExcerptSha256": "c0608ab995d13d596f9781f7b5831c03db3d0f7190454620d93206cc84d3422c"
+        },
+        {
+          "file": "tests/standalone-ap.test.ts",
+          "selector": "SAP-08",
+          "line": 15,
+          "fileSha256": "0062fa4906d5327a3db0a972e4748b6a98b93623ea141651550bb3b80fac1ad2",
+          "assertionExcerptSha256": "a85b02ac383c0c9f3712e4f792dd9003b09b666c31d8dd4569e9314805bcbf89"
+        },
+        {
+          "file": "tests/poe.test.ts",
+          "selector": "PoE powered APs join",
+          "line": 5,
+          "fileSha256": "31a2804d9e8b9b3b95ce5a12b21f430b1729ed2d9690355c92fc3f8c2d043f73",
+          "assertionExcerptSha256": "f611c3c3bb50267b9186758bc5d61055d62c617538d45e21a529549e47d55257"
+        },
+        {
+          "file": "tests/wlc-administration.test.ts",
+          "selector": "WADM-10",
+          "line": 40,
+          "fileSha256": "e55eef7014833ae68bf0b4b77c400f2ab5db27bbe711ce31ccbfdb7c1dc11099",
+          "assertionExcerptSha256": "1bc5ffcbf507eb593eff798e96c4e58980218c2eaedd076a12401f45a3d489c8"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [
+        "ap-poe-rate",
+        "ap-radius",
+        "ap-revocation"
+      ],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.2.c",
+      "workflow": "Receive CDP/LLDP-MED voice policy, obtain voice-VLAN DHCP and carry tagged traffic while PoE controls service.",
+      "remainingBoundary": "Received voice policy/VLAN/COS/DSCP and electrical state are functional. Call registration/media/signaling and a real handset OS are separate from edge-port configuration.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/endpoint.test.ts",
+          "selector": "ENDPOINT-02",
+          "line": 17,
+          "fileSha256": "e7b798699ab697b4f32003ab12dfc8f17eccd9b13a9f8eefd3b1be7969ba3782",
+          "assertionExcerptSha256": "0fefdc7aa5359c611f45a2019652d19cb7818882978f22a18abd4d11eb5ddc5b"
+        },
+        {
+          "file": "tests/endpoint.test.ts",
+          "selector": "ENDPOINT-04",
+          "line": 23,
+          "fileSha256": "e7b798699ab697b4f32003ab12dfc8f17eccd9b13a9f8eefd3b1be7969ba3782",
+          "assertionExcerptSha256": "1316a2bf7f73e440d8b74a3bd0b1c9d9bc45d0a3940eed55b6f6c8b7604be9c5"
+        },
+        {
+          "file": "tests/endpoint.test.ts",
+          "selector": "ENDPOINT-09",
+          "line": 41,
+          "fileSha256": "e7b798699ab697b4f32003ab12dfc8f17eccd9b13a9f8eefd3b1be7969ba3782",
+          "assertionExcerptSha256": "08ceb6539be60cb4a55760c9c8530b4cc949b8bf8075c16d06a518b3f6961e1a"
+        },
+        {
+          "file": "tests/endpoint.test.ts",
+          "selector": "ENDPOINT-12",
+          "line": 51,
+          "fileSha256": "e7b798699ab697b4f32003ab12dfc8f17eccd9b13a9f8eefd3b1be7969ba3782",
+          "assertionExcerptSha256": "242ad53109e7daf008a43d531ca251e0d5e398273eea8417a768696167850743"
+        },
+        {
+          "file": "tests/endpoint.test.ts",
+          "selector": "ENDPOINT-14",
+          "line": 59,
+          "fileSha256": "e7b798699ab697b4f32003ab12dfc8f17eccd9b13a9f8eefd3b1be7969ba3782",
+          "assertionExcerptSha256": "c988cac798d891d3ffcb85ad682698895ecfe8196771f6606fd1c36c691aa777"
+        },
+        {
+          "file": "tests/phone.test.ts",
+          "selector": "PHONE-03",
+          "line": 25,
+          "fileSha256": "00436d1c7e4a4aafc65770ba012a1df9b8d864b647abe77eb33d8c211fae3372",
+          "assertionExcerptSha256": "a413934d67a70a7861516409c427b1ca101278caddac72dcad6dfba40417d42a"
+        },
+        {
+          "file": "tests/phone.test.ts",
+          "selector": "PHONE-05",
+          "line": 50,
+          "fileSha256": "00436d1c7e4a4aafc65770ba012a1df9b8d864b647abe77eb33d8c211fae3372",
+          "assertionExcerptSha256": "a2f90bde135a118e5e524ef44e4b79e6565435376a13eb557970134900b35f76"
+        },
+        {
+          "file": "tests/phone-audit.test.ts",
+          "selector": "PHONE-AUDIT-01",
+          "line": 8,
+          "fileSha256": "03686a4f30164420b5a47b86afb242eedd97d91768500332347353f4cd7dbd36",
+          "assertionExcerptSha256": "082aa454042036feaa2d09dc68c2cea69336e037ff28632cc32f4c335830a39c"
+        },
+        {
+          "file": "tests/phone-audit.test.ts",
+          "selector": "PHONE-AUDIT-03",
+          "line": 26,
+          "fileSha256": "03686a4f30164420b5a47b86afb242eedd97d91768500332347353f4cd7dbd36",
+          "assertionExcerptSha256": "edb3c18706fc47293c6f81e502c9d1aafb02041f0d4e612db0d5d24536711337"
+        },
+        {
+          "file": "tests/phone-audit.test.ts",
+          "selector": "PHONE-AUDIT-04",
+          "line": 34,
+          "fileSha256": "03686a4f30164420b5a47b86afb242eedd97d91768500332347353f4cd7dbd36",
+          "assertionExcerptSha256": "0851684b623348879839d87570dfad128b5723882105bb68a8d0b32ee3013255"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.2.d",
+      "workflow": "Exercise a virtualized-host attachment with trunk VLANs and LACP-capable endpoint abstractions.",
+      "remainingBoundary": "Switch-side trunk/LACP and forwarding are real. The peer is a modeled host/router/switch endpoint, not a hypervisor, virtual switch product or guest/container runtime.",
+      "evidenceScope": "composed-network-side-workflow-with-external-peer-substitute",
+      "assertionEvidence": [
+        {
+          "file": "tests/core.test.ts",
+          "selector": "VLAN switching learns",
+          "line": 62,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "99b7cb00d721f7862c32eafa37c6520632610f896fa5c66a25a45f01d430f5ba"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "switched EtherChannel hashes",
+          "line": 376,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "9d46b3d77a18e07aa5d1a7313780de82c66eda5748bab547120f5199ff7a4ad0"
+        },
+        {
+          "file": "tests/wired-fidelity.test.ts",
+          "selector": "routed LACP peers may",
+          "line": 139,
+          "fileSha256": "38df6a5c2b4c45953eb55d9c2f2d93e1ca6f1d3fc95a79e2dc8808212de8e68d",
+          "assertionExcerptSha256": "ce01bc8f3683ca0adb8120ca18d11458429807e1df97b1597db8a405a257cc3b"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.2.e",
+      "workflow": "Exercise a network-appliance attachment using access/trunk/routed and LACP-capable modeled peers.",
+      "remainingBoundary": "Network-side connectivity is executable. An external appliance OS and every vendor-specific appliance service are not supplied.",
+      "evidenceScope": "composed-network-side-workflow-with-external-peer-substitute",
+      "assertionEvidence": [
+        {
+          "file": "tests/core.test.ts",
+          "selector": "VLAN switching learns",
+          "line": 62,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "99b7cb00d721f7862c32eafa37c6520632610f896fa5c66a25a45f01d430f5ba"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "routed EtherChannel applies",
+          "line": 389,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "418e53c3109cca178fe2f926917ddfcccf14e3387d8d2dc6ed8759f7f963505a"
+        },
+        {
+          "file": "tests/wired-fidelity.test.ts",
+          "selector": "routed LACP peers may",
+          "line": 139,
+          "fileSha256": "38df6a5c2b4c45953eb55d9c2f2d93e1ca6f1d3fc95a79e2dc8808212de8e68d",
+          "assertionExcerptSha256": "ce01bc8f3683ca0adb8120ca18d11458429807e1df97b1597db8a405a257cc3b"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.3",
+      "workflow": "Compare delivered CDP/LLDP neighbors, ports, addresses and expiry with the actual topology.",
+      "remainingBoundary": "Documentation accuracy is a learner comparison, not an automatic truth oracle. Only implemented TLVs and physical-hop semantics are represented.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/discovery.test.ts",
+          "selector": "CDP and LLDP",
+          "line": 9,
+          "fileSha256": "eb033cee0df666bee8e72b581ebf746c5eb209de5eb7e13d248e304baa2f6774",
+          "assertionExcerptSha256": "12ff9d9b416c8fe3560f18e8cfe95611daf5c1b38face428d7892ba0405cc66e"
+        },
+        {
+          "file": "tests/ethernet-physical.test.ts",
+          "selector": "CDP reports received duplex",
+          "line": 69,
+          "fileSha256": "2a9f54733868a0e7e3b1349f70dcb09b42b23eb949df1839e848e4bf1d698eb6",
+          "assertionExcerptSha256": "dfc7762517152fc6ceed5a6c39dcb4b41ac1a3417e675fbf9256deb96e0e0ec9"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.4",
+      "workflow": "Diagnose actual forwarding/operational faults with native shows/logs, interactive extended ping, traceroute and packet inspection.",
+      "remainingBoundary": "Only implemented diagnostic commands/options and logical packets are available; exact hardware output and binary PCAP interoperability are not implied.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/cli.test.ts",
+          "selector": "interactive extended ping",
+          "line": 238,
+          "fileSha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f",
+          "assertionExcerptSha256": "a8ceada3dcefecec383be96f6865dda096b6c800e343832d7538c561f34ad8c9"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "traceroute reports routed",
+          "line": 53,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "43aee565fb5d51afad3b4c7dd92afb26fb46020384b406cc832078cc5d0678ea"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "packet inspector exposes",
+          "line": 436,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "a1dbe2949b551a5ce2a607ffeb1dd71195e5c274f40a84462a849ada13ef7f72"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "logging independently controls",
+          "line": 485,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "6b52e6efaf7de3e4838af05d2f0d447fe57b6577c27a6a18dae62e7c02f84371"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.5.a",
+      "workflow": "Configure Rapid-PVST bridge/port priority/cost and inspect elected roots/root ports after topology changes.",
+      "remainingBoundary": "Root election/path invariants are direct; every root-primary/root-secondary macro/default combination is not separately fixture-verified.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "rapid spanning tree blocks",
+          "line": 27,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "717fd6925cf0ad81b420e1a2d1916a9a9850a459ac0444f014a3fdbf9198a20c"
+        },
+        {
+          "file": "tests/switching-compat.test.ts",
+          "selector": "per-tree port costs",
+          "line": 87,
+          "fileSha256": "068e693053b769e104449417cb31b24ec3275f3ffe73bb2c0f54d1d019b1927e",
+          "assertionExcerptSha256": "dc7a3bbb91394f726f0f8765e0f9a5fe60d26ba838e24fc9a3798f975571e2e3"
+        },
+        {
+          "file": "tests/control-plane-cli.test.ts",
+          "selector": "IOS root guard and LACP",
+          "line": 69,
+          "fileSha256": "2711c213adb96d85c866f6a4273122292814c223d9e4dd29ffc2b32abfaf873e",
+          "assertionExcerptSha256": "190d150bc51e0ad8477768302dfc60c5fe8345fd65daef70e13163d7fc2aaf80"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.5.b",
+      "workflow": "Inspect real root/designated/alternate state transitions and failover behavior.",
+      "remainingBoundary": "Packet-driven logical bridge trees and timers; complete ASIC convergence/counter fidelity is not claimed.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "rapid spanning tree blocks",
+          "line": 27,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "717fd6925cf0ad81b420e1a2d1916a9a9850a459ac0444f014a3fdbf9198a20c"
+        },
+        {
+          "file": "tests/switching-compat.test.ts",
+          "selector": "shared STP links",
+          "line": 91,
+          "fileSha256": "068e693053b769e104449417cb31b24ec3275f3ffe73bb2c0f54d1d019b1927e",
+          "assertionExcerptSha256": "a6f487b6392018618387cd791a43ac69aa33e4d999afe760db4b8ace6013a99a"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.5.c",
+      "workflow": "Apply edge PortFast defaults/overrides and verify timing and bridge-peer protection.",
+      "remainingBoundary": "Existing access/trunk edge modes are bounded by the selected switching profile.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "classic PVST observes",
+          "line": 42,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "580b452fd8c00a0ee37ae09739e5d9aa7e417d95fe64cde277112012b31788c2"
+        },
+        {
+          "file": "tests/switching-compat.test.ts",
+          "selector": "global PortFast applies",
+          "line": 22,
+          "fileSha256": "068e693053b769e104449417cb31b24ec3275f3ffe73bb2c0f54d1d019b1927e",
+          "assertionExcerptSha256": "cbaa3c4d3b8edd524a02599de1d2eef4754487ead9bc8cb9ec9c736e428e9df6"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "2.5.d",
+      "workflow": "Cause superior or missing BPDUs and validate root/loop/BPDU guard blocking and recovery.",
+      "remainingBoundary": "Guard actions depend on actual delivered messages; not every recovery/configuration permutation has a native reference comparison.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "BPDU guard prevents",
+          "line": 62,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "9643966abca0ea6c0947eb99385fab9057693b18ec902b90ad00142552f1cc46"
+        },
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "STP root guard rejects",
+          "line": 488,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "13e4d0b60a0dc29aa3f055ae8c4e36e270d4f977d96c13a1007128abc414ec4e"
+        },
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "STP loop guard blocks",
+          "line": 494,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "cd895c556ec04879423c1d6da7232102ac185e945e7909f13420e1ef94b1eefb"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "3.2.a",
+      "workflow": "Configure IPv4/IPv6 default routes and diagnose gateway/interface/return-path faults.",
+      "remainingBoundary": "Direct native IOS IPv6 ::/0 assertions select the real default next hop and delivered UDP receiver. Every family/platform route option is not separately reference-verified.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/exam-routing-practicals.test.ts",
+          "selector": "PRACTICAL-STATIC6",
+          "line": 9,
+          "fileSha256": "9f009b714bac49c6bb471872f5f75a559e99347db02104bcc5406eab9fc6c3c7",
+          "assertionExcerptSha256": "11a18cecf4063d53bd4a4903bf05fe8edae6fd605a2233fdf0ebbefe5d0b1304"
+        },
+        {
+          "file": "tests/reference-closure.test.ts",
+          "selector": "router DHCP installs",
+          "line": 18,
+          "fileSha256": "0c8ff6a28a7e27e2dce3033ec922218ed056295058b0e8f536a7b399d5e4b7cc",
+          "assertionExcerptSha256": "fe3d49539bae93fd9b5b6cb408e38dba210902660ef6ad3e2e039aceea6251c3"
+        },
+        {
+          "file": "tests/windows-cli.test.ts",
+          "selector": "WIN-10",
+          "line": 50,
+          "fileSha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e",
+          "assertionExcerptSha256": "520953297f91b696da886d091a24b31c4f8f84e206ca02575d96de3600bfb5e6"
+        },
+        {
+          "file": "tests/windows-cli.test.ts",
+          "selector": "WIN-24",
+          "line": 79,
+          "fileSha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e",
+          "assertionExcerptSha256": "b66312935550aa7ad45c9334bef0ed5486bee74b97379c2bf45848217a744a72"
+        },
+        {
+          "file": "tests/route-resolver.test.ts",
+          "selector": "secondary IPv4 and IPv6",
+          "line": 72,
+          "fileSha256": "f70694e7e8c52bf3531d46c51e3d4c194e5ee56a6211a386328bd6f2e05a8fba",
+          "assertionExcerptSha256": "b6d6b7ca387846e60d5d91879906fe9fe05fb7705f6f6aa4b36881da4fe6f8c5"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "3.2.b",
+      "workflow": "Configure network-prefix routes, follow recursive next hops and recover from unusable egress.",
+      "remainingBoundary": "Shared IPv4/IPv6 resolver and packet paths are executable; every family and recursive syntax permutation is not separately verified.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/exam-routing-practicals.test.ts",
+          "selector": "PRACTICAL-STATIC6",
+          "line": 9,
+          "fileSha256": "9f009b714bac49c6bb471872f5f75a559e99347db02104bcc5406eab9fc6c3c7",
+          "assertionExcerptSha256": "11a18cecf4063d53bd4a4903bf05fe8edae6fd605a2233fdf0ebbefe5d0b1304"
+        },
+        {
+          "file": "tests/route-resolver.test.ts",
+          "selector": "cyclic recursion terminates",
+          "line": 60,
+          "fileSha256": "f70694e7e8c52bf3531d46c51e3d4c194e5ee56a6211a386328bd6f2e05a8fba",
+          "assertionExcerptSha256": "b8d7f09caddc05f4c7615752ab003ccb73bbfcfc2fcbc6225a6d382218c94180"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "routing requires a usable",
+          "line": 48,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "bc6041bf0ddbf7875cade05f42b3bd48e3048982c27a88dee7ea946c55de08fa"
+        },
+        {
+          "file": "tests/windows-cli.test.ts",
+          "selector": "WIN-24",
+          "line": 79,
+          "fileSha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e",
+          "assertionExcerptSha256": "b66312935550aa7ad45c9334bef0ed5486bee74b97379c2bf45848217a744a72"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "3.2.c",
+      "workflow": "Configure specific host routes and inspect longest-prefix/CEF resolution independently of covering prefixes.",
+      "remainingBoundary": "Direct IPv6 /128 overrides a covering /64 and selects the actual receiver; removing it restores covering-prefix selection. All native show/grammar variants are not certified.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/exam-routing-practicals.test.ts",
+          "selector": "PRACTICAL-STATIC6",
+          "line": 9,
+          "fileSha256": "9f009b714bac49c6bb471872f5f75a559e99347db02104bcc5406eab9fc6c3c7",
+          "assertionExcerptSha256": "11a18cecf4063d53bd4a4903bf05fe8edae6fd605a2233fdf0ebbefe5d0b1304"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "GRE carries routed",
+          "line": 108,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "2e04012a8dc7b8419083629e1be9d7151cfd0aa67c0757b49f32c30bbd06747a"
+        },
+        {
+          "file": "tests/ios-show.test.ts",
+          "selector": "CEF shows all resolved",
+          "line": 71,
+          "fileSha256": "53d7e46300b5850536a1d905b631153eab9c89709b2d252ba4b088b99abd93e6",
+          "assertionExcerptSha256": "981e7fce55454b664140652eddfc474c93ce8b6f653fdfc93abd3cc8b44c1dcc"
+        },
+        {
+          "file": "tests/windows-cli.test.ts",
+          "selector": "WIN-24",
+          "line": 79,
+          "fileSha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e",
+          "assertionExcerptSha256": "b66312935550aa7ad45c9334bef0ed5486bee74b97379c2bf45848217a744a72"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "3.2.d",
+      "workflow": "Use administrative distance and egress eligibility to select a floating route after primary failure.",
+      "remainingBoundary": "Direct IPv4 and IPv6 fixtures now establish failover; IPv6 additionally verifies real UDP next hop and saved/portable recovery. Every tracking/permanent/VRF variant remains bounded.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/exam-routing-practicals.test.ts",
+          "selector": "PRACTICAL-STATIC6",
+          "line": 9,
+          "fileSha256": "9f009b714bac49c6bb471872f5f75a559e99347db02104bcc5406eab9fc6c3c7",
+          "assertionExcerptSha256": "11a18cecf4063d53bd4a4903bf05fe8edae6fd605a2233fdf0ebbefe5d0b1304"
+        },
+        {
+          "file": "tests/reference-closure.test.ts",
+          "selector": "operational RIB selects floating",
+          "line": 21,
+          "fileSha256": "0c8ff6a28a7e27e2dce3033ec922218ed056295058b0e8f536a7b399d5e4b7cc",
+          "assertionExcerptSha256": "65d14c8853f29bdff536b0cb65f12b7669d0b59c00b23d46e905bc52fa267464"
+        },
+        {
+          "file": "tests/cli.test.ts",
+          "selector": "static route parsing is atomic",
+          "line": 55,
+          "fileSha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f",
+          "assertionExcerptSha256": "3e5a96ad06f8b7788e05d32f08a06d70bc0ebc65a31d6123cf458a277634aa40"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "3.3.a",
+      "workflow": "Configure OSPFv2/v3 and require delivered Hello/database exchange before adjacency/routes/real packets.",
+      "remainingBoundary": "Authentication is explicitly excluded by this objective and is not counted as required AAA evidence. Logical OSPF messages/LSAs are bounded.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/ospf-packets.test.ts",
+          "selector": "OSPF databases and Full",
+          "line": 18,
+          "fileSha256": "a46e927cde0e6e1862a99689d943f354a6310922019be0177844861d2232bb97",
+          "assertionExcerptSha256": "720b4e1b62c672b8aac358bfab147e038a2fffcb7cf49bc2f4744dc9d3e5521c"
+        },
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "OSPF enforces area",
+          "line": 113,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "f91629d878b63a7d34d13fd57e4c66b1bbd7a15535140e22fe413bc15f39a62b"
+        },
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "OSPFv3 establishes",
+          "line": 196,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "c892d55352d8864dff38f2a19283c69494328105dd92aa95ffee648bb5eefbad"
+        },
+        {
+          "file": "tests/ospf-control-plane.test.ts",
+          "selector": "OSPF CP installs",
+          "line": 11,
+          "fileSha256": "d34ba15ed6c72fb3cee9b0bba5e1623bee0811de59995917f168b22e46860bbc",
+          "assertionExcerptSha256": "a363dad0c91e5a99efc4dde09760a24b67044604057e252964db47fc0aa0ff1c"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "3.3.b",
+      "workflow": "Configure OSPF point-to-point network mode and use the common delivered neighbor/LSDB engine.",
+      "remainingBoundary": "Parameterized native OSPFv2/v3 point-to-point cases now assert received FULL/P2P state, real echo, Hello-loss withdrawal/recovery and saved reload. Complete native output/platform options are not certified.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/exam-routing-practicals.test.ts",
+          "selector": "PRACTICAL-P2P",
+          "line": 17,
+          "fileSha256": "9f009b714bac49c6bb471872f5f75a559e99347db02104bcc5406eab9fc6c3c7",
+          "assertionExcerptSha256": "cea9531506db77dc5c438d4c8daa5866abc93b997a0be6aa656c34c1d05f3db0"
+        },
+        {
+          "file": "tests/ospf-packets.test.ts",
+          "selector": "OSPF databases and Full",
+          "line": 18,
+          "fileSha256": "a46e927cde0e6e1862a99689d943f354a6310922019be0177844861d2232bb97",
+          "assertionExcerptSha256": "720b4e1b62c672b8aac358bfab147e038a2fffcb7cf49bc2f4744dc9d3e5521c"
+        },
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "OSPFv3 establishes",
+          "line": 196,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "c892d55352d8864dff38f2a19283c69494328105dd92aa95ffee648bb5eefbad"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "3.3.c",
+      "workflow": "Observe broadcast DR/BDR/DROTHER election and actual route/adjacency consequences of priorities/failure.",
+      "remainingBoundary": "Direct broadcast election assertions; complete native interface/neighbor output is not certified.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "OSPF broadcast election",
+          "line": 438,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "c5d18ea21e88bda05535cdadfd0a7906252d1aba19fde89629dbfde8a239aa3f"
+        },
+        {
+          "file": "tests/cli.test.ts",
+          "selector": "OSPF interface show exposes",
+          "line": 219,
+          "fileSha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f",
+          "assertionExcerptSha256": "1cbd6c585123f5e703f441db6114f42a5db8d17317b1a1823e414f6b88852fb5"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "3.3.d",
+      "workflow": "Set router IDs in OSPFv2/v3 and observe received IDs in neighbor/LSDB/role output.",
+      "remainingBoundary": "Configured and received IDs are functional; every auto-selection/clear-process lifecycle variant is not covered by these selectors.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/cli.test.ts",
+          "selector": "protocol configuration and output",
+          "line": 62,
+          "fileSha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f",
+          "assertionExcerptSha256": "dd87e967c86075875692a3675250972d6408d7c28eb8dbf3ed39ce8349b1a039"
+        },
+        {
+          "file": "tests/control-plane.test.ts",
+          "selector": "OSPFv3 establishes",
+          "line": 196,
+          "fileSha256": "92430bffb8a07cbba606e3584a19c05e1df4685efd78fe0d079f4d7f13d2d2e6",
+          "assertionExcerptSha256": "c892d55352d8864dff38f2a19283c69494328105dd92aa95ffee648bb5eefbad"
+        },
+        {
+          "file": "tests/ios-show.test.ts",
+          "selector": "OSPF views use received router IDs",
+          "line": 49,
+          "fileSha256": "53d7e46300b5850536a1d905b631153eab9c89709b2d252ba4b088b99abd93e6",
+          "assertionExcerptSha256": "72d3588b8fb008bf65a6d0ea3349b9c4d7dc4022607ef8c5b8a8caf474298188"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "4.1",
+      "workflow": "Configure local users and delivered RADIUS/TACACS management login, authorization, fallback and access restrictions.",
+      "remainingBoundary": "Logical TCP/SSH/AAA exchanges and actual command privilege are modeled. Full native cryptography, accounting and every AAA scheme remain outside the bounded subset.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/management.test.ts",
+          "selector": "SSH authenticates over actual TCP",
+          "line": 16,
+          "fileSha256": "8c3e96cfd78ed8cf680dfa74bf4b0bf2c2b849330dc45dbac1456cdc714d9e1f",
+          "assertionExcerptSha256": "c343e2c943c86b28afe7e15eda55a932791ae38e2531d9b168a1cd4521b5ba64"
+        },
+        {
+          "file": "tests/management.test.ts",
+          "selector": "RADIUS and TACACS authentication",
+          "line": 53,
+          "fileSha256": "8c3e96cfd78ed8cf680dfa74bf4b0bf2c2b849330dc45dbac1456cdc714d9e1f",
+          "assertionExcerptSha256": "954ddd141c22d4e3cb27aa7ed8b74819f1ff301b652c2885f23eb7673b8dbd71"
+        },
+        {
+          "file": "tests/management.test.ts",
+          "selector": "AAA EXEC authorization",
+          "line": 100,
+          "fileSha256": "8c3e96cfd78ed8cf680dfa74bf4b0bf2c2b849330dc45dbac1456cdc714d9e1f",
+          "assertionExcerptSha256": "4ec81067f8fe1835ac11feeb049de2a788c05bc846a3274f19b69bbebe8d6892"
+        },
+        {
+          "file": "tests/wlc-administration.test.ts",
+          "selector": "WADM-12",
+          "line": 44,
+          "fileSha256": "e55eef7014833ae68bf0b4b77c400f2ab5db27bbe711ce31ccbfdb7c1dc11099",
+          "assertionExcerptSha256": "0a31bdbcb6f5e9b35237fce8113d89df247b21b333e0e313b6d4f08d0546ab82"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [
+        "ssh",
+        "aaa-auth",
+        "aaa-authz",
+        "wlc-admin"
+      ],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "4.2",
+      "workflow": "Copy actual configuration/software file content over packet-backed SCP or SFTP and enforce credentials/ACL/listener policy.",
+      "remainingBoundary": "IOS-to-IOS SCP is functional; SFTP uses an eligible non-IOS test endpoint, not an IOS SFTP server. User-excluded Server TFTP/SCP/SFTP GUI/services stay excluded. No actual IOS image boot/update is claimed.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/ssh-files.test.ts",
+          "selector": "FILE-01",
+          "line": 4,
+          "fileSha256": "0b114df56be61dabc7b21bf964f9613a01227fd3ed7bc9889f6364c90fe3c939",
+          "assertionExcerptSha256": "e465a94edc02933c267905a9f064d2eee573200da9dbdc17b253aca6e1022982"
+        },
+        {
+          "file": "tests/ssh-files.test.ts",
+          "selector": "FILE-02",
+          "line": 5,
+          "fileSha256": "0b114df56be61dabc7b21bf964f9613a01227fd3ed7bc9889f6364c90fe3c939",
+          "assertionExcerptSha256": "61f1239f9f96e8d683d29f58ba762a37865ab08554cc8ce744eb6197892f7ecf"
+        },
+        {
+          "file": "tests/ssh-files.test.ts",
+          "selector": "FILE-04",
+          "line": 7,
+          "fileSha256": "0b114df56be61dabc7b21bf964f9613a01227fd3ed7bc9889f6364c90fe3c939",
+          "assertionExcerptSha256": "fb9a115b3eb5e58d19c535da6291e13d2ee94ff6255540bd0e93c53e3566e018"
+        },
+        {
+          "file": "tests/ssh-files.test.ts",
+          "selector": "FILE-05",
+          "line": 8,
+          "fileSha256": "0b114df56be61dabc7b21bf964f9613a01227fd3ed7bc9889f6364c90fe3c939",
+          "assertionExcerptSha256": "383e967ce6c49c7e0a5b4aae82e3e7944ed90a4b200ec555d95da60b7feed5d4"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "4.3",
+      "workflow": "Configure NAT/PAT and diagnose actual translations, return tuples, exhaustion and aging.",
+      "remainingBoundary": "Bounded basic NAT/PAT packet behavior, not all IOS NAT architectures or application-layer gateways.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/core.test.ts",
+          "selector": "PAT supplies a return path",
+          "line": 74,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "1b1071991fd84d843ce6509c1a91db24a20baa16a2bf12e4d74347e6b21084ab"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "dynamic NAT allocates",
+          "line": 237,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "2f657596971ce244a2e7db42a7ec55cc7ca5d96e02affcf2367a9af89c215a9a"
+        },
+        {
+          "file": "tests/policy-closure.test.ts",
+          "selector": "allocated basic dynamic NAT",
+          "line": 74,
+          "fileSha256": "ec4445d3c580cb3f7f918ff210aecdbe48e7ed7552efb4c8c3cabdd46da888f9",
+          "assertionExcerptSha256": "35db5d492f5b8eb513fd0db3dca93fb0cd34da0d79170893cff89f7c8303f501"
+        },
+        {
+          "file": "tests/policy-closure.test.ts",
+          "selector": "PAT accepts the established",
+          "line": 93,
+          "fileSha256": "ec4445d3c580cb3f7f918ff210aecdbe48e7ed7552efb4c8c3cabdd46da888f9",
+          "assertionExcerptSha256": "fb74921298e9ce967dbed4cba1913f00b87dffce1db9cb7cc4cfe4d8b8196517"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "4.4",
+      "workflow": "Query six DNS record types, aliases and failures; diagnose resolver/cache/TTL effects on actual routed access.",
+      "remainingBoundary": "A/AAAA/CNAME/MX/NS/PTR have actual DNS query responses; no mail server SMTP product or unrelated AAA requirement is implied.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/dns-service.test.ts",
+          "selector": "DNS-01",
+          "line": 5,
+          "fileSha256": "b48b0fb69d6bc6f9aca107486cec6b6f1e027c7958d5753ea90f3aaa1201a563",
+          "assertionExcerptSha256": "e065f60df5e437c860b47bd7996e3bc071c9f709a1f738cd677ad36ce3602967"
+        },
+        {
+          "file": "tests/dns-service.test.ts",
+          "selector": "DNS-02",
+          "line": 6,
+          "fileSha256": "b48b0fb69d6bc6f9aca107486cec6b6f1e027c7958d5753ea90f3aaa1201a563",
+          "assertionExcerptSha256": "a4a8c4e32c5784a376010bd9d245acaa8ea55f308d064b57537d71356bdd21c9"
+        },
+        {
+          "file": "tests/dns-service.test.ts",
+          "selector": "DNS-03",
+          "line": 7,
+          "fileSha256": "b48b0fb69d6bc6f9aca107486cec6b6f1e027c7958d5753ea90f3aaa1201a563",
+          "assertionExcerptSha256": "db16044f1108555a891f7539cb8175c0268c65dddf3a14215e60b177dd7ebefb"
+        },
+        {
+          "file": "tests/windows-cli.test.ts",
+          "selector": "WIN-15",
+          "line": 60,
+          "fileSha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e",
+          "assertionExcerptSha256": "49c9337468043825b6c463aebf240bbf0be15e07dfe7cb921a66bdd07f2db77d"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "4.6",
+      "workflow": "Configure standard/extended numbered/named ACL entries and attachments; observe real drops, hits and correction.",
+      "remainingBoundary": "The four ACL forms are executable. Complete per-platform ACL compilation, every option and every attachment/match combination remain unverified.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/cli.test.ts",
+          "selector": "named and numbered ACL entries",
+          "line": 71,
+          "fileSha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f",
+          "assertionExcerptSha256": "8c98b8ff4b603d8abba5ffa400d2d071db0ff4a3fa9cf9d9445a1594d7a7cdaf"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "extended ACL enforces",
+          "line": 70,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "a66fbe4b8bb9b66f69cbe17a0b7adfc41893a417ac80cb9111f6abef7fdd5242"
+        },
+        {
+          "file": "tests/wired-fidelity.test.ts",
+          "selector": "standard and extended ACL route-map",
+          "line": 83,
+          "fileSha256": "38df6a5c2b4c45953eb55d9c2f2d93e1ca6f1d3fc95a79e2dc8808212de8e68d",
+          "assertionExcerptSha256": "4f132d772d8b45734420ec8080ca3c2d3aaa66365e796021f8605f2c22f21444"
+        },
+        {
+          "file": "tests/policy-closure.test.ts",
+          "selector": "router output ACLs count",
+          "line": 42,
+          "fileSha256": "ec4445d3c580cb3f7f918ff210aecdbe48e7ed7552efb4c8c3cabdd46da888f9",
+          "assertionExcerptSha256": "59010c0a1b23c8cb2015621314cd6d1037976c9397551a4cc29fa208fcc731c5"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "4.7.a",
+      "workflow": "Enforce trusted DHCP server paths, learn actual leases/bindings and validate renew/release/expiry.",
+      "remainingBoundary": "Logical snooping/rate/Option82 subset, not all hardware database-agent and stacking behavior.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/core.test.ts",
+          "selector": "DHCP snooping trust",
+          "line": 128,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "b3d6bfe7506eeb92af6a95cdcf9842df42b14e8fb08fc800b4eeb7e5c863c8f9"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "DHCP snooping learns",
+          "line": 303,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "f545007bc559dbe812d02a5b46ca59e6da505d49213333b6e7e3d2d023f1ce40"
+        },
+        {
+          "file": "tests/policy-closure.test.ts",
+          "selector": "validated DHCP RELEASE",
+          "line": 146,
+          "fileSha256": "ec4445d3c580cb3f7f918ff210aecdbe48e7ed7552efb4c8c3cabdd46da888f9",
+          "assertionExcerptSha256": "669546c35192abd1f79eabe664bae1ae18f299fd446d8b2fdfc13a1f2707928b"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "4.7.b",
+      "workflow": "Enforce DAI against learned/static bindings, ARP ACL and actual request/reply frame fields.",
+      "remainingBoundary": "Actual ARP admission/counters are modeled; not every hardware DAI validation option.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/policy-closure.test.ts",
+          "selector": "DAI validates request sender",
+          "line": 26,
+          "fileSha256": "ec4445d3c580cb3f7f918ff210aecdbe48e7ed7552efb4c8c3cabdd46da888f9",
+          "assertionExcerptSha256": "58dfb7d5e20fb9216ed15860e4d885f5daa52ce0f0aa5a162da5a463a269fbf8"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "static bindings and ARP ACLs",
+          "line": 354,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "5f17128198e07fde86d414769e8db7267a7a0045f9586795eba941c73baab350"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "4.7.c",
+      "workflow": "Generate actual storm traffic and observe configured suppression/shutdown/recovery.",
+      "remainingBoundary": "Bounded traffic-window/threshold behavior; every traffic class, unit/default and native counter mode is not independently compared.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/core.test.ts",
+          "selector": "storm-control shutdown recovers",
+          "line": 150,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "fdd42d762857c2500386f615c878c723a912c081a6cb59e3336d0e61a504e608"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "4.7.d",
+      "workflow": "Apply RA-guard roles/policies, drop actual unauthorized advertisements and restore permitted RA/SLAAC.",
+      "remainingBoundary": "Implemented logical IPv6 packet fields and policy scope; evasive binary extension-header/fragment parsing is outside this model.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/switching-compat.test.ts",
+          "selector": "VLAN RA-guard attachment",
+          "line": 52,
+          "fileSha256": "068e693053b769e104449417cb31b24ec3275f3ffe73bb2c0f54d1d019b1927e",
+          "assertionExcerptSha256": "85b4bab1dac05ca5c7912f080c3350b9a11cc0f6ca498382e901a9c9cce29a7c"
+        },
+        {
+          "file": "tests/core.test.ts",
+          "selector": "named RA guard checks",
+          "line": 537,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "00c1b5b191d9abe919659632b0320ff431d53249058a4901c54a01230dc40bb5"
+        },
+        {
+          "file": "tests/cli.test.ts",
+          "selector": "named RA guard roles",
+          "line": 278,
+          "fileSha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f",
+          "assertionExcerptSha256": "f6437161d6f97074d1094fae3c05e99301cbfb04daee65de7af292f3e2b88324"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "4.7.e",
+      "workflow": "Configure secure MAC/limits and enforce real MAC-move/aging/violation outcomes.",
+      "remainingBoundary": "Actual host admission is modeled; every violation/recovery/sticky persistence permutation is not established by these selectors.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/core.test.ts",
+          "selector": "port security rejects moves",
+          "line": 347,
+          "fileSha256": "c352248b26d483afbd29962e568c15631c341711a4e138af53283497a911edc5",
+          "assertionExcerptSha256": "782001fbdb0dc22f4b26899b0a5c2cfc79e81bb4730d27847436ef005d907794"
+        },
+        {
+          "file": "tests/endpoint.test.ts",
+          "selector": "ENDPOINT-07",
+          "line": 33,
+          "fileSha256": "e7b798699ab697b4f32003ab12dfc8f17eccd9b13a9f8eefd3b1be7969ba3782",
+          "assertionExcerptSha256": "509c9259dcb20a134f1836ec39c35d1c6be568063ad729ec0592b7212408a42a"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    },
+    {
+      "id": "5.5",
+      "workflow": "Use YAML/JSON inventory/tasks to issue packet-backed remote IOS commands/configuration and inspect structured results.",
+      "remainingBoundary": "Original offline Ansible-shaped teaching task subset. No installed Ansible/Python/Jinja/controller runtime, arbitrary collections, or external host execution.",
+      "evidenceScope": "direct-and-composed-invariants",
+      "assertionEvidence": [
+        {
+          "file": "tests/automation.test.ts",
+          "selector": "AUTO-01",
+          "line": 9,
+          "fileSha256": "0ade102f7dd2eb0fe8cea0f87a6e411a0160efedcff759b327b3f807cca512cc",
+          "assertionExcerptSha256": "9cc0b7e32718ac42260e079c42de1979b23ca8bce999a23911667b8440faff83"
+        },
+        {
+          "file": "tests/automation.test.ts",
+          "selector": "AUTO-03",
+          "line": 13,
+          "fileSha256": "0ade102f7dd2eb0fe8cea0f87a6e411a0160efedcff759b327b3f807cca512cc",
+          "assertionExcerptSha256": "8d39fb191b33d09ce7e34229333aa211f857d96041ba10cc6cae1d6c14e7c241"
+        },
+        {
+          "file": "tests/automation.test.ts",
+          "selector": "AUTO-04",
+          "line": 15,
+          "fileSha256": "0ade102f7dd2eb0fe8cea0f87a6e411a0160efedcff759b327b3f807cca512cc",
+          "assertionExcerptSha256": "1da73f9e3cf736eac699ec657e57252d7c4111a6159a1ea5c09b0231b0a0a159"
+        },
+        {
+          "file": "tests/automation.test.ts",
+          "selector": "AUTO-09",
+          "line": 25,
+          "fileSha256": "0ade102f7dd2eb0fe8cea0f87a6e411a0160efedcff759b327b3f807cca512cc",
+          "assertionExcerptSha256": "917096004b2271b8efc0b14a6e1c8e3d669fd85f0114fa0f407a28337a411b72"
+        }
+      ],
+      "workflowAssessment": "available within stated teaching model",
+      "nativeEquivalenceClaim": false,
+      "broadMatrixCaseIds": [
+        "auto-config",
+        "auto-failure",
+        "auto-authz",
+        "json"
+      ],
+      "caseEvidenceReview": "Explicit broad-matrix cases are bounded and consistent with their stated assertions; supplemental selectors provide workflow-specific evidence where the semantic matrix only had subsystem candidates."
+    }
+  ]
+}

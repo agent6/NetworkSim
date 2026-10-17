@@ -123,14 +123,14 @@ test('VTPv1/v2 higher revisions propagate from clients and servers, preserve ext
     const send = () => { const request = sim.udpRequest(a.id, '192.0.2.2', 9000, { version }, { timeout: 1000 }); sim.advance(1500); return request; };
     assert.equal(send().status, 'success');
     const cli = new IOSSession(sim, left.id);
-    commands(cli, 'enable', 'configure terminal', 'vlan 20', 'name RENAMED', 'end');
+    commands(cli, 'enable', 'configure terminal', 'vlan 20', 'name RENAMED', 'end');sim.advance(20);
     assert.equal(left.config.features.vtp.revision, 6); assert.equal(right.config.features.vtp.revision, 6); assert.equal(right.config.vlans[20]?.name, 'RENAMED');
-    right.config.features.vtp.revision = 8; sim.changed();
+    right.config.features.vtp.revision = 8; sim.changed();sim.advance(20);
     assert.equal(left.config.features.vtp.revision, 8, 'A server accepts a higher received client revision even if the VLAN payload is unchanged');
-    right.config.vlans[30] = { id: 30, name: 'CONFLICT', active: true }; sim.changed();
+    right.config.vlans[30] = { id: 30, name: 'CONFLICT', active: true }; sim.changed();sim.advance(20);
     assert.equal(left.config.vlans[30], undefined, 'An equal-revision conflicting database must not overwrite its peer');
     assert.equal(left.config.features.vtp.revision, 8, 'Learned revisions do not increment on later recomputation');
-    commands(cli, 'configure terminal', 'no vlan 20', 'end');
+    commands(cli, 'configure terminal', 'no vlan 20', 'end');sim.advance(20);
     assert.equal(left.config.features.vtp.revision, 9); assert.equal(right.config.features.vtp.revision, 9); assert.equal(right.config.vlans[20], undefined);
     assert.ok(right.config.vlans[2000]); assert.equal(send().status, 'failure', 'Removing the distributed VLAN removes its actual broadcast domain');
   }

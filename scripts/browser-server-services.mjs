@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
+import {createHash} from 'node:crypto';
 import {readFile, writeFile, mkdir} from 'node:fs/promises';
 import http from 'node:http';
 import {Simulator} from '../src/engine.ts';
@@ -9,7 +10,7 @@ const require=createRequire(import.meta.url),{chromium}=require(process.env.NETW
 const sim=new Simulator(20261016),pc=sim.addDevice('pc',250,250),host=sim.addDevice('server',600,250);
 sim.connect({deviceId:pc.id,port:'GigabitEthernet0'},{deviceId:host.id,port:'GigabitEthernet0'});
 Object.assign(host.config.interfaces.GigabitEthernet0,{ip:'192.0.2.1',mask:'255.255.255.0'});
-Object.assign(pc.config.interfaces.GigabitEthernet0,{ip:'192.0.2.50',mask:'255.255.255.0'});
+Object.assign(pc.config.interfaces.GigabitEthernet0,{ip:'192.0.2.50',mask:'255.255.255.0'});delete pc.config.interfaces.GigabitEthernet0.features.dhcp;
 host.config.services.dhcp={enabled:true,pools:[{name:'LAN',network:'192.0.2.0',prefix:24,defaultRouter:'192.0.2.1',leaseSeconds:3600}],excluded:[{start:'192.0.2.1',end:'192.0.2.9'}]};
 host.config.services.tftp={enabled:true,files:{'old.cfg':'retained'}};host.config.services.sshFiles={enabled:true,files:{'old.txt':'retained'}};
 host.config.features.users={student:{password:'labpassword',privilege:15}};
@@ -29,14 +30,14 @@ try {
   await page.goto('http://127.0.0.1:'+server.address().port);
   await page.locator('#import-input').setInputFiles({name:'server-services.netsim.yaml',mimeType:'application/yaml',buffer:Buffer.from(serializeLabFile(sim.serialize()))});
   await services();
-  assert.deepEqual(await page.locator('[data-service-tab]').allTextContents(),['DNS','DHCP','HTTP','AAA','NTP','Syslog']);
+  assert.deepEqual(await page.locator('[data-service-tab]').allTextContents(),['DNS','DHCP','HTTP','AAA','NTP','FTP','Syslog']);
   for(const [label,control] of [['NTP','[name=ntp-enabled]'],['Syslog','[name=syslog-enabled]']]) {
     await tab(label).click();assert.equal(await page.locator(control).isVisible(),true);
     assert.equal(await page.locator('[data-service-section]:visible').count(),1);
     assert.equal(await tab(label).getAttribute('aria-selected'),'true');
   }
   assert.equal(await page.locator('[name^=tftp-],[name^=ssh-files]').count(),0);
-  check('The server exposes its six remaining service tabs and no TFTP or SCP/SFTP controls');
+  check('The server exposes its seven service tabs and no TFTP or SCP/SFTP controls');
   await tab('DNS').focus();await page.keyboard.press('ArrowRight');assert.equal(await tab('DHCP').getAttribute('aria-selected'),'true');
   await page.keyboard.press('End');assert.equal(await tab('Syslog').getAttribute('aria-selected'),'true');
   await page.keyboard.press('Home');assert.equal(await tab('DNS').getAttribute('aria-selected'),'true');
@@ -72,7 +73,7 @@ try {
   await services();await tab('DHCP').click();await page.waitForSelector('[data-dhcp-lease-empty]');assert.match(await page.locator('[data-dhcp-lease-empty]').textContent(),/No active leases/);
   check('Released leases disappear from the DHCP lookup');
   assert.deepEqual(errors,[]);check('No browser page errors');
-  await writeFile(folder+'/results.json',JSON.stringify({generatedAt:new Date().toISOString(),checks,errors},null,2)+'\n');
+  const result=JSON.stringify({generatedAt:new Date().toISOString(),browser:await browser.version(),fixture:'Isolated public YAML import in local static HTML preview',artifact:{path:'dist/index.html',sha256:createHash('sha256').update(html).digest('hex')},checks,errors},null,2)+'\n';await writeFile(folder+'/results.json',result);await writeFile('docs/audits/server-services-browser-validation.json',result);
 } catch(error) {
   await page.screenshot({path:folder+'/failure.png'});console.error(error);console.error(errors);process.exitCode=1;
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}

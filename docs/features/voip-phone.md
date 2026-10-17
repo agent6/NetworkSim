@@ -34,4 +34,4 @@ This node models network attachment and PC bridging. SIP/SCCP registration, dial
 
 Behavior follows Cisco's documented [voice-VLAN attachment and unchanged untagged PC traffic](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst_digital_building_series_switches/software/15-2_7_e/configuration_guide/b_1527e_consolidated_cdb_cg/m_vlan_voice_cg_2960-x.html). All node artwork is one newly generated family of ten flat gray diagram symbols with transparent backgrounds.
 
-Validation: `tests/phone.test.ts`, `tests/phone-audit.test.ts`, `tests/endpoint.test.ts`, `tests/poe.test.ts`, and `node scripts/browser-phone.mjs`. The [independent audit tests](../../tests/phone-audit.test.ts) cover IPv6 passthrough, loop limits, import validation and boot cancellation.
+Validation: `tests/phone.test.ts`, `tests/phone-audit.test.ts`, `tests/endpoint.test.ts`, `tests/poe.test.ts`, and `node scripts/browser-phone.mjs`. The [independent audit](../audits/phone-fidelity.md) records actual IPv6 passthrough, loop limits, import validation and boot cancellation checks.

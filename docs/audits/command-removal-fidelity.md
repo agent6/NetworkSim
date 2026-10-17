@@ -30,7 +30,7 @@ The final old-VM follow-up also exposed a missing `no debug interface` alias. Th
 - `no snmp-server chassis-id` takes no old text value. The [Cisco SNMP command reference](https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/snmp/command/nm-snmp-cr-book/nm-snmp-cr-s2.html) supports the current strict argument-free removal.
 - Bare interface `no udld` is not a substitute for the modeled `no udld port` form; physical UDLD is not a subinterface protocol.
 - Standalone autonomous-system removal does not replace removing the named EIGRP address-family header.
-- WRED/fair-queue and OSPF `capability vrf-lite` remain unsupported. The latter requires PE DN-bit/VPN-tag/super-backbone mechanisms absent from the current logical LSA model. Adding a stored boolean would not implement its effect.
+- Router WRED/fair-queue now schedule and mark/drop actual traffic; the selected Catalyst profiles reject that router syntax. See [congestion evidence](qos-congestion-fidelity.md). OSPF `capability vrf-lite` remains unsupported because it requires PE DN-bit/VPN-tag/super-backbone mechanisms absent from the current logical LSA model. Adding a stored boolean would not implement its effect.
 - The older `test etherchannel load-balance` form is not established for the pinned9300 reference, which documents `show platform etherchannel ...`. It remains a legacy compatibility gap, not a certified missing9300 command.
 
 The QoS no-form, three-color default-drop and EIGRP BFD rendering repairs have their own packet/persistence regressions in the [wired findings](wired-fidelity-audit.md). Every whole-command and native-reference limitation remains visible; this follow-up does not certify all argument paths or the complete CLI.

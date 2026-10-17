@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-10-17T02:17:38.446Z",
+  "browser": "155.0.8059.84",
+  "artifact": {
+    "file": "index.html",
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+  },
+  "checks": [
+    "Ten distinct ImageGen icons render in the palette and workspace",
+    "All ten symbols remain consistent and visible in dark mode",
+    "A disconnected phone has no simulated local power and cannot request DHCP",
+    "The live phone panel shows PoE, learned voice policy, voice DHCP and both port peers",
+    "Renew DHCP runs through the actual phone voice interface",
+    "Phone IP settings use the Network uplink and preserve DHCP addressing",
+    "The PC obtains a data-subnet lease and passes real traffic through the phone",
+    "Inspector and context menu provide no manual phone power toggle",
+    "Switch inline-power shutdown takes the phone and PC passthrough carrier down",
+    "Restoring switch PoE reboots the phone and reacquires its voice configuration",
+    "Both themes and browser reload retain the real two-port phone topology",
+    "No browser page errors"
+  ],
+  "errors": []
+}

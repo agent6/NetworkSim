@@ -1,6 +1,10 @@
 {
-  "generatedAt": "2026-10-17T00:55:18.723Z",
+  "generatedAt": "2026-10-17T02:15:56.475Z",
   "browser": "155.0.8059.84",
+  "artifact": {
+    "path": "dist/index.html",
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+  },
   "fixture": "public YAML import in isolated headless profile; local static HTML preview",
   "checks": [
     "Imported an isolated four-node accounting lab through public YAML import",

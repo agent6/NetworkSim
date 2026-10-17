@@ -1,0 +1,48 @@
+{
+  "generatedAt": "2026-10-17T02:21:12.853Z",
+  "browser": "155.0.8059.84",
+  "url": "http://127.0.0.1:50149",
+  "artifact": {
+    "path": "dist/index.html",
+    "bytes": 3406080,
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+  },
+  "sourceDigests": [
+    {
+      "path": "src/main.ts",
+      "sha256": "01fabb18e86c80dc326dcafcebbd73710ff41985cf78420973ff802004f23d29"
+    },
+    {
+      "path": "src/styles.css",
+      "sha256": "c608c29165f5abcebdda3c8c46ab7bf5ddbb6b0c1cf07ddc6b82a3310f979cc7"
+    },
+    {
+      "path": "src/wireless-ui.ts",
+      "sha256": "47177246aea4d41522d74537c3ac333006f25fd7619f66af0f8d28853ca78ce4"
+    },
+    {
+      "path": "src/wireless.ts",
+      "sha256": "5edfe969791ff34ec80260b44bd345cd41de5088163abcb6334cd132c6bb3a23"
+    },
+    {
+      "path": "src/poe.ts",
+      "sha256": "aed9cfaadfa18f8a3cd74c256fd342a06a48cc3d7357f084ee08cf411c29d57c"
+    },
+    {
+      "path": "tests/fixtures/wireless-lab.ts",
+      "sha256": "53fe6d2f6aff9b116493f4ce1a0a54281eddc06d6ae8ab63dd74c8bb4bc1bcfd"
+    }
+  ],
+  "fixture": "Campus wireless fixture; public AP coverage toggle, zoom/theme, saved workspace reload and actual PoE port removal",
+  "checks": [
+    "Selecting estimated coverage renders it immediately without Apply",
+    "Coverage has visible shading, a contrasting outline, inner ring and range label",
+    "Zoom preserves the visible coverage outline",
+    "Coverage remains visible in dark mode",
+    "Unselecting coverage removes it immediately",
+    "Coverage selection survives closing settings and reloading the saved workspace",
+    "An unpowered AP explains why its enabled coverage display is unavailable",
+    "No browser page errors"
+  ],
+  "errors": []
+}

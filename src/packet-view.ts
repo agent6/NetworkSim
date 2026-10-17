@@ -2,9 +2,11 @@ import type { PacketSummary, SimEvent } from "./model.ts";
 
 const servicePorts: Record<string, number[]> = {
   DNS: [53],
+  SNMP: [161,162],
   DHCP: [67, 68, 546, 547],
   HTTP: [80],
   SSH: [22],
+  FTP: [21,...Array.from({length:32},(_,i)=>50000+i)],
   TELNET: [23],
   NTP: [123],
   TFTP: [69],
@@ -50,7 +52,7 @@ export function packetGroups(packet: PacketSummary) {
   };
   const groups = [
     group("802.11 and wireless transport",["frameType","subtype","bssid","ssid","channel","band","rssi","snr","rate","eapType","keyMessage","replayCounter","micValidated","innerFrameId"]),
-    group("Ethernet", ["sourceMac", "destinationMac", "vlan"]),
+    group("Ethernet", ["sourceMac", "destinationMac", "vlan", "cos"]),
     group("Addresses and forwarding", [
       "source",
       "destination",
@@ -58,6 +60,7 @@ export function packetGroups(packet: PacketSummary) {
       "ttl",
       "size",
       "dscp",
+      "ecn",
       "ipVersion",
       "df",
       "fragmentOffset",

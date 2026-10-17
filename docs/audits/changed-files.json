@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-17T01:04:05.941Z",
+  "generatedAt": "2026-10-17T02:23:18.457Z",
   "scope": "Explicit source/test review surface for this audit and retained concurrent work. No immutable pre-audit source snapshot exists; this is not a Git diff, authorship attribution, or exhaustive historical edit count.",
   "baseline": "Checkout was already untracked; no reset or blanket commit was made.",
   "concurrentWork": "AP controller displays, WLC reference dropdowns and server service removal were introduced concurrently and preserved. The shared packaging now delivers index.html; the wireless lab fixture was moved out of the product into tests/fixtures/wireless-lab.ts and browser workflows use public YAML import. This audit also repaired defects in these shared files.",
@@ -29,8 +29,17 @@
       "groups": [
         "gui-and-retained-concurrent-work"
       ],
-      "sha256": "377c82ab9565acb1c080c9bcd8c3427055c391d62c7fb5a28c05060dd4ff45dc",
-      "bytes": 3439
+      "sha256": "59ee059361c53187b55a25f9db19b0b8ceaed720a8d445d36c8d9840479f606e",
+      "bytes": 3897
+    },
+    {
+      "path": "src/automation.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "35335e64d32da7ff3fba92eb7850732fdc10268e99fde6806f251ca283610518",
+      "bytes": 18399
     },
     {
       "path": "src/bgp-compat.ts",
@@ -56,8 +65,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "01913600f41280e888b9292a9688067874b8d0d989b2bc668942d61ddfca4e24",
-      "bytes": 302467
+      "sha256": "43eac0ea22100892175146b727badf420524997fb4be88f10a1ede48a5111095",
+      "bytes": 312053
     },
     {
       "path": "src/config-renderer.ts",
@@ -65,8 +74,8 @@
       "groups": [
         "shared-engine-and-persistence"
       ],
-      "sha256": "df2513507e8900503d897a6143dd1fb7eed8a54bb46f947e139181616cd61e26",
-      "bytes": 63037
+      "sha256": "79fdeb1bea16b17ab8594bc720f88ba3d11eef96a4951ac88e0e12fba51cad38",
+      "bytes": 64941
     },
     {
       "path": "src/control-plane.ts",
@@ -74,8 +83,8 @@
       "groups": [
         "wired-protocols-and-physical-links"
       ],
-      "sha256": "c3f9c4fd6eeee881736dbd6acabcf548236c4147cf5dccc4322078f24e775c37",
-      "bytes": 236620
+      "sha256": "67f79f10fc4815e3f31c68789e479187eeaa6a04d12ae409c62a90283b0601fd",
+      "bytes": 248084
     },
     {
       "path": "src/discovery.ts",
@@ -83,8 +92,8 @@
       "groups": [
         "wired-protocols-and-physical-links"
       ],
-      "sha256": "157366ba698c3d70b0a70b3c7cdf3ec68b84bda655c0c49a355c25eecefbff27",
-      "bytes": 6811
+      "sha256": "d5dcb722034015246a8ba4e732e6bb26dbf5f16aae091d2448b0b6a8fd2eb0ed",
+      "bytes": 9884
     },
     {
       "path": "src/dns-service.ts",
@@ -96,13 +105,31 @@
       "bytes": 4109
     },
     {
+      "path": "src/eigrp-updates.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "7b48db7f68486285a35766655c45e38c4268e4f059835593a49d009f31356f03",
+      "bytes": 11422
+    },
+    {
+      "path": "src/endpoint.ts",
+      "role": "source",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "1a83ed29d862340f2fd6e7ded10bca4de2c06fecd1678e2042c4c887c936887f",
+      "bytes": 4662
+    },
+    {
       "path": "src/engine.ts",
       "role": "source",
       "groups": [
         "shared-engine-and-persistence"
       ],
-      "sha256": "c88f5ec22471c66fd22ea211920cbbcbf999f30c090f0e9c05b90bb6aba2ca1c",
-      "bytes": 169490
+      "sha256": "d3b507fad1cdab29d6e07deb36d2fd05586e5fd46de4e55e4fe9296e69399042",
+      "bytes": 175609
     },
     {
       "path": "src/ethernet.ts",
@@ -110,8 +137,8 @@
       "groups": [
         "wired-protocols-and-physical-links"
       ],
-      "sha256": "ef74152eaccd75792ad1ebd2b2a7cc04eba57fa1c0dc3bb41a657e9f70245095",
-      "bytes": 2861
+      "sha256": "073e8c822c41abe2d04614399217e9f984b92ff14610bd97f8dda9b8c1796cf3",
+      "bytes": 3140
     },
     {
       "path": "src/filesystem.ts",
@@ -121,6 +148,33 @@
       ],
       "sha256": "1b6ad1181e37079313a21a31eb231f4e7bf4c1ec82996c032713fa1b8efb6a3e",
       "bytes": 1316
+    },
+    {
+      "path": "src/ftp-files.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "ba40cb167453e6b983eeaf5c8b482afd2a0cda98c1cf14695b0ae607503a6356",
+      "bytes": 15023
+    },
+    {
+      "path": "src/ftp-ui.ts",
+      "role": "source",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "6a34d0d477ebbb32eb6936181c6b22e6834ac8610d179dac8794ae5d5dcdb2f9",
+      "bytes": 4352
+    },
+    {
+      "path": "src/host-os.ts",
+      "role": "source",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "1a9803771c5488ec910fb90d04f2c51100648ea52d9f8cd70b7632f149e14be1",
+      "bytes": 617
     },
     {
       "path": "src/http-service.ts",
@@ -141,6 +195,24 @@
       "bytes": 6071
     },
     {
+      "path": "src/ios-endpoint.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "fa005c985648727ab79feb9e0b8eafeac15a334431efafdd4f25251ca3d7662d",
+      "bytes": 5289
+    },
+    {
+      "path": "src/ios-ftp.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "0419330366b2272120d54d829426289a9125c3e69d44303fcdcf6d3ee3478a59",
+      "bytes": 8728
+    },
+    {
       "path": "src/ios-maintenance.ts",
       "role": "source",
       "groups": [
@@ -155,8 +227,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "4a9b5d4eeab04c5ff4fa8e8c9fbeba0992cbd3ac584c2f09364466fc871055f3",
-      "bytes": 15065
+      "sha256": "bf6d5a1ec930de3187a2b2337d76cda56d4071357878102b4609cdf799f1348c",
+      "bytes": 15033
     },
     {
       "path": "src/ios-poe.ts",
@@ -168,13 +240,22 @@
       "bytes": 2650
     },
     {
+      "path": "src/ios-routing-compat.ts",
+      "role": "source",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "29dc503b0b66a8df8fd7d479c80159d874acded24330d8d3936cfb25677ba5e0",
+      "bytes": 41896
+    },
+    {
       "path": "src/ios-show-enterprise.ts",
       "role": "source",
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "ecaa01117feb441fcb8adbcd9a4223c464ebcb008ff223fedf11d8ac43aa4e26",
-      "bytes": 38915
+      "sha256": "f6f9fdd0be17b371cbc1eca69c1f5a148eb5060bdc5be11bc1685fc3518e70c1",
+      "bytes": 40319
     },
     {
       "path": "src/ios-show-operational.ts",
@@ -182,8 +263,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "1594d1013bb60dd24bb39d3570948cca254a4a833656cead8712f455dfce0d2c",
-      "bytes": 22547
+      "sha256": "da35752f04608497ea4e5f71e3eb413f5b6221eabff8d39507bc20f4df901c01",
+      "bytes": 22606
     },
     {
       "path": "src/ios-show-switching.ts",
@@ -191,8 +272,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "fbb993f96fcf58c49c200b4ca87f5d24d30b1f26cc0203e2b193e0c14c22ba55",
-      "bytes": 14735
+      "sha256": "a97abb93cadcdf2942a153c354448ccc663d5f53a3ad5cd24270b0afb3c2bcce",
+      "bytes": 14909
     },
     {
       "path": "src/ios-show.ts",
@@ -200,8 +281,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "9c0f97e427736cfa2e26c90ac67497a90bfbaa7ff10267d49e4f2090a932b6d1",
-      "bytes": 72928
+      "sha256": "73e27e2792a9167566489e9c38c0a474c88b0071af2f245186c210d70e1b269d",
+      "bytes": 73672
     },
     {
       "path": "src/ios-snmp.ts",
@@ -209,8 +290,17 @@
       "groups": [
         "windows-and-network-services"
       ],
-      "sha256": "9961e71a83fa7a677bb93e371747fa8d4d9afc89bda90ce23791548ccd6e9f94",
-      "bytes": 10291
+      "sha256": "f0b24f295be375803b915b59d0727dcf9f3c4ea9fe5c58b579f9b75ba7061cfb",
+      "bytes": 10886
+    },
+    {
+      "path": "src/ios-standalone-ap.ts",
+      "role": "source",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "9e4a7c4a5e384591ab86e24d7a4d2e7fd530bc40ec4c22f4822d1e837059a3c6",
+      "bytes": 6248
     },
     {
       "path": "src/ios-switching-compat.ts",
@@ -218,8 +308,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "fe8bd3f861fcbffb38ea05a7f016754951342e77b50c9579a4a5dbb67e2fa87d",
-      "bytes": 25907
+      "sha256": "67ca71e82cd2d52c82be45561e21190c668f84cf46a39e09b085a5450a38bafd",
+      "bytes": 26387
     },
     {
       "path": "src/ios-syntax.ts",
@@ -227,8 +317,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "fe842f37689cf8b8d4850ebf4b0ed7c59f0db33b1babecb72b4d2907747cfe30",
-      "bytes": 53165
+      "sha256": "17e308ba9a3a11beb177c99eb20c56942f9633e6ac1d483b2afff97bdffeb564",
+      "bytes": 58082
     },
     {
       "path": "src/ios-wireless.ts",
@@ -236,8 +326,17 @@
       "groups": [
         "wireless-and-poe"
       ],
-      "sha256": "153910d45fa62c87ad1fb0c8ef04240e594c76901468f26825f27f500baaac7e",
-      "bytes": 16509
+      "sha256": "1718d0298290f13c143ba5d4c8d028e954d7aa387575c808a78bb181852fae3e",
+      "bytes": 22902
+    },
+    {
+      "path": "src/link-medium.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "ac8d49ae8389ffb1c7714f06909797c010bbd5d45d82799276561cdcda164814",
+      "bytes": 3620
     },
     {
       "path": "src/mac-aging.ts",
@@ -249,13 +348,22 @@
       "bytes": 601
     },
     {
+      "path": "src/mac-table.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "8ad8ae4c9bcd770f4b63e4e2ea578bc716280999f77e915b048775175fc946f2",
+      "bytes": 2126
+    },
+    {
       "path": "src/main.ts",
       "role": "source",
       "groups": [
         "gui-and-retained-concurrent-work"
       ],
-      "sha256": "1b9710d8a17ec479a87f0f1fb68a9cb779680275893944e748f52ee07e035c48",
-      "bytes": 123636
+      "sha256": "01fabb18e86c80dc326dcafcebbd73710ff41985cf78420973ff802004f23d29",
+      "bytes": 129097
     },
     {
       "path": "src/management.ts",
@@ -281,8 +389,8 @@
       "groups": [
         "shared-engine-and-persistence"
       ],
-      "sha256": "f65036f4a762cecc7ee0a9dc479edf6f776820645ac4d34e241155b76a58a93c",
-      "bytes": 6982
+      "sha256": "bea6197aaeea4aa6b3171547653a6a76d562ee0b5884bbbfdd30e26b9477e114",
+      "bytes": 7442
     },
     {
       "path": "src/network-tools-ui.ts",
@@ -290,8 +398,17 @@
       "groups": [
         "gui-and-retained-concurrent-work"
       ],
-      "sha256": "12a7c88e8f8f26a00ec1e1f1c430fa80a84c2bf01b63b0a1e1f5e3872fde4937",
-      "bytes": 5906
+      "sha256": "95ed577f071ce4e0eddcf2a02395dedae84b58408c055bf59e9358b87e9f9c17",
+      "bytes": 11982
+    },
+    {
+      "path": "src/ospf-packets.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "0b4d95c8e5eb07990a6614fd7d03570a141b0f7284cc1b2123e291c4587d5e82",
+      "bytes": 35613
     },
     {
       "path": "src/packet-policy.ts",
@@ -299,8 +416,8 @@
       "groups": [
         "wired-protocols-and-physical-links"
       ],
-      "sha256": "9143aa94533ba9d501d60b3033a75a23cf1294bb750d0c1da11c9bb7a0f85c8d",
-      "bytes": 38111
+      "sha256": "935a268673869e4bf064e5b36a9169a3774a79bcc24e3b04daac2f5e1c655ab4",
+      "bytes": 38134
     },
     {
       "path": "src/persistence.ts",
@@ -308,8 +425,26 @@
       "groups": [
         "shared-engine-and-persistence"
       ],
-      "sha256": "e9a25a57c29a59cf4a8106fea616257e4c0f728293051801962ffef95175e5ee",
-      "bytes": 13534
+      "sha256": "6481ec7b59c72ada82eceaf2f3729b891be9c1110d34cb02a3a613e42d8e32bc",
+      "bytes": 14300
+    },
+    {
+      "path": "src/phone-ui.ts",
+      "role": "source",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "b9e09ffa3bee5e0605438ae94af9644e21226d258b9324046bdb73e89f2ee0c2",
+      "bytes": 3496
+    },
+    {
+      "path": "src/phone.ts",
+      "role": "source",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "bb723918b9c8c57498d2d2318eaeb8405b13e262a0793aca05aa100e5ac29f1c",
+      "bytes": 2412
     },
     {
       "path": "src/poe-ui.ts",
@@ -317,8 +452,8 @@
       "groups": [
         "gui-and-retained-concurrent-work"
       ],
-      "sha256": "8e8adb580315ea18b2ea87974b7713822e30b1a5571c3171950fd44f5b44b7b3",
-      "bytes": 3974
+      "sha256": "9c1732894bd6f49d2b5d82b2ada24db7d4f1acb99892c56707b8797a45323e55",
+      "bytes": 4135
     },
     {
       "path": "src/poe.ts",
@@ -326,8 +461,17 @@
       "groups": [
         "wireless-and-poe"
       ],
-      "sha256": "c376dcb2718f48ba545d09ee441205c56602b7e14a3854a33ab8ad9b64051d45",
-      "bytes": 6614
+      "sha256": "aed9cfaadfa18f8a3cd74c256fd342a06a48cc3d7357f084ee08cf411c29d57c",
+      "bytes": 8107
+    },
+    {
+      "path": "src/qos-congestion.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "bd8b99a3a2205f7b578029198e002d257b8e5df7720107456685eac061dd91e8",
+      "bytes": 3011
     },
     {
       "path": "src/qos-scheduler.ts",
@@ -335,8 +479,8 @@
       "groups": [
         "wired-protocols-and-physical-links"
       ],
-      "sha256": "b0007780baeb2fb7aecf81172dc4ed5c1c82cada17043f2f5071671ff10d1fc4",
-      "bytes": 12391
+      "sha256": "47726bc175f916d8dfabbc7a1b9fccc2fc44ae015bd62660eaadea5d87c77976",
+      "bytes": 17876
     },
     {
       "path": "src/record-map.ts",
@@ -353,8 +497,26 @@
       "groups": [
         "gui-and-retained-concurrent-work"
       ],
-      "sha256": "d51cb23c472c0d70d54eff3e4e73d5d8713115c854beb24f5e6b0d039beff476",
-      "bytes": 24579
+      "sha256": "fa694fe754f07535d25aaf4129695435f3adfd4a4677d0140e18d0ce5b611601",
+      "bytes": 24853
+    },
+    {
+      "path": "src/snmp-manager-config.ts",
+      "role": "source",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "c2c05e72b7b7132c4a5b2a4d29274d4ec1c828917364cb8d8ffecd2f175e234b",
+      "bytes": 2744
+    },
+    {
+      "path": "src/snmp-manager-ui.ts",
+      "role": "source",
+      "groups": [
+        "gui-and-retained-concurrent-work"
+      ],
+      "sha256": "86bade24b7039c84c8e4ddf9de6e4c624bc6d4af0d938f86e93cf76fe3a701df",
+      "bytes": 2160
     },
     {
       "path": "src/snmp.ts",
@@ -362,8 +524,8 @@
       "groups": [
         "windows-and-network-services"
       ],
-      "sha256": "8fc9de6c1ca705814a4665e401e00051c1fe41e628bb89ef85cb4e4b48a7ab5b",
-      "bytes": 15239
+      "sha256": "12201cdec8c6e3febf4c80721d0bfdc7057b209bdfcc5a416eb5e669f8746b82",
+      "bytes": 24268
     },
     {
       "path": "src/ssh-files.ts",
@@ -375,6 +537,24 @@
       "bytes": 4466
     },
     {
+      "path": "src/standalone-ap.ts",
+      "role": "source",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "6f8281fbb5afbac341fdd79b335727bcd62a75663619719bb68fe5c34c6e9c97",
+      "bytes": 9527
+    },
+    {
+      "path": "src/switching-messages.ts",
+      "role": "source",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "c1e111cff284048bdb85056969131e53c37a66803941397d00cf4f2d9ecde463",
+      "bytes": 10971
+    },
+    {
       "path": "src/tcp-channel.ts",
       "role": "source",
       "groups": [
@@ -384,13 +564,22 @@
       "bytes": 20815
     },
     {
+      "path": "src/unix-cli.ts",
+      "role": "source",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "48e366a4292844ef907fec531721785f14e8fe5f5145593ee2177ab193c56c4c",
+      "bytes": 34027
+    },
+    {
       "path": "src/windows-cli.ts",
       "role": "source",
       "groups": [
         "windows-and-network-services"
       ],
-      "sha256": "9902c89fe4cc290db1c9a825cfafa724098cc514c43446b8f13171dfbe351942",
-      "bytes": 46522
+      "sha256": "b2fa25f7bd12dafe2439498d936c45a17ee15920bb1f72d241da9fd681a8c2b2",
+      "bytes": 52732
     },
     {
       "path": "src/wireless-controller-form.ts",
@@ -398,8 +587,8 @@
       "groups": [
         "wireless-and-poe"
       ],
-      "sha256": "d2d60084f5d66cab4a2c72669d2194b3037c4d12e13ebb9878cbf40b936a55cc",
-      "bytes": 9146
+      "sha256": "c18dcde3b56776c6d8c5f2d177794c4e6f2b75b192554cd093c19c4dc42cf1d7",
+      "bytes": 10569
     },
     {
       "path": "src/wireless-model.ts",
@@ -407,8 +596,17 @@
       "groups": [
         "wireless-and-poe"
       ],
-      "sha256": "3ccdff30259d573fb38890a5b745e2f5867f0def04d729c09d0e5011b213767f",
-      "bytes": 8607
+      "sha256": "5269ce51919ab50b80a48023d8e1f240ad3c1b0be1a74317f97b942e68bc6e4e",
+      "bytes": 11011
+    },
+    {
+      "path": "src/wireless-policy.ts",
+      "role": "source",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "b22a7d7458fc512931a701c3437ce2be086e5b17741905d908e291094acbaca5",
+      "bytes": 2659
     },
     {
       "path": "src/wireless-ui.ts",
@@ -416,8 +614,8 @@
       "groups": [
         "gui-and-retained-concurrent-work"
       ],
-      "sha256": "b20142b67960ceff3b99e482eb08eb201aa3023e9ded1dd84888f1e354accff2",
-      "bytes": 27750
+      "sha256": "47177246aea4d41522d74537c3ac333006f25fd7619f66af0f8d28853ca78ce4",
+      "bytes": 29707
     },
     {
       "path": "src/wireless.ts",
@@ -425,8 +623,26 @@
       "groups": [
         "wireless-and-poe"
       ],
-      "sha256": "aa7b4e36fe3bb2ba5bc33f6b02da2256e6b5b34dfd7f74fc384e974286437b78",
-      "bytes": 39537
+      "sha256": "5edfe969791ff34ec80260b44bd345cd41de5088163abcb6334cd132c6bb3a23",
+      "bytes": 49682
+    },
+    {
+      "path": "src/wlc-administration.ts",
+      "role": "source",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "ec0770870b64d78057f9215f3a50979cb3a21bd5d3d895c88124e5a9e887e046",
+      "bytes": 20894
+    },
+    {
+      "path": "src/wlc-monitoring.ts",
+      "role": "source",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "b027ae073db9fd236d7fcbbde67cfd3425b9c96008382ed7a500ae4939a606f4",
+      "bytes": 3914
     },
     {
       "path": "src/wlc-reference-ui.ts",
@@ -434,8 +650,8 @@
       "groups": [
         "gui-and-retained-concurrent-work"
       ],
-      "sha256": "4aad65c2165801c5dd330396f8fd978f273b1bda02824a2a965ba17b2657b3fe",
-      "bytes": 8366
+      "sha256": "620d546024a7c019705c6d4f3327757124720a8e9e56c5af31fe60b8b150375c",
+      "bytes": 9240
     },
     {
       "path": "tests/aaa-accounting.test.ts",
@@ -452,8 +668,17 @@
       "groups": [
         "wireless-and-poe"
       ],
-      "sha256": "80d167847c00dd048bb41b53685d581cfc7e81c8e99082a8c1e90f77a87fc3d0",
-      "bytes": 11901
+      "sha256": "f4a7789d8361015435f9a4e46abb17cf3112c1ae6130180490fd48d0f20c286d",
+      "bytes": 11948
+    },
+    {
+      "path": "tests/automation.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "0ade102f7dd2eb0fe8cea0f87a6e411a0160efedcff759b327b3f807cca512cc",
+      "bytes": 9332
     },
     {
       "path": "tests/bgp-multiprotocol.test.ts",
@@ -470,8 +695,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "62dd39b593fcf38b465df35ceeb8ba143599d1faa8eb9a6a38496764811898a6",
-      "bytes": 47761
+      "sha256": "05c669061cc5decadad02ce8312aa2cbb8d5c626ddbe43b38bc1b716a8ceb14f",
+      "bytes": 47821
     },
     {
       "path": "tests/dns-service.test.ts",
@@ -501,13 +726,76 @@
       "bytes": 3728
     },
     {
+      "path": "tests/eigrp-summary-metric.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "a1930a598e1151b958711395212b45342a17d402188bfd5945e4284ab53913f6",
+      "bytes": 5783
+    },
+    {
+      "path": "tests/eigrp-updates.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "ca83da2b73a694302e20a8e9f89fac0e4b6b3000668b312e23d2818653cae47f",
+      "bytes": 11747
+    },
+    {
+      "path": "tests/endpoint.test.ts",
+      "role": "tests",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "e7b798699ab697b4f32003ab12dfc8f17eccd9b13a9f8eefd3b1be7969ba3782",
+      "bytes": 17642
+    },
+    {
       "path": "tests/ethernet-physical.test.ts",
       "role": "tests",
       "groups": [
         "wired-protocols-and-physical-links"
       ],
-      "sha256": "38bf921f3e2a68fceb36bd04a6fa1b1febddfd173ffc48a6e4530423988a03e5",
-      "bytes": 11912
+      "sha256": "2a9f54733868a0e7e3b1349f70dcb09b42b23eb949df1839e848e4bf1d698eb6",
+      "bytes": 11943
+    },
+    {
+      "path": "tests/exam-routing-practicals.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "9f009b714bac49c6bb471872f5f75a559e99347db02104bcc5406eab9fc6c3c7",
+      "bytes": 14429
+    },
+    {
+      "path": "tests/ftp-files.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "f2b3e0ce3be69e2792e7a89f042f9d0e685b4e4f39333107717196ad492e2909",
+      "bytes": 7639
+    },
+    {
+      "path": "tests/ftp-gui.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "f96e9c94e519a59321e974de9d3a9bef351b03bd38959c76da25adfdc8005d6d",
+      "bytes": 2818
+    },
+    {
+      "path": "tests/ios-ftp.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "dd9a5f1ededd8d2422d491278283dae8a7f8529c70432ddb5833f30d1b44346d",
+      "bytes": 9712
     },
     {
       "path": "tests/ios-service-compat.test.ts",
@@ -533,8 +821,8 @@
       "groups": [
         "cli-and-platform"
       ],
-      "sha256": "b51fdffa6f9d03e9b6f65d00a8abbb01d154021bba0831c834c4a450f08eefbe",
-      "bytes": 15416
+      "sha256": "85a65edc92c73b43bc51d5e5b18e88ab06356ceadcb3aa3384aac5b2bff7cd95",
+      "bytes": 16655
     },
     {
       "path": "tests/ios-terminal.test.ts",
@@ -546,6 +834,15 @@
       "bytes": 10057
     },
     {
+      "path": "tests/link-medium.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "c302866cf07e6aebc436026c9cc6b533457b639dea3be11e08eb75354a91d226",
+      "bytes": 5706
+    },
+    {
       "path": "tests/mac-aging.test.ts",
       "role": "tests",
       "groups": [
@@ -553,6 +850,15 @@
       ],
       "sha256": "f3f4ed3cc127d9da472cd07164547f4aa68a41183baaff8c2b6fd8d27c6f9147",
       "bytes": 3313
+    },
+    {
+      "path": "tests/mac-capacity.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "d1e5472320a6994c4573a2c0777f0a23c70a0df0e7fc10b90ea0936831a6d962",
+      "bytes": 3236
     },
     {
       "path": "tests/management.test.ts",
@@ -573,6 +879,24 @@
       "bytes": 22577
     },
     {
+      "path": "tests/ospf-area-auth.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "23a15027ec6d4704f623fafce8cb78bea85035dbcf80b01912512e0652dc1d63",
+      "bytes": 7312
+    },
+    {
+      "path": "tests/parser-audit-regressions.test.ts",
+      "role": "tests",
+      "groups": [
+        "cli-and-platform"
+      ],
+      "sha256": "29a0df8603f0b4e1a5008c070bb142d6b5db2d726b241eb97919559c2639a7cc",
+      "bytes": 3760
+    },
+    {
       "path": "tests/persistence.test.ts",
       "role": "tests",
       "groups": [
@@ -580,6 +904,24 @@
       ],
       "sha256": "b9a836b5dfbba71f93a0aa47ff6ee5729ea079fdc59f766583553c32abf09425",
       "bytes": 7546
+    },
+    {
+      "path": "tests/phone-audit.test.ts",
+      "role": "tests",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "03686a4f30164420b5a47b86afb242eedd97d91768500332347353f4cd7dbd36",
+      "bytes": 7244
+    },
+    {
+      "path": "tests/phone.test.ts",
+      "role": "tests",
+      "groups": [
+        "shared-engine-and-persistence"
+      ],
+      "sha256": "00436d1c7e4a4aafc65770ba012a1df9b8d864b647abe77eb33d8c211fae3372",
+      "bytes": 10537
     },
     {
       "path": "tests/platform-fidelity.test.ts",
@@ -596,8 +938,17 @@
       "groups": [
         "wireless-and-poe"
       ],
-      "sha256": "2c26b9863877eed2ac77bf44c35af7ef3fc31a18dbd0e20b94365d39b9f9027b",
-      "bytes": 11205
+      "sha256": "31a2804d9e8b9b3b95ce5a12b21f430b1729ed2d9690355c92fc3f8c2d043f73",
+      "bytes": 12674
+    },
+    {
+      "path": "tests/qos-congestion.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "5f210fd7529ecb89832e408f1035c2763432a18f78e97aa2e986a782bcab9040",
+      "bytes": 14815
     },
     {
       "path": "tests/qos-parity.test.ts",
@@ -614,8 +965,8 @@
       "groups": [
         "wired-protocols-and-physical-links"
       ],
-      "sha256": "6d31471d5c82e243060bb5a75e08df10f076dba1c9d8e529971cf721275085c6",
-      "bytes": 13089
+      "sha256": "ea211c2dacd70e0866b139e58c95f6b263373cb77b5d1f4a9050e7ebbd8c5775",
+      "bytes": 13110
     },
     {
       "path": "tests/record-maps.test.ts",
@@ -623,8 +974,8 @@
       "groups": [
         "shared-engine-and-persistence"
       ],
-      "sha256": "06a2cc593d0d7eda57e41625fc15c52fde78efb7df45a7d3e26a1397d88369a8",
-      "bytes": 8523
+      "sha256": "0a4f6e6df7b8987d6a39ef8d6f4cbf8741f8fc7a5e16ae3e1ac156f094650872",
+      "bytes": 8580
     },
     {
       "path": "tests/remote-span.test.ts",
@@ -645,6 +996,15 @@
       "bytes": 9873
     },
     {
+      "path": "tests/snmp-advanced.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "8ecec49241daed90111db5f77da85ec0c3c94ece8a369754bc4d44abf7716597",
+      "bytes": 8725
+    },
+    {
       "path": "tests/snmp.test.ts",
       "role": "tests",
       "groups": [
@@ -663,13 +1023,40 @@
       "bytes": 6699
     },
     {
+      "path": "tests/standalone-ap.test.ts",
+      "role": "tests",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "0062fa4906d5327a3db0a972e4748b6a98b93623ea141651550bb3b80fac1ad2",
+      "bytes": 12698
+    },
+    {
+      "path": "tests/switching-messages.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "18a4c808fa7f19fadb966e7afedf5eb688ed269751887362f111ee4b2bfe4928",
+      "bytes": 6898
+    },
+    {
+      "path": "tests/unix-cli.test.ts",
+      "role": "tests",
+      "groups": [
+        "windows-and-network-services"
+      ],
+      "sha256": "0ef80be3ea96e1e2df5bc41420d251e45fc05120005181300e192eabd605e1cb",
+      "bytes": 16171
+    },
+    {
       "path": "tests/windows-cli.test.ts",
       "role": "tests",
       "groups": [
         "windows-and-network-services"
       ],
-      "sha256": "b2efa4bca59c5b3b8ffee1515c6c18c7d78f63932bbbc82637fc4ec9a0dbe849",
-      "bytes": 19849
+      "sha256": "923e7f8645591ad36b75edb4b2c895e8c8764980c53354dd10a5e2fba7fc2a7e",
+      "bytes": 29574
     },
     {
       "path": "tests/wired-fidelity.test.ts",
@@ -677,8 +1064,26 @@
       "groups": [
         "wired-protocols-and-physical-links"
       ],
-      "sha256": "97c037eed794111dfb3290f42dd7fb907fbefc32507d1ff3bc42537a02a501d3",
-      "bytes": 15543
+      "sha256": "38df6a5c2b4c45953eb55d9c2f2d93e1ca6f1d3fc95a79e2dc8808212de8e68d",
+      "bytes": 15607
+    },
+    {
+      "path": "tests/wired-integration-review.test.ts",
+      "role": "tests",
+      "groups": [
+        "wired-protocols-and-physical-links"
+      ],
+      "sha256": "30a022fc8a48c074dfb79210cf52fbaace9e13ab11fd7059d728f059b53a8776",
+      "bytes": 11230
+    },
+    {
+      "path": "tests/wireless-wpa3.test.ts",
+      "role": "tests",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "1021b09aca958ce8cb413c8dfd29b41a3e0c90a820ba067b33514050dd020675",
+      "bytes": 7750
     },
     {
       "path": "tests/wireless.test.ts",
@@ -688,6 +1093,15 @@
       ],
       "sha256": "4e3884c27d566426f0ed36fd2d11d8942e2d5974897167406c5bbaa755e94239",
       "bytes": 40272
+    },
+    {
+      "path": "tests/wlc-administration.test.ts",
+      "role": "tests",
+      "groups": [
+        "wireless-and-poe"
+      ],
+      "sha256": "e55eef7014833ae68bf0b4b77c400f2ab5db27bbe711ce31ccbfdb7c1dc11099",
+      "bytes": 20292
     }
   ],
   "evidencePaths": [
@@ -696,8 +1110,13 @@
     "docs/audits/aaa-accounting-inventory.json",
     "docs/audits/ap-controller-browser-validation.json",
     "docs/audits/audit-summary.json",
+    "docs/audits/automation-browser-validation.json",
+    "docs/audits/automation-fidelity.md",
+    "docs/audits/automation-inventory.json",
+    "docs/audits/ccna2-practical-workflows.json",
     "docs/audits/cisco-compatibility-matrix.md",
     "docs/audits/cli-command-coverage.md",
+    "docs/audits/client-profiles-browser-validation.json",
     "docs/audits/command-probe-current-triage.json",
     "docs/audits/command-probe-followups.json",
     "docs/audits/command-probe-snapshots.json",
@@ -705,33 +1124,65 @@
     "docs/audits/command-probe-validation.json",
     "docs/audits/command-probe-validation.md",
     "docs/audits/command-removal-fidelity.md",
+    "docs/audits/console-browser-validation.json",
     "docs/audits/coverage-inventory.json",
     "docs/audits/cross-device-integration.md",
+    "docs/audits/current-ios-parser-validation.json",
+    "docs/audits/current-ios-parser-validation.md",
     "docs/audits/dependency-map.json",
+    "docs/audits/eigrp-update-fidelity.md",
+    "docs/audits/encor-enarsi-practical-workflows.json",
+    "docs/audits/encor-enarsi-practical-workflows.md",
+    "docs/audits/endpoint-edge-fidelity.md",
+    "docs/audits/evidence-integrity-validation.json",
     "docs/audits/exam-objective-coverage.json",
     "docs/audits/exam-objective-coverage.md",
+    "docs/audits/final-check-snapshot.json",
     "docs/audits/final-validation-report.md",
+    "docs/audits/ftp-browser-validation.json",
+    "docs/audits/ftp-packet-fidelity.md",
     "docs/audits/implementation-progress.md",
+    "docs/audits/ios-ftp-client-fidelity.md",
     "docs/audits/known-limitations.md",
     "docs/audits/localhost-wireless-browser-validation.json",
     "docs/audits/model-driven-browser-validation.json",
     "docs/audits/model-driven-management-coverage.json",
     "docs/audits/networksim-node-inventory.md",
+    "docs/audits/ospf-authentication-fidelity.md",
+    "docs/audits/ospfv3-network-fidelity.md",
+    "docs/audits/parser-audit-repairs.md",
+    "docs/audits/phase2-changed-files.json",
+    "docs/audits/phase2-command-registry-delta.json",
+    "docs/audits/phone-browser-validation.json",
+    "docs/audits/phone-fidelity.md",
+    "docs/audits/physical-medium-fidelity.md",
+    "docs/audits/physical-snmp-browser-validation.json",
     "docs/audits/protocol-fidelity-audit.md",
+    "docs/audits/qos-congestion-fidelity.md",
+    "docs/audits/radio-browser-validation.json",
     "docs/audits/reference-command-inventory.json",
     "docs/audits/server-services-browser-validation.json",
     "docs/audits/snmp-fidelity.md",
+    "docs/audits/standalone-ap-browser-validation.json",
+    "docs/audits/switching-message-fidelity.md",
+    "docs/audits/unix-cli-coverage.md",
+    "docs/audits/unix-command-inventory.json",
     "docs/audits/windows-browser-validation.json",
     "docs/audits/windows-cli-coverage.md",
     "docs/audits/windows-command-inventory.json",
     "docs/audits/wired-fidelity-audit.md",
     "docs/audits/wired-fidelity-findings.json",
+    "docs/audits/wired-integration-review.md",
     "docs/audits/wireless-fidelity-findings.json",
     "docs/audits/wireless-gui-inventory.json",
+    "docs/audits/wlc-administration-browser-validation.json",
     "docs/audits/wlc-gui-coverage.md",
-    "docs/audits/wlc-reference-browser-validation.json"
+    "docs/audits/wlc-reference-browser-validation.json",
+    "docs/audits/workspace-browser-validation.json"
   ],
   "tooling": [
+    "scripts/audit-automation.mjs",
+    "scripts/audit-ccna2-practical.py",
     "scripts/audit-change-manifest.mjs",
     "scripts/audit-command-contexts.mjs",
     "scripts/audit-command-fixtures.mjs",
@@ -741,26 +1192,42 @@
     "scripts/audit-command-probe-triage.mjs",
     "scripts/audit-command-probes.mjs",
     "scripts/audit-command-registrations.mjs",
+    "scripts/audit-current-contexts.mjs",
+    "scripts/audit-current-ios-fixtures.mjs",
+    "scripts/audit-current-ios.mjs",
+    "scripts/audit-encor-enarsi-practical.py",
     "scripts/audit-exam-objectives.py",
     "scripts/audit-model-driven-management.mjs",
+    "scripts/audit-phase2-files.py",
     "scripts/audit-reference-commands.py",
+    "scripts/audit-registry-delta.mjs",
+    "scripts/audit-unix-commands.mjs",
     "scripts/audit-windows-commands.mjs",
     "scripts/audit-wireless-gui.mjs",
     "scripts/browser-aaa-accounting.mjs",
     "scripts/browser-ap-controller.mjs",
+    "scripts/browser-automation.mjs",
+    "scripts/browser-client-profiles.mjs",
+    "scripts/browser-console-paging.mjs",
+    "scripts/browser-ftp.mjs",
+    "scripts/browser-link-layout.mjs",
     "scripts/browser-model-driven.mjs",
+    "scripts/browser-phone.mjs",
+    "scripts/browser-physical-snmp.mjs",
     "scripts/browser-radio-coverage.mjs",
     "scripts/browser-server-services.mjs",
+    "scripts/browser-standalone-ap.mjs",
     "scripts/browser-windows-fidelity.mjs",
     "scripts/browser-wireless.mjs",
+    "scripts/browser-wlc-administration.mjs",
     "scripts/browser-wlc-references.mjs",
     "scripts/fidelity-inventory.mjs",
     "scripts/report-fidelity-audit.mjs"
   ],
   "standalone": {
     "path": "index.html",
-    "sha256": "52eb22827f202dfe03db3808912edc1ad2b00b31efc88620a7a3a964b336070a",
-    "bytes": 3455267
+    "sha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499",
+    "bytes": 3406080
   },
   "concurrentPaths": [
     {
@@ -768,6 +1235,27 @@
       "exists": true,
       "sha256": "7d7e6e353846ec80d46abeccc3a27ec6a559b4f5301fb9e20eb1bf0b5b3b891a",
       "bytes": 887,
+      "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
+    },
+    {
+      "path": "src/icons.ts",
+      "exists": true,
+      "sha256": "d6881d5abc2ba029d7a62162388a2bdce9cfa5a23b990b20720e6c9141b37099",
+      "bytes": 3789,
+      "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
+    },
+    {
+      "path": "src/node-icons.ts",
+      "exists": true,
+      "sha256": "780a8bffdc12776e5d3b666e2836e3a3fd81ef85836de5c7dbee03d777d8ac58",
+      "bytes": 1388,
+      "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
+    },
+    {
+      "path": "src/assets/node-icons.png",
+      "exists": true,
+      "sha256": "b1b1c1dbc628291f73b1a17e30a21d15f927d659423b1a8a9799ac7cdc7c9a1c",
+      "bytes": 394922,
       "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
     },
     {
@@ -794,8 +1282,8 @@
     {
       "path": "README.md",
       "exists": true,
-      "sha256": "b8ca4901134a9cfa2672e54f4b755c5b8194b82d7f8f892256077d4e5fc94909",
-      "bytes": 9609,
+      "sha256": "35c874ebdf383f4f900eb89b636cf1a25a37fb49f5f16d2022fd7a8eed2029e6",
+      "bytes": 10302,
       "role": "retained concurrent packaging/UI or fixture relocation; not attributed to this audit"
     },
     {

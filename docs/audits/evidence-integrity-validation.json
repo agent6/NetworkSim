@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-10-17T02:24:06.612Z",
+  "scope": "Source provenance and executable acceptance assertions; no full native protocol/OS/exam certification.",
+  "checks": [
+    "Full regression uses the current immutable product/test snapshot",
+    "The delivered root and dist HTML match every acceptance digest",
+    "Ten-node command/dependency inventory sources are current",
+    "Every current IOS registration has exact parser evidence",
+    "The continuation registry comparison binds current source",
+    "Old/current comparison and focused followups bind current source",
+    "wireless-gui-inventory.json sources are current",
+    "unix-command-inventory.json sources are current",
+    "automation-inventory.json sources are current",
+    "model-driven-management-coverage.json sources are current",
+    "Objective ledgers retain exact test/module and supplement identities",
+    "All browser workflows passed against the delivered HTML"
+  ],
+  "browserWorkflows": 17,
+  "browserChecks": 175,
+  "tests": 894,
+  "iosDefinitions": 6043,
+  "positiveRepresentatives": 5928,
+  "artifactSha256": "230e3d26868f8d1c868bb6f1d09ea4bf343c65ab09fd1ce1030d6ef72d852499"
+}
