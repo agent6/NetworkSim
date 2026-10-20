@@ -1,3 +1,4 @@
+import {iosRejected} from '../src/ios-help.ts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Simulator } from '../src/engine.ts';
@@ -10,7 +11,7 @@ function lab(kind: 'router'|'switch'|'l3switch'|'pc'='router') {
   return {engine,device,cli};
 }
 function ok(cli: IOSSession,...lines:string[]) {
-  for(const line of lines){const out=cli.execute(line);assert.ok(!out.some(x=>/^%/.test(x)),`${line}: ${out.join('\n')}`);}
+  for(const line of lines){const out=cli.execute(line);assert.ok(!out.some(iosRejected),`${line}: ${out.join('\n')}`);}
 }
 function conf(cli:IOSSession,...lines:string[]){ok(cli,'enable','configure terminal',...lines);}
 
@@ -114,13 +115,13 @@ test('simulated TFTP upload, download, flash copy and configuration merge use pa
   conf(ca,'interface g0/0','ip address 10.0.0.1 255.255.255.0','no shutdown','end');
   conf(cb,'interface g0/0','ip address 10.0.0.2 255.255.255.0','no shutdown','end');
   b.config.services.tftp={enabled:true,files:{}};
-  ok(ca,'copy running-config tftp:');assert.match(ca.prompt,/remote host/);ok(ca,'10.0.0.2');assert.match(ca.prompt,/Filename/);
+  ok(ca,'copy running-config tftp:');assert.match(ca.prompt,/remote host/);ok(ca,'10.0.0.2');assert.match(ca.prompt,/^Destination filename \[r1-confg\]\?$/);
   assert.match(ca.execute('backup.cfg').join('\n'),/bytes copied/);assert.match(b.config.services.tftp.files['backup.cfg'],/10.0.0.1/);
   ok(ca,'copy tftp: flash:backup.cfg','10.0.0.2');assert.match(ca.execute('backup.cfg').join('\n'),/copied/);
   assert.match(ca.execute('more flash:backup.cfg').join('\n'),/hostname R1/);
   b.config.services.tftp.files['change.cfg']='hostname Restored\ninterface Loopback5\nip address 198.51.100.5 255.255.255.255\nend';
   ok(ca,'copy tftp: running-config','10.0.0.2','change.cfg');assert.equal(a.config.hostname,'Restored');assert.equal(a.config.interfaces.Loopback5.ip,'198.51.100.5');
-  ok(ca,'copy tftp: flash:absent','10.0.0.2');assert.match(ca.execute('missing.cfg')[0],/TFTP failed/);assert.equal(a.config.features.files.absent,undefined);
+  ok(ca,'copy tftp: flash:absent','10.0.0.2');assert.match(ca.execute('missing.cfg')[0],/^%Error opening tftp:\/\/10\.0\.0\.2\/missing\.cfg \(No such file or directory\)$/);assert.equal(a.config.features.files.absent,undefined);
 });
 
 test('NTP and syslog CLI controls produce actual management packets',()=>{
@@ -182,7 +183,7 @@ test('interface NAT role arguments retain precedence over global NAT source pref
 });
 
 test('SNMP runtime configuration and partial security/SSO settings round-trip with accurate disclosure',()=>{
-  const {engine,device,cli}=lab();conf(cli);ok(cli,'snmp-server community monitor ro 10','snmp-server group OPS v3 priv read READ','snmp-server view READ iso included');assert.match(cli.execute('snmp-server user admin OPS v3 auth sha authpass priv aes 128 privpass').join('\n'),/USM authentication\/encryption is not implemented/);assert.match(cli.execute('snmp-server engineid local 0123456789').join('\n'),/key localization is not implemented/);assert.match(cli.execute('snmp-server host 192.0.2.5 version 3 priv admin').join('\n'),/no USM cryptography/);for(const command of ['redundancy','mode sso'])assert.ok(cli.execute(command).some(x=>x.includes('configuration stored only')),command);ok(cli,'end');const target=engine.addDevice('router'),session=new IOSSession(engine,target.id);target.config.features.files={config:renderConfig(device).join('\n')};ok(session,'enable','copy flash:config running-config');assert.deepEqual(target.config.features.snmp,device.config.features.snmp);assert.deepEqual(target.config.features.redundancy,device.config.features.redundancy);
+  const {engine,device,cli}=lab();conf(cli);ok(cli,'snmp-server community monitor ro 10','snmp-server group OPS v3 priv read READ','snmp-server view READ iso included');assert.deepEqual(cli.execute('snmp-server user admin OPS v3 auth sha authpass priv aes 128 privpass'),[]);assert.deepEqual(cli.execute('snmp-server engineid local 0123456789'),[]);assert.deepEqual(cli.execute('snmp-server host 192.0.2.5 version 3 priv admin'),[]);for(const command of ['redundancy','mode sso'])assert.ok(cli.execute(command).some(x=>x.includes('configuration stored only')),command);ok(cli,'end');const target=engine.addDevice('router'),session=new IOSSession(engine,target.id);target.config.features.files={config:renderConfig(device).join('\n')};ok(session,'enable','copy flash:config running-config');assert.deepEqual(target.config.features.snmp,device.config.features.snmp);assert.deepEqual(target.config.features.redundancy,device.config.features.redundancy);
 });
 
 test('advanced security and flexible flow settings round-trip to the exact consumed fields',()=>{
@@ -220,7 +221,7 @@ test('RIP distribute and offset lists change learned routes and serialize the co
 test('OSPF interface show exposes computed roles and named IPv6 rendering creates no IPv4 process',()=>{
   const {engine,device:a,cli:ca}=lab(),b=engine.addDevice('router'),cb=new IOSSession(engine,b.id);engine.connect({deviceId:a.id,port:'GigabitEthernet0/0'},{deviceId:b.id,port:'GigabitEthernet0/0'});
   for(const [cli,ip,rid,priority]of [[ca,'10.0.0.1','1.1.1.1',100],[cb,'10.0.0.2','2.2.2.2',1]] as const)conf(cli,'interface g0/0',`ip address ${ip} 255.255.255.0`,'no shutdown',`ip ospf priority ${priority}`,'router ospf 1',`router-id ${rid}`,'network 10.0.0.0 0.0.0.255 area 0','end');
-  assert.match(ca.execute('show ip ospf interface').join('\n'),/State DR, Priority 100[\s\S]*Designated Router \(ID\) 1\.1\.1\.1[\s\S]*Backup Designated router \(ID\) 2\.2\.2\.2/);assert.match(ca.execute('show ip ospf database').join('\n'),/Received logical router records/);assert.equal(ca.execute('show ip ospf virtual-links').join('\n'),'');
+  assert.match(ca.execute('show ip ospf interface').join('\n'),/State DR, Priority 100[\s\S]*Designated Router \(ID\) 1\.1\.1\.1[\s\S]*Backup Designated router \(ID\) 2\.2\.2\.2/);assert.match(ca.execute('show ip ospf database').join('\n'),/OSPF Router with ID \(1\.1\.1\.1\) \(Process ID 1\)\n\n\t\tRouter Link States \(Area 0\)\n\nLink ID         ADV Router      Age         Seq#       Checksum Link count\n1\.1\.1\.1         1\.1\.1\.1 /);assert.equal(ca.execute('show ip ospf virtual-links').join('\n'),'');
   const c=engine.addDevice('router'),cc=new IOSSession(engine,c.id);conf(cc,'no ip cef','ipv6 unicast-routing','interface g0/0');assert.match(cc.execute('ipv6 address 2001:db8::1/64 nonsense').join('\n'),/Invalid/);assert.deepEqual(c.config.interfaces['GigabitEthernet0/0'].ipv6,[]);ok(cc,'ipv6 address 2001:db8::1/64','router eigrp CAMPUS','address-family ipv6 unicast autonomous-system 77','eigrp router-id 3.3.3.3','end');const rendered=renderConfig(c).join('\n');assert.match(rendered,/address-family ipv6 unicast autonomous-system 77/);assert.doesNotMatch(rendered,/address-family ipv4/);assert.match(rendered,/no ip cef/);
 });
 
@@ -238,7 +239,7 @@ test('interface ARP timeout ages real learned entries and routing timer/hash con
 
 test('interactive extended ping accepts defaults, validates answers, sweeps sizes and cancels cleanly',()=>{
   const {engine,device:a,cli:ca}=lab(),b=engine.addDevice('router'),cb=new IOSSession(engine,b.id);engine.connect({deviceId:a.id,port:'GigabitEthernet0/0'},{deviceId:b.id,port:'GigabitEthernet0/0'});for(const[cli,address]of[[ca,'10.0.0.1'],[cb,'10.0.0.2']]as const)conf(cli,'interface g0/0',`ip address ${address} 255.255.255.0`,'no shutdown','end');
-  ok(ca,'ping');assert.equal(ca.prompt,'Protocol [ip]:');ok(ca,'','10.0.0.2');assert.match(ca.execute('0').join('\n'),/between/);assert.equal(ca.prompt,'Repeat count [5]:');ok(ca,'1','100','1','y','g0/0','184','y','y','0x1234','64','none','y','64','128');const out=ca.execute('32');assert.equal(out.filter(x=>x.includes('100 percent')).length,3);assert.ok(engine.events.some(e=>e.packet?.dscp===46));assert.equal(ca.prompt,'R1#');
+  ok(ca,'ping');assert.equal(ca.prompt,'Protocol [ip]:');ok(ca,'','10.0.0.2');assert.match(ca.execute('0').join('\n'),/between/);assert.equal(ca.prompt,'Repeat count [5]:');ok(ca,'1','100','1','y','g0/0','184','y','y','0x1234','none','y','64','128');const out=ca.execute('32');assert.match(out.join('\n'),/Sending 3, \[64\.\.128\]-byte ICMP Echos to 10\.0\.0\.2, timeout is 1 seconds:[\s\S]*Success rate is 100 percent \(3\/3\)/);assert.ok(engine.events.some(e=>e.packet?.dscp===46));assert.equal(ca.prompt,'R1#');
   ok(ca,'ping','');ca.cancel();assert.equal(ca.prompt,'R1#');ok(ca,'ping ip','10.0.0.2','1','','','n');assert.match(ca.execute('').join('\n'),/100 percent/);
 });
 
@@ -254,7 +255,7 @@ test('BGP show table and prefix details expose actual two-AS paths separately fr
 test('flash copy counts UTF-8 bytes, rejects exhaustion atomically and reports capacity',()=>{
   const {device,cli}=lab();ok(cli,'enable');device.config.features.fileSystem={capacityBytes:12};device.config.features.files={source:'éé'};
   ok(cli,'copy flash:source flash:target');assert.match(cli.execute('dir').join('\n'),/12 bytes total \(4 bytes free\)/);device.config.features.files.source='éééé';const before=structuredClone(device.config.features.files);assert.match(cli.execute('copy flash:source flash:target').join('\n'),/Insufficient simulated flash space/);assert.deepEqual(device.config.features.files,before);
-  assert.match(cli.execute('archive config').join('\n'),/Insufficient simulated flash space/);assert.equal(device.config.features.archives,undefined);ok(cli,'delete flash:target');assert.match(cli.execute('show file systems').join('\n'),/12\s+4\s+flash\s+rw\s+flash:/);
+  assert.match(cli.execute('archive config').join('\n'),/Insufficient simulated flash space/);assert.equal(device.config.features.archives,undefined);ok(cli,'delete flash:target');assert.match(cli.execute('show file systems').join('\n'),/\*\s+12\s+4\s+disk\s+rw\s+flash:/);
 });
 
 test('top talkers rank real observed traffic, preserve timed snapshots and render configuration',()=>{
@@ -273,7 +274,7 @@ test('BFD template, AS-path policy and persistent BGP timer syntax round-trip wi
 });
 
 test('static IPv6 host names resolve locally and truthful platform displays use current model state',()=>{
-  const {engine,device,cli}=lab();conf(cli,'ipv6 host self 2001:db8::1','int loopback0','ipv6 address 2001:db8::1/128','no shutdown','end');assert.match(cli.execute('ping self repeat 1').join('\n'),/100 percent/);assert.equal(engine.events.filter(e=>e.protocol==='DNS').length,0);assert.match(cli.execute('show inventory').join('\n'),new RegExp(device.id));assert.match(cli.execute('show processes cpu').join('\n'),/CPU\/memory utilization is not modeled/);assert.match(renderConfig(device).join('\n'),/ip host self 2001:db8::1/);
+  const {engine,device,cli}=lab();conf(cli,'ipv6 host self 2001:db8::1','int loopback0','ipv6 address 2001:db8::1/128','no shutdown','end');assert.match(cli.execute('ping self repeat 1').join('\n'),/100 percent/);assert.equal(engine.events.filter(e=>e.protocol==='DNS').length,0);assert.match(cli.execute('show inventory').join('\n'),/^NAME: "IOSv", DESCR: "IOSv chassis, Hw Serial#: (\w{11}), Hw Revision: 1\.0"\nPID: IOSv\s+, VID: 1\.0, SN: \1$/m);assert.match(cli.execute('show processes cpu').join('\n'),/^CPU utilization for five seconds: \d+%\/\d+%; one minute: \d+%; five minutes: \d+%/);assert.match(renderConfig(device).join('\n'),/ip host self 2001:db8::1/);
 });
 
 test('named RA guard roles change actual ingress admission and persist named attachments',()=>{

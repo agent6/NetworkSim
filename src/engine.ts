@@ -210,6 +210,7 @@ export class Simulator {
       let removedStatic=false;for(const d of this.lab.devices)removedStatic=pruneInactiveStaticRoutes(d,p=>this.interfaceUp(d.id,p))||removedStatic;
       if(removedStatic){for(const d of this.lab.devices)d.runtime.routes=d.runtime.routes.filter(r=>['static','connected','local','dhcp'].includes(r.protocol));recomputeControlPlane(this);}
       for(const device of this.lab.devices)selectInstalledRoutes(device);
+      for(const device of this.lab.devices){const now=this.clock.now(),old=device.runtime.features.routeSince??{},next:Record<string,number>={};for(const r of device.runtime.routes){const key=[r.vrf??'',r.network,r.prefix,r.protocol,r.nextHop??'',r.interface].join('|');next[key]=old[key]??now;}device.runtime.features.routeSince=next;}
       this.ipv6Services.recompute();
       syncSnooping(this);
       for (const d of this.lab.devices) {
@@ -299,7 +300,7 @@ export class Simulator {
     this.clock.schedule(1000, () => { for (const [key, row] of Object.entries(d.runtime.arp)) if (!row.static && row.expires <= this.clock.now()) delete d.runtime.arp[key]; for (const [key, row] of Object.entries(d.runtime.mac)) if (!row.static && row.expires <= this.clock.now()) delete d.runtime.mac[key]; }, { owner: d.id, repeat: 1000, label: 'ARP and MAC aging' });
   }
   private count(d: Device, port: string, kind: 'tx' | 'rx' | 'drops', bytes = 0, destinationMac?: string): void {
-    const c = d.runtime.counters[port] ??= { tx: 0, rx: 0, drops: 0, txBytes: 0, rxBytes: 0 }; c[kind]++; if (kind === 'tx') c.txBytes += bytes; if (kind === 'rx') c.rxBytes += bytes;
+    const c = d.runtime.counters[port] ??= { tx: 0, rx: 0, drops: 0, txBytes: 0, rxBytes: 0 }; c[kind]++; if (kind === 'tx') { c.txBytes += bytes; c.lastOutput = this.clock.now(); } if (kind === 'rx') { c.rxBytes += bytes; c.lastInput = this.clock.now(); }
     if(kind!=='drops'&&destinationMac){const normalized=destinationMac.replace(/[^0-9a-f]/gi,'').toLowerCase(),category=normalized==='ffffffffffff'?'Broadcast':(parseInt(normalized.slice(0,2),16)&1)?'Multicast':'Unicast',field=`${kind}${category}` as 'txUnicast'|'txMulticast'|'txBroadcast'|'rxUnicast'|'rxMulticast'|'rxBroadcast';c[field]=(c[field]??0)+1;}
   }
   private packetSummary(p: IPPacket): PacketSummary {
@@ -844,10 +845,10 @@ export class Simulator {
     if (!input || d.config.interfaces[input]?.features.nat !== 'inside' || d.config.interfaces[output]?.features.nat !== 'outside' || !isIPv4(p.source)) return p;
     const nat = d.config.features.nat; if (!nat) return p;
     const packet = clone(p), direct = nat.static?.find((x: any) => x.inside === packet.source);
-    if (direct) { packet.source = direct.outside; return packet; }
+    if (direct) { (d.runtime.features.natStats ??= { hits: 0, misses: 0 }).hits++; packet.source = direct.outside; return packet; }
     const table: any[] = d.runtime.features.natTranslations ??= [];
     const assigned = findDynamicNatBinding(table,{inside:packet.source},this.clock.now());
-    if(assigned){this.refreshNat(d,assigned);packet.source=assigned.outside;this.packetEvent(d,packet,'Source NAT',p.source+' → '+packet.source,'forward',output);return packet;}
+    if(assigned){(d.runtime.features.natStats ??= { hits: 0, misses: 0 }).hits++;this.refreshNat(d,assigned);packet.source=assigned.outside;this.packetEvent(d,packet,'Source NAT',p.source+' → '+packet.source,'forward',output);return packet;}
     const rules: any[] = nat.rules ?? [];
     for (const rule of rules) {
       if (!this.aclAllows(d, rule.acl, packet)) continue;
@@ -861,8 +862,8 @@ export class Simulator {
         if (!global) { this.packetEvent(d, packet, 'NAT pool exhausted', 'No unused address is available for this inside host.', 'drop', output); return; }
         let outsidePort = packet.sourcePort;
         if (rule.overload) { outsidePort = 20000; while (outsidePort <= 59999 && table.some(x => x.outside === global && x.outsidePort === outsidePort && x.protocol === packet.protocol)) outsidePort++; if (outsidePort > 59999) return; }
-        entry = { inside: packet.source, insidePort: packet.sourcePort, outside: global, outsidePort, overload: !!rule.overload, protocol: packet.protocol, remote: packet.destination, remotePort: packet.destinationPort, created: this.clock.now() }; table.push(entry);
-      }
+        entry = { inside: packet.source, insidePort: packet.sourcePort, outside: global, outsidePort, overload: !!rule.overload, protocol: packet.protocol, remote: packet.destination, remotePort: packet.destinationPort,         created: this.clock.now() }; table.push(entry); (d.runtime.features.natStats ??= { hits: 0, misses: 0 }).misses++; d.runtime.features.natStats.peak = Math.max(d.runtime.features.natStats.peak ?? 0, table.length);
+              } else (d.runtime.features.natStats ??= { hits: 0, misses: 0 }).hits++;
       this.refreshNat(d, entry);
       packet.source = entry.outside; if(entry.overload)packet.sourcePort = entry.outsidePort; this.packetEvent(d, packet, 'Source NAT', p.source + ' → ' + packet.source, 'forward', output); return packet;
     }
@@ -872,7 +873,7 @@ export class Simulator {
     const seconds = d.config.features.nat?.timeouts?.[entry.protocol] ?? (entry.protocol === 'tcp' ? 86400 : entry.protocol === 'icmp' ? 60 : 300);
     entry.lastUsed = this.clock.now(); entry.expires = this.clock.now() + Math.max(1, Number(seconds)) * 1000;
     if (entry.expiryScheduled) return; entry.expiryScheduled = true;
-    const expire = () => { const table: any[] = d.runtime.features.natTranslations ?? []; if (!table.includes(entry)) return; if (entry.expires > this.clock.now()) { this.clock.schedule(entry.expires - this.clock.now(), expire, { owner: d.id, label: 'NAT idle timeout' }); return; } d.runtime.features.natTranslations = table.filter(x => x !== entry); this.emit({ nodeId: d.id, protocol: 'NAT', label: 'Translation expired', detail: entry.inside + ' → ' + entry.outside, disposition: 'info' }); };
+    const expire = () => { const table: any[] = d.runtime.features.natTranslations ?? []; if (!table.includes(entry)) return; if (entry.expires > this.clock.now()) { this.clock.schedule(entry.expires - this.clock.now(), expire, { owner: d.id, label: 'NAT idle timeout' }); return; } d.runtime.features.natTranslations = table.filter(x => x !== entry); (d.runtime.features.natStats ??= { hits: 0, misses: 0 }).expired = (d.runtime.features.natStats.expired ?? 0) + 1; this.emit({ nodeId: d.id, protocol: 'NAT', label: 'Translation expired', detail: entry.inside + ' → ' + entry.outside, disposition: 'info' }); };
     this.clock.schedule(entry.expires - this.clock.now(), expire, { owner: d.id, label: 'NAT idle timeout' });
   }
   private translateInbound(d: Device, input: string, p: IPPacket): IPPacket {
@@ -886,7 +887,7 @@ export class Simulator {
     }
     const entry = findInboundNatTranslation(d.runtime.features.natTranslations??[],p,this.clock.now());
     if (!direct && !entry) return p;
-    const packet = clone(p); packet.destination = direct?.inside ?? entry.inside; if (entry) { if(entry.overload)packet.destinationPort = entry.insidePort; this.refreshNat(d, entry); } this.packetEvent(d, packet, 'Destination NAT', p.destination + ' → ' + packet.destination, 'forward', input); return packet;
+    const packet = clone(p); (d.runtime.features.natStats ??= { hits: 0, misses: 0 }).hits++; packet.destination = direct?.inside ?? entry.inside; if (entry) { if(entry.overload)packet.destinationPort = entry.insidePort; this.refreshNat(d, entry); } this.packetEvent(d, packet, 'Destination NAT', p.destination + ' → ' + packet.destination, 'forward', input); return packet;
   }
   releaseDHCP(deviceId:string,portName?:string):void {
     const d=this.getDevice(deviceId);if(!d)throw new Error('Unknown device');const ports=portName?[portName]:Object.keys(d.config.interfaces);

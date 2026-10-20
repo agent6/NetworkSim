@@ -1,3 +1,4 @@
+import {iosRejected} from '../src/ios-help.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Simulator} from '../src/engine.ts';
@@ -5,7 +6,7 @@ import {IOSSession} from '../src/cli.ts';
 import {IOS_BOOT_DURATION,iosBootState} from '../src/ios-boot.ts';
 import type {DeviceKind} from '../src/model.ts';
 const port='GigabitEthernet0/0';
-const run=(cli:IOSSession,...lines:string[])=>{for(const line of lines)assert.ok(!cli.execute(line).some(v=>v.startsWith('%')),line);};
+const run=(cli:IOSSession,...lines:string[])=>{for(const line of lines)assert.ok(!cli.execute(line).some(iosRejected),line);};
 function fixture(){const e=new Simulator(4100),r=e.addDevice('router'),a=e.addDevice('pc'),b=e.addDevice('server'),cli=new IOSSession(e,r.id);for(const[d,p,ip]of[[a,'GigabitEthernet0','10.0.0.10'],[r,port,'10.0.0.1'],[r,'GigabitEthernet0/1','10.0.1.1'],[b,'GigabitEthernet0','10.0.1.10']]as const){Object.assign(d.config.interfaces[p],{ip,mask:'255.255.255.0',adminUp:true});delete d.config.interfaces[p].features.dhcp;}a.config.defaultGateway='10.0.0.1';b.config.defaultGateway='10.0.1.1';e.connect({deviceId:a.id,port:'GigabitEthernet0'},{deviceId:r.id,port});e.connect({deviceId:b.id,port:'GigabitEthernet0'},{deviceId:r.id,port:'GigabitEthernet0/1'});run(cli,'enable','configure terminal','hostname Saved','end','write memory');return{e,r,a,b,cli};}
 function echo(f:ReturnType<typeof fixture>){const p=f.e.ping(f.a.id,'10.0.1.10',{count:1,timeout:200});f.e.advance(300);return p.received;}
 test('IOS-BOOT-01 reload streams ordered boot stages, blocks the console and actual traffic, then requires RETURN',()=>{

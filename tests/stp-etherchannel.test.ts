@@ -46,8 +46,8 @@ for(const protocol of ['lacp','pagp','static'])test(`${protocol}: STP elects and
   assert.equal(b.runtime.stp['1'].rootId,a.id);assert.equal(b.runtime.stp['1'].rootPort,'Port-channel2');
   assert.equal(b.runtime.stp['1'].cost,3);assert.equal(b.runtime.stp['1'].ports[g(1)],undefined);assert.equal(b.runtime.stp['1'].ports[g(2)],undefined);
   const out=cb.execute('show spanning-tree interface port-channel2').join('\n');
-  assert.match(out,/Po2\s+Root\s+FWD\s+3\s+128\.\d+\s+P2p/);assert.doesNotMatch(out,/Gi0\/[12]\s/);
-  assert.match(cb.execute('show spanning-tree interface g0/2').join('\n'),/Po2\s+Root\s+FWD/);
+  assert.match(out,/VLAN0001\s+Root\s+FWD\s+3\s+128\.\d+\s+P2p/);assert.doesNotMatch(out,/Gi0\/[12]\s/);
+  assert.match(cb.execute('show spanning-tree interface g0/2').join('\n'),/VLAN0001\s+Root\s+FWD\s+3\s+128\.\d+/);
   for(const d of [a,b]) {
     const stable=sent.filter(m=>m.id===d.id&&m.time>=30000&&m.time<35000&&m.body.port.startsWith('Port-channel'));
     assert.ok(stable.length>=2&&stable.length<=3,`one BPDU heartbeat per bundle: ${stable.length}`);
@@ -61,10 +61,10 @@ test('logical path cost and per-VLAN overrides are operational and survive seria
   const {s,a,b,cb}=pair();for(const d of [a,b])configure(s,d,'vlan 20','exit');s.advance(5000);
   run(cb,'configure terminal','interface port-channel2','spanning-tree cost 100','spanning-tree port-priority 64','spanning-tree vlan 20 cost 17','spanning-tree vlan 20 port-priority 32','end');s.advance(3000);
   assert.equal(b.runtime.stp['1'].cost,100);assert.equal(b.runtime.stp['20'].cost,17);
-  assert.match(cb.execute('show spanning-tree vlan 1 interface po2').join('\n'),/Po2\s+Root\s+FWD\s+100\s+64\./);
-  assert.match(cb.execute('show spanning-tree vlan 20 interface po2').join('\n'),/Po2\s+Root\s+FWD\s+17\s+32\./);
+  assert.match(cb.execute('show spanning-tree vlan 1 interface po2').join('\n'),/VLAN0001\s+Root\s+FWD\s+100\s+64\./);
+  assert.match(cb.execute('show spanning-tree vlan 20 interface po2').join('\n'),/VLAN0020\s+Root\s+FWD\s+17\s+32\./);
   const summary=cb.execute('show spanning-tree vlan 1 summary').at(-1)!.trim().split(/\s+/);
-  assert.equal(Number(summary.at(-1)),Object.keys(b.runtime.stp['1'].ports).length);
+  assert.equal(Number(summary.at(-1)),Object.values(b.runtime.stp['1'].ports).filter(p=>p.state!=='disabled').length);
   assert.match(renderConfig(b).join('\n'),/interface Port-channel2[\s\S]*spanning-tree cost 100/);
   const loaded=new Simulator();loaded.load(s.serialize());loaded.advance(5000);assert.equal(loaded.getDevice(b.id)!.runtime.stp['1'].cost,100);
   run(cb,'configure terminal','interface po2','no spanning-tree cost','no spanning-tree vlan 20 cost','end');s.advance(3000);
@@ -76,7 +76,7 @@ test('MST consumes logical per-instance cost/priority and displays one Po row',(
   for(const d of [a,b])configure(s,d,'vlan 20','exit','spanning-tree mst configuration','name LAB','revision 1','instance 2 vlan 20','exit',`spanning-tree mst 2 priority ${d===a?0:8192}`);
   configure(s,b,'interface po2','spanning-tree mst 2 cost 77','spanning-tree mst 2 port-priority 16');s.advance(35000);
   assert.equal(b.runtime.stp['20'].rootId,a.id);assert.equal(b.runtime.stp['20'].cost,77);
-  const out=cb.execute('show spanning-tree mst 2 interface po2 detail').join('\n');assert.match(out,/Po2\s+Root\s+FWD\s+77\s+16\.\d+\s+P2p/);assert.doesNotMatch(out,/Gi0\/[12]\s/);
+  const out=cb.execute('show spanning-tree mst 2 interface po2 detail').join('\n');assert.match(out,/Port-channel2 of MST2 is root forwarding/);assert.match(out,/Port info\s+port id\s+16\.\d+\s+priority\s+16\s+cost\s+77/);assert.doesNotMatch(out,/Gi0\/[12]\s/);
 });
 
 test('member failure retains the logical port/BPDU identity, recalculates automatic cost, and preserves manual cost',()=>{
@@ -106,13 +106,13 @@ test('redundant bundle blocks as one segment, shows both cables blocked, and for
   s.connect({deviceId:root.id,port:g(1)},{deviceId:b.id,port:g(3)});const uplink=s.connect({deviceId:root.id,port:g(2)},{deviceId:c.id,port:g(3)});
   const pc=endpoint(s,b,4,'192.0.2.10');endpoint(s,c,4,'192.0.2.20');s.advance(35000);
   assert.equal(c.runtime.stp['1'].ports['Port-channel2'].role,'alternate');assert.equal(c.runtime.stp['1'].ports['Port-channel2'].state,'blocking');
-  assert.match(cb.execute('show spanning-tree blockedports').join('\n'),/Po2\s+alternate/);
+  assert.match(cb.execute('show spanning-tree blockedports').join('\n'),/VLAN0001\s+Po2\n\nNumber of blocked ports \(segments\) in the system : 1/);
   for(const [i,wire] of wires.entries())assert.equal(portIndicator(s,c,g(i+1),wire).state,'blocked');
   s.events=[];ping(s,pc,'192.0.2.20');assert.ok(!s.events.some(e=>e.nodeId===c.id&&[g(1),g(2)].includes(e.port??'')&&e.protocol==='ICMP'&&e.label==='Frame sent'));
   s.disconnect(uplink.id);s.advance(10000);
   assert.equal(c.runtime.stp['1'].rootId,root.id);assert.equal(c.runtime.stp['1'].rootPort,'Port-channel2');assert.equal(c.runtime.stp['1'].cost,7);
-  assert.match(cb.execute('show spanning-tree interface po2').join('\n'),/Po2\s+Root\s+FWD\s+3/);ping(s,pc,'192.0.2.20');
-  assert.match(ca.execute('show spanning-tree interface po1').join('\n'),/Po1\s+Desg\s+FWD/);
+  assert.match(cb.execute('show spanning-tree interface po2').join('\n'),/VLAN0001\s+Root\s+FWD\s+3/);ping(s,pc,'192.0.2.20');
+  assert.match(ca.execute('show spanning-tree interface po1').join('\n'),/VLAN0001\s+Desg\s+FWD/);
 });
 
 test('logical root guard and loop guard block the whole bundle, with BPDU recovery',()=>{
@@ -125,7 +125,7 @@ test('logical root guard and loop guard block the whole bundle, with BPDU recove
   const send=s.sendLinkControl.bind(s);let lose=true;
   s.sendLinkControl=(id,port,message)=>{if(lose&&id===a.id&&message.protocol==='STP')return;send(id,port,message);};
   s.advance(7000);assert.equal(b.runtime.stp['1'].ports['Port-channel2'].role,'loop-inconsistent');
-  assert.match(cb.execute('show spanning-tree inconsistentports').join('\n'),/Po2\s+loop-inconsistent/);
+  assert.match(cb.execute('show spanning-tree inconsistentports').join('\n'),/VLAN0001\s+Port-channel2\s+Loop Inconsistent/);
   ping(s,pc,'192.0.2.20',0);
   lose=false;s.advance(3000);assert.equal(b.runtime.stp['1'].ports['Port-channel2'].state,'forwarding');assert.equal(b.runtime.stp['1'].rootId,a.id);ping(s,pc,'192.0.2.20');
 });
@@ -138,7 +138,7 @@ test('BPDU guard configured on a logical channel error-disables all active membe
 
 test('classic PVST keeps one logical P2p port and observes forward-delay timers',()=>{
   const {s,b,cb}=pair('static','pvst');s.advance(5000);assert.notEqual(b.runtime.stp['1'].ports['Port-channel2'].state,'forwarding');
-  s.advance(35000);assert.match(cb.execute('show spanning-tree interface po2').join('\n'),/Po2\s+Root\s+FWD\s+3\s+128\.\d+\s+P2p/);
+  s.advance(35000);assert.match(cb.execute('show spanning-tree interface po2').join('\n'),/VLAN0001\s+Root\s+FWD\s+3\s+128\.\d+\s+P2p/);
 });
 
 test('cost and advertised logical port priority select between parallel bundles',()=>{

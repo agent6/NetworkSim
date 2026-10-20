@@ -1,3 +1,4 @@
+import {iosRejected} from '../src/ios-help.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Simulator} from '../src/engine.ts';
@@ -5,7 +6,7 @@ import {IOSSession} from '../src/cli.ts';
 import {terminalRows} from '../src/ios-terminal.ts';
 
 function run(c:IOSSession,...commands:string[]) {
-  for(const command of commands)assert.ok(!c.execute(command).some(line=>line.startsWith('%')),command);
+  for(const command of commands)assert.ok(!c.execute(command).some(iosRejected),command);
 }
 
 test('attached terminal columns replace the 80-column fallback and preserve wide table headers',()=>{

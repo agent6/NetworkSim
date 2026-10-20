@@ -44,7 +44,7 @@ test('COMP-08 virtual IDs and subinterface numbers are preserved exactly instead
 
 test('COMP-09 invalid interface fragments and ambiguous commands are left unchanged by Tab',()=>{
   const {cli}=fixture();for(const line of ['i','interface xyz','interface gi99/9','interface gi0/999','router z','interface ',''])assert.equal(cli.complete(line),line,line);
-  assert.match(cli.help('interface xyz').join('\n'),/No matching/);assert.match(cli.help('interface gi99/9').join('\n'),/No matching/);
+  assert.match(cli.help('interface xyz').join('\n'),/% Unrecognized command/);assert.match(cli.help('interface gi99/9').join('\n'),/% Unrecognized command/);
   assert.equal(cli.complete('no int gi'),'no int GigabitEthernet');assert.equal(cli.complete('default int gi'),'default int GigabitEthernet');
 });
 

@@ -16,13 +16,16 @@ export function inspectIngress(engine: Simulator, device: Device, port: string, 
   const cleanMac = (mac: string) => mac.replace(/[^0-9a-f]/gi, '').toLowerCase();
   const security = iface.features.portSecurity;
   if (security && security.enabled !== false) {
+    (state.portSecurityLastSource ??= {})[port] = { mac: frame.sourceMac, vlan };
+    const countViolation = () => { if ((security.violation ?? 'shutdown') !== 'protect') (state.portSecurityPortViolations ??= {})[port] = (state.portSecurityPortViolations[port] ?? 0) + 1; };
     const moved = Object.entries(device.config.interfaces).some(([other, c]) => other !== port && c.features.portSecurity?.enabled !== false && c.features.portSecurity && [...(c.features.portSecurity.macs ?? []), ...(state.secureMacs?.[other] ?? [])].some((mac: string) => cleanMac(mac) === cleanMac(frame.sourceMac)));
-    if (moved) { if ((security.violation ?? 'shutdown') === 'shutdown') disablePort(engine, device, port, 'psecure-violation'); return drop('portSecurityViolations', 'ETHERNET', 'Secure MAC move violation', 'This source MAC belongs to a different secure port.'); }
+    if (moved) { countViolation(); if ((security.violation ?? 'shutdown') === 'shutdown') disablePort(engine, device, port, 'psecure-violation'); return drop('portSecurityViolations', 'ETHERNET', 'Secure MAC move violation', 'This source MAC belongs to a different secure port.'); }
     const entries: string[] = state.secureMacs?.[port] ?? [];
     const configured: string[] = security.macs ?? [];
     const known = [...new Set([...configured, ...entries].map(x => x.replace(/[^0-9a-f]/gi, '').toLowerCase()))];
     if (!known.includes(frame.sourceMac.replace(/[^0-9a-f]/gi, '').toLowerCase())) {
       if (known.length >= (security.maximum ?? 1)) {
+        countViolation();
         if ((security.violation ?? 'shutdown') === 'shutdown') disablePort(engine, device, port, 'psecure-violation');
         return drop('portSecurityViolations', 'ETHERNET', 'Port security violation', 'The secure MAC limit was exceeded on ' + port + '.');
       }

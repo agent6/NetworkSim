@@ -8,12 +8,13 @@ import{validatePoE}from'./poe.ts';
 import {dnsRecords,validateDNSRecords} from './dns-service.ts';
 import{validateWireless}from'./wireless-model.ts';
 import { parseDocument as parseYAML, stringify as stringifyYAML } from "yaml";
-import { emptyRuntime, type LabDocument } from "./model.ts";
-import { isIPv4, isIPv6, maskToPrefix, parseCidr } from "./ip.ts";
+import { emptyRuntime, type DeviceConfig, type LabDocument } from "./model.ts";
+import { isIPv4, isIPv6, maskToPrefix, parseCidr, sameAddress } from "./ip.ts";
 import { validateLesson } from "./lessons.ts";
 
 const STORAGE_KEY = "network-sim.labs.v1";
 const WORKSPACE_KEY = "network-sim.workspace.v1";
+const MAX_LAB_FILE_BYTES = 10 * 1024 * 1024;
 const KINDS = new Set(["router", "switch", "poeswitch", "l3switch", "pc", "server", "wlc", "ap", "laptop", "phone"]);
 export interface SavedLab {
   id: string;
@@ -137,14 +138,14 @@ function validateConfig(c: any) {
 
 /** Validation is deliberately transactional: no current simulator state is touched here. */
 export function parseDocument(text: string): LabDocument {
-  if (new TextEncoder().encode(text).byteLength > 10 * 1024 * 1024)
+  if (new TextEncoder().encode(text).byteLength > MAX_LAB_FILE_BYTES)
     throw Error("This lab exceeds the 10 MB file limit.");
   return validateDocument(JSON.parse(text));
 }
 
 /** YAML is the portable file format; browser recovery keeps its existing JSON storage. */
 export function parseLabFile(text: string): LabDocument {
-  if (new TextEncoder().encode(text).byteLength > 10 * 1024 * 1024)
+  if (new TextEncoder().encode(text).byteLength > MAX_LAB_FILE_BYTES)
     throw Error("This lab exceeds the 10 MB file limit.");
   const yaml = parseYAML(text, {
     version: "1.2", schema: "core", merge: false, resolveKnownTags: false,
@@ -153,6 +154,12 @@ export function parseLabFile(text: string): LabDocument {
   const problem = yaml.errors[0] ?? yaml.warnings[0];
   if (problem) throw Error(`Invalid YAML: ${problem.message}`);
   return validateDocument(yaml.toJS({maxAliasCount: 100}));
+}
+
+export async function readLabFile(file: Pick<File, "size" | "text">): Promise<LabDocument> {
+  if (file.size > MAX_LAB_FILE_BYTES)
+    throw Error("This lab exceeds the 10 MB file limit.");
+  return parseLabFile(await file.text());
 }
 
 export function serializeLabFile(doc: LabDocument): string {
@@ -297,6 +304,82 @@ export function saveLocal(doc: LabDocument, id = doc.lab.id): void {
   const labs = listSaved().filter((l) => l.id !== id);
   labs.unshift({ id, name: doc.lab.name, savedAt: Date.now(), document: doc });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(labs));
+}
+
+function savedLabName(name: string, currentId?: string): string {
+  const normalized = name.trim();
+  if (!normalized || normalized.length > 200) throw Error("Use a name from 1–200 characters.");
+  if (listSaved().some(lab => lab.id !== currentId && lab.name.toLowerCase() === normalized.toLowerCase()))
+    throw Error("A saved lab already uses that name. Choose a different name.");
+  return normalized;
+}
+
+/** First Save names the current lab without changing its identity or making a copy. */
+export function saveNamedLocal(doc: LabDocument, name: string): LabDocument {
+  const named = structuredClone(doc);
+  named.lab.name = savedLabName(name, doc.lab.id);
+  saveLocal(named);
+  return named;
+}
+
+/** Copies have independent identities; named Save as copies also require a distinct name. */
+export function saveLocalCopy(doc: LabDocument, name?: string): LabDocument {
+  if (name !== undefined) name = savedLabName(name);
+  const copy = structuredClone(doc);
+  copy.lab.id = crypto.randomUUID();
+  copy.lab.name = name ?? doc.lab.name;
+  saveLocal(copy);
+  return copy;
+}
+
+function labEditState(doc: LabDocument, reference: LabDocument): string {
+  const lab = structuredClone(doc.lab);
+  const configState = (config: DeviceConfig, previous?: DeviceConfig) => {
+    for (const port of Object.values(config.interfaces)) {
+      const previousPort = previous?.interfaces[port.name];
+      const lease = port.features.dhcpLease ?? previousPort?.features.dhcpLease;
+      if (port.features.dhcp) {
+        delete port.ip;
+        delete port.mask;
+        if (lease && config.defaultGateway === lease.gateway) delete config.defaultGateway;
+        if (port.features.windowsDNSMode !== "static" && lease &&
+          JSON.stringify(config.dnsServers) === JSON.stringify(lease.dns ?? [])) config.dnsServers = [];
+        if (lease?.domain && config.features.domainName === lease.domain) delete config.features.domainName;
+      }
+      const lease6 = port.features.dhcpv6Lease ?? previousPort?.features.dhcpv6Lease;
+      const learned = [...(port.features.slaacAddresses ?? []), ...(previousPort?.features.slaacAddresses ?? []), lease6?.address].filter(Boolean);
+      port.ipv6 = port.ipv6.filter(value => !learned.some(address => sameAddress(value.split("/")[0], address)));
+      const delegation = lease6?.delegationName;
+      if (delegation) delete config.features.delegatedPrefixes?.[delegation];
+      if (config.features.delegatedPrefixes && !Object.keys(config.features.delegatedPrefixes).length)
+        delete config.features.delegatedPrefixes;
+      for (const field of ["dhcpLease", "leaseExpires", "dhcpv6Lease", "slaacAddresses", "_secureMacs"])
+        delete port.features[field];
+    }
+    config.staticRoutes = config.staticRoutes.filter(route =>
+      !("autoconfig" in route && route.autoconfig) && !("autoconfigPrefix" in route && route.autoconfigPrefix));
+  };
+  for (const device of lab.devices) {
+    const previous = reference.lab.devices.find(item => item.id === device.id);
+    device.runtime = emptyRuntime();
+    configState(device.config, previous?.config);
+    if (device.startupConfig) configState(device.startupConfig, previous?.startupConfig);
+  }
+  if ("lesson" in lab && lab.lesson && typeof lab.lesson === "object") {
+    if ("completed" in lab.lesson) delete lab.lesson.completed;
+    if ("observations" in lab.lesson) delete lab.lesson.observations;
+  }
+  // Browser recovery, canvas navigation and learned network state are not user edits.
+  return JSON.stringify({ seed: doc.seed, lab }, (_key, value) =>
+    value && typeof value === "object" && !Array.isArray(value) ?
+      Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b))) : value);
+}
+
+export function labSaveStatus(doc: LabDocument): "unsaved" | "modified" | "saved" {
+  const saved = listSaved().find(lab => lab.id === doc.lab.id);
+  if (!saved) return "unsaved";
+  const baseline = parseDocument(JSON.stringify(saved.document));
+  return labEditState(doc, baseline) === labEditState(baseline, doc) ? "saved" : "modified";
 }
 
 /** The active workspace is independent of the user's named lab snapshots. */

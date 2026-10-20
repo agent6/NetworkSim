@@ -1,5 +1,35 @@
 # Validation record
 
+## New lab save-state correction (2026-10-20)
+
+TypeScript checking and **27 focused persistence/YAML tests** passed. New regressions distinguish an explicit named save from workspace recovery; verify first-save identity, in-place updates, meaningful topology/configuration/startup/note edits, undoing to saved content, ignored runtime/view changes, generated DHCP/SLAAC addressing, actual DHCP acquisition and renewal, save/load recovery, independent Save as identities, duplicate names and failed writes. The offline build produces matching `index.html` and `dist/index.html` copies.
+
+The built app passed **13 workflow checks in each of Chrome and Edge**, opened through `file://` with networking disabled, zero runtime errors and zero external requests. Clean saved labs cleared without a prompt or another snapshot. Edited saved labs offered Save/Don't save/Cancel and updated the existing record before clearing. Never-saved work requested a name; cancelling naming, duplicate names and blocked writes preserved the active lab. Checks also covered clean/edited reload recovery, undoing back to saved content, first Save on imported/custom-named work, Save as identity safety, unavailable saved-lab storage, unchanged Import protection, and 320/390-pixel dialogs. The existing eight-check offline IOS/console smoke also passed in both browsers.
+
+Save status is compared with the explicitly saved browser snapshot, not an autosave-reset dirty flag. Canvas navigation and runtime state do not count as edits; browser saves remain separate from portable exports. This corrects the earlier New flow recorded below, which offered a backup copy instead of updating the saved lab.
+
+## Lab toolbar and replacement checkpoint (2026-10-20)
+
+TypeScript checking, the offline build and **20 persistence/YAML tests** passed after adding the grouped New, Save, Save as, Import and Export controls. Tests cover independent backup identities, distinct Save as names, updating only the selected saved copy, failed writes, file-size limits, unreadable files, YAML/JSON validation, and preservation of the active document.
+
+The built `index.html` was exercised directly through `file://`, with networking disabled, in Chrome and Edge. Both browsers passed **14 workflow checks**, with zero runtime exceptions and zero external requests. Observed workflows include the actual native file chooser, fresh-workspace imports, save/cancel/discard replacement, export-first confirmation, storage-failure recovery, undo/redo, repeated file selection, malformed/unreadable/oversized files, cancelled slow reads, JSON import, immediate reload recovery, notes-only and renamed-empty labs, escaped imported text, and 320/390-pixel layouts. The toolbar's Save as flow preserved console drafts, edit history and earlier snapshots; Undo/Redo followed by Save stayed on the copy rather than overwriting its source. New offered save/cancel/discard, blocked clearing on a failed backup, and was undoable. My labs no longer duplicates the toolbar's new/save/import actions.
+
+Browser-local saving remains distinct from portable export. A download request is not evidence that a user completed the browser's save dialog; the export-first flow deliberately waits for an explicit replacement decision. Browser snapshots can be cleared with browsing data, and imported protocol sessions rebuild rather than restoring live runtime memory.
+
+## IOS output checkpoint (2026-10-20)
+
+The integrated `npm run check` passed TypeScript checking and **1,033 tests**, with no failures, then rebuilt both offline HTML copies. A final targeted run also passed 53 help, syntax, completion, terminal and terminal-width regressions after making `show line` help follow the configured VTY range.
+
+The final `index.html` was opened directly through `file://` in Chrome 155.0.8059.84 and Edge 155.0.4283.62 with networking disabled. Both browsers passed eight checks, with zero runtime errors and zero external requests. These checks used the public file-import control and real keyboard events to exercise IOSv/IOSvL2 identity, contextual `?` help, IPv6 source help, Tab completion, CLI mode transitions, delivered ping/traceroute probes, OSPF output, VLANs and EtherChannel output.
+
+The delivery and `dist/index.html` copies have identical SHA-256 hashes:
+
+```text
+f006460233150aa0941ddaefbc2cdf84e9ccebc7b155dd5faeec5ff18c493f3b
+```
+
+The six `ios-fidelity-*.test.ts` suites and existing regressions cover the revised configuration, help, interface/L3, routing, switching and system/probe output. This is not a live-image comparison of every IOS command or option. See [output boundaries](ios-output-reference.md#deliberate-boundaries-and-remaining-display-scope) for derived protocol fields, representative hardware values, unsupported dialogs and other remaining differences.
+
 ## Automated checkpoints
 
 - The integrated `npm run check` on October 16, 2026 passed TypeScript and **299 independent tests**, then built both offline HTML copies. The log is `.cache/final-check.log`. The test count is not a full-parity claim.
@@ -7,9 +37,9 @@
 - The build compiles Tailwind locally, bundles to one classic IIFE, verifies the escaped JavaScript parses, checks single script delimiters and rejects reference/research imports. The output includes `connect-src 'none'` and no external scripts/styles.
 - The current lockfile dependency audit reports zero vulnerabilities. There are no runtime package dependencies in the delivered HTML.
 
-## Browser checks
+## Browser checks (earlier environment)
 
-The exact built `dist/index.html` was tested in the Codex in-app browser using the user-authorized temporary `127.0.0.1` preview. The delivery copy is the same single HTML file. The browser automation environment rejects `file://` URLs, so direct-from-disk execution has not been observed through that browser; it was not bypassed. Packaging checks establish that the app has no runtime server or fetched-module dependency.
+The earlier built `dist/index.html` was tested in the Codex in-app browser using the user-authorized temporary `127.0.0.1` preview. The delivery copy was the same single HTML file. That browser automation environment rejected `file://` URLs, so direct-from-disk execution was not observed through it; the restriction was not bypassed. The newer direct-file Chrome/Edge evidence is recorded above. Packaging checks establish that the app has no runtime server or fetched-module dependency.
 
 Observed in the browser:
 

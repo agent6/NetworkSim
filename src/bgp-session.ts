@@ -17,9 +17,13 @@ export interface BgpPeerConfig {
 export interface BgpSession {
   key:string;config:BgpPeerConfig;runtime:Device['runtime'];state:string;channel?:TCPChannel;remoteRouterId?:string;negotiatedHold?:number;
   received:Map<string,any>;advertised:Map<string,string>;lastReceived?:number;establishedAt?:number;lastError?:string;blocked?:boolean;
-  messagesSent:number;messagesReceived:number;connects:number;signature:string;keepaliveTimer?:any;holdTimer?:any;retryTimer?:any;wanted:boolean;negotiatedFamilies?:(4|6)[];
+  messagesSent:number;messagesReceived:number;connects:number;stats?:BgpSessionStats;signature:string;keepaliveTimer?:any;holdTimer?:any;retryTimer?:any;wanted:boolean;negotiatedFamilies?:(4|6)[];
 }
 let advertisementOrder=0;
+/** Per-type message counters and reset history, as reported by IOS "show ip bgp neighbors". */
+export interface BgpSessionStats {sent:Record<string,number>;received:Record<string,number>;established:number;dropped:number;resetAt?:number;resetReason?:string}
+function sessionStats(s:BgpSession):BgpSessionStats {return s.stats??={sent:{},received:{},established:0,dropped:0};}
+function countMessage(s:BgpSession,direction:'sent'|'received',type:unknown):void {const table=sessionStats(s)[direction],key=String(type??'');table[key]=(table[key]??0)+1;}
 type Context={sessions:Map<string,BgpSession>;dispose?:()=>void};
 const contexts=new WeakMap<BgpTransportHost,Context>();
 function keyOf(d:string,address:string,vrf?:string):string{return`${d}|${vrf??''}|${address}`;}
@@ -27,8 +31,8 @@ function context(engine:BgpTransportHost):Context {let c=contexts.get(engine);if
 function event(engine:BgpTransportHost,s:BgpSession,label:string,detail:string,warning=false):void {engine.emit({nodeId:s.config.deviceId,protocol:'BGP',label,detail,disposition:warning?'warning':'info'});}
 function cancelTimers(engine:BgpTransportHost,s:BgpSession):void {engine.clock.cancel(s.keepaliveTimer);engine.clock.cancel(s.holdTimer);engine.clock.cancel(s.retryTimer);s.keepaliveTimer=s.holdTimer=s.retryTimer=undefined;}
 function refresh(engine:BgpTransportHost):void {engine.recompute();engine.notify();}
-function publish(s:BgpSession):void {const row=s.runtime.features.bgpSessions?.find((r:any)=>r.neighbor===s.config.peerAddress&&(r.vrf??'')===(s.config.vrf??''));if(row)Object.assign(row,{state:s.state,channelId:s.channel?.id,lastReceived:s.lastReceived,messagesSent:s.messagesSent,messagesReceived:s.messagesReceived});}
-function send(s:BgpSession,message:any):void {if(s.channel?.send({protocol:'bgp',...message})!==undefined)s.messagesSent++;publish(s);}
+function publish(s:BgpSession):void {const row=s.runtime.features.bgpSessions?.find((r:any)=>r.neighbor===s.config.peerAddress&&(r.vrf??'')===(s.config.vrf??''));if(row)Object.assign(row,{state:s.state,channelId:s.channel?.id,lastReceived:s.lastReceived,messagesSent:s.messagesSent,messagesReceived:s.messagesReceived,stats:s.stats,transport:s.channel?{localAddress:s.channel.localAddress,localPort:s.channel.localPort,peerPort:s.channel.peerPort}:undefined});}
+function send(s:BgpSession,message:any):void {if(s.channel?.send({protocol:'bgp',...message})!==undefined){s.messagesSent++;countMessage(s,'sent',message?.type);}publish(s);}
 function scheduleRetry(engine:BgpTransportHost,s:BgpSession):void {
   engine.clock.cancel(s.retryTimer);s.retryTimer=undefined;
   if(!s.wanted||s.blocked||!s.config.enabled||!s.config.initiate||!engine.getDevice(s.config.deviceId)?.powered)return;
@@ -38,7 +42,7 @@ function neighborLog(engine:BgpTransportHost,s:BgpSession,state:string):void {co
 function fail(engine:BgpTransportHost,s:BgpSession,reason:string,blocked=false,notification=true):void {
   if(notification&&s.channel?.state==='OPEN')send(s,{type:'NOTIFICATION',reason});
   for(const[key,route]of s.received)observeBgpDampening(engine,s.config.deviceId,s.config.peerAddress,key,route,true,s.config.localAs!==s.config.remoteAs);
-  const channel=s.channel;s.channel=undefined;cancelTimers(engine,s);s.received.clear();s.advertised.clear();s.establishedAt=undefined;s.negotiatedHold=undefined;s.blocked=blocked;s.lastError=reason;s.state=blocked?'IDLE (MAX-PREFIX)':'ACTIVE';channel?.close(reason);
+  const channel=s.channel;s.channel=undefined;cancelTimers(engine,s);s.received.clear();s.advertised.clear();if(s.establishedAt!==undefined){const st=sessionStats(s);st.dropped++;st.resetAt=engine.clock.now();st.resetReason=reason;}s.establishedAt=undefined;s.negotiatedHold=undefined;s.blocked=blocked;s.lastError=reason;s.state=blocked?'IDLE (MAX-PREFIX)':'ACTIVE';channel?.close(reason);
   neighborLog(engine,s,'Down '+reason);event(engine,s,blocked?'Maximum-prefix exceeded':'Session down',`${s.config.peerAddress}: ${reason}`,true);scheduleRetry(engine,s);refresh(engine);
 }
 function armHold(engine:BgpTransportHost,s:BgpSession,seconds=s.negotiatedHold??240):void {
@@ -46,13 +50,13 @@ function armHold(engine:BgpTransportHost,s:BgpSession,seconds=s.negotiatedHold??
   s.holdTimer=engine.clock.schedule(Math.max(100,seconds*1000),()=>fail(engine,s,'Hold timer expired'),{owner:s.config.deviceId,label:'BGP HoldTimer'});
 }
 function established(engine:BgpTransportHost,s:BgpSession):void {
-  if(s.state==='ESTABLISHED')return;s.state='ESTABLISHED';s.establishedAt=engine.clock.now();s.lastError=undefined;s.advertised.clear();
+  if(s.state==='ESTABLISHED')return;s.state='ESTABLISHED';s.establishedAt=engine.clock.now();sessionStats(s).established++;s.lastError=undefined;s.advertised.clear();
   const hold=s.negotiatedHold??0,interval=hold?Math.max(0.1,Math.min(s.config.keepalive||hold/3,hold/3)):0;
   if(interval)s.keepaliveTimer=engine.clock.schedule(interval*1000,()=>send(s,{type:'KEEPALIVE'}),{owner:s.config.deviceId,repeat:interval*1000,label:'BGP KeepaliveTimer'});
   neighborLog(engine,s,'Up');event(engine,s,'Session established',`${s.config.peerAddress}: OPEN and KEEPALIVE received over one persistent TCP connection; hold ${hold}s.`);refresh(engine);
 }
 function receive(engine:BgpTransportHost,s:BgpSession,message:any,channel:TCPChannel):void {
-  if(s.channel!==channel||message?.protocol!=='bgp')return;s.messagesReceived++;
+  if(s.channel!==channel||message?.protocol!=='bgp')return;s.messagesReceived++;countMessage(s,'received',message?.type);
   if(message.type==='NOTIFICATION'){fail(engine,s,String(message.reason??'Peer notification'),false,false);return;}
   if(message.type==='OPEN'){
     if(s.state!=='OPENSENT'||!Array.isArray(message.families??[4])||(message.families??[4]).some((f:any)=>![4,6].includes(f))||message.version!==4||message.asn!==s.config.remoteAs||!isIPv4(message.routerId)||message.routerId===s.config.routerId||!Number.isFinite(message.hold)||message.hold!==0&&message.hold<3){fail(engine,s,'OPEN parameters rejected');return;}

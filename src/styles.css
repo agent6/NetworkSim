@@ -489,11 +489,26 @@
 
 .editor-toolbar { overflow-x:auto; gap:12px; }
 .editor-toolbar > div { flex-shrink:0; }
+@media(max-width:1100px) {
+  .lab-actions .file-action-label { display:none; }
+  .lab-actions > button { padding:8px; }
+}
 @media(max-width:650px) {
-  .app-header { padding:0 10px;gap:8px; }
+  .app-header { height:auto; min-height:58px; padding:10px; gap:8px; flex-wrap:wrap; }
   .app-header > div { gap:6px; }
+  .app-header > div:first-child { flex:1; }
+  .app-header .header-actions { display:contents; }
+  .app-header .lab-actions { order:1; flex-basis:100%; gap:6px; }
+  .app-header .lab-actions > button { flex:1; min-width:0; flex-direction:column; gap:3px; padding:6px 4px; }
+  .app-header .lab-actions .file-action-label { display:inline; font-size:10px; white-space:nowrap; }
+  .app-header .theme-toggle, .app-header [data-action="files"] { padding:8px; }
   .app-header #lab-name { max-width:115px; }
-  .app-header .export-label { display:none; }
+  .app-header .brand-logo { width:28px; height:28px; }
+}
+
+@media(max-width:480px) {
+  .lab-import-dialog .dialog-footer { flex-wrap:wrap; }
+  .lab-import-dialog .dialog-footer > button { width:100%; }
 }
 
 

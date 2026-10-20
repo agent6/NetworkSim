@@ -2,6 +2,7 @@ import type {Simulator,ServiceOptions} from './engine.ts';
 import type {Device} from './model.ts';
 import {encodeType7,decodeType7} from './credentials.ts';
 import {transferFTPFile} from './ftp-files.ts';
+import {iosRejected} from './ios-help.ts';
 
 export interface FTPClientConfiguration {username?:string;password?:string;passwordType?:0|7;sourceInterface?:string;passive?:boolean}
 type ConfigurationContext={device:Device;fail:(message?:string)=>never;interfaceName:(name:string)=>string;changed:()=>void};
@@ -72,7 +73,7 @@ export class IOSFTPClient {
       this.request=undefined;if(value&&!['y','yes'].includes(value.toLowerCase()))return ['% Copy aborted.'];return this.run(r);
     }catch(error){this.request=undefined;return [this.error(error)];}
   }
-  private defaultPath():string{return this.engine.getDevice(this.deviceId)!.config.hostname+'-config';}
+  private defaultPath():string{return this.engine.getDevice(this.deviceId)!.config.hostname.toLowerCase()+'-confg';}
   private error(error:unknown):string{const message=error instanceof Error?error.message:String(error);return message.startsWith('%')?message:'% FTP copy failed: '+message;}
   private run(r:Request):string[]{
     try{
@@ -87,9 +88,9 @@ export class IOSFTPClient {
       for(let n=0;result.status==='running'&&n<310;n++)this.engine.advance(100);
       if(result.status!=='success')return [`%Error opening ftp://${r.host}/${r.path} (${result.error??'Transfer timed out'})`];
       const applied=r.reading?this.context.applyText(result.content,r.destination):[];
-      if(applied.some(line=>line.startsWith('%')))return applied;
+      if(applied.some(iosRejected))return applied;
       this.engine.changed();
-      return [...r.reading?[`Loading ${r.path} from ${r.host}: !`]:['Writing '+r.path+': !'],`[OK - ${result.bytes} bytes]`,...applied.filter(line=>!/^\d+ bytes copied\.$/.test(line)),`${result.bytes} bytes copied in ${((this.engine.clock.now()-started)/1000).toFixed(3)} secs`];
+      return [...r.reading?[`Loading ${r.path} from ${r.host}: !`]:['Writing '+r.path+': !'],`[OK - ${result.bytes} bytes]`,...applied.filter(line=>!/^\d+ bytes copied\b/.test(line)),'',`${result.bytes} bytes copied in ${(Math.max(1,this.engine.clock.now()-started)/1000).toFixed(3)} secs (${Math.floor(result.bytes*1000/Math.max(1,this.engine.clock.now()-started))} bytes/sec)`];
     }catch(error){return [this.error(error)];}
   }
 }

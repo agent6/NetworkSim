@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Simulator} from '../src/engine.ts';
-import {fileName,parseDocument,parseLabFile,serializeLabFile} from '../src/persistence.ts';
+import {fileName,parseDocument,parseLabFile,readLabFile,serializeLabFile} from '../src/persistence.ts';
 
 function portableLab() {
   const sim=new Simulator(413), router=sim.addDevice('router'), pc=sim.addDevice('pc');
@@ -66,4 +66,23 @@ test('exports from browser snapshots use the same YAML format and legacy JSON st
   const snapshot=parseDocument(stored),yaml=serializeLabFile(snapshot);
   assert.deepEqual(parseLabFile(yaml),snapshot);
   assert.equal(fileName('../../Old Lab.json'),'Old Labjson.netsim.yaml');
+});
+
+test('selected lab files accept YAML and prior JSON exports without changing the active lab',async()=>{
+  const current=new Simulator(12);current.addDevice('switch');
+  const before=current.serialize(),incoming=portableLab();
+  for(const text of [serializeLabFile(incoming),JSON.stringify(incoming)]){
+    const file=new File([text],'lab.netsim.yaml');
+    assert.deepEqual(await readLabFile(file),parseDocument(JSON.stringify(incoming)));
+    assert.deepEqual(current.serialize(),before);
+  }
+});
+
+test('file selection rejects oversize files before reading and propagates read or validation failures',async()=>{
+  let reads=0;
+  await assert.rejects(readLabFile({size:10*1024*1024+1,async text(){reads++;return '';}}),/10 MB/);
+  assert.equal(reads,0);
+  await assert.rejects(readLabFile({size:1,async text(){throw Error('File access was denied');}}),/File access was denied/);
+  await assert.rejects(readLabFile(new File(['not a lab'],'bad.yaml')),/NetworkSim/);
+  await assert.rejects(readLabFile(new File(['format: ['],'bad.yaml')),/Invalid YAML/);
 });

@@ -1,10 +1,11 @@
+import {iosRejected} from '../src/ios-help.ts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Simulator } from '../src/engine.ts';
 import { basicAuthorization } from '../src/http-service.ts';
 import { IOSSession } from '../src/cli.ts';
 
-function ok(cli:IOSSession,...commands:string[]){for(const command of commands){const output=cli.execute(command);assert.ok(!output.some(x=>x.startsWith('%')),`${command}: ${output.join('\n')}`);}}
+function ok(cli:IOSSession,...commands:string[]){for(const command of commands){const output=cli.execute(command);assert.ok(!output.some(iosRejected),`${command}: ${output.join('\n')}`);}}
 function setup(){const engine=new Simulator(98),a=engine.addDevice('router'),b=engine.addDevice('router'),ca=new IOSSession(engine,a.id),cb=new IOSSession(engine,b.id);engine.connect({deviceId:a.id,port:'GigabitEthernet0/0'},{deviceId:b.id,port:'GigabitEthernet0/0'});for(const [cli,ip]of [[ca,'10.0.0.1'],[cb,'10.0.0.2']] as const)ok(cli,'enable','conf t','int g0/0',`ip address ${ip} 255.255.255.0`,'no shutdown','end');return {engine,a,b,ca,cb};}
 
 test('enable secrets and console login authenticate without retaining secrets in history',()=>{
@@ -17,12 +18,12 @@ test('SSH authenticates over actual TCP, permits remote commands, and closes on 
   const {engine,a,b,ca,cb}=setup();ok(cb,'conf t','ip domain-name training.test','crypto key generate rsa modulus 2048','username admin privilege 15 secret secret','aaa new-model','aaa authentication login default local','aaa authorization exec default local','line vty 0 4','login authentication default','transport input ssh','end');
   ok(ca,'ssh -l admin 10.0.0.2');assert.equal(ca.prompt,'Password:');assert.equal(ca.passwordInput,true);ok(ca,'secret');assert.equal(ca.prompt,'R2#');assert.ok(ca.execute('show ip interface brief').some(x=>x.includes('10.0.0.2')));assert.ok(engine.events.some(x=>x.protocol==='TCP'));
   ok(ca,'conf t','hostname Remote','end');assert.equal(b.config.hostname,'Remote');assert.equal(a.config.hostname,'R1');assert.equal(ca.prompt,'Remote#');
-  ok(cb,'conf t','int g0/0','shutdown','end');assert.match(ca.execute('show version').join('\n'),/Connection failed/);assert.equal(ca.prompt,'R1#');
+  ok(cb,'conf t','int g0/0','shutdown','end');assert.match(ca.execute('show version').join('\n'),/\[Connection to 10\.0\.0\.2 closed by foreign host\]/);assert.equal(ca.prompt,'R1#');
 });
 
 test('Telnet rejects incorrect passwords and configured ACLs block new sessions',()=>{
   const {engine,b,ca,cb}=setup();ok(cb,'conf t','line vty 0 0','password access','login','transport input telnet','end');ok(ca,'telnet 10.0.0.2');assert.equal(ca.prompt,'Password:');ca.execute('wrong');ca.execute('wrong');assert.match(ca.execute('wrong').join('\n'),/Bad passwords/);assert.equal(ca.prompt,'R1#');
-  ok(cb,'conf t','ip access-list extended BLOCK','deny tcp any any eq 23','permit ip any any','exit','int g0/0','ip access-group BLOCK in','end');assert.match(ca.execute('telnet 10.0.0.2').join('\n'),/Connection failed/);assert.equal(b.runtime.features.managementSessions.length,0);assert.ok(engine.events.some(x=>/ACL/i.test(x.label+' '+x.detail)));
+  ok(cb,'conf t','ip access-list extended BLOCK','deny tcp any any eq 23','permit ip any any','exit','int g0/0','ip access-group BLOCK in','end');assert.match(ca.execute('telnet 10.0.0.2').join('\n'),/^Trying 10\.0\.0\.2 \.\.\. \n% Destination unreachable; gateway or host down$/);assert.equal(b.runtime.features.managementSessions.length,0);assert.ok(engine.events.some(x=>/ACL/i.test(x.label+' '+x.detail)));
 });
 
 test('nested Telnet sessions keep independent prompts and remote changes target only the selected device',()=>{

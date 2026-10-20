@@ -2,6 +2,21 @@
 
 Generated 2026-10-16T21:26:17.848Z. This is an ongoing differential audit, not a declaration of complete command or IOS fidelity.
 
+## IOS output pass (2026-10-20)
+
+The current console pass uses the IOSv 15.9(3)M router and IOSvL2 15.2 switch profiles, Cisco command references, and captured help catalogs to align command descriptions, argument-position help, completion, errors and output formatting. The inventory and closure queue below are historical reference-simulator comparison results, not new measurements or a claim that every IOS argument has been verified.
+
+| Area | Implementation and regression coverage |
+| --- | --- |
+| Help, completion and errors | `ios-help.ts`, `ios-help-keywords.ts`, `ios-syntax.ts`; `ios-fidelity-help.test.ts` and the existing syntax/completion/terminal suites |
+| Configuration | `config-renderer.ts`; `ios-fidelity-config.test.ts` covers IOS ordering, defaults, sections, indentation and save/replay |
+| Interfaces and L3 | `ios-show.ts`; `ios-fidelity-interfaces.test.ts` covers interface, route, ARP, discovery, CEF, ACL, NAT and DHCP displays |
+| Routing protocols | `ios-show-routing.ts`; `ios-fidelity-routing.test.ts` covers OSPF, EIGRP, BGP, RIP, routing-process summaries and FHRP |
+| Switching | `ios-show-l2.ts`; `ios-fidelity-switching.test.ts` covers VLAN, MAC, STP/MST, EtherChannel, LACP/PAgP, VTP and port-security |
+| System and probes | `ios-system-show.ts` and CLI handlers; `ios-fidelity-system.test.ts` covers identity, counters, logs, terminals, files, SSH, NTP, ping/traceroute and RSA dialogs |
+
+Final integration corrected BGP's unreachable-peer route claim, EIGRP's neighbor count and `show line` help for configured VTY ranges, and completed ping/traceroute help for IPv6 sources, TTL, data patterns and family/VRF forms. The [validation record](validation.md#ios-output-checkpoint-2026-10-20) records the completed automated and direct-file browser checks. Full IOS equivalence is not claimed: [output boundaries](ios-output-reference.md#deliberate-boundaries-and-remaining-display-scope) distinguish measured state, derived fields, idle placeholders and remaining simplified commands.
+
 ## Reproduction
 
 Run with Node 24:

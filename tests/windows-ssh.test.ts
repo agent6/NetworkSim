@@ -1,3 +1,4 @@
+import {iosRejected} from '../src/ios-help.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Simulator} from '../src/engine.ts';
@@ -5,7 +6,7 @@ import {IOSSession} from '../src/cli.ts';
 import {wirelessLabFixture} from './fixtures/wireless-lab.ts';
 
 const password='WindowsSSH123',port='GigabitEthernet0';
-const run=(cli:IOSSession,...lines:string[])=>{for(const line of lines){const output=cli.execute(line);assert.ok(!output.some(row=>row.startsWith('%')),line+': '+output.join('\n'));}};
+const run=(cli:IOSSession,...lines:string[])=>{for(const line of lines){const output=cli.execute(line);assert.ok(!output.some(iosRejected),line+': '+output.join('\n'));}};
 function configureSSH(cli:IOSSession) {
   run(cli,'enable','configure terminal','ip domain-name lab.example','crypto key generate rsa modulus 2048','ip ssh version 2',`username admin privilege 15 secret ${password}`,'line vty 0 4','login local','transport input ssh','end');
 }
@@ -60,7 +61,7 @@ test('WIN-SSH-09 hostname, IPv4 and IPv6 selection resolve through DNS and use t
 test('WIN-SSH-10 missing keys, disabled SSH transport, refused ports and VTY source restrictions deny access',()=>{
   for(const scenario of ['keys','transport','acl','port','telnet-port','http-port']) {
     const {sim,target,cli,network}=fixture();
-    if(scenario==='keys')run(network,'conf t','crypto key zeroize rsa','end');
+    if(scenario==='keys')run(network,'conf t','crypto key zeroize rsa','yes','end');
     if(scenario==='transport')run(network,'conf t','line vty 0 4','transport input telnet','end');
     if(scenario==='telnet-port')run(network,'conf t','line vty 0 4','transport input telnet','end');
     if(scenario==='http-port')run(network,'conf t','ip http server','end');

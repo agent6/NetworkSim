@@ -8,6 +8,7 @@ import { loginBlocked, recordLoginFailure } from './ios-platform-compat.ts';
 import { SLAController } from './sla.ts';
 import { writeFlashFile } from './filesystem.ts';
 import { renderConfig } from './config-renderer.ts';
+import { iosRejected } from './ios-help.ts';
 import type { Device } from './model.ts';
 import type { Simulator, ServiceResult } from './engine.ts';
 
@@ -218,7 +219,7 @@ export class ManagementController {
       if(accessClass&&!this.engine.aclPermits(d.id,accessClass,source,destination,'tcp',{destinationPort:port}))return {closed:true,output:['% Connection refused by VTY access-class.']};
       if(line.exec===false)return {closed:true,output:['% EXEC is disabled on this line.']};
       const method = this.method(d, line);
-      if (method === 'password' && !line.password) return { closed: true, output: ['Password required, but none set.', 'Connection closed.'] };
+      if (method === 'password' && !line.password) return { closed: true, output: ['', 'Password required, but none set', 'Connection closed.'] };
       const span = name.split(' ').slice(1).map(Number), capacity = span.length > 1 ? span[1] - span[0] + 1 : 1;
       for (const existing of [...this.sessions.values()]) if (!this.alive(existing)) this.close(existing);
       if ([...this.sessions.values()].filter(s => s.deviceId === d.id && s.line === name).length >= capacity) return { closed: true, output: ['% All configured VTY lines are in use.'] };
@@ -229,7 +230,6 @@ export class ManagementController {
       if(Number.isInteger(payload.columns)&&payload.columns>0&&payload.columns<=512)session.cli.setViewportColumns?.(payload.columns);
       if (session.phase === 'ready'){const authorization=this.execPrivilege(d.id,name,session.username,false,line.privilege||1);if(!authorization.accepted){this.close(session);return {closed:true,output:['% EXEC authorization failed.']};}session.cli.setPrivilege(authorization.privilege);session.cli.setIdentity(session.username,false,name);this.beginAccounting(session,d,authorization.privilege);}
       const messages = [d.config.features.banners?.motd, d.config.features.banners?.login].filter(Boolean);
-      if (port === 22) messages.unshift('Simulated SSH session; this teaching transport does not implement cryptographic encryption.');
       return this.reply(session, messages);
     }
     const session = this.sessions.get(payload?.sessionId);
@@ -287,7 +287,7 @@ export class ManagementController {
     try {
       for (const action of [...(applet.actions || [])].sort((a, b) => Number(a.order) - Number(b.order)).slice(0, 100)) {
         executed++;if (action.kind === 'syslog') this.engine.log(device.id, action.text, 6);
-        else if (action.kind === 'cli') { const result = cli.execute(action.text); output.push(...result); if (result.some(x => /^%/.test(x))) {failed=true;break;} }
+        else if (action.kind === 'cli') { const result = cli.execute(action.text); output.push(...result); if (result.some(iosRejected)) {failed=true;break;} }
       }
       device.runtime.features.eemHistory ??= [];
       device.runtime.features.eemHistory.push({ name, time: this.engine.clock.now(), actions:executed,status:failed?'failed':'success',eventType:applet.event?.type??'none' });

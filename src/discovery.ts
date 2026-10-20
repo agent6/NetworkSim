@@ -52,7 +52,8 @@ function advertise(engine:DiscoveryHost,d:Device,port:string,protocol:Protocol):
  if(!enabled(d,port,protocol,'send')||!engine.interfaceUp(d.id,port))return;
  const p=d.config.interfaces[port],cfg=configuration(d,protocol),phone=(d.kind==='pc'||d.kind==='phone')&&endpointProfile(d).role==='phone',voicePolicy=advertisedVoice(d,port,protocol,engine.clock.now()),medCapabilities=protocol==='LLDP'&&(phone||Object.values(table(d)).some(row=>row.interface===port&&row.protocol==='LLDP'&&row.medCapabilities&&row.expires>engine.clock.now()));
  engine.sendLinkControl?.(d.id,port,{kind:'link-control',protocol,body:{deviceId:d.id,port,hostname:d.config.hostname,address:p.ip||p.ipv6[0]?.split('/')[0],platform:phone?'IP phone (generic endpoint)':d.kind,capabilities:phone?['telephone','station']:d.kind==='router'?['router']:d.kind==='l3switch'?['router','bridge']:['bridge'],description:p.description||'',holdtime:cfg.holdtime,...(protocol==='CDP'?{duplex:engine.ethernetState?.(d.id,port)?.duplex}: {}),...medCapabilities?{medCapabilities:true}:{},...voicePolicy?{voicePolicy}:{} }});
-}
+  const traffic=(d.runtime.features.discoveryTraffic??={})[protocol]??={out:0,in:0,aged:0};traffic.out++;
+ }
 
 /** Per-physical-link advertisements. Timing and directional packet loss determine discovery. */
 export function syncDiscovery(engine:DiscoveryHost):void {
@@ -77,6 +78,7 @@ export function receiveDiscoveryControl(engine:DiscoveryHost,deviceId:string,por
   const protocol=message.protocol as Protocol,d=engine.getDevice(deviceId),b=message.body;
   if(!d||!enabled(d,port,protocol,'receive')||!engine.interfaceUp(deviceId,port)||!b||typeof b.deviceId!=='string'||typeof b.port!=='string'||!Number.isFinite(b.holdtime))return true;
   const key=`${protocol}|${port}|${b.deviceId}|${b.port}`,cache=table(d),previous=cache[key];
+  ((d.runtime.features.discoveryTraffic??={})[protocol]??={out:0,in:0,aged:0}).in++;
   if(b.holdtime<=0){delete cache[key];publish(d);refreshVoice(engine,d);syncDiscovery(engine);engine.notify();return true;}
   const holdtime=Math.min(65535,Math.max(1,b.holdtime)),row:RecordRow={protocol,deviceId:b.deviceId,interface:port,peerInterface:b.port,address:typeof b.address==='string'?b.address:undefined,state:'UP',expires:engine.clock.now()+holdtime*1000,lastReceived:engine.clock.now(),holdtime,hostname:String(b.hostname||b.deviceId),platform:String(b.platform||'unknown'),capabilities:Array.isArray(b.capabilities)?b.capabilities.map(String):[],description:String(b.description||''),...protocol==='LLDP'&&b.medCapabilities===true?{medCapabilities:true}:{},...validVoicePolicy(b.voicePolicy)?{voicePolicy:structuredClone(b.voicePolicy)}:{}};
   if(protocol==='CDP'&&['half','full'].includes(b.duplex)){
@@ -86,6 +88,6 @@ export function receiveDiscoveryControl(engine:DiscoveryHost,deviceId:string,por
   }
   cache[key]=row;publish(d);refreshVoice(engine,d);if(protocol==='LLDP'&&previous?.medCapabilities!==row.medCapabilities)syncDiscovery(engine);
   if(!previous)engine.emit({nodeId:d.id,protocol,label:'Neighbor discovered',detail:`${row.hostname} ${row.peerInterface} on ${port}`,disposition:'info'});
-  engine.clock.schedule(holdtime*1000,()=>{if(d.runtime.features.discoveryNeighbors!==cache||cache[key]!==row)return;delete cache[key];publish(d);refreshVoice(engine,d);syncDiscovery(engine);engine.emit({nodeId:d.id,protocol,label:'Neighbor expired',detail:`No advertisement from ${row.hostname} within ${holdtime} seconds.`,disposition:'info'});engine.notify();},{owner:d.id,label:`${protocol} neighbor expiry`});
+  engine.clock.schedule(holdtime*1000,()=>{if(d.runtime.features.discoveryNeighbors!==cache||cache[key]!==row)return;delete cache[key];((d.runtime.features.discoveryTraffic??={})[protocol]??={out:0,in:0,aged:0}).aged++;publish(d);refreshVoice(engine,d);syncDiscovery(engine);engine.emit({nodeId:d.id,protocol,label:'Neighbor expired',detail:`No advertisement from ${row.hostname} within ${holdtime} seconds.`,disposition:'info'});engine.notify();},{owner:d.id,label:`${protocol} neighbor expiry`});
   engine.notify();return true;
 }

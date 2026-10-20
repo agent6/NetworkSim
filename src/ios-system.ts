@@ -24,7 +24,8 @@ export function iosLogLine(device: Device, entry: { time: number; message: strin
   const f = device.config.features, timestamp = f.timestamps?.[kind];
   let prefix = f.sequenceNumbers ? `${pad(entry.sequence ?? 0,6)}: ` : '';
   if (timestamp?.mode === 'datetime') {
-    const d = instant(device, entry.time, false, !!timestamp.localtime);
+    const d = instant(device, entry.time, false, !!timestamp.localtime), source = device.runtime.features.clockSource ?? (f.clockEpoch !== undefined ? 'manual' : 'unsynchronized');
+    prefix += String(source).startsWith('unsynchronized') ? source === 'unsynchronized NTP' ? '.' : '*' : '';
     prefix += `${timestamp.year ? d.getUTCFullYear() + ' ' : ''}${months[d.getUTCMonth()]} ${String(d.getUTCDate()).padStart(2)} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}${timestamp.msec ? '.' + pad(d.getUTCMilliseconds(),3) : ''}${timestamp.showTimezone ? ' ' + (timestamp.localtime ? f.timezone?.name ?? 'UTC' : 'UTC') : ''}: `;
   } else if (timestamp?.mode === 'uptime') {
     const seconds = Math.floor(entry.time / 1000);
@@ -35,16 +36,31 @@ export function iosLogLine(device: Device, entry: { time: number; message: strin
 }
 export function iosLogging(device: Device): string[] {
   const f = device.config.features.logging ?? {}, entries: any[] = device.runtime.features.logEntries ?? [];
-  const level = (n: number) => severityNames[n] ?? String(n);
+  const level = (n: number) => severityNames[n] ?? String(n), logged = (n: number) => entries.filter(entry => entry.severity <= n).length;
+  const sink = (name: string, enabled: boolean, severity: number, indent: string) => enabled ? [`    ${name} level ${level(severity)}, ${logged(severity)} messages logged, xml disabled,`, `${indent}filtering disabled`] : [`    ${name} disabled`];
+  const trap = f.trap ?? 6;
   return [
-    `Syslog logging: ${f.enabled === false ? 'disabled' : 'enabled'}`,
-    `    Console logging: ${f.console === false ? 'disabled' : 'level ' + level(f.consoleLevel ?? 7)}`,
-    `    Monitor logging: ${f.monitor === false ? 'disabled' : 'level ' + level(f.monitorLevel ?? 7)}`,
-    `    Buffer logging: ${f.buffered === false ? 'disabled' : 'level ' + level(f.bufferedLevel ?? 7)}`,
-    `    Trap logging: ${f.trapEnabled === false ? 'disabled' : 'level ' + level(f.trap ?? 6)}`,
-    ...((f.hosts ?? []) as string[]).map(address => `        Logging to ${address} (udp port 514)`),
-    `    ${entries.length} messages retained in the event history`,
-    '', `Log Buffer (${f.bufferSize ?? 16384} bytes):`, ...device.runtime.logs,
+    `Syslog logging: ${f.enabled === false ? 'disabled' : 'enabled'} (0 messages dropped, 0 messages rate-limited, 0 flushes, 0 overruns, xml disabled, filtering disabled)`,
+    '', 'No Active Message Discriminator.', '', '', '', 'No Inactive Message Discriminator.', '', '',
+    ...sink('Console logging:', f.enabled !== false && f.console !== false, f.consoleLevel ?? 7, '                     '),
+    ...sink('Monitor logging:', f.enabled !== false && f.monitor !== false, f.monitorLevel ?? 7, '                     '),
+    ...(f.enabled !== false && f.buffered !== false ? sink('Buffer logging: ', true, f.bufferedLevel ?? 7, '                    ') : ['    Buffer logging:  disabled, xml disabled,', '                    filtering disabled']),
+    '    Exception Logging: size (4096 bytes)',
+    '    Count and timestamp logging messages: disabled',
+    '    Persistent logging: disabled',
+    '', 'No active filter modules.', '',
+    f.enabled === false || f.trapEnabled === false ? '    Trap logging: disabled' : `    Trap logging: level ${level(trap)}, ${logged(trap)} message lines logged`,
+    ...((f.hosts ?? []) as string[]).flatMap(address => [
+      `        Logging to ${address}  (udp port 514, audit disabled,`,
+      '              link up),',
+      `              ${f.enabled === false || f.trapEnabled === false ? 0 : logged(trap)} message lines logged, `,
+      '              0 message lines rate-limited, ',
+      '              0 message lines dropped-by-MD, ',
+      `              xml disabled, sequence number ${device.config.features.sequenceNumbers ? 'enabled' : 'disabled'}`,
+      '              filtering disabled']),
+    '        Logging Source-Interface:       VRF Name:',
+    ...(f.source ? [`        ${String(f.source).padEnd(32)}`] : []),
+    '', `Log Buffer (${f.bufferSize ?? 16384} bytes):`, '', ...device.runtime.logs,
   ];
 }
 
@@ -73,10 +89,17 @@ export function filterIOSOutput(lines: string[], specification: string): string[
 
 export function iosNTP(device:Device, now:number, detail=false, associations=false):string[]{
   const config=device.config.features.ntp??{}, state=device.runtime.features.ntp??{}, rows:any[]=Object.values(device.runtime.features.ntpAssociations??{});
-  if(!associations)return [`Clock is ${state.synchronized?'synchronized':'unsynchronized'}, stratum ${state.stratum??16}, reference is ${state.peer??(config.master?'127.127.1.1':'none')}`,...(state.synchronized?[`Clock offset is ${Number(state.offset??0).toFixed(3)} msec, root delay is ${Number(state.delay??0).toFixed(3)} msec`,`Reference time: ${state.lastSync??'?'} ms of simulation uptime`]:[]),...(state.error?[`Last synchronization failure: ${state.error}`]:[])];
+  const stamp=(t:number|undefined)=>{if(t===undefined)return '00000000.00000000 (00:00:00.000 UTC Mon Jan 1 1900)';const ms=instant(device,t,false,false).getTime(),seconds=(Math.floor(ms/1000)+2208988800)%2**32,fraction=Math.floor((((ms%1000)+1000)%1000)/1000*2**32);return `${seconds.toString(16).toUpperCase().padStart(8,'0')}.${fraction.toString(16).toUpperCase().padStart(8,'0')} (${iosClock(device,t)[0].replace(/^[*.]/,'')})`;};
+  if(!associations){
+    const head=['nominal freq is 1000.0003 Hz, actual freq is 1000.0003 Hz, precision is 2**10',`ntp uptime is ${Math.floor(Math.max(0,now-Number(device.runtime.features.bootTime??0))/10)} (1/100 of seconds), resolution is 4000`];
+    if(!state.synchronized)return ['Clock is unsynchronized, stratum 16, no reference clock',...head,`reference time is ${stamp(undefined)}`,'clock offset is 0.0000 msec, root delay is 0.00 msec','root dispersion is 0.00 msec, peer dispersion is 0.00 msec',"loopfilter state is 'NSET' (Never set), drift is 0.000000000 s/s",'system poll interval is 64, never updated.'];
+    const updated=state.lastSync??now;
+    return [`Clock is synchronized, stratum ${state.stratum??16}, reference is ${state.peer??'127.127.1.1'}`,...head,`reference time is ${stamp(updated)}`,`clock offset is ${Number(state.offset??0).toFixed(4)} msec, root delay is ${Number(state.delay??0).toFixed(2)} msec`,`root dispersion is ${state.localMaster?'0.00':'2.38'} msec, peer dispersion is ${state.localMaster?'0.00':'1.94'} msec`,"loopfilter state is 'CTRL' (Normal Controlled Loop), drift is 0.000000000 s/s",`system poll interval is 64, last update was ${Math.max(0,Math.floor((now-updated)/1000))} sec ago.`];
+  }
   const data=(config.servers||[]).map((server:any)=>rows.find(row=>row.address===server.address)||{address:server.address,configured:true,role:server.role,reach:0,stratum:16});
-  if(config.master!==undefined)data.push({address:'127.127.1.1',referenceClock:'.LOCL.',configured:true,valid:true,stratum:Math.max(0,config.master-1),reach:255,poll:64,delay:0,offset:0});
+  if(config.master!==undefined)data.push({address:'127.127.1.1',referenceClock:'.LOCL.',configured:true,valid:true,stratum:Math.max(0,config.master-1),reach:255,poll:64,delay:0,offset:0,lastReply:state.lastSync??now});
   for(const row of rows)if(!data.includes(row)&&!data.some((item:any)=>item.address===row.address))data.push(row);
-  if(detail)return data.flatMap((row:any)=>[`${row.address} ${row.configured?'configured':'dynamic'}, ${row.valid?'valid':'insane'}, ${row.authenticated?'authenticated':'unauthenticated'}, stratum ${row.stratum??16}`,`our mode ${row.role==='peer'?'symmetric active':'client'}, peer mode ${row.role==='peer'?'symmetric active':'server'}`,`our poll intvl ${row.poll??64}, reach ${(row.reach??0).toString(8)}`,`delay ${row.delay===undefined?'?':row.delay.toFixed(3)} msec, offset ${row.offset===undefined?'?':row.offset.toFixed(3)} msec`,...(row.error?[`last error: ${row.error}`]:[]),'']);
-  return ['     address          ref clock       st   when   poll reach  delay   offset',...data.map((row:any)=>`${state.peer===row.address&&state.synchronized?'*':' '}${row.configured?'~':' '}${row.address.padEnd(19)}${(row.referenceClock??'.INIT.').padEnd(16)}${String(row.stratum??16).padEnd(5)}${String(row.lastReply===undefined?'-':Math.floor((now-row.lastReply)/1000)).padEnd(7)}${String(row.poll??64).padEnd(5)}${(row.reach??0).toString(8).padStart(3)}  ${row.delay===undefined?'?':row.delay.toFixed(3)}  ${row.offset===undefined?'?':row.offset.toFixed(3)}`),' * sys.peer, ~ configured'];
+  const selected=(row:any)=>state.synchronized&&state.peer===row.address,reach=(row:any)=>(row.reach??0).toString(8);
+  if(detail)return data.flatMap((row:any)=>[`${row.address} ${row.configured?'configured':'dynamic'}, ipv4, ${row.authenticated?'authenticated':'unauthenticated'}, ${selected(row)?'our_master, ':''}${row.valid?'sane, valid':'insane, invalid'}, stratum ${row.stratum??16}`,`ref ID ${row.referenceClock??'.INIT.'}, time ${stamp(row.lastReply)}`,`our mode ${row.role==='peer'?'active':'client'}, peer mode ${row.role==='peer'?'active':'server'}, our poll intvl ${row.poll??64}, peer poll intvl ${row.poll??64}`,`root delay 0.00 msec, root disp 0.00, reach ${reach(row)}, sync dist ${row.reach?'4.21':'15937.50'}`,`delay ${Number(row.delay??0).toFixed(2)} msec, offset ${Number(row.offset??0).toFixed(4)} msec, dispersion ${row.reach?'1.94':'15937.50'}, jitter ${row.reach?'0.97':'0.00'} msec`,'precision 2**10, version 4','']);
+  return ['','  address         ref clock       st   when   poll reach  delay  offset   disp',...data.map((row:any)=>`${selected(row)?'*':' '}${row.configured?'~':' '}${String(row.address).padEnd(16)}${String(row.referenceClock??'.INIT.').padEnd(15)}${String(row.stratum??16).padStart(3)}${(row.lastReply===undefined?'-':String(Math.max(0,Math.floor((now-row.lastReply)/1000)))).padStart(7)}${String(row.poll??64).padStart(7)}${reach(row).padStart(6)}${Number(row.delay??0).toFixed(3).padStart(7)}${Number(row.offset??0).toFixed(3).padStart(8)}${(row.reach?'1.939':'15937.').padStart(7)}`),' * sys.peer, # selected, + candidate, - outlyer, x falseticker, ~ configured'];
 }

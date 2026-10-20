@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Simulator } from "../src/engine.ts";
-import { parseDocument, fileName, loadWorkspace, saveWorkspace } from "../src/persistence.ts";
+import { parseDocument, fileName, loadWorkspace, saveWorkspace, saveLocal, saveLocalCopy, listSaved } from "../src/persistence.ts";
 
 function document() {
   const s = new Simulator(42),
@@ -154,4 +154,67 @@ test("damaged workspace data is rejected without replacing the stored recovery c
   const before = new Map(storage.data);
   assert.throws(() => loadWorkspace(storage), /missing/);
   assert.deepEqual(storage.data, before);
+});
+
+test("replacement backups keep independent IDs without overwriting earlier snapshots or changing the active lab", () => {
+  const originalStorage = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  const storage = browserStorage();
+  Object.defineProperty(globalThis, "localStorage", { value: storage, configurable: true });
+  try {
+    const doc = { ...document(), view: { x: 20, y: -5, scale: 1.2 } };
+    saveLocal(doc);
+    doc.lab.name = "Unsaved newer work";
+    doc.lab.devices[0].config.hostname = "CURRENT";
+    const before = structuredClone(doc);
+    saveLocalCopy(doc);
+    saveLocalCopy(doc);
+    assert.deepEqual(doc, before);
+    const saved = listSaved();
+    assert.equal(saved.length, 3);
+    assert.equal(new Set(saved.map(row => row.id)).size, 3);
+    for (const row of saved.slice(0, 2)) {
+      assert.notEqual(row.id, doc.lab.id);
+      assert.equal(row.document.lab.id, row.id);
+      assert.deepEqual({ ...row.document, lab: { ...row.document.lab, id: doc.lab.id } }, before);
+    }
+    assert.equal(saved[2].id, doc.lab.id);
+    assert.notEqual(saved[2].document.lab.devices[0].config.hostname, "CURRENT");
+    const storedBefore = new Map(storage.data);
+    storage.setItem = () => { throw Error("Browser storage quota exceeded"); };
+    assert.throws(() => saveLocalCopy(doc), /quota/);
+    assert.deepEqual(storage.data, storedBefore);
+    assert.deepEqual(doc, before);
+  } finally {
+    if (originalStorage) Object.defineProperty(globalThis, "localStorage", originalStorage);
+    else Reflect.deleteProperty(globalThis, "localStorage");
+  }
+});
+
+test("Save as creates a named independent lab and subsequent Save updates only that copy", () => {
+  const originalStorage = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  const storage = browserStorage();
+  Object.defineProperty(globalThis, "localStorage", { value: storage, configurable: true });
+  try {
+    const original = document(), before = structuredClone(original);
+    saveLocal(original);
+    const copy = saveLocalCopy(original, "  My separate lab  ");
+    assert.equal(copy.lab.name, "My separate lab");
+    assert.notEqual(copy.lab.id, original.lab.id);
+    assert.deepEqual(original, before);
+    copy.lab.devices[0].config.hostname = "EDITED-COPY";
+    saveLocal(copy);
+    const saved = listSaved();
+    assert.equal(saved.length, 2);
+    assert.equal(saved[0].document.lab.devices[0].config.hostname, "EDITED-COPY");
+    assert.deepEqual(saved[1].document, before);
+    const snapshot = new Map(storage.data);
+    for (const name of ["", "  ", "x".repeat(201), "MY SEPARATE LAB"]) {
+      assert.throws(() => saveLocalCopy(original, name), /name/);
+      assert.deepEqual(storage.data, snapshot);
+      assert.deepEqual(original, before);
+    }
+  } finally {
+    if (originalStorage) Object.defineProperty(globalThis, "localStorage", originalStorage);
+    else Reflect.deleteProperty(globalThis, "localStorage");
+  }
 });

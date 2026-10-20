@@ -1,73 +1,8 @@
-import {stpPortName} from './stp-ports.ts';
-import { switchingPeer } from './switching-messages.ts';
-import { interfaceSpeed, interfaceDuplex } from './ethernet.ts';
-import { bridgeMac } from './control-plane.ts';
 import type { Simulator } from './engine.ts';
-import type { Device, InterfaceConfig } from './model.ts';
-import { ERRDISABLE_CAUSES, MODELED_ERRDISABLE_CAUSES, errdisableDetectionEnabled } from './ios-errdisable.ts';
+import type { Device } from './model.ts';
+import { formatIOSL2Show } from './ios-show-l2.ts';
 
-class InputError extends Error {}
-const bad=():never=>{throw new InputError("% Invalid input detected at '^' marker.");};
-const missing=():never=>{throw new InputError('% Incomplete command.');};
-const exact=(a:string[],n=0)=>{if(a.length<n)missing();if(a.length>n)bad();};
-const natural=(a:string,b:string)=>a.localeCompare(b,'en',{numeric:true});
-const row=(values:unknown[],widths:number[])=>values.map((value,i)=>String(value??'?').padEnd(widths[i]??0)).join(' ').trimEnd();
-const short=(p:string)=>p.replace(/^GigabitEthernet/i,'Gi').replace(/^FastEthernet/i,'Fa').replace(/^TenGigabitEthernet/i,'Te').replace(/^Ethernet/i,'Et').replace(/^Port-channel/i,'Po');
-const mac=(value:string)=>value.replace(/[^a-f0-9]/gi,'').match(/.{4}/g)?.join('.')??'?';
-const ports=(d:Device)=>Object.values(d.config.interfaces).filter(p=>p.switchport&&!/^(Vlan|Loopback|Tunnel|Null)/i.test(p.name)&&!p.name.includes('.')).sort((a,b)=>natural(a.name,b.name));
-const word=(value:string|undefined,options:string[])=>{if(!value)missing();value=value!.toLowerCase();const found=options.includes(value)?[value]:options.filter(o=>o.startsWith(value!));if(found.length>1)throw new InputError(`% Ambiguous command: "${value}"`);return found[0]??bad();};
-const num=(value:string|undefined,min:number,max:number)=>{if(!value)missing();if(!/^\d+$/.test(value!)||Number(value)<min||Number(value)>max)bad();return Number(value);};
-function takePort(d:Device,a:string[]):InterfaceConfig {let value=a.shift()??missing();if(/^[a-z-]+$/i.test(value)&&/^\d/.test(a[0]??''))value+=a.shift();const m=/^([a-z-]+)(\d.*)$/i.exec(value),names=Object.values(d.config.interfaces).filter(p=>{const n=/^([a-z-]+)(\d.*)$/i.exec(p.name);return p.name.toLowerCase()===value.toLowerCase()||short(p.name).toLowerCase()===value.toLowerCase()||m&&n&&n[1].toLowerCase().startsWith(m[1].toLowerCase())&&n[2]===m[2];});if(names.length>1)throw new InputError(`% Ambiguous command: "${value}"`);return names[0]??bad();}
-function ranges(values:number[]):string {const sorted=[...new Set(values)].sort((a,b)=>a-b),result:string[]=[];for(let i=0;i<sorted.length;i++){const first=sorted[i];while(sorted[i+1]===sorted[i]+1)i++;result.push(first===sorted[i]?String(first):first+'-'+sorted[i]);}return result.join(',')||'none';}
-function mst(d:Device,a:string[]):string[]{
-  const cfg=d.config.features.stp??{},m=cfg.mst??{},instances:any[]=m.instances??[],mapped=new Set<number>(instances.flatMap(i=>i.vlans??[])),mapping=[{id:0,vlans:Array.from({length:4094},(_,i)=>i+1).filter(v=>!mapped.has(v))},...instances];
-  if(a[0]&&'configuration'.startsWith(a[0])){a.shift();if(a[0])word(a.shift(),['revision']);exact(a);return [`Name      [${m.name??''}]`,`Revision  ${m.revision??0}     Instances configured ${mapping.length}`,row(['Instance','Vlans mapped'],[10]),...mapping.map(i=>row([i.id,ranges(i.vlans)],[10]))];}
-  let instance:number|undefined,port:InterfaceConfig|undefined,detail=false;if(/^\d+$/.test(a[0]??''))instance=num(a.shift(),0,4094);while(a.length){const key=word(a.shift(),['detail','interface']);if(key==='detail')detail=true;else{if(port)bad();port=takePort(d,a);}}
-  if(cfg.mode!=='mst')return ['% Switch is not in MST mode'];
-  return mapping.filter(i=>instance===undefined||i.id===instance).flatMap(i=>{
-    const trees=Object.entries(d.runtime.stp).filter(([v])=>i.vlans.includes(Number(v))),tree=trees[0]?.[1];if(!tree)return [`MST${i.id}: no active VLANs mapped to this instance`];
-    const bridge=String(tree.bridgeId??'').split('.'),root=String(tree.rootBridgeId??'').split('.'),rootPort=Object.entries(tree.ports).find(([,s])=>s.role==='root')?.[0],selected=Object.entries(tree.ports).filter(([p])=>!port||p===stpPortName(d,port.name)).sort(([a],[b])=>natural(a,b));
-    return [`##### MST${i.id}    vlans mapped:   ${ranges(i.vlans)}`,`Bridge        address ${mac(bridge[1]??'')}  priority ${Number(bridge[0])||0}`,`Root          address ${mac(root[1]??'')}  priority ${Number(root[0])||0}`,tree.rootId===d.id?'              This bridge is the root':`              port ${rootPort?short(rootPort):'?'}  cost ${tree.cost??'?'}`,`Configured    hello time ${cfg.helloTime??2}, forward delay ${cfg.forwardTime??15}, max age ${cfg.maxAge??20}, max hops ${m.maxHops??20}`,row(['Interface','Role','Sts','Cost','Prio.Nbr','Type'],[23,10,5,10,10]),...selected.flatMap(([name,s])=>{const p=d.config.interfaces[name],priority=p.features.stpMst?.[i.id]?.['port-priority']??p.features.stpPortPriority??128,role=({designated:'Desg',root:'Root',alternate:'Altn',backup:'Back'} as Record<string,string>)[s.role??'']??s.role??'?',state=({forwarding:'FWD',blocking:'BLK',discarding:'BLK',listening:'LIS',learning:'LRN',disabled:'DIS'})[s.state],link=s.linkType??p.features.stpLinkType??(interfaceDuplex(d,p)==='half'?'shared':'point-to-point');return [row([short(name),role,state,s.cost,priority+'.'+s.portNumber,(link==='shared'?'Shr':'P2p')+(s.edge?' Edge':'')+(tree.boundary?' Bound(PVST)':'')],[23,10,5,10,10]),...(detail?[`  ${name}: ${s.role}, ${s.state}; active VLANs ${ranges(trees.map(([v])=>Number(v)))}`]:[])];}),''];
-  });
-}
-function vtp(e:Simulator,d:Device,a:string[]):string[]|undefined {
-  if(!a.length||'status'.startsWith(a[0]))return undefined;const kind=word(a.shift(),['counters','devices','interface','password','conflicts']),cfg=d.config.features.vtp??{};
-  if(kind==='interface'){const selected=a.length?[takePort(d,a)]:ports(d);exact(a);if(selected.some(p=>!p.switchport))bad();return [row(['Interface','VTP Status'],[25]),...selected.map(p=>row([p.name,p.features.vtp===false?'disabled':'enabled'],[25]))];}
-  if(kind==='devices'||kind==='conflicts'){if(kind==='devices'&&a.length)word(a.shift(),['conflicts']);exact(a);return Number(cfg.version??2)!==3?['Device information can be only retrieved in VTP version 3']:['% VTP version 3 device discovery is not simulated.'];}
-  exact(a);if(kind==='password')return [cfg.password?'VTP Password: '+cfg.password:'The VTP password is not configured.'];
-  return ['VTP statistics:',`  VLAN database synchronizations received: ${d.runtime.features.vtpSyncCount??0}`,...(d.runtime.features.vtpLastSync?[`  Last source: ${d.runtime.features.vtpLastSync.hostname}, revision ${d.runtime.features.vtpLastSync.revision}`]:[]),...Object.entries<any>(d.runtime.features.switchingMessages??{}).filter(([,r])=>r.VTP).map(([p,r])=>`  ${p}: ${r.VTP.sent} advertisements sent, ${r.VTP.received} received, ${r.VTP.errors} rejected`)];
-}
-function dtp(e:Simulator,d:Device,a:string[]):string[]{
-  if(!a.length)return [`Global DTP information`,`  ${ports(d).filter(p=>e.interfaceUp(d.id,p.name)&&!p.features.nonegotiate).length} interfaces using DTP`,'Sending DTP Hello packets every 30 seconds','Dynamic Trunk timeout is 300 seconds'];
-  word(a.shift(),['interface']);const selected=a.length?[takePort(d,a)]:ports(d);exact(a);if(selected.some(p=>!p.switchport))bad();
-  return selected.flatMap(p=>{const operational=!!d.runtime.features.trunks?.[p.name]?.operational,state=operational?'TRUNK':'ACCESS',admin=({trunk:'ON',access:'OFF','dynamic-auto':'AUTO','dynamic-desirable':'DESIRABLE'} as Record<string,string>)[p.mode]??p.mode;return [`DTP information for ${p.name}:`,`  TOS/TAS/TNS: ${state}/${admin}/${state}`,`  TOT/TAT/TNT: ${operational?'DOT1Q':'NATIVE'}/DOT1Q/${operational?'DOT1Q':'NATIVE'}`,`  Enabled: ${p.features.nonegotiate?'no':'yes'}`,`  In STP: ${Object.values(d.runtime.stp).some(t=>!!t.ports[p.name])?'yes':'no'}`,`  DTP packets sent/received: ${d.runtime.features.switchingMessages?.[p.name]?.DTP?.sent??0}/${d.runtime.features.switchingMessages?.[p.name]?.DTP?.received??0}`,`  Neighbor expires in: ${Math.max(0,Math.ceil(((switchingPeer(e,d.id,p.name,'DTP')?.expires??e.clock.now())-e.clock.now())/1000))} seconds`,''];});
-}
-function counters(e:Simulator,d:Device,protocol:'lacp'|'pagp',a:string[]):string[]{
-  let group:number|undefined;if(/^\d+$/.test(a[0]??''))group=num(a.shift(),1,4096);const kind=word(a.shift(),protocol==='lacp'?['counters','internal','neighbor','sys-id']:['counters','internal','neighbor']);let detail=false;if(a.length){word(a.shift(),['detail']);detail=true;}exact(a);const selected=ports(d).filter(p=>p.features.channelGroup&&(group===undefined||Number(p.features.channelGroup)===group)&&(protocol==='lacp'?['active','passive']:['desirable','auto']).includes(p.features.channelMode));
-  if(kind==='sys-id')return [`${d.config.features.lacpSystemPriority??32768}, ${mac(bridgeMac(d))}`];
-  if(kind==='counters')return [`${protocol==='lacp'?'LACP':'PAgP'} packet counters`,row(['Port','Sent','Received','Errors'],[22,12,12]),...selected.map(p=>{const c=d.runtime.features.switchingMessages?.[p.name]?.[protocol==='lacp'?'LACP':'PAGP'];return row([short(p.name),c?.sent??0,c?.received??0,c?.errors??0],[22,12,12]);})];
-  if(kind==='internal')return [`${protocol.toUpperCase()} local port information`,row(['Port','Priority','Admin Key','Oper Key','Port State'],[19,10,12,12]),...selected.flatMap(p=>{const channel=d.runtime.features.portChannels?.[p.features.channelGroup],active=channel?.activeMembers?.includes(p.name),state=active?'bundled':channel?.standbyMembers?.includes(p.name)?'hot-standby':'individual';return [row([short(p.name),p.features.lacpPortPriority??32768,p.features.channelGroup,active?p.features.channelGroup:0,state],[19,10,12,12]),...(detail?[`  Mode ${p.features.channelMode}, interface ${e.interfaceUp(d.id,p.name)?'up':'down'}, port channel ${channel?.state??'down'}`]:[])];})];
-  return [`${protocol.toUpperCase()} negotiated member neighbors`,row(['Port','Partner System','Partner Port','Group'],[19,23,21]),...selected.flatMap(p=>{const peer=switchingPeer(e,d.id,p.name,protocol==='lacp'?'LACP':'PAGP');return peer?[row([short(p.name),mac(peer.systemMac??''),peer.port,peer.group],[19,23,21]),...(detail?[`  Partner ${peer.deviceId}, last received ${((e.clock.now()-peer.lastReceived)/1000).toFixed(1)}s ago, expires in ${Math.ceil((peer.expires-e.clock.now())/1000)}s`,`  Actor synchronized ${peer.synchronized?'yes':'no'}, partner ${peer.partner?.port??'not received'}`]:[])]:[];})];
-}
-
-function errdisable(e:Simulator,d:Device,a:string[]):string[]{
-  const kind=word(a.shift(),['detect','recovery','flap-values']);exact(a);const cfg=d.config.features.errdisable??{},causes=cfg.causes??[];
-  if(kind==='flap-values')return ['ErrDisable flap detection','Link, DTP and PAgP flap-rate detectors are not simulated; no operational flap thresholds are available.'];
-  if(kind==='detect')return [row(['ErrDisable Reason','Detection','Mode'],[27,16]),...ERRDISABLE_CAUSES.map(c=>row([c,errdisableDetectionEnabled(d,c)?'Enabled':'Disabled',MODELED_ERRDISABLE_CAUSES.includes(c)?'port':'configuration only'],[27,16]))];
-  const disabled=Object.entries<string>(d.runtime.features.errdisableCauses??{}).filter(([port,cause])=>d.config.interfaces[port]?.features.errDisabled&&(causes.includes('all')||causes.includes(cause)));
-  return [row(['ErrDisable Reason','Timer Status'],[27]),...ERRDISABLE_CAUSES.map(c=>row([c,causes.includes('all')||causes.includes(c)?'Enabled':'Disabled'],[27])),`Timer interval: ${cfg.interval??300} seconds`,'','Interfaces that will be enabled at the next timeout:',row(['Interface','Errdisable reason','Time left(sec)'],[18,27]),...disabled.map(([port,cause])=>{const deadline=d.runtime.features.errdisableDeadline?.[port];return row([short(port),cause,deadline===undefined?'?':Math.max(0,Math.ceil((deadline-e.clock.now())/1000))],[18,27]);})];
-}
-function storm(e:Simulator,d:Device,a:string[]):string[]{
-  let port:InterfaceConfig|undefined,kind='broadcast';if(a.length&&!['broadcast','multicast','unicast'].some(v=>v.startsWith(a[0])))port=takePort(d,a);if(a.length)kind=word(a.shift(),['broadcast','multicast','unicast']);exact(a);if(port&&!port.switchport)bad();const selected=port?[port]:ports(d);
-  return [row(['Interface','Filter State','Upper','Lower','Current'],[17,16,11,11]),...selected.map(p=>{const setting=p.features.stormControl?.[kind],meter=d.runtime.features.stormMeters?.[p.name+':'+kind],now=Math.floor(e.clock.now()/1000),current=meter?.window===now?meter.bytes*8/(interfaceSpeed(d,p)*1000000)*100:0,blocked=meter?.blocked&&now-meter.window<=1;return row([short(p.name),p.features.errDisabled?'Err-disabled':setting===undefined?'Inactive':blocked?'Blocking':'Forwarding',setting===undefined?'100.00%':Number(typeof setting==='number'?setting:setting.rising).toFixed(2)+'%',setting===undefined?'100.00%':Number(typeof setting==='number'?setting:setting.falling??setting.rising).toFixed(2)+'%',current.toFixed(2)+'%'],[17,16,11,11]);}),`Traffic type: ${kind}; current load is the measured one-second simulation window.`];
-}
 /** Display only local configuration and observed state; unknown branches defer to the base formatter. */
 export function formatIOSSwitchingShow(e:Simulator,d:Device,topic:string,input:readonly string[]):string[]|undefined {
-  const [family,...suffix]=topic.split(' '),a=[...suffix,...input];
-  try {
-    if(family==='vlan'&&a.length&&['summary','remote-span'].some(v=>v.startsWith(a[0]))){const kind=word(a.shift(),['summary','remote-span']);exact(a);const vlans=Object.values(d.config.vlans);return kind==='summary'?[`Number of existing VLANs: ${vlans.length}`,`Number of existing normal-range VLANs: ${vlans.filter(v=>v.id<=1005).length}`,`Number of existing extended-range VLANs: ${vlans.filter(v=>v.id>1005).length}`]:['Remote SPAN VLANs','------------------------------------------------------------------------------',ranges((d.config.features.rspanVlans??[]).filter((v:number)=>!!d.config.vlans[v]))];}
-    if(family==='spanning-tree'&&a.length&&['mst','backbonefast','uplinkfast'].some(v=>v.startsWith(a[0]))){const kind=word(a.shift(),['mst','backbonefast','uplinkfast']);if(kind==='mst')return mst(d,a);exact(a);const enabled=d.config.features.stp?.[kind==='uplinkfast'?'uplinkFast':'backbonefast'];return [`${kind==='uplinkfast'?'UplinkFast':'BackboneFast'} is ${enabled?'enabled':'disabled'}`,kind==='backbonefast'?'BackboneFast configuration is stored; inferior-BPDU recovery is not simulated.':'Alternate root-port promotion uses actual STP state; station-update frame counters are not retained.'];}
-    if(family==='vtp')return vtp(e,d,a);if(family==='dtp')return dtp(e,d,a);if(family==='lacp'||family==='pagp')return counters(e,d,family,a);if(family==='errdisable')return errdisable(e,d,a);if(family==='storm-control')return storm(e,d,a);
-    return undefined;
-  }catch(error){if(error instanceof InputError)return [error.message];throw error;}
+  return formatIOSL2Show(e,d,topic,input);
 }

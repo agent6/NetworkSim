@@ -31,7 +31,7 @@ test('parallel detection reports negotiated 100/half against fixed 100/full; exp
   assert.equal(sim.ethernetState(a.id,g)?.speed,100);assert.equal(sim.ethernetState(a.id,g)?.duplex,'half');
   assert.match(ca.execute('show interfaces '+g+' status').join('\n'),/a-half\s+a-100\s/);
   run(ca,'configure terminal','interface '+g,'speed 1000','duplex full','end');
-  assert.match(renderConfig(a).join("\n"),/ speed 1000/);const fresh=new Simulator(1988),copy=fresh.addDevice('router'),cli=new IOSSession(fresh,copy.id);run(cli,'enable','configure terminal');for(const line of renderConfig(a)){if(!line.trim()||line.startsWith('!')||line==='end'||line.startsWith('Building')||line.startsWith('Current'))continue;run(cli,line.trim());}
+  assert.match(renderConfig(a).join("\n"),/ speed 1000/);const fresh=new Simulator(1988),copy=fresh.addDevice('router'),cli=new IOSSession(fresh,copy.id);copy.config.features.files={...copy.config.features.files,snapshot:renderConfig(a).join('\n')};assert.match(cli.execute('enable').concat(cli.execute('copy flash:snapshot running-config')).join('\n'),/^\d+ bytes copied in /m);
   assert.equal(copy.config.interfaces[g].features.speedAuto,false);
   run(ca,'configure terminal','interface '+g,'default speed','default duplex','end');assert.equal(a.config.interfaces[g].features.speedAuto,true);assert.equal(a.config.interfaces[g].duplex,'auto');assert.doesNotMatch(renderConfig(a).join("\n"),/ speed 1000/);
   run(ca,'configure terminal','interface '+g,'speed 1000');assert.match(ca.execute('duplex half').join('\n'),/Half duplex is supported only/);assert.equal(a.config.interfaces[g].duplex,'auto');assert.match(ca.execute('speed 10000').join('\n'),/not supported/);

@@ -28,8 +28,8 @@ test('caret offset identifies the rejected word while preserving actual terminal
 test('IPv4 argument help follows address, mask, optional secondary and completion without changing state', () => {
   const { engine, device, session, specs, context } = lab('enable', 'configure terminal', 'interface g0/0');
   const configuration = JSON.stringify(device.config), clock = engine.clock.now(), history = [...session.history];
-  assert.match(iosContextHelp('ip address ', specs(), context())!.join('\n'), /A\.B\.C\.D\s+IPv4 address/);
-  assert.match(iosContextHelp('ip address 192.0.2.1 ', specs(), context())!.join('\n'), /A\.B\.C\.D\s+Subnet mask/);
+  assert.match(iosContextHelp('ip address ', specs(), context())!.join('\n'), /A\.B\.C\.D\s+IP address/);
+  assert.match(iosContextHelp('ip address 192.0.2.1 ', specs(), context())!.join('\n'), /A\.B\.C\.D\s+IP subnet mask/);
   const final = iosContextHelp('ip address 192.0.2.1 255.255.255.0 ', specs(), context())!.join('\n');
   assert.match(final, /secondary/); assert.match(final, /<cr>/);
   assert.equal(iosArgumentCompletion('ip address 192.0.2.1 255.255.255.0 sec', specs(), context()), 'ip address 192.0.2.1 255.255.255.0 secondary ');
@@ -61,7 +61,7 @@ test('BGP help depends on neighbor argument position and accepts only a unique k
   const { session, specs, context } = lab('enable', 'configure terminal', 'router bgp 65001');
   const ctx = context({ protocol: 'bgp' });
   assert.match(iosContextHelp('neighbor 192.0.2.2 ', specs(), ctx)!.join('\n'), /remote-as/);
-  assert.match(iosContextHelp('neighbor 192.0.2.2 remote-as ', specs(), ctx)!.join('\n'), /Autonomous|autonomous/);
+  assert.match(iosContextHelp('neighbor 192.0.2.2 remote-as ', specs(), ctx)!.join('\n'), /<1-4294967295>\s+AS of remote neighbor/);
   assert.equal(iosArgumentCompletion('neighbor 192.0.2.2 rem', specs(), ctx), 'neighbor 192.0.2.2 remote-as ');
   assert.equal(iosArgumentCompletion('neighbor 192.0.2.2 r', specs(), ctx), undefined);
   assert.deepEqual(session.execute('neighbor 192.0.2.2 remote-as 65002'), []);
@@ -88,7 +88,7 @@ test('ACL help walks real source/destination port grammar and sequence-prefixed 
   const { session, device } = lab('enable','configure terminal','ip access-list extended WEB');
   assert.match(session.help('10 permit tcp any ').join('\n'),/range/);
   assert.match(session.help('10 permit tcp any range 1024 ').join('\n'),/<0-65535>/);
-  assert.match(session.help('10 permit tcp any range 1024 65535 host 192.0.2.10 eq ').join('\n'),/service name/);
+  assert.match(session.help('10 permit tcp any range 1024 65535 host 192.0.2.10 eq ').join('\n'),/<0-65535>\s+Port number[\s\S]*www\s+World Wide Web \(HTTP, 80\)/);
   assert.equal(session.complete('10 permit tcp any host 192.0.2.10 eq ht'),'10 permit tcp any host 192.0.2.10 eq ht');
   assert.equal(session.complete('10 permit tcp any host 192.0.2.10 eq htt'),'10 permit tcp any host 192.0.2.10 eq htt');
   assert.deepEqual(session.execute('10 permit tcp any range 1024 65535 host 192.0.2.10 eq https log'),[]);
@@ -118,9 +118,9 @@ test('actual command execution distinguishes incomplete, ambiguous and invalid s
   const probes=[
     {setup:['enable'],command:'show',error:/^% Incomplete command\.$/},
     {setup:['enable','configure terminal'],command:'interface',error:/^% Incomplete command\.$/},
-    {setup:['enable','configure terminal'],command:'i',error:/^% Ambiguous command: "i"$/},
+    {setup:['enable','configure terminal'],command:'i',error:/^% Ambiguous command:  "i"$/},
     {setup:['enable','configure terminal','interface g0/0'],command:'ip address 192.0.2.1',error:/^% Incomplete command\.$/},
-    {setup:['enable','configure terminal','router bgp 65001'],command:'neighbor 192.0.2.2 r',error:/^% Ambiguous command: "neighbor 192.0.2.2 r"$/},
+    {setup:['enable','configure terminal','router bgp 65001'],command:'neighbor 192.0.2.2 r',error:/^% Ambiguous command:  "neighbor 192.0.2.2 r"$/},
     {setup:['enable'],command:'show ip interfaace brief',error:/Invalid input detected/,caret:'show ip interfaace brief'.indexOf('interfaace')+7},
     {setup:['enable','configure terminal','interface g0/0'],command:'ip address 192.0.2.1 255.255.255.0 tertiary',error:/Invalid input detected/},
   ];
@@ -135,8 +135,8 @@ test('actual command execution distinguishes incomplete, ambiguous and invalid s
 test('output modifier help and completion describe the same real filter and file operations',()=>{
   const {session}=lab('enable');
   assert.match(session.help('show interfaces | ').join('\n'),/append[\s\S]*count[\s\S]*redirect[\s\S]*tee/);
-  assert.match(session.help('show interfaces | count ').join('\n'),/Regular expression/);
-  assert.match(session.help('show interfaces | redirect ').join('\n'),/flash:filename/);
+  assert.match(session.help('show interfaces | count ').join('\n'),/LINE\s+Regular Expression/);
+  assert.match(session.help('show interfaces | redirect ').join('\n'),/flash:\s+Uniform Resource Locator/);
   assert.equal(session.complete('show interfaces | red'),'show interfaces | redirect ');
 });
 

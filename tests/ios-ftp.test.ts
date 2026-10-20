@@ -33,8 +33,8 @@ test('FTPCLI-02 configured FTP credentials, Type 7 render/import, interactive co
  const running=command(cli,'show running-config');assert.match(running,/ip ftp password 7 [0-9A-F]+/i);assert.ok(!running.includes('ip ftp password 0 FtpPass123'));
  assert.deepEqual(cli.execute('copy ftp: flash:interactive.txt'),[]);assert.match(cli.prompt,/remote host/);command(cli,'192.0.2.2');assert.match(cli.prompt,/Source filename/);assert.match(command(cli,'hello.txt'),/bytes copied/);
  assert.equal(r.config.features.files['interactive.txt'],'Hello FTP 🌐\n');
- assert.match(command(cli,'copy ftp://192.0.2.2/good.cfg system:running-config'),/Configuration copied/);assert.equal(r.config.hostname,'FTPImported');
- command(cli,'copy running-config startup-config');
+ assert.match(command(cli,'copy ftp://192.0.2.2/good.cfg system:running-config'),/\[OK - \d+ bytes\]\n\n\d+ bytes copied in \d+\.\d{3} secs \(\d+ bytes\/sec\)$/);assert.equal(r.config.hostname,'FTPImported');
+ command(cli,'copy running-config startup-config');assert.match(cli.prompt,/Destination filename \[startup-config\]\?/);assert.match(command(cli,''),/Building configuration\.\.\.\n\[OK\]/);
  const parsed=parseLabFile(serializeLabFile(e.serialize())),loaded=new Simulator();loaded.load(parsed);const rr=loaded.getDevice(r.id)!;assert.equal(rr.config.features.ftpClient.password,'FtpPass123');assert.equal(rr.startupConfig?.features.ftpClient.passwordType,7);
  const restored=new IOSSession(loaded,r.id);restored.execute('enable');assert.match(command(restored,'copy ftp://192.0.2.2/hello.txt flash:restored.txt'),/bytes copied/);assert.equal(rr.config.features.files['restored.txt'],'Hello FTP 🌐\n');
  for(const line of['conf t','no ip ftp password','default ip ftp username','no ip ftp source-interface','default ip ftp passive','end'])command(cli,line);
@@ -89,7 +89,7 @@ test('FTPCLI-07 accepted whitespace passwords and imported quote conflicts survi
   else command(cli,'ip ftp password '+(password.includes('"')?"'"+password+"'":'"'+password+'"'));
   command(cli,'end');command(cli,'copy running-config flash:credentials.cfg');
   command(cli,'conf t');command(cli,'no ip ftp password');command(cli,'end');
-  assert.match(command(cli,'copy flash:credentials.cfg running-config'),/Configuration copied/);
+  assert.match(command(cli,'copy flash:credentials.cfg running-config'),/^\d+ bytes copied in \d+\.\d{3} secs \(\d+ bytes\/sec\)$/);
   assert.equal(r.config.features.ftpClient.password,password);
  }
 });

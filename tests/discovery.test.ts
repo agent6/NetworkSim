@@ -8,7 +8,7 @@ function pair(){const engine=new Simulator(410),a=engine.addDevice('router'),b=e
 
 test('CDP and LLDP discover only received physical advertisements and expire under directional loss',()=>{
   const {engine,a,b,ca,wire}=pair();assert.equal(a.runtime.neighbors.filter(n=>['CDP','LLDP'].includes(n.protocol)).length,0);engine.clock.advance(10);
-  assert.equal(a.runtime.neighbors.filter(n=>['CDP','LLDP'].includes(n.protocol)).length,2);assert.equal(b.runtime.neighbors.filter(n=>['CDP','LLDP'].includes(n.protocol)).length,2);assert.match(ca.execute('show cdp neighbors detail').join('\n'),/connected neighbor/);assert.match(ca.execute('show lldp neighbors').join('\n'),/Hold-time/);
+  assert.equal(a.runtime.neighbors.filter(n=>['CDP','LLDP'].includes(n.protocol)).length,2);assert.equal(b.runtime.neighbors.filter(n=>['CDP','LLDP'].includes(n.protocol)).length,2);assert.match(ca.execute('show cdp neighbors detail').join('\n'),/Device ID: [\s\S]*IP address: 10\.0\.0\.2/);assert.match(ca.execute('show lldp neighbors detail').join('\n'),/Port Description: connected neighbor/);assert.match(ca.execute('show lldp neighbors').join('\n'),/Hold-time/);
   wire.lossAB=1;engine.clock.advance(13000);assert.equal(b.runtime.neighbors.filter(n=>['CDP','LLDP'].includes(n.protocol)).length,0);assert.equal(a.runtime.neighbors.filter(n=>['CDP','LLDP'].includes(n.protocol)).length,2);assert.ok(engine.events.some(e=>e.label==='Neighbor expired'&&e.nodeId===b.id));
   wire.lossAB=0;engine.clock.advance(5000);assert.equal(b.runtime.neighbors.filter(n=>['CDP','LLDP'].includes(n.protocol)).length,2);
 });

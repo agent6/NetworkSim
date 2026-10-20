@@ -1,4 +1,5 @@
 import {isIPv6,parseCidr} from './ip.ts';
+import {IOS_UNRECOGNIZED,iosArgumentDescription,iosArgumentRows,iosDescription,iosHelpRows,iosKeywordHidden,iosPartialHelp} from './ios-help.ts';
 /** Original IOS interaction helpers. These inspect syntax and never execute a command. */
 export interface IosSyntaxCommand { words: string[]; description: string; args?: string }
 export interface IosSyntaxContext {
@@ -6,11 +7,14 @@ export interface IosSyntaxContext {
   protocol?: string;
   aclType?: string;
   interfaces?: string[];
+  maxLine?: number;
   execCommands?: IosSyntaxCommand[];
   namedProtocol?: boolean;
   addressFamily?: string;
   ethernetSpeeds?: string[];
   duplexHalf?: boolean;
+  /** Terminal width used to wrap help descriptions. */
+  width?: number;
 }
 export interface IosToken { text: string; start: number; end: number }
 
@@ -40,6 +44,7 @@ const tail = (description = 'Text') => ({ ...argument('LINE', description), repe
 const optional = (...atoms: Atom[]): Form[] => [[], atoms];
 const combine = (head: Form[], suffix: Form[]): Form[] => head.flatMap(a => suffix.map(b => [...a, ...b]));
 const virtualInterfaces:Record<string,[number,number]>={Loopback:[0,2147483647],Vlan:[1,4094],Tunnel:[0,2147483647],'Port-channel':[1,48]};
+const interfaceTypeHelp:Record<string,string>={GigabitEthernet:'GigabitEthernet IEEE 802.3z',Loopback:'Loopback interface','Port-channel':'Ethernet Channel of interfaces',Tunnel:'Tunnel interface',Vlan:'Catalyst Vlans'};
 const interfaceParts=(name:string)=>/^(.*?[a-z-])(\d[\d/.]*)$/i.exec(name);
 function interfaceFamilies(syntax:InterfaceSyntax):string[] {
   return [...new Set([...(syntax.context.interfaces??[]).map(name=>interfaceParts(name)?.[1]).filter((name):name is string=>!!name),...syntax.create?Object.keys(virtualInterfaces):[]])];
@@ -71,7 +76,7 @@ function interfaceHelp(value:string,syntax:InterfaceSyntax):[string,string][] {
   if(syntax.range&&value.includes(','))value=value.slice(value.lastIndexOf(',')+1);
   const {families,number}=interfaceFragment(value,syntax),rows:[string,string][]=[];
   for(const family of families) {
-    if(number===undefined){rows.push([family,`${family} interface`]);continue;}
+    if(number===undefined){rows.push([family,interfaceTypeHelp[family]??`${family} interface`]);continue;}
     const virtual=syntax.create&&virtualInterfaces[family];
     if(virtual){rows.push([`<${virtual[0]}-${virtual[1]}>`,`${family} interface number`]);continue;}
     const separator=Math.max(number.lastIndexOf('/'),number.lastIndexOf('.')),stem=number.slice(0,separator+1),partial=number.slice(separator+1);
@@ -110,23 +115,40 @@ const aclGraphs = new Map<string, SyntaxGraph>();
 function aclGraph(type: string): SyntaxGraph {
   const cached = aclGraphs.get(type); if (cached) return cached;
   const flags = graph(true);
-  flags.edges.push({ atom: word('log', 'Log matching packets'), next: flags }, { atom: word('time-range', 'Restrict the active time'), next: chain([text('Time range name')], flags) });
+  flags.edges.push({ atom: word('log', 'Log matches against this entry'), next: flags }, { atom: word('time-range', 'Specify a time-range'), next: chain([text('Time-range entry name')], flags) });
   const ipv6 = type === 'ipv6';
-  const endpoint = (next: SyntaxGraph): SyntaxGraph => union(
-    chain([word('any', 'Any source or destination')], next),
-    chain([word('host', 'Single host address'), ipv6 ? argument('X:X:X:X::X', 'IPv6 host address', value => value.includes(':')) : ip('Host address')], next),
-    ipv6 ? chain([argument('X:X:X:X::X/<0-128>', 'IPv6 prefix', value => value.includes(':') && value.includes('/'))], next) : chain([ip('Address')], union(next, chain([ip('Wildcard mask')], next))),
-  );
+  // IOS words source and destination help differently (`Source wildcard bits`, `Any destination host`).
+  const endpoint = (next: SyntaxGraph, role: 'standard' | 'source' | 'destination'): SyntaxGraph => {
+    const side = role === 'destination' ? 'destination' : 'source', Side = role === 'destination' ? 'Destination' : 'Source';
+    const address = role === 'standard' ? 'Address to match' : `${Side} address`, host = role === 'standard' ? 'Host address' : address;
+    return union(
+      chain([word('any', ipv6 ? `Any ${side} prefix` : `Any ${side} host`)], next),
+      chain([word('host', role === 'standard' ? 'A single host address' : `A single ${side} host`), ipv6 ? argument('X:X:X:X::X', host, value => value.includes(':')) : ip(host)], next),
+      ipv6 ? chain([argument('X:X:X:X::X/<0-128>', `IPv6 ${side} prefix x:x::y/<z>`, value => value.includes(':') && value.includes('/'))], next) : chain([ip(address)], role === 'standard' ? union(next, chain([ip('Wildcard bits')], next)) : chain([ip(`${Side} wildcard bits`)], next)),
+    );
+  };
+  // IOS lists named ports per transport; names the handler also accepts but IOS does not list stay valid without a help row.
   const ports = ['www', 'http', 'https', 'domain', 'ssh', 'telnet', 'ftp', 'tftp'];
-  const port = argument('<0-65535>', 'Port number or service name', value => ports.includes(value.toLowerCase()) || /^\d+$/.test(value) && +value <= 65535, ports);
-  const portMatch = (next: SyntaxGraph) => union(next, ...['eq', 'gt', 'lt'].map(operator => chain([word(operator, `${operator} port match`), port], next)), chain([word('range', 'Inclusive port range'), port, port], next));
+  const namedPorts: Record<'tcp' | 'udp', Record<string, string>> = {
+    tcp: { domain: 'Domain Name Service (53)', ftp: 'File Transfer Protocol (21)', telnet: 'Telnet (23)', www: 'World Wide Web (HTTP, 80)' },
+    udp: { domain: 'Domain Name Service (DNS, 53)', tftp: 'Trivial File Transfer Protocol (69)' },
+  };
+  const portValue = (protocol: 'tcp' | 'udp', next: SyntaxGraph) => {
+    const listed = namedPorts[protocol], unlisted = ports.filter(name => !listed[name]);
+    return union(chain([argument('<0-65535>', 'Port number', value => unlisted.includes(value.toLowerCase()) || /^\d+$/.test(value) && +value <= 65535)], next), ...Object.entries(listed).map(([name, help]) => chain([word(name, help)], next)));
+  };
+  const operators: Record<string, string> = { eq: 'Match only packets on a given port number', gt: 'Match only packets with a greater port number', lt: 'Match only packets with a lower port number' };
+  const portMatch = (protocol: 'tcp' | 'udp', next: SyntaxGraph) => union(next, ...Object.entries(operators).map(([operator, help]) => chain([word(operator, help)], portValue(protocol, next))), chain([word('range', 'Match only packets in the range of port numbers')], portValue(protocol, portValue(protocol, next))));
   let root: SyntaxGraph;
-  if (type === 'standard') root = endpoint(flags);
+  if (type === 'standard') root = endpoint(flags, 'standard');
   else {
-    const plain = endpoint(endpoint(flags)), transport = endpoint(portMatch(endpoint(portMatch(flags))));
-    const icmpTail = union(flags, ...['echo', 'echo-request', 'echo-reply', 'unreachable', 'time-exceeded', 'packet-too-big'].map(name => chain([word(name, 'ICMP message type')], union(flags, chain([number(0, 255, 'ICMP code')], flags)))), chain([number(0, 255, 'ICMP type')], union(flags, chain([number(0, 255, 'ICMP code')], flags))));
-    const icmp=endpoint(endpoint(icmpTail)),numeric=(valid:(value:number)=>boolean)=>({...number(0,255,'IP protocol number'),valid:(value:string)=>/^\d+$/.test(value)&&+value<=255&&valid(+value)});
-    root = union(...[ipv6?'ipv6':'ip',...(!ipv6?['igmp']:[]),'gre','esp','ah','ospf','eigrp','pim'].map(protocol=>chain([word(protocol,'IP protocol')],plain)),...['tcp','udp'].map(protocol=>chain([word(protocol,'Transport protocol')],transport)),chain([word('icmp','Internet Control Message Protocol')],icmp),chain([numeric(value=>![1,6,17,58].includes(value))],plain),chain([numeric(value=>[6,17].includes(value))],transport),chain([numeric(value=>[1,58].includes(value))],icmp));
+    const source = (next: SyntaxGraph) => endpoint(next, 'source'), destination = (next: SyntaxGraph) => endpoint(next, 'destination');
+    const plain = source(destination(flags)), transport = (protocol: 'tcp' | 'udp') => source(portMatch(protocol, destination(portMatch(protocol, flags)))), tcp = transport('tcp'), udp = transport('udp');
+    const icmpTypes: Record<string, string> = { echo: 'Echo (ping)', 'echo-request': 'Echo request', 'echo-reply': 'Echo reply', unreachable: 'All unreachables', 'time-exceeded': 'All time exceededs', 'packet-too-big': 'Packet too big' };
+    const icmpTail = union(flags, ...Object.entries(icmpTypes).map(([name, help]) => chain([word(name, help)], union(flags, chain([number(0, 255, 'ICMP message code')], flags)))), chain([number(0, 255, 'ICMP message type')], union(flags, chain([number(0, 255, 'ICMP message code')], flags))));
+    const icmp=source(destination(icmpTail)),numeric=(valid:(value:number)=>boolean)=>({...number(0,255,'An IP protocol number'),valid:(value:string)=>/^\d+$/.test(value)&&+value<=255&&valid(+value)});
+    const protocols: Record<string, string> = { ip: 'Any Internet Protocol', ipv6: 'Any IPv6 protocol', igmp: 'Internet Gateway Message Protocol', gre: "Cisco's GRE tunneling", esp: 'Encapsulation Security Payload', ah: 'Authentication Header Protocol', ospf: 'OSPF routing protocol', eigrp: "Cisco's EIGRP routing protocol", pim: 'Protocol Independent Multicast' };
+    root = union(...[ipv6?'ipv6':'ip',...(!ipv6?['igmp']:[]),'gre','esp','ah','ospf','eigrp','pim'].map(protocol=>chain([word(protocol,protocols[protocol])],plain)),chain([word('tcp','Transmission Control Protocol')],tcp),chain([word('udp','User Datagram Protocol')],udp),chain([word('icmp','Internet Control Message Protocol')],icmp),chain([numeric(value=>![1,6,17,58].includes(value))],plain),chain([numeric(value=>value===6)],tcp),chain([numeric(value=>value===17)],udp),chain([numeric(value=>[1,58].includes(value))],icmp));
   }
   aclGraphs.set(type, root); return root;
 }
@@ -151,21 +173,94 @@ function optionGraph(options: Form[], complete = true): SyntaxGraph {
 
 function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): SyntaxGraph | undefined {
   const done = graph(true), area = argument('AREA', 'Area ID, integer or dotted decimal', value => ipv4(value) || /^\d+$/.test(value));
-  if(path==='aaa accounting')return union(...['exec','commands','connection','network','system'].map(kind=>{const prefix=[word(kind,kind==='exec'?'VTY EXEC records':kind==='commands'?'TACACS command records':'Stored configuration only'),...kind==='commands'?[number(0,15,'Command privilege level')]:[],kind==='system'?word('default','Default system list'):text('Accounting method list')];if(no)return chain(prefix,done);const server=argument('WORD',kind==='commands'?'TACACS+ server group':'RADIUS or TACACS+ server group',value=>kind!=='commands'||value!=='radius',kind==='commands'?['tacacs+']:['radius','tacacs+']),groups=optionGraph([[word('group'),server]]),required=chain([word('group'),server],groups);return chain(prefix,union(chain([word('none','Disable accounting for this list')],done),...['start-stop','stop-only'].map(mode=>chain([word(mode)],required))));}));
+  if(path==='aaa accounting')return union(...['exec','commands','connection','network','system'].map(kind=>{const prefix=[word(kind,({exec:'For starting an exec (shell).',commands:'For exec (shell) commands.',connection:'For outbound connections. (telnet, rlogin)',network:'For network services. (PPP, SLIP, ARAP)',system:'For system events.'} as Record<string,string>)[kind]),...kind==='commands'?[number(0,15,'Command privilege level')]:[],kind==='system'?word('default','Default system list'):text('Accounting method list')];if(no)return chain(prefix,done);const server=argument('WORD','Server-group name',value=>kind!=='commands'||value!=='radius',kind==='commands'?['tacacs+']:['radius','tacacs+']),groups=optionGraph([[word('group'),server]]),required=chain([word('group'),server],groups);return chain(prefix,union(chain([word('none','Disable accounting for this list')],done),...['start-stop','stop-only'].map(mode=>chain([word(mode)],required))));}));
   if(context.mode==='line'&&path==='accounting exec')return no?done:chain([text('EXEC accounting list')],done);
+  if (['standby', 'vrrp', 'glbp'].includes(path) && ['interface', 'range'].includes(context.mode || '')) {
+    const hsrp = path === 'standby', vrrp = path === 'vrrp', glbp = path === 'glbp';
+    const help: Record<string, string> = hsrp
+      ? { ip: 'Enable HSRP IPv4 and set the virtual IP address', preempt: 'Overthrow lower priority Active routers', priority: 'Priority level', track: 'Priority tracking', timers: 'Hello and hold timers', authentication: 'Authentication' }
+      : vrrp
+        ? { ip: 'Enable Virtual Router Redundancy Protocol (VRRP) for IP', preempt: 'Enable preemption of lower priority Master', priority: 'Priority of this VRRP group', track: 'Event Tracking', timers: 'Set the VRRP timers', authentication: 'Authentication string' }
+        : { ip: 'Enable group and set virtual IP address', preempt: 'Overthrow lower priority designated routers', priority: 'Priority level', track: 'Weighting tracking', timers: 'Adjust GLBP timers', authentication: 'Authentication method', 'load-balancing': 'Load balancing method', weighting: 'Gateway weighting and tracking' };
+    const branch = (key: string, next: SyntaxGraph) => chain([word(key, help[key])], next);
+    const seconds = (name: string, unit: string, next: SyntaxGraph) => union(chain([number(1, 3600, `${name} in seconds`)], next), chain([word('msec', `Specify ${unit} in milliseconds`), number(50, 3600000, `${name} in milliseconds`)], next));
+    const timers = vrrp ? chain([word('advertise', 'Set the Advertisement timer')], seconds('Advertisement interval', 'the advertisement interval', done)) : seconds('Hello interval', 'hello interval', seconds('Hold time', 'hold time', done));
+    const minimum = number(0, 3600, 'Number of seconds for minimum delay');
+    const preempt = union(done, chain([word('delay', 'Wait before preempting'), word('minimum', 'Delay at least this long')], no ? union(done, chain([minimum], done)) : chain([minimum], done)));
+    const authentication = union(chain([text(hsrp ? 'Plain text authentication string (8 chars max)' : 'Authentication string')], done), chain([word('text', 'Plain text authentication'), text('Plain text authentication string')], done),
+      chain([word('md5', 'Use MD5 authentication')], union(chain([word('key-chain', 'Set key chain'), text('Name of key chain')], done), chain([word('key-string', 'Set key string'), text('Key string')], done))));
+    const threshold = number(1, 254, 'Weighting threshold value');
+    const group = union(
+      branch('ip', no ? done : chain([ip(vrrp ? 'VRRP group IP address' : 'Virtual IP address')], done)),
+      branch('priority', no ? done : chain([number(1, 255, vrrp ? 'Priority level' : 'Priority value')], done)),
+      branch('preempt', preempt),
+      branch('track', chain([number(1, 1000, 'Tracked object number')], no ? done : union(done, chain([word('decrement', 'Priority decrement'), number(1, 255, 'Decrement value')], done)))),
+      branch('timers', no ? done : timers),
+      branch('authentication', no ? done : authentication),
+      ...(glbp ? [
+        branch('load-balancing', no ? done : union(...[['host-dependent', 'Load balance equally, source MAC determines forwarder choice'], ['round-robin', 'Load balance equally using each forwarder in turn'], ['weighted', 'Load balance in proportion to forwarder weighting']].map(([value, text]) => chain([word(value, text)], done)))),
+        branch('weighting', no ? done : chain([number(1, 254, 'Weighting maximum value')], union(done, chain([word('lower', 'Weighting lower threshold'), threshold, word('upper', 'Weighting upper threshold'), threshold], done)))),
+      ] : []),
+    );
+    const groupNumber = number(vrrp ? 1 : 0, hsrp ? 4095 : glbp ? 1023 : 255, hsrp ? 'group number' : 'Group number');
+    return union(chain([groupNumber], group), ...(hsrp ? [chain([word('version', 'HSRP version')], no ? done : chain([number(1, 2, 'Version number')], done))] : []));
+  }
+  if (path === 'distance' && context.mode === 'router' && ['ospf', 'eigrp', 'rip'].includes(context.protocol || '')) {
+    const acl = union(done, chain([number(1, 99, 'IP Standard access list number')], done), chain([text('Standard access-list name')], done));
+    const rule = chain([number(1, 255, 'Administrative distance')], union(done, chain([ip('IP Source address'), ip('Wildcard bits')], acl)));
+    const kinds = [['external', 'External type 5 and type 7 routes', 'Distance for external type 5 and type 7 routes'], ['inter-area', 'Inter-area routes', 'Distance for inter-area routes'], ['intra-area', 'Intra-area routes', 'Distance for intra-area routes']];
+    const ospf = chain([word('ospf', 'OSPF distance')], optionGraph(kinds.map(([key, text, value]) => no ? [word(key, text)] : [word(key, text), number(1, 255, value)])));
+    const eigrp = chain([word('eigrp', 'IP-EIGRP distance')], no ? done : chain([number(1, 255, 'Distance for internal routes'), number(1, 255, 'Distance for external routes')], done));
+    return union(...(no ? [done] : []), rule, ...(context.protocol === 'ospf' ? [ospf] : context.protocol === 'eigrp' ? [eigrp] : []));
+  }
+  if (path === 'distribute-list' && context.mode === 'router' && ['ospf', 'eigrp', 'rip'].includes(context.protocol || '')) {
+    const sources: [string, string, Atom?][] = [['bgp', 'Border Gateway Protocol (BGP)', number(1, 4294967295, 'Autonomous system number')], ['connected', 'Connected'], ['eigrp', 'Enhanced Interior Gateway Routing Protocol (EIGRP)', number(1, 65535, 'Autonomous system number')], ['ospf', 'Open Shortest Path First (OSPF)', number(1, 65535, 'Process ID')], ['rip', 'Routing Information Protocol (RIP)'], ['static', 'Static routes']];
+    const target = (out: boolean) => union(done, chain([iface(context)], done), ...(out && context.protocol === 'ospf' ? sources.map(([key, text, id]) => chain([word(key, text)], id ? union(done, chain([id], done)) : done)) : []));
+    const direction = union(chain([word('in', 'Filter incoming routing updates')], target(false)), chain([word('out', 'Filter outgoing routing updates')], target(true)));
+    return union(chain([number(1, 199, 'IP access list number')], direction), chain([text('Access-list name')], direction), chain([word('prefix', 'Filter prefixes in address updates'), text('Name of an IP prefix-list')], direction), chain([word('route-map', 'Filter prefixes based on the route-map'), text('route-map name')], direction));
+  }
+  if (path === 'show line') {
+    const maxLine = context.maxLine ?? 6;
+    return union(done, chain([number(0, maxLine, 'First Line range')], done),
+      chain([word('console', 'Primary terminal line'), number(0, 0, 'Primary terminal line number')], done),
+      chain([word('aux', 'Auxiliary line'), number(0, 0, 'Auxiliary line number')], done),
+      chain([word('vty', 'Virtual terminal'), number(0, maxLine - 2, 'Virtual terminal line number')], done));
+  }
+  if ((path === 'ping' || path === 'traceroute') && ['user', 'priv'].includes(context.mode || '')) {
+    const trace = path === 'traceroute', keywords = ['ip', 'ipv6', 'vrf'];
+    const sourceOptions: Form[] = [[word('source', 'specify source address or name'), ip('Source address')], [word('source', 'specify source address or name'), argument('X:X:X:X::X', 'Source IPv6 address', value => value.includes(':'))], [word('source', 'specify source address or name'), iface(context)]];
+    const options = optionGraph(trace ? [
+      [word('numeric', 'display numeric address')], [word('port', 'specify port number'), number(0, 65535, 'Port number')],
+      [word('probe', 'specify number of probes per hop'), number(1, 65535, 'Number of probes')], ...sourceOptions,
+      [word('timeout', 'specify time out'), number(0, 3600, 'Timeout in seconds')], [word('ttl', 'specify minimum and maximum ttl'), number(0, 255, 'minimum ttl'), number(0, 255, 'maximum ttl')],
+    ] : [
+      [{ ...word('data-pattern', 'specify data pattern'), label: 'data' }, argument('Hex-data-pattern', 'Data pattern', value => /^(0x)?[0-9a-f]{1,4}$/i.test(value))], [word('df-bit', 'enable do not fragment bit in IP header')],
+      [word('repeat', 'specify repeat count'), number(1, 100, 'Repeat count')], [word('size', 'specify datagram size'), number(1, 65000, 'Datagram size')], ...sourceOptions,
+      [word('timeout', 'specify timeout interval'), number(1, 60, 'Timeout in seconds')], [word('tos', 'specify type of service value'), number(0, 255, 'Type of service')], [word('ttl', 'specify time to live'), number(1, 255, 'Time to live')], [word('validate', 'validate reply data')],
+    ]);
+    const destination = chain([argument('WORD', trace ? 'Trace route to destination address or hostname' : 'Ping destination address or hostname', value => !keywords.some(keyword => keyword.startsWith(value.toLowerCase())))], options);
+    const extended = context.mode === 'priv' && !trace ? done : graph();
+    const vrf = chain([word('vrf', 'Select VPN Routing/Forwarding instance'), text('VPN Routing/Forwarding instance name')], destination);
+    const family = (key: string, help: string) => chain([word(key, help)], union(extended, destination, vrf));
+    return union(destination, extended, family('ip', trace ? 'IP Trace' : 'IP echo'), family('ipv6', trace ? 'IPv6 trace' : 'IPv6 echo'), vrf);
+  }
+  if (path === 'clear mac address-table' || path === 'clear mac address-table dynamic') {
+    const filters = optionGraph([[word('address', 'address keyword'), argument('H.H.H', '48 bit mac address')], [word('interface', 'interface keyword'), iface(context)], [word('vlan', 'vlan keyword'), number(1, 4094, 'Vlan number')]]);
+    return path.endsWith('dynamic') ? filters : union(filters, chain([word('dynamic', 'dynamic entry type')], filters));
+  }
   if(context.mode==='line'&&path==='accounting commands')return chain([number(0,15,'Command privilege level')],no?done:chain([text('TACACS command accounting list')],done));
   if(path==='snmp-server'){
     const informOptions=optionGraph(['retries','timeout','pending'].flatMap(key=>{const arg=number(key==='timeout'?0:1,key==='retries'?100:key==='timeout'?42949671:4294967295,'Inform '+key);return no?[[word(key)],[word(key),arg]]:[[word(key),arg]];}));
-    const name=text('SNMP name'),acl=text('Manager access-list'),subtree=text('Numeric or supported symbolic MIB subtree');
+    const name=text('SNMP name'),acl=text('Manager access-list'),subtree=text('MIB view family name or oid');
     const levels=choices(['noauth','auth','priv']),categories=optionGraph(choices(['snmp','linkdown','linkup','coldstart','warmstart','authentication']));
     if(no)return union(done,chain([word('informs')],informOptions),chain([word('community'),name],done),chain([word('group'),name],union(done,chain([word('v3')],union(done,...levels.map(form=>chain(form,done)))))),chain([word('user'),name],union(done,chain([name],union(done,chain([word('v3')],done))))),chain([word('view'),name],union(done,chain([subtree],union(done,...choices(['included','excluded']).map(form=>chain(form,done)))))),chain([word('enable'),word('traps')],categories),...['location','contact','chassis-id','trap-source','source-interface','packetsize','queue-length'].map(value=>chain([word(value)],done)),chain([word('engineid'),word('local')],done),chain([word('ifindex'),word('persist')],done),chain([word('host'),ip('Notification host')],done));
     const access=union(done,chain([acl],done)),permission=union(access,...choices(['ro','rw']).map(form=>chain(form,access)));
     const groupOptions=optionGraph(['read','write','notify'].map(value=>[word(value),text('MIB view name')]).concat([[word('access'),acl]]));
-    const userAccess=union(done,chain([word('access'),acl],done)),password=text('Lab password, 8–64 characters');
-    const privacy=union(userAccess,...['des','3des'].map(value=>chain([word('priv'),word(value),password],userAccess)),...['128','192','256'].map(bits=>chain([word('priv'),word('aes'),word(bits),password],userAccess)));
+    const userAccess=union(done,chain([word('access'),acl],done)),password=text('authentication password for user'),privacyPassword=text('privacy password for user');
+    const privacy=union(userAccess,...['des','3des'].map(value=>chain([word('priv'),word(value),privacyPassword],userAccess)),...['128','192','256'].map(bits=>chain([word('priv'),word('aes'),word(bits),privacyPassword],userAccess)));
     const authentication=union(userAccess,...['md5','sha'].map(value=>chain([word('auth'),word(value),password],privacy)),...['256','384','512'].map(bits=>chain([word('auth'),word('sha-2'),word(bits),password],privacy)));
     const notificationVersion=union(chain([word('version'),word('2c'),text('Community string')],categories),...levels.map(form=>chain([word('version'),word('3'),...form,text('SNMPv3 username')],categories)));
-    return union(chain([word('informs')],informOptions),chain([word('community'),name],union(permission,chain([word('view'),text('MIB view name')],permission))),...['location','contact','chassis-id'].map(value=>chain([word(value),tail('Text')],done)),chain([word('group'),name,word('v3')],union(...levels.map(form=>chain(form,groupOptions)))),chain([word('user'),name,text('Group name'),word('v3')],authentication),chain([word('view'),name,subtree],union(...choices(['included','excluded']).map(form=>chain(form,done)))),chain([word('engineid'),word('local'),argument('HEX','5–32 hexadecimal bytes',value=>/^(?:[0-9a-f]{2}){5,32}$/i.test(value))],done),chain([word('host'),ip('Notification host')],union(notificationVersion,chain([word('traps')],notificationVersion),chain([word('informs')],notificationVersion))),chain([word('enable'),word('traps')],categories),...['trap-source','source-interface'].map(value=>chain([word(value),iface(context)],done)),chain([word('ifindex'),word('persist')],done),chain([word('packetsize'),number(484,17940,'Stored packet-size setting')],done),chain([word('queue-length'),number(1,1000,'Stored queue-length setting')],done));
+    return union(chain([word('informs')],informOptions),chain([word('community'),name],union(permission,chain([word('view'),text('MIB view name')],permission))),...['location','contact','chassis-id'].map(value=>chain([word(value),tail('Text')],done)),chain([word('group'),name,word('v3')],union(...levels.map(form=>chain(form,groupOptions)))),chain([word('user'),name,text('Group name'),word('v3')],authentication),chain([word('view'),name,subtree],union(...choices(['included','excluded']).map(form=>chain(form,done)))),chain([word('engineid'),word('local'),argument('HEX','5–32 hexadecimal bytes',value=>/^(?:[0-9a-f]{2}){5,32}$/i.test(value))],done),chain([word('host'),ip('Notification host')],union(notificationVersion,chain([word('traps')],notificationVersion),chain([word('informs')],notificationVersion))),chain([word('enable'),word('traps')],categories),...['trap-source','source-interface'].map(value=>chain([word(value),iface(context)],done)),chain([word('ifindex'),word('persist')],done),chain([word('packetsize'),number(484,17940,'Packet size')],done),chain([word('queue-length'),number(1,1000,'Queue length (default 10)')],done));
   }
   if (path === 'redistribute') {
     const options = optionGraph([[word('metric'), number(0, 4294967295, 'Redistributed metric')], [word('metric-type'), number(1, 2, 'OSPF external type')], [word('route-map'), text('Route map name')], [word('tag'), number(0, 4294967295, 'Route tag')], [word('subnets')]]);
@@ -177,38 +272,38 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
       chain([word('authentication')], union(done, chain([word('message-digest')],done))),
       chain([word('stub')], optionGraph([[word('no-summary')]])),
       chain([word('nssa')], optionGraph(choices(['no-summary', 'default-information-originate', 'no-redistribution']))),
-      chain([word('range'), ip('Network address'), ip('Subnet mask')], optionGraph([[word('not-advertise')], [word('cost'), number(0, 16777215, 'Summary cost')]])),
-      chain([word('virtual-link'), ip('Remote router ID')], optionGraph([[word('hello-interval'), number(1, 65535, 'Hello seconds')], [word('dead-interval'), number(1, 65535, 'Dead seconds')], [word('authentication')], [word('authentication'),word('message-digest')], [word('authentication'),word('null')], [word('authentication'),word('key-chain'),text('Key chain name')], [word('authentication-key'), text('Authentication key')], [word('message-digest-key'),number(1,255,'Key ID'),word('md5'),text('Authentication key')]])),
+      chain([word('range'), ip('IP address to match'), ip('IP mask for address')], optionGraph([[word('not-advertise')], [word('cost'), number(0, 16777215, 'Advertised metric for this range')]])),
+      chain([word('virtual-link'), ip('ID (IP addr) associated with virtual link neighbor')], optionGraph([[word('hello-interval'), number(1, 65535, 'Seconds')], [word('dead-interval'), number(1, 65535, 'Seconds')], [word('authentication')], [word('authentication'),word('message-digest')], [word('authentication'),word('null')], [word('authentication'),word('key-chain'),text('Name of key-chain')], [word('authentication-key'), text('The OSPF password (key)')], [word('message-digest-key'),number(1,255,'Key ID'),word('md5'),text('The OSPF password (key)')]])),
     ));
   }
   if (path === 'ip route') {
-    const options = optionGraph([[word('name'), text('Route name')], [word('tag'), number(1, 4294967295, 'Route tag')], [word('permanent')], [word('track'), number(1, 1000, 'Tracked object')]]);
-    const distance = union(options, chain([number(1, 255, 'Administrative distance')], options));
+    const options = optionGraph([[word('name'), text('Name of the next hop')], [word('tag'), number(1, 4294967295, 'Tag value')], [word('permanent')], [word('track'), number(1, 1000, 'Tracked object')]]);
+    const distance = union(options, chain([number(1, 255, 'Distance metric for this route')], options));
     const destination = (vrf: boolean) => {
-      const next = vrf ? union(distance, chain([word('global', 'Resolve next hop in the global table')], distance)) : distance;
-      const via = union(chain([ip('Next-hop address')], next), chain([iface(context)], union(next, chain([ip('Next-hop address')], next))), chain([argument('Null0', 'Discard route', value => /^nu(?:ll)?0+$/i.test(value), ['Null0'])], next));
-      return chain([ip('Destination network'), ip('Subnet mask')], no ? union(done, via) : via);
+      const next = vrf ? union(distance, chain([word('global', 'Next hop address is global')], distance)) : distance;
+      const via = union(chain([ip("Forwarding router's address")], next), chain([iface(context)], union(next, chain([ip("Forwarding router's address")], next))), chain([argument('Null0', 'Null interface', value => /^nu(?:ll)?0+$/i.test(value), ['Null0'])], next));
+      return chain([ip('Destination prefix'), ip('Destination prefix mask')], no ? union(done, via) : via);
     };
-    return union(destination(false), chain([word('vrf'), text('VRF name')], destination(true)));
+    return union(destination(false), chain([word('vrf'), text('VPN Routing/Forwarding instance name')], destination(true)));
   }
   if (path === 'ip prefix-list' || path === 'ipv6 prefix-list') {
-    const length = path.startsWith('ipv6') ? 128 : 32, address = argument(path.startsWith('ipv6') ? 'X:X:X:X::X/<0-128>' : 'A.B.C.D/<0-32>', 'Prefix to match', value => value.includes('/'));
+    const length = path.startsWith('ipv6') ? 128 : 32, address = argument(path.startsWith('ipv6') ? 'X:X:X:X::X/<0-128>' : 'A.B.C.D/<0-32>', path.startsWith('ipv6') ? 'IPv6 prefix x:x::y/<z>' : 'IP prefix <network>/<length>, e.g., 35.0.0.0/8', value => value.includes('/'));
     const options = optionGraph([[word('ge'), number(0, length, 'Minimum prefix length')], [word('le'), number(0, length, 'Maximum prefix length')]]);
     const rule = union(...['permit', 'deny'].map(value => chain([word(value), address], options)));
     const sequence = union(rule, chain([word('seq'), number(1, 2147483647, 'Sequence number')], no ? union(done, rule) : rule));
-    return chain([text('Prefix list name')], no ? union(done, sequence) : sequence);
+    return chain([text('Name of a prefix list')], no ? union(done, sequence) : sequence);
   }
   if (/^aaa (?:authentication login|authorization (?:exec|commands))$/.test(path)) {
     const authorization = path.includes('authorization');
     const methods = graph(true);
-    const atoms = [...['local', 'none', ...(authorization ? ['if-authenticated'] : [])].map(value => [word(value)]), [word('group'), argument('WORD', 'RADIUS, TACACS+, or named server group', undefined, ['radius', 'tacacs+'])]];
+    const atoms = [...['local', 'none', ...(authorization ? ['if-authenticated'] : [])].map(value => [word(value)]), [word('group'), argument('WORD', 'Server-group name', undefined, ['radius', 'tacacs+'])]];
     for (const method of atoms) methods.edges.push(...chain(method, methods).edges);
     const first = { edges: methods.edges, complete: no };
     return chain([...(path.endsWith('commands') ? [number(0, 15, 'Privilege level')] : []), text('Method list name or default')], first);
   }
   if (path === 'ip nat') {
-    const inside = chain([word('inside'), word('source')], union(chain([word('static'), ip('Inside local address'), ip('Inside global address')], done), chain([word('list'), text('Access list name')], union(chain([word('interface'), iface(context)], union(done, chain([word('overload')], done))), chain([word('pool'), text('Pool name')], union(done, chain([word('overload')], done)))))));
-    const pool = chain([word('pool'), text('Pool name')], no ? done : chain([ip('First global address'), ip('Last global address'), word('netmask'), ip('Subnet mask')], done));
+    const inside = chain([word('inside'), word('source')], union(chain([word('static'), ip('Inside local IP address'), ip('Inside global IP address')], done), chain([word('list'), text('Access list name for local addresses')], union(chain([word('interface'), iface(context)], union(done, chain([word('overload')], done))), chain([word('pool'), text('Name pool of global addresses')], union(done, chain([word('overload')], done)))))));
+    const pool = chain([word('pool'), text('Pool name')], no ? done : chain([ip('Start IP address'), ip('End IP address'), word('netmask'), ip('Network mask')], done));
     return union(inside, pool, ...(['interface', 'range'].includes(context.mode || '') ? ['inside', 'outside'].map(value => chain([word(value)], done)) : []));
   }
   if (path === 'eigrp stub') return optionGraph(choices(['connected', 'summary', 'static', 'redistributed', 'receive-only']));
@@ -252,15 +347,15 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   if(path==='ap')return[[argument('H.H.H','AP Ethernet MAC address',value=>/^[a-f0-9]{12}$/i.test(value.replace(/[:.\-]/g,'')))]];
   if(path==='wireless management interface')return[[iface(context)]];
   if(path==='aaa authentication dot1x')return[[text('Method-list name'),word('group'),text('RADIUS server group')]];
-  if(path==='security wpa psk set-key')return combine(choices(['ascii','hex']),[[word('0','Unencrypted lab key'),text('WPA2 preshared key')]]);
+  if(path==='security wpa psk set-key')return combine(choices(['ascii','hex']),[[word('0','Specifies an UNENCRYPTED password will follow'),text('WPA2 preshared key')]]);
   if(path==='capwap ap primary-base')return[[text('Controller hostname'),ip('Controller IPv4 address')]];
   if(path==='show wireless client mac-address')return[[text('Client MAC address'),word('detail')]];
   if(path==='show ap name')return[[text('AP name'),word('config'),word('general')]];
   if(path==='ap capwap timers heartbeat-timeout')return[[number(1,30,'Heartbeat interval in seconds')]];
   if(path==='native-vlan-id')return[[number(1,4094,'Native VLAN ID')]];
   if(path==='session-timeout')return[[number(1,86400,'Session timeout in seconds')]];
-  if (path === '__output') return [...combine(choices(['include','exclude','begin','section','count']), [[tail('Regular expression')]]), ...combine(choices(['redirect','append','tee']), [[argument('flash:filename','Destination in simulated flash',value=>/^flash:\S+$/i.test(value))]])];
-  if (path === 'ip address' && ['interface', 'range'].includes(context.mode || '')) return [[ip(), ip('Subnet mask')], [ip(), ip('Subnet mask'), word('secondary', 'Secondary IP address')], [word('dhcp', 'Obtain an IP address using DHCP')]];
+  if (path === '__output') return [...combine(choices(['include','exclude','begin','section','count']), [[tail('Regular Expression')]]), ...combine(choices(['redirect','append','tee']), [[argument('flash:filename','Uniform Resource Locator',value=>/^flash:\S+$/i.test(value))]])];
+  if (path === 'ip address' && ['interface', 'range'].includes(context.mode || '')) return [[ip(), ip('IP subnet mask')], [ip(), ip('IP subnet mask'), word('secondary', 'Make this IP address a secondary address')], [word('dhcp', 'IP Address negotiated via DHCP')]];
   if (path === 'ip address') return [[ip()]];
   if (path === 'ipv6 address') return [[prefix()], [prefix(), word('eui-64', 'Use the interface identifier')], [argument('X:X:X:X::X', 'IPv6 address'), word('link-local', 'Link-local address')], ...choices(['autoconfig', 'dhcp'])];
   if (path === 'interface') return [[iface(context,true)]];
@@ -281,33 +376,33 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   if (path === 'duplex') return choices(['auto', 'full', ...(context.duplexHalf===false?[]:['half'])]);
   if (path === 'speed') return choices(['auto', ...(context.ethernetSpeeds??['10','100','1000'])]);
   if (path === 'mtu' || path === 'ip mtu') return [[number(68, 9216, 'Maximum transmission unit')]];
-  if(['policy-class','policy-police'].includes(context.mode??'')){if(path==='bandwidth')return [[number(1,2000000,'Bandwidth in kilobits per second')],[word('percent'),number(1,100,'Percentage of configured bandwidth')],[word('remaining'),word('percent'),number(1,100,'Percentage of remaining bandwidth')]];if(path==='priority')return [[number(1,2000000,'Priority bandwidth in kilobits per second')],[word('percent'),number(1,100,'Priority bandwidth percentage')]];if(path==='shape')return [[word('average'),number(1000,1000000000,'Average shaped bits per second')]];if(path==='queue-limit')return combine([[number(1,4096,'Simulator class queue capacity in packets')]],optional(word('packets')));}
+  if(['policy-class','policy-police'].includes(context.mode??'')){if(path==='bandwidth')return [[number(1,2000000,'Bandwidth in kilobits per second')],[word('percent'),number(1,100,'Percentage of configured bandwidth')],[word('remaining'),word('percent'),number(1,100,'Percentage of remaining bandwidth')]];if(path==='priority')return [[number(1,2000000,'Priority bandwidth in kilobits per second')],[word('percent'),number(1,100,'Priority bandwidth percentage')]];if(path==='shape')return [[word('average'),number(1000,1000000000,'Average shaped bits per second')]];if(path==='queue-limit')return combine([[number(1,4096,'Packets')]],optional(word('packets')));}
   if (path === 'bandwidth' || path === 'delay') return [[number(1, 10000000, path === 'bandwidth' ? 'Bandwidth in kilobits per second' : 'Delay in tens of microseconds')]];
   if (['ip default-gateway', 'ip helper-address', 'router-id', 'bgp router-id', 'tunnel destination', 'default-router'].includes(path)) return [[ip()]];
-  if (path === 'ip name-server' || path === 'dns-server') return [[{ ...ip('DNS server address'), repeat: true }]];
+  if (path === 'ip name-server' || path === 'dns-server') return [[{ ...ip('Domain server IP address (maximum of 6)'), repeat: true }]];
   if (path === 'router') return [[word('ospf'), number(1, 65535, 'OSPF process ID')], [word('eigrp'), number(1, 65535, 'Autonomous system number')], [word('eigrp'), text('Named EIGRP instance')], [word('bgp'), number(1, 4294967295, 'Autonomous system number')], [word('rip')]];
   if(path==='summary-metric'){const keys=summaryMetricKeys(context),distance=[word('distance'),number(1,255,'Administrative distance for local summary')],metric=[number(1,4294967295,'Bandwidth in kilobits per second'),number(1,4294967295,'Delay in tens of microseconds'),number(0,255,'Reliability'),number(1,255,'Load'),number(1,65535,'Path MTU')];return combine(keys,[metric,[...metric,...distance],distance]);}
   if (path === 'network') {
-    if (context.mode === 'pool') return [[ip('Network address'), ip('Subnet mask')]];
-    if (context.protocol === 'ospf') return [[ip('Network address'), ip('Wildcard mask'), word('area'), argument('AREA', 'Area ID, integer or dotted decimal', value => ipv4(value) || /^\d+$/.test(value))]];
-    if (context.protocol === 'bgp') return context.addressFamily==='ipv6'?[[prefix()]]:[[ip('Network address')], [ip('Network address'), word('mask'), ip('Subnet mask')]];
-    if (context.protocol === 'eigrp') return [[ip('Network address')], [ip('Network address'), ip('Wildcard mask')]];
+    if (context.mode === 'pool') return [[ip('Network number in dotted-decimal notation'), ip('Network mask')]];
+    if (context.protocol === 'ospf') return [[ip('Network number'), ip('OSPF wild card bits'), word('area'), argument('AREA', 'Area ID, integer or dotted decimal', value => ipv4(value) || /^\d+$/.test(value))]];
+    if (context.protocol === 'bgp') return context.addressFamily==='ipv6'?[[prefix()]]:[[ip('Network number')], [ip('Network number'), word('mask'), ip('Network mask')]];
+    if (context.protocol === 'eigrp') return [[ip('Network number')], [ip('Network number'), ip('EIGRP wild card bits')]];
     if (context.protocol === 'rip') return [[ip('Network address')]];
   }
   if (path === 'passive-interface') return context.mode === 'af-interface' ? [[]] : [[word('default', 'All interfaces')], [iface(context)]];
   if (path === 'neighbor' && context.protocol === 'bgp') {
     const peer = argument('A.B.C.D or X:X:X:X::X','BGP neighbor address',value=>ipv4(value)||isIPv6(value));
     return [
-      [peer, word('remote-as'), number(1, 4294967295, 'Remote autonomous system')],
+      [peer, word('remote-as'), number(1, 4294967295, 'AS of remote neighbor')],
       ...combine([[peer]], choices(['shutdown', 'next-hop-self', 'activate', 'route-reflector-client'])),
-      [peer, word('description'), tail('Neighbor description')],
+      [peer, word('description'), tail('Up to 80 characters describing this neighbor')],
       [peer, word('update-source'), iface(context)],
-      [peer, word('ebgp-multihop'), number(1, 255, 'Maximum hop count')],
-      ...combine([[peer, word('route-map'), text('Route map name')], [peer, word('prefix-list'), text('Prefix list name')]], choices(['in', 'out'])),
-      [peer, word('maximum-prefix'), number(1, 4294967295, 'Maximum prefixes')],
-      [peer, word('timers'), number(0, 65535, 'Keepalive interval'), number(0, 65535, 'Hold time')],
+      [peer, word('ebgp-multihop'), number(1, 255, 'maximum hop count')],
+      ...[...combine([[peer, word('route-map'), text('Name of route map')]], [[word('in', 'Apply map to incoming routes')], [word('out', 'Apply map to outbound routes')]]), ...combine([[peer, word('prefix-list'), text('Name of a prefix list')]], [[word('in', 'Filter incoming updates')], [word('out', 'Filter outgoing updates')]])],
+      [peer, word('maximum-prefix'), number(1, 4294967295, 'maximum no. of prefix limit')],
+      [peer, word('timers'), number(0, 65535, 'Keepalive interval'), number(0, 65535, 'Holdtime')],
       ...combine([[peer, word('send-community')]], [[], ...choices(['standard', 'extended', 'both'])]),
-      [peer, word('fall-over'), word('bfd')], [peer, word('ttl-security'), word('hops'), number(1, 254, 'Maximum external hops')],
+      [peer, word('fall-over'), word('bfd')], [peer, word('ttl-security'), word('hops'), number(1, 254, 'maximum number of hops')],
     ];
   }
   if (path === 'address-family') {
@@ -325,14 +420,14 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
     if (context.aclType === 'extended') return combine(choices(['ip', 'tcp', 'udp', 'icmp', 'gre', 'ospf']), combine(endpoint, endpoint));
   }
   if (path === 'ip route') {
-    const destinations: Form[] = [[ip('Destination network'), ip('Subnet mask')], [word('vrf'), text('VRF name'), ip('Destination network'), ip('Subnet mask')]];
-    const via: Form[] = [[ip('Next-hop address')], [iface(context)], [iface(context), ip('Next-hop address')], [word('Null0', 'Discard route')]];
+    const destinations: Form[] = [[ip('Destination prefix'), ip('Destination prefix mask')], [word('vrf'), text('VPN Routing/Forwarding instance name'), ip('Destination prefix'), ip('Destination prefix mask')]];
+    const via: Form[] = [[ip("Forwarding router's address")], [iface(context)], [iface(context), ip("Forwarding router's address")], [word('Null0', 'Null interface')]];
     return combine(combine(destinations, via), [[], [number(1, 255, 'Administrative distance')], [word('permanent')], [word('track'), number(1, 1000, 'Tracked object')], [number(1, 255, 'Administrative distance'), word('permanent')]]);
   }
   if (path === 'ipv6 route') return combine([[prefix(), argument('X:X:X:X::X', 'Next-hop address')], [prefix(), iface(context)], [prefix(), iface(context), argument('X:X:X:X::X', 'Next-hop address')]], optional(number(1, 255, 'Administrative distance')));
   if (path === 'show interfaces') return [[], [iface(context)], ...choices(['status', 'description', 'trunk', 'switchport']),[word('counters')],[word('counters'),word('errors')],[iface(context),word('counters'),word('errors')]];
   if (path === 'show ip route') return [[], [ip('Destination address')], ...choices(['connected', 'static', 'ospf', 'eigrp', 'bgp', 'rip']), [word('vrf'), text('VRF name')], [word('vrf'), text('VRF name'), ip('Destination address')]];
-  if (path === 'show running-config' || path === 'show startup-config') return [[], ...combine([[word('|', 'Output modifiers')]], combine(choices(['include', 'exclude', 'begin']), [[tail('Regular expression')]]))];
+  if (path === 'show running-config' || path === 'show startup-config') return [[], ...combine([[word('|', 'Output modifiers')]], combine(choices(['include', 'exclude', 'begin']), [[tail('Regular Expression')]]))];
   if (path === 'show cdp neighbors' || path === 'show lldp neighbors') return [[], [word('detail', 'Detailed neighbor information')]];
   if (path === 'show access-lists' || path === 'show ip access-lists' || path === 'show ipv6 access-list') return [[], [text('Access list name')]];
   if(path==='show users')return [[],[word('all','Include idle lines')]];
@@ -356,7 +451,7 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   if (path === 'crypto ipsec transform-set') return combine([[text('Transform set name'), word('esp-3des')], [text('Transform set name'), word('esp-aes')], ...combine([[text('Transform set name'), word('esp-aes')]], choices(['128', '192', '256']))], choices(['esp-sha-hmac', 'esp-md5-hmac']));
   if (path === 'encryption' && context.mode === 'ike') return [[word('3des')], [word('aes')], ...combine([[word('aes')]], choices(['128', '192', '256']))];
   if (path === 'set pfs') return Array.from({ length: 24 }, (_, index) => [word(`group${index + 1}`, 'Diffie-Hellman group')]);
-  if (path === 'username') return combine(combine([[text('User name')]], [[], [word('privilege'), number(0, 15, 'Privilege level')]]), [[word('secret'), text('Password')], [word('secret'), word('0'), text('Clear-text password')], [word('password'), text('Password')], ...combine([[word('password')]], combine(choices(['0', '7']), [[text('Password')]]))]);
+  if (path === 'username') { const secret = text('The UNENCRYPTED (cleartext) user secret'), password = text('The UNENCRYPTED (cleartext) user password'); return combine(combine([[text('User name')]], [[], [word('privilege'), number(0, 15, 'User privilege level')]]), [[word('secret'), secret], [word('secret'), word('0', 'Specifies an UNENCRYPTED secret will follow'), secret], [word('password'), password], [word('password'), word('0', 'Specifies an UNENCRYPTED password will follow'), password], [word('password'), word('7', 'Specifies a HIDDEN password will follow'), text('The HIDDEN user password string')]]); }
   if (path === 'login') return [[], [word('local', 'Use local user authentication')]];
   if (path === 'address ipv4' && context.mode === 'aaa-server') {const auth=[word('auth-port'),number(1,65535,'Authentication UDP port')],acct=[word('acct-port'),number(1,65535,'Accounting UDP port')];return combine([[ip()]],context.protocol==='tacacs'?[[],[word('port'),number(1,65535,'TACACS TCP port')]]:[[],auth,acct,[...auth,...acct],[...acct,...auth]]);}
   if(path==='key'&&context.mode==='aaa-server')return [[text('Shared secret')],...combine(choices(['0','7']),[[text('Shared secret')]])];
@@ -488,7 +583,7 @@ function negativeForms(path: string, forms: Form[], context: IosSyntaxContext): 
 
 interface Position { atoms: Atom[]; complete: boolean; bad?: number }
 function advanceForms(forms: Form[], tokens: IosToken[]): Position {
-  let states = forms.map(form => ({ form, index: 0 }));
+  let states = forms.map(form => ({ form, index: 0, filled: false }));
   for (let index = 0; index < tokens.length; index++) {
     const token = tokens[index].text.toLowerCase();
     const literals = [...new Set(states.map(state => state.form[state.index]?.literal).filter((value): value is string => !!value))];
@@ -497,10 +592,11 @@ function advanceForms(forms: Form[], tokens: IosToken[]): Position {
     states = states.filter(state => {
       const atom = state.form[state.index];
       return atom && (atom.literal ? matches.length === 1 && matches[0] === atom.literal : !atom.valid || atom.valid(tokens[index].text));
-    }).map(state => ({ ...state, index: state.form[state.index].repeat ? state.index : state.index + 1 }));
+    }).map(state => state.form[state.index].repeat ? { ...state, filled: true } : { ...state, index: state.index + 1, filled: false });
     if (!states.length) return { atoms: [], complete: false, bad: index };
   }
-  return { atoms: states.map(state => state.form[state.index]).filter(Boolean), complete: states.some(state => state.index === state.form.length || state.form[state.index]?.repeat && tokens.length > 0) };
+  // A repeating argument such as `| include LINE` needs at least one value before `<cr>` is offered.
+  return { atoms: states.map(state => state.form[state.index]).filter(Boolean), complete: states.some(state => state.index === state.form.length || state.form[state.index]?.repeat && state.filled) };
 }
 
 interface Lookup { tokens: IosToken[]; specs: IosSyntaxCommand[]; index: number; no: boolean; prefix: string; context: IosSyntaxContext; fallback?: { spec: IosSyntaxCommand; index: number }; bad?: number; badColumn?: number }
@@ -553,26 +649,52 @@ function argumentPosition(state: Lookup, lastIsPartial: boolean): Position | und
 
 /** undefined asks the caller to retain its existing help for an unmodeled argument grammar. */
 export function iosContextHelp(line: string, commands: IosSyntaxCommand[], context: IosSyntaxContext = {}): string[] | undefined {
-  const pipe=line.indexOf('|');
-  if(pipe>=0&&/^\s*(?:do\s+)?(?:s(?:h(?:o(?:w)?)?)?|mo(?:r(?:e)?)?)\s/i.test(line))return iosContextHelp('__output '+line.slice(pipe+1).trimStart(),[{words:['__output'],description:'Output modifier',args:'<modifier>'}],{mode:'priv'});
-  if (context.mode === 'acl' && /^(?:(?:no|default)\s+)?\d+\s+$/i.test(line.trimStart())) return [...['permit', 'deny', 'remark'].map(value => `  ${value.padEnd(22)} Access list entry`), ...(/^\s*(?:no|default)\s/i.test(line) ? ['  <cr>'] : [])];
+  const pipe=line.indexOf('|'),width=context.width??80;
+  if(pipe>=0&&/^\s*(?:do\s+)?(?:s(?:h(?:o(?:w)?)?)?|mo(?:r(?:e)?)?)\s/i.test(line))return iosContextHelp('__output '+line.slice(pipe+1).trimStart(),[{words:['__output'],description:'Output modifier',args:'<modifier>'}],{mode:'priv',width});
+  if (context.mode === 'acl' && /^(?:(?:no|default)\s+)?\d+\s+\S*$/i.test(line.trimStart())) {
+    const partialWord=/\s$/.test(line)?undefined:line.trim().split(/\s+/).at(-1)!.toLowerCase();
+    const entries:[string,string][]=[['deny','Specify packets to reject'],['permit','Specify packets to forward'],['remark','Access list entry comment']];
+    if(partialWord!==undefined){const words=entries.map(([label])=>label).filter(label=>label.startsWith(partialWord));return words.length?iosPartialHelp(words,width):[IOS_UNRECOGNIZED];}
+    return iosHelpRows([...entries,...(/^\s*(?:no|default)\s/i.test(line)?[['<cr>','<cr>'] as [string,string]]:[])],width);
+  }
   const partial = !!line && !/\s$/.test(line), state = lookup(line, commands, context, false);
   if (state.bad !== undefined) return undefined;
   const position = argumentPosition(state, partial);
   if (!position) return undefined;
   if (position.bad !== undefined) return undefined;
-  const value = partial ? state.tokens.at(-1)!.text.toLowerCase() : '', rows = new Map<string, string>();
+  const value = partial ? state.tokens.at(-1)!.text.toLowerCase() : '', rows = new Map<string, string>(), specPath = state.fallback?.spec.words.join(' ') ?? '';
+  // IOS keyword help is keyed by the full keyword path, so `address-family ipv4 ?` looks up `address-family ipv4|unicast`.
+  const typedWords=state.fallback?[...state.fallback.spec.words,...state.tokens.slice(state.fallback.index,state.tokens.length-(partial?1:0)).map(token=>token.text.toLowerCase())]:[];
+  const typedPath=typedWords.join(' '),path=specPath,specLength=state.fallback?.spec.words.length??0;
+  // Keywords are looked up from the longest typed prefix back to the command path, so
+  // `snmp-server group G v3 ?` can use `snmp-server group|auth` before `snmp-server|auth`.
+  const paths=typedWords.length>specLength?Array.from({length:typedWords.length-specLength+1},(_,i)=>typedWords.slice(0,typedWords.length-i).join(' ')):[specPath];
+  // A generic placeholder means something different at each argument position (address, then mask), so
+  // after the first argument it is keyed by position (`ip address#1|A.B.C.D`) rather than by the command path.
+  const argIndex=typedWords.length-specLength,atomPaths=(label:string)=>argIndex>0&&/^(?:A\.B\.C\.D|X:X:X:X::X|WORD|LINE|H\.H\.H|<[^>]*>|\d+-\d+)$/.test(label)?[typedPath,`${specPath}#${argIndex}`]:paths;
+  const mode=state.context.mode||'',keywordPath=state.fallback?.spec.words??[],keyword=(label:string,fallback:string,words=keywordPath)=>iosArgumentDescription(paths,label,iosDescription(mode,[...words,label],fallback,context.protocol),mode,context.protocol);
+  // Simulator signatures such as <mode|vlan|mst> name keywords, not a free-form WORD.
+  const alternatives:string[]=[];
   for (const atom of position.atoms) {
     if(atom.interface){for(const [label,description]of interfaceHelp(value,atom.interface))rows.set(label,description);}
-    else if (!atom.literal || atom.literal.toLowerCase().startsWith(value)) rows.set(atom.label, atom.description);
+    else if(!atom.literal&&atom.label==='WORD'&&/^[a-z][\w-]*(?:\|[a-z][\w-]*)+$/.test(atom.description))alternatives.push(...atom.description.split('|').filter(word=>word.startsWith(value)));
+    else if (!atom.literal || atom.literal.toLowerCase().startsWith(value)) for(const [label,description]of iosArgumentRows(atomPaths(atom.label),atom.label,atom.description,mode,context.protocol))rows.set(label,description);
   }
   // A command may accept an argument and also have keyword branches (interface range,
   // show interfaces status). Both are valid at the same source position.
-  const consumed=state.tokens.length-(partial?1:0);
-  if(state.fallback&&consumed===state.fallback.index)for(const spec of state.specs){const child=spec.words[state.fallback.spec.words.length];if(child&&child.startsWith(value))rows.set(child,spec.description);}
-  if (!partial && position.complete) rows.set('<cr>', '');
-  if (!rows.size) return position.atoms.some(atom=>atom.interface)?['% No matching command at this position.']:undefined;
-  return [...rows].sort(([a], [b]) => a === '<cr>' ? 1 : b === '<cr>' ? -1 : a.localeCompare(b)).map(([label, description]) => `  ${label.padEnd(22)} ${description}`.trimEnd());
+  const consumed=state.tokens.length-(partial?1:0),start=state.fallback?state.fallback.index-state.fallback.spec.words.length:0;
+  if(state.fallback&&state.index===consumed)for(const spec of state.specs){const depth=consumed-start,child=spec.words[depth];if(child&&child.startsWith(value)&&!rows.has(child)&&!iosKeywordHidden(spec.words.slice(0,depth).join(' '),child,mode,context.protocol))rows.set(child,keyword(child,spec.description,spec.words.slice(0,depth)));}
+  for(const word of alternatives)if(!rows.has(word))for(const [label,description]of iosArgumentRows(paths,word,keyword(word,state.fallback?.spec.description??'',typedWords),mode,context.protocol))rows.set(label,description);
+  if (!partial && position.complete) {
+    rows.set('<cr>', '<cr>');
+    if(['user','priv'].includes(state.context.mode||'')&&/^(?:show|more)\b/.test(path))rows.set('|','Output modifiers');
+  }
+  if (!rows.size) return position.atoms.some(atom=>atom.interface)?[IOS_UNRECOGNIZED]:undefined;
+  if (partial) {
+    const keywords=[...rows.keys()].filter(label=>label!=='<cr>'&&label!=='|'&&/^[a-z0-9]/i.test(label)&&label.toLowerCase().startsWith(value)&&!/^(?:WORD|LINE|A\.B\.C\.D|X:X:X:X::X|H\.H\.H)$/.test(label)).sort((a,b)=>a<b?-1:a>b?1:0);
+    if(keywords.length)return iosPartialHelp(keywords,width);
+  }
+  return iosHelpRows(rows, width);
 }
 
 export function iosArgumentCompletion(line: string, commands: IosSyntaxCommand[], context: IosSyntaxContext = {}): string | undefined {

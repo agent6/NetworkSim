@@ -15,7 +15,7 @@ test('invalid no/default navigation cannot leave modes or dispatch EXEC and is a
       assert.match(cli.execute(command).join('\n'),/Invalid input/,command);assert.equal(cli.mode,mode);assert.equal(cli.prompt,prompt);assert.equal(JSON.stringify(device.config),configuration);assert.equal(engine.clock.now(),clock);
     }
     assert.ok(!cli.help('no ').some(row=>/^\s*(?:end|exit|help|do)\s/.test(row)));
-    assert.match(cli.help('no do ').join('\n'),/No matching/);assert.equal(cli.complete('no do sh'),'no do sh');assert.equal(cli.complete('no exi'),'no exi');
+    assert.match(cli.help('no do ').join('\n'),/% Unrecognized command/);assert.equal(cli.complete('no do sh'),'no do sh');assert.equal(cli.complete('no exi'),'no exi');
   }
 });
 

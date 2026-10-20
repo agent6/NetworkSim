@@ -28,10 +28,13 @@ import {
 import { icon, deviceLabels, escapeHTML as esc } from "./icons.ts";
 import {
   parseDocument,
-  parseLabFile,
+  readLabFile,
   serializeLabFile,
   listSaved,
   saveLocal,
+  saveLocalCopy,
+  saveNamedLocal,
+  labSaveStatus,
   loadWorkspace,
   saveWorkspace,
   deleteLocal,
@@ -117,6 +120,8 @@ let playing = true,
   dirtyFile = false,
   lastAutosave = 0;
 let lastWorkspaceSnapshot = "", workspaceError = "";
+let importReadVersion = 0;
+let importReading = false;
 let clipboard: any = null;
 let spaceHeld = false,
   toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -201,10 +206,16 @@ app.innerHTML = `${nodeIconDefinitions()}
         <div class="flex h-9 w-9 shrink-0 items-center justify-center"><span class="brand-logo" style="--brand-image: url('${projectLogo}')" aria-hidden="true"></span></div>
         <div><div class="flex items-center gap-2"><span class="text-[15px] font-bold tracking-tight">NetworkSim</span></div><button id="lab-name" data-action="rename-lab" class="max-w-[250px] truncate text-left text-[11px] text-slate-400" title="Rename lab">Untitled lab</button></div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="header-actions flex items-center gap-2">
         <button class="btn theme-toggle" id="theme-toggle" data-action="toggle-theme" aria-label="Switch to dark mode">${icon('moon', 15)}<span class="wide-label">Dark mode</span></button>
-        <button class="btn" data-action="files">${icon("folder", 15)}<span class="wide-label">My labs</span></button>
-        <button class="btn-primary" data-action="export">${icon("download", 15)}<span class="export-label">Export lab</span></button>
+        <button class="btn" data-action="files" data-tooltip="My labs" aria-label="My labs">${icon("folder", 15)}<span class="wide-label">My labs</span></button>
+        <div class="lab-actions flex items-center gap-2" role="group" aria-label="Lab files">
+          <button class="btn" data-action="new-lab" data-tooltip="New lab" aria-label="New lab">${icon("plus", 15)}<span class="file-action-label">New</span></button>
+          <button class="btn" data-action="save-local" data-tooltip="Save lab in this browser" aria-label="Save lab">${icon("save", 15)}<span class="file-action-label">Save</span></button>
+          <button class="btn" data-action="save-as" data-tooltip="Save as a separate browser copy" aria-label="Save lab as">${icon("copy", 15)}<span class="file-action-label">Save as</span></button>
+          <button class="btn" data-action="import" data-tooltip="Import lab" aria-label="Import lab">${icon("upload", 15)}<span class="file-action-label">Import lab</span></button>
+          <button class="btn-primary" data-action="export" data-tooltip="Export lab" aria-label="Export lab">${icon("download", 15)}<span class="file-action-label">Export lab</span></button>
+        </div>
         ${button("help", "info", "Supported behavior and limits")}
       </div>
     </header>
@@ -233,7 +244,7 @@ app.innerHTML = `${nodeIconDefinitions()}
         </div>
       </main>
     </div>
-  </div><input type="file" id="import-input" accept=".yaml,.yml,application/yaml,text/yaml" hidden>`;
+  </div><input type="file" id="import-input" accept=".yaml,.yml,.json,application/yaml,text/yaml,application/json" hidden>`;
 syncThemeToggle();
 
 function syncThemeToggle() {
@@ -850,6 +861,10 @@ function cliComplete(help = false) {
 }
 
 function closeDialog() {
+  if (importReading) {
+    importReadVersion++;
+    setImportReading(false);
+  }
   $("#dialogs").innerHTML = "";
   if (lastFocus?.isConnected) lastFocus.focus();
   else $("#topology").focus();
@@ -872,6 +887,7 @@ function formDialog(
   content: string,
   onSave: (data: FormData) => void,
   saveLabel = "Save changes",
+  afterSave?: () => void,
 ) {
   dialog(
     title,
@@ -882,10 +898,12 @@ function formDialog(
     e.preventDefault();
     try {
       onSave(new FormData(e.currentTarget as HTMLFormElement));
-      closeDialog();
     } catch (err) {
       $("#form-error").textContent = message(err);
+      return;
     }
+    closeDialog();
+    afterSave?.();
   });
 }
 function textField(
@@ -1165,6 +1183,7 @@ function powerDevices(devices: Device[], powered: boolean) {
 }
 
 function exportLab() {
+  if (noteEdit) finishNoteEdit(true);
   try {
     download(fileName(sim.lab.name), serializeLabFile(documentState()));
   } catch (error) {
@@ -1188,26 +1207,218 @@ function restoreView(doc: LabDocument) {
   }
   return false;
 }
-function importLab(doc: LabDocument) {
+function importLab(doc: LabDocument): boolean {
   const before = snapshot();
   try {
     sim.load(doc);
-    undoStack.push(before);
-    redoStack.length = 0;
-    selected.clear();
-    sessions.clear();
-    activeDevice = null;
-    dirtyFile = false;
-    dirty = true;
-    closeDialog();
-    renderTerminal();
-    if (!restoreView(doc)) setTimeout(fit, 0);
-    toast(`Opened ${sim.lab.name}`);
   } catch (e) {
     sim.load(JSON.parse(before));
-    toast(message(e));
+    restoreView(JSON.parse(before));
+    const error = document.querySelector("#lab-import-error");
+    if (error) error.textContent = `Could not open lab: ${message(e)}. Your previous lab has been restored.`;
+    else labImportError(e);
+    return false;
+  }
+  undoStack.push(before);
+  if (undoStack.length > 80) undoStack.shift();
+  redoStack.length = 0;
+  selected.clear();
+  selectedLink = null;
+  hoveredLink = null;
+  alignmentGuides = [];
+  setTool("select");
+  sessions.clear();
+  activeDevice = null;
+  dirtyFile = false;
+  dirty = true;
+  closeDialog();
+  setDock(false);
+  renderTerminal();
+  if (!restoreView(doc)) fit();
+  const saved = persistWorkspace();
+  toast(saved ? `Opened ${sim.lab.name}. Undo restores the previous lab.` :
+    `Opened ${sim.lab.name}, but browser autosave is unavailable. Export the lab to keep your work.`);
+  return true;
+}
+
+function labImportError(error: unknown) {
+  dialog(
+    "Could not import lab",
+    `<p class="text-xs leading-6 text-slate-500">Your current lab has not been replaced.</p><p class="notice mt-3" role="alert">${esc(message(error))}</p><p class="mt-3 text-xs leading-6 text-slate-500">Choose a NetworkSim YAML lab (.yaml or .yml), or a previous NetworkSim JSON export, up to 10 MB. Cisco .pkt/.pka files and other simulators' formats are not supported.</p>`,
+    '<button class="btn" data-action="close-dialog">Cancel</button><button class="btn-primary" data-action="import">Choose another file</button>',
+  );
+}
+
+function requestLabReplacement(doc: LabDocument, operation: "import" | "open", source?: string) {
+  // Exercise initialization off-screen before touching the current simulator or its history.
+  new Simulator(doc.seed).load(doc);
+  if (noteEdit) finishNoteEdit(true);
+  const lab = sim.lab;
+  const hasCurrentLab = lab.devices.length || lab.links.length || lab.notes.length || ("lesson" in lab && lab.lesson) ||
+    !["Untitled lab", "Untitled network"].includes(lab.name);
+  if (!hasCurrentLab) { importLab(doc); return; }
+  const verb = operation;
+  dialog(
+    operation === "import" ? "Import lab" : "Open saved lab",
+    `<p id="lab-import-description" class="text-xs leading-6 text-slate-500">Opening <strong class="break-words">${esc(doc.lab.name)}</strong> replaces <strong class="break-words">${esc(lab.name)}</strong>, including its workspace autosave. Labs are not merged.</p>
+    ${source ? `<p class="mt-2 break-words text-xs text-slate-400">File: ${esc(source)}</p>` : ""}
+    <p class="mt-3 text-xs text-slate-500">${doc.lab.devices.length} devices &middot; ${doc.lab.links.length} links &middot; ${doc.lab.notes.length} notes. Protocol sessions restart when opened.</p>
+    <p class="mt-4 text-xs leading-6 text-slate-500"><strong>Save a copy &amp; ${verb}</strong> keeps the current lab in <strong>My labs</strong> without overwriting earlier saves. Browser copies stay in this browser and can be cleared with browsing data.</p>
+    <button type="button" class="btn mt-3" id="lab-import-export">${icon("download", 15)} Export current lab first</button>
+    <p id="lab-import-export-status" class="mt-2 text-xs leading-5 text-slate-500" role="status"></p>
+    <p id="lab-import-error" class="mt-3 text-xs leading-5 text-rose-600" role="alert"></p>`,
+    `<button class="btn" id="cancel-lab-import" data-action="close-dialog">Cancel</button><button class="btn" id="lab-import-replace">${operation === "import" ? "Import" : "Open"} without saving</button><button class="btn-primary" id="lab-import-save">Save a copy &amp; ${verb}</button>`,
+  );
+  const confirmation = $("#dialogs [role=dialog]");
+  confirmation.classList.add("lab-import-dialog");
+  confirmation.setAttribute("aria-describedby", "lab-import-description");
+  setTimeout(() => document.querySelector<HTMLElement>("#cancel-lab-import")?.focus(), 0);
+  $("#lab-import-export").onclick = () => {
+    try {
+      download(fileName(sim.lab.name), serializeLabFile(documentState()));
+      $("#lab-import-export-status").textContent = "Download requested. Confirm the file has finished saving before continuing without a browser copy.";
+    } catch (error) {
+      $("#lab-import-error").textContent = `Could not export the current lab: ${message(error)}`;
+    }
+  };
+  $("#lab-import-replace").onclick = () => { importLab(doc); };
+  $("#lab-import-save").onclick = () => {
+    try {
+      saveLocalCopy(documentState());
+    } catch (error) {
+      $("#lab-import-error").textContent = `Could not save a browser copy: ${message(error)}. Nothing was replaced. Export your current lab first, or cancel.`;
+      return;
+    }
+    importLab(doc);
+  };
+}
+
+function chooseLabFile() {
+  if (importReading) return;
+  const input = $<HTMLInputElement>("#import-input");
+  input.value = "";
+  input.click();
+}
+
+function setImportReading(reading: boolean) {
+  importReading = reading;
+  for (const button of $$<HTMLButtonElement>('[data-action="import"]')) {
+    button.disabled = reading;
+    button.setAttribute("aria-busy", String(reading));
   }
 }
+
+function useSavedLabIdentity(saved: LabDocument) {
+  // Undoing an edit after naming a lab must keep later saves on that same saved lab.
+  for (const stack of [undoStack, redoStack]) {
+    for (let index = 0; index < stack.length; index++) {
+      const prior: LabDocument = JSON.parse(stack[index]);
+      if (prior.lab.id !== sim.lab.id) continue;
+      prior.lab.id = saved.lab.id;
+      prior.lab.name = saved.lab.name;
+      stack[index] = JSON.stringify(prior);
+    }
+  }
+  sim.lab.id = saved.lab.id;
+  sim.lab.name = saved.lab.name;
+  dirtyFile = false;
+  dirty = true;
+}
+
+function saveLabAs() {
+  if (noteEdit) finishNoteEdit(true);
+  const suggested = ["Untitled lab", "Untitled network"].includes(sim.lab.name) ? "My lab" : `${sim.lab.name.slice(0, 190)} copy`;
+  formDialog(
+    "Save lab as",
+    `${textField("Lab name", "name", suggested, "", true)}<p class="text-xs leading-6 text-slate-500">Creates a separate copy in <strong>My labs</strong> in this browser, then makes it the current lab. Earlier saved labs are not overwritten. Use <strong>Export lab</strong> for a portable YAML file.</p>`,
+    data => {
+      const copy = saveLocalCopy(documentState(), String(data.get("name")));
+      useSavedLabIdentity(copy);
+      const recovered = persistWorkspace();
+      toast(recovered ? `Saved ${sim.lab.name} as a separate browser lab.` :
+        `Saved ${sim.lab.name} in My labs, but workspace autosave is unavailable.`);
+    },
+    "Save copy",
+  );
+  const input = $<HTMLInputElement>('#dialog-form [name="name"]');
+  input.maxLength = 200;
+  setTimeout(() => { if (input.isConnected) { input.focus(); input.select(); } }, 0);
+}
+
+function nameAndSaveLab(afterSave?: () => void) {
+  const suggested = ["Untitled lab", "Untitled network"].includes(sim.lab.name) ? "My lab" : sim.lab.name;
+  formDialog(
+    "Save lab",
+    `${textField("Lab name", "name", suggested, "", true)}<p class="text-xs leading-6 text-slate-500">Save this lab in <strong>My labs</strong> in this browser. Future saves update this same lab. Use <strong>Export lab</strong> for a portable YAML file.</p>`,
+    data => {
+      const saved = saveNamedLocal(documentState(), String(data.get("name")));
+      useSavedLabIdentity(saved);
+      const recovered = persistWorkspace();
+      toast(recovered ? `Saved ${sim.lab.name} in this browser.` :
+        `Saved ${sim.lab.name} in My labs, but workspace autosave is unavailable.`);
+    },
+    afterSave ? "Save and start new lab" : "Save",
+    afterSave,
+  );
+  const input = $<HTMLInputElement>('#dialog-form [name="name"]');
+  input.maxLength = 200;
+  setTimeout(() => { if (input.isConnected) { input.focus(); input.select(); } }, 0);
+}
+
+function saveLab(afterSave?: () => void, onError?: (message: string) => void) {
+  if (noteEdit) finishNoteEdit(true);
+  try {
+    if (!listSaved().some(lab => lab.id === sim.lab.id)) {
+      nameAndSaveLab(afterSave);
+      return;
+    }
+    saveLocal(documentState());
+    dirtyFile = false;
+    dirty = true;
+    toast(`Saved ${sim.lab.name} in this browser. Export lab creates a portable backup.`);
+  } catch (error) {
+    const detail = `Could not save lab in this browser: ${message(error)}. Your lab has not been cleared. Use Export lab to keep your work.`;
+    if (onError) onError(detail);
+    else toast(detail);
+    return;
+  }
+  afterSave?.();
+}
+
+function newLab() {
+  importReadVersion++;
+  setImportReading(false);
+  if (noteEdit) finishNoteEdit(true);
+  const doc = {
+    ...documentState(),
+    lab: { id: crypto.randomUUID(), name: "Untitled lab", devices: [], links: [], notes: [] },
+    view: { x: 70, y: 60, scale: 1 },
+  };
+  const lab = sim.lab;
+  const hasWork = lab.devices.length || lab.links.length || lab.notes.length || ("lesson" in lab && lab.lesson) ||
+    !["Untitled lab", "Untitled network"].includes(lab.name);
+  if (!hasWork) { importLab(doc); return; }
+  let status: ReturnType<typeof labSaveStatus> | "unknown" = "unknown";
+  let warning = "";
+  try { status = labSaveStatus(documentState()); }
+  catch (error) { warning = `Could not check the last saved lab: ${message(error)}. Save or export before clearing if you want to keep it.`; }
+  if (status === "saved") { importLab(doc); return; }
+  dialog(
+    status === "modified" ? "Save changes before starting a new lab?" : "Save this lab before starting a new one?",
+    `<p id="new-lab-description" class="text-xs leading-6 text-slate-500">${status === "modified" ?
+      `<strong class="break-words">${esc(lab.name)}</strong> has unsaved changes. Save updates this existing lab in My labs before starting a new, empty workspace.` :
+      `<strong class="break-words">${esc(lab.name)}</strong> ${status === "unknown" ? "may have unsaved changes" : "has not been saved"}. Save will ask for a name before starting a new, empty workspace.`}</p><p class="mt-3 text-xs leading-6 text-slate-500">Don't save discards the current workspace changes. Cancel keeps working on this lab. Workspace autosave is not a saved lab.</p><p id="new-lab-error" class="mt-3 text-xs leading-5 text-rose-600" role="alert">${esc(warning)}</p>`,
+    '<button class="btn" id="new-lab-cancel" data-action="close-dialog">Cancel</button><button class="btn" id="new-lab-discard">Don\'t save</button><button class="btn-primary" id="new-lab-save">Save</button>',
+  );
+  const confirmation = $("#dialogs [role=dialog]");
+  confirmation.classList.add("lab-import-dialog");
+  confirmation.setAttribute("aria-describedby", "new-lab-description");
+  setTimeout(() => document.querySelector<HTMLElement>("#new-lab-cancel")?.focus(), 0);
+  $("#new-lab-discard").onclick = () => { importLab(doc); };
+  $("#new-lab-save").onclick = () => saveLab(() => { importLab(doc); },
+    detail => { $("#new-lab-error").textContent = detail; });
+}
+
 function filesDialog() {
   let labs: ReturnType<typeof listSaved> = [],
     err = "";
@@ -1218,10 +1429,10 @@ function filesDialog() {
   }
   dialog(
     "My labs",
-    `<div class="grid grid-cols-2 gap-3"><button class="btn py-4" data-action="import">${icon("upload")} Open a YAML lab</button><button class="btn py-4" data-action="save-local">${icon("save")} Save in this browser</button></div><div class="mt-6 flex items-center justify-between"><span class="section-label">Saved in this browser</span><span class="text-[10px] text-slate-400">Current workspace saves automatically</span></div>${err ? `<p class="notice mt-3">${esc(err)}</p>` : ""}<div class="mt-3 divide-y divide-slate-100">${labs.length ? labs.map((l) => `<div class="flex items-center justify-between gap-2 py-3"><button data-open-saved="${esc(l.id)}" class="min-w-0 flex-1 text-left"><div class="truncate text-xs font-semibold">${esc(l.name)}</div><div class="mt-1 text-[10px] text-slate-400">${new Date(l.savedAt).toLocaleString()}</div></button><button class="icon-btn" data-rename-saved="${esc(l.id)}" aria-label="Rename ${esc(l.name)}">${icon("edit", 16)}</button><button class="icon-btn" data-download-saved="${esc(l.id)}" title="Export saved lab" aria-label="Export ${esc(l.name)}">${icon("download", 16)}</button><button class="icon-btn" data-delete-saved="${esc(l.id)}" title="Delete saved lab" aria-label="Delete ${esc(l.name)}">${icon("trash", 16)}</button></div>`).join("") : '<p class="py-5 text-xs text-slate-400">No saved labs yet. Export a file for a portable backup.</p>'}</div><p class="mt-4 text-[10px] leading-5 text-slate-400">Browser saves depend on browser permissions and can be cleared with browsing data. A downloaded lab file is the reliable way to move or back up your work.</p>`,
-    `<button class="btn" data-action="new-lab">New empty lab</button><button class="btn-primary" data-action="close-dialog">Done</button>`,
+    `<div class="flex flex-wrap items-center justify-between gap-2"><span class="section-label">Saved in this browser</span><span class="text-[10px] text-slate-400">Current workspace saves automatically</span></div>${err ? `<p class="notice mt-3">${esc(err)}</p>` : ""}<div class="mt-3 divide-y divide-slate-100">${labs.length ? labs.map((l) => `<div class="flex items-center justify-between gap-2 py-3"><button data-open-saved="${esc(l.id)}" class="min-w-0 flex-1 text-left"><div class="truncate text-xs font-semibold">${esc(l.name)}</div><div class="mt-1 text-[10px] text-slate-400">${new Date(l.savedAt).toLocaleString()}</div></button><button class="icon-btn" data-rename-saved="${esc(l.id)}" aria-label="Rename ${esc(l.name)}">${icon("edit", 16)}</button><button class="icon-btn" data-download-saved="${esc(l.id)}" title="Export saved lab" aria-label="Export ${esc(l.name)}">${icon("download", 16)}</button><button class="icon-btn" data-delete-saved="${esc(l.id)}" title="Delete saved lab" aria-label="Delete ${esc(l.name)}">${icon("trash", 16)}</button></div>`).join("") : '<p class="py-5 text-xs text-slate-400">No saved labs yet. Use Save or Save as in the toolbar to add one.</p>'}</div><p class="mt-4 text-[10px] leading-5 text-slate-400">Browser saves depend on browser permissions and can be cleared with browsing data. A downloaded lab file is the reliable way to move or back up your work.</p>`,
+    `<button class="btn-primary" data-action="close-dialog">Done</button>`,
   );
-
+  setImportReading(importReading);
 }
 
 function desktop(d: Device) {
@@ -1737,37 +1948,10 @@ const actions: Record<string, () => void> = {
   },
   files: filesDialog,
   export: exportLab,
-  import: () => $<HTMLInputElement>("#import-input").click(),
-  "save-local": () => {
-    try {
-      saveLocal(documentState());
-      dirtyFile = false;
-      dirty = true;
-      filesDialog();
-      toast("Lab saved in this browser");
-    } catch (e) {
-      toast(`Browser save failed: ${message(e)}`);
-    }
-  },
-  "new-lab": () => {
-    checkpoint();
-    const doc = documentState();
-    doc.lab = {
-      id: crypto.randomUUID(),
-      name: "Untitled lab",
-      devices: [],
-      links: [],
-      notes: [],
-    };
-    sim.load(doc);
-    sessions.clear();
-    activeDevice = null;
-    selected.clear();
-    closeDialog();
-    fit();
-    dirty = true;
-    renderTerminal();
-  },
+  import: chooseLabFile,
+  "save-local": saveLab,
+  "save-as": saveLabAs,
+  "new-lab": newLab,
   "close-dialog": closeDialog,
   help: capabilitiesDialog,
   capabilities: capabilitiesDialog,
@@ -1847,11 +2031,14 @@ document.addEventListener("click", (e) => {
   }
   const open = target.closest<HTMLElement>("[data-open-saved]");
   if (open) {
+    importReadVersion++;
+    setImportReading(false);
     try {
       const l = listSaved().find((l) => l.id === open.dataset.openSaved);
-      if (l) importLab(parseDocument(JSON.stringify(l.document)));
+      if (!l) throw Error("This saved lab no longer exists. Choose another lab.");
+      requestLabReplacement(parseDocument(JSON.stringify(l.document)), "open");
     } catch (err) {
-      toast(message(err));
+      labImportError(err);
     }
   }
   const rename = target.closest<HTMLElement>("[data-rename-saved]");
@@ -1901,15 +2088,27 @@ document.addEventListener("pointerdown", e => {
 $("#import-input").addEventListener("change", async (e) => {
   const input = e.target as HTMLInputElement,
     file = input.files?.[0];
-  if (!file) return;
-  try {
-    if (file.size > 10 * 1024 * 1024)
-      throw Error("This lab exceeds the 10 MB file limit.");
-    importLab(parseLabFile(await file.text()));
-  } catch (err) {
-    toast(`Could not open lab: ${message(err)}`);
-  }
   input.value = "";
+  if (!file) return;
+  const version = ++importReadVersion;
+  const returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  setImportReading(true);
+  try {
+    const doc = await readLabFile(file);
+    if (version === importReadVersion) {
+      setImportReading(false);
+      if (returnFocus?.isConnected) returnFocus.focus();
+      requestLabReplacement(doc, "import", file.name);
+    }
+  } catch (err) {
+    if (version === importReadVersion) {
+      setImportReading(false);
+      if (returnFocus?.isConnected) returnFocus.focus();
+      labImportError(err);
+    }
+  } finally {
+    if (version === importReadVersion) setImportReading(false);
+  }
 });
 let terminalPointer: { x: number; y: number } | null = null;
 $("#console-panel").addEventListener("pointerdown", e => { terminalPointer = { x: e.clientX, y: e.clientY }; });
