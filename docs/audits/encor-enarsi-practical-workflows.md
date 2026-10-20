@@ -1,5 +1,7 @@
 # ENCOR/ENARSI practical workflow review
 
+**DMVPN update:** The ENARSI 2.3.a-e assessments in this frozen ledger predate the current [single-hub Phase 2/3 implementation](../features/dmvpn.md). `tests/dmvpn.test.ts` now supplies executable evidence for protected mGRE/NHRP, dynamic neighbors and direct spoke shortcuts, including failure/recovery and persistence. The historical JSON hashes/assertion selections below are not a new snapshot of those changes.
+
 All20 ENCORv1.2 and44 ENARSIv1.1 practical leaves are mapped to exact reviewed assertions in [the JSON ledger](encor-enarsi-practical-workflows.json). ENARSI1.10.c.i–iv inherit the troubleshooting action; the corrected total is64. This is a bounded workflow assessment, not complete IOS, every option/output, native cryptographic behavior or exam/Simlet equivalence.
 
 The JSON pins every selected test declaration/title/pattern, assertion lines, file/excerpt SHA256, implementation entry point/file hash, blueprint digest and objective-specific remaining boundary. The generator validates selectors/hashes and never executes tests. The focused routing/FTP/syntax suite passed123/123 and typecheck passed; consult the parent final combined acceptance for all-node status.

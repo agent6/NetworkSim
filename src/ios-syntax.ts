@@ -479,6 +479,18 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   if (path === 'crypto ipsec transform-set') return combine([[text('Transform set name'), word('esp-3des')], [text('Transform set name'), word('esp-aes')], ...combine([[text('Transform set name'), word('esp-aes')]], choices(['128', '192', '256']))], choices(['esp-sha-hmac', 'esp-md5-hmac']));
   if (path === 'encryption' && context.mode === 'ike') return [[word('3des')], [word('aes')], ...combine([[word('aes')]], choices(['128', '192', '256']))];
   if (path === 'set pfs') return Array.from({ length: 24 }, (_, index) => [word(`group${index + 1}`, 'Diffie-Hellman group')]);
+  if(path==='ip nhrp')return [
+    [word('network-id'),number(1,4294967295,'Locally significant NHRP network ID')],
+    [word('authentication'),text('NHRP authentication string')],
+    [word('holdtime'),number(1,65535,'NHRP cache holdtime in seconds')],
+    [word('registration'),word('timeout'),number(1,65535,'Registration refresh interval in seconds')],
+    [word('nhs'),ip('NHS tunnel address')],[word('nhs'),ip('NHS tunnel address'),word('nbma'),ip('NHS NBMA address')],
+    [word('map'),ip('Peer tunnel address'),ip('Peer NBMA address')],
+    [word('map'),word('multicast'),word('dynamic')],[word('map'),word('multicast'),ip('Multicast NBMA address')],
+    [word('redirect')],[word('shortcut')],
+  ];
+  if(path==='show ip nhrp')return combine([[],...choices(['brief','detail','summary','traffic','multicast','nhs']),[word('nhs'),word('detail')]], [[],[word('interface'),iface(context)]]);
+  if(path==='show dmvpn')return combine([[],...choices(['detail','summary'])],[[],[word('interface'),iface(context)]]);
   if (path === 'username') { const secret = text('The UNENCRYPTED (cleartext) user secret'), password = text('The UNENCRYPTED (cleartext) user password'); return combine(combine([[text('User name')]], [[], [word('privilege'), number(0, 15, 'User privilege level')]]), [[word('secret'), secret], [word('secret'), word('0', 'Specifies an UNENCRYPTED secret will follow'), secret], [word('password'), password], [word('password'), word('0', 'Specifies an UNENCRYPTED password will follow'), password], [word('password'), word('7', 'Specifies a HIDDEN password will follow'), text('The HIDDEN user password string')]]); }
   if (path === 'login') return [[], [word('local', 'Use local user authentication')]];
   if (path === 'address ipv4' && context.mode === 'aaa-server') {const auth=[word('auth-port'),number(1,65535,'Authentication UDP port')],acct=[word('acct-port'),number(1,65535,'Accounting UDP port')];return combine([[ip()]],context.protocol==='tacacs'?[[],[word('port'),number(1,65535,'TACACS TCP port')]]:[[],auth,acct,[...auth,...acct],[...acct,...auth]]);}
@@ -587,6 +599,8 @@ function specialPosition(path: string, tokens: IosToken[], context: IosSyntaxCon
 function summaryMetricKeys(context:IosSyntaxContext):Form[]{const six=context.protocol==='eigrp6',key=argument(six?'X:X:X:X::X/<0-128>':'A.B.C.D/<0-32>',six?'IPv6 summary prefix':'IPv4 summary prefix',value=>{try{return value.includes('/')&&parseCidr(value).family===(six?6:4);}catch{return false;}});return [[key],...(six?[]:[[ip('Summary network address'),ip('Contiguous subnet mask')]])];}
 
 function negativeForms(path: string, forms: Form[], context: IosSyntaxContext): Form[] {
+  if(path==='ip nhrp')return [...forms.filter(f=>!['network-id','authentication','holdtime','registration'].includes(f[0]?.literal??'')),...choices(['network-id','authentication','holdtime']),[word('registration'),word('timeout')]];
+  if(['tunnel source','tunnel mode','tunnel key','tunnel vrf','tunnel protection ipsec profile','set pfs','set transform-set','set security-association lifetime seconds'].includes(path))return[[],...forms];
   if(context.mode==='sla'&&['frequency','timeout','threshold'].includes(path))return [[]];
   if(context.mode==='track'&&path==='delay')return [[],[word('up')],[word('down')],[word('up'),word('down')],[word('down'),word('up')]];
   if(path.startsWith('ip ftp '))return [[]];

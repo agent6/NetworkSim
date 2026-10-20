@@ -7,7 +7,7 @@ const options:Record<string,string[]>={
  'ip bgp':['events','keepalives','updates'],'ip eigrp':['notifications','summary','neighbors','transactions'],
  'ip rip':['database','events','trigger'],'ipv6 rip':['*process'],
  'standby':['errors','events','packets'],'eigrp fsm':['events','actions'],'eigrp packets':['hello','update','query','reply','ack','siaquery','siareply','stub'],
- 'crypto isakmp':[],'crypto ipsec':[],'spanning-tree events':[],'spanning-tree bpdu':[],'event manager action':['cli']
+ 'crypto isakmp':[],'crypto ipsec':[],'nhrp':['packet','error'],'ip nhrp':[],'spanning-tree events':[],'spanning-tree bpdu':[],'event manager action':['cli']
 };
 const required=new Set(['ip dhcp server','ip ospf','event manager action']);
 /** Debug subscriptions are runtime state, never configuration or invented protocol traffic. */

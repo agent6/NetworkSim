@@ -115,11 +115,12 @@ function interfaceLines(p: InterfaceConfig, config: DeviceConfig, kind = 'router
   for (const address of p.features.helpers || []) a.push(` ip helper-address ${address}`);
   if(p.features.cryptoMap)a.push(` crypto map ${p.features.cryptoMap}`);
   if(p.features.tunnelProtection)a.push(` tunnel protection ipsec profile ${p.features.tunnelProtection}`);
+  if(p.features.tunnelVrf)a.push(` tunnel vrf ${p.features.tunnelVrf}`);
   if (p.features.nat === 'inside') a.push(' ip nat inside');
   if (p.features.nat === 'outside') a.push(' ip nat outside');
   if(p.features.tunnelKey!==undefined)a.push(` tunnel key ${p.features.tunnelKey}`);
   if(p.features.tunnelMode)a.push(p.features.tunnelMode==='gre multipoint'?' tunnel mode gre multipoint':' tunnel mode gre ip');
-  if(p.features.nhrp){const n=p.features.nhrp;for(const [key,field]of [['network-id','networkId'],['authentication','authentication'],['holdtime','holdtime']])if(n[field]!==undefined)a.push(` ip nhrp ${key} ${n[field]}`);for(const h of n.nhs||[])a.push(` ip nhrp nhs ${h.address}${h.nbma?` nbma ${h.nbma}`:''}`);for(const m of n.maps||[])a.push(` ip nhrp map ${m.address} ${m.nbma}`);for(const m of n.multicast==='dynamic'?['dynamic']:n.multicast||[])a.push(` ip nhrp map multicast ${m}`);for(const k of ['shortcut','redirect'])if(n[k])a.push(` ip nhrp ${k}`);}
+  if(p.features.nhrp){const n=p.features.nhrp;for(const [key,field]of [['network-id','networkId'],['authentication','authentication'],['holdtime','holdtime'],['registration timeout','registrationTimeout']])if(n[field]!==undefined)a.push(` ip nhrp ${key} ${n[field]}`);for(const h of n.nhs||[])a.push(` ip nhrp nhs ${typeof h==='string'?h:h.address}${h.nbma?` nbma ${h.nbma}`:''}`);for(const m of n.maps||[])a.push(` ip nhrp map ${m.address??m.protocolAddress} ${m.nbma}`);for(const m of n.multicast==='dynamic'?['dynamic']:n.multicast||[])a.push(` ip nhrp map multicast ${m}`);for(const k of ['shortcut','redirect'])if(n[k])a.push(` ip nhrp ${k}`);}
   if(p.features.udld===false)a.push(' no udld port');else if(p.features.udld)a.push(' udld port'+(p.features.udld.mode==='aggressive'?' aggressive':''));
   if(p.features.bfdEcho!==undefined)a.push(`${p.features.bfdEcho?' ':' no '}bfd echo`);
   if(p.features.bfdTemplate)a.push(` bfd template ${p.features.bfdTemplate}`);
@@ -328,7 +329,7 @@ export function renderConfig(device: Device, config: DeviceConfig = device.confi
     for(const k of crypto.isakmpKeys||[])lines.push(`crypto isakmp key ${k.key} address ${k.peer}`);
     for(const [name,t]of Object.entries<any>(crypto.transformSets||{}))lines.push(`crypto ipsec transform-set ${name} ${t.encryption}${t.encryption==='esp-aes'&&t.keyLength?` ${t.keyLength}`:''} ${t.integrity}`,` mode ${t.mode||'tunnel'}`,'!');
     for(const [name,maps]of Object.entries<any[]>(crypto.maps||{}))for(const m of maps){lines.push(`crypto map ${name} ${m.sequence} ipsec-isakmp`);if(m.peer)lines.push(` set peer ${m.peer}`);if(m.transformSets?.length)lines.push(` set transform-set ${m.transformSets.join(' ')}`);if(m.acl)lines.push(` match address ${m.acl}`);if(m.pfs)lines.push(` set pfs group${m.pfs}`);if(m.lifetime)lines.push(` set security-association lifetime seconds ${m.lifetime}`);lines.push('!');}
-    for(const [name,p]of Object.entries<any>(crypto.profiles||{})){lines.push(`crypto ipsec profile ${name}`);if(p.transformSet)lines.push(` set transform-set ${p.transformSet}`);lines.push('!');}
+    for(const [name,p]of Object.entries<any>(crypto.profiles||{})){lines.push(`crypto ipsec profile ${name}`);if(p.transformSet)lines.push(` set transform-set ${p.transformSet}`);if(p.pfs)lines.push(` set pfs group${p.pfs}`);if(p.lifetime!==undefined)lines.push(` set security-association lifetime seconds ${p.lifetime}`);lines.push('!');}
   }
   if(c.features.msdp?.originatorId)lines.push(`ip msdp originator-id ${c.features.msdp.originatorId}`);
   for(const p of c.features.msdp?.peers??[])lines.push(`ip msdp peer ${p.address}${p.connectSource?' connect-source '+p.connectSource:''}${p.remoteAs?' remote-as '+p.remoteAs:''}`);

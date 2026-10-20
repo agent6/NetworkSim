@@ -1,6 +1,7 @@
 import type {Simulator} from './engine.ts';
 import type {Device} from './model.ts';
 import {isIPv4,isIPv6} from './ip.ts';
+import {clearNhrp} from './nhrp.ts';
 export interface MaintenanceHost {engine:Simulator;device:Device;interfaceName(value:string):string;fail(message?:string):never}
 export function maintenanceCommands(h:MaintenanceHost){
  const d=h.device,r=d.runtime,f=r.features,commands:Array<{words:string[];description:string;args?:string;run(a:string[],no:boolean):string[]|void}>=[];
@@ -18,8 +19,8 @@ export function maintenanceCommands(h:MaintenanceHost){
  for(const [key,row]of Object.entries(r.mac))if(!row.static&&(!port||row.port===port)&&(!vlan||row.vlan===vlan)&&(!mac||row.mac.replace(/:/g,'').toLowerCase()===mac))delete r.mac[key];};
  add('clear mac address-table',clearMac,'[dynamic] [interface name] [vlan id] [address MAC]');add('clear mac address-table dynamic',clearMac,'[interface name] [vlan id] [address MAC]');
  add('clear ip flow',a=>{if(a.length>1)h.fail();if(a[0])keyword(a[0],['stats']);if(a[0])delete f.netflowStats;else f.netflowCache=[];},'[stats]');
- add('clear ip nhrp',a=>{exact(a,0);for(const state of Object.values<any>(f.nhrp||{})){state.cache=[];state.registrations=[];state.requests={};}});
- add('clear crypto',a=>{if(!a.length)h.fail('% Incomplete command.');keyword(a[0],['isakmp','ipsec','sa']);if(a[0]==='sa'){exact(a,1);}else{exact(a,2);keyword(a[1],['sa']);}h.engine.clearCrypto(d.id);},'isakmp sa|ipsec sa');
+ add('clear ip nhrp',a=>{let port:string|undefined,address:string|undefined;while(a.length){if(a[0]==='interface'){a.shift();if(!a.length)h.fail('% Incomplete command.');port=h.interfaceName(a.shift()!);if(!/^Tunnel/i.test(port))h.fail('% Expected a Tunnel interface.');}else if(isIPv4(a[0]))address=a.shift();else h.fail();}clearNhrp(h.engine,d.id,port,address);},'[address] [interface name]');
+ add('clear crypto',a=>{if(!a.length)h.fail('% Incomplete command.');const kind=keyword(a[0],['isakmp','ipsec','sa']);if(kind==='sa'){exact(a,1);h.engine.clearCrypto(d.id);return;}if(a.length!==2&&a.length!==4)h.fail();keyword(a[1],['sa']);let peer:string|undefined;if(a.length===4){keyword(a[2],['peer']);if(!isIPv4(a[3]))h.fail();peer=a[3];}h.engine.clearCrypto(d.id,kind==='isakmp'?'isakmp':'ipsec',peer);},'isakmp sa|ipsec sa [peer address]');
  add('clear host',a=>{exact(a,1);if(a[0]==='*')f.dnsCache={};else if(f.dnsCache){const name=a[0].replace(/\.$/,'').toLowerCase();for(const key of Object.keys(f.dnsCache))if(key===name||key.startsWith(name+'|'))delete f.dnsCache[key];}},'*|name');
  return commands;
 }

@@ -713,6 +713,8 @@ export const IOS_KEYWORD_HELP: Record<string, string> = {
   'ip nhrp|network-id': 'NBMA network identifier',
   'ip nhrp|nhs': 'Specify a next hop server',
   'ip nhrp|redirect': 'Enable NHRP redirect',
+  'ip nhrp|registration': 'NHRP registration controls',
+  'ip nhrp registration|timeout': 'Registration refresh interval in seconds',
   'ip nhrp|shortcut': 'Enable shortcut switching',
   'ipv6 rip split-horizon|enable': 'Enable/disable RIP routing',
   'ipv6 rip split-horizon|poison-reverse': 'Enable/disable poison reverse',

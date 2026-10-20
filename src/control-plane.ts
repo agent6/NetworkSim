@@ -23,6 +23,9 @@ import { isIPv6, ipv6Network, ipv6ToBigInt, prefixContains, sameAddress } from '
 import { refreshTrackingBindings } from './fhs-tracking.ts';
 import { portfastConfigured, loopguardEnabled, bpduguardEnabled } from './ios-switching-compat.ts';
 import { configuredDistance, routePolicyMatches } from './ios-routing-compat.ts';
+import { nhrpRuntime, nhrpMapping, nhrpServers, synchronizeNhrp, type NhrpMessage } from './nhrp.ts';
+import { tunnelNbma } from './tunnel.ts';
+export { resolveTunnelDestination, tunnelAccepts } from './nhrp.ts';
 
 /** Structural interface keeps the protocol module independently testable. */
 export interface ControlPlaneHost {
@@ -39,6 +42,8 @@ export interface ControlPlaneHost {
   recompute(): void;
   notify(): void;
   sendControlDatagram?(deviceId:string,source:string,destination:string,destinationPort:number,body:any,options?:{interface?:string;vrf?:string;ttl?:number;protocol?:string}):void;
+  sendNhrpDatagram?(deviceId:string,port:string,nbma:string,message:NhrpMessage):void;
+  cefLookup?(deviceId:string,target:string,vrf?:string):{route:Route;port:string;target:string}|undefined;
   sendBfdEcho?(deviceId:string,port:string,source:string,peer:string,body:any):void;
   receiveRegisteredMulticast?(deviceId:string,packet:any):void;
   sendGratuitousARP?(deviceId:string,port:string,ip:string,mac?:string):void;
@@ -58,7 +63,7 @@ export const CONTROL_PLANE_CAPABILITIES = {
   bgp: 'Actual persistent TCP179, OPEN/KEEPALIVE/UPDATE/NOTIFICATION, negotiated hold expiry, reconnect and advertised-prefix withdrawals. IPv4/IPv6 unicast capabilities are negotiated on each shared transport; per-AF activation, policy, VRF isolation, origination and withdrawals drive real forwarding. Eligible eBGP/iBGP maximum-paths install actual ECMP and IGP next-hop cost precedes router-ID selection. Received paths drive IPv4/IPv6 policy, weight/local preference, deterministic/cross-AS MED, administrative distance, per-neighbor defaults, private-AS removal, allowas-in, soft policy refresh and retained inbound/outbound views. Conditional aggregates, recursive next hops, reflection and maximum-prefix shutdown remain operational. GTSM checks actual TTL; single-hop BFD and modeled TCP key equality can gate sessions. Neighbor logging follows configuration. Delivered eBGP withdrawal history drives configurable dampening, decay/reuse and administrative history clears. Logical message encoding and authentication tokens, not real TCP-MD5; no complete RFC event matrix, MRAI, graceful restart, confederations, VPN families or complete IOS policy language.',
   fhrp: 'Actual HSRP/VRRP/GLBP advertisements, per-observer hold expiry, auth/version compatibility and delayed preemption drive elections. Actual virtual ARP, GLBP client assignment and MAC takeover. Logical teaching state model; no cryptographic digest, full coup/resign FSM or GLBP redirect/secondary-forwarder timers.',
   bfd: 'Actual simulated UDP3784 control messages, Down/Init/Up progression, negotiated intervals and expiry. Independent IPv4 and IPv6 link-local sessions gate IGP/BGP adjacency and BFD tracks; optional actual forwarding echo detects echo-only loss. Single-hop asynchronous model; no authentication, demand mode or multihop BFD.',
-  nhrp: 'Actual simulated underlay registration/resolution messages with authentication/key compatibility, cache expiry and real mGRE data forwarding. Logical NHRP envelope, no binary wire encoding or Phase3 redirect/shortcut FSM.',
+  nhrp: 'GRE-carried NHRP registration/resolution, NHS retry/hold states, refresh/purge and cache expiry; attached IPsec profiles protect control and data. Single-hub Phase2 direct resolution and Phase3 redirect, hub-relayed requests, direct destination replies and prefix-aware CEF overrides. Logical envelopes, not binary NHRP or native VPN interoperability.',
   multicast: 'Actual IGMP reports/leaves/query responses, membership expiry, PIM Register/Register-Stop data, RPT/SPT copies and dense flood/Prune/Graft/Ack with timers. Computed DR and shared joins, source keepalive and SSM filtering. Switch snooping/querier use actual IGMP traffic. No complete PIM Hello/Join-Prune/Assert/BSR/Auto-RP FSM or IGMP include/exclude matrix.',
   udld: 'Actual physical-link advertisements/echo, neighbor expiry, aggressive one-second retries and err-disable/recovery; honors directional link loss. Simplified discovery/recovery state model.',
   ptp: 'Computed BMCA priority/domain election and ordinary/boundary/transparent roles. synchronized=false: no timestamp packets, oscillator servo, clock-offset precision or hardware synchronization.',
@@ -86,7 +91,6 @@ const vtpDatabases = new WeakMap<Simulator, Map<string, { domain: string; versio
 type BfdSession={key:string;deviceId:string;interface:string;peer:string;source:string;peerDeviceId:string;status:'Down'|'Init'|'Up';minTx:number;minRx:number;multiplier:number;peerMinTx:number;peerMinRx:number;peerMultiplier:number;lastReceived?:number;tx?:any;detect?:any;echoDetect?:any;echoSequence?:number;lastEchoReceived?:number;echoReceivedSequence?:number;peerEcho?:boolean;runtime:Device['runtime'];vrf?:string};
 const bfdSessions=new WeakMap<Simulator,Map<string,BfdSession>>();
 const glbpAssignments=new WeakMap<Simulator,Map<string,Map<string,number>>>();
-const nhrpTimers=new WeakMap<Simulator,Map<string,{timer:any;runtime:Device['runtime'];signature:string}>>();
 const igmpTimers=new WeakMap<Simulator,Map<string,{timer:any;runtime:Device['runtime'];signature:string;deviceId:string;port:string;groups:{group:string;source?:string}[];version:number}>>();
 const multicastFlows=new WeakMap<Simulator,Map<string,{source:string;group:string;expires:number;timer?:any}>>();
 type UdldSession={deviceId:string;port:string;mode:string;messageTime:number;state:string;neighborDeviceId?:string;neighborPort?:string;lastReceived?:number;retries:number;tx?:any;expiry?:any;retry?:any;runtime:Device['runtime']};
@@ -1449,7 +1453,7 @@ export function receiveControlDatagram(engine:Simulator,deviceId:string,source:s
   if(payload?.protocol==='eigrp-hello'){receiveEigrpHello(engine,deviceId,source,payload,ttl,input);return;}
   if(receiveEigrpUpdate(engine,deviceId,source,destination,payload,ttl,input,peer=>refreshEigrpHold(engine,peer.key)))return;
   if(payload?.protocol==='eigrp-dual'){receiveDual(engine,deviceId,source,destination,payload,ttl,input);return;}
-  if(payload?.protocol==='nhrp'){receiveNhrp(engine,deviceId,source,destination,payload);return;}
+  if(payload?.protocol==='nhrp'){const d=engine.getDevice(deviceId);if(d)event(engine,d,'NHRP','Unencapsulated NHRP rejected','NHRP control messages must arrive through the GRE tunnel.',true);return;}
   if(payload?.protocol==='pim'){receivePim(engine,deviceId,source,destination,payload,input);return;}
   if(payload?.protocol==='igmp'){receiveIgmp(engine,deviceId,source,payload,ttl,input);return;}
   if(payload?.protocol==='bfd-echo'){const session=bfdSessions.get(engine)?.get(payload.key);if(session&&session.deviceId===deviceId&&session.interface===input&&sameAddress(source,session.source)&&sameAddress(destination,session.source)&&ttl<255&&ttl>0&&Number.isInteger(payload.sequence)&&payload.sequence>(session.echoReceivedSequence??0)&&payload.sequence<=(session.echoSequence??0)&&session.status==='Up'){session.echoReceivedSequence=payload.sequence;session.lastEchoReceived=engine.clock.now();armBfdEcho(engine,session);publishBfd(engine);}return;}
@@ -1472,87 +1476,13 @@ export function receiveControlDatagram(engine:Simulator,deviceId:string,source:s
   else publishBfd(engine);
 }
 
-function tunnelNbma(d:Device,iface:InterfaceConfig):string|undefined {
-  const source=iface.features.tunnelSource;return Number.isFinite(ipNumber(source??''))?source:d.config.interfaces[source]?.ip;
-}
-function nhrpRuntime(d:Device,port:string):any {
-  return(d.runtime.features.nhrp??={})[port]??=((d.runtime.features.nhrp)[port]={cache:[],registrations:[],requests:{}});
-}
-function nhrpServers(c:any):{address:string;nbma?:string}[]{return(c?.nhs??[]).map((n:any)=>typeof n==='string'?{address:n}:n);}
-function nhrpMapping(d:Device,port:string,ip:string,now:number):any {
-  return(nhrpRuntime(d,port).cache??[]).find((m:any)=>sameAddress(m.address,ip)&&(m.type==='static'||m.expires>now));
-}
-function nhrpSend(engine:Simulator,d:Device,port:string,destination:string,body:any):void {
-  const iface=d.config.interfaces[port],source=iface&&tunnelNbma(d,iface);if(!source)return;
-  engine.sendControlDatagram?.(d.id,source,destination,0,{protocol:'nhrp',key:iface.features.tunnelKey,authentication:iface.features.nhrp?.authentication??'',tunnel:iface.ip,holdtime:Number(iface.features.nhrp?.holdtime??7200),...body},{vrf:iface.features.tunnelVrf,protocol:'nhrp'});
-}
-function learnNhrp(engine:Simulator,d:Device,port:string,address:string,nbma:string,holdtime:number,type='dynamic'):void {
-  const rt=nhrpRuntime(d,port),old=rt.cache.find((m:any)=>sameAddress(m.address,address));if(old?.type==='static')return;
-  rt.cache=rt.cache.filter((m:any)=>!sameAddress(m.address,address));
-  const entry={address,nbma,type,expires:engine.clock.now()+Math.max(1,holdtime)*1000};rt.cache.push(entry);
-  engine.clock.schedule(Math.max(1,holdtime)*1000,()=>{if(nhrpRuntime(d,port).cache.includes(entry)){rt.cache=rt.cache.filter((m:any)=>m!==entry);event(engine,d,'NHRP','Mapping expired',`${address} on ${port}.`);engine.recompute();engine.notify();}},{owner:d.id,label:'NHRP cache expiry'});
-}
-function synchronizeNhrp(engine:Simulator):void {
-  let timers=nhrpTimers.get(engine);if(!timers){timers=new Map();nhrpTimers.set(engine,timers);}
-  const wanted=new Set<string>();
-  for(const d of engine.lab.devices)for(const[port,iface]of Object.entries(d.config.interfaces)){
-    const c=iface.features.nhrp;if(!d.powered||!c?.networkId||!iface.adminUp||!tunnelNbma(d,iface))continue;
-    const rt=nhrpRuntime(d,port),maps=(c.maps??[]).map((m:any)=>({address:m.address??m.protocolAddress,nbma:m.nbma,type:'static'}));
-    rt.cache=[...rt.cache.filter((m:any)=>m.type!=='static'&&m.expires>engine.clock.now()),...maps];
-    const servers=nhrpServers(c);
-    for(const server of servers){
-      const nbma=server.nbma??maps.find((m:any)=>m.address===server.address)?.nbma;if(!nbma)continue;
-      if(!rt.cache.some((m:any)=>m.address===server.address))rt.cache.push({address:server.address,nbma,type:'static'});
-      const key=`${d.id}|${port}|${server.address}`,signature=JSON.stringify([nbma,c.authentication,c.holdtime,iface.features.tunnelKey]);wanted.add(key);
-      const old=timers.get(key);if(old?.runtime===d.runtime&&old.signature===signature)continue;if(old)engine.clock.cancel(old.timer);
-      const send=()=>nhrpSend(engine,d,port,nbma,{operation:'register',server:server.address});
-      const timer=engine.clock.schedule(0,send,{owner:d.id,repeat:Math.max(1000,Number(c.holdtime??7200)*1000/3),label:'NHRP registration'});timers.set(key,{timer,runtime:d.runtime,signature});
-    }
-  }
-  for(const[key,t]of timers)if(!wanted.has(key)){engine.clock.cancel(t.timer);timers.delete(key);}
-}
-function receiveNhrp(engine:Simulator,deviceId:string,source:string,destination:string,p:any):void {
-  const d=engine.getDevice(deviceId);if(!d)return;
-  const match=Object.entries(d.config.interfaces).find(([name,c])=>/^Tunnel/i.test(name)&&c.adminUp&&c.features.nhrp?.networkId&&tunnelNbma(d,c)===destination&&c.features.tunnelKey===p.key&&(c.features.nhrp.authentication??'')===p.authentication&&c.ip&&contains(c.ip,prefixOf(c.mask),p.tunnel));if(!match)return;
-  const[port,iface]=match,c=iface.features.nhrp,rt=nhrpRuntime(d,port);
-  const server=nhrpServers(c).some(n=>n.address===p.tunnel&&(n.nbma??nhrpMapping(d,port,n.address,engine.clock.now())?.nbma)===source);
-  if(p.operation==='register'&&sameAddress(iface.ip!,p.server)){
-    learnNhrp(engine,d,port,p.tunnel,source,Number(p.holdtime??7200));
-    nhrpSend(engine,d,port,source,{operation:'register-reply',client:p.tunnel});event(engine,d,'NHRP','Spoke registered',`${p.tunnel} maps to NBMA ${source} on ${port}.`);
-  }else if(p.operation==='register-reply'&&server&&sameAddress(iface.ip!,p.client)){
-    rt.registrations=rt.registrations.filter((r:any)=>r.server!==p.tunnel);rt.registrations.push({server:p.tunnel,nbma:source,state:'UP',expires:engine.clock.now()+Number(p.holdtime??7200)*1000});
-  }else if(p.operation==='resolve'){
-    const found=sameAddress(p.target,iface.ip!)?{address:iface.ip,nbma:destination}:nhrpMapping(d,port,p.target,engine.clock.now());
-    const requester=nhrpMapping(d,port,p.tunnel,engine.clock.now());if(!found||requester?.nbma!==source)return;
-    nhrpSend(engine,d,port,source,{operation:'resolve-reply',target:p.target,nbma:found.nbma});
-  }else if(p.operation==='resolve-reply'&&server&&contains(iface.ip!,prefixOf(iface.mask),p.target)){
-    learnNhrp(engine,d,port,p.target,p.nbma,Number(p.holdtime??7200));delete rt.requests[p.target];event(engine,d,'NHRP','Resolution complete',`${p.target} maps to NBMA ${p.nbma}.`);
-  }else return;
-  engine.recompute();engine.notify();
-}
-/** Resolve an overlay next hop using registered or requested NBMA information. */
-export function resolveTunnelDestination(engine:Simulator,d:Device,port:string,address:string):string|undefined {
-  const iface=d.config.interfaces[port];if(!iface)return;
-  if(iface.features.tunnelMode!=='gre multipoint')return iface.features.tunnelDestination;
-  const rt=nhrpRuntime(d,port),cached=nhrpMapping(d,port,address,engine.clock.now());if(cached)return cached.nbma;
-  if(rt.requests[address]!==undefined&&engine.clock.now()-rt.requests[address]<1000)return;
-  rt.requests[address]=engine.clock.now();
-  for(const server of nhrpServers(iface.features.nhrp)){
-    const nbma=server.nbma??nhrpMapping(d,port,server.address,engine.clock.now())?.nbma;if(nbma)nhrpSend(engine,d,port,nbma,{operation:'resolve',target:address});
-  }
-  return;
-}
-/** GRE keys demultiplex tunnels; NHRP authentication secures registration only, not GRE data. */
-export function tunnelAccepts(_engine:Simulator,d:Device,port:string,source:string):boolean {
-  const iface=d.config.interfaces[port];return iface?.features.tunnelMode==='gre multipoint'?!!iface.features.nhrp?.networkId:iface?.features.tunnelDestination===source;
-}
 function tunnelNeighbors(engine:Simulator,a:RoutedPort,b:RoutedPort):boolean {
   if(a.iface.features.tunnelKey!==b.iface.features.tunnelKey||a.family!==b.family||!contains(a.ip,a.prefix,b.ip)||!contains(b.ip,b.prefix,a.ip))return false;
   const an=tunnelNbma(a.device,a.iface),bn=tunnelNbma(b.device,b.iface);if(!an||!bn)return false;
   const allows=(p:RoutedPort,remote:RoutedPort,nbma:string)=>{
     if(p.iface.features.tunnelMode!=='gre multipoint')return p.iface.features.tunnelDestination===nbma;
     const c=p.iface.features.nhrp,rt=nhrpRuntime(p.device,p.name),mapping=nhrpMapping(p.device,p.name,remote.ip,engine.clock.now());
-    return mapping?.nbma===nbma&&(c?.multicast==='dynamic'||Array.isArray(c?.multicast)&&c.multicast.includes(nbma))&&(!nhrpServers(c).length||rt.registrations.some((r:any)=>r.state==='UP'&&r.expires>engine.clock.now()));
+    return mapping?.nbma===nbma&&(c?.multicast==='dynamic'&&mapping.registered||Array.isArray(c?.multicast)&&c.multicast.includes(nbma))&&(!nhrpServers(c).length||rt.registrations.some(r=>r.state==='UP'&&(r.expires??0)>engine.clock.now()));
   };
   return allows(a,b,bn)&&allows(b,a,an);
 }

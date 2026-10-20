@@ -26,6 +26,8 @@ import { emptyRuntime, defaultInterface, factoryDeviceConfig, type Device, type 
 import { bigIntToIPv6, ipv6ToBigInt, broadcastAddress, inSubnet, intToIp, ipToInt, isIPv4, isIPv6, maskToPrefix, networkAddress, parseCidr, prefixContains, sameAddress } from './ip.ts';
 import { multicastForwarding, prefixListPermits, receiveControlDatagram, receiveLinkControl, prepareLinkState, recomputeControlPlane, registerMulticast, resolveTunnelDestination, tunnelAccepts, virtualArpReply } from './control-plane.ts';
 import { CryptoServices } from './crypto.ts';
+import { receiveNhrp, sendNhrpRedirect, touchNhrp, type NhrpMessage, type NhrpRuntime } from './nhrp.ts';
+import { tunnelNbma, tunnelMatches, tunnelSignature, validateTunnelConfiguration, type TunnelProtection } from './tunnel.ts';
 import { IPv6Services, type LinkControl } from './ipv6-services.ts';
 import { applyQos, classifyQosPolicy, inspectIngress, observeFrame, recordFlow, selectPolicyRoute, egressAclRequired, findDynamicNatBinding, findInboundNatTranslation, aclIcmpMatches } from './packet-policy.ts';
 import { PersistentTCPChannels, type TCPChannel, type TCPChannelOptions } from './tcp-channel.ts';
@@ -44,6 +46,7 @@ interface ArpMessage { kind: 'arp'; operation: 'request' | 'reply'; source: stri
 interface DHCPMessage { kind: 'dhcp'; operation: 'discover' | 'offer' | 'request' | 'ack' | 'nak' | 'decline' | 'release'; clientId: string; transaction: string; hostname?: string; serverId?: string; address?: string; prefix?: number; gateway?: string; dns?: string[]; lease?: number; domain?: string; bootfile?: string; nextServer?: string; options?: Record<string, any>; routers?: string[]; relay?: string; relayPort?: string; serverAddress?: string; unicast?: string; phase?: string; reason?: string; option82?: { circuitId: string; remoteId: string } }
 export interface Frame { id: string; sourceMac: string; destinationMac: string; vlan?: number; cos?:number; payload: IPPacket | ArpMessage | DHCPMessage | LinkControl; hops: number; mirrored?: boolean; remoteSpan?: { sourceDevice: string; session: string; vlan: number } }
 interface Resolution { deviceId: string; port: string; target: string; packets: IPPacket[]; attempts: number; timer?: TimerHandle }
+interface TunnelResolution extends Resolution { runtime:Device['runtime'];signature:string;nhrp?:NhrpRuntime;generation?:number }
 interface ProbeWait { deviceId: string; timer: TimerHandle; sentAt: number; callback: (reply: ProbeReply) => void; expectedData?: string }
 interface Reassembly { parts: Map<number, number>; packet: IPPacket; timer: TimerHandle }
 interface ResolvedRoute { route: Route; port: string; target: string }
@@ -63,6 +66,7 @@ export class Simulator {
   private sequence = 0;
   private listeners = new Set<() => void>();
   private pendingArp = new Map<string, Resolution>();
+  private pendingTunnels = new Map<string,TunnelResolution>();
   private probes = new Map<string, ProbeWait>();
   private fragments = new Map<string, Reassembly>();
   private wireAvailable = new Map<string, number>();
@@ -191,6 +195,8 @@ export class Simulator {
       }
       for (const d of this.lab.devices) d.runtime.features.ethernet = Object.fromEntries(Object.keys(d.config.interfaces).flatMap(port => { const value = this.ethernetState(d.id, port); return value ? [[port, value]] : []; }));
       prepareLinkState(this);
+      this.cryptoServices.synchronize();
+      for(const wait of this.pendingTunnels.values())if(!this.tunnelResolutionValid(wait))this.finishTunnelResolution(wait,'NHRP resolution cancelled');
       this.egressQueues.sync();
       this.ipv6Services.syncStaticDAD();
       for (const d of this.lab.devices) {
@@ -571,6 +577,12 @@ export class Simulator {
       else this.forwardIP(d, { port: options.interface, target: destination, route: { network: destination, prefix: isIPv6(destination) ? 128 : 32, interface: options.interface, protocol: 'control', ad: 0, metric: 0 } }, packet);
     } else this.originate(d, packet);
   }
+  sendNhrpDatagram(deviceId:string,port:string,nbma:string,message:NhrpMessage):void {
+    const d=this.getDevice(deviceId),c=d?.config.interfaces[port];if(!d||!c||!this.interfaceUp(d.id,port))return;
+    const source=tunnelNbma(d,c);if(!source)return;
+    const outer=this.makePacket(source,nbma,'gre',28+64+JSON.stringify(message).length,{kind:'gre',key:c.features.tunnelKey,nhrp:message});
+    outer.vrf=c.features.tunnelVrf;this.sendGREOuter(d,port,outer);
+  }
   sendBfdEcho(deviceId:string,port:string,source:string,peer:string,body:any):void {
     const d=this.getDevice(deviceId);if(!d?.powered||!this.interfaceUp(deviceId,port))return;
     const packet=this.makePacket(source,source,'udp',64,{kind:'control-plane',payload:body});packet.sourcePort=49152;packet.destinationPort=3785;packet.ttl=255;packet.vrf=d.config.interfaces[port]?.vrf;
@@ -625,7 +637,7 @@ export class Simulator {
     if (!packet.source) { this.failLocal(d.id, packet, 'No source IP address on the outgoing interface'); return; }
     this.forwardIP(d, route, packet);
   }
-  private receiveIP(d: Device, input: string, packet: IPPacket, ingressQosHandled = false): void {
+  private receiveIP(d: Device, input: string, packet: IPPacket, ingressQosHandled = false, tunnelPeer?:string): void {
     const c = d.config.interfaces[input]; packet.vrf = c.vrf;
     if (!ingressQosHandled && !applyQos(this, d, input, 'in', packet, (name, p) => this.aclAllows(d, name, p))) return;
     if (!this.aclAllows(d, isIPv6(packet.destination) ? c.features.ipv6AclIn : c.features.aclIn, packet)) { this.packetEvent(d, packet, 'Ingress ACL denied', 'Access list ' + c.features.aclIn, 'drop', input); this.icmpError(d, packet, 'Administratively prohibited', input); return; }
@@ -644,6 +656,7 @@ export class Simulator {
     if (packet.ttl <= 1) { this.packetEvent(d, packet, 'TTL expired', 'The packet hop limit was exhausted.', 'drop', input); this.icmpError(d, packet, 'Time exceeded', input); return; }
     const route = this.policyRoute(d, input, packet) ?? this.resolveRoute(d, packet.destination, packet.vrf, new Set(), packet);
     if (!route) { this.packetEvent(d, packet, 'No route', 'No usable route to ' + packet.destination, 'drop', input); this.icmpError(d, packet, 'Destination network unreachable', input); return; }
+    if(route.port===input&&isIPv4(packet.destination))sendNhrpRedirect(this,d,input,tunnelPeer,packet.destination,route.target);
     if(!ipv6&&route.port===input&&c.features.redirects!==false&&c.ip&&c.mask&&route.target!==packet.source&&inSubnet(packet.source,c.ip,c.mask)&&inSubnet(route.target,c.ip,c.mask)){
       const key=input+'|'+packet.source+'|'+packet.destination,seen=d.runtime.features.redirectSent??={};
       if(seen[key]===undefined||this.clock.now()-seen[key]>=1000){seen[key]=this.clock.now();const redirect=this.makePacket(c.ip,packet.source,'icmp',56,{kind:'icmp-redirect',gateway:route.target,destination:packet.destination});redirect.parentId=packet.id;redirect.vrf=packet.vrf;this.originate(d,redirect);this.packetEvent(d,redirect,'ICMP redirect sent','Use next hop '+route.target+' for '+packet.destination,'info',input);}
@@ -677,7 +690,7 @@ export class Simulator {
     this.sendResolved(d, route.port, route.target, packet);
   }
   pendingNeighbors(deviceId:string):{ip:string;port:string;state:'Incomplete';attempts:number}[]{return [...this.pendingArp.values()].filter(row=>row.deviceId===deviceId).map(row=>({ip:row.target,port:row.port,state:'Incomplete' as const,attempts:row.attempts}));}
-  private arpKey(d: Device, port: string, address: string): string { return d.id + '|' + port + '|' + address; }
+  private arpKey(d: Pick<Device,'id'>, port: string, address: string): string { return d.id + '|' + port + '|' + address; }
   private sendResolved(d: Device, port: string, target: string, packet: IPPacket): void {
     if (/^Tunnel/i.test(port)) { this.encapsulateGRE(d, port, packet, target); return; }
     if (this.isMulticast(packet.destination)) { this.transmit(d, port, this.multicastMac(packet.destination), packet); return; }
@@ -688,24 +701,70 @@ export class Simulator {
     if (wait.packets.length >= 64) { this.packetEvent(d, packet, 'ARP queue full', 'Too many packets await neighbor resolution.', 'drop', port); return; }
     wait.packets.push(packet); if (!wait.attempts) this.askNeighbor(wait);
   }
-  private encapsulateGRE(d: Device, port: string, packet: IPPacket, target = packet.destination, attempt = 0, nbma?: string): void {
-    const c = d.config.interfaces[port], mode = c.features.tunnelMode ?? 'gre';
+  private encapsulateGRE(d: Device, port: string, packet: IPPacket, target = packet.destination, nbma?: string): void {
+    const c = d.config.interfaces[port];if(!c||!d.powered||!this.interfaceUp(d.id,port)){this.packetEvent(d,packet,'Tunnel unavailable','Tunnel is no longer operational.','drop',port);this.failLocal(d.id,packet,'Tunnel unavailable');return;}const mode = c.features.tunnelMode ?? 'gre';
     if (!['gre', 'gre ip', 'gre ipv4', 'gre multipoint'].includes(mode)) { this.packetEvent(d, packet, 'Unsupported tunnel mode', String(mode) + ' is not operational in this engine.', 'drop', port); this.failLocal(d.id, packet, 'Unsupported tunnel mode'); return; }
-    const source = isIPv4(c.features.tunnelSource ?? '') ? c.features.tunnelSource : d.config.interfaces[c.features.tunnelSource]?.ip;
+    const source = tunnelNbma(d,c);
     if (mode === 'gre multipoint' && !nbma && (this.isMulticast(target) || /^ff/i.test(target) || target === '255.255.255.255')) {
       const nhrp = c.features.nhrp ?? {}, cache = d.runtime.features.nhrp?.[port]?.cache ?? [];
-      const destinations: string[] = nhrp.multicast === 'dynamic' ? cache.filter((entry: any) => entry.type !== 'static' && entry.expires > this.clock.now()).map((entry: any) => entry.nbma) : Array.isArray(nhrp.multicast) ? nhrp.multicast : [];
-      for (const destination of new Set(destinations)) if (isIPv4(destination) && destination !== source) this.encapsulateGRE(d, port, clone(packet), target, 0, destination);
+      const destinations: string[] = nhrp.multicast === 'dynamic' ? cache.filter((entry: any) => entry.registered && entry.expires > this.clock.now()).map((entry: any) => entry.nbma) : Array.isArray(nhrp.multicast) ? nhrp.multicast : [];
+      for (const destination of new Set(destinations)) if (isIPv4(destination) && destination !== source) this.encapsulateGRE(d, port, clone(packet), target, destination);
       if (!destinations.length) this.packetEvent(d, packet, 'No tunnel multicast mapping', 'No configured multicast NBMA or current dynamic registration is available.', 'drop', port);
       return;
     }
     const destination = nbma ?? (mode === 'gre multipoint' ? resolveTunnelDestination(this, d, port, target) : c.features.tunnelDestination);
-    if (!destination && mode === 'gre multipoint' && attempt < 20) { this.clock.schedule(100, () => this.encapsulateGRE(d, port, packet, target, attempt + 1), { owner: d.id, label: 'NHRP resolution queue' }); return; }
-    const route = destination ? this.resolveRoute(d, destination, c.features.tunnelVrf) : undefined;
-    if (!source || !destination || !route || /^Tunnel/i.test(route.port)) { this.packetEvent(d, packet, 'Tunnel underlay unavailable', 'GRE needs an independent physical route to its destination.', 'drop', port); this.failLocal(d.id, packet, 'Tunnel underlay unavailable'); return; }
+    if (!destination && mode === 'gre multipoint') { this.queueTunnelResolution(d,port,target,packet);return; }
+    if (!source || !destination) { this.packetEvent(d, packet, 'Tunnel underlay unavailable', 'GRE needs a resolved NBMA destination and an independent physical route.', 'drop', port); this.failLocal(d.id, packet, 'Tunnel underlay unavailable'); return; }
+    touchNhrp(d,port,target);
     const outer = this.makePacket(source, destination, 'gre', packet.size + (c.features.tunnelKey === undefined ? 24 : 28), { kind: 'gre', inner: clone(packet), key: c.features.tunnelKey }); outer.parentId = packet.id; outer.vrf = c.features.tunnelVrf;
-    if (c.features.tunnelProtection && this.cryptoServices.protect(d, route.port, outer, c.features.tunnelProtection)) return;
-    this.packetEvent(d, outer, 'GRE encapsulation', packet.source + ' → ' + packet.destination + ' inside ' + source + ' → ' + destination, 'forward', port); this.originate(d, outer);
+    this.sendGREOuter(d,port,outer);
+  }
+  private tunnelResolutionValid(wait:TunnelResolution):boolean {
+    const d=this.getDevice(wait.deviceId),state:NhrpRuntime|undefined=d?.runtime.features.nhrp?.[wait.port];
+    return !!d&&d.runtime===wait.runtime&&this.interfaceUp(d.id,wait.port)&&wait.signature===tunnelSignature(d,wait.port)&&state===wait.nhrp&&state?.generation===wait.generation;
+  }
+  private finishTunnelResolution(wait:TunnelResolution,error?:string,nbma?:string):void {
+    this.pendingTunnels.delete(this.arpKey({id:wait.deviceId},wait.port,wait.target));this.clock.cancel(wait.timer);
+    const d=this.getDevice(wait.deviceId);if(!d||d.runtime!==wait.runtime)return;
+    for(const packet of wait.packets){
+      if(error){this.packetEvent(d,packet,error,'Pending GRE packet discarded.','drop',wait.port);if(this.localInterface(d,packet.source,packet.vrf))this.failLocal(d.id,packet,error);else if(packet.body?.kind!=='control-plane')this.icmpError(d,packet,error);continue;}
+      if(packet.body?.kind!=='control-plane'){
+        const route=this.resolveRoute(d,packet.destination,packet.vrf,new Set(),packet);
+        if(!route){this.packetEvent(d,packet,'No route','Overlay route was withdrawn during NHRP resolution.','drop',wait.port);this.failLocal(d.id,packet,'Overlay route withdrawn');continue;}
+        if(route.port!==wait.port||route.target!==wait.target){this.forwardIP(d,route,packet);continue;}
+      }
+      this.encapsulateGRE(d,wait.port,packet,wait.target,nbma);
+    }
+  }
+  private queueTunnelResolution(d:Device,port:string,target:string,packet:IPPacket):void {
+    const key=this.arpKey(d,port,target);let wait=this.pendingTunnels.get(key);
+    if(wait&&!this.tunnelResolutionValid(wait)){this.finishTunnelResolution(wait,'NHRP resolution cancelled');wait=undefined;}
+    if(!wait){const state:NhrpRuntime|undefined=d.runtime.features.nhrp?.[port];wait={deviceId:d.id,port,target,packets:[],attempts:0,runtime:d.runtime,signature:tunnelSignature(d,port),nhrp:state,generation:state?.generation};this.pendingTunnels.set(key,wait);}
+    if(wait.packets.length>=64){this.packetEvent(d,packet,'NHRP queue full','At most 64 packets may await this tunnel next hop.','drop',port);this.failLocal(d.id,packet,'NHRP queue full');return;}
+    wait.packets.push(packet);if(wait.timer)return;
+    const entry=wait,check=()=>{
+      if(this.pendingTunnels.get(key)!==entry)return;
+      if(!this.tunnelResolutionValid(entry)){this.finishTunnelResolution(entry,'NHRP resolution cancelled');return;}
+      const nbma=resolveTunnelDestination(this,d,port,target);
+      if(nbma){this.finishTunnelResolution(entry,undefined,nbma);return;}
+      if(++entry.attempts>=20){this.finishTunnelResolution(entry,'NHRP resolution timed out');return;}
+      entry.timer=this.clock.schedule(100,check,{owner:d.id,label:'NHRP packet queue'});
+    };
+    entry.timer=this.clock.schedule(100,check,{owner:d.id,label:'NHRP packet queue'});
+  }
+  private sendGREOuter(d:Device,port:string,outer:IPPacket):void {
+    const c=d.config.interfaces[port],route=this.resolveRoute(d,outer.destination,c.features.tunnelVrf);
+    if(!route||/^Tunnel|^Null/i.test(route.port)){this.packetEvent(d,outer,'Tunnel underlay unavailable','GRE needs an independent physical route to its destination.','drop',port);this.dropCryptoPacket(d.id,outer,'Tunnel underlay unavailable');return;}
+    if(c.features.tunnelProtection&&this.cryptoServices.protect(d,route.port,outer,c.features.tunnelProtection,port))return;
+    this.packetEvent(d,outer,'GRE encapsulation',outer.body.nhrp?'NHRP '+outer.body.nhrp.operation:`${outer.body.inner.source} → ${outer.body.inner.destination} inside ${outer.source} → ${outer.destination}`,'forward',port);this.originate(d,outer);
+  }
+  private receiveGRE(d:Device,p:IPPacket,protection?:TunnelProtection):void {
+    const b=p.body,tunnel=Object.entries(d.config.interfaces).find(([name,c])=>/^Tunnel/i.test(name)&&this.interfaceUp(d.id,name)&&tunnelAccepts(this,d,name,p.source)&&tunnelMatches(d,c,p.destination,p.source,b.key,p.vrf));
+    if(!tunnel){this.packetEvent(d,p,'No matching GRE tunnel','No operational tunnel matches the outer addresses, VRF and key.','drop');return;}
+    const [port,c]=tunnel;
+    if(c.features.tunnelProtection&&(!protection||protection.profile!==c.features.tunnelProtection||protection.tunnel!==port||protection.local!==p.destination||protection.peer!==p.source||protection.key!==b.key||(protection.vrf??'')!==(p.vrf??''))){this.packetEvent(d,p,'Unprotected GRE rejected','This tunnel requires a matching IPsec association.','drop',port);return;}
+    this.packetEvent(d,p,'GRE decapsulation',b.nhrp?'Delivering NHRP '+b.nhrp.operation+' to '+port:'Delivering the inner packet to '+port,'receive',port);
+    if(b.nhrp)receiveNhrp(this,d.id,port,p.source,b.nhrp);else if(b.inner)this.receiveIP(d,port,b.inner,false,p.source);
   }
   private askNeighbor(wait: Resolution): void {
     const d = this.getDevice(wait.deviceId); if (!d?.powered) return;
@@ -1079,10 +1138,10 @@ export class Simulator {
   fetchHTTP(sourceId: string, address: string, path = '/', options: HTTPRequestOptions & ServiceOptions = {}): ServiceResult {
     const result = this.tcpRequest(sourceId, address, options.port??(options.secure?443:80), { application: 'http', secure:!!options.secure, path, method: options.method, headers: options.headers,body:options.body }, options); result.address = address; result.path = path; return result;
   }
-  clearCrypto(deviceId: string): void { this.cryptoServices.clear(deviceId); this.notify(); }
-  sendCryptoPacket(deviceId: string, source: string, destination: string, protocol: string, body: any, size: number): void { const d = this.getDevice(deviceId); if (!d) return; const p = this.makePacket(source, destination, protocol, size, body); if (protocol === 'udp') { p.sourcePort = 500; p.destinationPort = 500; } this.originate(d, p); }
-  receiveDecryptedPacket(deviceId: string, port: string, packet: IPPacket): void { const d = this.getDevice(deviceId); if (d && this.interfaceUp(d.id, port)) this.receiveIP(d, port, packet); }
-  dropCryptoPacket(deviceId: string, packet: IPPacket, reason: string): void { const d = this.getDevice(deviceId); if (!d) return; this.packetEvent(d, packet, 'IPsec drop', reason, 'drop'); const original = packet.body?.kind === 'gre' ? packet.body.inner : packet; if (this.localInterface(d, original.source, original.vrf)) this.failLocal(d.id, original, reason); else this.icmpError(d, original, reason); }
+  clearCrypto(deviceId: string,kind:'all'|'isakmp'|'ipsec'='all',peer?:string): void { this.cryptoServices.clear(deviceId,kind,peer); this.notify(); }
+  sendCryptoPacket(deviceId: string, source: string, destination: string, protocol: string, body: any, size: number,vrf?:string): void { const d = this.getDevice(deviceId); if (!d) return; const p = this.makePacket(source, destination, protocol, size, body);p.vrf=vrf; if (protocol === 'udp') { p.sourcePort = 500; p.destinationPort = 500; } this.originate(d, p); }
+  receiveDecryptedPacket(deviceId: string, port: string, packet: IPPacket,protection?:TunnelProtection): void { const d = this.getDevice(deviceId); if (d && this.interfaceUp(d.id, port)){if(packet.body?.kind==='gre')this.receiveGRE(d,packet,protection);else this.receiveIP(d, port, packet);} }
+  dropCryptoPacket(deviceId: string, packet: IPPacket, reason: string): void { const d = this.getDevice(deviceId); if (!d) return; this.packetEvent(d, packet, 'IPsec drop', reason, 'drop'); const original = packet.body?.kind === 'gre' ? packet.body.inner : packet;if(!original)return; if (this.localInterface(d, original.source, original.vrf)) this.failLocal(d.id, original, reason); else this.icmpError(d, original, reason); }
   registerUDPService(port: number, accepts: (device: Device) => boolean, handler: (device: Device, payload: any, sourceAddress: string,destinationAddress:string) => Record<string, any>|undefined): () => void { const service = { accepts, handler }; this.udpServices.set(port, service); return () => { if (this.udpServices.get(port) === service) this.udpServices.delete(port); }; }
   /** A one-way datagram. Success means queued; receiver events establish delivery. */
   udpNotify(deviceId:string,address:string,port:number,payload:any,options:ServiceOptions={}):ServiceResult {
@@ -1275,13 +1334,13 @@ export class Simulator {
   private serviceReply(d: Device, incoming: IPPacket, body: any, size: number): void { this.originate(d, this.replyPacket(incoming, body, size)); }
   private deliverService(d: Device, p: IPPacket, input?: string): void {
     const b = p.body; if (!b) return;
-    if (b.kind === 'ike' || b.kind === 'esp') this.cryptoServices.receive(d, p);
+    if (b.kind === 'ike' || b.kind === 'esp') this.cryptoServices.receive(d, p,input);
     else if (b.kind === 'remote-span') receiveRemoteSpan(this, d, p, input ?? '');
     else if (b.kind === 'control-plane') {if(!this.wireless.receiveDatagram(d,p))receiveControlDatagram(this, d.id, p.source, p.destination, b.payload, p.ttl, input);}
     else if (b.kind === 'udp-service-response') { if (this.serviceWait.get(b.transaction)?.deviceId === d.id) this.finishService(b.transaction, b.result, b.error); }
     else if (b.kind === 'udp-service-request'||b.kind==='udp-service-notification') { const service = this.udpServices.get(p.destinationPort!); if (!service?.accepts(d)) { this.icmpError(d, p, 'Port unreachable'); return; } try { const response=service.handler(d,b.payload,p.source,p.destination);if(b.kind==='udp-service-request'&&response!==undefined)this.serviceReply(d,p,{kind:'udp-service-response',transaction:b.transaction,result:response},128); } catch (error) { if(b.kind==='udp-service-request')this.serviceReply(d, p, { kind: 'udp-service-response', transaction: b.transaction, error: String(error) }, 64); } }
     else if (b.kind === 'ipv6-service') this.ipv6Services.receiveDatagram(d, p);
-    else if (b.kind === 'gre') { const tunnel = Object.entries(d.config.interfaces).find(([name, c]) => /^Tunnel/i.test(name) && this.interfaceUp(d.id, name) && (c.features.tunnelMode === 'gre multipoint' ? tunnelAccepts(this, d, name, p.source) : c.features.tunnelDestination === p.source) && (c.features.tunnelSource === p.destination || d.config.interfaces[c.features.tunnelSource]?.ip === p.destination) && c.features.tunnelKey === b.key); if (tunnel) { this.packetEvent(d, p, 'GRE decapsulation', 'Delivering the inner packet to ' + tunnel[0], 'receive', tunnel[0]); this.receiveIP(d, tunnel[0], b.inner); } else this.packetEvent(d, p, 'No matching GRE tunnel', 'No operational tunnel matches the outer addresses and key.', 'drop'); }
+    else if (b.kind === 'gre') this.receiveGRE(d,p);
     else if (b.kind === 'dhcp-unicast') { const logical = this.localInterface(d, p.destination); if (logical) this.receiveDHCP(d, logical, undefined, undefined, b.message); }
     else if (b.kind === 'dhcp-relay') { const logical = this.localInterface(d, p.destination); if (logical) this.receiveDHCP(d, logical, undefined, undefined, b.message); }
     else if (b.kind.startsWith('tftp-')) this.handleTFTP(d, p);
@@ -1337,7 +1396,7 @@ export class Simulator {
     if (parsed.lab.devices.length > 500 || parsed.lab.links.length > 2000) throw new Error('Lab exceeds simulator limits');
     const ids = new Set<string>();
     for (const d of parsed.lab.devices) { if (!d.id || ids.has(d.id) || !['router', 'switch', 'poeswitch', 'l3switch', 'pc', 'server', 'wlc', 'ap', 'laptop', 'phone'].includes(d.kind) || !d.config?.interfaces || !d.config?.vlans || !Array.isArray(d.config.staticRoutes) || !d.config.protocols || !d.config.services || !d.config.features) throw new Error('Invalid or duplicate device'); ids.add(d.id); for (const [port, c] of Object.entries(d.config.interfaces) as [string, InterfaceConfig][]) { if (!port || !c || !Array.isArray(c.ipv6) || !c.features || !Number.isFinite(c.mtu) || !Number.isFinite(c.speed) || c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean' || (c.ip && !isIPv4(c.ip))) throw new Error('Invalid interface configuration'); } validateFTPConfiguration(d.config);validateHostOS(d.kind,d.config);validateEndpoint(d.kind,d.config);validatePhone(d.kind,d.config);validatePoE(d.kind,d.config);validateWireless(d.kind,d.config.features.wireless);if(d.startupConfig){for(const c of Object.values(d.startupConfig.interfaces) as InterfaceConfig[])if(c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean')throw Error('Invalid saved Ethernet autonegotiation setting');validateWireless(d.kind,d.startupConfig.features.wireless);validateFTPConfiguration(d.startupConfig);validateHostOS(d.kind,d.startupConfig);validateEndpoint(d.kind,d.startupConfig);validatePhone(d.kind,d.startupConfig);validatePoE(d.kind,d.startupConfig);}d.runtime = emptyRuntime();d.runtime.features.bootTime=this.clock.now(); }
-    for(const device of parsed.lab.devices){validateSLAConfiguration(device.config);if(device.startupConfig)validateSLAConfiguration(device.startupConfig);}
+    for(const device of parsed.lab.devices){validateSLAConfiguration(device.config);validateTunnelConfiguration(device.config);if(device.startupConfig){validateSLAConfiguration(device.startupConfig);validateTunnelConfiguration(device.startupConfig);}}
     const occupied = new Set<string>();
     for (const link of parsed.lab.links) { if (!link?.a || !link?.b || !Number.isFinite(link.delay) || !Number.isFinite(link.loss)) throw new Error('Invalid link'); for (const e of [link.a, link.b]) { const d = parsed.lab.devices.find((x: Device) => x.id === e.deviceId); const key = e.deviceId + '|' + e.port; if (!d?.config.interfaces[e.port] || occupied.has(key)) throw new Error('Invalid or occupied cable endpoint'); occupied.add(key); } }
     this.lab = parsed.lab; this.seed = Number.isInteger(parsed.seed) ? parsed.seed >>> 0 || 1 : this.seed; this.clock = new SimulationClock(this.seed);
@@ -1378,7 +1437,7 @@ export class Simulator {
     }
   }
   resetRuntime(): void {
-    this.clock.reset(); this.wireless.reset(); this.events = []; this.pendingArp.clear(); this.probes.clear(); this.fragments.clear(); this.wireAvailable.clear(); this.wireTransmissions.clear(); this.egressQueues.reset(); this.serviceWait.clear(); this.dhcpWait.clear(); this.ipv6Services.reset(); this.cryptoServices.reset(); this.tcpChannels.reset();
+    this.clock.reset(); this.wireless.reset(); this.events = []; this.pendingArp.clear(); this.pendingTunnels.clear(); this.probes.clear(); this.fragments.clear(); this.wireAvailable.clear(); this.wireTransmissions.clear(); this.egressQueues.reset(); this.serviceWait.clear(); this.dhcpWait.clear(); this.ipv6Services.reset(); this.cryptoServices.reset(); this.tcpChannels.reset();
     for (const d of this.lab.devices) { d.runtime = emptyRuntime();d.runtime.features.bootTime=this.clock.now(); this.resetAutomaticAddresses(d); } this.changed(); for (const d of this.lab.devices) this.startAutomaticClients(d);
   }
 }

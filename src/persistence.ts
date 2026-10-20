@@ -1,5 +1,6 @@
 import {validateFTPConfiguration} from './ftp-files.ts';
 import {validateSLAConfiguration} from './sla-config.ts';
+import {validateTunnelConfiguration} from './tunnel.ts';
 import {validateEndpoint} from './endpoint.ts';
 import {validatePhone} from './phone.ts';
 import {validateHostOS} from './host-os.ts';
@@ -51,6 +52,7 @@ function validateConfig(c: any) {
     throw Error("A device configuration is incomplete.");
   validateSNMPConfiguration(c);
   validateSLAConfiguration(c);
+  validateTunnelConfiguration(c);
   if(c.services.dns?.resourceRecords!==undefined){
     if(!Array.isArray(c.services.dns.resourceRecords)||c.services.dns.resourceRecords.length>10000)throw Error('Invalid DNS resource record table.');
     validateDNSRecords(dnsRecords(c.services.dns));

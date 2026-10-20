@@ -1,5 +1,19 @@
 # Validation record
 
+## Single-hub DMVPN Phase 2 and Phase 3 (2026-10-20)
+
+The integrated `npm run check` passed TypeScript checking, **1,097 tests** and the standalone build. Twenty-four dedicated DMVPN regressions cover protected registration without data/IGP probes, EIGRP Phase 2/3, plain GRE preservation, protected OSPF point-to-multipoint Phase 3, late third-spoke joins, loopback NBMA/front-door VRF binding, wrong PSK/PFS/transform/GRE-key/NHRP-auth/profile isolation, plaintext rejection, idle/active cache and SA expiry, NBMA purge, NHS loss/recovery, bounded packet queues and cancellation, peer-scoped clears, summary-prefix CEF overrides, route revalidation, legacy records, rendered replay, JSON/YAML/startup/reload and transactional malformed-import rejection. A separate IOS syntax regression verifies contextual help, completion and argument-free NHRP/profile removal forms.
+
+The rebuilt delivery passed **19 checks in each of Chrome and Edge**: nine for the protected Phase 2 example and ten for Phase 3, directly through `file://` with networking disabled, zero runtime exceptions and zero external requests. Both public YAML imports contained one ISP, one hub and three spokes. Real console keyboard input observed actual NHRP registration, dynamic EIGRP neighbors, delivered spoke LAN probes, direct peer ESP counters, CEF next hops, truthful tunnel/profile/socket displays, help/Tab/no forms, scoped clears and saving. Phase 3 retained the hub EIGRP next hop while showing received redirects and LAN-prefix forwarding overrides; an incompatible spoke failed independently and recovered. Readiness checks wait for observed protocol convergence rather than assuming that a successful underlay ping establishes the IGP.
+
+The root and `dist/index.html` copies have identical SHA-256 hashes:
+
+```text
+eb19b34fda60464cfbd0f89f721724570edcc862a8dd519818dfca6b4030d6f2
+```
+
+The [DMVPN guide](features/dmvpn.md) links both importable examples and documents their configuration and verification. The target is a bounded IPv4 single-hub teaching model, not native Cisco firmware or cryptography. IKEv2, NAT-T, PKI, IPv6 DMVPN, multiple hubs/clouds, NHS clustering and a complete independent soft-rekey/DPD engine remain outside this implementation. The earlier DMVPN practical-audit ledger is a historical snapshot, superseded for these workflows by this evidence.
+
 ## NetSim version and inventory identities (2026-10-20)
 
 The integrated `npm run check` passed TypeScript checking, **1,072 tests** and the standalone build. The preceding focused run passed **113 tests** across platform identity, system/configuration/interface output, boot, discovery, SNMP and CLI behavior. Eleven dedicated identity regressions cover all six network platforms, consistent software/model/serial/revision fields, actual port/radio counts and flash capacity, shared memory totals, read-only output, help/invalid arguments, 1,000 distinct device IDs, rename/reload/import stability, cached received discovery data and legacy/new configuration-header replay.

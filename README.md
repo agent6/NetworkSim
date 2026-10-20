@@ -35,6 +35,8 @@ The **console width follows its visible space**, including SSH/Telnet sessions. 
 
 **IP SLA and floating static routes** support upstream-failure detection, delayed tracking and primary-path recovery. SLA `state` and `reachability` have different threshold semantics; `show track` identifies the latest return code, RTT and dependent clients. Use an explicit `life forever start-time now` for continuous monitoring, and keep the probe routed through the intended primary path. See the [configuration and supported boundaries](docs/protocol-design.md#ip-sla-and-floating-static-routing).
 
+**Single-hub DMVPN Phase 2 and Phase 3** support GRE/mGRE, protected NHRP registration/resolution, dynamic neighbors and actual direct spoke-to-spoke forwarding. Phase 3 installs prefix-aware CEF shortcuts while retaining hub-next-hop routing. Import the included [Phase 2](examples/dmvpn/single-hub-phase2.netsim.yaml) or [Phase 3](examples/dmvpn/single-hub-phase3.netsim.yaml) three-spoke lab. See the [DMVPN guide](docs/features/dmvpn.md) for configuration, verification, failure exercises and modeled-IPsec boundaries.
+
 ## Working with the editor and console
 
 - Drag devices, Shift-select or marquee-select a group, and use Space-drag or the middle mouse button to pan. Scroll to zoom around the pointer. Touch supports drag, pinch and long-press menus.

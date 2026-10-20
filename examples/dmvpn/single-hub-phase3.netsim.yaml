@@ -1,0 +1,1562 @@
+format: netsim-lab
+version: 1
+seed: 24100
+lab:
+  id: lab-ilg
+  name: Single-hub protected DMVPN - Phase 3
+  devices:
+    - id: device-1
+      kind: router
+      x: 500
+      y: 100
+      powered: true
+      config:
+        hostname: ISP
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 198.51.100.1
+            mask: 255.255.255.252
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 192.0.2.1
+            mask: 255.255.255.252
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 203.0.113.1
+            mask: 255.255.255.252
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 198.19.0.1
+            mask: 255.255.255.252
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes: []
+        protocols: {}
+        services: {}
+        features: {}
+      runtime:
+        routes: []
+        arp: {}
+        mac: {}
+        neighbors: []
+        stp: {}
+        counters: {}
+        logs: []
+        features: {}
+      startupConfig:
+        hostname: ISP
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 198.51.100.1
+            mask: 255.255.255.252
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 192.0.2.1
+            mask: 255.255.255.252
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 203.0.113.1
+            mask: 255.255.255.252
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 198.19.0.1
+            mask: 255.255.255.252
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes: []
+        protocols: {}
+        services: {}
+        features: {}
+    - id: device-2
+      kind: router
+      x: 500
+      y: 320
+      powered: true
+      config:
+        hostname: HUB
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 198.51.100.2
+            mask: 255.255.255.252
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          Loopback0:
+            name: Loopback0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 172.16.1.1
+            mask: 255.255.255.0
+          Tunnel0:
+            name: Tunnel0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1400
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+              tunnelSource: GigabitEthernet0/0
+              tunnelMode: gre multipoint
+              tunnelKey: 123
+              nhrp:
+                nhs: []
+                maps: []
+                networkId: 100
+                authentication: lesson
+                holdtime: 30
+                multicast: dynamic
+                redirect: true
+              eigrp:
+                optionsAsn: 100
+                splitHorizon: false
+              tunnelProtection: DM-IPSEC
+            ip: 10.10.10.1
+            mask: 255.255.255.0
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes:
+          - network: 0.0.0.0
+            prefix: 0
+            nextHop: 198.51.100.1
+        protocols:
+          eigrp:
+            asn: 100
+            networks:
+              - network: 10.10.10.0
+                prefix: 24
+              - network: 172.16.1.0
+                prefix: 24
+            passiveInterfaces: []
+        services: {}
+        features:
+          crypto:
+            isakmpPolicies:
+              - priority: 10
+                encryption: aes
+                hash: sha
+                authentication: pre-share
+                group: 14
+                lifetime: 86400
+                keyLength: 256
+            isakmpKeys:
+              - peer: 0.0.0.0
+                key: dmvpn-lab
+            transformSets:
+              DM-TS:
+                encryption: esp-aes
+                keyLength: 256
+                integrity: esp-sha-hmac
+                mode: transport
+            maps: {}
+            profiles:
+              DM-IPSEC:
+                transformSet: DM-TS
+                pfs: 14
+                lifetime: 60
+      runtime:
+        routes: []
+        arp: {}
+        mac: {}
+        neighbors: []
+        stp: {}
+        counters: {}
+        logs: []
+        features: {}
+      startupConfig:
+        hostname: HUB
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 198.51.100.2
+            mask: 255.255.255.252
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          Loopback0:
+            name: Loopback0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 172.16.1.1
+            mask: 255.255.255.0
+          Tunnel0:
+            name: Tunnel0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1400
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+              tunnelSource: GigabitEthernet0/0
+              tunnelMode: gre multipoint
+              tunnelKey: 123
+              nhrp:
+                nhs: []
+                maps: []
+                networkId: 100
+                authentication: lesson
+                holdtime: 30
+                multicast: dynamic
+                redirect: true
+              eigrp:
+                optionsAsn: 100
+                splitHorizon: false
+              tunnelProtection: DM-IPSEC
+            ip: 10.10.10.1
+            mask: 255.255.255.0
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes:
+          - network: 0.0.0.0
+            prefix: 0
+            nextHop: 198.51.100.1
+        protocols:
+          eigrp:
+            asn: 100
+            networks:
+              - network: 10.10.10.0
+                prefix: 24
+              - network: 172.16.1.0
+                prefix: 24
+            passiveInterfaces: []
+        services: {}
+        features:
+          crypto:
+            isakmpPolicies:
+              - priority: 10
+                encryption: aes
+                hash: sha
+                authentication: pre-share
+                group: 14
+                lifetime: 86400
+                keyLength: 256
+            isakmpKeys:
+              - peer: 0.0.0.0
+                key: dmvpn-lab
+            transformSets:
+              DM-TS:
+                encryption: esp-aes
+                keyLength: 256
+                integrity: esp-sha-hmac
+                mode: transport
+            maps: {}
+            profiles:
+              DM-IPSEC:
+                transformSet: DM-TS
+                pfs: 14
+                lifetime: 60
+    - id: device-a
+      kind: router
+      x: 180
+      y: 550
+      powered: true
+      config:
+        hostname: SPOKE1
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 192.0.2.2
+            mask: 255.255.255.252
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          Loopback0:
+            name: Loopback0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 172.16.2.1
+            mask: 255.255.255.0
+          Tunnel0:
+            name: Tunnel0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1400
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+              tunnelSource: GigabitEthernet0/0
+              tunnelMode: gre multipoint
+              tunnelKey: 123
+              nhrp:
+                nhs:
+                  - address: 10.10.10.1
+                    nbma: 198.51.100.2
+                maps: []
+                networkId: 101
+                authentication: lesson
+                holdtime: 30
+                multicast:
+                  - 198.51.100.2
+                shortcut: true
+              tunnelProtection: DM-IPSEC
+            ip: 10.10.10.2
+            mask: 255.255.255.0
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes:
+          - network: 0.0.0.0
+            prefix: 0
+            nextHop: 192.0.2.1
+        protocols:
+          eigrp:
+            asn: 100
+            networks:
+              - network: 10.10.10.0
+                prefix: 24
+              - network: 172.16.2.0
+                prefix: 24
+            passiveInterfaces: []
+        services: {}
+        features:
+          crypto:
+            isakmpPolicies:
+              - priority: 10
+                encryption: aes
+                hash: sha
+                authentication: pre-share
+                group: 14
+                lifetime: 86400
+                keyLength: 256
+            isakmpKeys:
+              - peer: 0.0.0.0
+                key: dmvpn-lab
+            transformSets:
+              DM-TS:
+                encryption: esp-aes
+                keyLength: 256
+                integrity: esp-sha-hmac
+                mode: transport
+            maps: {}
+            profiles:
+              DM-IPSEC:
+                transformSet: DM-TS
+                pfs: 14
+                lifetime: 60
+      runtime:
+        routes: []
+        arp: {}
+        mac: {}
+        neighbors: []
+        stp: {}
+        counters: {}
+        logs: []
+        features: {}
+      startupConfig:
+        hostname: SPOKE1
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 192.0.2.2
+            mask: 255.255.255.252
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          Loopback0:
+            name: Loopback0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 172.16.2.1
+            mask: 255.255.255.0
+          Tunnel0:
+            name: Tunnel0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1400
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+              tunnelSource: GigabitEthernet0/0
+              tunnelMode: gre multipoint
+              tunnelKey: 123
+              nhrp:
+                nhs:
+                  - address: 10.10.10.1
+                    nbma: 198.51.100.2
+                maps: []
+                networkId: 101
+                authentication: lesson
+                holdtime: 30
+                multicast:
+                  - 198.51.100.2
+                shortcut: true
+              tunnelProtection: DM-IPSEC
+            ip: 10.10.10.2
+            mask: 255.255.255.0
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes:
+          - network: 0.0.0.0
+            prefix: 0
+            nextHop: 192.0.2.1
+        protocols:
+          eigrp:
+            asn: 100
+            networks:
+              - network: 10.10.10.0
+                prefix: 24
+              - network: 172.16.2.0
+                prefix: 24
+            passiveInterfaces: []
+        services: {}
+        features:
+          crypto:
+            isakmpPolicies:
+              - priority: 10
+                encryption: aes
+                hash: sha
+                authentication: pre-share
+                group: 14
+                lifetime: 86400
+                keyLength: 256
+            isakmpKeys:
+              - peer: 0.0.0.0
+                key: dmvpn-lab
+            transformSets:
+              DM-TS:
+                encryption: esp-aes
+                keyLength: 256
+                integrity: esp-sha-hmac
+                mode: transport
+            maps: {}
+            profiles:
+              DM-IPSEC:
+                transformSet: DM-TS
+                pfs: 14
+                lifetime: 60
+    - id: device-i
+      kind: router
+      x: 500
+      y: 550
+      powered: true
+      config:
+        hostname: SPOKE2
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 203.0.113.2
+            mask: 255.255.255.252
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          Loopback0:
+            name: Loopback0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 172.16.3.1
+            mask: 255.255.255.0
+          Tunnel0:
+            name: Tunnel0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1400
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+              tunnelSource: GigabitEthernet0/0
+              tunnelMode: gre multipoint
+              tunnelKey: 123
+              nhrp:
+                nhs:
+                  - address: 10.10.10.1
+                    nbma: 198.51.100.2
+                maps: []
+                networkId: 102
+                authentication: lesson
+                holdtime: 30
+                multicast:
+                  - 198.51.100.2
+                shortcut: true
+              tunnelProtection: DM-IPSEC
+            ip: 10.10.10.3
+            mask: 255.255.255.0
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes:
+          - network: 0.0.0.0
+            prefix: 0
+            nextHop: 203.0.113.1
+        protocols:
+          eigrp:
+            asn: 100
+            networks:
+              - network: 10.10.10.0
+                prefix: 24
+              - network: 172.16.3.0
+                prefix: 24
+            passiveInterfaces: []
+        services: {}
+        features:
+          crypto:
+            isakmpPolicies:
+              - priority: 10
+                encryption: aes
+                hash: sha
+                authentication: pre-share
+                group: 14
+                lifetime: 86400
+                keyLength: 256
+            isakmpKeys:
+              - peer: 0.0.0.0
+                key: dmvpn-lab
+            transformSets:
+              DM-TS:
+                encryption: esp-aes
+                keyLength: 256
+                integrity: esp-sha-hmac
+                mode: transport
+            maps: {}
+            profiles:
+              DM-IPSEC:
+                transformSet: DM-TS
+                pfs: 14
+                lifetime: 60
+      runtime:
+        routes: []
+        arp: {}
+        mac: {}
+        neighbors: []
+        stp: {}
+        counters: {}
+        logs: []
+        features: {}
+      startupConfig:
+        hostname: SPOKE2
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 203.0.113.2
+            mask: 255.255.255.252
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          Loopback0:
+            name: Loopback0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 172.16.3.1
+            mask: 255.255.255.0
+          Tunnel0:
+            name: Tunnel0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1400
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+              tunnelSource: GigabitEthernet0/0
+              tunnelMode: gre multipoint
+              tunnelKey: 123
+              nhrp:
+                nhs:
+                  - address: 10.10.10.1
+                    nbma: 198.51.100.2
+                maps: []
+                networkId: 102
+                authentication: lesson
+                holdtime: 30
+                multicast:
+                  - 198.51.100.2
+                shortcut: true
+              tunnelProtection: DM-IPSEC
+            ip: 10.10.10.3
+            mask: 255.255.255.0
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes:
+          - network: 0.0.0.0
+            prefix: 0
+            nextHop: 203.0.113.1
+        protocols:
+          eigrp:
+            asn: 100
+            networks:
+              - network: 10.10.10.0
+                prefix: 24
+              - network: 172.16.3.0
+                prefix: 24
+            passiveInterfaces: []
+        services: {}
+        features:
+          crypto:
+            isakmpPolicies:
+              - priority: 10
+                encryption: aes
+                hash: sha
+                authentication: pre-share
+                group: 14
+                lifetime: 86400
+                keyLength: 256
+            isakmpKeys:
+              - peer: 0.0.0.0
+                key: dmvpn-lab
+            transformSets:
+              DM-TS:
+                encryption: esp-aes
+                keyLength: 256
+                integrity: esp-sha-hmac
+                mode: transport
+            maps: {}
+            profiles:
+              DM-IPSEC:
+                transformSet: DM-TS
+                pfs: 14
+                lifetime: 60
+    - id: device-q
+      kind: router
+      x: 820
+      y: 550
+      powered: true
+      config:
+        hostname: SPOKE3
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 198.19.0.2
+            mask: 255.255.255.252
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          Loopback0:
+            name: Loopback0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 172.16.4.1
+            mask: 255.255.255.0
+          Tunnel0:
+            name: Tunnel0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1400
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+              tunnelSource: GigabitEthernet0/0
+              tunnelMode: gre multipoint
+              tunnelKey: 123
+              nhrp:
+                nhs:
+                  - address: 10.10.10.1
+                    nbma: 198.51.100.2
+                maps: []
+                networkId: 103
+                authentication: lesson
+                holdtime: 30
+                multicast:
+                  - 198.51.100.2
+                shortcut: true
+              tunnelProtection: DM-IPSEC
+            ip: 10.10.10.4
+            mask: 255.255.255.0
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes:
+          - network: 0.0.0.0
+            prefix: 0
+            nextHop: 198.19.0.1
+        protocols:
+          eigrp:
+            asn: 100
+            networks:
+              - network: 10.10.10.0
+                prefix: 24
+              - network: 172.16.4.0
+                prefix: 24
+            passiveInterfaces: []
+        services: {}
+        features:
+          crypto:
+            isakmpPolicies:
+              - priority: 10
+                encryption: aes
+                hash: sha
+                authentication: pre-share
+                group: 14
+                lifetime: 86400
+                keyLength: 256
+            isakmpKeys:
+              - peer: 0.0.0.0
+                key: dmvpn-lab
+            transformSets:
+              DM-TS:
+                encryption: esp-aes
+                keyLength: 256
+                integrity: esp-sha-hmac
+                mode: transport
+            maps: {}
+            profiles:
+              DM-IPSEC:
+                transformSet: DM-TS
+                pfs: 14
+                lifetime: 60
+      runtime:
+        routes: []
+        arp: {}
+        mac: {}
+        neighbors: []
+        stp: {}
+        counters: {}
+        logs: []
+        features: {}
+      startupConfig:
+        hostname: SPOKE3
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 198.19.0.2
+            mask: 255.255.255.252
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          Loopback0:
+            name: Loopback0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 172.16.4.1
+            mask: 255.255.255.0
+          Tunnel0:
+            name: Tunnel0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1400
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+              tunnelSource: GigabitEthernet0/0
+              tunnelMode: gre multipoint
+              tunnelKey: 123
+              nhrp:
+                nhs:
+                  - address: 10.10.10.1
+                    nbma: 198.51.100.2
+                maps: []
+                networkId: 103
+                authentication: lesson
+                holdtime: 30
+                multicast:
+                  - 198.51.100.2
+                shortcut: true
+              tunnelProtection: DM-IPSEC
+            ip: 10.10.10.4
+            mask: 255.255.255.0
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes:
+          - network: 0.0.0.0
+            prefix: 0
+            nextHop: 198.19.0.1
+        protocols:
+          eigrp:
+            asn: 100
+            networks:
+              - network: 10.10.10.0
+                prefix: 24
+              - network: 172.16.4.0
+                prefix: 24
+            passiveInterfaces: []
+        services: {}
+        features:
+          crypto:
+            isakmpPolicies:
+              - priority: 10
+                encryption: aes
+                hash: sha
+                authentication: pre-share
+                group: 14
+                lifetime: 86400
+                keyLength: 256
+            isakmpKeys:
+              - peer: 0.0.0.0
+                key: dmvpn-lab
+            transformSets:
+              DM-TS:
+                encryption: esp-aes
+                keyLength: 256
+                integrity: esp-sha-hmac
+                mode: transport
+            maps: {}
+            profiles:
+              DM-IPSEC:
+                transformSet: DM-TS
+                pfs: 14
+                lifetime: 60
+  links:
+    - id: link-3
+      a:
+        deviceId: device-2
+        port: GigabitEthernet0/0
+      b:
+        deviceId: device-1
+        port: GigabitEthernet0/0
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-b
+      a:
+        deviceId: device-a
+        port: GigabitEthernet0/0
+      b:
+        deviceId: device-1
+        port: GigabitEthernet0/1
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-j
+      a:
+        deviceId: device-i
+        port: GigabitEthernet0/0
+      b:
+        deviceId: device-1
+        port: GigabitEthernet0/2
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-r
+      a:
+        deviceId: device-q
+        port: GigabitEthernet0/0
+      b:
+        deviceId: device-1
+        port: GigabitEthernet0/3
+      enabled: true
+      delay: 0.1
+      loss: 0
+  notes:
+    - id: dmvpn-guide
+      x: 40
+      y: 85
+      locked: true
+      text: |-
+        DMVPN Phase 3
+        Single hub, three dynamic spokes
+        ISP routes WAN only; EIGRP 100 routes LANs
+        Overlay 10.10.10.0/24, GRE key 123
+        NHRP auth: lesson; invented PSK: dmvpn-lab
+        SPOKE1: ping 172.16.3.1 source 172.16.2.1
+        show dmvpn / show ip nhrp / show ip cef
+        IPsec is a logical model, not encryption.

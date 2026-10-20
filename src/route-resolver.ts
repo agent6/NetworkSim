@@ -1,5 +1,6 @@
 import type { Device, InterfaceConfig, Route } from './model.ts';
 import { inSubnet, isIPv6, parseCidr, prefixContains } from './ip.ts';
+import { nhrpForwardingOverride } from './nhrp.ts';
 
 type ForwardingRoute = Route & { share?: number; global?: boolean };
 export interface ForwardingPath { route: Route; port: string; target: string; weight: number }
@@ -61,7 +62,10 @@ export function resolveForwardingPaths(
         const sum = children.reduce((total, child) => total + child.weight, 0);
         if (sum > 0) for (const child of children) paths.push({ route, port: child.port, target: child.target, weight: share * child.weight / sum });
       }
-      if (paths.length) return paths;
+      if (paths.length) return paths.map(path => {
+        const shortcut = nhrpForwardingOverride(device, path.route, address);
+        return shortcut ? { ...path, target: shortcut.nextHop } : path;
+      });
       for (const route of tier) candidates.splice(candidates.indexOf(route), 1);
     }
     return [];

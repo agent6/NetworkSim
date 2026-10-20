@@ -4,6 +4,22 @@ import { Simulator } from '../src/engine.ts';
 import { IOSSession } from '../src/cli.ts';
 import { iosTokens, iosInvalidInput, iosContextHelp, iosArgumentCompletion, iosErrorOffset, type IosSyntaxCommand, type IosSyntaxContext } from '../src/ios-syntax.ts';
 
+test('DMVPN argument help and no forms match the operational NHRP and profile handlers', () => {
+  const { session, specs, context } = lab('enable', 'configure terminal', 'interface tunnel0');
+  assert.equal(iosArgumentCompletion('ip nhrp registration t', specs(), context()), 'ip nhrp registration timeout ');
+  assert.match(iosContextHelp('ip nhrp nhs 10.0.0.1 nbma ', specs(), context())!.join('\n'), /A\.B\.C\.D/);
+  for (const line of ['no ip nhrp network-id', 'no ip nhrp authentication', 'no ip nhrp holdtime', 'no ip nhrp registration timeout', 'no tunnel protection ipsec profile', 'no tunnel vrf']) {
+    assert.match(iosContextHelp(line + ' ', specs(), context())!.join('\n'), /<cr>/, line);
+    assert.deepEqual(session.execute(line), [], line);
+  }
+  assert.deepEqual(session.execute('exit'), []);
+  assert.deepEqual(session.execute('crypto ipsec profile DM'), []);
+  for (const line of ['no set pfs', 'no set security-association lifetime seconds']) {
+    assert.match(iosContextHelp(line + ' ', specs(), context())!.join('\n'), /<cr>/, line);
+    assert.deepEqual(session.execute(line), [], line);
+  }
+});
+
 function lab(...commands: string[]) {
   const engine = new Simulator(894), device = engine.addDevice('router'), session = new IOSSession(engine, device.id);
   for (const command of commands) assert.ok(!session.execute(command).some(line => line.startsWith('%')), command);
