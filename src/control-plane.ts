@@ -14,6 +14,7 @@ import { syncFhrpPackets, receiveFhrpControl, fhrpPeerView } from './fhrp-packet
 import { syncOSPF, configuredOSPFNeighbors, verifiedOSPFAdjacency, ospfDatabaseView, receiveOSPFControl, type OSPFProtocol, type OSPFEndpoint, type OSPFOrigin, type OSPFSnapshot } from './ospf-packets.ts';
 import { synchronizeBgpSessions, sendBgpAdvertisements, rejectBgpMaximumPrefix, type BgpPeerConfig } from './bgp-session.ts';
 import type { TCPChannel, TCPChannelOptions } from './tcp-channel.ts';
+import { slaTrackUp } from './sla-config.ts';
 import { settleTrackStates } from './tracking.ts';
 import { syncDiscovery, receiveDiscoveryControl } from './discovery.ts';
 import { defaultInterface, type Device, type InterfaceConfig, type Lab, type Link, type NewSimEvent, type Route, type StpPortState } from './model.ts';
@@ -1814,7 +1815,7 @@ export function virtualArpReply(engine:Simulator,d:Device,port:string,ip:string,
 function trackStates(engine:Simulator,d:Device):Record<string,{up:boolean;description:string}> {
   const result:Record<string,{up:boolean;description:string}>={};
   for(const [id,t]of Object.entries(d.config.features.tracks??{}) as [string,any][]) {
-    if(t.type==='sla')result[id]={up:!!d.runtime.features.ipSla?.[t.sla]?.success,description:`IP SLA ${t.sla}`};
+    if(t.type==='sla')result[id]={up:slaTrackUp(d,t.sla,t.aspect),description:`IP SLA ${t.sla} ${t.aspect??'reachability'}`};
     else if(t.type==='bfd')result[id]={up:(d.runtime.features.bfd??[]).some((s:any)=>s.interface===t.interface&&(!t.peer||sameAddress(s.peer,t.peer))&&s.state==='UP'),description:`BFD ${t.interface} ${t.peer??''}`};
     else if(t.type==='interface'||t.interface)result[id]={up:engine.interfaceUp(d.id,t.interface),description:`Interface ${t.interface}`};
     else if(t.type==='route'||t.network)result[id]={up:d.runtime.routes.some(r=>r.network===subnet(t.network,t.prefix??32)&&r.prefix===(t.prefix??32)&&(r.vrf??'')===(t.vrf??'')&&(/^null/i.test(r.interface)||!!resolveEgress(d,r.network,r.vrf))),description:`Route ${t.network}/${t.prefix??32}`};

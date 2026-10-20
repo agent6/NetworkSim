@@ -1,6 +1,7 @@
 import {endpointProfile,endpointVoicePolicy,validVoicePolicy,switchVoiceVlan,type VoicePolicy} from './endpoint.ts';
 import type { Device, Lab, Neighbor, NewSimEvent } from './model.ts';
 import type { SimulationClock, TimerHandle } from './clock.ts';
+import {platformIdentity,platformSoftware} from './platform-identity.ts';
 
 export interface DiscoveryHost {
   lab: Lab;
@@ -15,7 +16,7 @@ export interface DiscoveryHost {
   endpointPolicyChanged?(deviceId:string):void;
 }
 type Protocol='CDP'|'LLDP';
-type RecordRow=Neighbor & {expires:number;lastReceived:number;holdtime:number;hostname:string;platform:string;capabilities:string[];description:string;duplex?:'half'|'full';medCapabilities?:boolean;voicePolicy?:VoicePolicy};
+type RecordRow=Neighbor & {expires:number;lastReceived:number;holdtime:number;hostname:string;platform:string;software?:string;capabilities:string[];description:string;duplex?:'half'|'full';medCapabilities?:boolean;voicePolicy?:VoicePolicy};
 type Advertisement={runtime:Device['runtime'];signature:string;timer?:TimerHandle};
 const sessions=new WeakMap<DiscoveryHost,Map<string,Advertisement>>();
 const protocols:Protocol[]=['CDP','LLDP'];
@@ -51,7 +52,8 @@ function refreshVoice(engine:DiscoveryHost,d:Device):void {
 function advertise(engine:DiscoveryHost,d:Device,port:string,protocol:Protocol):void {
  if(!enabled(d,port,protocol,'send')||!engine.interfaceUp(d.id,port))return;
  const p=d.config.interfaces[port],cfg=configuration(d,protocol),phone=(d.kind==='pc'||d.kind==='phone')&&endpointProfile(d).role==='phone',voicePolicy=advertisedVoice(d,port,protocol,engine.clock.now()),medCapabilities=protocol==='LLDP'&&(phone||Object.values(table(d)).some(row=>row.interface===port&&row.protocol==='LLDP'&&row.medCapabilities&&row.expires>engine.clock.now()));
- engine.sendLinkControl?.(d.id,port,{kind:'link-control',protocol,body:{deviceId:d.id,port,hostname:d.config.hostname,address:p.ip||p.ipv6[0]?.split('/')[0],platform:phone?'IP phone (generic endpoint)':d.kind,capabilities:phone?['telephone','station']:d.kind==='router'?['router']:d.kind==='l3switch'?['router','bridge']:['bridge'],description:p.description||'',holdtime:cfg.holdtime,...(protocol==='CDP'?{duplex:engine.ethernetState?.(d.id,port)?.duplex}: {}),...medCapabilities?{medCapabilities:true}:{},...voicePolicy?{voicePolicy}:{} }});
+ const kind=phone?'phone':d.kind;
+ engine.sendLinkControl?.(d.id,port,{kind:'link-control',protocol,body:{deviceId:d.id,port,hostname:d.config.hostname,address:p.ip||p.ipv6[0]?.split('/')[0],platform:'NetSim '+platformIdentity(kind).model,software:platformSoftware(kind),capabilities:phone?['telephone','station']:d.kind==='router'?['router']:d.kind==='l3switch'?['router','bridge']:['bridge'],description:p.description||'',holdtime:cfg.holdtime,...(protocol==='CDP'?{duplex:engine.ethernetState?.(d.id,port)?.duplex}: {}),...medCapabilities?{medCapabilities:true}:{},...voicePolicy?{voicePolicy}:{} }});
   const traffic=(d.runtime.features.discoveryTraffic??={})[protocol]??={out:0,in:0,aged:0};traffic.out++;
  }
 
@@ -81,6 +83,7 @@ export function receiveDiscoveryControl(engine:DiscoveryHost,deviceId:string,por
   ((d.runtime.features.discoveryTraffic??={})[protocol]??={out:0,in:0,aged:0}).in++;
   if(b.holdtime<=0){delete cache[key];publish(d);refreshVoice(engine,d);syncDiscovery(engine);engine.notify();return true;}
   const holdtime=Math.min(65535,Math.max(1,b.holdtime)),row:RecordRow={protocol,deviceId:b.deviceId,interface:port,peerInterface:b.port,address:typeof b.address==='string'?b.address:undefined,state:'UP',expires:engine.clock.now()+holdtime*1000,lastReceived:engine.clock.now(),holdtime,hostname:String(b.hostname||b.deviceId),platform:String(b.platform||'unknown'),capabilities:Array.isArray(b.capabilities)?b.capabilities.map(String):[],description:String(b.description||''),...protocol==='LLDP'&&b.medCapabilities===true?{medCapabilities:true}:{},...validVoicePolicy(b.voicePolicy)?{voicePolicy:structuredClone(b.voicePolicy)}:{}};
+  if(typeof b.software==='string')row.software=b.software;
   if(protocol==='CDP'&&['half','full'].includes(b.duplex)){
     row.duplex=b.duplex;const local=engine.ethernetState?.(deviceId,port)?.duplex,warnings=d.runtime.features.cdpDuplexWarnings??={};
     if(local&&local!==row.duplex){const signature=local+'/'+row.duplex;if(warnings[key]!==signature){warnings[key]=signature;const message=`%CDP-4-DUPLEX_MISMATCH: duplex mismatch discovered on ${port} (${local} duplex), with ${row.hostname} ${row.peerInterface} (${row.duplex} duplex).`;engine.log?.(deviceId,message,4);engine.emit({nodeId:deviceId,port,protocol:'CDP',label:'Duplex mismatch discovered',detail:message,disposition:'warning'});}}

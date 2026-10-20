@@ -1,5 +1,7 @@
 import {stpPortState,stpMemberActive} from './stp-ports.ts';
 import {installFTPServices,validateFTPConfiguration} from './ftp-files.ts';
+import { validateSLAConfiguration } from './sla-config.ts';
+import { SLAController } from './sla.ts';
 import {iosBooting,iosBootStages,type IOSBootState,IOS_BOOT_DURATION} from './ios-boot.ts';
 import {phoneIngress,validatePhone} from './phone.ts';
 import {validateHostOS} from './host-os.ts';
@@ -71,6 +73,7 @@ export class Simulator {
   private cryptoServices = new CryptoServices(this);
   private ipv6Services = new IPv6Services(this);
   private tcpChannels = new PersistentTCPChannels(this);
+  private sla: SLAController;
   private httpAuthenticator?: (deviceId: string, list: string, username: string, password: string) => ReturnType<HTTPAuthenticator>;
   private computing = false;
   private revision = 0;
@@ -86,6 +89,8 @@ export class Simulator {
     installSSHFileService(this);
     installFTPServices(this);
     this.modelDriven=new ModelDrivenManagement(this,(deviceId,list,user,password)=>this.httpAuthenticator?.(deviceId,list,user,password)??{accepted:false});
+    this.sla=new SLAController(this);
+    this.subscribe(()=>{if(this.sla.sync())this.recompute();});
   }
   subscribe(listener: () => void): () => void { this.listeners.add(listener); return () => this.listeners.delete(listener); }
   notify(): void { for (const listener of this.listeners) listener(); }
@@ -206,9 +211,13 @@ export class Simulator {
         if(d.powered&&!d.config.ipRouting)for(const row of Object.values<any>(d.runtime.features.icmpRedirects||{}))if(row.expires>this.clock.now()&&this.interfaceUp(d.id,row.interface))d.runtime.routes.push({...row});
         if (d.powered && d.config.defaultGateway && !d.config.ipRouting) d.runtime.routes.push({ network: '0.0.0.0', prefix: 0, nextHop: d.config.defaultGateway, interface: '', protocol: 'static', ad: 1, metric: 0 });
       }
-      recomputeControlPlane(this);
-      let removedStatic=false;for(const d of this.lab.devices)removedStatic=pruneInactiveStaticRoutes(d,p=>this.interfaceUp(d.id,p))||removedStatic;
-      if(removedStatic){for(const d of this.lab.devices)d.runtime.routes=d.runtime.routes.filter(r=>['static','connected','local','dhcp'].includes(r.protocol));recomputeControlPlane(this);}
+      let removedStatic:boolean;
+      do {
+        recomputeControlPlane(this);
+        removedStatic=false;
+        for(const d of this.lab.devices)removedStatic=pruneInactiveStaticRoutes(d,p=>this.interfaceUp(d.id,p))||removedStatic;
+        if(removedStatic)for(const d of this.lab.devices)d.runtime.routes=d.runtime.routes.filter(r=>['static','connected','local','dhcp'].includes(r.protocol));
+      } while(removedStatic);
       for(const device of this.lab.devices)selectInstalledRoutes(device);
       for(const device of this.lab.devices){const now=this.clock.now(),old=device.runtime.features.routeSince??{},next:Record<string,number>={};for(const r of device.runtime.routes){const key=[r.vrf??'',r.network,r.prefix,r.protocol,r.nextHop??'',r.interface].join('|');next[key]=old[key]??now;}device.runtime.features.routeSince=next;}
       this.ipv6Services.recompute();
@@ -1086,7 +1095,7 @@ export class Simulator {
   udpRequest(deviceId: string, address: string, port: number, payload: any, options: ServiceOptions = {}): ServiceResult {
     const d = this.getDevice(deviceId); if (!d) throw new Error('Unknown device'); const result = this.startService(d, 'udp',options.timeout), source = this.serviceSource(d, address, options); if (source === undefined) { this.finishService(result.id, undefined, 'Source address is not assigned to an operational interface in the selected VRF'); return result; } const packet = this.makePacket(source, address, 'udp', 28 + JSON.stringify(payload).length, { kind: 'udp-service-request', transaction: result.id, payload }); if (options.sourcePort !== undefined && (!Number.isInteger(options.sourcePort) || options.sourcePort < 1 || options.sourcePort > 65535)) { this.finishService(result.id, undefined, 'Source port must be 1–65535'); return result; } packet.sourcePort = options.sourcePort ?? 49152 + this.hash(result.id) % 16000; packet.destinationPort = port; packet.vrf = options.vrf; this.originate(d, packet); return result;
   }
-  private serviceSource(d: Device, target: string, options: ServiceOptions): string | undefined { if (!options.source) return ''; const port = d.config.interfaces[options.source] ? options.source : this.localInterface(d, options.source, options.vrf); if (!port || !this.interfaceUp(d.id, port) || (d.config.interfaces[port].vrf ?? '') !== (options.vrf ?? '')) return; const source = d.config.interfaces[options.source] ? this.addressFor(d, port, isIPv6(target) ? 6 : 4) : options.source; return source && isIPv6(source) === isIPv6(target) ? source : undefined; }
+  serviceSource(d: Device, target: string, options: ServiceOptions): string | undefined { if (!options.source) return ''; const port = d.config.interfaces[options.source] ? options.source : this.localInterface(d, options.source, options.vrf); if (!port || !this.interfaceUp(d.id, port) || (d.config.interfaces[port].vrf ?? '') !== (options.vrf ?? '')) return; const source = d.config.interfaces[options.source] ? this.addressFor(d, port, isIPv6(target) ? 6 : 4) : options.source; return source && isIPv6(source) === isIPv6(target) ? source : undefined; }
   registerTCPService(port: number, accepts: (device: Device) => boolean, handler: (device: Device, payload: any, sourceAddress: string, destinationAddress: string) => Record<string, any>): () => void {
     if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('TCP port must be 1–65535');
     const entry = { accepts, handler }; this.tcpServices.set(port, entry); return () => { if (this.tcpServices.get(port) === entry) this.tcpServices.delete(port); };
@@ -1328,6 +1337,7 @@ export class Simulator {
     if (parsed.lab.devices.length > 500 || parsed.lab.links.length > 2000) throw new Error('Lab exceeds simulator limits');
     const ids = new Set<string>();
     for (const d of parsed.lab.devices) { if (!d.id || ids.has(d.id) || !['router', 'switch', 'poeswitch', 'l3switch', 'pc', 'server', 'wlc', 'ap', 'laptop', 'phone'].includes(d.kind) || !d.config?.interfaces || !d.config?.vlans || !Array.isArray(d.config.staticRoutes) || !d.config.protocols || !d.config.services || !d.config.features) throw new Error('Invalid or duplicate device'); ids.add(d.id); for (const [port, c] of Object.entries(d.config.interfaces) as [string, InterfaceConfig][]) { if (!port || !c || !Array.isArray(c.ipv6) || !c.features || !Number.isFinite(c.mtu) || !Number.isFinite(c.speed) || c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean' || (c.ip && !isIPv4(c.ip))) throw new Error('Invalid interface configuration'); } validateFTPConfiguration(d.config);validateHostOS(d.kind,d.config);validateEndpoint(d.kind,d.config);validatePhone(d.kind,d.config);validatePoE(d.kind,d.config);validateWireless(d.kind,d.config.features.wireless);if(d.startupConfig){for(const c of Object.values(d.startupConfig.interfaces) as InterfaceConfig[])if(c.features.speedAuto!==undefined&&typeof c.features.speedAuto!=='boolean')throw Error('Invalid saved Ethernet autonegotiation setting');validateWireless(d.kind,d.startupConfig.features.wireless);validateFTPConfiguration(d.startupConfig);validateHostOS(d.kind,d.startupConfig);validateEndpoint(d.kind,d.startupConfig);validatePhone(d.kind,d.startupConfig);validatePoE(d.kind,d.startupConfig);}d.runtime = emptyRuntime();d.runtime.features.bootTime=this.clock.now(); }
+    for(const device of parsed.lab.devices){validateSLAConfiguration(device.config);if(device.startupConfig)validateSLAConfiguration(device.startupConfig);}
     const occupied = new Set<string>();
     for (const link of parsed.lab.links) { if (!link?.a || !link?.b || !Number.isFinite(link.delay) || !Number.isFinite(link.loss)) throw new Error('Invalid link'); for (const e of [link.a, link.b]) { const d = parsed.lab.devices.find((x: Device) => x.id === e.deviceId); const key = e.deviceId + '|' + e.port; if (!d?.config.interfaces[e.port] || occupied.has(key)) throw new Error('Invalid or occupied cable endpoint'); occupied.add(key); } }
     this.lab = parsed.lab; this.seed = Number.isInteger(parsed.seed) ? parsed.seed >>> 0 || 1 : this.seed; this.clock = new SimulationClock(this.seed);

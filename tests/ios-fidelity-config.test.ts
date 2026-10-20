@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { Simulator } from '../src/engine.ts';
 import { IOSSession } from '../src/cli.ts';
 import { renderConfig } from '../src/config-renderer.ts';
+import { NETSIM_VERSION } from '../src/platform-identity.ts';
 
 const run = (session: IOSSession, lines: string[]) => lines.flatMap(line => session.execute(line));
 const block = (out: string[], head: string) => { const start = out.indexOf(head); assert.ok(start >= 0, `missing ${head}`); const end = out.findIndex((line, i) => i > start && !line.startsWith(' ')); return out.slice(start, end); };
@@ -28,14 +29,14 @@ test('show running-config uses the IOS header, byte count, boilerplate and trail
   const count = /^Current configuration : (\d+) bytes$/.exec(out[2]);
   assert.ok(count, out[2]);
   assert.equal(Number(count[1]), bytes(out.slice(3)));
-  assert.deepEqual(out.slice(3, 9), ['!', 'version 15.9', 'no service password-encryption', '!', 'hostname Edge', '!']);
+  assert.deepEqual(out.slice(3, 9), ['!', `version ${NETSIM_VERSION}`, 'no service password-encryption', '!', 'hostname Edge', '!']);
   for (const line of ['boot-start-marker', 'boot-end-marker', 'no aaa new-model', 'ip cef', 'no ipv6 cef', 'ip forward-protocol nd', 'no ip http server', 'control-plane', 'no scheduler allocate']) assert.ok(out.includes(line), line);
   assert.deepEqual(out.slice(-2), ['!', 'end']);
   assert.ok(out.indexOf('boot-start-marker') < out.indexOf('no aaa new-model') && out.indexOf('ip cef') < out.indexOf('interface Loopback0'));
   assert.ok(!out.some(line => /NetworkSim|educational|simulat/i.test(line)));
   assert.ok(!out.includes('ip routing'), 'routers never print the default ip routing');
   assert.ok(!out.some(line => /^ (no )?switchport$/.test(line) || line === ' no shutdown'));
-  assert.equal(cs.execute('show running-config')[4], 'version 15.2');
+  assert.equal(cs.execute('show running-config')[4], `version ${NETSIM_VERSION}`);
   assert.deepEqual(c1.execute('write terminal'), out);
 });
 

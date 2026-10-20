@@ -274,7 +274,7 @@ test('BFD template, AS-path policy and persistent BGP timer syntax round-trip wi
 });
 
 test('static IPv6 host names resolve locally and truthful platform displays use current model state',()=>{
-  const {engine,device,cli}=lab();conf(cli,'ipv6 host self 2001:db8::1','int loopback0','ipv6 address 2001:db8::1/128','no shutdown','end');assert.match(cli.execute('ping self repeat 1').join('\n'),/100 percent/);assert.equal(engine.events.filter(e=>e.protocol==='DNS').length,0);assert.match(cli.execute('show inventory').join('\n'),/^NAME: "IOSv", DESCR: "IOSv chassis, Hw Serial#: (\w{11}), Hw Revision: 1\.0"\nPID: IOSv\s+, VID: 1\.0, SN: \1$/m);assert.match(cli.execute('show processes cpu').join('\n'),/^CPU utilization for five seconds: \d+%\/\d+%; one minute: \d+%; five minutes: \d+%/);assert.match(renderConfig(device).join('\n'),/ip host self 2001:db8::1/);
+  const {engine,device,cli}=lab();conf(cli,'ipv6 host self 2001:db8::1','int loopback0','ipv6 address 2001:db8::1/128','no shutdown','end');assert.match(cli.execute('ping self repeat 1').join('\n'),/100 percent/);assert.equal(engine.events.filter(e=>e.protocol==='DNS').length,0);assert.match(cli.execute('show inventory').join('\n'),/^NAME: "Chassis", DESCR: "NetSim NS-R4 .*"\nPID: NS-R4\s+, VID: V01, SN: NS\w{13}$/m);assert.match(cli.execute('show processes cpu').join('\n'),/^CPU utilization for five seconds: \d+%\/\d+%; one minute: \d+%; five minutes: \d+%/);assert.match(renderConfig(device).join('\n'),/ip host self 2001:db8::1/);
 });
 
 test('named RA guard roles change actual ingress admission and persist named attachments',()=>{

@@ -286,6 +286,62 @@ THIS SOFTWARE.
     return typeof value === "string" && value.length > 0 ? value : void 0;
   }
 
+  // package.json
+  var package_default = {
+    name: "network-sim",
+    version: "0.1.0",
+    private: true,
+    type: "module",
+    description: "An original offline network laboratory for routing and switching.",
+    engines: {
+      node: ">=24.15.0"
+    },
+    allowScripts: {
+      "esbuild@0.28.2": true
+    },
+    scripts: {
+      build: "node scripts/build.mjs",
+      preview: "node scripts/preview.mjs",
+      typecheck: "tsc --noEmit",
+      test: "node --test --test-concurrency=1 tests/*.test.ts",
+      check: "npm run typecheck && npm test && npm run build"
+    },
+    devDependencies: {
+      "@tailwindcss/cli": "4.3.0",
+      "@types/node": "^24.0.0",
+      esbuild: "0.28.2",
+      tailwindcss: "4.3.0",
+      typescript: "7.0.2"
+    },
+    dependencies: {
+      yaml: "2.9.1"
+    }
+  };
+
+  // src/platform-identity.ts
+  var NETSIM_VERSION = package_default.version;
+  var NETSIM_HARDWARE_REVISION = "1.0";
+  var NETSIM_HARDWARE_VID = "V01";
+  var NETSIM_NVRAM_KIB = 256;
+  var platforms = {
+    router: { model: "NS-R4", description: "4-port Gigabit Ethernet router", software: "Routing", processorKiB: 448 * 1024, ioKiB: 64 * 1024 },
+    switch: { model: "NS-S24-2G", description: "24-port Layer 2 switch with 2 Gigabit uplinks", software: "Switching", processorKiB: 448 * 1024, ioKiB: 64 * 1024 },
+    poeswitch: { model: "NS-S24P-2G", description: "24-port PoE switch with 2 Gigabit uplinks", software: "PoE Switching", processorKiB: 448 * 1024, ioKiB: 64 * 1024 },
+    l3switch: { model: "NS-L3S24-2G", description: "24-port multilayer switch with 2 Gigabit uplinks", software: "Multilayer Switching", processorKiB: 960 * 1024, ioKiB: 64 * 1024 },
+    wlc: { model: "NS-WLC1", description: "Wireless LAN controller", software: "Wireless Controller", processorKiB: 1984 * 1024, ioKiB: 64 * 1024 },
+    ap: { model: "NS-AP2", description: "Dual-band wireless access point", software: "Access Point", processorKiB: 224 * 1024, ioKiB: 32 * 1024 },
+    pc: { model: "NS-PC1", description: "Desktop endpoint", software: "Endpoint", processorKiB: 448 * 1024, ioKiB: 64 * 1024 },
+    server: { model: "NS-SRV1", description: "Lab services server", software: "Services", processorKiB: 960 * 1024, ioKiB: 64 * 1024 },
+    laptop: { model: "NS-LT1", description: "Wireless laptop endpoint", software: "Endpoint", processorKiB: 448 * 1024, ioKiB: 64 * 1024 },
+    phone: { model: "NS-PH2", description: "VoIP phone with PC passthrough", software: "Phone", processorKiB: 224 * 1024, ioKiB: 32 * 1024 }
+  };
+  var platformIdentity = (kind) => platforms[kind];
+  var platformSoftware = (kind) => {
+    const profile = platformIdentity(kind);
+    return `NetSim OS Software, ${profile.software} Software (${profile.model}), Version ${NETSIM_VERSION}`;
+  };
+  var platformImage = (kind) => `embedded:netsim-${kind}-${NETSIM_VERSION}`;
+
   // src/ethernet.ts
   function speedIsAuto(port3) {
     return port3.features.speedAuto ?? port3.speed === 1e3;
@@ -411,7 +467,7 @@ THIS SOFTWARE.
   }
   function snmpMIB(engine, device) {
     const config4 = device.config.features.snmp ?? {}, rows2 = [], add2 = (oid, type, value) => rows2.push({ oid, type, value });
-    add2("1.3.6.1.2.1.1.1.0", "OctetString", `NetworkSim original ${device.kind} educational agent; IOS XE 17.12-style read-only networking subset`);
+    add2("1.3.6.1.2.1.1.1.0", "OctetString", `${platformSoftware(device.kind)}; virtual platform, read-only educational agent`);
     add2("1.3.6.1.2.1.1.2.0", "ObjectIdentifier", "0.0");
     add2("1.3.6.1.2.1.1.3.0", "TimeTicks", Math.floor(Math.max(0, engine.clock.now() - (device.runtime.features.bootTime ?? 0)) / 10) % 4294967296);
     add2("1.3.6.1.2.1.1.4.0", "OctetString", config4.contact ?? "");
@@ -7335,8 +7391,8 @@ ${end.comment}` : end.comment;
     const type = device.kind === "router" ? "Router" : device.kind === "wlc" ? "WLC" : device.kind === "ap" ? "Access point" : "Switch";
     const ignored = !!((device.configurationRegister?.current ?? 8450) & 64);
     return [
-      { after: 600, phase: "bootstrap", lines: ["", `${type} ${device.kind === "router" ? "System Bootstrap" : "Boot Loader"}, NetworkSim`, "Initializing platform hardware..."] },
-      { after: 1800, phase: "loading", lines: ['Loading "flash:packages.conf"...', "Image loading: ####################"] },
+      { after: 600, phase: "bootstrap", lines: ["", `${type} ${device.kind === "router" ? "System Bootstrap" : "Boot Loader"}, NetSim ${platformIdentity(device.kind).model}, Version ${NETSIM_VERSION}`, "Initializing virtual platform hardware..."] },
+      { after: 1800, phase: "loading", lines: [`Loading "${platformImage(device.kind)}"...`, "Image loading: ####################"] },
       { after: 3200, phase: "initializing", lines: ["Image load complete.", "Initializing interfaces and system services..."] },
       { after: 4800, phase: "configuration", lines: [ignored ? `Startup configuration ignored (configuration register 0x${device.configurationRegister.current.toString(16)}).` : device.startupConfig ? "Loading configuration from nvram:startup-config..." : "No startup configuration found. Loading factory defaults."] },
       { after: IOS_BOOT_DURATION, phase: "ready", lines: ["", "%SYS-5-RESTART: System restarted", `${device.config.hostname} con0 is now available`, "", "Press RETURN to get started!"] }
@@ -7354,6 +7410,66 @@ ${end.comment}` : end.comment;
       row5.lastSeen = seen;
       row5.expires = seconds4 === 0 ? Number.MAX_SAFE_INTEGER : seen + seconds4 * 1e3;
       if (row5.expires <= now) delete d.runtime.mac[row5.vlan + "|" + row5.mac];
+    }
+  }
+
+  // src/sla-config.ts
+  var slaDefaults = { frequency: 60, timeout: 5e3, threshold: 5e3 };
+  var slaReservedPorts = /* @__PURE__ */ new Set([53, 67, 68, 123, 161, 162, 514, 1812, 1813, 1967]);
+  var slaStart = (schedule4) => schedule4.start ?? "now";
+  var slaLife = (schedule4) => schedule4.life ?? 3600;
+  function slaStartText(schedule4) {
+    if (slaStart(schedule4) !== "after") return slaStart(schedule4);
+    const seconds4 = schedule4.after ?? 0;
+    return "after " + [Math.floor(seconds4 / 3600), Math.floor(seconds4 / 60) % 60, seconds4 % 60].map((n) => String(n).padStart(2, "0")).join(":");
+  }
+  function slaTrackUp(device, operation, aspect = "reachability") {
+    if (!device.config.features.ipSla?.[operation]?.target || !device.config.features.ipSlaSchedules?.[operation]) return false;
+    const schedule4 = device.runtime.features.ipSlaScheduleState?.[operation];
+    const result = device.runtime.features.ipSla?.[operation];
+    return schedule4?.status === "active" && (result?.returnCode === "OK" || aspect === "reachability" && result?.returnCode === "Over threshold");
+  }
+  function validateSLAConfiguration(config4) {
+    const record2 = (value) => !!value && typeof value === "object" && !Array.isArray(value);
+    const integer4 = (value, min, max) => typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
+    const address = (value) => typeof value === "string" && (isIPv4(value) || isIPv6(value));
+    const table2 = (name) => {
+      const value = config4.features[name];
+      if (value === void 0) return {};
+      if (!record2(value) || Object.keys(value).length > 2e3 || Object.keys(value).some((id2) => String(Number(id2)) !== id2 || !integer4(Number(id2), 1, 2147483647))) throw Error(`Invalid IP SLA ${name === "ipSla" ? "operation" : "schedule"} table.`);
+      return value;
+    };
+    const operations = table2("ipSla");
+    for (const [id2, probe] of Object.entries(operations)) {
+      if (!record2(probe) || probe.type !== void 0 && (typeof probe.type !== "string" || !["icmp-echo", "http", "udp-jitter"].includes(probe.type)) || probe.target !== void 0 && probe.type === void 0) throw Error(`Invalid IP SLA ${id2} operation.`);
+      for (const [key4, min, max] of [["frequency", 1, 604800], ["timeout", 1, 6048e5], ["threshold", 1, 6048e5], ["port", 1, 65535], ["sourcePort", 1, 65535], ["numPackets", 1, 100], ["interval", 1, 6e4]]) {
+        if (probe[key4] !== void 0 && !integer4(probe[key4], min, max)) throw Error(`Invalid IP SLA ${id2} ${key4}.`);
+      }
+      if (probe.source !== void 0 && (typeof probe.source !== "string" || !address(probe.source) && !/^[a-z][a-z-]*\d[\d/.]*$/i.test(probe.source))) throw Error(`Invalid IP SLA ${id2} source.`);
+      if (probe.control !== void 0 && typeof probe.control !== "boolean") throw Error(`Invalid IP SLA ${id2} responder control.`);
+      if (probe.target !== void 0) {
+        if (probe.type === "http") {
+          let url;
+          try {
+            url = new URL(String(probe.url));
+          } catch {
+            throw Error(`Invalid IP SLA ${id2} HTTP URL.`);
+          }
+          if (url.protocol !== "http:" || url.port && url.port !== "80" || url.hostname !== probe.target) throw Error(`Invalid IP SLA ${id2} HTTP target.`);
+        } else if (!address(probe.target) || probe.type === "udp-jitter" && (!isIPv4(probe.target) || !integer4(probe.port, 1, 65535))) throw Error(`Invalid IP SLA ${id2} target.`);
+      }
+    }
+    for (const [id2, schedule4] of Object.entries(table2("ipSlaSchedules"))) {
+      const probe = operations[id2];
+      if (!record2(schedule4) || !record2(probe) || !probe.target || schedule4.start !== void 0 && (typeof schedule4.start !== "string" || !["now", "pending", "after"].includes(schedule4.start)) || schedule4.life !== void 0 && !integer4(schedule4.life, 0, 2147483647) || schedule4.start === "after" && !integer4(schedule4.after, 0, 86399)) throw Error(`Invalid IP SLA ${id2} schedule.`);
+    }
+    for (const track2 of Object.values(config4.features.tracks ?? {})) {
+      if (record2(track2) && track2.type === "sla" && (!integer4(track2.sla, 1, 2147483647) || track2.aspect !== void 0 && (typeof track2.aspect !== "string" || !["state", "reachability"].includes(track2.aspect)))) throw Error("Invalid IP SLA tracked object.");
+    }
+    const responder = config4.features.ipSlaResponder;
+    if (responder !== void 0) {
+      if (!record2(responder) || typeof responder.enabled !== "boolean" || !Array.isArray(responder.ports) || responder.ports.length > 2e3) throw Error("Invalid IP SLA responder.");
+      for (const port3 of responder.ports) if (!record2(port3) || !integer4(port3.port, 1, 65535) || slaReservedPorts.has(Number(port3.port)) || port3.address !== void 0 && !address(port3.address)) throw Error("Invalid IP SLA responder port.");
     }
   }
 
@@ -10344,6 +10460,15 @@ ${end.comment}` : end.comment;
     },
     "time-range": { absolute: "absolute time and date", periodic: "periodic time and date", exit: "Exit from time-range configuration mode" },
     track: { delay: "Tracking delay", exit: "Exit from tracking configuration mode" },
+    sla: {
+      "icmp-echo": "ICMP Echo Operation",
+      http: "HTTP Operation",
+      "udp-jitter": "UDP Jitter Operation",
+      frequency: "Frequency of an operation",
+      timeout: "Timeout of an operation",
+      threshold: "Operation threshold in milliseconds",
+      exit: "Exit from IP SLA configuration mode"
+    },
     mst: {
       instance: "Map vlans to an MST instance",
       name: "Set configuration name",
@@ -10581,6 +10706,7 @@ ${end.comment}` : end.comment;
     vrf: "VPN Routing/Forwarding instance configuration commands:",
     "time-range": "Time range configuration commands:",
     track: "Tracking instance configuration commands:",
+    sla: "IP SLAs entry configuration commands:",
     mst: "MST configuration mode commands:"
   };
   function iosHelpHeader(mode, path, aclType) {
@@ -13769,14 +13895,14 @@ ${end.comment}` : end.comment;
       }
     });
   }
-  function resolveForwardingPaths(device, target, vrf2, interfaceUp, initialRoutes) {
+  function resolveForwardingPaths(device, target, vrf2, interfaceUp, initialRoutes, excludedRoute) {
     function visit3(address, table2, ancestors) {
       const key4 = (table2 ?? "") + "|" + address;
       if (ancestors.has(key4) || ancestors.size >= 16) return [];
       const branch = new Set(ancestors);
       branch.add(key4);
       const candidates = (ancestors.size === 0 && initialRoutes ? initialRoutes : device.runtime.routes).filter(
-        (route) => sameTable(route.vrf, table2) && route.ad < 255 && (route.share === void 0 || Number.isFinite(route.share) && route.share > 0) && (prefixContains(route.network, route.prefix, address) || !!route.candidateDefault && !isIPv6(address))
+        (route) => route !== excludedRoute && sameTable(route.vrf, table2) && route.ad < 255 && (route.protocol !== "static" || staticEnabled(device, route)) && (route.share === void 0 || Number.isFinite(route.share) && route.share > 0) && (prefixContains(route.network, route.prefix, address) || !!route.candidateDefault && !isIPv6(address))
       ).sort((a, b) => effectivePrefix(b) - effectivePrefix(a) || a.ad - b.ad || a.metric - b.metric);
       function effectivePrefix(route) {
         return prefixContains(route.network, route.prefix, address) ? route.prefix : 0;
@@ -13801,7 +13927,7 @@ ${end.comment}` : end.comment;
             }
           }
           if (!route.nextHop) continue;
-          const children = visit3(route.nextHop, nextTable, branch);
+          const children = visit3(route.nextHop, nextTable, branch).filter((child2) => !route.interface || child2.port === route.interface);
           const sum = children.reduce((total, child2) => total + child2.weight, 0);
           if (sum > 0) for (const child2 of children) paths2.push({ route, port: child2.port, target: child2.target, weight: share * child2.weight / sum });
         }
@@ -13812,43 +13938,54 @@ ${end.comment}` : end.comment;
     }
     return visit3(target, vrf2, /* @__PURE__ */ new Set());
   }
+  function staticEnabled(device, route) {
+    if (route.ad >= 255 || route.track !== void 0 && !device.runtime.features.tracks?.[route.track]?.up) return false;
+    const binding = (device.config.features.staticBfd ?? []).find((b) => b.peer === route.nextHop && (!route.interface || b.interface === route.interface));
+    if (!binding) return true;
+    const config4 = device.config.interfaces[binding.interface];
+    return !(config4?.features.bfd || config4?.features.bfdTemplate) || (device.runtime.features.bfd ?? []).some((s) => s.interface === binding.interface && s.peer === binding.peer && s.state === "UP");
+  }
   function pruneInactiveStaticRoutes(device, interfaceUp) {
     const old = device.runtime.routes;
-    device.runtime.routes = old.filter((route) => {
+    let candidates = old.filter((route) => {
       if (route.protocol !== "static") return true;
-      if (route.ad >= 255) return false;
-      if (route.track !== void 0 && !device.runtime.features.tracks?.[route.track]?.up) return false;
+      if (!staticEnabled(device, route)) return false;
       if (route.permanent || /^Null\d*$/i.test(route.interface)) return true;
-      const binding = (device.config.features.staticBfd ?? []).find((b) => b.peer === route.nextHop && (!route.interface || b.interface === route.interface));
-      if (binding) {
-        const config4 = device.config.interfaces[binding.interface];
-        if ((config4?.features.bfd || config4?.features.bfdTemplate) && !(device.runtime.features.bfd ?? []).some((s) => s.interface === binding.interface && s.peer === binding.peer && s.state === "UP")) return false;
-      }
       const table2 = route.global ? void 0 : route.vrf;
-      if (route.interface) {
-        const cfg = device.config.interfaces[route.interface];
-        if (!cfg || !interfaceUp(route.interface) || (cfg.vrf ?? "") !== (table2 ?? "")) return false;
-        if (!route.nextHop || adjacent(cfg, route.nextHop, device)) return true;
-      }
-      if (!route.nextHop) return false;
-      return resolveForwardingPaths(device, route.nextHop, table2, interfaceUp).some((path) => path.route !== route && !/^Null/i.test(path.port));
+      return !route.interface || !!device.config.interfaces[route.interface] && interfaceUp(route.interface) && sameTable(device.config.interfaces[route.interface].vrf, table2);
     });
-    return old.length !== device.runtime.routes.length;
+    for (; ; ) {
+      device.runtime.routes = installedRoutes(candidates);
+      const unresolved = device.runtime.routes.find((route) => {
+        if (route.protocol !== "static" || route.permanent || /^Null\d*$/i.test(route.interface)) return false;
+        const table2 = route.global ? void 0 : route.vrf;
+        if (route.interface && (!route.nextHop || adjacent(device.config.interfaces[route.interface], route.nextHop, device))) return false;
+        if (!route.nextHop) return true;
+        return !resolveForwardingPaths(device, route.nextHop, table2, interfaceUp, void 0, route).some((path) => !/^Null/i.test(path.port) && (!route.interface || path.port === route.interface));
+      });
+      if (!unresolved) break;
+      candidates = candidates.filter((route) => route !== unresolved);
+    }
+    device.runtime.routes = candidates;
+    return old.length !== candidates.length;
   }
-  function selectInstalledRoutes(device) {
+  function installedRoutes(routes) {
     const groups = /* @__PURE__ */ new Map();
-    for (const route of device.runtime.routes) {
+    for (const route of routes) {
       const key4 = [route.vrf ?? "", route.network, route.prefix].join("|");
       const rows2 = groups.get(key4) ?? [];
       rows2.push(route);
       groups.set(key4, rows2);
     }
-    device.runtime.routes = [...groups.values()].flatMap((rows2) => {
+    return [...groups.values()].flatMap((rows2) => {
       const usable2 = rows2.filter((r) => r.ad < 255 && (r.share === void 0 || r.share > 0));
       if (!usable2.length) return [];
       const best = [...usable2].sort((a, b) => a.ad - b.ad || a.metric - b.metric)[0];
       return usable2.filter((r) => r.ad === best.ad && (r.metric === best.metric || r.loadShare && best.loadShare));
     });
+  }
+  function selectInstalledRoutes(device) {
+    device.runtime.routes = installedRoutes(device.runtime.routes);
   }
 
   // src/msdp.ts
@@ -14861,7 +14998,7 @@ ${end.comment}` : end.comment;
       visiting.delete(id2);
       let state4 = machine.objects.get(id2);
       if (!state4 || state4.changedAt > now) {
-        state4 = { up: raw.error ? false : raw.up && !(config4.delayUp > 0), changedAt: now };
+        state4 = { up: raw.error ? false : raw.up && !(config4.delayUp > 0), changedAt: now, changes: 0 };
         machine.objects.set(id2, state4);
       }
       const clear = () => {
@@ -14872,7 +15009,10 @@ ${end.comment}` : end.comment;
         delete state4.deadline;
       };
       if (raw.error) {
-        if (state4.up) state4.changedAt = now;
+        if (state4.up) {
+          state4.changedAt = now;
+          state4.changes++;
+        }
         state4.up = false;
         clear();
       } else if (raw.up === state4.up) clear();
@@ -14887,6 +15027,7 @@ ${end.comment}` : end.comment;
         if (deadline <= now) {
           state4.up = raw.up;
           state4.changedAt = now;
+          state4.changes++;
           clear();
         } else if (state4.deadline !== deadline || !state4.timer) {
           engine.clock.cancel(state4.timer);
@@ -14900,7 +15041,7 @@ ${end.comment}` : end.comment;
           }, { owner: device.id, label: `Track ${id2} delayed ${raw.up ? "up" : "down"}` });
         }
       }
-      return result[id2] = { up: state4.up, rawUp: raw.up, description: config4.description || raw.description, lastChange: state4.changedAt, ...raw.value === void 0 ? {} : { value: raw.value }, ...state4.pendingUp === void 0 ? {} : { pending: state4.pendingUp ? "up" : "down", pendingUntil: state4.deadline }, ...raw.error ? { error: raw.error } : {} };
+      return result[id2] = { up: state4.up, rawUp: raw.up, description: config4.description || raw.description, lastChange: state4.changedAt, changes: state4.changes, ...raw.value === void 0 ? {} : { value: raw.value }, ...state4.pendingUp === void 0 ? {} : { pending: state4.pendingUp ? "up" : "down", pendingUntil: state4.deadline }, ...raw.error ? { error: raw.error } : {} };
     };
     for (const id2 of Object.keys(definitions2)) evaluate(id2);
     for (const [id2, state4] of machine.objects) if (!definitions2[id2]) {
@@ -14954,7 +15095,8 @@ ${end.comment}` : end.comment;
   function advertise(engine, d, port3, protocol) {
     if (!enabled2(d, port3, protocol, "send") || !engine.interfaceUp(d.id, port3)) return;
     const p = d.config.interfaces[port3], cfg = configuration(d, protocol), phone = (d.kind === "pc" || d.kind === "phone") && endpointProfile(d).role === "phone", voicePolicy = advertisedVoice(d, port3, protocol, engine.clock.now()), medCapabilities = protocol === "LLDP" && (phone || Object.values(table(d)).some((row5) => row5.interface === port3 && row5.protocol === "LLDP" && row5.medCapabilities && row5.expires > engine.clock.now()));
-    engine.sendLinkControl?.(d.id, port3, { kind: "link-control", protocol, body: { deviceId: d.id, port: port3, hostname: d.config.hostname, address: p.ip || p.ipv6[0]?.split("/")[0], platform: phone ? "IP phone (generic endpoint)" : d.kind, capabilities: phone ? ["telephone", "station"] : d.kind === "router" ? ["router"] : d.kind === "l3switch" ? ["router", "bridge"] : ["bridge"], description: p.description || "", holdtime: cfg.holdtime, ...protocol === "CDP" ? { duplex: engine.ethernetState?.(d.id, port3)?.duplex } : {}, ...medCapabilities ? { medCapabilities: true } : {}, ...voicePolicy ? { voicePolicy } : {} } });
+    const kind = phone ? "phone" : d.kind;
+    engine.sendLinkControl?.(d.id, port3, { kind: "link-control", protocol, body: { deviceId: d.id, port: port3, hostname: d.config.hostname, address: p.ip || p.ipv6[0]?.split("/")[0], platform: "NetSim " + platformIdentity(kind).model, software: platformSoftware(kind), capabilities: phone ? ["telephone", "station"] : d.kind === "router" ? ["router"] : d.kind === "l3switch" ? ["router", "bridge"] : ["bridge"], description: p.description || "", holdtime: cfg.holdtime, ...protocol === "CDP" ? { duplex: engine.ethernetState?.(d.id, port3)?.duplex } : {}, ...medCapabilities ? { medCapabilities: true } : {}, ...voicePolicy ? { voicePolicy } : {} } });
     const traffic2 = (d.runtime.features.discoveryTraffic ??= {})[protocol] ??= { out: 0, in: 0, aged: 0 };
     traffic2.out++;
   }
@@ -15008,6 +15150,7 @@ ${end.comment}` : end.comment;
       return true;
     }
     const holdtime = Math.min(65535, Math.max(1, b.holdtime)), row5 = { protocol, deviceId: b.deviceId, interface: port3, peerInterface: b.port, address: typeof b.address === "string" ? b.address : void 0, state: "UP", expires: engine.clock.now() + holdtime * 1e3, lastReceived: engine.clock.now(), holdtime, hostname: String(b.hostname || b.deviceId), platform: String(b.platform || "unknown"), capabilities: Array.isArray(b.capabilities) ? b.capabilities.map(String) : [], description: String(b.description || ""), ...protocol === "LLDP" && b.medCapabilities === true ? { medCapabilities: true } : {}, ...validVoicePolicy(b.voicePolicy) ? { voicePolicy: structuredClone(b.voicePolicy) } : {} };
+    if (typeof b.software === "string") row5.software = b.software;
     if (protocol === "CDP" && ["half", "full"].includes(b.duplex)) {
       row5.duplex = b.duplex;
       const local = engine.ethernetState?.(deviceId, port3)?.duplex, warnings = d.runtime.features.cdpDuplexWarnings ??= {};
@@ -18387,7 +18530,7 @@ ${end.comment}` : end.comment;
   function trackStates(engine, d) {
     const result = {};
     for (const [id2, t] of Object.entries(d.config.features.tracks ?? {})) {
-      if (t.type === "sla") result[id2] = { up: !!d.runtime.features.ipSla?.[t.sla]?.success, description: `IP SLA ${t.sla}` };
+      if (t.type === "sla") result[id2] = { up: slaTrackUp(d, t.sla, t.aspect), description: `IP SLA ${t.sla} ${t.aspect ?? "reachability"}` };
       else if (t.type === "bfd") result[id2] = { up: (d.runtime.features.bfd ?? []).some((s) => s.interface === t.interface && (!t.peer || sameAddress(s.peer, t.peer)) && s.state === "UP"), description: `BFD ${t.interface} ${t.peer ?? ""}` };
       else if (t.type === "interface" || t.interface) result[id2] = { up: engine.interfaceUp(d.id, t.interface), description: `Interface ${t.interface}` };
       else if (t.type === "route" || t.network) result[id2] = { up: d.runtime.routes.some((r) => r.network === subnet(t.network, t.prefix ?? 32) && r.prefix === (t.prefix ?? 32) && (r.vrf ?? "") === (t.vrf ?? "") && (/^null/i.test(r.interface) || !!resolveEgress(d, r.network, r.vrf))), description: `Route ${t.network}/${t.prefix ?? 32}` };
@@ -19923,7 +20066,7 @@ ${end.comment}` : end.comment;
     }
     return out;
   }
-  var RENDERED_DEFAULTS = /^(version \d+\.\d+|boot-start-marker|boot-end-marker|(no )?mmi .*|ip forward-protocol nd|(no )?ipv6 cef|multilink bundle-name authenticated|no scheduler allocate|vlan internal allocation policy ascending|spanning-tree extend system-id)$/;
+  var RENDERED_DEFAULTS = /^(version \d+\.\d+(?:\.\d+)?|boot-start-marker|boot-end-marker|(no )?mmi .*|ip forward-protocol nd|(no )?ipv6 cef|multilink bundle-name authenticated|no scheduler allocate|vlan internal allocation policy ascending|spanning-tree extend system-id)$/;
   function isRenderedDefaultLine(device, line2, parentHead) {
     const text3 = line2.trim(), c = device.config, f = c.features;
     if (!parentHead) {
@@ -19965,7 +20108,7 @@ ${end.comment}` : end.comment;
   function renderConfig(device, config4 = device.config) {
     const c = config4, router = device.kind === "router";
     const platformGlobal = renderPlatformGlobal(c), timestampOrder = (type) => type === "debug" ? 0 : 1;
-    const lines2 = ["!", `version ${router ? "15.9" : "15.2"}`];
+    const lines2 = ["!", `version ${NETSIM_VERSION}`];
     for (const [type, timestamp2] of Object.entries(c.features.timestamps || {}).sort((x, y) => timestampOrder(x[0]) - timestampOrder(y[0]))) lines2.push(`service timestamps ${type} ${timestamp2.mode}${timestamp2.msec ? " msec" : ""}${timestamp2.localtime ? " localtime" : ""}${timestamp2.showTimezone ? " show-timezone" : ""}${timestamp2.year ? " year" : ""}`);
     lines2.push(c.features.passwordEncryption ? "service password-encryption" : "no service password-encryption");
     if (c.features.sequenceNumbers) lines2.push("service sequence-numbers");
@@ -20401,7 +20544,7 @@ ${end.comment}` : end.comment;
       lines2.push(`route-map ${r.name} ${r.action} ${r.sequence}`, ...r.match.map((x) => " match " + x), ...r.continue === void 0 ? [] : [" continue" + (r.continue === null ? "" : " " + r.continue)], ...r.set.map((x) => " set " + (x.startsWith("community ") ? x.split(" ").map((v, i) => i ? displayCommunity(v, !!c.features.bgpCommunityNewFormat) : v).join(" ") : x)), "!");
     }
     for (const [id2, track2] of Object.entries(c.features.tracks || {})) {
-      lines2.push(track2.type === "list" ? `track ${id2} list ${track2.thresholdType ? "threshold " + track2.thresholdType : "boolean " + (track2.operator || "and")}` : track2.type === "sla" ? `track ${id2} ip sla ${track2.sla} reachability` : track2.type === "bfd" ? `track ${id2} bfd ${track2.interface}${track2.peer ? ` ${track2.peer}` : ""}` : track2.type === "interface" ? `track ${id2} interface ${track2.interface} line-protocol` : `track ${id2} ip route ${track2.network} ${prefixMask2(track2.prefix)} reachability`);
+      lines2.push(track2.type === "list" ? `track ${id2} list ${track2.thresholdType ? "threshold " + track2.thresholdType : "boolean " + (track2.operator || "and")}` : track2.type === "sla" ? `track ${id2} ip sla ${track2.sla} ${track2.aspect ?? "reachability"}` : track2.type === "bfd" ? `track ${id2} bfd ${track2.interface}${track2.peer ? ` ${track2.peer}` : ""}` : track2.type === "interface" ? `track ${id2} interface ${track2.interface} line-protocol` : `track ${id2} ip route ${track2.network} ${prefixMask2(track2.prefix)} reachability`);
       for (const object3 of track2.objects || []) lines2.push(` object ${object3.id}${object3.not ? " not" : ""}${object3.weight !== void 0 ? " weight " + object3.weight : ""}`);
       if (track2.thresholds) lines2.push(" threshold " + track2.thresholdType + (track2.thresholds.up !== void 0 ? " up " + track2.thresholds.up : "") + (track2.thresholds.down !== void 0 ? " down " + track2.thresholds.down : ""));
       if (track2.delayUp !== void 0 || track2.delayDown !== void 0) lines2.push(" delay" + (track2.delayUp !== void 0 ? ` up ${track2.delayUp}` : "") + (track2.delayDown !== void 0 ? ` down ${track2.delayDown}` : ""));
@@ -20422,11 +20565,13 @@ ${end.comment}` : end.comment;
       lines2.push(`ip sla ${id2}`);
       if (p.type === "http" && p.url) lines2.push(` http get ${p.url}`);
       else if (p.type === "udp-jitter" && p.target) lines2.push(` udp-jitter ${p.target} ${p.port} num-packets ${p.numPackets ?? 10} interval ${p.interval ?? 20}${p.source ? " source-ip " + p.source : ""}${p.sourcePort ? " source-port " + p.sourcePort : ""} control ${p.control === false ? "disable" : "enable"}`);
-      else if (p.target) lines2.push(` icmp-echo ${p.target}${p.source ? ` ${p.source.includes(".") ? "source-ip" : "source-interface"} ${p.source}` : ""}`);
-      for (const key4 of ["frequency", "timeout", "threshold"]) if (p[key4] !== void 0) lines2.push(` ${key4} ${p[key4]}`);
+      else if (p.target) lines2.push(` icmp-echo ${p.target}${p.source ? ` ${isIPv4(p.source) || isIPv6(p.source) ? "source-ip" : "source-interface"} ${p.source}` : ""}`);
+      if (p.target) {
+        for (const key4 of ["frequency", "timeout", "threshold"]) if (p[key4] !== void 0) lines2.push(` ${key4} ${p[key4]}`);
+      }
       lines2.push("!");
     }
-    for (const [id2, p] of Object.entries(c.features.ipSlaSchedules || {})) lines2.push(`ip sla schedule ${id2} life ${p.life || "forever"} start-time now`);
+    for (const [id2, p] of Object.entries(c.features.ipSlaSchedules || {})) lines2.push(`ip sla schedule ${id2} life ${slaLife(p) || "forever"} start-time ${slaStartText(p)}`);
     if (c.features.multicastRouting) lines2.push("ip multicast-routing");
     if (c.features.pim?.sptThreshold !== void 0) lines2.push(`ip pim spt-threshold ${c.features.pim.sptThreshold}`);
     if (c.features.pim?.rpAddress) lines2.push(`ip pim rp-address ${c.features.pim.rpAddress}`);
@@ -22484,98 +22629,6 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     engine.registerTCPService(49, (d) => !!d.config.services.tacacs?.enabled, (d, payload, source) => handleAAARequest(engine, d, "tacacs", payload, source));
   }
 
-  // src/sla.ts
-  var SLAController = class {
-    ports = /* @__PURE__ */ new Set();
-    engine;
-    constructor(engine) {
-      this.engine = engine;
-      engine.registerUDPService(1967, (d) => !!d.config.features.ipSlaResponder?.enabled, (d, p, source) => {
-        if (p?.application !== "sla-control" || !Number.isInteger(p.port) || p.port < 1 || p.port > 65535) return { accepted: false };
-        this.listen(p.port);
-        (d.runtime.features.slaResponderWindows ??= {})[`${source}:${p.port}`] = engine.clock.now() + Math.min(6e5, Math.max(1e3, Number(p.duration) || 1e4));
-        return { accepted: true };
-      });
-    }
-    sync() {
-      for (const d of this.engine.lab.devices) for (const entry of d.config.features.ipSlaResponder?.ports || []) this.listen(entry.port);
-    }
-    listen(port3) {
-      if (this.ports.has(port3)) return;
-      this.ports.add(port3);
-      this.engine.registerUDPService(port3, (d) => !!d.config.features.ipSlaResponder?.ports?.some((x) => x.port === port3) || Object.entries(d.runtime.features.slaResponderWindows || {}).some(([key4, expires]) => key4.endsWith(":" + port3) && expires > this.engine.clock.now()), (d, p, source) => {
-        const configured = d.config.features.ipSlaResponder?.ports?.some((x) => x.port === port3 && (!x.address || x.address === p?.target)), temporary = d.runtime.features.slaResponderWindows?.[`${source}:${port3}`] > this.engine.clock.now();
-        if (p?.application !== "sla-echo" || !configured && !temporary) return { accepted: false };
-        (d.runtime.features.slaResponderCounters ??= {})[port3] = (d.runtime.features.slaResponderCounters?.[port3] || 0) + 1;
-        return { accepted: true, sequence: p.sequence };
-      });
-    }
-    run(device, id2, probe, owner) {
-      const engine = this.engine, previous = device.runtime.features.ipSla?.[id2];
-      if (previous?.pending) return;
-      const started = engine.clock.now(), timeout = Math.max(1, probe.timeout ?? 5e3), runtime = device.runtime;
-      const state4 = { lastRun: started, success: previous?.success ?? false, rtt: previous?.rtt, returnCode: previous?.returnCode || "Pending", pending: true, runs: (previous?.runs || 0) + 1, successes: previous?.successes || 0, failures: previous?.failures || 0 };
-      (runtime.features.ipSla ??= {})[id2] = state4;
-      let finished = false;
-      const finish = (times, sent, error) => {
-        if (finished || device.runtime !== runtime) return;
-        finished = true;
-        const rtt = times.length ? times.reduce((a, b) => a + b, 0) / times.length : void 0;
-        Object.assign(state4, { pending: false, success: times.length > 0, rtt, packetsSent: sent, packetsReceived: times.length, returnCode: times.length ? rtt > (probe.threshold ?? 5e3) ? "Over threshold" : "OK" : error || "Timeout" });
-        if (times.length) state4.successes++;
-        else state4.failures++;
-        if (probe.type === "udp-jitter") state4.jitter = times.length > 1 ? times.slice(1).reduce((sum, time2, i) => sum + Math.abs(time2 - times[i]), 0) / (times.length - 1) : 0;
-        engine.recompute();
-        engine.notify();
-      };
-      const watch2 = (result2, deadline, callback) => {
-        const poll2 = () => {
-          if (device.runtime !== runtime || !device.powered || finished) return;
-          if (result2.status !== "running" || engine.clock.now() >= deadline) callback(result2);
-          else engine.clock.schedule(Math.min(10, deadline - engine.clock.now()), poll2, { owner, label: `IP SLA ${id2} response` });
-        };
-        poll2();
-      };
-      if (probe.type === "http") {
-        const result2 = engine.httpRequest(device.id, probe.url, { source: probe.source });
-        watch2(result2, started + timeout, (r) => finish(r.status === "success" ? [engine.clock.now() - started] : [], 1, r.status === "failure" ? r.error : void 0));
-        return;
-      }
-      if (probe.type === "udp-jitter") {
-        const count = probe.numPackets ?? 10, interval2 = probe.interval ?? 20, times = [];
-        let complete2 = 0, sent = 0;
-        const train = () => {
-          for (let i = 0; i < count; i++) engine.clock.schedule(i * interval2, () => {
-            if (finished || device.runtime !== runtime || !device.powered) return;
-            const time2 = engine.clock.now();
-            sent++;
-            const result2 = engine.udpRequest(device.id, probe.target, probe.port, { application: "sla-echo", sequence: i, target: probe.target }, { source: probe.source, ...probe.sourcePort ? { sourcePort: probe.sourcePort } : {} });
-            watch2(result2, time2 + timeout, (r) => {
-              if (r.status === "success" && r.accepted && r.sequence === i) times.push(engine.clock.now() - time2);
-              if (++complete2 === count) finish(times, sent);
-            });
-          }, { owner, label: `IP SLA ${id2} UDP probe` });
-        };
-        if (probe.control === false) train();
-        else {
-          const control = engine.udpRequest(device.id, probe.target, 1967, { application: "sla-control", port: probe.port, duration: timeout + count * interval2 + 1e3 }, { source: probe.source });
-          watch2(control, started + timeout, (r) => {
-            if (r.status === "success" && r.accepted) train();
-            else finish([], 0, "Responder unavailable");
-          });
-        }
-        return;
-      }
-      const source = probe.source && device.config.interfaces[probe.source] ? device.config.interfaces[probe.source].ip : probe.source, result = engine.ping(device.id, probe.target, { count: 1, source, timeout });
-      const poll = () => {
-        if (device.runtime !== runtime || finished) return;
-        if (result.status !== "running" || engine.clock.now() >= started + timeout + 100) finish(result.replies.filter((x) => !x.error).map((x) => x.time ?? 0), 1);
-        else engine.clock.schedule(10, poll, { owner, label: `IP SLA ${id2} echo result` });
-      };
-      poll();
-    }
-  };
-
   // src/management.ts
   var controllers = /* @__PURE__ */ new WeakMap();
   function managementSessionSnapshot(engine, deviceId) {
@@ -22594,7 +22647,6 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     sequence = 0;
     engine;
     factory;
-    sla;
     accounting;
     automationRuns = /* @__PURE__ */ new Map();
     sessionSnapshot(deviceId) {
@@ -22609,7 +22661,6 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     constructor(engine, factory) {
       this.engine = engine;
       this.factory = factory;
-      this.sla = new SLAController(engine);
       this.accounting = new AAAAccountingClient(engine);
       engine.subscribe(() => this.syncAutomation());
       engine.registerHTTPAuthenticator((deviceId, list, user, password) => this.authenticate(deviceId, list, user, password));
@@ -22703,24 +22754,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       while (result.status === "running" && this.engine.clock.now() < deadline && count++ < 2001) this.engine.clock.advance(Math.min(step, deadline - this.engine.clock.now()));
     }
     syncAutomation() {
-      this.sla.sync();
       for (const device of this.engine.lab.devices) {
         if (!device.powered) continue;
-        const f = device.config.features, signature = JSON.stringify([f.eem, f.archive, f.ipSla, f.ipSlaSchedules]);
+        const f = device.config.features, signature = JSON.stringify([f.eem, f.archive]);
         if (device.runtime.features.automationSignature === signature) continue;
         device.runtime.features.automationSignature = signature;
         const owner = `management-${device.id}`;
         this.engine.clock.cancelOwner(owner);
-        for (const [id2, schedule4] of Object.entries(f.ipSlaSchedules || {})) {
-          const probe = f.ipSla?.[id2];
-          if (!probe?.target) continue;
-          const start = this.engine.clock.now(), frequency = Math.max(1, probe.frequency || 60) * 1e3;
-          const run = () => {
-            if (!device.powered || schedule4.life && this.engine.clock.now() > start + schedule4.life * 1e3) return;
-            this.sla.run(device, id2, probe, owner);
-          };
-          this.engine.clock.schedule(0, run, { owner, repeat: frequency, label: `IP SLA ${id2}` });
-        }
         for (const [name, applet] of Object.entries(f.eem || {})) if (applet.event?.type === "timer") {
           const delay = applet.event.seconds * 1e3;
           if (!Number.isFinite(delay) || delay < 1e3) continue;
@@ -22999,10 +23039,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   var isSwitch = (device) => SWITCH_KINDS.includes(device.kind);
   var uptimeMs = (device, now) => Math.max(0, now - Number(device.runtime.features.bootTime ?? 0));
   function iosSerial(device) {
-    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let serial = "9";
-    for (let i = 0; i < 10; i++) serial += alphabet[hash(`${device.id}:${i}`) % alphabet.length];
-    return serial;
+    let serial = 0xcbf29ce484222325n;
+    for (const character of device.id) serial = BigInt.asUintN(64, (serial ^ BigInt(character.codePointAt(0))) * 0x100000001b3n);
+    return "NS" + serial.toString(36).toUpperCase().padStart(13, "0");
   }
   function iosUptime(ms) {
     let minutes = Math.floor(Math.max(0, ms) / 6e4), started = false;
@@ -23025,35 +23064,36 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
   function iosVersion(device, now) {
     const sw = isSwitch(device), register = device.configurationRegister, current2 = register?.current ?? (sw ? 257 : 8450);
-    const capacity = fileSystemStats(device).capacity;
+    const capacity = fileSystemStats(device).capacity, profile = platformIdentity(device.kind);
+    const reason = device.runtime.features.reloadReason ?? "Power-on";
+    const radios = device.config.features.wireless?.radios?.length ?? 0;
     return [
-      sw ? "Cisco IOS Software, vios_l2 Software (vios_l2-ADVENTERPRISEK9-M), Version 15.2(CML_NIGHTLY_20190423)FLO_DSGS7, EARLY DEPLOYMENT DEVELOPMENT BUILD, synced to  V152_6_0_81_E" : "Cisco IOS Software, IOSv Software (VIOS-ADVENTERPRISEK9-M), Version 15.9(3)M12, RELEASE SOFTWARE (fc1)",
-      "Technical Support: http://www.cisco.com/techsupport",
+      platformSoftware(device.kind),
+      `NetSim ${profile.model} - ${profile.description}`,
+      "Virtual platform (simulated hardware)",
       "",
-      "",
-      "ROM: Bootstrap program is IOSv",
+      `ROM: NetSim Bootstrap, Version ${NETSIM_VERSION}`,
       "",
       `${device.config.hostname} uptime is ${iosUptime(uptimeMs(device, now))}`,
-      "System returned to ROM by reload",
-      `System image file is "flash0:/${sw ? "vios_l2-adventerprisek9-m" : "vios-adventerprisek9-m"}"`,
-      `Last reload reason: ${device.runtime.features.reloadReason ?? "Unknown reason"}`,
+      `System restarted by ${reason}`,
+      `System image file is "${platformImage(device.kind)}"`,
+      `Last reload reason: ${reason}`,
       "",
-      "",
-      sw ? "cisco IOSv () processor (revision 1.0) with 657721K/62464K bytes of memory." : "Cisco IOSv (revision 1.0) with  with 460137K/62464K bytes of memory.",
+      `NetSim ${profile.model} virtual processor (revision ${NETSIM_HARDWARE_REVISION}) with ${profile.processorKiB}K/${profile.ioKiB}K bytes of memory.`,
       `Processor board ID ${iosSerial(device)}`,
+      `Model number: ${profile.model}`,
+      `Hardware revision: ${NETSIM_HARDWARE_REVISION}`,
       ...interfaceCounts(device),
-      "DRAM configuration is 72 bits wide with parity disabled.",
-      "256K bytes of non-volatile configuration memory.",
-      `${Math.floor(capacity / 1024)}K bytes of ATA System CompactFlash 0 (Read/Write)`,
-      "",
-      "",
+      ...radios ? [`${plural(radios, "IEEE 802.11 radio")}`] : [],
+      `${NETSIM_NVRAM_KIB}K bytes of non-volatile configuration memory (simulated).`,
+      `${capacity} bytes of flash storage (Read/Write, simulated).`,
       "",
       `Configuration register is 0x${current2.toString(16)}${register && register.next !== register.current ? ` (will be 0x${register.next.toString(16)} at next reload)` : ""}`
     ];
   }
   function iosInventory(device) {
-    const serial = iosSerial(device), name = isSwitch(device) ? "vios_l2" : "IOSv";
-    return [`NAME: "${name}", DESCR: "${name} chassis, Hw Serial#: ${serial}, Hw Revision: 1.0"`, `PID: ${name.padEnd(18)}, VID: 1.0, SN: ${serial}`, ""];
+    const serial = iosSerial(device), profile = platformIdentity(device.kind);
+    return [`NAME: "Chassis", DESCR: "NetSim ${profile.model} ${profile.description} (virtual chassis)"`, `PID: ${profile.model.padEnd(18)}, VID: ${NETSIM_HARDWARE_VID}, SN: ${serial}`, ""];
   }
   var BASE_PROCESSES = ["Chunk Manager", "Load Meter", "PKI Trustpool", "Retransmission of IPC messages", "Check heaps", "Pool Manager", "DiscardQ Background Mgr", "Timers", "WATCH_AFS", "MEMLEAK PROCESS", "ARP Input", "ARP Background", "ATM Idle Timer", "ATM ASYNC PROC", "AAA_SERVER_DEADTIME", "Policy Manager", "DDR Timers", "Entity MIB API", "PrstVbl", "RO Notify Timers", "RMI RM Notify Watched Policy", "EEM ED Syslog", "SMART", "GraphIt", "Dialer event", "IOS Licensing Expiry", "SERIAL A'detect", "XML Proxy Client", "Critical Bkgnd", "Net Background", "IDB Work", "Logger", "TTY Background", "BACK CHECK", "IF-MGR control process", "IF-MGR event process", "IPC Seat Manager", "IPC Event Notifier", "IPC Session Service", "IP Input", "ICMP event handler", "IPv6 Input", "TCP Timer", "TCP Protocols", "Socket Timers", "HTTP CORE", "CEF background", "IP ARP Retry Ager", "IP RIB Update", "SSS Manager", "Syslog Traps"];
   function processList(device, vty) {
@@ -23117,11 +23157,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
   function iosMemoryPools(device) {
     const configBytes = JSON.stringify(device.config).length, state4 = device.runtime.routes.length + device.runtime.neighbors.length + Object.keys(device.runtime.arp).length;
-    return { processor: { head: "F6E0E2A0", total: 370393444, used: 135061928 + configBytes * 4 + state4 * 1024 }, io: { head: "E400000", total: 63963136, used: 20330608 + Object.keys(device.config.interfaces).length * 65536 } };
+    const profile = platformIdentity(device.kind), processor = profile.processorKiB * 1024, io = profile.ioKiB * 1024;
+    return { processor: { head: "F6E0E2A0", total: processor, used: Math.min(processor, 135061928 + configBytes * 4 + state4 * 1024) }, io: { head: "E400000", total: io, used: Math.min(io, 20330608 + Object.keys(device.config.interfaces).length * 65536) } };
   }
   function iosMemoryStatistics(device) {
     const pools = iosMemoryPools(device), row5 = (name, pool) => {
-      const free = pool.total - pool.used, lowest = free - 1694288, largest = Math.floor(lowest * 0.987);
+      const free = pool.total - pool.used, lowest = Math.max(0, free - 1694288), largest = Math.floor(lowest * 0.987);
       return name.padStart(9) + pool.head.padStart(11) + [pool.total, pool.used, free, lowest, largest].map((n) => String(n).padStart(12)).join("");
     };
     return ["                Head    Total(b)     Used(b)     Free(b)   Lowest(b)  Largest(b)", row5("Processor", pools.processor), row5("I/O", pools.io)];
@@ -26391,9 +26432,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       return line([n, c.type, c.target ?? c.url, s?.rtt === void 0 ? "-" : s.rtt.toFixed(2) + " ms", s?.pending ? "Pending" : s?.returnCode ?? "Not started"], [8, 14, 26, 14]);
     })];
     return configs.flatMap(([n, c]) => {
-      const s = d.runtime.features.ipSla?.[n], schedule4 = d.config.features.ipSlaSchedules?.[n];
-      if (kind === "configuration") return [`IP SLAs Configuration`, `Entry number: ${n}`, `Type of operation to perform: ${c.type}`, `Target address: ${c.url ?? c.target ?? "not configured"}`, `Source address/interface: ${c.source ?? "route selected"}`, `Operation timeout (milliseconds): ${c.timeout ?? 5e3}`, `Threshold (milliseconds): ${c.threshold ?? 5e3}`, `Operation frequency (seconds): ${c.frequency ?? 60}`, `Schedule: ${schedule4 ? "start now, life " + (schedule4.life ? `${schedule4.life} seconds` : "forever") : "not scheduled"}`, ...c.type === "udp-jitter" ? [`Target port: ${c.port}, Number of packets: ${c.numPackets ?? 10}, Interval: ${c.interval ?? 20} ms`] : [], ""];
-      return [`IPSLAs Latest Operation Statistics`, `IPSLA operation id: ${n}`, `Latest RTT: ${s?.rtt === void 0 ? "No measured RTT" : s.rtt.toFixed(2) + " milliseconds"}`, `Latest operation start time: ${s?.lastRun === void 0 ? "never" : new Date(deviceTime2(e, d) - e.clock.now() + s.lastRun).toISOString()}`, `Latest operation return code: ${s?.pending ? "Pending" : s?.returnCode ?? "Not started"}`, `Number of successes: ${s?.successes ?? 0}`, `Number of failures: ${s?.failures ?? 0}`, ...detail || c.type === "udp-jitter" ? [`Packets sent: ${s?.packetsSent ?? "?"}, Packets received: ${s?.packetsReceived ?? "?"}`, ...s?.jitter === void 0 ? [] : [`Mean absolute round-trip variation: ${s.jitter.toFixed(2)} milliseconds`]] : [], ""];
+      const s = d.runtime.features.ipSla?.[n], schedule4 = d.config.features.ipSlaSchedules?.[n], state4 = d.runtime.features.ipSlaScheduleState?.[n];
+      const life = schedule4 ? slaLife(schedule4) : 3600, status3 = state4?.status ?? "pending";
+      if (kind === "configuration") return [`IP SLAs Configuration`, `Entry number: ${n}`, `Type of operation to perform: ${c.type ?? "not configured"}`, `Target address: ${c.url ?? c.target ?? "not configured"}`, `Source address/interface: ${c.source ?? "route selected"}`, `Operation timeout (milliseconds): ${c.timeout ?? 5e3}`, `Threshold (milliseconds): ${c.threshold ?? 5e3}`, `Operation frequency (seconds): ${c.frequency ?? 60}`, `Schedule: ${schedule4 ? "start " + slaStartText(schedule4) + ", life " + (life ? `${life} seconds` : "forever") : "not scheduled"}`, `Operational state: ${status3}`, ...c.type === "udp-jitter" ? [`Target port: ${c.port}, Number of packets: ${c.numPackets ?? 10}, Interval: ${c.interval ?? 20} ms`] : [], ""];
+      return [`IPSLAs Latest Operation Statistics`, `IPSLA operation id: ${n}`, `Latest RTT: ${s?.rtt === void 0 ? "No measured RTT" : s.rtt.toFixed(2) + " milliseconds"}`, `Latest operation start time: ${s?.lastRun === void 0 ? "never" : new Date(deviceTime2(e, d) - e.clock.now() + s.lastRun).toISOString()}`, `Latest operation return code: ${s?.pending ? "Pending" : s?.returnCode ?? "Not started"}`, `Number of successes: ${s?.successes ?? 0}`, `Number of failures: ${s?.failures ?? 0}`, `Operation time to live: ${status3 === "expired" ? "expired" : status3 === "pending" ? "pending" : state4?.expiresAt === void 0 ? "forever" : Math.max(0, Math.ceil((state4.expiresAt - e.clock.now()) / 1e3)) + " seconds"}`, ...detail || c.type === "udp-jitter" ? [`Packets sent: ${s?.packetsSent ?? "?"}, Packets received: ${s?.packetsReceived ?? "?"}`, ...s?.jitter === void 0 ? [] : [`Mean absolute round-trip variation: ${s.jitter.toFixed(2)} milliseconds`]] : [], ""];
     });
   }
   function nhrp(e, d, dmvpn, a) {
@@ -26582,13 +26624,15 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   function track(e, d, a) {
     if (a[0] === "brief") {
       only(a, 1);
-      return [line(["Track", "Object", "Parameter", "State", "Last Change"], [8, 30, 20, 8]), ...entries2(d.runtime.features.tracks).map(([n, s]) => line([n, s.description ?? "configured object", d.config.features.tracks?.[n]?.type ?? "?", s.up ? "Up" : "Down", age2(e, s.lastChange)], [8, 30, 20, 8]))];
+      return [line(["Track", "Object", "Parameter", "State", "Last Change"], [8, 30, 20, 8]), ...entries2(d.runtime.features.tracks).map(([n, s]) => line([n, s.description ?? "configured object", d.config.features.tracks?.[n]?.type === "sla" ? d.config.features.tracks[n].aspect ?? "reachability" : d.config.features.tracks?.[n]?.type ?? "?", s.up ? "Up" : "Down", age2(e, s.lastChange)], [8, 30, 20, 8]))];
     }
     only(a, 1);
     if (a.length) id(a[0]);
+    if (a[0] && !d.config.features.tracks?.[a[0]]) return [`% Track ${a[0]} does not exist`];
     return entries2(d.runtime.features.tracks).filter(([n]) => !a[0] || n === a[0]).flatMap(([n, s]) => {
-      const c = d.config.features.tracks?.[n] ?? {};
-      return [`Track ${n}`, `  ${s.description}`, `  State is ${s.up ? "Up" : "Down"}`, `  Last change ${age2(e, s.lastChange)} ago`, `  Delay up ${c.delayUp ?? 0} secs, down ${c.delayDown ?? 0} secs`, ...s.pending ? [`  Delayed ${s.pending} pending in ${until(e, s.pendingUntil)}`] : [], ...s.value === void 0 ? [] : [`  Threshold value ${s.value}, up ${c.thresholds?.up ?? "?"}, down ${c.thresholds?.down ?? "?"}`], ...s.error ? [`  Error: ${s.error}`] : [], ...(c.objects ?? []).map((o) => `  Object ${o.id}${o.not ? " NOT" : ""}${o.weight === void 0 ? "" : " weight " + o.weight}`)];
+      const c = d.config.features.tracks?.[n] ?? {}, result = c.type === "sla" ? d.runtime.features.ipSla?.[c.sla] : void 0;
+      const clients = [...d.config.staticRoutes.filter((r) => String(r.track) === n).map((r) => `${r.network.includes(":") ? "IPv6" : "IP"} static route ${r.network}/${r.prefix}`), ...rows(d.config.features.fhrp).filter((g) => g.track?.some((t) => String(t.id) === n)).map((g) => `${String(g.protocol).toUpperCase()} ${g.interface} group ${g.group}`), ...entries2(d.config.features.tracks).filter(([, t]) => t.type === "list" && t.objects?.some((o) => String(o.id) === n)).map(([id2]) => `Track list ${id2}`)];
+      return [`Track ${n}`, `  ${s.description}`, `  State is ${s.up ? "Up" : "Down"}`, `  ${s.changes ?? 0} changes, last change ${age2(e, s.lastChange)} ago`, `  Delay up ${c.delayUp ?? 0} secs, down ${c.delayDown ?? 0} secs`, ...c.type === "sla" ? [`  Latest operation return code: ${result?.returnCode ?? "Not started"}`, ...result?.rtt === void 0 ? [] : [`  Latest RTT (millisecs) ${result.rtt.toFixed(2)}`]] : [], ...s.pending ? [`  Delayed ${s.pending} pending in ${until(e, s.pendingUntil)}`] : [], ...s.value === void 0 ? [] : [`  Threshold value ${s.value}, up ${c.thresholds?.up ?? "?"}, down ${c.thresholds?.down ?? "?"}`], ...s.error ? [`  Error: ${s.error}`] : [], ...(c.objects ?? []).map((o) => `  Object ${o.id}${o.not ? " NOT" : ""}${o.weight === void 0 ? "" : " weight " + o.weight}`), ...clients.length ? ["  Tracked by:", ...clients.map((client) => "    " + client)] : []];
     });
   }
   function vrf(d, a) {
@@ -27269,9 +27313,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     return match ? match[1].slice(0, 3) + " " + match[2] : name;
   };
   function neighborIdentity(n) {
-    const kind = String(n.platform ?? ""), caps = (n.capabilities ?? []).map((c) => c.toLowerCase()), router = caps.includes("router"), bridge = caps.includes("bridge"), phone = caps.includes("telephone");
-    const platform = kind === "router" ? "Cisco IOSv" : ["switch", "poeswitch", "l3switch"].includes(kind) ? "Cisco IOSvL2" : /phone/i.test(kind) ? "Cisco IP Phone" : kind;
-    const version2 = kind === "router" ? ["Cisco IOS Software, IOSv Software (VIOS-ADVENTERPRISEK9-M), Version 15.9(3)M, RELEASE SOFTWARE (fc1)", "Technical Support: http://www.cisco.com/techsupport"] : ["switch", "poeswitch", "l3switch"].includes(kind) ? ["Cisco IOS Software, vios_l2 Software (vios_l2-ADVENTERPRISEK9-M), Version 15.2(4.0.55)E, TEST ENGINEERING ESTG_WEEKLY BUILD, synced to  END_OF_FLO_ISP", "Technical Support: http://www.cisco.com/techsupport"] : [platform];
+    const caps = (n.capabilities ?? []).map((c) => c.toLowerCase()), router = caps.includes("router"), bridge = caps.includes("bridge"), phone = caps.includes("telephone");
+    const platform = String(n.platform ?? "unknown");
+    const version2 = [typeof n.software === "string" ? n.software : platform];
     const cdpCodes = phone ? "H P M" : router && bridge ? "R S I" : router ? "R B" : bridge ? "S I" : caps.includes("station") ? "H" : "";
     const cdpWords = phone ? "Host Phone Two-port Mac Relay" : router && bridge ? "Router Switch IGMP" : router ? "Router Source-Route-Bridge" : bridge ? "Switch IGMP" : caps.includes("station") ? "Host" : "";
     const lldpCodes = [...bridge ? ["B"] : [], ...router ? ["R"] : [], ...phone ? ["T"] : [], ...caps.includes("station") && !phone ? ["S"] : []].join(",");
@@ -27307,8 +27351,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         const id2 = neighborIdentity(n);
         return ["-------------------------", `Device ID: ${n.hostname ?? n.deviceId}`, "Entry address(es): ", ...address(n.address, "  ", "IP address: ", "IPv6 address: "), `Platform: ${id2.platform},  Capabilities: ${id2.cdpWords} `, `Interface: ${n.interface},  Port ID (outgoing port): ${n.peerInterface ?? ""}`, `Holdtime : ${remaining(n.expires, now)} sec`, "", "Version :", ...id2.version, "", "advertisement version: 2", ...n.duplex ? [`Duplex: ${n.duplex}`] : [], "Management address(es): ", ...address(n.address, "  ", "IP address: ", "IPv6 address: "), ""];
       }), ...entry ? [] : [...peers.length ? [] : [""], `Total cdp entries displayed : ${peers.length}`]];
-      return ["Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge", "                  S - Switch, H - Host, I - IGMP, r - Repeater, P - Phone, ", "                  D - Remote, C - CVTA, M - Two-port Mac Relay ", "", "Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID", ...peers.flatMap((n) => {
-        const id2 = neighborIdentity(n), name2 = String(n.hostname ?? n.deviceId), rest = cdpPort(n.interface).padEnd(18) + String(remaining(n.expires, now)).padEnd(11) + ("      " + id2.cdpCodes).padEnd(12) + id2.platform.replace(/^cisco /i, "").slice(0, 9).padEnd(10) + cdpPort(n.peerInterface ?? "");
+      const model = (n) => neighborIdentity(n).platform.replace(/^NetSim /, "");
+      const width = Math.max(10, ...peers.map((n) => model(n).length + 1));
+      return ["Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge", "                  S - Switch, H - Host, I - IGMP, r - Repeater, P - Phone, ", "                  D - Remote, C - CVTA, M - Two-port Mac Relay ", "", "Device ID        Local Intrfce     Holdtme    Capability  " + "Platform".padEnd(width) + "Port ID", ...peers.flatMap((n) => {
+        const id2 = neighborIdentity(n), name2 = String(n.hostname ?? n.deviceId), rest = cdpPort(n.interface).padEnd(18) + String(remaining(n.expires, now)).padEnd(11) + ("      " + id2.cdpCodes).padEnd(12) + model(n).padEnd(width) + cdpPort(n.peerInterface ?? "");
         return name2.length > 16 ? [name2, " ".repeat(17) + rest.trimEnd()] : [(name2.padEnd(17) + rest).trimEnd()];
       }), "", `Total cdp entries displayed : ${peers.length}`];
     }
@@ -28102,6 +28148,28 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
   function protocolGraph(path, context6, no) {
     const done = graph(true), area = argument("AREA", "Area ID, integer or dotted decimal", (value) => ipv4(value) || /^\d+$/.test(value));
+    const slaId = () => number3(1, 2147483647, "IP SLAs operation number");
+    if (path === "ip sla schedule") {
+      if (no) return chain([slaId()], done);
+      const duration3 = argument("HH:MM:SS", "Delay before the operation starts", (value) => /^(?:[01]?\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(value));
+      return chain([slaId()], optionGraph([[word5("life", "Length of time to execute"), word5("forever", "Run indefinitely")], [word5("life"), number3(1, 2147483647, "Lifetime in seconds")], [word5("start-time", "When to start this entry"), word5("now", "Start immediately")], [word5("start-time"), word5("pending", "Wait for a trigger")], [word5("start-time"), word5("after", "Start after a delay"), duration3]]));
+    }
+    if (path === "track") {
+      const object3 = number3(1, 1e3, "Tracked object number");
+      return chain([object3], no ? done : union(
+        done,
+        chain([word5("interface"), iface(context6), word5("line-protocol")], done),
+        chain([word5("ip"), word5("sla"), slaId()], union(...["state", "reachability"].map((aspect) => chain([word5(aspect, aspect === "state" ? "Track the operation state" : "Track reachability (OK or OverThreshold)")], done)))),
+        chain([word5("ip"), word5("route"), ip("Route network"), ip("Subnet mask"), word5("reachability")], done),
+        chain([word5("bfd"), iface(context6)], union(done, chain([ip("BFD peer address")], done))),
+        ...["and", "or"].map((operator) => chain([word5("list"), word5("boolean"), word5(operator)], done)),
+        ...["weight", "percentage"].map((kind) => chain([word5("list"), word5("threshold"), word5(kind)], done))
+      ));
+    }
+    if (path === "udp-jitter" && context6.mode === "sla") {
+      if (no) return graph();
+      return chain([ip("Target IPv4 address"), number3(1, 65535, "Target UDP port")], optionGraph([[word5("num-packets"), number3(1, 100, "Number of packets")], [word5("interval"), number3(1, 6e4, "Interval in milliseconds")], [word5("source-ip"), ip("Source IPv4 address")], [word5("source-port"), number3(1, 65535, "Source UDP port")], ...["enable", "disable"].map((value) => [word5("control"), word5(value)])]));
+    }
     if (path === "aaa accounting") return union(...["exec", "commands", "connection", "network", "system"].map((kind) => {
       const prefix2 = [word5(kind, { exec: "For starting an exec (shell).", commands: "For exec (shell) commands.", connection: "For outbound connections. (telnet, rlogin)", network: "For network services. (PPP, SLIP, ARAP)", system: "For system events." }[kind]), ...kind === "commands" ? [number3(0, 15, "Command privilege level")] : [], kind === "system" ? word5("default", "Default system list") : text("Accounting method list")];
       if (no) return chain(prefix2, done);
@@ -28261,6 +28329,26 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     return void 0;
   }
   function formsFor(path, context6) {
+    if (path === "ip sla") return [[number3(1, 2147483647, "IP SLAs operation number")]];
+    if (path === "ip sla responder") {
+      const port3 = [word5("port"), number3(1, 65535, "UDP echo port")], address = [word5("ipaddress"), ip("Responder IPv4 address")];
+      return [[], [word5("udp-echo"), ...port3], [word5("udp-echo"), ...address, ...port3], [word5("udp-echo"), ...port3, ...address]];
+    }
+    if (path === "icmp-echo" && context6.mode === "sla") {
+      const address = argument("A.B.C.D or X:X:X:X::X", "Target IP address", (value) => ipv4(value) || isIPv6(value));
+      return [[address], [address, word5("source-ip"), argument("A.B.C.D or X:X:X:X::X", "Source IP address", (value) => ipv4(value) || isIPv6(value))], [address, word5("source-interface"), iface(context6)]];
+    }
+    if (path === "http get" && context6.mode === "sla") return [[argument("URL", "HTTP URL")]];
+    if (["frequency", "timeout", "threshold"].includes(path) && context6.mode === "sla") return [[number3(1, path === "frequency" ? 604800 : 6048e5, path === "frequency" ? "Operation frequency in seconds" : "Milliseconds")]];
+    if (path === "delay" && context6.mode === "track") {
+      const up = [word5("up"), number3(0, 180, "Delay in seconds")], down3 = [word5("down"), number3(0, 180, "Delay in seconds")];
+      return [up, down3, [...up, ...down3], [...down3, ...up]];
+    }
+    if (path === "show ip sla") {
+      const id2 = number3(1, 2147483647, "IP SLAs operation number");
+      return combine(choices(["configuration", "statistics", "summary"]), [[], [id2], [word5("details")], [id2, word5("details")]]);
+    }
+    if (path === "show track") return [[], [word5("brief")], [number3(1, 1e3, "Tracked object number")]];
     if (path === "ip ftp username") return [[text("Default remote FTP username")]];
     if (path === "ip ftp password") return [[text("FTP password")], ...combine(choices(["0", "7"]), [[text("FTP password")]])];
     if (path === "ip ftp source-interface") return [[iface(context6)]];
@@ -28524,7 +28612,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const protocol = protocolGraph(path, context6, no);
     if (protocol) {
       const position = advanceGraph(protocol, tokens);
-      const used = new Set(tokens.map((token) => token.text.toLowerCase())), unique = /* @__PURE__ */ new Set(["name", "tag", "permanent", "track", "ge", "le", "prefer", "source", "msec", "localtime", "show-timezone", "year", "no-summary", "default-information-originate", "no-redistribution", "not-advertise", "cost"]);
+      const used = new Set(tokens.map((token) => token.text.toLowerCase())), unique = /* @__PURE__ */ new Set(["name", "tag", "permanent", "track", "ge", "le", "prefer", "source", "msec", "localtime", "show-timezone", "year", "no-summary", "default-information-originate", "no-redistribution", "not-advertise", "cost", ...path === "ip sla schedule" ? ["life", "start-time"] : [], ...path === "udp-jitter" ? ["num-packets", "interval", "source-ip", "source-port", "control"] : []]);
       position.atoms = position.atoms.filter((atom) => !atom.literal || !unique.has(atom.literal) || !used.has(atom.literal));
       if (path === "ip route" && (used.has("permanent") || used.has("track"))) position.atoms = position.atoms.filter((atom) => atom.literal !== "permanent" && atom.literal !== "track");
       return position;
@@ -28554,6 +28642,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     return [[key4], ...six ? [] : [[ip("Summary network address"), ip("Contiguous subnet mask")]]];
   }
   function negativeForms(path, forms, context6) {
+    if (context6.mode === "sla" && ["frequency", "timeout", "threshold"].includes(path)) return [[]];
+    if (context6.mode === "track" && path === "delay") return [[], [word5("up")], [word5("down")], [word5("up"), word5("down")], [word5("down"), word5("up")]];
     if (path.startsWith("ip ftp ")) return [[]];
     if (path === "network-policy" || path === "network-policy profile" && ["interface", "range"].includes(context6.mode ?? "") || path === "voice vlan" && context6.mode === "network-policy") return [[], ...forms];
     if (path === "ipv6 ospf network" || path === "ospfv3 network" || ["ipv6 ospf hello-interval", "ipv6 ospf dead-interval", "ipv6 ospf cost", "ipv6 ospf priority"].includes(path)) return [[], ...forms];
@@ -29137,6 +29227,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const d = this.device;
       if (["pc", "server", "laptop"].includes(d.kind)) return this.windows.prompt;
       if (wirelessPrompts[this.mode]) return d.config.hostname + "(" + wirelessPrompts[this.mode] + ")#";
+      if (this.mode === "sla" && d.config.features.ipSla?.[this.context.name]?.target) {
+        const type = d.config.features.ipSla[this.context.name].type;
+        return `${d.config.hostname}(config-ip-sla-${type === "http" ? "http" : type === "udp-jitter" ? "jitter" : "echo"})#`;
+      }
       const suffix = { user: ">", priv: "#", config: "(config)#", interface: "(config-if)#", range: "(config-if-range)#", vlan: "(config-vlan)#", router: "(config-router)#", "address-family": "(config-router-af)#", acl: `(config-${this.acl()?.type === "standard" ? "std" : "ext"}-nacl)#`, pool: "(dhcp-config)#", line: "(config-line)#", "route-map": "(config-route-map)#", mst: "(config-mst)#", vrf: "(config-vrf)#", "vrf-af": `(config-vrf-af-${this.context.protocol})#`, "class-map": "(config-cmap)#", "policy-map": "(config-pmap)#", "policy-class": "(config-pmap-c)#", "policy-police": "(config-pmap-c-police)#", archive: "(config-archive)#", applet: "(config-applet)#", redundancy: "(config-red)#", pool6: "(config-dhcpv6)#", sla: "(config-ip-sla)#", "time-range": "(config-time-range)#", ike: "(config-isakmp)#", transform: "(cfg-crypto-trans)#", "crypto-map": "(config-crypto-map)#", "crypto-profile": "(ipsec-profile)#", "aaa-server": "(config-server)#", "aaa-group": "(config-sg)#", "key-chain": "(config-keychain)#", key: "(config-keychain-key)#", "af-interface": "(config-router-af-interface)#", "af-topology": "(config-router-af-topology)#", "flow-record": "(config-flow-record)#", "flow-exporter": "(config-flow-exporter)#", "flow-monitor": "(config-flow-monitor)#", "arp-acl": "(config-arp-nacl)#", track: "(config-track)#", "bfd-template": "(config-bfd)#", "flow-top-talkers": "(config-flow-top-talkers)#", "ipv6-guard": "(config-ipv6-guard)#", span: "(config-mon-erspan)#", "span-peer": "(config-mon-erspan-peer)#", "device-tracking": "(config-device-tracking)#", "ipv6-snooping": "(config-ipv6-snooping)#", "vlan-feature": "(config-vlan-config)#", "control-plane": "(config-cp)#", "network-policy": "(config-network-policy)#" };
       if (this.mode === "acl" && this.acl()?.type === "ipv6") return d.config.hostname + "(config-ipv6-acl)#";
       if (this.mode === "aaa-server") return d.config.hostname + (d.config.features.aaa?.servers?.[this.context.name]?.protocol === "radius" ? "(config-radius-server)#" : "(config-server-tacacs)#");
@@ -32540,13 +32634,16 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           } else {
             keyword(a[0], ["udp-echo"]);
             let port3, address;
+            const seen = /* @__PURE__ */ new Set();
             for (let i = 1; i < a.length; i++) {
               const key4 = keyword(a[i], ["port", "ipaddress"]);
+              if (seen.has(key4)) fail3();
+              seen.add(key4);
               if (key4 === "port") port3 = integer2(a[++i], 1, 65535);
               else address = ipv42(a[++i]);
             }
             if (!port3) incomplete4();
-            if ([53, 67, 68, 123, 161, 162, 514, 1812, 1967].includes(port3)) fail3("% This port is reserved by another modeled service.");
+            if (slaReservedPorts.has(port3)) fail3("% This port is reserved by another modeled service.");
             r.ports = (r.ports || []).filter((p) => p.port !== port3 || p.address !== address);
             if (!no) r.ports.push({ port: port3, ...address ? { address } : {} });
           }
@@ -32555,12 +32652,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         this.c("ip sla", "Configure a scheduled reachability or service probe", (a, no) => {
           exactly(a, 1);
           const id2 = integer2(a[0], 1, 2147483647);
+          if (!no && f.ipSlaSchedules?.[id2]) fail3("% Entry already scheduled. Remove the operation with no ip sla and reconfigure it.");
           f.ipSla ??= {};
           if (no) {
             delete f.ipSla[id2];
             if (f.ipSlaSchedules) delete f.ipSlaSchedules[id2];
           } else {
-            f.ipSla[id2] ??= { type: "icmp-echo", frequency: 60, timeout: 5e3, threshold: 5e3 };
+            f.ipSla[id2] ??= { ...slaDefaults };
             this.enter("sla", { name: String(id2) });
           }
           this.change();
@@ -32568,116 +32666,99 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         this.c("ip sla schedule", "Schedule a service probe", (a, no) => {
           if (!a.length) incomplete4();
           const id2 = integer2(a[0], 1, 2147483647);
-          f.ipSlaSchedules ??= {};
           if (no) {
             exactly(a, 1);
-            delete f.ipSlaSchedules[id2];
+            if (f.ipSlaSchedules) delete f.ipSlaSchedules[id2];
           } else {
             if (!f.ipSla?.[id2]?.target) fail3("% Define an IP SLA target first.");
-            let i = 1, life = 0, start = "now";
+            if (f.ipSlaSchedules?.[id2]) fail3("% Entry already scheduled. Remove its schedule before scheduling it again.");
+            const schedule4 = { start: "pending", life: 3600 }, seen = /* @__PURE__ */ new Set();
+            let i = 1;
             while (i < a.length) {
               const key4 = keyword(a[i++], ["life", "start-time"]);
+              if (seen.has(key4)) fail3();
+              seen.add(key4);
               if (key4 === "life") {
-                if (a[i] === "forever") {
-                  life = 0;
+                if (a[i]?.toLowerCase() === "forever") {
+                  schedule4.life = 0;
                   i++;
-                } else life = integer2(a[i++], 1, 2147483647);
+                } else schedule4.life = integer2(a[i++], 1, 2147483647);
               } else {
-                start = keyword(a[i++], ["now"]);
+                schedule4.start = keyword(a[i++], ["now", "pending", "after"]);
+                if (schedule4.start === "after") {
+                  const time2 = a[i++];
+                  if (time2 === void 0) incomplete4();
+                  const match = /^(\d{1,2}):(\d{2}):(\d{2})$/.exec(time2);
+                  if (!match) fail3("% Expected HH:MM:SS.");
+                  schedule4.after = integer2(match[1], 0, 23) * 3600 + integer2(match[2], 0, 59) * 60 + integer2(match[3], 0, 59);
+                }
               }
             }
-            f.ipSlaSchedules[id2] = { start, life };
+            (f.ipSlaSchedules ??= {})[id2] = schedule4;
           }
           this.change();
-        }, "<id> [life forever|seconds] start-time now")
+        }, "<id> [life forever|seconds] [start-time now|pending|after HH:MM:SS]")
       ];
     }
     slaModeCommands() {
-      const probe = this.device.config.features.ipSla[this.context.name];
+      const probe = this.device.config.features.ipSla?.[this.context.name];
+      if (!probe) return [];
+      const editable = () => {
+        if (this.device.config.features.ipSlaSchedules?.[this.context.name]) fail3("% Entry already scheduled. Remove the operation with no ip sla and reconfigure it.");
+      };
+      if (probe.target) return ["frequency", "timeout", "threshold"].map((field2) => this.c(field2, `Set probe ${field2}`, (a, no) => {
+        editable();
+        exactly(a, no ? 0 : 1);
+        probe[field2] = no ? field2 === "timeout" && probe.type === "http" ? 6e4 : slaDefaults[field2] : integer2(a[0], 1, field2 === "frequency" ? 604800 : 6048e5);
+        this.change();
+      }, field2 === "frequency" ? "<1-604800>" : "<1-604800000>"));
+      const define = (next, no) => {
+        editable();
+        if (no) fail3("% Remove an operation using no ip sla <id>.");
+        Object.assign(probe, next);
+        this.change();
+      };
       return [
         this.c("icmp-echo", "Set target and optional source", (a, no) => {
-          if (no) {
-            if (a.length !== 0 && a.length !== 1 && a.length !== 3) fail3();
-            if (a.length) {
-              this.resolveTarget(a[0]);
-              if (a.length === 3) {
-                const key4 = keyword(a[1], ["source-ip", "source-interface"]);
-                if (key4 === "source-ip") ipv42(a[2]);
-                else this.getInterface(a[2]);
-              }
-            }
-            delete probe.target;
-            delete probe.source;
-          } else {
-            if (a.length !== 1 && a.length !== 3) fail3();
-            probe.target = this.resolveTarget(a[0]);
-            if (a.length === 3) {
-              const key4 = keyword(a[1], ["source-ip", "source-interface"]);
-              probe.source = key4 === "source-ip" ? ipv42(a[2]) : this.getInterface(a[2]);
-            }
-            probe.type = "icmp-echo";
+          if (a.length < 1) incomplete4();
+          if (a.length !== 1 && a.length !== 3) fail3();
+          const target = this.resolveTarget(a[0]), next = { type: "icmp-echo", target };
+          if (a.length === 3) {
+            const key4 = keyword(a[1], ["source-ip", "source-interface"]);
+            if (key4 === "source-ip") {
+              const source = this.resolveTarget(a[2]);
+              if (isIPv6(source) !== isIPv6(target)) fail3("% Source and target address families must match.");
+              next.source = source;
+            } else next.source = this.getInterface(a[2]);
           }
-          this.change();
+          define(next, no);
         }, "<address> [source-ip address|source-interface name]"),
         this.c("http get", "Probe a real simulated HTTP endpoint", (a, no) => {
-          if (a.length > 1 || !no && !a.length) fail3();
-          if (no) {
-            if (a.length) {
-              try {
-                const url = new URL(a[0]);
-                if (url.protocol !== "http:") fail3();
-              } catch {
-                fail3("% Expected an HTTP URL.");
-              }
-            }
-            delete probe.target;
-            delete probe.url;
-          } else {
-            let url;
-            try {
-              url = new URL(a[0]);
-            } catch {
-              fail3("% Expected an HTTP URL.");
-            }
-            if (url.protocol !== "http:" || url.port && url.port !== "80") this.unsupported("HTTPS or non-default HTTP SLA ports");
-            probe.type = "http";
-            probe.url = url.href;
-            probe.target = url.hostname;
-            delete probe.source;
-            probe.timeout = 6e4;
+          exactly(a, 1);
+          let url;
+          try {
+            url = new URL(a[0]);
+          } catch {
+            fail3("% Expected an HTTP URL.");
           }
-          this.change();
+          if (url.protocol !== "http:" || url.port && url.port !== "80") this.unsupported("HTTPS or non-default HTTP SLA ports");
+          define({ type: "http", url: url.href, target: url.hostname, timeout: 6e4 }, no);
         }, "<http://host/path>"),
         this.c("udp-jitter", "Send a measured train of UDP echo probes", (a, no) => {
-          if (no && !a.length) {
-            delete probe.target;
-            this.change();
-            return;
-          }
           if (a.length < 2) incomplete4();
-          const next = { type: "udp-jitter", target: ipv42(a[0]), port: integer2(a[1], 1, 65535), numPackets: 10, interval: 20, control: true };
+          const next = { type: "udp-jitter", target: ipv42(a[0]), port: integer2(a[1], 1, 65535), numPackets: 10, interval: 20, control: true }, seen = /* @__PURE__ */ new Set();
           for (let i = 2; i < a.length; i += 2) {
             const key4 = keyword(a[i], ["source-ip", "source-port", "num-packets", "interval", "control"]);
+            if (seen.has(key4)) fail3();
+            seen.add(key4);
             if (key4 === "source-ip") next.source = ipv42(a[i + 1]);
             else if (key4 === "control") next.control = keyword(a[i + 1], ["enable", "disable"]) === "enable";
-            else next[key4 === "num-packets" ? "numPackets" : key4 === "source-port" ? "sourcePort" : key4] = integer2(a[i + 1], key4 === "source-port" ? 1 : 1, key4 === "num-packets" ? 100 : key4 === "source-port" ? 65535 : 6e4);
+            else if (key4 === "source-port") next.sourcePort = integer2(a[i + 1], 1, 65535);
+            else if (key4 === "num-packets") next.numPackets = integer2(a[i + 1], 1, 100);
+            else next.interval = integer2(a[i + 1], 1, 6e4);
           }
-          if (no) {
-            delete probe.target;
-            delete probe.source;
-            delete probe.sourcePort;
-          } else {
-            delete probe.source;
-            delete probe.sourcePort;
-            Object.assign(probe, next);
-          }
-          this.change();
-        }, "<address> <port> [num-packets n] [interval ms] [source-ip ip] [source-port port] [control enable|disable]"),
-        ...[["frequency", 1, 604800, 60], ["timeout", 1, 6048e5, 5e3], ["threshold", 1, 6048e5, 5e3]].map(([field2, min, max, value]) => this.c(String(field2), `Set probe ${field2}`, (a, no) => {
-          exactly(a, no ? 0 : 1);
-          probe[field2] = no ? value : integer2(a[0], Number(min), Number(max));
-          this.change();
-        }, "<integer>"))
+          define(next, no);
+        }, "<address> <port> [num-packets n] [interval ms] [source-ip ip] [source-port port] [control enable|disable]")
       ];
     }
     enterpriseGlobalCommands() {
@@ -33521,8 +33602,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         value = { type: "interface", interface: this.getInterface(a[2]) };
       } else if (a[1] === "ip" && a[2] === "sla") {
         exactly(a, 5);
-        keyword(a[4], ["reachability", "state"]);
-        value = { type: "sla", sla: integer2(a[3], 1, 2147483647) };
+        const aspect = keyword(a[4], ["reachability", "state"]);
+        value = { type: "sla", sla: integer2(a[3], 1, 2147483647), aspect };
       } else if (a[1] === "bfd") {
         if (a.length !== 3 && a.length !== 4) fail3();
         value = { type: "bfd", interface: this.getInterface(a[2]), ...a[3] ? { peer: ipv42(a[3]) } : {} };
@@ -36959,6 +37040,173 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const tags = view.assignment;
     return `<div class="rounded-xl border border-slate-200 p-4 space-y-4"><div><div class="section-label" data-ap-config-state>${view.standalone ? "Standalone local configuration" : view.state === "RUN" ? "WLC configuration applied" : "Cached WLC configuration"}</div><p class="mt-2 text-xs text-slate-500" data-ap-controller>${view.standalone ? "Local bridge \xB7 no controller required" : "Managed by " + escapeHTML(view.controllerName ?? "WLC")}${!view.standalone && view.controllerAddress ? " \xB7 " + escapeHTML(view.controllerAddress) : ""}</p><p class="mt-1 text-[11px] text-slate-400">${view.standalone ? "Local SSID and radio settings drive this standalone AP." : "Edit WLANs, policies and radio profiles on the WLC. These values show the configuration received by this AP."}</p></div><dl class="${view.standalone ? "hidden" : "grid grid-cols-3 gap-3 text-xs"}"><div><dt class="text-slate-400">Policy tag</dt><dd class="mt-1 break-all" data-ap-policy-tag>${escapeHTML(tags?.policyTag ?? "default-policy-tag")}</dd></div><div><dt class="text-slate-400">Site tag</dt><dd class="mt-1 break-all" data-ap-site-tag>${escapeHTML(tags?.siteTag ?? "default-site-tag")}</dd></div><div><dt class="text-slate-400">RF tag</dt><dd class="mt-1 break-all" data-ap-rf-tag>${escapeHTML(tags?.rfTag ?? "default-rf-tag")}</dd></div></dl>${view.issues.map((issue) => `<p class="rounded-lg bg-amber-50 p-3 text-xs text-amber-800" data-ap-config-issue>${escapeHTML(issue)}</p>`).join("")}<div><div class="section-label mb-2">Effective radios</div><div class="wireless-table-wrap"><table class="wireless-table"><thead><tr><th>Band</th><th>Status</th><th>Channel</th><th>Width</th><th>Transmit power</th><th>Streams</th><th>RF profile</th></tr></thead><tbody>${view.radios.map((r) => `<tr data-ap-radio-band="${r.band}"><td>${r.band} GHz</td><td>${r.operational ? "Serving WLANs" : r.enabled ? "Ready" : "Disabled"}</td><td data-ap-channel="${r.band}">${r.channel}</td><td>${r.width} MHz</td><td data-ap-radio-power="${r.band}">${r.power} dBm</td><td data-ap-spatial-streams="${r.band}">${r.spatialStreams}</td><td>${escapeHTML(r.profileName ?? "Default radio profile")}</td></tr>`).join("")}</tbody></table></div></div><div><div class="section-label mb-2">${view.standalone ? "Local SSIDs" : "WLANs from controller"}</div><div class="wireless-table-wrap"><table class="wireless-table"><thead><tr><th>SSID / profile</th><th>Security</th><th>VLAN</th><th>Switching</th><th>Status</th></tr></thead><tbody>${view.wlans.map((w) => `<tr data-ap-wlan="${escapeHTML(w.name)}"><td>${escapeHTML(w.ssid || w.name)}<div class="text-[10px] text-slate-400">${escapeHTML(w.name)} \u2192 ${escapeHTML(w.policyName)}</div></td><td>${escapeHTML(securityLabel[w.security] ?? w.security)}</td><td>${w.vlan ?? "\u2014"}</td><td>${w.central === void 0 ? "\u2014" : w.central ? "Central" : view.standalone ? "Local bridge" : "FlexConnect local"}</td><td>${escapeHTML(w.reason)}</td></tr>`).join("") || '<tr><td colspan="5">No WLAN is mapped to this AP\u2019s policy tag.</td></tr>'}</tbody></table></div></div></div>`;
   }
+
+  // src/sla.ts
+  var SLAController = class {
+    ports = /* @__PURE__ */ new Set();
+    operations = /* @__PURE__ */ new Map();
+    engine;
+    constructor(engine) {
+      this.engine = engine;
+      engine.registerUDPService(1967, (d) => !!d.config.features.ipSlaResponder?.enabled, (d, p, source) => {
+        if (p?.application !== "sla-control" || !Number.isInteger(p.port) || p.port < 1 || p.port > 65535 || slaReservedPorts.has(p.port)) return { accepted: false };
+        this.listen(p.port);
+        (d.runtime.features.slaResponderWindows ??= {})[`${source}:${p.port}`] = engine.clock.now() + Math.min(6e5, Math.max(1e3, Number(p.duration) || 1e4));
+        return { accepted: true };
+      });
+    }
+    sync() {
+      let changed2 = false;
+      const wanted = /* @__PURE__ */ new Set();
+      for (const device of this.engine.lab.devices) {
+        for (const entry of device.config.features.ipSlaResponder?.ports ?? []) this.listen(entry.port);
+        for (const id2 of Object.keys(device.runtime.features.ipSla ?? {})) {
+          if (!device.config.features.ipSla?.[id2]) {
+            delete device.runtime.features.ipSla[id2];
+            changed2 = true;
+          }
+        }
+        if (!device.powered || iosBooting(device)) continue;
+        for (const [id2, schedule4] of Object.entries(device.config.features.ipSlaSchedules ?? {})) {
+          const probe = device.config.features.ipSla?.[id2];
+          if (!probe?.target) continue;
+          const key4 = `${device.id}|${id2}`, signature = JSON.stringify([probe, schedule4]), old = this.operations.get(key4);
+          wanted.add(key4);
+          if (old?.runtime === device.runtime && old.clock === this.engine.clock && old.signature === signature) continue;
+          if (old) this.stop(key4, id2, old);
+          const owner = `ip-sla-${device.id}-${id2}`, now = this.engine.clock.now();
+          const state4 = { status: "pending" };
+          const operation = { device, runtime: device.runtime, clock: this.engine.clock, signature, owner, state: state4 };
+          this.operations.set(key4, operation);
+          const previous = device.runtime.features.ipSla?.[id2];
+          if (previous) Object.assign(previous, { pending: false, success: false, rtt: void 0, returnCode: "Not started" });
+          (device.runtime.features.ipSlaScheduleState ??= {})[id2] = state4;
+          if (slaStart(schedule4) !== "pending") {
+            state4.startsAt = now + (slaStart(schedule4) === "after" ? (schedule4.after ?? 0) * 1e3 : 0);
+            const life = slaLife(schedule4);
+            if (life) state4.expiresAt = state4.startsAt + life * 1e3;
+            state4.nextRun = state4.startsAt;
+            const run = () => {
+              if (!this.current(key4, operation) || state4.expiresAt !== void 0 && operation.clock.now() >= state4.expiresAt) return;
+              state4.status = "active";
+              state4.nextRun = operation.clock.now() + (probe.frequency ?? 60) * 1e3;
+              this.run(id2, probe, operation, () => this.current(key4, operation) && state4.status === "active");
+            };
+            operation.clock.schedule(state4.startsAt - now, run, { owner, repeat: (probe.frequency ?? 60) * 1e3, label: `IP SLA ${id2}` });
+            if (state4.expiresAt !== void 0) operation.clock.schedule(state4.expiresAt - now, () => {
+              if (!this.current(key4, operation)) return;
+              state4.status = "expired";
+              delete state4.nextRun;
+              operation.clock.cancelOwner(owner);
+              this.cancelResult(id2, operation);
+              this.engine.recompute();
+              this.engine.notify();
+            }, { owner, label: `IP SLA ${id2} lifetime` });
+          }
+          changed2 = true;
+        }
+      }
+      for (const [key4, operation] of this.operations) if (!wanted.has(key4)) {
+        this.stop(key4, key4.slice(key4.lastIndexOf("|") + 1), operation);
+        changed2 = true;
+      }
+      return changed2;
+    }
+    current(key4, operation) {
+      return this.operations.get(key4) === operation && operation.device.runtime === operation.runtime && operation.device.powered && !iosBooting(operation.device) && operation.clock === this.engine.clock;
+    }
+    cancelResult(id2, operation) {
+      const result = operation.runtime.features.ipSla?.[id2];
+      if (result?.pending) Object.assign(result, { pending: false, success: false, rtt: void 0, returnCode: "Cancelled" });
+    }
+    stop(key4, id2, operation) {
+      operation.clock.cancelOwner(operation.owner);
+      this.cancelResult(id2, operation);
+      delete operation.runtime.features.ipSlaScheduleState?.[id2];
+      this.operations.delete(key4);
+    }
+    listen(port3) {
+      if (this.ports.has(port3)) return;
+      this.ports.add(port3);
+      this.engine.registerUDPService(port3, (d) => !!d.config.features.ipSlaResponder?.ports?.some((x) => x.port === port3) || Object.entries(d.runtime.features.slaResponderWindows ?? {}).some(([key4, expires]) => key4.endsWith(":" + port3) && expires > this.engine.clock.now()), (d, p, source) => {
+        const configured = d.config.features.ipSlaResponder?.ports?.some((x) => x.port === port3 && (!x.address || x.address === p?.target));
+        const temporary = d.runtime.features.slaResponderWindows?.[`${source}:${port3}`] > this.engine.clock.now();
+        if (p?.application !== "sla-echo" || !configured && !temporary) return { accepted: false };
+        (d.runtime.features.slaResponderCounters ??= {})[port3] = (d.runtime.features.slaResponderCounters?.[port3] ?? 0) + 1;
+        return { accepted: true, sequence: p.sequence };
+      });
+    }
+    run(id2, probe, operation, active3) {
+      const engine = this.engine, { device, runtime, owner, clock } = operation;
+      const previous = runtime.features.ipSla?.[id2];
+      if (previous?.pending || !probe.target) return;
+      const started = clock.now(), timeout = probe.timeout ?? 5e3;
+      const state4 = { lastRun: started, success: previous?.success ?? false, rtt: previous?.rtt, returnCode: previous?.returnCode ?? "Pending", pending: true, runs: (previous?.runs ?? 0) + 1, successes: previous?.successes ?? 0, failures: previous?.failures ?? 0 };
+      (runtime.features.ipSla ??= {})[id2] = state4;
+      let finished = false;
+      const finish = (times, sent, error = "Timeout") => {
+        if (finished || !active3() || runtime.features.ipSla?.[id2] !== state4) return;
+        finished = true;
+        const rtt = times.length ? times.reduce((a, b) => a + b, 0) / times.length : void 0;
+        Object.assign(state4, { pending: false, success: times.length > 0, rtt, packetsSent: sent, packetsReceived: times.length, returnCode: times.length ? rtt > (probe.threshold ?? 5e3) ? "Over threshold" : "OK" : error });
+        if (times.length) state4.successes++;
+        else state4.failures++;
+        if (probe.type === "udp-jitter") state4.jitter = times.length > 1 ? times.slice(1).reduce((sum, time2, i) => sum + Math.abs(time2 - times[i]), 0) / (times.length - 1) : 0;
+        engine.recompute();
+        engine.notify();
+      };
+      const watch2 = (result2, deadline, callback) => {
+        const poll2 = () => {
+          if (!active3() || finished) return;
+          if (result2.status !== "running" || clock.now() >= deadline) callback(result2);
+          else clock.schedule(Math.min(10, deadline - clock.now()), poll2, { owner, label: `IP SLA ${id2} response` });
+        };
+        poll2();
+      };
+      const source = engine.serviceSource(device, probe.target, { source: probe.source });
+      if (source === void 0) {
+        finish([], 0, "Source unavailable");
+        return;
+      }
+      if (probe.type === "http") {
+        const result2 = engine.httpRequest(device.id, probe.url, { source, timeout });
+        watch2(result2, started + timeout, (r) => finish(r.status === "success" ? [clock.now() - started] : [], 1, r.status === "failure" ? r.error : void 0));
+        return;
+      }
+      if (probe.type === "udp-jitter") {
+        const count = probe.numPackets ?? 10, interval2 = probe.interval ?? 20, times = [];
+        let complete2 = 0, sent = 0;
+        const train = () => {
+          for (let i = 0; i < count; i++) clock.schedule(i * interval2, () => {
+            if (finished || !active3()) return;
+            const time2 = clock.now();
+            sent++;
+            const result2 = engine.udpRequest(device.id, probe.target, probe.port, { application: "sla-echo", sequence: i, target: probe.target }, { source, timeout, sourcePort: probe.sourcePort });
+            watch2(result2, time2 + timeout, (r) => {
+              if (r.status === "success" && r.accepted && r.sequence === i) times.push(clock.now() - time2);
+              if (++complete2 === count) finish(times, sent);
+            });
+          }, { owner, label: `IP SLA ${id2} UDP probe` });
+        };
+        if (probe.control === false) train();
+        else {
+          const control = engine.udpRequest(device.id, probe.target, 1967, { application: "sla-control", port: probe.port, duration: timeout + count * interval2 + 1e3 }, { source, timeout });
+          watch2(control, started + timeout, (r) => {
+            if (r.status === "success" && r.accepted) train();
+            else finish([], 0, "Responder unavailable");
+          });
+        }
+        return;
+      }
+      const result = engine.ping(device.id, probe.target, { count: 1, source: source || void 0, timeout, size: probe.target.includes(":") ? 84 : 64 });
+      const poll = () => {
+        if (!active3() || finished) return;
+        if (result.status !== "running" || clock.now() >= started + timeout) finish(result.replies.filter((x) => !x.error).map((x) => x.time ?? 0), result.sent);
+        else clock.schedule(Math.min(10, started + timeout - clock.now()), poll, { owner, label: `IP SLA ${id2} echo result` });
+      };
+      poll();
+    }
+  };
 
   // src/phone.ts
   var PHONE_NETWORK_PORT = "Network";
@@ -40466,6 +40714,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     cryptoServices = new CryptoServices(this);
     ipv6Services = new IPv6Services(this);
     tcpChannels = new PersistentTCPChannels(this);
+    sla;
     httpAuthenticator;
     computing = false;
     revision = 0;
@@ -40481,6 +40730,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       installSSHFileService(this);
       installFTPServices(this);
       this.modelDriven = new ModelDrivenManagement(this, (deviceId, list, user, password) => this.httpAuthenticator?.(deviceId, list, user, password) ?? { accepted: false });
+      this.sla = new SLAController(this);
+      this.subscribe(() => {
+        if (this.sla.sync()) this.recompute();
+      });
     }
     subscribe(listener) {
       this.listeners.add(listener);
@@ -40696,13 +40949,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           }
           if (d.powered && d.config.defaultGateway && !d.config.ipRouting) d.runtime.routes.push({ network: "0.0.0.0", prefix: 0, nextHop: d.config.defaultGateway, interface: "", protocol: "static", ad: 1, metric: 0 });
         }
-        recomputeControlPlane(this);
-        let removedStatic = false;
-        for (const d of this.lab.devices) removedStatic = pruneInactiveStaticRoutes(d, (p) => this.interfaceUp(d.id, p)) || removedStatic;
-        if (removedStatic) {
-          for (const d of this.lab.devices) d.runtime.routes = d.runtime.routes.filter((r) => ["static", "connected", "local", "dhcp"].includes(r.protocol));
+        let removedStatic;
+        do {
           recomputeControlPlane(this);
-        }
+          removedStatic = false;
+          for (const d of this.lab.devices) removedStatic = pruneInactiveStaticRoutes(d, (p) => this.interfaceUp(d.id, p)) || removedStatic;
+          if (removedStatic) for (const d of this.lab.devices) d.runtime.routes = d.runtime.routes.filter((r) => ["static", "connected", "local", "dhcp"].includes(r.protocol));
+        } while (removedStatic);
         for (const device of this.lab.devices) selectInstalledRoutes(device);
         for (const device of this.lab.devices) {
           const now = this.clock.now(), old = device.runtime.features.routeSince ?? {}, next = {};
@@ -43186,6 +43439,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         d.runtime = emptyRuntime();
         d.runtime.features.bootTime = this.clock.now();
       }
+      for (const device of parsed.lab.devices) {
+        validateSLAConfiguration(device.config);
+        if (device.startupConfig) validateSLAConfiguration(device.startupConfig);
+      }
       const occupied = /* @__PURE__ */ new Set();
       for (const link of parsed.lab.links) {
         if (!link?.a || !link?.b || !Number.isFinite(link.delay) || !Number.isFinite(link.loss)) throw new Error("Invalid link");
@@ -44705,6 +44962,7 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
     if (![c.vlans, c.protocols, c.services, c.features].every(object2) || !Array.isArray(c.dnsServers) || !Array.isArray(c.staticRoutes) || typeof c.ipRouting !== "boolean" || typeof c.ipv6Routing !== "boolean")
       throw Error("A device configuration is incomplete.");
     validateSNMPConfiguration(c);
+    validateSLAConfiguration(c);
     if (c.services.dns?.resourceRecords !== void 0) {
       if (!Array.isArray(c.services.dns.resourceRecords) || c.services.dns.resourceRecords.length > 1e4) throw Error("Invalid DNS resource record table.");
       validateDNSRecords(dnsRecords(c.services.dns));

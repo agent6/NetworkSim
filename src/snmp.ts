@@ -1,6 +1,7 @@
 import {ownRecordValue} from './record-map.ts';
 import type {Simulator,ServiceResult,ServiceOptions} from './engine.ts';
 import type {Device} from './model.ts';
+import {platformSoftware} from './platform-identity.ts';
 import {interfaceSpeed} from './ethernet.ts';
 
 /** Logical SNMP PDUs traverse UDP. ASN.1/BER and USM cryptography are not emulated. */
@@ -33,7 +34,7 @@ export function synchronizeSNMPIndexes(d:Device):void{const c=d.config.features.
 export function snmpIfIndex(d:Device,name:string):number{return d.config.features.snmp?.ifindex==='persist'?d.config.features.snmp.interfaceIndexes?.[name]??Object.keys(d.config.interfaces).indexOf(name)+1:Object.keys(d.config.interfaces).indexOf(name)+1;}
 export function snmpMIB(engine:Simulator,device:Device):SNMPVariable[]{
  const config=device.config.features.snmp??{},rows:SNMPVariable[]=[],add=(oid:string,type:string,value:string|number)=>rows.push({oid,type,value});
- add('1.3.6.1.2.1.1.1.0','OctetString',`NetworkSim original ${device.kind} educational agent; IOS XE 17.12-style read-only networking subset`);
+ add('1.3.6.1.2.1.1.1.0','OctetString',`${platformSoftware(device.kind)}; virtual platform, read-only educational agent`);
  add('1.3.6.1.2.1.1.2.0','ObjectIdentifier','0.0'); // No assigned vendor enterprise OID; do not impersonate Cisco hardware.
  add('1.3.6.1.2.1.1.3.0','TimeTicks',Math.floor(Math.max(0,engine.clock.now()-(device.runtime.features.bootTime??0))/10)%4294967296);
  add('1.3.6.1.2.1.1.4.0','OctetString',config.contact??'');add('1.3.6.1.2.1.1.5.0','OctetString',device.config.hostname);add('1.3.6.1.2.1.1.6.0','OctetString',config.location??'');

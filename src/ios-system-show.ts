@@ -1,8 +1,9 @@
 import type { Device } from './model.ts';
 import { iosClock } from './ios-system.ts';
 import { fileSystemStats } from './filesystem.ts';
+import { NETSIM_VERSION, NETSIM_HARDWARE_REVISION, NETSIM_HARDWARE_VID, NETSIM_NVRAM_KIB, platformIdentity, platformImage, platformSoftware } from './platform-identity.ts';
 
-/** Cisco IOS formatted system output. Every value is derived from simulator state or an idle IOSv default. */
+/** IOS-style system output over real state and explicitly simulated NetSim hardware profiles. */
 const SWITCH_KINDS = ['switch', 'poeswitch', 'l3switch'];
 const hash = (text: string): number => { let h = 0x811c9dc5; for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h >>> 0; };
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -12,10 +13,9 @@ const isSwitch = (device: Device) => SWITCH_KINDS.includes(device.kind);
 const uptimeMs = (device: Device, now: number) => Math.max(0, now - Number(device.runtime.features.bootTime ?? 0));
 
 export function iosSerial(device: Device): string {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let serial = '9';
-  for (let i = 0; i < 10; i++) serial += alphabet[hash(`${device.id}:${i}`) % alphabet.length];
-  return serial;
+  let serial = 0xcbf29ce484222325n;
+  for (const character of device.id) serial = BigInt.asUintN(64, (serial ^ BigInt(character.codePointAt(0)!)) * 0x100000001b3n);
+  return 'NS' + serial.toString(36).toUpperCase().padStart(13, '0');
 }
 
 export function iosUptime(ms: number): string {
@@ -38,29 +38,33 @@ function interfaceCounts(device: Device): string[] {
 
 export function iosVersion(device: Device, now: number): string[] {
   const sw = isSwitch(device), register = device.configurationRegister, current = register?.current ?? (sw ? 0x101 : 0x2102);
-  const capacity = fileSystemStats(device).capacity;
+  const capacity = fileSystemStats(device).capacity, profile = platformIdentity(device.kind);
+  const reason = device.runtime.features.reloadReason ?? 'Power-on';
+  const radios = device.config.features.wireless?.radios?.length ?? 0;
   return [
-    sw ? 'Cisco IOS Software, vios_l2 Software (vios_l2-ADVENTERPRISEK9-M), Version 15.2(CML_NIGHTLY_20190423)FLO_DSGS7, EARLY DEPLOYMENT DEVELOPMENT BUILD, synced to  V152_6_0_81_E'
-      : 'Cisco IOS Software, IOSv Software (VIOS-ADVENTERPRISEK9-M), Version 15.9(3)M12, RELEASE SOFTWARE (fc1)',
-    'Technical Support: http://www.cisco.com/techsupport', '', '',
-    'ROM: Bootstrap program is IOSv', '',
+    platformSoftware(device.kind),
+    `NetSim ${profile.model} - ${profile.description}`,
+    'Virtual platform (simulated hardware)', '',
+    `ROM: NetSim Bootstrap, Version ${NETSIM_VERSION}`, '',
     `${device.config.hostname} uptime is ${iosUptime(uptimeMs(device, now))}`,
-    'System returned to ROM by reload',
-    `System image file is "flash0:/${sw ? 'vios_l2-adventerprisek9-m' : 'vios-adventerprisek9-m'}"`,
-    `Last reload reason: ${device.runtime.features.reloadReason ?? 'Unknown reason'}`, '', '',
-    sw ? 'cisco IOSv () processor (revision 1.0) with 657721K/62464K bytes of memory.' : 'Cisco IOSv (revision 1.0) with  with 460137K/62464K bytes of memory.',
+    `System restarted by ${reason}`,
+    `System image file is "${platformImage(device.kind)}"`,
+    `Last reload reason: ${reason}`, '',
+    `NetSim ${profile.model} virtual processor (revision ${NETSIM_HARDWARE_REVISION}) with ${profile.processorKiB}K/${profile.ioKiB}K bytes of memory.`,
     `Processor board ID ${iosSerial(device)}`,
+    `Model number: ${profile.model}`,
+    `Hardware revision: ${NETSIM_HARDWARE_REVISION}`,
     ...interfaceCounts(device),
-    'DRAM configuration is 72 bits wide with parity disabled.',
-    '256K bytes of non-volatile configuration memory.',
-    `${Math.floor(capacity / 1024)}K bytes of ATA System CompactFlash 0 (Read/Write)`, '', '', '',
+    ...(radios ? [`${plural(radios, 'IEEE 802.11 radio')}`] : []),
+    `${NETSIM_NVRAM_KIB}K bytes of non-volatile configuration memory (simulated).`,
+    `${capacity} bytes of flash storage (Read/Write, simulated).`, '',
     `Configuration register is 0x${current.toString(16)}${register && register.next !== register.current ? ` (will be 0x${register.next.toString(16)} at next reload)` : ''}`,
   ];
 }
 
 export function iosInventory(device: Device): string[] {
-  const serial = iosSerial(device), name = isSwitch(device) ? 'vios_l2' : 'IOSv';
-  return [`NAME: "${name}", DESCR: "${name} chassis, Hw Serial#: ${serial}, Hw Revision: 1.0"`, `PID: ${name.padEnd(18)}, VID: 1.0, SN: ${serial}`, ''];
+  const serial = iosSerial(device), profile = platformIdentity(device.kind);
+  return [`NAME: "Chassis", DESCR: "NetSim ${profile.model} ${profile.description} (virtual chassis)"`, `PID: ${profile.model.padEnd(18)}, VID: ${NETSIM_HARDWARE_VID}, SN: ${serial}`, ''];
 }
 
 interface ProcessRow { pid: number; name: string; tty: number }
@@ -120,12 +124,13 @@ export function iosProcesses(device: Device, now: number, vty: Array<{ lineNumbe
 
 function iosMemoryPools(device: Device) {
   const configBytes = JSON.stringify(device.config).length, state = device.runtime.routes.length + device.runtime.neighbors.length + Object.keys(device.runtime.arp).length;
-  return { processor: { head: 'F6E0E2A0', total: 370393444, used: 135061928 + configBytes * 4 + state * 1024 }, io: { head: 'E400000', total: 63963136, used: 20330608 + Object.keys(device.config.interfaces).length * 65536 } };
+  const profile = platformIdentity(device.kind), processor = profile.processorKiB * 1024, io = profile.ioKiB * 1024;
+  return { processor: { head: 'F6E0E2A0', total: processor, used: Math.min(processor, 135061928 + configBytes * 4 + state * 1024) }, io: { head: 'E400000', total: io, used: Math.min(io, 20330608 + Object.keys(device.config.interfaces).length * 65536) } };
 }
 
 export function iosMemoryStatistics(device: Device): string[] {
   const pools = iosMemoryPools(device), row = (name: string, pool: { head: string; total: number; used: number }) => {
-    const free = pool.total - pool.used, lowest = free - 1694288, largest = Math.floor(lowest * 0.987);
+    const free = pool.total - pool.used, lowest = Math.max(0, free - 1694288), largest = Math.floor(lowest * 0.987);
     return name.padStart(9) + pool.head.padStart(11) + [pool.total, pool.used, free, lowest, largest].map(n => String(n).padStart(12)).join('');
   };
   return ['                Head    Total(b)     Used(b)     Free(b)   Lowest(b)  Largest(b)', row('Processor', pools.processor), row('I/O', pools.io)];

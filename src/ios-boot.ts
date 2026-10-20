@@ -1,4 +1,5 @@
 import type {Device} from './model.ts';
+import {NETSIM_VERSION,platformIdentity,platformImage} from './platform-identity.ts';
 
 export interface IOSBootState {
   phase:'restarting'|'bootstrap'|'loading'|'initializing'|'configuration'|'ready';
@@ -15,8 +16,8 @@ export function iosBootStages(device:Device):Array<{after:number;phase:IOSBootSt
   const type=device.kind==='router'?'Router':device.kind==='wlc'?'WLC':device.kind==='ap'?'Access point':'Switch';
   const ignored=!!((device.configurationRegister?.current??0x2102)&0x40);
   return [
-    {after:600,phase:'bootstrap',lines:['',`${type} ${device.kind==='router'?'System Bootstrap':'Boot Loader'}, NetworkSim`,'Initializing platform hardware...']},
-    {after:1800,phase:'loading',lines:['Loading "flash:packages.conf"...','Image loading: ####################']},
+    {after:600,phase:'bootstrap',lines:['',`${type} ${device.kind==='router'?'System Bootstrap':'Boot Loader'}, NetSim ${platformIdentity(device.kind).model}, Version ${NETSIM_VERSION}`,'Initializing virtual platform hardware...']},
+    {after:1800,phase:'loading',lines:[`Loading "${platformImage(device.kind)}"...`,'Image loading: ####################']},
     {after:3200,phase:'initializing',lines:['Image load complete.','Initializing interfaces and system services...']},
     {after:4800,phase:'configuration',lines:[ignored?`Startup configuration ignored (configuration register 0x${device.configurationRegister!.current.toString(16)}).`:device.startupConfig?'Loading configuration from nvram:startup-config...':'No startup configuration found. Loading factory defaults.']},
     {after:IOS_BOOT_DURATION,phase:'ready',lines:['','%SYS-5-RESTART: System restarted',`${device.config.hostname} con0 is now available`,'','Press RETURN to get started!']},

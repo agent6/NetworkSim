@@ -65,9 +65,9 @@ test('show arp includes own addresses with a dash age and dynamic entries in min
 test('CDP displays follow IOS 15 formats', () => {
   const neighbors = show('show cdp neighbors');
   has(neighbors, 'Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge', 'Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID', 'Total cdp entries displayed : 2');
-  assert.ok(neighbors.some(line => /^R2\s+Gig 0\/0\s+\d+\s+R B\s+IOSv\s+Gig 0\/0$/.test(line)));
+  assert.ok(neighbors.some(line => /^R2\s+Gig 0\/0\s+\d+\s+R B\s+NS-R4\s+Gig 0\/0$/.test(line)));
   const detail = show('show cdp neighbors detail');
-  has(detail, '-------------------------', 'Device ID: R2', 'Platform: Cisco IOSv,  Capabilities: Router Source-Route-Bridge ', 'Interface: GigabitEthernet0/0,  Port ID (outgoing port): GigabitEthernet0/0', 'advertisement version: 2');
+  has(detail, '-------------------------', 'Device ID: R2', 'Platform: NetSim NS-R4,  Capabilities: Router Source-Route-Bridge ', 'Interface: GigabitEthernet0/0,  Port ID (outgoing port): GigabitEthernet0/0', 'advertisement version: 2');
   assert.deepEqual(show('show cdp'), ['Global CDP information:', '        Sending CDP packets every 60 seconds', '        Sending a holdtime value of 180 seconds', '        Sending CDPv2 advertisements is  enabled']);
   const iface = show('show cdp interface g0/0');
   assert.equal(iface[0], 'GigabitEthernet0/0 is up, line protocol is up');

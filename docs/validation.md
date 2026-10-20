@@ -1,5 +1,33 @@
 # Validation record
 
+## NetSim version and inventory identities (2026-10-20)
+
+The integrated `npm run check` passed TypeScript checking, **1,072 tests** and the standalone build. The preceding focused run passed **113 tests** across platform identity, system/configuration/interface output, boot, discovery, SNMP and CLI behavior. Eleven dedicated identity regressions cover all six network platforms, consistent software/model/serial/revision fields, actual port/radio counts and flash capacity, shared memory totals, read-only output, help/invalid arguments, 1,000 distinct device IDs, rename/reload/import stability, cached received discovery data and legacy/new configuration-header replay.
+
+The rebuilt HTML passed **ten identity checks and eight existing IOS-console checks in each of Chrome and Edge**, directly through `file://` with networking disabled, zero runtime exceptions and zero external requests. The identity checks used the public YAML import, device dialogs and real console keyboard events. All six network kinds reported their correct distinct NetSim model, including an AP powered through the imported PoE switch. Received CDP/LLDP advertised the full remote model/software, contextual help and completion remained usable, and a real timed reload retained the saved hostname and serial while loading the same embedded image reported by `show version`.
+
+The delivery and `dist/index.html` copies have identical SHA-256 hashes:
+
+```text
+bc7164966ae927e3554692aebbb06d421d71b95f10c7d909387fa175b8a76c4e
+```
+
+This checkpoint supersedes the earlier IOSv/IOSvL2 identity policy, not the IOS-style command syntax/layout goal. NetSim RAM/NVRAM are fictional virtual-platform capacities; CPU and memory-usage figures remain representative, not host-resource measurements. Inventory lists only the modeled fixed chassis, serials are not manufacturer-registered identifiers, and embedded profiles do not execute Cisco firmware or stored boot-image selections. The corrected field meanings, six models and primary Cisco documentation are recorded in the [platform identity policy](ios-output-reference.md#netsim-platform-identities).
+
+## IP SLA and floating-static-route edge cases (2026-10-20)
+
+The integrated `npm run check` passed TypeScript checking, **1,061 tests** and the offline build. The final import-validation, responder-port and SLA-help refinements then passed TypeScript checking and **90 focused tests** across SLA/failover, management, persistence/YAML, IOS platform compatibility and help, followed by another offline build. Seventeen dedicated SLA/failover regressions cover independent timer/lifetime ownership, pending cancellation and restart, deletion and stale replies, operation editing, scheduling defaults and delayed starts, source validation, IPv6, reload without an open console, state versus reachability, recursive dependency withdrawal and cycles, explicit egress, AD 255, OSPF competition, delivered backup traffic, blackholes and debounced recovery. Malformed running/startup/imported SLA records reject transactionally; legacy forever schedules and tracks without an explicit aspect remain supported.
+
+The final delivered HTML passed **eight SLA checks and eight existing IOS-console checks in each of Chrome and Edge**, directly through `file://` with networking disabled, zero runtime exceptions and zero external requests. The SLA checks imported a four-router lab through the public file control and used real console keyboard events. An upstream ACL blackhole left the edge carrier Up while SLA timed out; after the configured track delay the AD 200 default delivered traffic. Removing the blackhole recovered the AD 1 primary. Checks also exercised OverThreshold state/reachability differences, operation prompts, `?` help and Tab completion, delayed start and finite expiry, unrelated EEM changes, unavailable sources, scheduled-edit rejection and deletion with the configured track delay. Browser assertions wait for the observed configured transition rather than assuming a fixed ping command advances enough simulation time.
+
+The delivery and `dist/index.html` copies have identical SHA-256 hashes:
+
+```text
+9d813d186d7696c166aca3cd219e89ae4ee40bd09e566d71b8e92d7995de56a4
+```
+
+These fixes follow Cisco documentation, not live IOS-image certification. Source-interface selection does not pin egress, and an appropriate primary-only monitoring route is still required to avoid false recovery through a backup. Absolute/random/recurring/reaction scheduling, ageout, the full probe catalog and synchronized one-way jitter/MOS remain outside the supported subset. See the [configuration and boundaries](protocol-design.md#ip-sla-and-floating-static-routing).
+
 ## New lab save-state correction (2026-10-20)
 
 TypeScript checking and **27 focused persistence/YAML tests** passed. New regressions distinguish an explicit named save from workspace recovery; verify first-save identity, in-place updates, meaningful topology/configuration/startup/note edits, undoing to saved content, ignored runtime/view changes, generated DHCP/SLAAC addressing, actual DHCP acquisition and renewal, save/load recovery, independent Save as identities, duplicate names and failed writes. The offline build produces matching `index.html` and `dist/index.html` copies.

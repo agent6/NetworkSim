@@ -67,9 +67,36 @@ The distinction below is part of the product contract. **Traffic** means a messa
 | UDLD | Actual physical link-local echo advertisements before STP forwarding, neighbor expiration, normal unknown state, aggressive eight one-second retries, explicit one-way echo detection and err-disable. Optional link lossAB/lossBA produces real directional faults. | Simplified discovery/recovery state model, without every platform-specific UDLD option. |
 | PTP | Computed BMCA ordering, domain isolation, grandmaster changes and ordinary/boundary/transparent roles. Runtime explicitly reports synchronized=false. | Election only: no Sync/Follow-Up/Delay messages, servo, oscillator drift, clock offset or precision claim. |
 | Protocol authentication / keychains | Computed matching key IDs and key strings, active send/accept lifetime windows and scheduled rollover. OSPF simple keys and message-digest key sets; EIGRP and RIP interface keychains. Local keychain names may differ. | No wire digest generation or cryptographic security guarantee. Sender selection uses the lowest valid key ID in this educational model. Lifetimes use deterministic device clock epoch plus simulated elapsed time and configured/NTP offset. |
-| Tracking / IP SLA | Interface/route/BFD state, actual scheduled ICMP echo, HTTP GET and UDP-jitter control/echo trains change gateway priority/weight. Boolean and weighted/percentage lists have real hysteresis and delayed transitions. The management/SLA modules own packet probes. | Cycle/missing-dependency errors and delayed transition cancellation are explicit. Jitter is consecutive RTT variation, not a synchronized one-way statistic. HTTPS and the full SLA catalog remain absent. |
+| Tracking / IP SLA | Interface/route/BFD state, independently scheduled ICMP echo (IPv4/IPv6), HTTP GET and UDP-jitter control/echo trains change static-route eligibility and gateway priority/weight. Boolean and weighted/percentage lists have real hysteresis and delayed transitions. The engine owns SLA probes even when no console is open. | State requires OK; reachability also accepts OverThreshold. Cancellation/deletion, runtime reset and boot invalidate stale completions. Cycle/missing-dependency errors and delayed transition cancellation are explicit. Jitter is consecutive RTT variation, not a synchronized one-way statistic. HTTPS and the full SLA catalog remain absent. |
 
 Configuration changes initiate recomputation, but OSPF received LSDB state, EIGRP Hello/DUAL state, RIP update timers and BGP persistent sessions determine when the corresponding routes become usable. BFD supplies an additional actual packet-based failure signal. EIGRP route vectors now require delivered per-neighbor UPDATEs; its discovery/auth eligibility and selected election behaviors retain computed adapters. These differences are visible capability boundaries, not claims of complete router protocol FSMs.
+
+### IP SLA and floating static routing
+
+Floating statics are ordinary static routes with a higher administrative distance for the same prefix. Longest-prefix matching still precedes distance comparisons; AD 255 is not installed. Route eligibility is resolved against installed recursive winners, not suppressed backup candidates. Removing an invalid dependency reselects candidates and recomputes the control plane until stable, so the RIB, CEF and delivered traffic agree. A configured `permanent` route retains its intentional RIB behavior.
+
+For an edge router with primary next hop `10.0.0.2` on `GigabitEthernet0/0` and backup next hop `10.1.0.2` on `GigabitEthernet0/1`, a bounded example is:
+
+```text
+ip route 192.0.2.1 255.255.255.255 GigabitEthernet0/0 10.0.0.2
+ip sla 1
+ icmp-echo 192.0.2.1 source-interface GigabitEthernet0/0
+ frequency 3
+ timeout 500
+exit
+ip sla schedule 1 life forever start-time now
+track 1 ip sla 1 reachability
+ delay down 1 up 2
+exit
+ip route 0.0.0.0 0.0.0.0 GigabitEthernet0/0 10.0.0.2 track 1
+ip route 0.0.0.0 0.0.0.0 GigabitEthernet0/1 10.1.0.2 200
+```
+
+Address the interfaces, enable them and configure a real return path from the monitoring target before using this example. Source-interface selects an operational source address; it does not force egress. The explicit monitoring /32 prevents the backup default from falsely healing the primary. An untracked floating route detects loss of route eligibility, not every upstream outage. Failover/recovery time depends on probe phase, timeout and track delays.
+
+An omitted schedule start remains pending; an omitted lifetime is 3600 seconds. Supported starts are `now`, `pending` and `after HH:MM:SS`; absolute, random, recurring and reaction-trigger scheduling and ageout remain unsupported. Each operation owns its clock timers, generation and lifetime independently of EEM/archive and other SLA operations. Unscheduling cancels an in-flight result; deleting removes its runtime result. Expired or unscheduled monitoring is Down while completed statistics remain inspectable. A new schedule requires removing the old schedule first; changing an operation type requires deleting and recreating the operation. Schedules restart from their configured start on import/reload, not from a serialized live timer.
+
+`track ... state` is Up only for OK; `reachability` is also Up for OverThreshold. Older saved tracks with no aspect preserve reachability behavior, and old `life: 0` schedules remain forever. Portable/running/startup configurations validate SLA records before replacement. `show ip sla` and `show track` expose measured return codes, RTT, counters, schedule state, delays and actual configured clients; they do not fabricate one-way latency, MOS or history. See Cisco's [ICMP operation reference](https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipsla/command/sla-cr-book/sla_i1.html), [object tracking guide](https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipapp/configuration/15-mt/iap-15-mt-book/iap-eot.html), and [recursive floating-route guidance](https://www.cisco.com/c/en/us/support/docs/dial-access/floating-static-route/118263-technote-nexthop-00.html).
 
 Configured IPv6 addresses remain visible during duplicate-address detection. Tentative or duplicate addresses are excluded from control-plane source endpoints and originated prefixes as well as data-plane local/connected routes. A unique replacement becomes eligible only after DAD and, for a remote OSPF observer, delivery of its replacement LSA.
 

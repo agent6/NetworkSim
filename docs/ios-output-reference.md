@@ -1,8 +1,31 @@
 # IOS-style operational output
 
-`src/ios-show.ts` is an original, read-only presentation layer over the simulator's configuration, RIB, received protocol state, counters and forwarding resolver. It does not execute Cisco IOS. To match what students see in a lab, it uses the identity strings of Cisco's virtual lab images: IOSv 15.9(3)M for routers and IOSvL2 15.2 for switches (`show version`, `show inventory` and the `show running-config` header). Cisco copyright and licensing text is not reproduced. IOS releases and platforms differ; the linked IOS/IOS XE documentation supplies field meaning and representative layout, rather than a promise of byte-identical output for every image.
+`src/ios-show.ts` is an original, read-only presentation layer over the simulator's configuration, RIB, received protocol state, counters and forwarding resolver. It does not execute Cisco IOS. Command syntax, help and table layouts follow IOS conventions, while platform identification uses original NetSim models and NetSim OS software. Cisco copyright and licensing text is not reproduced. IOS releases and platforms differ; the linked IOS/IOS XE documentation supplies field meaning and representative layout, rather than a promise of byte-identical output for every image.
 
 `formatIOSShow(engine, deviceId, topic, args)` takes a topic without `show`, returns lines, and returns `undefined` for topics owned by the caller. The CLI dispatches the longest recognized topic after authorization. Invalid arguments are rejected instead of silently selecting a different view. The formatter never sends packets, advances time, changes configuration or recomputes state.
+
+## NetSim platform identities
+
+`src/platform-identity.ts` is the shared model/software source for version, inventory, boot, configuration headers, received CDP/LLDP advertisements and SNMP system descriptions. NetSim OS uses the application version from `package.json`, not a copied Cisco release or an independently maintained firmware string.
+
+| Device | Product ID / model | Default physical Ethernet ports | Simulated RAM |
+| --- | --- | --- | --- |
+| Router | `NS-R4` | 4 Gigabit | 512 MiB |
+| Layer 2 switch | `NS-S24-2G` | 24 Gigabit access + 2 Gigabit uplinks | 512 MiB |
+| PoE switch | `NS-S24P-2G` | 24 Gigabit access + 2 Gigabit uplinks | 512 MiB |
+| Multilayer switch | `NS-L3S24-2G` | 24 Gigabit access + 2 Gigabit uplinks | 1 GiB |
+| Wireless controller | `NS-WLC1` | 1 Gigabit | 2 GiB |
+| Dual-band access point | `NS-AP2` | 1 Gigabit, plus 2 modeled radios | 256 MiB |
+
+`show version` reports the NetSim manufacturer/model, software and bootstrap versions, embedded profile image, actual simulated hostname/uptime/restart reason, board serial, hardware revision, configured interface counts, processor/I/O memory split, flash capacity and current/next configuration register. Physical Ethernet counts exclude subinterfaces; SVIs remain separately identified as virtual Ethernet. The processor and I/O totals also back the memory commands. RAM and the 256 KiB NVRAM profile are fictional teaching specifications, not host-resource measurements or a new configuration-size enforcement limit. Flash reports the exact byte capacity used by the modeled filesystem, including a configured override.
+
+`show inventory` uses the IOS-style `NAME`, `DESCR`, `PID`, `VID` and `SN` fields. PID is the product/model, VID `V01` is hardware revision 1.0 (not the software version), and the `NS`-prefixed serial is derived from the stable device ID. It agrees with the version command's processor board ID and survives rename, save, reload and portable lab import. These are simulated identifiers, not globally registered manufacturer serial numbers. Inventory lists the modeled fixed chassis only: it does not invent installed SFPs, modular power supplies, fans, line cards or stack members.
+
+Boot uses the same `embedded:netsim-<kind>-<version>` profile shown by `show version`. This is embedded simulator code, not a nonexistent `flash:packages.conf` or downloadable Cisco image. Writable flash remains for user-created files; stored `boot system` choices still do not execute firmware. Existing labs retain their configurations, and both older two-part IOS-style configuration version headers and the new NetSim version headers remain importable. Neighbor views use cached received model/software advertisements rather than reading the remote device's current configuration. SNMP retains `0.0` as its unassigned vendor object identifier instead of appropriating Cisco's enterprise OID.
+
+Before this correction, the WLC reported the router IOSv identity, all three switch kinds shared `vios_l2`, version and discovery showed different Cisco release strings, boot loaded `packages.conf` while version claimed another image, and the serial generator collided for many device IDs. The dedicated identity regressions cover those inconsistencies and read-only behavior.
+
+Primary field references: Cisco's [show version definition](https://www.cisco.com/E-Learning/bulk/public/tac/cim/cib/using_cisco_ios_software/cmdrefs/show_version.htm) and [show inventory / PID, VID and SN definitions](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/command_reference/b_1712_9300_cr/interface_and_hardware_commands.html). These establish field meanings; the NetSim specifications above are deliberately original.
 
 ## Evidence and implemented views
 
@@ -28,7 +51,7 @@ The prior project's source was used to identify command behavior, never imported
 
 ## Deliberate boundaries and remaining display scope
 
-The software identity follows the IOSv/IOSvL2 policy above. Serial numbers and processor board IDs are stable per-device placeholders. CPU, memory and unmeasured hardware/queue/timing fields use representative idle values, not measurements. Matching an IOS display does not make the simulator Cisco firmware or prove protocol equivalence.
+The software and hardware identity follows the NetSim policy above. Serial numbers and processor board IDs are stable per-device identifiers. Memory totals use the documented virtual profiles; CPU, memory usage and unmeasured hardware/queue/timing fields remain representative display values, not host measurements. Matching an IOS display does not make the simulator Cisco firmware or prove protocol equivalence.
 
 * Interface, route, discovery, VLAN, STP, EtherChannel, ACL, DHCP and NAT views use local configuration and runtime state. Link and route timestamps and NAT hit/miss/expiry counters are tracked. Some hardware error counters remain idle placeholders.
 * EIGRP topology includes locally originated entries derived from the same distance calculation used by DUAL, learned successors and feasible successors. Neighbor uptime, hold deadlines, message sequence and retry state are tracked; SRTT/RTO and some queue/pacing fields remain representative values. `show eigrp plugins` describes simulator capabilities rather than inventing Cisco component versions.
@@ -61,7 +84,7 @@ Boundaries remain: the best-path model does not implement every IOS tie-break (i
 | Views | Measured fields and boundaries | Primary Cisco reference |
 |---|---|---|
 | BFD | Delivered Up/Init/Down state, actual configured and negotiated intervals, received deadline. Untracked discriminators and lifetime counters stay unknown. | [IOS BFD verification](https://www.cisco.com/en/US/docs/ios/12_4t/ip_route/configuration/guide/t_bfd.html) |
-| SLA / track | Probe result, actual success/failure totals, RTT, jitter's measured round-trip variation, schedule, delayed/boolean/threshold tracking state. No fabricated one-way delay, MOS or history buckets. | [IOS SLA show reference](https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipsla/command/sla-cr-book/sla_s1.html) |
+| SLA / track | Probe result, actual success/failure totals, RTT, jitter's measured round-trip variation, pending/active/expired schedule state and TTL, distinct SLA state/reachability, delayed/boolean/threshold state, transition count and static/FHRP/list clients. Cancelled results are explicit. No fabricated one-way delay, MOS or history buckets. | [IOS SLA show reference](https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipsla/command/sla-cr-book/sla_s1.html) |
 | NHRP / DMVPN | Received cache/NBMA mappings, registration acknowledgments, expiration and static/dynamic distinction. Creation age and message totals are unknown. DMVPN mapping state does not claim IPsec establishment. | [NHRP operational fields](https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-addressing/ip-addressing/m_config-nhrp-0.html) |
 | PIM / IGMP / mroute | Received IGMP membership and expiry, computed PIM DR/neighbor view, actual tree interfaces and RPF lookup. PIM Hello aging remains explicitly unmodeled. | [Multicast verification fields](https://www.cisco.com/c/en/us/support/docs/ip/ip-multicast/13726-57.html) |
 | Crypto | Actual logical IKE state, IPsec SPIs, modeled encapsulation/decapsulation counters, expiration, configured transforms. No claim of real encryption, digest execution or cryptographic protection. | [IOS IPsec verification](https://www.cisco.com/c/en/us/support/docs/routers/1700-series-modular-access-routers/71462-rtr-l2l-ipsec-split.html) |

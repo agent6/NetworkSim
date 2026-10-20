@@ -254,6 +254,9 @@ const MODES: Record<string, Record<string, string>> = {
     exit: 'Exit from VRF configuration mode' },
   'time-range': { absolute: 'absolute time and date', periodic: 'periodic time and date', exit: 'Exit from time-range configuration mode' },
   track: { delay: 'Tracking delay', exit: 'Exit from tracking configuration mode' },
+  sla: { 'icmp-echo': 'ICMP Echo Operation', http: 'HTTP Operation', 'udp-jitter': 'UDP Jitter Operation',
+    frequency: 'Frequency of an operation', timeout: 'Timeout of an operation', threshold: 'Operation threshold in milliseconds',
+    exit: 'Exit from IP SLA configuration mode' },
   mst: { instance: 'Map vlans to an MST instance', name: 'Set configuration name', revision: 'Set configuration revision number', show: 'Display region configurations',
     abort: 'Exit region configuration mode, aborting changes', exit: 'Exit region configuration mode, applying changes' },
 };
@@ -384,7 +387,7 @@ const MODE_HEADERS: Record<string, string> = {
   line: 'Line configuration commands:', vlan: 'VLAN configuration commands:', pool: 'DHCP pool configuration commands:', 'route-map': 'Route Map configuration commands:',
   'class-map': 'QoS class-map configuration commands:', 'policy-map': 'QoS policy-map configuration commands:', 'policy-class': 'QoS policy-map class configuration commands:',
   'key-chain': 'Key-chain configuration commands:', key: 'Key-chain key configuration commands:', vrf: 'VPN Routing/Forwarding instance configuration commands:',
-  'time-range': 'Time range configuration commands:', track: 'Tracking instance configuration commands:', mst: 'MST configuration mode commands:',
+  'time-range': 'Time range configuration commands:', track: 'Tracking instance configuration commands:', sla: 'IP SLAs entry configuration commands:', mst: 'MST configuration mode commands:',
 };
 
 /** The heading IOS prints before a top-level or first-level subcommand list. */

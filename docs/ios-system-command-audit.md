@@ -32,7 +32,7 @@ These are focused static analyses, not exhaustive runtime proof. The separate ex
 
 ## Explicit simulation boundaries
 
-The CLI does not run a Cisco IOS image. `show version`, `show inventory` and the running-config header use the IOSv 15.9(3)M (router) and IOSvL2 15.2 (switch) identity strings so lab output looks like Cisco's virtual images. Uptime is the device's simulated uptime. Serial numbers are stable per-device placeholders, and Cisco copyright and licensing text is omitted. IOS releases/platforms differ, so this is a documented educational CLI profile, not a claim of exact equivalence to every IOS image.
+The CLI does not run a Cisco IOS image. `show version` and `show inventory` use [distinct NetSim platform identities](ios-output-reference.md#netsim-platform-identities), and the running-config header, boot transcript, received discovery software and SNMP description use the same application software version. Uptime and reload reasons come from device runtime; serials are stable per-device simulated identifiers. Hardware capacities are documented virtual specifications rather than measurements of the host. Cisco copyright and licensing text is omitted. IOS syntax/layout compatibility is retained, not a claim of Cisco firmware or exact equivalence to every IOS image.
 
 SSH and HTTPS use simulated TCP services, without SSH/TLS cryptography. NTP authentication checks a deterministic identity tag rather than wire-compatible MD5. BGP transport authentication follows the same logical compatibility approach. NetFlow version is modeled message metadata, not a binary wire encoder. TCP uses a bounded 1,024-byte maximum modeled segment, further reduced by configured transit MSS.
 

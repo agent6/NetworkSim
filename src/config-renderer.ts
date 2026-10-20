@@ -1,4 +1,6 @@
 import {renderFTPClient} from './ios-ftp.ts';
+import {slaLife,slaStartText,type SLAOperation,type SLASchedule} from './sla-config.ts';
+import {isIPv4,isIPv6} from './ip.ts';
 import {endpointGlobalLines,endpointInterfaceLines} from './ios-endpoint.ts';
 import { speedIsAuto } from './ethernet.ts';
 import {renderWred} from './qos-congestion.ts';
@@ -11,6 +13,7 @@ import { switchingCompatibilityLines, switchingInterfaceLines } from './ios-swit
 import { encodeType7 } from './credentials.ts';
 import { routingCompatibilityLines } from './ios-routing-compat.ts';
 import type { Device, DeviceConfig, InterfaceConfig, StaticRoute } from './model.ts';
+import { NETSIM_VERSION } from './platform-identity.ts';
 
 export function prefixMask(prefix: number): string {
   const n = prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0;
@@ -211,7 +214,7 @@ function renderLineBlocks(c: DeviceConfig, kind: string): string[] {
   return out;
 }
 
-const RENDERED_DEFAULTS = /^(version \d+\.\d+|boot-start-marker|boot-end-marker|(no )?mmi .*|ip forward-protocol nd|(no )?ipv6 cef|multilink bundle-name authenticated|no scheduler allocate|vlan internal allocation policy ascending|spanning-tree extend system-id)$/;
+const RENDERED_DEFAULTS = /^(version \d+\.\d+(?:\.\d+)?|boot-start-marker|boot-end-marker|(no )?mmi .*|ip forward-protocol nd|(no )?ipv6 cef|multilink bundle-name authenticated|no scheduler allocate|vlan internal allocation policy ascending|spanning-tree extend system-id)$/;
 
 /** True when a rendered line only restates an IOS default the simulator already holds, so config replay can skip it. */
 export function isRenderedDefaultLine(device: Device, line: string, parentHead?: string): boolean {
@@ -259,7 +262,7 @@ export function isRenderedDefaultBlock(device: Device, head: string, children: s
 export function renderConfig(device: Device, config: DeviceConfig = device.config): string[] {
   const c = config, router = device.kind === 'router';
   const platformGlobal = renderPlatformGlobal(c), timestampOrder = (type: string) => type === 'debug' ? 0 : 1;
-  const lines = ['!', `version ${router ? '15.9' : '15.2'}`];
+  const lines = ['!', `version ${NETSIM_VERSION}`];
   for(const [type,timestamp]of Object.entries<any>(c.features.timestamps||{}).sort((x,y)=>timestampOrder(x[0])-timestampOrder(y[0])))lines.push(`service timestamps ${type} ${timestamp.mode}${timestamp.msec?' msec':''}${timestamp.localtime?' localtime':''}${timestamp.showTimezone?' show-timezone':''}${timestamp.year?' year':''}`);
   lines.push(c.features.passwordEncryption ? 'service password-encryption' : 'no service password-encryption');
   if(c.features.sequenceNumbers)lines.push('service sequence-numbers');
@@ -486,14 +489,14 @@ export function renderConfig(device: Device, config: DeviceConfig = device.confi
   for(const [name,entries]of Object.entries<any[]>(c.features.communityLists||{}))for(const e of entries)lines.push(`ip community-list ${/^\d+$/.test(name)?'':(e.type??'standard')+' '}${name} ${e.action} ${e.pattern??e.communities.map((v:string)=>displayCommunity(v,!!c.features.bgpCommunityNewFormat)).join(' ')}`);
   for(const [name,entries] of Object.entries<any[]>(c.features.prefixLists||{}))for(const e of entries)lines.push(`${e.network.includes(':')?'ipv6':'ip'} prefix-list ${name} seq ${e.sequence} ${e.action} ${e.network}/${e.prefix}${e.ge!==undefined?` ge ${e.ge}`:''}${e.le!==undefined?` le ${e.le}`:''}`);
   for(const r of Object.values<any>(c.features.routeMaps||{})){lines.push(`route-map ${r.name} ${r.action} ${r.sequence}`,...r.match.map((x:string)=>' match '+x),...(r.continue===undefined?[]:[' continue'+(r.continue===null?'':' '+r.continue)]),...r.set.map((x:string)=>' set '+(x.startsWith('community ')?x.split(' ').map((v:string,i:number)=>i?displayCommunity(v,!!c.features.bgpCommunityNewFormat):v).join(' '):x)),'!');}
-  for(const [id,track] of Object.entries<any>(c.features.tracks||{})){lines.push(track.type==='list'?`track ${id} list ${track.thresholdType?'threshold '+track.thresholdType:'boolean '+(track.operator||'and')}`:track.type==='sla'?`track ${id} ip sla ${track.sla} reachability`:track.type==='bfd'?`track ${id} bfd ${track.interface}${track.peer?` ${track.peer}`:''}`:track.type==='interface'?`track ${id} interface ${track.interface} line-protocol`:`track ${id} ip route ${track.network} ${prefixMask(track.prefix)} reachability`);for(const object of track.objects||[])lines.push(` object ${object.id}${object.not?' not':''}${object.weight!==undefined?' weight '+object.weight:''}`);if(track.thresholds)lines.push(' threshold '+track.thresholdType+(track.thresholds.up!==undefined?' up '+track.thresholds.up:'')+(track.thresholds.down!==undefined?' down '+track.thresholds.down:''));if(track.delayUp!==undefined||track.delayDown!==undefined)lines.push(' delay'+(track.delayUp!==undefined?` up ${track.delayUp}`:'')+(track.delayDown!==undefined?` down ${track.delayDown}`:''));if(track.description)lines.push(` description ${track.description}`);lines.push('!');}
+  for(const [id,track] of Object.entries<any>(c.features.tracks||{})){lines.push(track.type==='list'?`track ${id} list ${track.thresholdType?'threshold '+track.thresholdType:'boolean '+(track.operator||'and')}`:track.type==='sla'?`track ${id} ip sla ${track.sla} ${track.aspect??'reachability'}`:track.type==='bfd'?`track ${id} bfd ${track.interface}${track.peer?` ${track.peer}`:''}`:track.type==='interface'?`track ${id} interface ${track.interface} line-protocol`:`track ${id} ip route ${track.network} ${prefixMask(track.prefix)} reachability`);for(const object of track.objects||[])lines.push(` object ${object.id}${object.not?' not':''}${object.weight!==undefined?' weight '+object.weight:''}`);if(track.thresholds)lines.push(' threshold '+track.thresholdType+(track.thresholds.up!==undefined?' up '+track.thresholds.up:'')+(track.thresholds.down!==undefined?' down '+track.thresholds.down:''));if(track.delayUp!==undefined||track.delayDown!==undefined)lines.push(' delay'+(track.delayUp!==undefined?` up ${track.delayUp}`:'')+(track.delayDown!==undefined?` down ${track.delayDown}`:''));if(track.description)lines.push(` description ${track.description}`);lines.push('!');}
   const nat=c.features.nat;
   if(nat){for(const r of nat.static||[])lines.push(`ip nat inside source static ${r.inside} ${r.outside}`);for(const [name,pool]of Object.entries<any>(nat.pools||{}))lines.push(`ip nat pool ${name} ${pool.start} ${pool.end} netmask ${pool.mask}`);for(const rule of nat.rules||[])lines.push(`ip nat inside source list ${rule.acl} ${rule.interface?`interface ${rule.interface}`:`pool ${rule.pool}`}${rule.overload?' overload':''}`);}
   if(c.features.udld)lines.push(`udld ${c.features.udld.mode==='aggressive'?'aggressive':'enable'}`,`udld message time ${c.features.udld.messageTime||15}`);
   if(c.features.ptp)for(const [key,value]of Object.entries(c.features.ptp))lines.push(`ptp ${key} ${value}`);
   if(c.features.ipSlaResponder?.enabled)lines.push('ip sla responder');for(const port of c.features.ipSlaResponder?.ports||[])lines.push(`ip sla responder udp-echo${port.address?' ipaddress '+port.address:''} port ${port.port}`);
-  for(const [id,p]of Object.entries<any>(c.features.ipSla||{})){lines.push(`ip sla ${id}`);if(p.type==='http'&&p.url)lines.push(` http get ${p.url}`);else if(p.type==='udp-jitter'&&p.target)lines.push(` udp-jitter ${p.target} ${p.port} num-packets ${p.numPackets??10} interval ${p.interval??20}${p.source?' source-ip '+p.source:''}${p.sourcePort?' source-port '+p.sourcePort:''} control ${p.control===false?'disable':'enable'}`);else if(p.target)lines.push(` icmp-echo ${p.target}${p.source?` ${p.source.includes('.')?'source-ip':'source-interface'} ${p.source}`:''}`);for(const key of ['frequency','timeout','threshold'])if(p[key]!==undefined)lines.push(` ${key} ${p[key]}`);lines.push('!');}
-  for(const [id,p]of Object.entries<any>(c.features.ipSlaSchedules||{}))lines.push(`ip sla schedule ${id} life ${p.life||'forever'} start-time now`);
+  for(const [id,p]of Object.entries<SLAOperation>(c.features.ipSla||{})){lines.push(`ip sla ${id}`);if(p.type==='http'&&p.url)lines.push(` http get ${p.url}`);else if(p.type==='udp-jitter'&&p.target)lines.push(` udp-jitter ${p.target} ${p.port} num-packets ${p.numPackets??10} interval ${p.interval??20}${p.source?' source-ip '+p.source:''}${p.sourcePort?' source-port '+p.sourcePort:''} control ${p.control===false?'disable':'enable'}`);else if(p.target)lines.push(` icmp-echo ${p.target}${p.source?` ${isIPv4(p.source)||isIPv6(p.source)?'source-ip':'source-interface'} ${p.source}`:''}`);if(p.target)for(const key of ['frequency','timeout','threshold'] as const)if(p[key]!==undefined)lines.push(` ${key} ${p[key]}`);lines.push('!');}
+  for(const [id,p]of Object.entries<SLASchedule>(c.features.ipSlaSchedules||{}))lines.push(`ip sla schedule ${id} life ${slaLife(p)||'forever'} start-time ${slaStartText(p)}`);
   if(c.features.multicastRouting)lines.push('ip multicast-routing');
   if(c.features.pim?.sptThreshold!==undefined)lines.push(`ip pim spt-threshold ${c.features.pim.sptThreshold}`);
   if(c.features.pim?.rpAddress)lines.push(`ip pim rp-address ${c.features.pim.rpAddress}`);

@@ -4,7 +4,7 @@ Generated 2026-10-16T21:26:17.848Z. This is an ongoing differential audit, not a
 
 ## IOS output pass (2026-10-20)
 
-The current console pass uses the IOSv 15.9(3)M router and IOSvL2 15.2 switch profiles, Cisco command references, and captured help catalogs to align command descriptions, argument-position help, completion, errors and output formatting. The inventory and closure queue below are historical reference-simulator comparison results, not new measurements or a claim that every IOS argument has been verified.
+The console's command descriptions, argument-position help, completion, errors and output formatting follow Cisco command references and captured IOSv 15.9(3)M / IOSvL2 15.2 help catalogs. Device identification now uses [original NetSim models and software](ios-output-reference.md#netsim-platform-identities), not Cisco appliance/firmware identity strings. The inventory and closure queue below are historical reference-simulator comparison results, not new measurements or a claim that every IOS argument has been verified.
 
 | Area | Implementation and regression coverage |
 | --- | --- |

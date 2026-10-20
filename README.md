@@ -33,6 +33,8 @@ When **DHCP and DNS are enabled on the same Server**, acknowledged leases automa
 
 The **console width follows its visible space**, including SSH/Telnet sessions. Explicit `terminal width` settings remain effective; `terminal width 0` preserves long rows with horizontal scrolling. See the [console width guide](docs/features/console-width.md).
 
+**IP SLA and floating static routes** support upstream-failure detection, delayed tracking and primary-path recovery. SLA `state` and `reachability` have different threshold semantics; `show track` identifies the latest return code, RTT and dependent clients. Use an explicit `life forever start-time now` for continuous monitoring, and keep the probe routed through the intended primary path. See the [configuration and supported boundaries](docs/protocol-design.md#ip-sla-and-floating-static-routing).
+
 ## Working with the editor and console
 
 - Drag devices, Shift-select or marquee-select a group, and use Space-drag or the middle mouse button to pan. Scroll to zoom around the pointer. Touch supports drag, pinch and long-press menus.
@@ -52,7 +54,7 @@ The **console width follows its visible space**, including SSH/Telnet sessions. 
 
 This is an educational simulation, not Cisco IOS firmware. Traffic is represented as structured Ethernet/IP/transport records. Many routing and switching control-plane decisions are computed models; selected protocols and all modeled user traffic traverse interfaces and links. It does not run real sockets or contact devices on your actual network.
 
-Console output follows Cisco IOS layouts and wording, including `?` help rows, error messages and `show` command tables. Routers report the IOSv 15.9(3)M identity and switches report IOSvL2 15.2, matching Cisco's virtual lab images. Operational fields are driven by simulation state; identity, hardware and unmeasured performance fields use the documented lab-profile values. Byte-identical output for every image is not guaranteed.
+Console output follows Cisco IOS layouts and wording, including `?` help rows, error messages and `show` command tables, but devices identify as fictional **NetSim** platforms rather than Cisco appliances. `show version` and `show inventory` share distinct router, Layer 2, PoE, multilayer, WLC and AP models, stable per-device serials and hardware revisions. Software versions come from the application version; uptime, reload reason, interface counts and flash capacity use simulation state. RAM and NVRAM are explicitly simulated profile capacities, not measurements of your computer. See the [platform models and output fields](docs/ios-output-reference.md#netsim-platform-identities). Byte-identical output for a Cisco image is not guaranteed.
 
 An implemented command family is not a promise that every IOS command or protocol edge case is supported. Unsupported commands report an error. SSH, IKE and IPsec use simulated authentication and compatibility checks; they do not provide real cryptographic protection. Use invented lab credentials because project exports contain configuration values.
 

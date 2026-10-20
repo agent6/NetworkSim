@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Simulator } from '../src/engine.ts';
 import { IOSSession } from '../src/cli.ts';
+import { NETSIM_VERSION, platformSoftware } from '../src/platform-identity.ts';
 
 function lab() {
   const sim = new Simulator(4242), r1 = sim.addDevice('router'), r2 = sim.addDevice('router'), r3 = sim.addDevice('router');
@@ -17,29 +18,29 @@ function lab() {
 const text = (lines: string[]) => lines.join('\n');
 const noCommentary = (output: string, label: string) => assert.doesNotMatch(output, /NetworkSim|simulat|not modeled|Copyright|\?\s*$/im, label);
 
-test('show version prints the IOSv identity, actual uptime, interface count and configuration register', () => {
+test('show version prints the NetSim identity, actual uptime, interface count and configuration register', () => {
   const { c1 } = lab(), out = c1.execute('show version');
-  assert.equal(out[0], 'Cisco IOS Software, IOSv Software (VIOS-ADVENTERPRISEK9-M), Version 15.9(3)M12, RELEASE SOFTWARE (fc1)');
-  assert.equal(out[1], 'Technical Support: http://www.cisco.com/techsupport');
+  assert.equal(out[0], platformSoftware('router'));
+  assert.equal(out[1], 'NetSim NS-R4 - 4-port Gigabit Ethernet router');
   const all = text(out);
-  for (const line of ['ROM: Bootstrap program is IOSv', 'R1 uptime is 1 minute', 'System returned to ROM by reload', 'System image file is "flash0:/vios-adventerprisek9-m"', 'Cisco IOSv (revision 1.0) with  with 460137K/62464K bytes of memory.', '4 Gigabit Ethernet interfaces', 'DRAM configuration is 72 bits wide with parity disabled.', '256K bytes of non-volatile configuration memory.'])
+  for (const line of [`ROM: NetSim Bootstrap, Version ${NETSIM_VERSION}`, 'R1 uptime is 1 minute', 'System restarted by Power-on', `System image file is "embedded:netsim-router-${NETSIM_VERSION}"`, 'NetSim NS-R4 virtual processor (revision 1.0) with 458752K/65536K bytes of memory.', '4 Gigabit Ethernet interfaces', '256K bytes of non-volatile configuration memory (simulated).'])
     assert.ok(out.includes(line), line);
-  assert.match(all, /^Processor board ID \w{11}$/m);
-  assert.match(all, /^\d+K bytes of ATA System CompactFlash 0 \(Read\/Write\)$/m);
+  assert.match(all, /^Processor board ID NS[A-Z0-9]{13}$/m);
+  assert.match(all, /^\d+ bytes of flash storage \(Read\/Write, simulated\)\.$/m);
   assert.equal(out.at(-1), 'Configuration register is 0x2102');
-  noCommentary(all, 'show version');
+  assert.doesNotMatch(all, /Cisco|IOSv|CompactFlash|with  with|Technical Support:/);
   const sim = new Simulator(7), sw = sim.addDevice('switch'), cs = new IOSSession(sim, sw.id), swv = cs.execute('show version');
-  assert.match(swv[0], /^Cisco IOS Software, vios_l2 Software \(vios_l2-ADVENTERPRISEK9-M\), Version 15\.2/);
-  assert.ok(swv.includes('cisco IOSv () processor (revision 1.0) with 657721K/62464K bytes of memory.'));
+  assert.equal(swv[0], platformSoftware('switch'));
+  assert.ok(swv.includes('NetSim NS-S24-2G virtual processor (revision 1.0) with 458752K/65536K bytes of memory.'));
   assert.equal(swv.at(-1), 'Configuration register is 0x101');
-  assert.match(cs.execute('show inventory')[0], /^NAME: "vios_l2", DESCR: "vios_l2 chassis, Hw Serial#: \w+, Hw Revision: 1\.0"$/);
+  assert.equal(cs.execute('show inventory')[0], 'NAME: "Chassis", DESCR: "NetSim NS-S24-2G 24-port Layer 2 switch with 2 Gigabit uplinks (virtual chassis)"');
 });
 
 test('show inventory and show processes/memory use IOS layouts', () => {
   const { c1 } = lab(), inventory = c1.execute('show inventory');
-  assert.match(inventory[0], /^NAME: "IOSv", DESCR: "IOSv chassis, Hw Serial#: (\w{11}), Hw Revision: 1\.0"$/);
-  const serial = inventory[0].match(/Serial#: (\w+)/)![1];
-  assert.equal(inventory[1], `PID: IOSv              , VID: 1.0, SN: ${serial}`);
+  assert.equal(inventory[0], 'NAME: "Chassis", DESCR: "NetSim NS-R4 4-port Gigabit Ethernet router (virtual chassis)"');
+  const serial = inventory[1].match(/SN: (NS\w{13})/)![1];
+  assert.equal(inventory[1], `PID: NS-R4             , VID: V01, SN: ${serial}`);
   assert.match(text(c1.execute('show version')), new RegExp(`Processor board ID ${serial}`));
   const cpu = c1.execute('show processes cpu');
   assert.match(cpu[0], /^CPU utilization for five seconds: \d+%\/\d+%; one minute: \d+%; five minutes: \d+%$/);

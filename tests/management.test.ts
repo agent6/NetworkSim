@@ -44,7 +44,7 @@ test('manual, timer and syslog EEM actions change real config and archive snapsh
 
 test('scheduled IP SLA probes actual reachability and updates object tracking after a link failure',()=>{
   const {engine,a,ca,cb}=setup();ok(ca,'conf t','ip sla 5','icmp-echo 10.0.0.2 source-interface g0/0','frequency 3','timeout 500','threshold 100','exit','ip sla schedule 5 life forever start-time now','track 5 ip sla 5 reachability','end');engine.clock.advance(1000);assert.equal(a.runtime.features.ipSla[5].returnCode,'OK');assert.equal(a.runtime.features.tracks[5].up,true);
-  ok(cb,'conf t','int g0/0','shutdown','end');engine.clock.advance(4000);assert.equal(a.runtime.features.ipSla[5].returnCode,'Timeout');assert.equal(a.runtime.features.tracks[5].up,false);
+  ok(cb,'conf t','int g0/0','shutdown','end');engine.clock.advance(4000);assert.equal(a.runtime.features.ipSla[5].returnCode,'Source unavailable');assert.equal(a.runtime.features.tracks[5].up,false);
 });
 
 test('VTY access-class applies source filtering even when the TCP destination is reachable',()=>{
@@ -91,7 +91,7 @@ test('HTTP and UDP-jitter SLA require delivered replies, preserve source/ports a
   const {engine,a,b,ca,cb}=setup();ok(cb,'conf t','ip http server','ip sla responder','end');ok(ca,'conf t','ip sla 1','http get http://10.0.0.2/','frequency 5','timeout 500','exit','ip sla 2','udp-jitter 10.0.0.2 20000 num-packets 4 interval 20 source-ip 10.0.0.1 source-port 12345','frequency 5','timeout 500','exit','ip sla schedule 1 life forever start-time now','ip sla schedule 2 life forever start-time now','track 9 ip sla 2 reachability','end');engine.advance(1500);
   assert.equal(a.runtime.features.ipSla[1].returnCode,'OK');assert.equal(a.runtime.features.ipSla[2].packetsReceived,4);assert.equal(a.runtime.features.ipSla[2].packetsSent,4);assert.equal(a.runtime.features.tracks[9].up,true);assert.ok(engine.events.some(e=>e.packet?.source==='10.0.0.1'&&e.packet?.sourcePort===12345&&e.packet?.destinationPort===20000));assert.ok(engine.events.some(e=>e.packet?.destinationPort===1967));assert.equal(b.runtime.features.slaResponderCounters[20000],4);
   const snapshot=ca.execute('show running-config').join('\n'),copy=engine.addDevice('router'),session=new IOSSession(engine,copy.id);copy.config.features.files={snapshot};ok(session,'enable','copy flash:snapshot running-config');assert.deepEqual(copy.config.features.ipSla,a.config.features.ipSla);
-  ok(cb,'conf t','int g0/0','shutdown','end');engine.advance(5500);assert.equal(a.runtime.features.ipSla[1].success,false);assert.equal(a.runtime.features.ipSla[2].returnCode,'Responder unavailable');assert.equal(a.runtime.features.tracks[9].up,false);
+  ok(cb,'conf t','int g0/0','shutdown','end');engine.advance(5500);assert.equal(a.runtime.features.ipSla[1].success,false);assert.equal(a.runtime.features.ipSla[2].returnCode,'Source unavailable');assert.equal(a.runtime.features.tracks[9].up,false);
 });
 
 test('UDP jitter control-disabled needs an explicitly configured responder and rejects a wrong bound address',()=>{

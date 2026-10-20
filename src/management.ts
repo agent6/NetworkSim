@@ -5,7 +5,6 @@ import type {TimerHandle} from './clock.ts';
 import {handleSSHFile,sshFileEnabled} from './ssh-files.ts';
 import { isIPv6 } from './ip.ts';
 import { loginBlocked, recordLoginFailure } from './ios-platform-compat.ts';
-import { SLAController } from './sla.ts';
 import { writeFlashFile } from './filesystem.ts';
 import { renderConfig } from './config-renderer.ts';
 import { iosRejected } from './ios-help.ts';
@@ -69,7 +68,6 @@ export class ManagementController {
   private sequence = 0;
   readonly engine: Simulator;
   private readonly factory: Factory;
-  private sla:SLAController;
   private accounting:AAAAccountingClient;
   private automationRuns = new Map<string, number>();
   sessionSnapshot(deviceId:string):{id:string;source:string;port:number;line:string;phase:string;username?:string;expires:number;lastActivity:number;lineNumber:number}[]{
@@ -78,7 +76,7 @@ export class ManagementController {
   sessionIdFor(cli:ManagedCLI):string|undefined{return [...this.sessions.values()].find(s=>s.cli===cli&&this.alive(s))?.id;}
   accountingSnapshot(deviceId:string):AccountingContext[]{return [...this.sessions.values()].filter(s=>s.deviceId===deviceId&&this.alive(s)&&!!s.accounting).map(s=>({...s.accounting!}));}
   constructor(engine: Simulator, factory: Factory) {
-    this.engine = engine; this.factory = factory; this.sla=new SLAController(engine);this.accounting=new AAAAccountingClient(engine);
+    this.engine = engine; this.factory = factory; this.accounting=new AAAAccountingClient(engine);
     engine.subscribe(()=>this.syncAutomation());
     engine.registerHTTPAuthenticator((deviceId,list,user,password)=>this.authenticate(deviceId,list,user,password));
     engine.registerUDPService(1812,d=>!!d.config.services.radius?.enabled,(d,payload,source)=>this.aaaRequest(d,'radius',payload,source));
@@ -118,19 +116,12 @@ export class ManagementController {
   execPrivilege(deviceId:string,lineName:string,username:string|undefined,authenticated:boolean,loginPrivilege:number):{accepted:boolean;privilege:number}{const d=this.engine.getDevice(deviceId)!,f=d.config.features,line=f.lines?.[lineName]||{};if(!f.aaa?.enabled)return {accepted:true,privilege:loginPrivilege};const base=line.privilege??1;if(lineName.startsWith('console')&&!f.aaa.authorizeConsole)return {accepted:true,privilege:base};const result=this.authorize(deviceId,'exec',line.authorizationExec||'default',username,authenticated);return {accepted:result.accepted,privilege:result.privilege??base};}
   private wait(result:ServiceResult,timeout=10000):void{const deadline=this.engine.clock.now()+timeout,step=Math.max(20,Math.ceil(timeout/2000));let count=0;while(result.status==='running'&&this.engine.clock.now()<deadline&&count++<2001)this.engine.clock.advance(Math.min(step,deadline-this.engine.clock.now()));}
   private syncAutomation():void {
-    this.sla.sync();
     for(const device of this.engine.lab.devices){
       if(!device.powered)continue;
-      const f=device.config.features,signature=JSON.stringify([f.eem,f.archive,f.ipSla,f.ipSlaSchedules]);
+      const f=device.config.features,signature=JSON.stringify([f.eem,f.archive]);
       if(device.runtime.features.automationSignature===signature)continue;
       device.runtime.features.automationSignature=signature;
       const owner=`management-${device.id}`;this.engine.clock.cancelOwner(owner);
-      for(const [id,schedule]of Object.entries<any>(f.ipSlaSchedules||{})){
-        const probe=f.ipSla?.[id];if(!probe?.target)continue;
-        const start=this.engine.clock.now(),frequency=Math.max(1,probe.frequency||60)*1000;
-        const run=()=>{if(!device.powered||schedule.life&&this.engine.clock.now()>start+schedule.life*1000)return;this.sla.run(device,id,probe,owner);};
-        this.engine.clock.schedule(0,run,{owner,repeat:frequency,label:`IP SLA ${id}`});
-      }
       for(const [name,applet]of Object.entries<any>(f.eem||{}))if(applet.event?.type==='timer'){
         const delay=applet.event.seconds*1000;if(!Number.isFinite(delay)||delay<1000)continue;
         this.engine.clock.schedule(delay,()=>{if(device.powered)this.runApplet(device,name);},{owner,repeat:applet.event.mode==='watchdog'?delay:undefined,label:`EEM ${name}`});

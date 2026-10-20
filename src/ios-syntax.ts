@@ -173,6 +173,26 @@ function optionGraph(options: Form[], complete = true): SyntaxGraph {
 
 function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): SyntaxGraph | undefined {
   const done = graph(true), area = argument('AREA', 'Area ID, integer or dotted decimal', value => ipv4(value) || /^\d+$/.test(value));
+  const slaId=()=>number(1,2147483647,'IP SLAs operation number');
+  if(path==='ip sla schedule'){
+    if(no)return chain([slaId()],done);
+    const duration=argument('HH:MM:SS','Delay before the operation starts',value=>/^(?:[01]?\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(value));
+    return chain([slaId()],optionGraph([[word('life','Length of time to execute'),word('forever','Run indefinitely')],[word('life'),number(1,2147483647,'Lifetime in seconds')],[word('start-time','When to start this entry'),word('now','Start immediately')],[word('start-time'),word('pending','Wait for a trigger')],[word('start-time'),word('after','Start after a delay'),duration]]));
+  }
+  if(path==='track'){
+    const object=number(1,1000,'Tracked object number');
+    return chain([object],no?done:union(done,
+      chain([word('interface'),iface(context),word('line-protocol')],done),
+      chain([word('ip'),word('sla'),slaId()],union(...['state','reachability'].map(aspect=>chain([word(aspect,aspect==='state'?'Track the operation state':'Track reachability (OK or OverThreshold)')],done)))),
+      chain([word('ip'),word('route'),ip('Route network'),ip('Subnet mask'),word('reachability')],done),
+      chain([word('bfd'),iface(context)],union(done,chain([ip('BFD peer address')],done))),
+      ...['and','or'].map(operator=>chain([word('list'),word('boolean'),word(operator)],done)),
+      ...['weight','percentage'].map(kind=>chain([word('list'),word('threshold'),word(kind)],done))));
+  }
+  if(path==='udp-jitter'&&context.mode==='sla'){
+    if(no)return graph();
+    return chain([ip('Target IPv4 address'),number(1,65535,'Target UDP port')],optionGraph([[word('num-packets'),number(1,100,'Number of packets')],[word('interval'),number(1,60000,'Interval in milliseconds')],[word('source-ip'),ip('Source IPv4 address')],[word('source-port'),number(1,65535,'Source UDP port')],...['enable','disable'].map(value=>[word('control'),word(value)])]));
+  }
   if(path==='aaa accounting')return union(...['exec','commands','connection','network','system'].map(kind=>{const prefix=[word(kind,({exec:'For starting an exec (shell).',commands:'For exec (shell) commands.',connection:'For outbound connections. (telnet, rlogin)',network:'For network services. (PPP, SLIP, ARAP)',system:'For system events.'} as Record<string,string>)[kind]),...kind==='commands'?[number(0,15,'Command privilege level')]:[],kind==='system'?word('default','Default system list'):text('Accounting method list')];if(no)return chain(prefix,done);const server=argument('WORD','Server-group name',value=>kind!=='commands'||value!=='radius',kind==='commands'?['tacacs+']:['radius','tacacs+']),groups=optionGraph([[word('group'),server]]),required=chain([word('group'),server],groups);return chain(prefix,union(chain([word('none','Disable accounting for this list')],done),...['start-stop','stop-only'].map(mode=>chain([word(mode)],required))));}));
   if(context.mode==='line'&&path==='accounting exec')return no?done:chain([text('EXEC accounting list')],done);
   if (['standby', 'vrrp', 'glbp'].includes(path) && ['interface', 'range'].includes(context.mode || '')) {
@@ -315,6 +335,14 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
 
 /** Deliberately explicit: prose in legacy argument hints is not an executable grammar. */
 function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
+  if(path==='ip sla')return [[number(1,2147483647,'IP SLAs operation number')]];
+  if(path==='ip sla responder'){const port=[word('port'),number(1,65535,'UDP echo port')],address=[word('ipaddress'),ip('Responder IPv4 address')];return [[],[word('udp-echo'),...port],[word('udp-echo'),...address,...port],[word('udp-echo'),...port,...address]];}
+  if(path==='icmp-echo'&&context.mode==='sla'){const address=argument('A.B.C.D or X:X:X:X::X','Target IP address',value=>ipv4(value)||isIPv6(value));return [[address],[address,word('source-ip'),argument('A.B.C.D or X:X:X:X::X','Source IP address',value=>ipv4(value)||isIPv6(value))],[address,word('source-interface'),iface(context)]];}
+  if(path==='http get'&&context.mode==='sla')return [[argument('URL','HTTP URL')]];
+  if(['frequency','timeout','threshold'].includes(path)&&context.mode==='sla')return [[number(1,path==='frequency'?604800:604800000,path==='frequency'?'Operation frequency in seconds':'Milliseconds')]];
+  if(path==='delay'&&context.mode==='track'){const up=[word('up'),number(0,180,'Delay in seconds')],down=[word('down'),number(0,180,'Delay in seconds')];return [up,down,[...up,...down],[...down,...up]];}
+  if(path==='show ip sla'){const id=number(1,2147483647,'IP SLAs operation number');return combine(choices(['configuration','statistics','summary']),[[],[id],[word('details')],[id,word('details')]]);}
+  if(path==='show track')return [[],[word('brief')],[number(1,1000,'Tracked object number')]];
   if(path==='ip ftp username')return [[text('Default remote FTP username')]];
   if(path==='ip ftp password')return [[text('FTP password')],...combine(choices(['0','7']),[[text('FTP password')]])];
   if(path==='ip ftp source-interface')return [[iface(context)]];
@@ -536,7 +564,7 @@ function specialPosition(path: string, tokens: IosToken[], context: IosSyntaxCon
   if (protocol) {
     const position = advanceGraph(protocol, tokens);
     // Option lists shrink after a unique option is used, matching the executable parser's contract.
-    const used = new Set(tokens.map(token => token.text.toLowerCase())), unique = new Set(['name', 'tag', 'permanent', 'track', 'ge', 'le', 'prefer', 'source', 'msec', 'localtime', 'show-timezone', 'year', 'no-summary', 'default-information-originate', 'no-redistribution', 'not-advertise', 'cost']);
+    const used = new Set(tokens.map(token => token.text.toLowerCase())), unique = new Set(['name', 'tag', 'permanent', 'track', 'ge', 'le', 'prefer', 'source', 'msec', 'localtime', 'show-timezone', 'year', 'no-summary', 'default-information-originate', 'no-redistribution', 'not-advertise', 'cost',...path==='ip sla schedule'?['life','start-time']:[],...path==='udp-jitter'?['num-packets','interval','source-ip','source-port','control']:[]]);
     position.atoms = position.atoms.filter(atom => !atom.literal || !unique.has(atom.literal) || !used.has(atom.literal));
     if (path === 'ip route' && (used.has('permanent') || used.has('track'))) position.atoms = position.atoms.filter(atom => atom.literal !== 'permanent' && atom.literal !== 'track');
     return position;
@@ -559,6 +587,8 @@ function specialPosition(path: string, tokens: IosToken[], context: IosSyntaxCon
 function summaryMetricKeys(context:IosSyntaxContext):Form[]{const six=context.protocol==='eigrp6',key=argument(six?'X:X:X:X::X/<0-128>':'A.B.C.D/<0-32>',six?'IPv6 summary prefix':'IPv4 summary prefix',value=>{try{return value.includes('/')&&parseCidr(value).family===(six?6:4);}catch{return false;}});return [[key],...(six?[]:[[ip('Summary network address'),ip('Contiguous subnet mask')]])];}
 
 function negativeForms(path: string, forms: Form[], context: IosSyntaxContext): Form[] {
+  if(context.mode==='sla'&&['frequency','timeout','threshold'].includes(path))return [[]];
+  if(context.mode==='track'&&path==='delay')return [[],[word('up')],[word('down')],[word('up'),word('down')],[word('down'),word('up')]];
   if(path.startsWith('ip ftp '))return [[]];
   if(path==='network-policy'||path==='network-policy profile'&&['interface','range'].includes(context.mode??'')||path==='voice vlan'&&context.mode==='network-policy')return[[],...forms];
   if(path==='ipv6 ospf network'||path==='ospfv3 network'||['ipv6 ospf hello-interval','ipv6 ospf dead-interval','ipv6 ospf cost','ipv6 ospf priority'].includes(path))return[[],...forms];

@@ -1,6 +1,7 @@
 import {endpointCommands} from './ios-endpoint.ts';
 import {iosBootState,iosBooting,type IOSBootState} from './ios-boot.ts';
 import {refreshMacAging} from './mac-aging.ts';
+import { slaDefaults, slaReservedPorts, type SLAOperation, type SLASchedule } from './sla-config.ts';
 import {ownRecordValue,setRecordValue,accountCredential} from './record-map.ts';
 import {showAccounting} from './aaa-accounting.ts';
 import { schedulingError, catalystQueueProfile } from './qos-scheduler.ts';
@@ -247,6 +248,7 @@ export class IOSSession {
     const d=this.device;
     if (['pc','server','laptop'].includes(d.kind)) return this.windows.prompt;
     if(wirelessPrompts[this.mode])return d.config.hostname+'('+wirelessPrompts[this.mode]+')#';
+    if(this.mode==='sla'&&d.config.features.ipSla?.[this.context.name!]?.target){const type=d.config.features.ipSla[this.context.name!].type;return `${d.config.hostname}(config-ip-sla-${type==='http'?'http':type==='udp-jitter'?'jitter':'echo'})#`;}
     const suffix: Partial<Record<Mode,string>>={user:'>',priv:'#',config:'(config)#',interface:'(config-if)#',range:'(config-if-range)#',vlan:'(config-vlan)#',router:'(config-router)#','address-family':'(config-router-af)#',acl:`(config-${this.acl()?.type === 'standard' ? 'std' : 'ext'}-nacl)#`,pool:'(dhcp-config)#',line:'(config-line)#','route-map':'(config-route-map)#',mst:'(config-mst)#',vrf:'(config-vrf)#','vrf-af':`(config-vrf-af-${this.context.protocol})#`,'class-map':'(config-cmap)#','policy-map':'(config-pmap)#','policy-class':'(config-pmap-c)#','policy-police':'(config-pmap-c-police)#',archive:'(config-archive)#',applet:'(config-applet)#',redundancy:'(config-red)#',pool6:'(config-dhcpv6)#',sla:'(config-ip-sla)#','time-range':'(config-time-range)#',ike:'(config-isakmp)#',transform:'(cfg-crypto-trans)#','crypto-map':'(config-crypto-map)#','crypto-profile':'(ipsec-profile)#','aaa-server':'(config-server)#','aaa-group':'(config-sg)#','key-chain':'(config-keychain)#',key:'(config-keychain-key)#','af-interface':'(config-router-af-interface)#','af-topology':'(config-router-af-topology)#','flow-record':'(config-flow-record)#','flow-exporter':'(config-flow-exporter)#','flow-monitor':'(config-flow-monitor)#','arp-acl':'(config-arp-nacl)#',track:'(config-track)#','bfd-template':'(config-bfd)#','flow-top-talkers':'(config-flow-top-talkers)#','ipv6-guard':'(config-ipv6-guard)#',span:'(config-mon-erspan)#','span-peer':'(config-mon-erspan-peer)#','device-tracking':'(config-device-tracking)#','ipv6-snooping':'(config-ipv6-snooping)#','vlan-feature':'(config-vlan-config)#','control-plane':'(config-cp)#','network-policy':'(config-network-policy)#'};
     if(this.mode==='acl'&&this.acl()?.type==='ipv6')return d.config.hostname+'(config-ipv6-acl)#';
     if(this.mode==='aaa-server')return d.config.hostname+(d.config.features.aaa?.servers?.[this.context.name!]?.protocol==='radius'?'(config-radius-server)#':'(config-server-tacacs)#');
@@ -865,17 +867,62 @@ export class IOSSession {
     this.c('periodic','Set recurring UTC days and time window',(a,no)=>{if(a.length<4)incomplete();const days=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];const names:string[]=[];let i=0;while(a[i]&&!a[i].includes(':'))names.push(keyword(a[i++],['daily','weekdays','weekend',...days]));const startMinutes=this.parseTime(a[i++]);keyword(a[i++],['to']);const endMinutes=this.parseTime(a[i++]);if(i!==a.length)fail();const selected=[...new Set(names.flatMap(n=>n==='daily'?[0,1,2,3,4,5,6]:n==='weekdays'?[1,2,3,4,5]:n==='weekend'?[0,6]:[days.indexOf(n)]))];const entry={days:selected,startMinutes,endMinutes};range.periodic=(range.periodic||[]).filter((x:any)=>JSON.stringify(x)!==JSON.stringify(entry));if(!no)range.periodic.push(entry);this.change();},'<day(s)|daily|weekdays|weekend> <HH:MM> to <HH:MM>'),
   ];}
   private slaCommands():Command[]{const f=this.device.config.features;return [
-    this.c('ip sla responder','Enable UDP probe control or a static echo listener',(a,no)=>{f.ipSlaResponder??={enabled:false,ports:[]};const r=f.ipSlaResponder;if(!a.length){r.enabled=!no;if(no)r.ports=[];}else{keyword(a[0],['udp-echo']);let port:number|undefined,address:string|undefined;for(let i=1;i<a.length;i++){const key=keyword(a[i],['port','ipaddress']);if(key==='port')port=integer(a[++i],1,65535);else address=ipv4(a[++i]);}if(!port)incomplete();if([53,67,68,123,161,162,514,1812,1967].includes(port!))fail('% This port is reserved by another modeled service.');r.ports=(r.ports||[]).filter((p:any)=>p.port!==port||p.address!==address);if(!no)r.ports.push({port,...(address?{address}:{})});}this.change();},'[udp-echo [ipaddress address] port number]'),
-    this.c('ip sla','Configure a scheduled reachability or service probe',(a,no)=>{exactly(a,1);const id=integer(a[0],1,2147483647);f.ipSla??={};if(no){delete f.ipSla[id];if(f.ipSlaSchedules)delete f.ipSlaSchedules[id];}else{f.ipSla[id]??={type:'icmp-echo',frequency:60,timeout:5000,threshold:5000};this.enter('sla',{name:String(id)});}this.change();},'<id>'),
-    this.c('ip sla schedule','Schedule a service probe',(a,no)=>{if(!a.length)incomplete();const id=integer(a[0],1,2147483647);f.ipSlaSchedules??={};if(no){exactly(a,1);delete f.ipSlaSchedules[id];}else{if(!f.ipSla?.[id]?.target)fail('% Define an IP SLA target first.');let i=1,life=0,start='now';while(i<a.length){const key=keyword(a[i++],['life','start-time']);if(key==='life'){if(a[i]==='forever'){life=0;i++;}else life=integer(a[i++],1,2147483647);}else{start=keyword(a[i++],['now']);}}f.ipSlaSchedules[id]={start,life};}this.change();},'<id> [life forever|seconds] start-time now'),
+    this.c('ip sla responder','Enable UDP probe control or a static echo listener',(a,no)=>{f.ipSlaResponder??={enabled:false,ports:[]};const r=f.ipSlaResponder;if(!a.length){r.enabled=!no;if(no)r.ports=[];}else{keyword(a[0],['udp-echo']);let port:number|undefined,address:string|undefined;const seen=new Set<string>();for(let i=1;i<a.length;i++){const key=keyword(a[i],['port','ipaddress']);if(seen.has(key))fail();seen.add(key);if(key==='port')port=integer(a[++i],1,65535);else address=ipv4(a[++i]);}if(!port)incomplete();if(slaReservedPorts.has(port!))fail('% This port is reserved by another modeled service.');r.ports=(r.ports||[]).filter((p:any)=>p.port!==port||p.address!==address);if(!no)r.ports.push({port,...(address?{address}:{})});}this.change();},'[udp-echo [ipaddress address] port number]'),
+    this.c('ip sla','Configure a scheduled reachability or service probe',(a,no)=>{
+      exactly(a,1);const id=integer(a[0],1,2147483647);
+      if(!no&&f.ipSlaSchedules?.[id])fail('% Entry already scheduled. Remove the operation with no ip sla and reconfigure it.');
+      f.ipSla??={};
+      if(no){delete f.ipSla[id];if(f.ipSlaSchedules)delete f.ipSlaSchedules[id];}
+      else{f.ipSla[id]??={...slaDefaults};this.enter('sla',{name:String(id)});}
+      this.change();
+    },'<id>'),
+    this.c('ip sla schedule','Schedule a service probe',(a,no)=>{
+      if(!a.length)incomplete();const id=integer(a[0],1,2147483647);
+      if(no){exactly(a,1);if(f.ipSlaSchedules)delete f.ipSlaSchedules[id];}
+      else{
+        if(!f.ipSla?.[id]?.target)fail('% Define an IP SLA target first.');
+        if(f.ipSlaSchedules?.[id])fail('% Entry already scheduled. Remove its schedule before scheduling it again.');
+        const schedule:SLASchedule={start:'pending',life:3600},seen=new Set<string>();let i=1;
+        while(i<a.length){
+          const key=keyword(a[i++],['life','start-time']);if(seen.has(key))fail();seen.add(key);
+          if(key==='life'){if(a[i]?.toLowerCase()==='forever'){schedule.life=0;i++;}else schedule.life=integer(a[i++],1,2147483647);}
+          else{
+            schedule.start=keyword(a[i++],['now','pending','after']) as SLASchedule['start'];
+            if(schedule.start==='after'){const time=a[i++];if(time===undefined)incomplete();const match=/^(\d{1,2}):(\d{2}):(\d{2})$/.exec(time);if(!match)fail('% Expected HH:MM:SS.');schedule.after=integer(match![1],0,23)*3600+integer(match![2],0,59)*60+integer(match![3],0,59);}
+          }
+        }
+        (f.ipSlaSchedules??={})[id]=schedule;
+      }
+      this.change();
+    },'<id> [life forever|seconds] [start-time now|pending|after HH:MM:SS]'),
   ];}
-  private slaModeCommands():Command[]{const probe=this.device.config.features.ipSla[this.context.name!];return [
-    this.c('icmp-echo','Set target and optional source',(a,no)=>{if(no){if(a.length!==0&&a.length!==1&&a.length!==3)fail();if(a.length){this.resolveTarget(a[0]);if(a.length===3){const key=keyword(a[1],['source-ip','source-interface']);if(key==='source-ip')ipv4(a[2]);else this.getInterface(a[2]);}}delete probe.target;delete probe.source;}else{if(a.length!==1&&a.length!==3)fail();probe.target=this.resolveTarget(a[0]);if(a.length===3){const key=keyword(a[1],['source-ip','source-interface']);probe.source=key==='source-ip'?ipv4(a[2]):this.getInterface(a[2]);}probe.type='icmp-echo';}this.change();},'<address> [source-ip address|source-interface name]'),
-    this.c('http get','Probe a real simulated HTTP endpoint',(a,no)=>{if(a.length>1||!no&&!a.length)fail();if(no){if(a.length){try{const url=new URL(a[0]);if(url.protocol!=='http:')fail();}catch{fail('% Expected an HTTP URL.');}}delete probe.target;delete probe.url;}else{let url:URL;try{url=new URL(a[0]);}catch{fail('% Expected an HTTP URL.');}if(url!.protocol!=='http:'||url!.port&&url!.port!=='80')this.unsupported('HTTPS or non-default HTTP SLA ports');probe.type='http';probe.url=url!.href;probe.target=url!.hostname;delete probe.source;probe.timeout=60000;}this.change();},'<http://host/path>'),
-    this.c('udp-jitter','Send a measured train of UDP echo probes',(a,no)=>{if(no&&!a.length){delete probe.target;this.change();return;}if(a.length<2)incomplete();const next:any={type:'udp-jitter',target:ipv4(a[0]),port:integer(a[1],1,65535),numPackets:10,interval:20,control:true};for(let i=2;i<a.length;i+=2){const key=keyword(a[i],['source-ip','source-port','num-packets','interval','control']);if(key==='source-ip')next.source=ipv4(a[i+1]);else if(key==='control')next.control=keyword(a[i+1],['enable','disable'])==='enable';else next[key==='num-packets'?'numPackets':key==='source-port'?'sourcePort':key]=integer(a[i+1],key==='source-port'?1:1,key==='num-packets'?100:key==='source-port'?65535:60000);}if(no){delete probe.target;delete probe.source;delete probe.sourcePort;}else{delete probe.source;delete probe.sourcePort;Object.assign(probe,next);}this.change();},'<address> <port> [num-packets n] [interval ms] [source-ip ip] [source-port port] [control enable|disable]'),
-
-    ...[['frequency',1,604800,60],['timeout',1,604800000,5000],['threshold',1,604800000,5000]].map(([field,min,max,value])=>this.c(String(field),`Set probe ${field}`,(a,no)=>{exactly(a,no?0:1);probe[field]=no?value:integer(a[0],Number(min),Number(max));this.change();},'<integer>')),
-  ];}
+  private slaModeCommands():Command[]{
+    const probe:SLAOperation|undefined=this.device.config.features.ipSla?.[this.context.name!];
+    if(!probe)return [];
+    const editable=()=>{if(this.device.config.features.ipSlaSchedules?.[this.context.name!])fail('% Entry already scheduled. Remove the operation with no ip sla and reconfigure it.');};
+    if(probe.target)return (['frequency','timeout','threshold'] as const).map(field=>this.c(field,`Set probe ${field}`,(a,no)=>{
+      editable();exactly(a,no?0:1);probe[field]=no?(field==='timeout'&&probe.type==='http'?60000:slaDefaults[field]):integer(a[0],1,field==='frequency'?604800:604800000);this.change();
+    },field==='frequency'?'<1-604800>':'<1-604800000>'));
+    const define=(next:SLAOperation,no:boolean)=>{editable();if(no)fail('% Remove an operation using no ip sla <id>.');Object.assign(probe,next);this.change();};
+    return [
+      this.c('icmp-echo','Set target and optional source',(a,no)=>{
+        if(a.length<1)incomplete();if(a.length!==1&&a.length!==3)fail();
+        const target=this.resolveTarget(a[0]),next:SLAOperation={type:'icmp-echo',target};
+        if(a.length===3){const key=keyword(a[1],['source-ip','source-interface']);if(key==='source-ip'){const source=this.resolveTarget(a[2]);if(isIPv6(source)!==isIPv6(target))fail('% Source and target address families must match.');next.source=source;}else next.source=this.getInterface(a[2]);}
+        define(next,no);
+      },'<address> [source-ip address|source-interface name]'),
+      this.c('http get','Probe a real simulated HTTP endpoint',(a,no)=>{
+        exactly(a,1);let url:URL;try{url=new URL(a[0]);}catch{fail('% Expected an HTTP URL.');}
+        if(url!.protocol!=='http:'||url!.port&&url!.port!=='80')this.unsupported('HTTPS or non-default HTTP SLA ports');
+        define({type:'http',url:url!.href,target:url!.hostname,timeout:60000},no);
+      },'<http://host/path>'),
+      this.c('udp-jitter','Send a measured train of UDP echo probes',(a,no)=>{
+        if(a.length<2)incomplete();const next:SLAOperation={type:'udp-jitter',target:ipv4(a[0]),port:integer(a[1],1,65535),numPackets:10,interval:20,control:true},seen=new Set<string>();
+        for(let i=2;i<a.length;i+=2){const key=keyword(a[i],['source-ip','source-port','num-packets','interval','control']);if(seen.has(key))fail();seen.add(key);if(key==='source-ip')next.source=ipv4(a[i+1]);else if(key==='control')next.control=keyword(a[i+1],['enable','disable'])==='enable';else if(key==='source-port')next.sourcePort=integer(a[i+1],1,65535);else if(key==='num-packets')next.numPackets=integer(a[i+1],1,100);else next.interval=integer(a[i+1],1,60000);}
+        define(next,no);
+      },'<address> <port> [num-packets n] [interval ms] [source-ip ip] [source-port port] [control enable|disable]'),
+    ];
+  }
   private enterpriseGlobalCommands():Command[]{const f=this.device.config.features;return [
     ...['enable','aggressive'].map(mode=>this.c('udld '+mode,'Configure global link direction detection',(a,no)=>{exactly(a,0);f.udld=no?undefined:{...f.udld,mode:mode==='enable'?'normal':'aggressive',messageTime:f.udld?.messageTime||15};this.change();})),
     this.c('udld message time','Set UDLD advertisement interval',(a,no)=>{exactly(a,no?0:1);f.udld??={mode:'normal'};f.udld.messageTime=no?15:integer(a[0],1,90);this.change();},'<seconds>'),
@@ -1006,7 +1053,7 @@ export class IOSSession {
     if(a.length===1){if(!f.tracks[id])fail('% Tracked object does not exist.');this.enter('track',{name:String(id)});return;}
     let value:any;
     if(a[1]==='interface'){exactly(a,4);keyword(a[3],['line-protocol']);value={type:'interface',interface:this.getInterface(a[2])};}
-    else if(a[1]==='ip'&&a[2]==='sla'){exactly(a,5);keyword(a[4],['reachability','state']);value={type:'sla',sla:integer(a[3],1,2147483647)};}
+    else if(a[1]==='ip'&&a[2]==='sla'){exactly(a,5);const aspect=keyword(a[4],['reachability','state']);value={type:'sla',sla:integer(a[3],1,2147483647),aspect};}
     else if(a[1]==='bfd'){if(a.length!==3&&a.length!==4)fail();value={type:'bfd',interface:this.getInterface(a[2]),...(a[3]?{peer:ipv4(a[3])}:{})};}
     else if(a[1]==='ip'&&a[2]==='route'){exactly(a,6);keyword(a[5],['reachability']);const ip=ipv4(a[3]),prefix=maskPrefix(a[4]);value={type:'route',network:network(ip,prefix),prefix};}
     else if(a[1]==='list'){exactly(a,4);const kind=keyword(a[2],['boolean','threshold']);value=kind==='boolean'?{type:'list',operator:keyword(a[3],['and','or']),objects:[]}:{type:'list',thresholdType:keyword(a[3],['weight','percentage']),objects:[]};}
