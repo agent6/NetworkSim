@@ -1,0 +1,1829 @@
+{
+  "schemaVersion": 1,
+  "source": "reviewed-cml-vpc-ethernet-keepalive",
+  "status": "validated-selected-contracts",
+  "baseline": "running-owned-lab-after-expectation-failure",
+  "scope": "Two-node Ethernet keepalive and peer-link control-plane validation, native single-member/range parser restrictions, port-channel defaults and VRF migration. This is a reviewed run on a booted owned lab following retained expectation failures; it is not an uninterrupted fresh-boot capture or a complete NX-OS certification. Native ports 1/1-3 map to simulator ports 1/27-29.",
+  "startedAt": "2026-10-22T20:34:34.727680+00:00",
+  "finishedAt": "2026-10-22T20:46:40.697977+00:00",
+  "captureSha256": "75008a9426fd387e2a64a5fb4aec5fce6602a11c4fac1249d2053b837c48e68a",
+  "scenarioSha256": "532aa2037187c766c102a02ffe957845f458ed71da150ec48b500fda35c9ccb1",
+  "previousCaptureSha256": "27230013a0d3558c71b3cab7b4b39c341769072da8ddedb03708bc800be5b1be",
+  "images": {
+    "nexus": "nxosv9300-10-6-2-f",
+    "nxosVersion": "10.6(2)",
+    "cmlVersion": "2.10.0+build.13"
+  },
+  "labStopped": true,
+  "cleanupErrors": [],
+  "nativeStepCount": 68,
+  "observationCount": 8,
+  "steps": [
+    {
+      "id": "eth-ka-001",
+      "passed": true,
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : peer is not reachable through peer-keepalive\r\n--Send status                   : Failed \r\n--Receive status                : Failed\r\n--Last update from peer         : (234) seconds, (451) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.2\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : management\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "08fa3c9db64c4eb99b9e721405ca98c891217ba81efbd37227edc937978b19f6"
+    },
+    {
+      "id": "eth-ka-002",
+      "passed": true,
+      "node": "dc1",
+      "command": "show running-config vpc",
+      "raw": "show running-config vpc\r\r\n\r\n!Command: show running-config vpc\r\n!Running configuration last done at: Thu Oct 22 20:41:40 2026\r\n!Time: Thu Oct 22 20:43:45 2026\r\n\r\nversion 10.6(2) Bios:version  \r\nfeature vpc\r\n\r\nvpc domain 1\r\n  role priority 100\r\n  peer-keepalive destination 192.168.100.2 source 192.168.100.1\r\n\r\ninterface port-channel1\r\n  vpc peer-link\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "fe7a7286806a01e984428da1887bcb54fe5ed3f25225c1e78a8bc5e597e01a1a"
+    },
+    {
+      "id": "eth-ka-003",
+      "passed": true,
+      "node": "dc1",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer link is down             \r\nvPC keep-alive status             : peer is not reachable through peer-keepalive\r\nConfiguration consistency status  : failed  \r\nPer-vlan consistency status       : success                       \r\nConfiguration inconsistency reason: Consistency Check Not Performed\r\nType-2 inconsistency reason       : Consistency Check Not Performed\r\nvPC role                          : none established              \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Disabled (due to peer configuration)\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is off.(timeout = 30s)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     -                                                                    \r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "50d71998557669631e689da8f8a6ac6d8b6c3c7d8c75ddc2716a1e339c10e230"
+    },
+    {
+      "id": "eth-ka-004",
+      "passed": true,
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "raw": "show port-channel summary\r\r\nFlags:  D - Down        P - Up in port-channel (members)\r\n        I - Individual  H - Hot-standby (LACP only)\r\n        s - Suspended   r - Module-removed\r\n        b - BFD Session Wait\r\n        S - Switched    R - Routed\r\n        U - Up (port-channel)\r\n        p - Up in delay-lacp mode (member)\r\n        M - Not in use. Min-links not met\r\n--------------------------------------------------------------------------------\r\nGroup Port-       Type     Protocol  Member Ports\r\n      Channel\r\n--------------------------------------------------------------------------------\r\n1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)    \r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "764b1cb162d8ac0126e8028743026d90fbefeae3fe89aa522d646b48f84888fd"
+    },
+    {
+      "id": "eth-ka-005",
+      "passed": true,
+      "node": "dc2",
+      "command": "show vpc peer-keepalive",
+      "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : Suspended (Destination IP not reachable)\r\n--Send status                   : Failed \r\n--Receive status                : Failed\r\n--Last update from peer         : (223) seconds, (639) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.1\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : management\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "60645cc44487ca7b194e93193ebfed4770be3b6c01286e02de5472d852b6f1e8"
+    },
+    {
+      "id": "eth-ka-006",
+      "passed": true,
+      "node": "dc2",
+      "command": "show running-config vpc",
+      "raw": "show running-config vpc\r\r\n\r\n!Command: show running-config vpc\r\n!Running configuration last done at: Thu Oct 22 20:40:05 2026\r\n!Time: Thu Oct 22 20:43:44 2026\r\n\r\nversion 10.6(2) Bios:version  \r\nfeature vpc\r\n\r\nvpc domain 1\r\n  role priority 200\r\n  peer-keepalive destination 192.168.100.1 source 192.168.100.2\r\n\r\ninterface port-channel1\r\n  vpc peer-link\r\n\r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "f1e4efe18ad63f2f88c117c68e6c5c5e18263fe2c626a753c02bde8c06f70d28"
+    },
+    {
+      "id": "eth-ka-007",
+      "passed": true,
+      "node": "dc2",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer link is down             \r\nvPC keep-alive status             : Suspended (Destination IP not reachable)\r\nConfiguration consistency status  : failed  \r\nPer-vlan consistency status       : success                       \r\nConfiguration inconsistency reason: Consistency Check Not Performed\r\nType-2 inconsistency reason       : Consistency Check Not Performed\r\nvPC role                          : none established              \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Disabled (due to peer configuration)\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is off.(timeout = 30s)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     -                                                                    \r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "e9a1117d497616e288651abc805c0f86e99fb48182a9727ebffaed4abbe70809"
+    },
+    {
+      "id": "eth-ka-008",
+      "passed": true,
+      "node": "dc2",
+      "command": "show port-channel summary",
+      "raw": "show port-channel summary\r\r\nFlags:  D - Down        P - Up in port-channel (members)\r\n        I - Individual  H - Hot-standby (LACP only)\r\n        s - Suspended   r - Module-removed\r\n        b - BFD Session Wait\r\n        S - Switched    R - Routed\r\n        U - Up (port-channel)\r\n        p - Up in delay-lacp mode (member)\r\n        M - Not in use. Min-links not met\r\n--------------------------------------------------------------------------------\r\nGroup Port-       Type     Protocol  Member Ports\r\n      Channel\r\n--------------------------------------------------------------------------------\r\n1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)    \r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "cfe8329ee76c142658d86a0241d32d94c9c8611d3387ce85932733a275776073"
+    },
+    {
+      "id": "eth-ka-009",
+      "passed": true,
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "id": "eth-ka-010",
+      "passed": true,
+      "node": "dc1",
+      "command": "vpc domain 1",
+      "raw": "vpc domain 1\r\r\n\rDC1(config-vpc-domain)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a6d2197d0e078bdaa971abf2ef6094e16f068b72c9c5de7d9bd6dd623a7d6247"
+    },
+    {
+      "id": "eth-ka-011",
+      "passed": true,
+      "node": "dc1",
+      "command": "peer-keepalive destination 192.168.100.2 source 192.168.100.1 vrf default",
+      "raw": "peer-keepalive destination 192.168.100.2 source 192.168.100.1 vrf default\r\r\n\rDC1(config-vpc-domain)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "9c37a8dbbcfe4f2e5539773f8b449940fe77a7a4cf7d6286ae81a28ba0a498c8"
+    },
+    {
+      "id": "eth-ka-012",
+      "passed": true,
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "id": "eth-ka-013",
+      "passed": true,
+      "node": "dc2",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC2(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a3c3cbf0e8950479eee84d38bbf92dfaaf276c7b854658e1895a19a020d1c89b"
+    },
+    {
+      "id": "eth-ka-014",
+      "passed": true,
+      "node": "dc2",
+      "command": "vpc domain 1",
+      "raw": "vpc domain 1\r\r\n\rDC2(config-vpc-domain)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "aee5d437cd744f5b8431a27f842341ce390e7848024e530131e03714e10c5c8e"
+    },
+    {
+      "id": "eth-ka-015",
+      "passed": true,
+      "node": "dc2",
+      "command": "peer-keepalive destination 192.168.100.1 source 192.168.100.2 vrf default",
+      "raw": "peer-keepalive destination 192.168.100.1 source 192.168.100.2 vrf default\r\r\n\rDC2(config-vpc-domain)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "258726a21360f2cfc70c5c713b5c10b8c57ec1538b343dabed5013da4e528e04"
+    },
+    {
+      "id": "eth-ka-016",
+      "passed": true,
+      "node": "dc2",
+      "command": "end",
+      "raw": "end\r\r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "518fbfb9e8e20b0ade90522c586c92edc038683353c0eb00fcbd276cc086179c"
+    },
+    {
+      "id": "eth-ka-017",
+      "passed": true,
+      "node": "dc1",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer adjacency formed ok      \r\nvPC keep-alive status             : peer is alive                 \r\nConfiguration consistency status  : success \r\nPer-vlan consistency status       : success                       \r\nType-2 consistency status         : success \r\nvPC role                          : primary                       \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Enabled\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is on.(timeout = 30s, 0s left)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     1                                                                    \r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a3cff1ce0fa445f4a15118eb7e8176001e94043d5c394d861558631cfd17365a"
+    },
+    {
+      "id": "eth-ka-018",
+      "passed": true,
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : peer is alive                 \r\n--Peer is alive for             : (39) seconds, (326) msec\r\n--Send status                   : Success \r\n--Last send at                  : 2026.10.22 20:44:26 584 ms\r\n--Sent on interface             : Eth1/3\r\n--Receive status                : Success\r\n--Last receive at               : 2026.10.22 20:44:27 75 ms\r\n--Received on interface         : Eth1/3\r\n--Last update from peer         : (0) seconds, (325) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.2\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : default\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "907171b5cac547e4a6bc17df6ae347588045511edfb37a2d6bc4c7d7d7119bb9"
+    },
+    {
+      "id": "eth-ka-019",
+      "passed": true,
+      "node": "dc2",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer adjacency formed ok      \r\nvPC keep-alive status             : peer is alive                 \r\nConfiguration consistency status  : success \r\nPer-vlan consistency status       : success                       \r\nType-2 consistency status         : success \r\nvPC role                          : secondary                     \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Enabled\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is on.(timeout = 30s, 0s left)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     1                                                                    \r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "f1cde5ee7b7403a33800d6a2be12d7b3768c21290ce39757002a0c2bf91e47bd"
+    },
+    {
+      "id": "eth-ka-020",
+      "passed": true,
+      "node": "dc2",
+      "command": "show vpc peer-keepalive",
+      "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : peer is alive                 \r\n--Peer is alive for             : (40) seconds, (24) msec\r\n--Send status                   : Success \r\n--Last send at                  : 2026.10.22 20:44:25 910 ms\r\n--Sent on interface             : Eth1/3\r\n--Receive status                : Success\r\n--Last receive at               : 2026.10.22 20:44:26 421 ms\r\n--Received on interface         : Eth1/3\r\n--Last update from peer         : (0) seconds, (21) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.1\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : default\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "403c49dcaafc32cf181917ace495686e9e8085e533beeb9d80b44d366dc9d942"
+    },
+    {
+      "id": "eth-ka-021",
+      "passed": true,
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "id": "eth-ka-022",
+      "passed": true,
+      "node": "dc1",
+      "command": "interface ethernet 1/1-2",
+      "raw": "interface ethernet 1/1-2\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "b8a92293bc4664c625ff78f8bd0de53760619e46de48a83832307e5b20879aa9"
+    },
+    {
+      "id": "eth-ka-023",
+      "passed": true,
+      "node": "dc1",
+      "command": "switchport",
+      "raw": "switchport\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "1eedb28b8af2fb143d314201e1826d1d9ea6e530ea558c472e76e29cdcd31e28"
+    },
+    {
+      "id": "eth-ka-024",
+      "passed": true,
+      "node": "dc1",
+      "command": "switchport mode trunk",
+      "raw": "switchport mode trunk\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7deb4a6d8bec0ed7bf151c672a0db235091f48e97b1b1c2d2345bed531e2a941"
+    },
+    {
+      "id": "eth-ka-025",
+      "passed": true,
+      "node": "dc1",
+      "command": "channel-group 1 mode active",
+      "raw": "channel-group 1 mode active\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "887e30e4babee66b75c6971d412a8cbcc79237f32245bef67566e6d8d18da5a9"
+    },
+    {
+      "id": "eth-ka-026",
+      "passed": true,
+      "node": "dc1",
+      "command": "interface ethernet 1/1-2",
+      "raw": "interface ethernet 1/1-2\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "b8a92293bc4664c625ff78f8bd0de53760619e46de48a83832307e5b20879aa9"
+    },
+    {
+      "id": "eth-ka-027",
+      "passed": true,
+      "node": "dc1",
+      "command": "switchport",
+      "raw": "switchport\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "1eedb28b8af2fb143d314201e1826d1d9ea6e530ea558c472e76e29cdcd31e28"
+    },
+    {
+      "id": "eth-ka-028",
+      "passed": true,
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "id": "eth-ka-029",
+      "passed": true,
+      "node": "dc1",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer adjacency formed ok      \r\nvPC keep-alive status             : peer is alive                 \r\nConfiguration consistency status  : success \r\nPer-vlan consistency status       : success                       \r\nType-2 consistency status         : success \r\nvPC role                          : primary                       \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Enabled\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is off.(timeout = 30s)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     1                                                                    \r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "2d9bdabe63e6c484ae77310d20df76f08e60da6f17a5ef2d72b4c95d59914fce"
+    },
+    {
+      "id": "eth-ka-030",
+      "passed": true,
+      "node": "dc2",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC2(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a3c3cbf0e8950479eee84d38bbf92dfaaf276c7b854658e1895a19a020d1c89b"
+    },
+    {
+      "id": "eth-ka-031",
+      "passed": true,
+      "node": "dc2",
+      "command": "interface ethernet 1/1-2",
+      "raw": "interface ethernet 1/1-2\r\r\n\rDC2(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "bd8649a0147b691b437f6d8dba59c2843f150bca62f98a3ea9a594dda9ca3f1f"
+    },
+    {
+      "id": "eth-ka-032",
+      "passed": true,
+      "node": "dc2",
+      "command": "switchport",
+      "raw": "switchport\r\r\n\rDC2(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "e7a77af76db70b661fddbdf5fa537b020380293fa584e0059e8fe64d765d2617"
+    },
+    {
+      "id": "eth-ka-033",
+      "passed": true,
+      "node": "dc2",
+      "command": "switchport mode trunk",
+      "raw": "switchport mode trunk\r\r\n\rDC2(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "ca1e6b5fcd47de26543678efa4a356afbea4c6011a858db71fb69b5bd3e935fe"
+    },
+    {
+      "id": "eth-ka-034",
+      "passed": true,
+      "node": "dc2",
+      "command": "channel-group 1 mode active",
+      "raw": "channel-group 1 mode active\r\r\n\rDC2(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "aaad2211f06f3b6ca673a4594228ff3a588e344805682e947700bcc9bcf99922"
+    },
+    {
+      "id": "eth-ka-035",
+      "passed": true,
+      "node": "dc2",
+      "command": "interface ethernet 1/1-2",
+      "raw": "interface ethernet 1/1-2\r\r\n\rDC2(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "bd8649a0147b691b437f6d8dba59c2843f150bca62f98a3ea9a594dda9ca3f1f"
+    },
+    {
+      "id": "eth-ka-036",
+      "passed": true,
+      "node": "dc2",
+      "command": "switchport",
+      "raw": "switchport\r\r\n\rDC2(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "e7a77af76db70b661fddbdf5fa537b020380293fa584e0059e8fe64d765d2617"
+    },
+    {
+      "id": "eth-ka-037",
+      "passed": true,
+      "node": "dc2",
+      "command": "end",
+      "raw": "end\r\r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "518fbfb9e8e20b0ade90522c586c92edc038683353c0eb00fcbd276cc086179c"
+    },
+    {
+      "id": "eth-ka-038",
+      "passed": true,
+      "node": "dc2",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer adjacency formed ok      \r\nvPC keep-alive status             : peer is alive                 \r\nConfiguration consistency status  : success \r\nPer-vlan consistency status       : success                       \r\nType-2 consistency status         : success \r\nvPC role                          : secondary                     \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Enabled\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is off.(timeout = 30s)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     1                                                                    \r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "bcd1bbb07e06a5b38b50aaca7dcaa1d0cc8f49f80b5a909bd165639b2d5a37a6"
+    },
+    {
+      "id": "eth-ka-039",
+      "passed": true,
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "id": "eth-ka-040",
+      "passed": true,
+      "node": "dc1",
+      "command": "vrf context KEEPALIVE",
+      "raw": "vrf context KEEPALIVE\r\r\n\rDC1(config-vrf)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "42ad4fd50a0b0347402d8b27c1fd6621934e49906114e442b9c2e7ff91520fc2"
+    },
+    {
+      "id": "eth-ka-041",
+      "passed": true,
+      "node": "dc1",
+      "command": "interface Ethernet1/3",
+      "raw": "interface Ethernet1/3\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "5889b501d75a1d143f5e14af95a1c4b13aac213ce73c5491c472bdd8c6bdcb56"
+    },
+    {
+      "id": "eth-ka-042",
+      "passed": true,
+      "node": "dc1",
+      "command": "vrf member KEEPALIVE",
+      "raw": "vrf member KEEPALIVE\r\r\nWarning: Deleted all L3 config on interface Ethernet1/3\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "eda955fe0f6c0e69864be1e578411525d6acbe226bf99840b2b3de50c1ae2d0a"
+    },
+    {
+      "id": "eth-ka-043",
+      "passed": true,
+      "node": "dc1",
+      "command": "ip address 192.168.100.1/30",
+      "raw": "ip address 192.168.100.1/30\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "e0b923568e48f9d5e07eedb31524706846fc73d6c8aad8659aab54b17b8c0096"
+    },
+    {
+      "id": "eth-ka-044",
+      "passed": true,
+      "node": "dc1",
+      "command": "no shutdown",
+      "raw": "no shutdown\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "d5f96f3bfaa85072155f6aa3217520325fb3641bcecc370b92ca5a5246a42045"
+    },
+    {
+      "id": "eth-ka-045",
+      "passed": true,
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "id": "eth-ka-046",
+      "passed": true,
+      "node": "dc2",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC2(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a3c3cbf0e8950479eee84d38bbf92dfaaf276c7b854658e1895a19a020d1c89b"
+    },
+    {
+      "id": "eth-ka-047",
+      "passed": true,
+      "node": "dc2",
+      "command": "vrf context KEEPALIVE",
+      "raw": "vrf context KEEPALIVE\r\r\n\rDC2(config-vrf)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "cc594c2054157b33b20468206dd9afba46da496eaf515c73388113d5cb990460"
+    },
+    {
+      "id": "eth-ka-048",
+      "passed": true,
+      "node": "dc2",
+      "command": "interface Ethernet1/3",
+      "raw": "interface Ethernet1/3\r\r\n\rDC2(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "f4119a00743216e3a564e10475dd899a1f20b0d49c7249c17a6ccb95abcb641f"
+    },
+    {
+      "id": "eth-ka-049",
+      "passed": true,
+      "node": "dc2",
+      "command": "vrf member KEEPALIVE",
+      "raw": "vrf member KEEPALIVE\r\r\nWarning: Deleted all L3 config on interface Ethernet1/3\r\n\rDC2(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "095bccc63bde7418d9fa7c3aae64dc6898d6f7e266f0c31c5482273ba418d0ad"
+    },
+    {
+      "id": "eth-ka-050",
+      "passed": true,
+      "node": "dc2",
+      "command": "ip address 192.168.100.2/30",
+      "raw": "ip address 192.168.100.2/30\r\r\n\rDC2(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "6052e6fa6eee3f07ebb1b163db9464bb59a1ddbaf658d4b9841a83850571d173"
+    },
+    {
+      "id": "eth-ka-051",
+      "passed": true,
+      "node": "dc2",
+      "command": "no shutdown",
+      "raw": "no shutdown\r\r\n\rDC2(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "11afaba90ef115315a562526f5aa1d2d9348b908fbcff97a748183804656a5e1"
+    },
+    {
+      "id": "eth-ka-052",
+      "passed": true,
+      "node": "dc2",
+      "command": "end",
+      "raw": "end\r\r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "518fbfb9e8e20b0ade90522c586c92edc038683353c0eb00fcbd276cc086179c"
+    },
+    {
+      "id": "eth-ka-053",
+      "passed": true,
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : peer is not reachable through peer-keepalive\r\n--Send status                   : Success \r\n--Last send at                  : 2026.10.22 20:44:29 584 ms\r\n--Sent on interface             : \r\n--Receive status                : Failed\r\n--Last update from peer         : (8) seconds, (280) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.2\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : default\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "d112c75abf4c9f62cdd56a5e4f7c5f59da6e060a306c3273394560a7a836d128"
+    },
+    {
+      "id": "eth-ka-054",
+      "passed": true,
+      "node": "dc1",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer adjacency formed ok      \r\nvPC keep-alive status             : peer is not reachable through peer-keepalive\r\nConfiguration consistency status  : success \r\nPer-vlan consistency status       : success                       \r\nType-2 consistency status         : success \r\nvPC role                          : primary                       \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Enabled\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is off.(timeout = 30s)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     1                                                                    \r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "298727d13cb7c2dde0251d226518d956fafcd6c7cf9403b595bce637da5fc0b5"
+    },
+    {
+      "id": "eth-ka-055",
+      "passed": true,
+      "node": "dc2",
+      "command": "show vpc peer-keepalive",
+      "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : peer is not reachable through peer-keepalive\r\n--Send status                   : Success \r\n--Last send at                  : 2026.10.22 20:44:29 897 ms\r\n--Sent on interface             : \r\n--Receive status                : Failed\r\n--Last update from peer         : (10) seconds, (725) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.1\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : default\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "da2290b4cec2b11b431435b7ddf688fff0de4879e3314fccfe3bbefd84cf4693"
+    },
+    {
+      "id": "eth-ka-056",
+      "passed": true,
+      "node": "dc2",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer adjacency formed ok      \r\nvPC keep-alive status             : peer is not reachable through peer-keepalive\r\nConfiguration consistency status  : success \r\nPer-vlan consistency status       : success                       \r\nType-2 consistency status         : success \r\nvPC role                          : secondary                     \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Enabled\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is off.(timeout = 30s)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     1                                                                    \r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "44d42e86cbab2bdfb7d4888dd30e4bc8e3c2ea36c66d81dff954be31a418f848"
+    },
+    {
+      "id": "eth-ka-057",
+      "passed": true,
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "id": "eth-ka-058",
+      "passed": true,
+      "node": "dc1",
+      "command": "vpc domain 1",
+      "raw": "vpc domain 1\r\r\n\rDC1(config-vpc-domain)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a6d2197d0e078bdaa971abf2ef6094e16f068b72c9c5de7d9bd6dd623a7d6247"
+    },
+    {
+      "id": "eth-ka-059",
+      "passed": true,
+      "node": "dc1",
+      "command": "peer-keepalive destination 192.168.100.2 source 192.168.100.1 vrf KEEPALIVE",
+      "raw": "peer-keepalive destination 192.168.100.2 source 192.168.100.1 vrf KEEPALIVE\r\r\n\rDC1(config-vpc-domain)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "260869b621f6ecce2e5d0cb5d0cd7feb67a7cef0f2e8e07accb8ef33300ebf4c"
+    },
+    {
+      "id": "eth-ka-060",
+      "passed": true,
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "id": "eth-ka-061",
+      "passed": true,
+      "node": "dc2",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC2(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a3c3cbf0e8950479eee84d38bbf92dfaaf276c7b854658e1895a19a020d1c89b"
+    },
+    {
+      "id": "eth-ka-062",
+      "passed": true,
+      "node": "dc2",
+      "command": "vpc domain 1",
+      "raw": "vpc domain 1\r\r\n\rDC2(config-vpc-domain)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "aee5d437cd744f5b8431a27f842341ce390e7848024e530131e03714e10c5c8e"
+    },
+    {
+      "id": "eth-ka-063",
+      "passed": true,
+      "node": "dc2",
+      "command": "peer-keepalive destination 192.168.100.1 source 192.168.100.2 vrf KEEPALIVE",
+      "raw": "peer-keepalive destination 192.168.100.1 source 192.168.100.2 vrf KEEPALIVE\r\r\n\rDC2(config-vpc-domain)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "28c4165af72bade05fbb24e95b704e5489f9e7f05d74a730106e1e6a0cfabed8"
+    },
+    {
+      "id": "eth-ka-064",
+      "passed": true,
+      "node": "dc2",
+      "command": "end",
+      "raw": "end\r\r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "518fbfb9e8e20b0ade90522c586c92edc038683353c0eb00fcbd276cc086179c"
+    },
+    {
+      "id": "eth-ka-065",
+      "passed": true,
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : peer is alive                 \r\n--Peer is alive for             : (6) seconds, (391) msec\r\n--Send status                   : Success \r\n--Last send at                  : 2026.10.22 20:44:48 60 ms\r\n--Sent on interface             : Eth1/3\r\n--Receive status                : Success\r\n--Last receive at               : 2026.10.22 20:44:48 466 ms\r\n--Received on interface         : Eth1/3\r\n--Last update from peer         : (0) seconds, (230) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.2\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : KEEPALIVE\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "b1361715f2199e32f2a320a2f96434402b09e0b41cc11d9c7271e262fc4845b8"
+    },
+    {
+      "id": "eth-ka-066",
+      "passed": true,
+      "node": "dc1",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer adjacency formed ok      \r\nvPC keep-alive status             : peer is alive                 \r\nConfiguration consistency status  : success \r\nPer-vlan consistency status       : success                       \r\nType-2 consistency status         : success \r\nvPC role                          : primary                       \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Enabled\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is off.(timeout = 30s)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     1                                                                    \r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "2d9bdabe63e6c484ae77310d20df76f08e60da6f17a5ef2d72b4c95d59914fce"
+    },
+    {
+      "id": "eth-ka-067",
+      "passed": true,
+      "node": "dc2",
+      "command": "show vpc peer-keepalive",
+      "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : peer is alive                 \r\n--Peer is alive for             : (6) seconds, (928) msec\r\n--Send status                   : Success \r\n--Last send at                  : 2026.10.22 20:44:48 134 ms\r\n--Sent on interface             : Eth1/3\r\n--Receive status                : Success\r\n--Last receive at               : 2026.10.22 20:44:47 732 ms\r\n--Received on interface         : Eth1/3\r\n--Last update from peer         : (0) seconds, (927) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.1\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : KEEPALIVE\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "5bf448b0c7ac260724f361aef786b018dc0f4e1ae4d0be563bd7caf335261808"
+    },
+    {
+      "id": "eth-ka-068",
+      "passed": true,
+      "node": "dc2",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer adjacency formed ok      \r\nvPC keep-alive status             : peer is alive                 \r\nConfiguration consistency status  : success \r\nPer-vlan consistency status       : success                       \r\nType-2 consistency status         : success \r\nvPC role                          : secondary                     \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Enabled\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is off.(timeout = 30s)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     1                                                                    \r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "bcd1bbb07e06a5b38b50aaca7dcaa1d0cc8f49f80b5a909bd165639b2d5a37a6"
+    }
+  ],
+  "observations": [
+    {
+      "node": "dc1",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer adjacency formed ok      \r\nvPC keep-alive status             : peer is alive                 \r\nConfiguration consistency status  : success \r\nPer-vlan consistency status       : success                       \r\nType-2 consistency status         : success \r\nvPC role                          : primary                       \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Enabled\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is off.(timeout = 30s)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     1                                                                    \r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "2d9bdabe63e6c484ae77310d20df76f08e60da6f17a5ef2d72b4c95d59914fce"
+    },
+    {
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : peer is alive                 \r\n--Peer is alive for             : (6) seconds, (998) msec\r\n--Send status                   : Success \r\n--Last send at                  : 2026.10.22 20:44:49 59 ms\r\n--Sent on interface             : Eth1/3\r\n--Receive status                : Success\r\n--Last receive at               : 2026.10.22 20:44:48 466 ms\r\n--Received on interface         : Eth1/3\r\n--Last update from peer         : (0) seconds, (837) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.2\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : KEEPALIVE\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "cdb01db5917e0d3d1a72266fd115fed6a85ca261ce4c2f2f74f6716d9efcebe6"
+    },
+    {
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "raw": "show port-channel summary\r\r\nFlags:  D - Down        P - Up in port-channel (members)\r\n        I - Individual  H - Hot-standby (LACP only)\r\n        s - Suspended   r - Module-removed\r\n        b - BFD Session Wait\r\n        S - Switched    R - Routed\r\n        U - Up (port-channel)\r\n        p - Up in delay-lacp mode (member)\r\n        M - Not in use. Min-links not met\r\n--------------------------------------------------------------------------------\r\nGroup Port-       Type     Protocol  Member Ports\r\n      Channel\r\n--------------------------------------------------------------------------------\r\n1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)    \r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "764b1cb162d8ac0126e8028743026d90fbefeae3fe89aa522d646b48f84888fd"
+    },
+    {
+      "node": "dc1",
+      "command": "show running-config vpc",
+      "raw": "show running-config vpc\r\r\n\r\n!Command: show running-config vpc\r\n!Running configuration last done at: Thu Oct 22 20:44:40 2026\r\n!Time: Thu Oct 22 20:44:49 2026\r\n\r\nversion 10.6(2) Bios:version  \r\nfeature vpc\r\n\r\nvpc domain 1\r\n  role priority 100\r\n  peer-keepalive destination 192.168.100.2 source 192.168.100.1 vrf KEEPALIVE\r\n\r\ninterface port-channel1\r\n  vpc peer-link\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "436c279f1ff54d3148e32b664f9140794e8b58dad4df19ad109db2fb6ce39123"
+    },
+    {
+      "node": "dc2",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer adjacency formed ok      \r\nvPC keep-alive status             : peer is alive                 \r\nConfiguration consistency status  : success \r\nPer-vlan consistency status       : success                       \r\nType-2 consistency status         : success \r\nvPC role                          : secondary                     \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Enabled\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is off.(timeout = 30s)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     1                                                                    \r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "bcd1bbb07e06a5b38b50aaca7dcaa1d0cc8f49f80b5a909bd165639b2d5a37a6"
+    },
+    {
+      "node": "dc2",
+      "command": "show vpc peer-keepalive",
+      "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : peer is alive                 \r\n--Peer is alive for             : (7) seconds, (836) msec\r\n--Send status                   : Success \r\n--Last send at                  : 2026.10.22 20:44:49 134 ms\r\n--Sent on interface             : Eth1/3\r\n--Receive status                : Success\r\n--Last receive at               : 2026.10.22 20:44:48 732 ms\r\n--Received on interface         : Eth1/3\r\n--Last update from peer         : (0) seconds, (836) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.1\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : KEEPALIVE\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "b870c368db405485d7963e183246e6efa1081be19ba2c7117b54eaa175776fc5"
+    },
+    {
+      "node": "dc2",
+      "command": "show port-channel summary",
+      "raw": "show port-channel summary\r\r\nFlags:  D - Down        P - Up in port-channel (members)\r\n        I - Individual  H - Hot-standby (LACP only)\r\n        s - Suspended   r - Module-removed\r\n        b - BFD Session Wait\r\n        S - Switched    R - Routed\r\n        U - Up (port-channel)\r\n        p - Up in delay-lacp mode (member)\r\n        M - Not in use. Min-links not met\r\n--------------------------------------------------------------------------------\r\nGroup Port-       Type     Protocol  Member Ports\r\n      Channel\r\n--------------------------------------------------------------------------------\r\n1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)    \r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "cfe8329ee76c142658d86a0241d32d94c9c8611d3387ce85932733a275776073"
+    },
+    {
+      "node": "dc2",
+      "command": "show running-config vpc",
+      "raw": "show running-config vpc\r\r\n\r\n!Command: show running-config vpc\r\n!Running configuration last done at: Thu Oct 22 20:44:40 2026\r\n!Time: Thu Oct 22 20:44:49 2026\r\n\r\nversion 10.6(2) Bios:version  \r\nfeature vpc\r\n\r\nvpc domain 1\r\n  role priority 200\r\n  peer-keepalive destination 192.168.100.1 source 192.168.100.2 vrf KEEPALIVE\r\n\r\ninterface port-channel1\r\n  vpc peer-link\r\n\r\n\rDC2# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "26541e1c4e7d2e1dcdc159eea3240ae19a4cd8e7096d489a3da647b9cd8a5837"
+    }
+  ],
+  "supplementaryObservations": [
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "interface Ethernet1/1",
+      "raw": "interface Ethernet1/1\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a0ee453b8055c65d8029040326918f76dcbb5013db5a609e959c3badaf4b5315"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n                             ^\r\n% Incomplete command at '^' marker.\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": false,
+      "rawSha256": "0c3520f10a6375ff93e9267dc957e14ff9cebbecbb0f43a5be71817da52e4208"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "interface ethernet 1/1-2",
+      "raw": "interface ethernet 1/1-2\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "b8a92293bc4664c625ff78f8bd0de53760619e46de48a83832307e5b20879aa9"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "switchport",
+      "raw": "switchport\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "1eedb28b8af2fb143d314201e1826d1d9ea6e530ea558c472e76e29cdcd31e28"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\nERROR: : port already in a port-channel, no config allowed\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": false,
+      "rawSha256": "5f8ec730b0b6c19e61a3dafcc876f03e161050085a28d47334b5efab59b3e39c"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "interface Ethernet1/4",
+      "raw": "interface Ethernet1/4\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "fa83273b6627076c3fb6c3da339bc5674504f7ad3dfda00d87bba4aed5d3be3d"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "switchport",
+      "raw": "switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "02a3abf098295662600b4dec2b9a90253aff91cc0ad5f26974c49fbe1f68b5a1"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "49d21b94e9750746e375a37e4b43174ee872d7231306a2edfaa44b9696a32e0f"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "49d21b94e9750746e375a37e4b43174ee872d7231306a2edfaa44b9696a32e0f"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "interface port-channel100",
+      "raw": "interface port-channel100\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "54fa92afd1e74d59e58d811d762f8ee1c588026ac31d0bc6e907e3753783a482"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "49d21b94e9750746e375a37e4b43174ee872d7231306a2edfaa44b9696a32e0f"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "interface Ethernet1/4",
+      "raw": "interface Ethernet1/4\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "fa83273b6627076c3fb6c3da339bc5674504f7ad3dfda00d87bba4aed5d3be3d"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "channel-group 100 mode active",
+      "raw": "channel-group 100 mode active\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "41087b3bd71e4f40bdbca7c4f0fb37b592f74ff87a767df5173c810910a23d9c"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n                         ^\r\n% Invalid command at '^' marker.\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": false,
+      "rawSha256": "3eeade97edc1953f93154836bcb3bedbfa7f9ede9f951e8fda6f744463559153"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "switchport",
+      "raw": "switchport\r\r\n                      ^\r\n% Invalid command at '^' marker.\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": false,
+      "rawSha256": "b85b1e03d35f7a1cb1375bdd73d5d280063c13df8ace29f191ff7d515fcebc4e"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "show running-config interface Ethernet1/4",
+      "raw": "show running-config interface Ethernet1/4\r\r\n\r\n!Command: show running-config interface Ethernet1/4\r\n!Running configuration last done at: Thu Oct 22 20:37:39 2026\r\n!Time: Thu Oct 22 20:37:40 2026\r\n\r\nversion 10.6(2) Bios:version  \r\n\r\ninterface Ethernet1/4\r\n  no switchport\r\n  channel-group 100 mode active\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "45c3c4c77c34528e6960aa890acefedb6b976245f159a44a53504c45cebfff1b"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "show running-config interface port-channel100",
+      "raw": "show running-config interface port-channel100\r\r\n\r\n!Command: show running-config interface port-channel100\r\n!Running configuration last done at: Thu Oct 22 20:37:39 2026\r\n!Time: Thu Oct 22 20:37:40 2026\r\n\r\nversion 10.6(2) Bios:version  \r\n\r\ninterface port-channel100\r\n  no switchport\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "1b4ab57805f507a845b4941750adbb8cd2afa092085a6bf4fb7eaaa30abe3e33"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "interface Ethernet1/4",
+      "raw": "interface Ethernet1/4\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "fa83273b6627076c3fb6c3da339bc5674504f7ad3dfda00d87bba4aed5d3be3d"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "no channel-group 100",
+      "raw": "no channel-group 100\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "435a53d3172c23e4773a168107f3014501576ce2bc8f69b3a3db0f154271e42e"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "default interface Ethernet1/4",
+      "raw": "default interface Ethernet1/4\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "432742cb4a9e81e07e919506255f1521c18d30bd2792b0593a9285bfe6d1d5cb"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "no interface port-channel100",
+      "raw": "no interface port-channel100\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a576af612044502f7d323d89d273bde136456a61e663a6687f61bca121742038"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "show running-config interface Ethernet1/4",
+      "raw": "show running-config interface Ethernet1/4\r\r\n\r\n!Command: show running-config interface Ethernet1/4\r\n!Running configuration last done at: Thu Oct 22 20:37:44 2026\r\n!Time: Thu Oct 22 20:37:45 2026\r\n\r\nversion 10.6(2) Bios:version  \r\n\r\ninterface Ethernet1/4\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "892d75ab2fca976fa6f2f0a90e2404d265246bbc31eb9975d618481486e61008"
+    },
+    {
+      "job": "03-mode-probes.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "raw": "show vpc\r\r\nLegend:\r\n                (*) - local vPC is down, forwarding via vPC peer-link\r\n\r\nvPC domain id                     : 1   \r\nPeer status                       : peer adjacency formed ok      \r\nvPC keep-alive status             : peer is alive                 \r\nConfiguration consistency status  : success \r\nPer-vlan consistency status       : success                       \r\nType-2 consistency status         : success \r\nvPC role                          : primary                       \r\nNumber of vPCs configured         : 0   \r\nPeer Gateway                      : Disabled\r\nDual-active excluded VLANs        : -\r\nGraceful Consistency Check        : Enabled\r\nAuto-recovery status              : Disabled\r\nDelay-restore status              : Timer is off.(timeout = 30s)\r\nDelay-restore SVI status          : Timer is off.(timeout = 10s)\r\nDelay-restore Orphan-port status  : Timer is off.(timeout = 0s)\r\nOperational Layer3 Peer-router    : Disabled\r\nVirtual-peerlink mode             : Disabled\r\n\r\nvPC Peer-link status\r\n---------------------------------------------------------------------\r\nid    Port   Status Active vlans    \r\n--    ----   ------ -------------------------------------------------\r\n1     Po1    up     1                                                                    \r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "2d9bdabe63e6c484ae77310d20df76f08e60da6f17a5ef2d72b4c95d59914fce"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "show running-config interface Ethernet1/5",
+      "raw": "show running-config interface Ethernet1/5\r\r\n\r\n!Command: show running-config interface Ethernet1/5\r\n!Running configuration last done at: Thu Oct 22 20:37:44 2026\r\n!Time: Thu Oct 22 20:38:24 2026\r\n\r\nversion 10.6(2) Bios:version  \r\n\r\ninterface Ethernet1/5\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "315dad751ef067ced304a9b24f26c303899cff268f2475fd9c49d1f9e0d734c5"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "interface ethernet 1/4-5",
+      "raw": "interface ethernet 1/4-5\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "bdc1262f56d0d2226c457a0634fa333a1617b15a023d900e8904fb9eef7463bf"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "460cdd3ca4aa437b258281277bda64dc8a297273df4dbcae80c3181352aadc60"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "channel-group 100 mode active",
+      "raw": "channel-group 100 mode active\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "83638e653d236cf76052761e029c5337a20effa7b782720383fe6a56c2d25d36"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "460cdd3ca4aa437b258281277bda64dc8a297273df4dbcae80c3181352aadc60"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "switchport",
+      "raw": "switchport\r\r\nERROR: : port already in a port-channel, no config allowed\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": false,
+      "rawSha256": "343fed69edb8271c9870babc03d388cd210492622aa771ac9d2f520069d01b77"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "show running-config interface Ethernet1/4",
+      "raw": "show running-config interface Ethernet1/4\r\r\n\r\n!Command: show running-config interface Ethernet1/4\r\n!Running configuration last done at: Thu Oct 22 20:38:26 2026\r\n!Time: Thu Oct 22 20:38:26 2026\r\n\r\nversion 10.6(2) Bios:version  \r\n\r\ninterface Ethernet1/4\r\n  no switchport\r\n  channel-group 100 mode active\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "4edde0233d04215ac6247fcb41f0ecc2ea1f45ca7bce3f4ab2e1be5cfa070230"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "show running-config interface Ethernet1/5",
+      "raw": "show running-config interface Ethernet1/5\r\r\n\r\n!Command: show running-config interface Ethernet1/5\r\n!Running configuration last done at: Thu Oct 22 20:38:26 2026\r\n!Time: Thu Oct 22 20:38:26 2026\r\n\r\nversion 10.6(2) Bios:version  \r\n\r\ninterface Ethernet1/5\r\n  no switchport\r\n  channel-group 100 mode active\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "be8829fcb8be71816a1f1bc94c5ad9a62d29283e1d12f4ae51a30c9c1ee09cf7"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "interface ethernet 1/4-5",
+      "raw": "interface ethernet 1/4-5\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "bdc1262f56d0d2226c457a0634fa333a1617b15a023d900e8904fb9eef7463bf"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "no channel-group 100",
+      "raw": "no channel-group 100\r\r\n\rDC1(config-if-range)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "8b635965a72e1e97d8c9dd7f5eaa7d2df9f549a3f2b8fd19b5dbac30f7f33d63"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "default interface Ethernet1/4",
+      "raw": "default interface Ethernet1/4\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "432742cb4a9e81e07e919506255f1521c18d30bd2792b0593a9285bfe6d1d5cb"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "default interface Ethernet1/5",
+      "raw": "default interface Ethernet1/5\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "e71fbad211e02c685688b1206ed2bbad1d709eaa1a07542d9472c9f61e6abe57"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "no interface port-channel100",
+      "raw": "no interface port-channel100\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a576af612044502f7d323d89d273bde136456a61e663a6687f61bca121742038"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "show running-config interface Ethernet1/4",
+      "raw": "show running-config interface Ethernet1/4\r\r\n\r\n!Command: show running-config interface Ethernet1/4\r\n!Running configuration last done at: Thu Oct 22 20:38:30 2026\r\n!Time: Thu Oct 22 20:38:31 2026\r\n\r\nversion 10.6(2) Bios:version  \r\n\r\ninterface Ethernet1/4\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "3209773cedc2062e36eb008267cbb052a113db6fbe15b70538a6dcd51ea6c27c"
+    },
+    {
+      "job": "04-routed-range.json",
+      "node": "dc1",
+      "command": "show running-config interface Ethernet1/5",
+      "raw": "show running-config interface Ethernet1/5\r\r\n\r\n!Command: show running-config interface Ethernet1/5\r\n!Running configuration last done at: Thu Oct 22 20:38:30 2026\r\n!Time: Thu Oct 22 20:38:31 2026\r\n\r\nversion 10.6(2) Bios:version  \r\n\r\ninterface Ethernet1/5\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "639642a1f2eada27566fb7bef92ac5bf51e15b60d939721c76c591987b86a62a"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "interface port-channel100",
+      "raw": "interface port-channel100\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "54fa92afd1e74d59e58d811d762f8ee1c588026ac31d0bc6e907e3753783a482"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "show interface port-channel100",
+      "raw": "show interface port-channel100\r\r\nport-channel100 is down (No operational members)\r\nadmin state is up,\r\n  Hardware: Port-Channel, address: 0000.0000.0000 (bia 0000.0000.0000)\r\n  MTU 1500 bytes, BW 100000 Kbit , DLY 10 usec\r\n  reliability 255/255, txload 1/255, rxload 1/255\r\n  Encapsulation ARPA, medium is broadcast\r\n  Port mode is access\r\n  auto-duplex, auto-speed\r\n  Input flow-control is off, output flow-control is off\r\n  Auto-mdix is turned off\r\n  Switchport monitor is off \r\n  EtherType is 0x8100 \r\n  No members\r\n  Last clearing of \"show interface\" counters never\r\n  0 interface resets\r\n  Load-Interval #1: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  Load-Interval #2: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  RX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 input packets  0 bytes\r\n    0 jumbo packets  0 storm suppression packets\r\n    0 runts  0 giants  0 CRC  0 no buffer\r\n    0 input error  0 short frame  0 overrun   0 underrun  0 ignored\r\n    0 watchdog  0 bad etype drop  0 bad proto drop  0 if down drop\r\n    0 input with dribble  0 input discard\r\n    0 Rx pause\r\n    0 Stomped CRC\r\n  TX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 output packets  0 bytes\r\n    0 jumbo packets\r\n    0 output error  0 collision  0 deferred  0 late collision\r\n    0 lost carrier  0 no carrier  0 babble  0 output discard\r\n    0 Tx pause\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "d916fa53d8753e8806bbd38bf1bf4df1ba01cc31a7c59eba4ff692daa463bb3a"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "interface Ethernet1/4",
+      "raw": "interface Ethernet1/4\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "fa83273b6627076c3fb6c3da339bc5674504f7ad3dfda00d87bba4aed5d3be3d"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "channel-group 101 mode active",
+      "raw": "channel-group 101 mode active\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "276814e7c13d22819667b2c48936d7f7b541d1deafb8635d240face4fb485a5f"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "show interface port-channel101",
+      "raw": "show interface port-channel101\r\r\nport-channel101 is down (No operational members)\r\nadmin state is up,\r\n  Hardware: Port-Channel, address: 0000.0000.0000 (bia 0000.0000.0000)\r\n  MTU 1500 bytes, BW 100000 Kbit , DLY 10 usec\r\n  reliability 255/255, txload 1/255, rxload 1/255\r\n  Encapsulation ARPA, medium is broadcast\r\n  Port mode is access\r\n  auto-duplex, auto-speed\r\n  Input flow-control is off, output flow-control is off\r\n  Auto-mdix is turned off\r\n  Switchport monitor is off \r\n  EtherType is 0x8100 \r\n  Members in this channel: Eth1/4\r\n  Last clearing of \"show interface\" counters never\r\n  0 interface resets\r\n  Load-Interval #1: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  Load-Interval #2: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  RX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 input packets  0 bytes\r\n    0 jumbo packets  0 storm suppression packets\r\n    0 runts  0 giants  0 CRC  0 no buffer\r\n    0 input error  0 short frame  0 overrun   0 underrun  0 ignored\r\n    0 watchdog  0 bad etype drop  0 bad proto drop  0 if down drop\r\n    0 input with dribble  0 input discard\r\n    0 Rx pause\r\n    0 Stomped CRC\r\n  TX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 output packets  0 bytes\r\n    0 jumbo packets\r\n    0 output error  0 collision  0 deferred  0 late collision\r\n    0 lost carrier  0 no carrier  0 babble  0 output discard\r\n    0 Tx pause\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "c23629553272941d6c6bb252b055fade07cacb807f26be59105e549d9e8414da"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "show running-config interface port-channel101",
+      "raw": "show running-config interface port-channel101\r\r\n\r\n!Command: show running-config interface port-channel101\r\n!Running configuration last done at: Thu Oct 22 20:41:37 2026\r\n!Time: Thu Oct 22 20:41:38 2026\r\n\r\nversion 10.6(2) Bios:version  \r\n\r\ninterface port-channel101\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "2b5bfba98b2a78388595c70e873000bf62b18537a450d8b8a39e467e4309eedc"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "interface Ethernet1/4",
+      "raw": "interface Ethernet1/4\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "fa83273b6627076c3fb6c3da339bc5674504f7ad3dfda00d87bba4aed5d3be3d"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "no channel-group 101",
+      "raw": "no channel-group 101\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "bc62a0020fc3329288c9cdc50e5936174c678b6d7f95a77b1327cd9322859910"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "default interface Ethernet1/4",
+      "raw": "default interface Ethernet1/4\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "432742cb4a9e81e07e919506255f1521c18d30bd2792b0593a9285bfe6d1d5cb"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "no interface port-channel100",
+      "raw": "no interface port-channel100\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a576af612044502f7d323d89d273bde136456a61e663a6687f61bca121742038"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "no interface port-channel101",
+      "raw": "no interface port-channel101\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "957f3c34f3dc6b6b6fb1ea6b30f560f5fa1eba8b72b2e81181030c44a38c8163"
+    },
+    {
+      "job": "07-channel-defaults.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "show running-config all | include system.default",
+      "raw": "show running-config all | include system.default\r\r\nsystem default switchport\r\nsystem default interface congestion mode core\r\nsystem default interface congestion mode edge\r\nsystem default interface-vlan autostate\r\nno system default route-map validate-applied\r\nno system default switchport shutdown\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "dfe30dc468702dfd56fde039ea05f176f86b5edfd24822fac3c02866b9712d1d"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "show interface Ethernet1/4",
+      "raw": "show interface Ethernet1/4\r\r\nEthernet1/4 is down (Link not connected)\r\nadmin state is up, Dedicated Interface\r\n  Hardware: 100/1000/10000 Ethernet, address: 5239.cfed.0104 (bia 5239.cfed.0104)\r\n  MTU 1500 bytes, BW 10000000 Kbit , DLY 10 usec\r\n  reliability 255/255, txload 1/255, rxload 1/255\r\n  Encapsulation ARPA, medium is broadcast\r\n  Port mode is access\r\n  auto-duplex, auto-speed\r\n  Beacon is turned off\r\n  Auto-Negotiation is turned on  FEC mode is Auto\r\n  Input flow-control is off, output flow-control is off\r\n  Auto-mdix is turned off\r\n  Switchport monitor is off \r\n  EtherType is 0x8100 \r\n  EEE (efficient-ethernet) : n/a\r\n    admin fec state is auto, oper fec state is off\r\n  Last link flapped never\r\n  Last clearing of \"show interface\" counters 00:03:14\r\n  0 interface resets\r\n  Load-Interval #1: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  Load-Interval #2: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  RX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 input packets  0 bytes\r\n    0 jumbo packets  0 storm suppression packets\r\n    0 runts  0 giants  0 CRC  0 no buffer\r\n    0 input error  0 short frame  0 overrun   0 underrun  0 ignored\r\n    0 watchdog  0 bad etype drop  0 bad proto drop  0 if down drop\r\n    0 input with dribble  0 input discard\r\n    0 Rx pause\r\n    0 Stomped CRC\r\n  TX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 output packets  0 bytes\r\n    0 jumbo packets\r\n    0 output error  0 collision  0 deferred  0 late collision\r\n    0 lost carrier  0 no carrier  0 babble  0 output discard\r\n    0 Tx pause\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "ea1d0dc823e8cf35a672eed80fe49dda90ea7381abda61167c909038b76f2aa1"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "interface Ethernet1/4",
+      "raw": "interface Ethernet1/4\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "fa83273b6627076c3fb6c3da339bc5674504f7ad3dfda00d87bba4aed5d3be3d"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "49d21b94e9750746e375a37e4b43174ee872d7231306a2edfaa44b9696a32e0f"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "show interface Ethernet1/4",
+      "raw": "show interface Ethernet1/4\r\r\nEthernet1/4 is down (Administratively down)\r\nadmin state is down, Dedicated Interface\r\n  Hardware: 100/1000/10000 Ethernet, address: 5239.cfed.1b08 (bia 5239.cfed.0104)\r\n  MTU 1500 bytes, BW 10000000 Kbit , DLY 10 usec\r\n  reliability 255/255, txload 1/255, rxload 1/255\r\n  Encapsulation ARPA, medium is broadcast\r\n  auto-duplex, auto-speed\r\n  Beacon is turned off\r\n  Auto-Negotiation is turned on  FEC mode is Auto\r\n  Input flow-control is off, output flow-control is off\r\n  Auto-mdix is turned off\r\n  Switchport monitor is off \r\n  EtherType is 0x8100 \r\n  EEE (efficient-ethernet) : n/a\r\n    admin fec state is auto, oper fec state is off\r\n  Last link flapped never\r\n  Last clearing of \"show interface\" counters 00:03:15\r\n  0 interface resets\r\n  Load-Interval #1: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  Load-Interval #2: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  RX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 input packets  0 bytes\r\n    0 jumbo packets  0 storm suppression packets\r\n    0 runts  0 giants  0 CRC  0 no buffer\r\n    0 input error  0 short frame  0 overrun   0 underrun  0 ignored\r\n    0 watchdog  0 bad etype drop  0 bad proto drop  0 if down drop\r\n    0 input with dribble  0 input discard\r\n    0 Rx pause\r\n    0 Stomped CRC\r\n  TX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 output packets  0 bytes\r\n    0 jumbo packets\r\n    0 output error  0 collision  0 deferred  0 late collision\r\n    0 lost carrier  0 no carrier  0 babble  0 output discard\r\n    0 Tx pause\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "3bf76b8bb26a42eb2e69a76a68b5685e07fbb1bf678919bee2a56d603558bdb8"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "interface Ethernet1/4",
+      "raw": "interface Ethernet1/4\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "fa83273b6627076c3fb6c3da339bc5674504f7ad3dfda00d87bba4aed5d3be3d"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "switchport",
+      "raw": "switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "02a3abf098295662600b4dec2b9a90253aff91cc0ad5f26974c49fbe1f68b5a1"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "show interface Ethernet1/4",
+      "raw": "show interface Ethernet1/4\r\r\nEthernet1/4 is down (Link not connected)\r\nadmin state is up, Dedicated Interface\r\n  Hardware: 100/1000/10000 Ethernet, address: 5239.cfed.0104 (bia 5239.cfed.0104)\r\n  MTU 1500 bytes, BW 10000000 Kbit , DLY 10 usec\r\n  reliability 255/255, txload 1/255, rxload 1/255\r\n  Encapsulation ARPA, medium is broadcast\r\n  Port mode is access\r\n  auto-duplex, auto-speed\r\n  Beacon is turned off\r\n  Auto-Negotiation is turned on  FEC mode is Auto\r\n  Input flow-control is off, output flow-control is off\r\n  Auto-mdix is turned off\r\n  Switchport monitor is off \r\n  EtherType is 0x8100 \r\n  EEE (efficient-ethernet) : n/a\r\n    admin fec state is auto, oper fec state is off\r\n  Last link flapped never\r\n  Last clearing of \"show interface\" counters 00:03:15\r\n  0 interface resets\r\n  Load-Interval #1: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  Load-Interval #2: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  RX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 input packets  0 bytes\r\n    0 jumbo packets  0 storm suppression packets\r\n    0 runts  0 giants  0 CRC  0 no buffer\r\n    0 input error  0 short frame  0 overrun   0 underrun  0 ignored\r\n    0 watchdog  0 bad etype drop  0 bad proto drop  0 if down drop\r\n    0 input with dribble  0 input discard\r\n    0 Rx pause\r\n    0 Stomped CRC\r\n  TX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 output packets  0 bytes\r\n    0 jumbo packets\r\n    0 output error  0 collision  0 deferred  0 late collision\r\n    0 lost carrier  0 no carrier  0 babble  0 output discard\r\n    0 Tx pause\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "571320d7355efec37e4f7ca942ae5a54a24deed220d19c7a85d7ef669d770022"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "default interface Ethernet1/4",
+      "raw": "default interface Ethernet1/4\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "432742cb4a9e81e07e919506255f1521c18d30bd2792b0593a9285bfe6d1d5cb"
+    },
+    {
+      "job": "10-physical-defaults.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "interface Ethernet1/4",
+      "raw": "interface Ethernet1/4\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "fa83273b6627076c3fb6c3da339bc5674504f7ad3dfda00d87bba4aed5d3be3d"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "shutdown",
+      "raw": "shutdown\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "73f793a6e7c8c2d04d3b8315230b924d212c294f10f8db286f96e93f66c24dc5"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "49d21b94e9750746e375a37e4b43174ee872d7231306a2edfaa44b9696a32e0f"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "switchport",
+      "raw": "switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "02a3abf098295662600b4dec2b9a90253aff91cc0ad5f26974c49fbe1f68b5a1"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "show interface Ethernet1/4",
+      "raw": "show interface Ethernet1/4\r\r\nEthernet1/4 is down (Administratively down)\r\nadmin state is down, Dedicated Interface\r\n  Hardware: 100/1000/10000 Ethernet, address: 5239.cfed.0104 (bia 5239.cfed.0104)\r\n  MTU 1500 bytes, BW 10000000 Kbit , DLY 10 usec\r\n  reliability 255/255, txload 1/255, rxload 1/255\r\n  Encapsulation ARPA, medium is broadcast\r\n  Port mode is access\r\n  auto-duplex, auto-speed\r\n  Beacon is turned off\r\n  Auto-Negotiation is turned on  FEC mode is Auto\r\n  Input flow-control is off, output flow-control is off\r\n  Auto-mdix is turned off\r\n  Switchport monitor is off \r\n  EtherType is 0x8100 \r\n  EEE (efficient-ethernet) : n/a\r\n    admin fec state is auto, oper fec state is off\r\n  Last link flapped never\r\n  Last clearing of \"show interface\" counters 00:04:02\r\n  0 interface resets\r\n  Load-Interval #1: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  Load-Interval #2: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  RX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 input packets  0 bytes\r\n    0 jumbo packets  0 storm suppression packets\r\n    0 runts  0 giants  0 CRC  0 no buffer\r\n    0 input error  0 short frame  0 overrun   0 underrun  0 ignored\r\n    0 watchdog  0 bad etype drop  0 bad proto drop  0 if down drop\r\n    0 input with dribble  0 input discard\r\n    0 Rx pause\r\n    0 Stomped CRC\r\n  TX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 output packets  0 bytes\r\n    0 jumbo packets\r\n    0 output error  0 collision  0 deferred  0 late collision\r\n    0 lost carrier  0 no carrier  0 babble  0 output discard\r\n    0 Tx pause\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "1ec836bae859198bc4a63d529408679afe89d7a8787b3fb2f10e47e20897af67"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "show running-config interface Ethernet1/4",
+      "raw": "show running-config interface Ethernet1/4\r\r\n\r\n!Command: show running-config interface Ethernet1/4\r\n!Running configuration last done at: Thu Oct 22 20:45:39 2026\r\n!Time: Thu Oct 22 20:45:40 2026\r\n\r\nversion 10.6(2) Bios:version  \r\n\r\ninterface Ethernet1/4\r\n  shutdown\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "39b074599a551a370e88e54b724e0e30f3b98fc6d1278a2ab5ee48a7527b8df8"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "default interface Ethernet1/4",
+      "raw": "default interface Ethernet1/4\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "432742cb4a9e81e07e919506255f1521c18d30bd2792b0593a9285bfe6d1d5cb"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "interface Ethernet1/4",
+      "raw": "interface Ethernet1/4\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "fa83273b6627076c3fb6c3da339bc5674504f7ad3dfda00d87bba4aed5d3be3d"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "no shutdown",
+      "raw": "no shutdown\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "d5f96f3bfaa85072155f6aa3217520325fb3641bcecc370b92ca5a5246a42045"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "49d21b94e9750746e375a37e4b43174ee872d7231306a2edfaa44b9696a32e0f"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "show interface Ethernet1/4",
+      "raw": "show interface Ethernet1/4\r\r\nEthernet1/4 is down (Link not connected)\r\nadmin state is up, Dedicated Interface\r\n  Hardware: 100/1000/10000 Ethernet, address: 5239.cfed.1b08 (bia 5239.cfed.0104)\r\n  MTU 1500 bytes, BW 10000000 Kbit , DLY 10 usec\r\n  reliability 255/255, txload 1/255, rxload 1/255\r\n  Encapsulation ARPA, medium is broadcast\r\n  auto-duplex, auto-speed\r\n  Beacon is turned off\r\n  Auto-Negotiation is turned on  FEC mode is Auto\r\n  Input flow-control is off, output flow-control is off\r\n  Auto-mdix is turned off\r\n  Switchport monitor is off \r\n  EtherType is 0x8100 \r\n  EEE (efficient-ethernet) : n/a\r\n    admin fec state is auto, oper fec state is off\r\n  Last link flapped never\r\n  Last clearing of \"show interface\" counters 00:04:05\r\n  0 interface resets\r\n  Load-Interval #1: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  Load-Interval #2: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  RX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 input packets  0 bytes\r\n    0 jumbo packets  0 storm suppression packets\r\n    0 runts  0 giants  0 CRC  0 no buffer\r\n    0 input error  0 short frame  0 overrun   0 underrun  0 ignored\r\n    0 watchdog  0 bad etype drop  0 bad proto drop  0 if down drop\r\n    0 input with dribble  0 input discard\r\n    0 Rx pause\r\n    0 Stomped CRC\r\n  TX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 output packets  0 bytes\r\n    0 jumbo packets\r\n    0 output error  0 collision  0 deferred  0 late collision\r\n    0 lost carrier  0 no carrier  0 babble  0 output discard\r\n    0 Tx pause\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "1ecaf7173a33562bad684459c118a9295487f617d2be3539a1c9fc687d28713b"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "show running-config interface Ethernet1/4",
+      "raw": "show running-config interface Ethernet1/4\r\r\n\r\n!Command: show running-config interface Ethernet1/4\r\n!Running configuration last done at: Thu Oct 22 20:45:42 2026\r\n!Time: Thu Oct 22 20:45:42 2026\r\n\r\nversion 10.6(2) Bios:version  \r\n\r\ninterface Ethernet1/4\r\n  no switchport\r\n  no shutdown\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "4fa90f1222070382b8539992a057a977bedfba03a64b3e9b4f76e3af101548f6"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "default interface Ethernet1/4",
+      "raw": "default interface Ethernet1/4\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "432742cb4a9e81e07e919506255f1521c18d30bd2792b0593a9285bfe6d1d5cb"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "interface Ethernet1/4",
+      "raw": "interface Ethernet1/4\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "fa83273b6627076c3fb6c3da339bc5674504f7ad3dfda00d87bba4aed5d3be3d"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "49d21b94e9750746e375a37e4b43174ee872d7231306a2edfaa44b9696a32e0f"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "no shutdown",
+      "raw": "no shutdown\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "d5f96f3bfaa85072155f6aa3217520325fb3641bcecc370b92ca5a5246a42045"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "switchport",
+      "raw": "switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "02a3abf098295662600b4dec2b9a90253aff91cc0ad5f26974c49fbe1f68b5a1"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "no switchport",
+      "raw": "no switchport\r\r\n\rDC1(config-if)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "49d21b94e9750746e375a37e4b43174ee872d7231306a2edfaa44b9696a32e0f"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "show interface Ethernet1/4",
+      "raw": "show interface Ethernet1/4\r\r\nEthernet1/4 is down (Link not connected)\r\nadmin state is up, Dedicated Interface\r\n  Hardware: 100/1000/10000 Ethernet, address: 5239.cfed.1b08 (bia 5239.cfed.0104)\r\n  MTU 1500 bytes, BW 10000000 Kbit , DLY 10 usec\r\n  reliability 255/255, txload 1/255, rxload 1/255\r\n  Encapsulation ARPA, medium is broadcast\r\n  auto-duplex, auto-speed\r\n  Beacon is turned off\r\n  Auto-Negotiation is turned on  FEC mode is Auto\r\n  Input flow-control is off, output flow-control is off\r\n  Auto-mdix is turned off\r\n  Switchport monitor is off \r\n  EtherType is 0x8100 \r\n  EEE (efficient-ethernet) : n/a\r\n    admin fec state is auto, oper fec state is off\r\n  Last link flapped never\r\n  Last clearing of \"show interface\" counters 00:04:09\r\n  0 interface resets\r\n  Load-Interval #1: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  Load-Interval #2: 0 seconds\r\n    0 seconds input rate 0 bits/sec, 0 packets/sec\r\n    0 seconds output rate 0 bits/sec, 0 packets/sec\r\n    input rate 0 bps, 0 pps; output rate 0 bps, 0 pps\r\n  RX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 input packets  0 bytes\r\n    0 jumbo packets  0 storm suppression packets\r\n    0 runts  0 giants  0 CRC  0 no buffer\r\n    0 input error  0 short frame  0 overrun   0 underrun  0 ignored\r\n    0 watchdog  0 bad etype drop  0 bad proto drop  0 if down drop\r\n    0 input with dribble  0 input discard\r\n    0 Rx pause\r\n    0 Stomped CRC\r\n  TX\r\n    0 unicast packets  0 multicast packets  0 broadcast packets\r\n    0 output packets  0 bytes\r\n    0 jumbo packets\r\n    0 output error  0 collision  0 deferred  0 late collision\r\n    0 lost carrier  0 no carrier  0 babble  0 output discard\r\n    0 Tx pause\r\n\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "a1f144308f0fcd200c94a4ffd624fb3e4e812680cb198bfa401d5b4867bbe0a7"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "configure terminal",
+      "raw": "configure terminal\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "7762a4276d641fdc2f6d61ab32e4d45f6fd4f7339d326879e24d8ad68b2e0a23"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "default interface Ethernet1/4",
+      "raw": "default interface Ethernet1/4\r\r\n\rDC1(config)# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "432742cb4a9e81e07e919506255f1521c18d30bd2792b0593a9285bfe6d1d5cb"
+    },
+    {
+      "job": "11-explicit-admin.json",
+      "node": "dc1",
+      "command": "end",
+      "raw": "end\r\r\n\rDC1# ",
+      "timedOut": false,
+      "accepted": true,
+      "rawSha256": "537bf4443153a9d3ba7012fc3cf746c442101bf19d190de028fdb0c169e2aec2"
+    }
+  ],
+  "captureEvidence": [
+    {
+      "linkId": "82b85927-3e6f-4410-8e8f-5650c9726887",
+      "sha256": "336a81defec92a3ccca3a2b04af2444e38f77747a525ebc5978a42e8c245edd1",
+      "file": "82b85927-3e6f-4410-8e8f-5650c9726887.pcap",
+      "bytes": 631040,
+      "protocolCounts": {
+        "ARP": 0,
+        "ICMP": 0,
+        "ICMPv6": 0,
+        "OSPF": 0,
+        "STP": 756,
+        "CDP": 24,
+        "LLDP": 0,
+        "packets": 3625,
+        "LACP": 1417
+      },
+      "keepaliveTosTtl": []
+    },
+    {
+      "linkId": "6a6595e0-a7d0-4439-a31f-9b3ded671133",
+      "sha256": "5177cd9aaf6297b2def154d90aa55d6f5ff369c555519557c9bf0917ac4f846a",
+      "file": "6a6595e0-a7d0-4439-a31f-9b3ded671133.pcap",
+      "bytes": 204267,
+      "protocolCounts": {
+        "ARP": 0,
+        "ICMP": 0,
+        "ICMPv6": 0,
+        "OSPF": 0,
+        "STP": 6,
+        "CDP": 23,
+        "LLDP": 0,
+        "packets": 1441,
+        "LACP": 1412
+      },
+      "keepaliveTosTtl": []
+    },
+    {
+      "linkId": "f527aa3d-2eb6-44e6-b1a4-fd6732c53e75",
+      "sha256": "0bfff3a905869743845d56f150666f386bb491fece16cb3504fac526cf141fd1",
+      "file": "f527aa3d-2eb6-44e6-b1a4-fd6732c53e75.pcap",
+      "bytes": 84414,
+      "protocolCounts": {
+        "ARP": 4,
+        "ICMP": 2,
+        "ICMPv6": 0,
+        "OSPF": 0,
+        "STP": 0,
+        "CDP": 22,
+        "LLDP": 0,
+        "packets": 766,
+        "LACP": 0
+      },
+      "keepaliveTosTtl": [
+        {
+          "tos": 192,
+          "ttl": 64,
+          "count": 738
+        }
+      ]
+    }
+  ],
+  "retainedExpectations": [
+    {
+      "source": "initial-standard-capture",
+      "captureSha256": "27230013a0d3558c71b3cab7b4b39c341769072da8ddedb03708bc800be5b1be",
+      "status": "failed",
+      "failedStep": "eth-ka-001",
+      "reason": "Expected generic unreachable text; native cold-start detail instead reported Suspended (Destination IP not reachable).",
+      "observation": {
+        "node": "dc1",
+        "command": "show vpc peer-keepalive",
+        "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : Suspended (Destination IP not reachable)\r\n--Send status                   : Failed \r\n--Receive status                : Failed\r\n--Last update from peer         : (213) seconds, (828) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.2\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : management\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC1# ",
+        "timedOut": false,
+        "accepted": true,
+        "rawSha256": "3d9a3e742fd9bd1ffa8ef444e565c6639871bb0f1c90a186f759a6912786a098"
+      }
+    },
+    {
+      "job": "01-scenario.json",
+      "scenarioSha256": "135a7c0d28e379b6f8090f37ff65fb85456e487fdb3c6305531b7e683ea8a38d",
+      "status": "failed",
+      "failedStep": "eth-ka-023",
+      "observation": {
+        "node": "dc1",
+        "command": "switchport",
+        "raw": "switchport\r\r\n                          ^\r\n% Incomplete command at '^' marker.\r\n\rDC1(config-if)# ",
+        "timedOut": false,
+        "accepted": false,
+        "rawSha256": "df130ecedf06801731f0e2495506f676aeea0a707580612ae5001c2977b2687d"
+      }
+    },
+    {
+      "job": "06-scenario.json",
+      "scenarioSha256": "f0be6815ac8605f8dfddc2aa8772f5835f7f87058b386475de0e19cab31709e5",
+      "status": "failed",
+      "failedStep": "eth-ka-001",
+      "observation": {
+        "node": "dc1",
+        "command": "show vpc peer-keepalive",
+        "raw": "show vpc peer-keepalive\r\r\n\r\nvPC keep-alive status             : peer is not reachable through peer-keepalive\r\n--Send status                   : Failed \r\n--Receive status                : Failed\r\n--Last update from peer         : (105) seconds, (69) msec\r\n\r\nvPC Keep-alive parameters\r\n--Destination                   : 192.168.100.2\r\n--Keepalive interval            : 1000 msec\r\n--Keepalive timeout             : 5 seconds\r\n--Keepalive hold timeout        : 3 seconds\r\n--Keepalive vrf                 : management\r\n--Keepalive udp port            : 3200\r\n--Keepalive tos                 : 192\r\n\rDC1# ",
+        "timedOut": false,
+        "accepted": true,
+        "rawSha256": "22d863cc71cea710442a3ed1ef1ce849fe4b21ab0c1b7e98f5783504714958dc"
+      }
+    }
+  ],
+  "boundaries": [
+    "A prior six-node native single-peer-link-member return-path discrepancy remains unresolved in docs/audits/cml-vpc-pair.md.",
+    "No claim of native 30-NIC boot failure: that attempt was interrupted before it reached a usable CLI.",
+    "No physical ASIC, full NX-OS FSM/timer, end-host data-plane or strict full-transcript parity certification from this two-node run.",
+    "Native failed-detail wording differs between cold start and a reset domain; assertions accept the two observed failure forms while requiring the configured VRF and no peer adjacency."
+  ]
+}

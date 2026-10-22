@@ -150,7 +150,7 @@ export function factoryDeviceConfig(kind: DeviceKind, hostname: string): DeviceC
     const interfaces: Record<string, InterfaceConfig> = {};
     for (let n = 1; n <= 30; n++) {
       const p = interfaces[`Ethernet1/${n}`] = defaultInterface(`Ethernet1/${n}`, true);
-      p.adminUp = false;
+      p.features.nsosAdminExplicit = false;
       p.speed = n <= 24 ? 10000 : 40000;
       p.features.ethernetSpeeds = n <= 24 ? [1000, 10000] : [1000, 10000, 40000];
       p.features.speedAuto = true;

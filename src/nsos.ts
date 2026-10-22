@@ -152,7 +152,8 @@ export class NSOSSession {
     const id=integer(match[2],label==='Loopback'?0:1,label==='Vlan'?4094:label==='Port-channel'?4096:1023);
     if(label==='Vlan')this.requireFeature('interface-vlan');
     const p=defaultInterface(label+id,label==='Port-channel');
-    p.adminUp=label==='Loopback';
+    p.adminUp=label==='Loopback'||label==='Port-channel';
+    p.features.nsosAdminExplicit=false;
     if(label==='Loopback'){p.features.bandwidth=8000000;p.features.delay=500;}
     if(label==='Port-channel'){p.features.nonegotiate=true;p.speed=10000;}
     this.device.config.interfaces[p.name]=p;
@@ -176,12 +177,12 @@ export class NSOSSession {
     this.context={mode:'interface',name:p.name,parent:{mode:'config'}};
   }
   private rangeCommands():Command[]{
-    return this.interfaceCommands().map(command=>({...command,run:(args:string[],no:boolean)=>{
+    return this.interfaceCommands(true).map(command=>({...command,run:(args:string[],no:boolean)=>{
       const range=this.context,output:string[]=[];
       try{
         for(const name of range.interfaces!){
           this.context={mode:'interface',name,parent:{mode:'config'}};
-          const before=clone(this.device.config),handler=this.interfaceCommands().find(c=>c.syntax===command.syntax)!;
+          const before=clone(this.device.config),handler=this.interfaceCommands(true).find(c=>c.syntax===command.syntax)!;
           const lines=handler.run(args,no)||[];
           if(lines.some(iosRejected))throw new NSOSError(lines.join('\n'));
           if(command.write)this.synchronizeChannel(before,this.context);
@@ -384,19 +385,27 @@ export class NSOSSession {
     const hits=this.device.runtime.features.aclHits??{};
     for(const key of Object.keys(hits))if(sequence===undefined?key.startsWith(name+':'):key===name+':'+sequence)delete hits[key];
   }
-  private interfaceCommands():Command[]{
+  private interfaceCommands(range=false):Command[]{
     const cmd=this.c.bind(this),p=this.selected,f=p.features,c=this.device.config;
     const data=()=>{if(p.name==='mgmt0')fail('mgmt0 is a dedicated routed management interface.');};
     const routed=()=>{if(p.switchport)fail('Configure no switchport before Layer 3 addressing.');if(f.channelGroup)fail(`Configure Layer 3 on Port-channel${f.channelGroup}, not on an individual member.`);};
+    // Native individual members hide mode-conversion leaves. Ranges retain
+    // them and accept an unchanged mode, while real conversions still reject.
     return [
       cmd('description <text...>','Set interface description',(a,no)=>{p.description=no?'':a.join(' ');},{no:'description'}),
-      cmd('shutdown','Administratively disable interface',(_a,no)=>{p.adminUp=no;},{no:'shutdown'}),
+      cmd('shutdown','Administratively disable interface',(_a,no)=>{p.adminUp=no;f.nsosAdminExplicit=true;},{no:'shutdown'}),
       cmd('switchport','Configure Layer 2 or routed port',(_a,no)=>{
         data();if(/^(Vlan|Loopback)/.test(p.name))fail('Logical routed interfaces do not support switchport.');
-        if(f.channelGroup)fail('Remove channel-group membership before changing Layer 2/3 mode.');
+        if(f.channelGroup){
+          if(p.switchport===!no)return;
+          throw new NSOSError('ERROR: : port already in a port-channel, no config allowed');
+        }
         if(p.switchport!==!no&&f.aclOut)fail('Remove the outbound ACL before changing Layer 2/3 mode.');
         if(no&&(f.vpcId||nsosConfig(this.device).vpc?.peerLink===p.name))fail('vPC members and the peer-link must remain Layer 2 port-channels.');
-        if(p.switchport!==!no){delete p.ip;delete p.mask;p.ipv6=[];delete f.ospf;}p.switchport=!no;f.nonegotiate=true;
+        if(p.switchport!==!no){
+          delete p.ip;delete p.mask;p.ipv6=[];delete f.ospf;
+          if(/^Ethernet/.test(p.name)&&f.nsosAdminExplicit===false)p.adminUp=!no;
+        }p.switchport=!no;f.nonegotiate=true;
       },{no:'switchport'}),
       ...['access','trunk'].map(value=>cmd('switchport mode '+value,'Set explicit Layer 2 mode',()=>{
         data();if(!p.switchport)fail('Interface is not a switchport.');
@@ -512,7 +521,7 @@ export class NSOSSession {
       cmd('vpc orphan-port suspend','Suspend orphan port upon peer-link failure',(_a,no)=>{
         this.requireFeature('vpc');if(!p.switchport||f.channelGroup||f.vpcId||nsosConfig(this.device).vpc?.peerLink===p.name)fail('An orphan port must be a non-vPC Layer 2 interface; configure port-channel suspension on the logical interface.');f.vpcOrphanSuspend=!no;
       },{no:'vpc orphan-port suspend'}),
-    ];
+    ].filter(command=>range||!f.channelGroup||!command.syntax.startsWith('switchport')||p.switchport&&command.syntax!=='switchport');
   }
   private area(text:string):string{
     if(isIPv4(text))return String(text.split('.').reduce((n,x)=>(n*256+Number(x))>>>0,0));

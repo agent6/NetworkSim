@@ -31,7 +31,7 @@ test('NSOS factory exposes 24 access-facing and 6 uplink Ethernet ports plus iso
   assert.equal(Object.keys(d.config.interfaces).length,31);
   for(let n=1;n<=30;n++){
     const p=d.config.interfaces['Ethernet1/'+n];
-    assert.equal(p.speed,n<=24?10000:40000);assert.equal(p.adminUp,false);assert.equal(p.switchport,true);assert.equal(p.mode,'access');assert.equal(p.vlan,1);
+    assert.equal(p.speed,n<=24?10000:40000);assert.equal(p.adminUp,true);assert.equal(p.switchport,true);assert.equal(p.mode,'access');assert.equal(p.vlan,1);
     assert.deepEqual(p.features.ethernetSpeeds,n<=24?[1000,10000]:[1000,10000,40000]);assert.equal(p.features.speedAuto,true);
   }
   assert.equal(d.config.interfaces.mgmt0.vrf,'management');assert.equal(d.config.interfaces.mgmt0.speed,1000);
@@ -229,7 +229,8 @@ test('NSOS vPC CLI validates domain/member/peer-link, shows absent peers honestl
   reject(cli,'layer3 peer-router');run(cli,'exit','interface Port-channel1','switchport mode trunk','vpc peer-link','interface Port-channel2','vpc 20','end');
   assert.equal(d.config.interfaces['Port-channel1'].features.stpPortType,'network');
   assert.match(text(cli,'show vpc'),/adjacency not formed/);assert.doesNotMatch(text(cli,'show vpc'),/Status.*success/);
-  assert.match(text(cli,'show vpc peer-keepalive'),/--Receive status\s+: Never received/);
+  assert.match(text(cli,'show vpc peer-keepalive'),/--Receive status\s+: Failed/);
+  assert.match(text(cli,'show vpc peer-keepalive'),/Suspended \(Destination IP not reachable\)/);
   run(cli,'conf t','no feature vpc','end');assert.equal(nsosConfig(d).vpc,undefined);assert.equal(d.config.interfaces['Port-channel2'].features.vpcId,undefined);
 });
 

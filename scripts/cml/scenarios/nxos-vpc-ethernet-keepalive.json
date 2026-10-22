@@ -1,0 +1,652 @@
+{
+  "schemaVersion": 1,
+  "id": "nxos-vpc-ethernet-keepalive",
+  "description": "Screenshot reproduction: two Nexus peers, Po1 on Ethernet1/27-28, routed Ethernet1/29 keepalive, no downstream vPC members. Default-management VRF failure, default/dedicated VRF repairs and native-compatible range switchport reapplication. CML uses Ethernet1/1-3 mapped to NetworkSim Ethernet1/27-29; the first 30-NIC native attempt was stopped before it reached a usable CLI.",
+  "nodes": [
+    {
+      "id": "dc1",
+      "kind": "datacenter",
+      "hostname": "DC1",
+      "cml": {
+        "definition": "nxosv9000",
+        "image": "nxosv9300-10-6-2-f",
+        "port": "Ethernet1/1"
+      },
+      "simPort": "Ethernet1/27",
+      "startup": [
+        "hostname DC1",
+        "no password strength-check",
+        "username admin password NetSimLab42! role network-admin",
+        "feature vpc",
+        "feature lacp",
+        "interface port-channel1",
+        "description vPC_PEER_LINK",
+        "switchport",
+        "switchport mode trunk",
+        "spanning-tree port type network",
+        "vpc domain 1",
+        "role priority 100",
+        "interface port-channel1",
+        "vpc peer-link",
+        "no shutdown",
+        "interface ethernet 1/1-2",
+        "description PEER_LINK_MEMBER",
+        "switchport",
+        "switchport mode trunk",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/3",
+        "no switchport",
+        "ip address 192.168.100.1/30",
+        "no shutdown",
+        "vpc domain 1",
+        "peer-keepalive destination 192.168.100.2 source 192.168.100.1",
+        "end"
+      ],
+      "simulatorSetup": [
+        "configure terminal",
+        "hostname DC1",
+        "feature vpc",
+        "feature lacp",
+        "interface port-channel1",
+        "description vPC_PEER_LINK",
+        "switchport",
+        "switchport mode trunk",
+        "spanning-tree port type network",
+        "vpc domain 1",
+        "role priority 100",
+        "interface port-channel1",
+        "vpc peer-link",
+        "no shutdown",
+        "interface ethernet 1/27-28",
+        "description PEER_LINK_MEMBER",
+        "switchport",
+        "switchport mode trunk",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/29",
+        "no switchport",
+        "ip address 192.168.100.1/30",
+        "no shutdown",
+        "vpc domain 1",
+        "peer-keepalive destination 192.168.100.2 source 192.168.100.1",
+        "end"
+      ],
+      "portMap": {
+        "Ethernet1/1": "Ethernet1/27",
+        "Ethernet1/2": "Ethernet1/28",
+        "Ethernet1/3": "Ethernet1/29"
+      }
+    },
+    {
+      "id": "dc2",
+      "kind": "datacenter",
+      "hostname": "DC2",
+      "cml": {
+        "definition": "nxosv9000",
+        "image": "nxosv9300-10-6-2-f",
+        "port": "Ethernet1/1"
+      },
+      "simPort": "Ethernet1/27",
+      "startup": [
+        "hostname DC2",
+        "no password strength-check",
+        "username admin password NetSimLab42! role network-admin",
+        "feature vpc",
+        "feature lacp",
+        "interface port-channel1",
+        "description vPC_PEER_LINK",
+        "switchport",
+        "switchport mode trunk",
+        "spanning-tree port type network",
+        "vpc domain 1",
+        "role priority 200",
+        "interface port-channel1",
+        "vpc peer-link",
+        "no shutdown",
+        "interface ethernet 1/1-2",
+        "description PEER_LINK_MEMBER",
+        "switchport",
+        "switchport mode trunk",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/3",
+        "no switchport",
+        "ip address 192.168.100.2/30",
+        "no shutdown",
+        "vpc domain 1",
+        "peer-keepalive destination 192.168.100.1 source 192.168.100.2",
+        "end"
+      ],
+      "simulatorSetup": [
+        "configure terminal",
+        "hostname DC2",
+        "feature vpc",
+        "feature lacp",
+        "interface port-channel1",
+        "description vPC_PEER_LINK",
+        "switchport",
+        "switchport mode trunk",
+        "spanning-tree port type network",
+        "vpc domain 1",
+        "role priority 200",
+        "interface port-channel1",
+        "vpc peer-link",
+        "no shutdown",
+        "interface ethernet 1/27-28",
+        "description PEER_LINK_MEMBER",
+        "switchport",
+        "switchport mode trunk",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/29",
+        "no switchport",
+        "ip address 192.168.100.2/30",
+        "no shutdown",
+        "vpc domain 1",
+        "peer-keepalive destination 192.168.100.1 source 192.168.100.2",
+        "end"
+      ],
+      "portMap": {
+        "Ethernet1/1": "Ethernet1/27",
+        "Ethernet1/2": "Ethernet1/28",
+        "Ethernet1/3": "Ethernet1/29"
+      }
+    }
+  ],
+  "links": [
+    [
+      {
+        "node": "dc1",
+        "port": "Ethernet1/1"
+      },
+      {
+        "node": "dc2",
+        "port": "Ethernet1/1"
+      }
+    ],
+    [
+      {
+        "node": "dc1",
+        "port": "Ethernet1/2"
+      },
+      {
+        "node": "dc2",
+        "port": "Ethernet1/2"
+      }
+    ],
+    [
+      {
+        "node": "dc1",
+        "port": "Ethernet1/3"
+      },
+      {
+        "node": "dc2",
+        "port": "Ethernet1/3"
+      }
+    ]
+  ],
+  "steps": [
+    {
+      "id": "eth-ka-001",
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "expect": [
+        "(?:Suspended \\(Destination IP not reachable\\)|peer is not reachable through peer-keepalive)",
+        "Keepalive vrf\\s+: management"
+      ],
+      "waitSeconds": 90
+    },
+    {
+      "id": "eth-ka-002",
+      "node": "dc1",
+      "command": "show running-config vpc",
+      "expect": [
+        "peer-keepalive destination 192.168.100.2 source 192.168.100.1"
+      ],
+      "absent": [
+        "vrf default"
+      ]
+    },
+    {
+      "id": "eth-ka-003",
+      "node": "dc1",
+      "command": "show vpc",
+      "absent": [
+        "peer adjacency formed ok"
+      ]
+    },
+    {
+      "id": "eth-ka-004",
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "expect": [
+        "Po1\\(SU\\).*LACP.*Eth1/(?:1|27)\\(P\\).*Eth1/(?:2|28)\\(P\\)"
+      ]
+    },
+    {
+      "id": "eth-ka-005",
+      "node": "dc2",
+      "command": "show vpc peer-keepalive",
+      "expect": [
+        "(?:Suspended \\(Destination IP not reachable\\)|peer is not reachable through peer-keepalive)",
+        "Keepalive vrf\\s+: management"
+      ]
+    },
+    {
+      "id": "eth-ka-006",
+      "node": "dc2",
+      "command": "show running-config vpc",
+      "expect": [
+        "peer-keepalive destination 192.168.100.1 source 192.168.100.2"
+      ],
+      "absent": [
+        "vrf default"
+      ]
+    },
+    {
+      "id": "eth-ka-007",
+      "node": "dc2",
+      "command": "show vpc",
+      "absent": [
+        "peer adjacency formed ok"
+      ]
+    },
+    {
+      "id": "eth-ka-008",
+      "node": "dc2",
+      "command": "show port-channel summary",
+      "expect": [
+        "Po1\\(SU\\).*LACP.*Eth1/(?:1|27)\\(P\\).*Eth1/(?:2|28)\\(P\\)"
+      ]
+    },
+    {
+      "id": "eth-ka-009",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "eth-ka-010",
+      "node": "dc1",
+      "command": "vpc domain 1"
+    },
+    {
+      "id": "eth-ka-011",
+      "node": "dc1",
+      "command": "peer-keepalive destination 192.168.100.2 source 192.168.100.1 vrf default"
+    },
+    {
+      "id": "eth-ka-012",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "eth-ka-013",
+      "node": "dc2",
+      "command": "configure terminal"
+    },
+    {
+      "id": "eth-ka-014",
+      "node": "dc2",
+      "command": "vpc domain 1"
+    },
+    {
+      "id": "eth-ka-015",
+      "node": "dc2",
+      "command": "peer-keepalive destination 192.168.100.1 source 192.168.100.2 vrf default"
+    },
+    {
+      "id": "eth-ka-016",
+      "node": "dc2",
+      "command": "end"
+    },
+    {
+      "id": "eth-ka-017",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "peer adjacency formed ok",
+        "keep-alive status\\s+: peer is alive",
+        "Number of vPCs configured\\s+: 0"
+      ],
+      "waitSeconds": 40
+    },
+    {
+      "id": "eth-ka-018",
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "expect": [
+        "Keepalive vrf\\s+: default"
+      ]
+    },
+    {
+      "id": "eth-ka-019",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "peer adjacency formed ok",
+        "keep-alive status\\s+: peer is alive",
+        "Number of vPCs configured\\s+: 0"
+      ]
+    },
+    {
+      "id": "eth-ka-020",
+      "node": "dc2",
+      "command": "show vpc peer-keepalive",
+      "expect": [
+        "Keepalive vrf\\s+: default"
+      ]
+    },
+    {
+      "id": "eth-ka-021",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "eth-ka-022",
+      "node": "dc1",
+      "command": "interface ethernet 1/1-2",
+      "simCommand": "interface ethernet 1/27-28"
+    },
+    {
+      "id": "eth-ka-023",
+      "node": "dc1",
+      "command": "switchport"
+    },
+    {
+      "id": "eth-ka-024",
+      "node": "dc1",
+      "command": "switchport mode trunk"
+    },
+    {
+      "id": "eth-ka-025",
+      "node": "dc1",
+      "command": "channel-group 1 mode active"
+    },
+    {
+      "id": "eth-ka-026",
+      "node": "dc1",
+      "command": "interface ethernet 1/1-2",
+      "simCommand": "interface ethernet 1/27-28"
+    },
+    {
+      "id": "eth-ka-027",
+      "node": "dc1",
+      "command": "switchport"
+    },
+    {
+      "id": "eth-ka-028",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "eth-ka-029",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "peer adjacency formed ok"
+      ]
+    },
+    {
+      "id": "eth-ka-030",
+      "node": "dc2",
+      "command": "configure terminal"
+    },
+    {
+      "id": "eth-ka-031",
+      "node": "dc2",
+      "command": "interface ethernet 1/1-2",
+      "simCommand": "interface ethernet 1/27-28"
+    },
+    {
+      "id": "eth-ka-032",
+      "node": "dc2",
+      "command": "switchport"
+    },
+    {
+      "id": "eth-ka-033",
+      "node": "dc2",
+      "command": "switchport mode trunk"
+    },
+    {
+      "id": "eth-ka-034",
+      "node": "dc2",
+      "command": "channel-group 1 mode active"
+    },
+    {
+      "id": "eth-ka-035",
+      "node": "dc2",
+      "command": "interface ethernet 1/1-2",
+      "simCommand": "interface ethernet 1/27-28"
+    },
+    {
+      "id": "eth-ka-036",
+      "node": "dc2",
+      "command": "switchport"
+    },
+    {
+      "id": "eth-ka-037",
+      "node": "dc2",
+      "command": "end"
+    },
+    {
+      "id": "eth-ka-038",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "peer adjacency formed ok"
+      ]
+    },
+    {
+      "id": "eth-ka-039",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "eth-ka-040",
+      "node": "dc1",
+      "command": "vrf context KEEPALIVE"
+    },
+    {
+      "id": "eth-ka-041",
+      "node": "dc1",
+      "command": "interface Ethernet1/3",
+      "simCommand": "interface Ethernet1/29"
+    },
+    {
+      "id": "eth-ka-042",
+      "node": "dc1",
+      "command": "vrf member KEEPALIVE"
+    },
+    {
+      "id": "eth-ka-043",
+      "node": "dc1",
+      "command": "ip address 192.168.100.1/30"
+    },
+    {
+      "id": "eth-ka-044",
+      "node": "dc1",
+      "command": "no shutdown"
+    },
+    {
+      "id": "eth-ka-045",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "eth-ka-046",
+      "node": "dc2",
+      "command": "configure terminal"
+    },
+    {
+      "id": "eth-ka-047",
+      "node": "dc2",
+      "command": "vrf context KEEPALIVE"
+    },
+    {
+      "id": "eth-ka-048",
+      "node": "dc2",
+      "command": "interface Ethernet1/3",
+      "simCommand": "interface Ethernet1/29"
+    },
+    {
+      "id": "eth-ka-049",
+      "node": "dc2",
+      "command": "vrf member KEEPALIVE"
+    },
+    {
+      "id": "eth-ka-050",
+      "node": "dc2",
+      "command": "ip address 192.168.100.2/30"
+    },
+    {
+      "id": "eth-ka-051",
+      "node": "dc2",
+      "command": "no shutdown"
+    },
+    {
+      "id": "eth-ka-052",
+      "node": "dc2",
+      "command": "end"
+    },
+    {
+      "id": "eth-ka-053",
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "expect": [
+        "(?:Suspended \\(Destination IP not reachable\\)|peer is not reachable through peer-keepalive)"
+      ],
+      "waitSeconds": 8
+    },
+    {
+      "id": "eth-ka-054",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "peer adjacency formed ok"
+      ]
+    },
+    {
+      "id": "eth-ka-055",
+      "node": "dc2",
+      "command": "show vpc peer-keepalive",
+      "expect": [
+        "(?:Suspended \\(Destination IP not reachable\\)|peer is not reachable through peer-keepalive)"
+      ]
+    },
+    {
+      "id": "eth-ka-056",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "peer adjacency formed ok"
+      ]
+    },
+    {
+      "id": "eth-ka-057",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "eth-ka-058",
+      "node": "dc1",
+      "command": "vpc domain 1"
+    },
+    {
+      "id": "eth-ka-059",
+      "node": "dc1",
+      "command": "peer-keepalive destination 192.168.100.2 source 192.168.100.1 vrf KEEPALIVE"
+    },
+    {
+      "id": "eth-ka-060",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "eth-ka-061",
+      "node": "dc2",
+      "command": "configure terminal"
+    },
+    {
+      "id": "eth-ka-062",
+      "node": "dc2",
+      "command": "vpc domain 1"
+    },
+    {
+      "id": "eth-ka-063",
+      "node": "dc2",
+      "command": "peer-keepalive destination 192.168.100.1 source 192.168.100.2 vrf KEEPALIVE"
+    },
+    {
+      "id": "eth-ka-064",
+      "node": "dc2",
+      "command": "end"
+    },
+    {
+      "id": "eth-ka-065",
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "expect": [
+        "keep-alive status\\s+: peer is alive",
+        "Keepalive vrf\\s+: KEEPALIVE"
+      ],
+      "waitSeconds": 8
+    },
+    {
+      "id": "eth-ka-066",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "peer adjacency formed ok"
+      ]
+    },
+    {
+      "id": "eth-ka-067",
+      "node": "dc2",
+      "command": "show vpc peer-keepalive",
+      "expect": [
+        "keep-alive status\\s+: peer is alive",
+        "Keepalive vrf\\s+: KEEPALIVE"
+      ]
+    },
+    {
+      "id": "eth-ka-068",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "peer adjacency formed ok"
+      ]
+    }
+  ],
+  "surveys": [
+    {
+      "node": "dc1",
+      "commands": [
+        "show vpc",
+        "show vpc peer-keepalive",
+        "show port-channel summary",
+        "show running-config vpc"
+      ]
+    },
+    {
+      "node": "dc2",
+      "commands": [
+        "show vpc",
+        "show vpc peer-keepalive",
+        "show port-channel summary",
+        "show running-config vpc"
+      ]
+    }
+  ],
+  "packetEvidence": {
+    "kind": "operational",
+    "minimum": {
+      "STP": 1,
+      "ARP": 1
+    }
+  }
+}

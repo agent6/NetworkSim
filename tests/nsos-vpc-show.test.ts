@@ -55,3 +55,19 @@ test('native L2 MTU constraints and implicit peer-link jumbo profile preserve co
   const description=d.config.interfaces['Ethernet1/3'].description;
   assert.ok(c.execute('copy bootflash:bad running-config').some(iosRejected));assert.equal(d.config.interfaces['Ethernet1/3'].description,description);
 });
+
+test('keepalive detail distinguishes a missing route in its VRF from a reachable subnet with no received peer messages',()=>{
+  const {s,a,b}=topology(),c=new NSOSSession(s,a.id,{skipConsoleLogin:true});
+  run(c,'conf t','vpc domain 42','peer-keepalive destination 10.255.0.2 source 10.255.0.1 vrf default','end');
+  const output=show(c,'show vpc peer-keepalive');
+  assert.match(output,/vPC keep-alive status\s+: Suspended \(Destination IP not reachable\)/);
+  assert.match(output,/--Receive status\s+: Failed/);assert.match(output,/Keepalive vrf\s+: default/);
+  assert.doesNotMatch(output,/--Last update from peer/);
+  run(c,'conf t','vpc domain 42','peer-keepalive destination 10.255.0.2 source 10.255.0.1 vrf management','end');advance(s,2000);
+  assert.match(show(c,'show vpc peer-keepalive'),/vPC keep-alive status\s+: peer is alive/);
+  delete nsosConfig(b).vpc!.keepalive;s.changed();advance(s,6000);
+  const timedOut=show(c,'show vpc peer-keepalive');
+  assert.match(timedOut,/vPC keep-alive status\s+: peer is not reachable through peer-keepalive/);
+  assert.match(timedOut,/--Receive status\s+: Failed/);assert.doesNotMatch(timedOut,/Suspended/);
+  assert.equal(vpcRuntime(a)!.adjacency,true);
+});

@@ -423,6 +423,7 @@ export function validateNSOSConfiguration(config:DeviceConfig,kind?:Device['kind
   for(const p of Object.values(config.interfaces)){
     if(!/^(?:Ethernet1\/(?:[1-9]|[12]\d|30)|mgmt0|Port-channel\d+|Vlan\d+|Loopback\d+|Null0)$/.test(p.name))throw Error('Unsupported NS-OS interface '+p.name);
     if(/^Port-channel/.test(p.name)&&!integer(Number(p.name.slice(12)),1,4096)||/^Vlan/.test(p.name)&&!integer(Number(p.name.slice(4)),1,4094))throw Error('Invalid NS-OS logical interface number.');
+    if(p.features.nsosAdminExplicit!==undefined&&typeof p.features.nsosAdminExplicit!=='boolean')throw Error('Invalid NS-OS administrative override.');
     if(p.features.ethernetSpeeds!==undefined&&(!Array.isArray(p.features.ethernetSpeeds)||!p.features.ethernetSpeeds.length||p.features.ethernetSpeeds.some((n:unknown)=>typeof n!=='number'||![10,100,1000,10000,25000,40000,100000].includes(n))))throw Error('Invalid Ethernet speed capability.');
     if(p.features.vpcId!==undefined){const id=p.features.vpcId;if(!c||!integer(id,1,4096)||!/^Port-channel\d+$/.test(p.name)||!p.switchport||ids.has(id))throw Error('Invalid or duplicate vPC member.');ids.add(id);}
     if(p.features.vpcOrphanSuspend!==undefined&&typeof p.features.vpcOrphanSuspend!=='boolean')throw Error('Invalid vPC orphan suspension.');

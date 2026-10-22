@@ -11652,6 +11652,7 @@ ${end.comment}` : end.comment;
     for (const p of Object.values(config4.interfaces)) {
       if (!/^(?:Ethernet1\/(?:[1-9]|[12]\d|30)|mgmt0|Port-channel\d+|Vlan\d+|Loopback\d+|Null0)$/.test(p.name)) throw Error("Unsupported NS-OS interface " + p.name);
       if (/^Port-channel/.test(p.name) && !integer5(Number(p.name.slice(12)), 1, 4096) || /^Vlan/.test(p.name) && !integer5(Number(p.name.slice(4)), 1, 4094)) throw Error("Invalid NS-OS logical interface number.");
+      if (p.features.nsosAdminExplicit !== void 0 && typeof p.features.nsosAdminExplicit !== "boolean") throw Error("Invalid NS-OS administrative override.");
       if (p.features.ethernetSpeeds !== void 0 && (!Array.isArray(p.features.ethernetSpeeds) || !p.features.ethernetSpeeds.length || p.features.ethernetSpeeds.some((n2) => typeof n2 !== "number" || ![10, 100, 1e3, 1e4, 25e3, 4e4, 1e5].includes(n2)))) throw Error("Invalid Ethernet speed capability.");
       if (p.features.vpcId !== void 0) {
         const id2 = p.features.vpcId;
@@ -11675,7 +11676,8 @@ ${end.comment}` : end.comment;
     const lines2 = [`interface ${p.name}`], f = p.features;
     if (p.description) lines2.push(" description " + p.description);
     if (p.switchport) {
-      lines2.push(" switchport", " switchport mode " + p.mode);
+      if (!f.channelGroup) lines2.push(" switchport");
+      lines2.push(" switchport mode " + p.mode);
       if (p.vlan !== 1) lines2.push(" switchport access vlan " + p.vlan);
       if (p.nativeVlan !== 1) lines2.push(" switchport trunk native vlan " + p.nativeVlan);
       if (p.allowedVlans !== null) lines2.push(" switchport trunk allowed vlan " + (p.allowedVlans.join(",") || "none"));
@@ -11709,7 +11711,9 @@ ${end.comment}` : end.comment;
     if (f.vpcId !== void 0) lines2.push(" vpc " + f.vpcId);
     if (nsosConfig({ kind: "datacenter", config: c }).vpc?.peerLink === p.name) lines2.push(" vpc peer-link");
     if (f.vpcOrphanSuspend) lines2.push(" vpc orphan-port suspend");
-    lines2.push(p.adminUp ? " no shutdown" : " shutdown", " exit");
+    const defaultUp = /^Ethernet/.test(p.name) ? p.switchport : /^(Port-channel|Loopback|mgmt)/.test(p.name);
+    if (f.nsosAdminExplicit !== false || p.adminUp !== defaultUp) lines2.push(p.adminUp ? " no shutdown" : " shutdown");
+    lines2.push(" exit");
     return lines2;
   }
   function renderNSOSConfig(device, c = device.config) {
@@ -16475,7 +16479,7 @@ ${end.comment}` : end.comment;
       const interfaces3 = {};
       for (let n = 1; n <= 30; n++) {
         const p = interfaces3[`Ethernet1/${n}`] = defaultInterface(`Ethernet1/${n}`, true);
-        p.adminUp = false;
+        p.features.nsosAdminExplicit = false;
         p.speed = n <= 24 ? 1e4 : 4e4;
         p.features.ethernetSpeeds = n <= 24 ? [1e3, 1e4] : [1e3, 1e4, 4e4];
         p.features.speedAuto = true;
@@ -37604,10 +37608,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const status3 = (rows3) => !r?.consistencyEvaluated ? "Consistency Check Not Performed" : rows3.length ? "failed" : "success";
     const rows2 = r?.consistency ?? [], global = rows2.filter((x) => x.type === 1 && x.vpc === void 0 && x.vlan === void 0), perVlan = rows2.filter((x) => x.type === 1 && x.vlan !== void 0), type2 = rows2.filter((x) => x.type === 2);
     const alive = r?.peerAlive ? "peer is alive" : "peer is not reachable through peer-keepalive";
-    if (a[0] === "role") return ["vPC Role status", "----------------------------------------------------", field("vPC role", r?.role ?? "none established"), field("Dual Active Detection Status", r?.dualActive ? 1 : 0), field("vPC system-mac", mac4(r?.systemMac ?? v.systemMac)), field("vPC system-priority", v.systemPriority), field("vPC local system-mac", mac4(datacenterBridgeMac(d))), field("vPC local role-priority", v.rolePriority), field("vPC local config role-priority", v.rolePriority), field("vPC peer system-mac", mac4(peer?.localMac)), field("vPC peer role-priority", peer?.rolePriority ?? "-"), field("vPC peer config role-priority", peer?.rolePriority ?? "-")];
+    const evaluated = r?.consistencyEvaluated === true, role = evaluated || r?.state === "auto-recovery" ? r?.role ?? "none established" : "none established";
+    if (a[0] === "role") return ["vPC Role status", "----------------------------------------------------", field("vPC role", role), field("Dual Active Detection Status", r?.dualActive ? 1 : 0), field("vPC system-mac", mac4(r?.systemMac ?? v.systemMac)), field("vPC system-priority", v.systemPriority), field("vPC local system-mac", mac4(datacenterBridgeMac(d))), field("vPC local role-priority", v.rolePriority), field("vPC local config role-priority", v.rolePriority), field("vPC peer system-mac", mac4(peer?.localMac)), field("vPC peer role-priority", peer?.rolePriority ?? "-"), field("vPC peer config role-priority", peer?.rolePriority ?? "-")];
     if (a[0] === "peer-keepalive") {
       const k = v.keepalive, age4 = r?.lastKeepalive === void 0 ? void 0 : now - r.lastKeepalive;
-      return [field("vPC keep-alive status", alive), field("--Receive status", r?.peerAlive ? "Success" : age4 === void 0 ? "Never received" : "Failed"), ...age4 === void 0 ? [] : [field("--Last update from peer", `(${Math.floor(age4 / 1e3)}) seconds, (${Math.floor(age4 % 1e3)}) msec`)], "", "vPC Keep-alive parameters", field("--Destination", k?.destination ?? "not configured"), field("--Keepalive interval", (k?.interval ?? 1e3) + " msec"), field("--Keepalive timeout", (k?.timeout ?? 5e3) / 1e3 + " seconds"), field("--Keepalive hold timeout", (k?.holdTimeout ?? 3e3) / 1e3 + " seconds"), field("--Keepalive vrf", k?.vrf ?? "management"), field("--Keepalive udp port", 3200), field("--Keepalive tos", 192)];
+      const vrf2 = k?.vrf === "default" ? void 0 : k?.vrf;
+      const destinationUnreachable = k && !e.cefLookup(d.id, k.destination, vrf2);
+      return [field("vPC keep-alive status", destinationUnreachable ? "Suspended (Destination IP not reachable)" : alive), field("--Receive status", r?.peerAlive ? "Success" : "Failed"), ...age4 === void 0 ? [] : [field("--Last update from peer", `(${Math.floor(age4 / 1e3)}) seconds, (${Math.floor(age4 % 1e3)}) msec`)], "", "vPC Keep-alive parameters", field("--Destination", k?.destination ?? "not configured"), field("--Keepalive interval", (k?.interval ?? 1e3) + " msec"), field("--Keepalive timeout", (k?.timeout ?? 5e3) / 1e3 + " seconds"), field("--Keepalive hold timeout", (k?.holdTimeout ?? 3e3) / 1e3 + " seconds"), field("--Keepalive vrf", k?.vrf ?? "management"), field("--Keepalive udp port", 3200), field("--Keepalive tos", 192)];
     }
     if (a[0] === "orphan-ports") {
       if (!r?.peerLinkUp) return ["ERROR: Peer-link is down"];
@@ -37646,12 +37653,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       return ["", "    Legend:", "        Type 1 : vPC will be suspended in case of mismatch", "", "Name                            Type  Local Value             Peer Value", "------------------------------- ----  ----------------------- -----------------------", ...table2.map(([name2, type, local, remote]) => name2.padEnd(32) + type.padEnd(6) + String(local).padEnd(24) + remote), ...!r?.consistencyEvaluated ? ["", "Consistency Check Not Performed"] : []];
     }
     const type2Reason = type2[0]?.name;
-    return ["Legend:", "                (*) - local vPC is down, forwarding via vPC peer-link", "", field("vPC domain id", v.domain), field("Peer status", r?.adjacency ? "peer adjacency formed ok" : r?.consistencyEvaluated ? "peer link is down" : "peer adjacency not formed"), field("vPC keep-alive status", alive), field("Configuration consistency status", status3(global)), field("Per-vlan consistency status", status3(perVlan)), field("Type-2 consistency status", status3(type2)), ...type2Reason ? [field("Type-2 inconsistency reason", type2Reason)] : [], field("vPC role", r?.role ?? "none established"), field("Number of vPCs configured", localMembers2.length), field("Peer Gateway", enabled3(v.peerGateway)), field("Dual-active excluded VLANs", "-"), field("Graceful Consistency Check", enabled3(v.gracefulConsistency)), field("Auto-recovery status", enabled3(v.autoRecovery)), field("Delay-restore status", timer(now, r?.restoreUntil, v.delayRestore)), field("Delay-restore SVI status", timer(now, r?.sviRestoreUntil, v.delayRestoreSVI)), field("Delay-restore Orphan-port status", timer(now, void 0, 0)), field("Operational Layer3 Peer-router", "Disabled"), field("Virtual-peerlink mode", "Disabled"), "", "vPC Peer-link status", "---------------------------------------------------------------------", "id    Port   Status Active vlans", "--    ----   ------ -------------------------------------------------", ...peerLink ? [String(1).padEnd(6) + nsosPort(peerLink.name).padEnd(7) + (r?.peerLinkUp ? "up" : "down").padEnd(7) + vlanList2(r?.peerLinkUp ? vlans4(d, peerLink) : [])] : [], "", "vPC status", "--------------------------------------------------------------------------------", "Id    Port          Status Consistency Reason                       Active vlans", "--    ------------  ------ ----------- ---------------------------- ---------------", ...localMembers2.map((p) => {
+    return ["Legend:", "                (*) - local vPC is down, forwarding via vPC peer-link", "", field("vPC domain id", v.domain), field("Peer status", r?.adjacency ? "peer adjacency formed ok" : r?.consistencyEvaluated ? "peer link is down" : "peer adjacency not formed"), field("vPC keep-alive status", alive), field("Configuration consistency status", evaluated ? status3(global) : "failed"), field("Per-vlan consistency status", evaluated ? status3(perVlan) : "success"), ...evaluated ? [field("Type-2 consistency status", status3(type2))] : [field("Configuration inconsistency reason", "Consistency Check Not Performed"), field("Type-2 inconsistency reason", "Consistency Check Not Performed")], ...type2Reason ? [field("Type-2 inconsistency reason", type2Reason)] : [], field("vPC role", role), field("Number of vPCs configured", localMembers2.length), field("Peer Gateway", enabled3(v.peerGateway)), field("Dual-active excluded VLANs", "-"), field("Graceful Consistency Check", evaluated ? enabled3(v.gracefulConsistency) : "Disabled (due to peer configuration)"), field("Auto-recovery status", enabled3(v.autoRecovery)), field("Delay-restore status", timer(now, r?.restoreUntil, v.delayRestore)), field("Delay-restore SVI status", timer(now, r?.sviRestoreUntil, v.delayRestoreSVI)), field("Delay-restore Orphan-port status", timer(now, void 0, 0)), field("Operational Layer3 Peer-router", "Disabled"), field("Virtual-peerlink mode", "Disabled"), "", "vPC Peer-link status", "---------------------------------------------------------------------", "id    Port   Status Active vlans", "--    ----   ------ -------------------------------------------------", ...peerLink ? [String(1).padEnd(6) + nsosPort(peerLink.name).padEnd(7) + (r?.peerLinkUp ? "up" : "down").padEnd(7) + vlanList2(r?.peerLinkUp && r.adjacency ? vlans4(d, peerLink) : [])] : [], ...localMembers2.length ? ["", "vPC status", "--------------------------------------------------------------------------------", "Id    Port          Status Consistency Reason                       Active vlans", "--    ------------  ------ ----------- ---------------------------- ---------------", ...localMembers2.map((p) => {
       const id2 = p.features.vpcId, m = r?.members[id2], incompatible = rows2.some((x) => x.type === 1 && (x.vpc === void 0 || x.vpc === id2)), failed = !r?.consistencyEvaluated || incompatible || m?.suspended && !r?.adjacency;
       const reason = !r?.consistencyEvaluated ? "Consistency Check Not Performed" : incompatible ? "vPC type-1 configuration incompatible" : m?.suspended && !r?.adjacency ? "Peer-link is down" : "success";
       const state4 = m?.up ? "up" : r?.adjacency && m?.peerUp ? "down*" : "down";
       return String(id2).padEnd(6) + nsosPort(p.name).padEnd(14) + state4.padEnd(7) + (failed ? "failed" : "success").padEnd(12) + reason.padEnd(29) + vlanList2(m?.activeVlans ?? []);
-    }), "", 'Please check "show vpc consistency-parameters vpc <vpc-num>" for the', "consistency reason of down vpc and for type-2 consistency reasons for", "any vpc."];
+    }), "", 'Please check "show vpc consistency-parameters vpc <vpc-num>" for the', "consistency reason of down vpc and for type-2 consistency reasons for", "any vpc."] : []];
   }
   function nsosVPCConfig(d) {
     const lines2 = renderNSOSConfig(d), result = [];
@@ -37883,7 +37890,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const id2 = integer3(match[2], label === "Loopback" ? 0 : 1, label === "Vlan" ? 4094 : label === "Port-channel" ? 4096 : 1023);
       if (label === "Vlan") this.requireFeature("interface-vlan");
       const p = defaultInterface(label + id2, label === "Port-channel");
-      p.adminUp = label === "Loopback";
+      p.adminUp = label === "Loopback" || label === "Port-channel";
+      p.features.nsosAdminExplicit = false;
       if (label === "Loopback") {
         p.features.bandwidth = 8e6;
         p.features.delay = 500;
@@ -37917,12 +37925,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       this.context = { mode: "interface", name: p.name, parent: { mode: "config" } };
     }
     rangeCommands() {
-      return this.interfaceCommands().map((command) => ({ ...command, run: (args, no) => {
+      return this.interfaceCommands(true).map((command) => ({ ...command, run: (args, no) => {
         const range = this.context, output = [];
         try {
           for (const name2 of range.interfaces) {
             this.context = { mode: "interface", name: name2, parent: { mode: "config" } };
-            const before = clone2(this.device.config), handler = this.interfaceCommands().find((c) => c.syntax === command.syntax);
+            const before = clone2(this.device.config), handler = this.interfaceCommands(true).find((c) => c.syntax === command.syntax);
             const lines2 = handler.run(args, no) || [];
             if (lines2.some(iosRejected)) throw new NSOSError(lines2.join("\n"));
             if (command.write) this.synchronizeChannel(before, this.context);
@@ -38296,7 +38304,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const hits = this.device.runtime.features.aclHits ?? {};
       for (const key4 of Object.keys(hits)) if (sequence === void 0 ? key4.startsWith(name2 + ":") : key4 === name2 + ":" + sequence) delete hits[key4];
     }
-    interfaceCommands() {
+    interfaceCommands(range = false) {
       const cmd = this.c.bind(this), p = this.selected, f = p.features, c = this.device.config;
       const data = () => {
         if (p.name === "mgmt0") fail4("mgmt0 is a dedicated routed management interface.");
@@ -38311,11 +38319,15 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         }, { no: "description" }),
         cmd("shutdown", "Administratively disable interface", (_a, no) => {
           p.adminUp = no;
+          f.nsosAdminExplicit = true;
         }, { no: "shutdown" }),
         cmd("switchport", "Configure Layer 2 or routed port", (_a, no) => {
           data();
           if (/^(Vlan|Loopback)/.test(p.name)) fail4("Logical routed interfaces do not support switchport.");
-          if (f.channelGroup) fail4("Remove channel-group membership before changing Layer 2/3 mode.");
+          if (f.channelGroup) {
+            if (p.switchport === !no) return;
+            throw new NSOSError("ERROR: : port already in a port-channel, no config allowed");
+          }
           if (p.switchport !== !no && f.aclOut) fail4("Remove the outbound ACL before changing Layer 2/3 mode.");
           if (no && (f.vpcId || nsosConfig(this.device).vpc?.peerLink === p.name)) fail4("vPC members and the peer-link must remain Layer 2 port-channels.");
           if (p.switchport !== !no) {
@@ -38323,6 +38335,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
             delete p.mask;
             p.ipv6 = [];
             delete f.ospf;
+            if (/^Ethernet/.test(p.name) && f.nsosAdminExplicit === false) p.adminUp = !no;
           }
           p.switchport = !no;
           f.nonegotiate = true;
@@ -38596,7 +38609,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           if (!p.switchport || f.channelGroup || f.vpcId || nsosConfig(this.device).vpc?.peerLink === p.name) fail4("An orphan port must be a non-vPC Layer 2 interface; configure port-channel suspension on the logical interface.");
           f.vpcOrphanSuspend = !no;
         }, { no: "vpc orphan-port suspend" })
-      ];
+      ].filter((command) => range || !f.channelGroup || !command.syntax.startsWith("switchport") || p.switchport && command.syntax !== "switchport");
     }
     area(text3) {
       if (isIPv4(text3)) return String(text3.split(".").reduce((n, x) => n * 256 + Number(x) >>> 0, 0));

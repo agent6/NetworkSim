@@ -15,7 +15,7 @@ function ping(s:Simulator,from:Device,to:Device,count=2):void {
 test('Datacenter profile has 24 access-facing and six Ethernet uplinks, with real negotiated capacities',()=>{
   const s=new Simulator(),a=s.addDevice('datacenter'),b=s.addDevice('datacenter'),ios=s.addDevice('switch');
   const ports=Object.values(a.config.interfaces).filter(p=>/^Ethernet/.test(p.name));
-  assert.equal(ports.length,30);assert.ok(ports.every(p=>!p.adminUp));
+  assert.equal(ports.length,30);assert.ok(ports.every(p=>p.adminUp));
   assert.equal(ports.filter(p=>p.speed===10000).length,24);assert.equal(ports.filter(p=>p.speed===40000).length,6);
   assert.equal(negotiateEthernet(a.config.interfaces[eth(1)],b.config.interfaces[eth(1)]).speed,10000);
   assert.equal(negotiateEthernet(a.config.interfaces[eth(25)],b.config.interfaces[eth(25)]).speed,40000);
@@ -432,4 +432,5 @@ test('auto-recovery is opt-in and obeys the full configured reload delay without
   nsosConfig(a).vpc={...defaultVPC(1),autoRecovery:true};s.changed();
   advance(s,239999);assert.equal(vpcRuntime(a)!.state,'initializing');advance(s,1);
   assert.equal(vpcRuntime(a)!.state,'auto-recovery');
+  const cli=new NSOSSession(s,a.id,{skipConsoleLogin:true});assert.match(cli.execute('show vpc role').join('\n'),/vPC role\s+: primary/);
 });

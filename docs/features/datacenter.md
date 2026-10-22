@@ -15,9 +15,12 @@ so the name fits below the icon.
 | Ethernet1/25–Ethernet1/30 | Uplinks | 40 Gbps | 1 / 10 / 40 Gbps |
 | mgmt0 | Dedicated management | 1 Gbps | 10 / 100 / 1000 Mbps |
 
-All 30 data ports begin **administratively down**, with `switchport`, explicit
-access mode and VLAN 1. These are this fictional platform's deliberately selected
-access-layout defaults—not a claim about every Nexus release's defaults.
+All 30 data ports begin **administratively enabled**, with `switchport`, access
+mode and VLAN 1, matching the measured Nexus 9300v 10.6(2) profile. With no explicit
+shutdown choice, conversion to a routed Ethernet port changes its default to
+shut; conversion back to Layer 2 enables it. An explicit `shutdown` or
+`no shutdown` survives mode changes. Existing saved ports retain their saved
+administrative state. The system-wide default-switchport controls are not exposed.
 Port placement is descriptive: any data port can connect to a host, router or
 switch. Autonegotiation is enabled and can negotiate down to existing 1-Gbps
 NetworkSim nodes. `speed` takes Mbps, including `10000` and `40000`; `speed auto`
@@ -118,6 +121,20 @@ port-channel propagate to its physical members; shared Layer 2/MTU/VRF settings
 must be changed on the logical port-channel rather than one member. Members
 must be compatible; unsupported speeds and inconsistent member configurations
 are rejected. There is no PAgP or DTP.
+
+New port-channels start administratively enabled, including those created by
+`channel-group`. An explicit `shutdown` remains in effect when member commands
+are reapplied. Older saved labs retain their saved administrative state; use
+`no shutdown` on their port-channel if it was saved shut.
+
+On the measured Nexus 9300v image, bare `switchport` and `no switchport` are
+incomplete on an individual Layer 2 channel member and invalid on an individual
+routed channel member. Their help omits `<CR>`. An interface range accepts
+reapplying its existing mode; a real Layer 2/3 conversion remains rejected
+until channel membership is removed. NetworkSim preserves that distinction.
+Layer 2 member exports omit the redundant bare `switchport` line, as native
+NVGEN does, so reapplying their exported configuration does not hit that parser
+restriction.
 
 Physical selectors accept compact and spaced forms, including
 `interface port-channel 1` and `interface ethernet 1/1-2`. A contiguous physical
@@ -264,6 +281,35 @@ port-channel and sets its STP port type to `network`.
 Configure each downstream port-channel's `vpc ID` on both peers. IDs range
 1–4096; domains range 1–1000. A peer-link cannot also be a vPC member.
 `vpc orphan-port suspend` is available on non-vPC Layer 2 interfaces.
+
+The keepalive defaults to the **management VRF**, even when its source address
+belongs to a routed Ethernet interface in the default VRF. Selecting an IP
+address does not select that interface's VRF. For a direct Ethernet1/29
+keepalive in the default routing table, configure DC1 as follows and reverse
+the addresses on DC2:
+
+```text
+configure terminal
+interface Ethernet1/29
+ no switchport
+ ip address 192.168.100.1/30
+ no shutdown
+vpc domain 1
+ peer-keepalive destination 192.168.100.2 source 192.168.100.1 vrf default
+end
+show vpc peer-keepalive
+show vpc
+```
+
+For a dedicated keepalive VRF, create `vrf context KEEPALIVE`, put Ethernet1/29
+in it with `vrf member KEEPALIVE`, reapply its IP address, and select
+`vrf KEEPALIVE` on both peers' `peer-keepalive` commands. Keep this transport
+separate from the peer-link. A pair can form before any downstream `vpc ID`
+is configured; `Number of vPCs configured : 0` does not prevent adjacency.
+The [minimal two-node example](../../examples/datacenter-vpc-ethernet-keepalive.netsim.yaml)
+uses Ethernet1/27–28 for Po1 and Ethernet1/29 for the default-VRF keepalive.
+The [native Ethernet keepalive audit](../audits/cml-vpc-ethernet-keepalive.md)
+records both the initial failure and the measured repairs.
 
 The model uses delivered peer-link state exchanges and routed VRF UDP3200
 keepalives, common LACP actor identity, sticky operational role, consistency

@@ -10,7 +10,8 @@ function portLines(p:InterfaceConfig,c:DeviceConfig):string[] {
   const lines=[`interface ${p.name}`],f=p.features;
   if(p.description)lines.push(' description '+p.description);
   if(p.switchport){
-    lines.push(' switchport',' switchport mode '+p.mode);
+    if(!f.channelGroup)lines.push(' switchport');
+    lines.push(' switchport mode '+p.mode);
     if(p.vlan!==1)lines.push(' switchport access vlan '+p.vlan);
     if(p.nativeVlan!==1)lines.push(' switchport trunk native vlan '+p.nativeVlan);
     if(p.allowedVlans!==null)lines.push(' switchport trunk allowed vlan '+(p.allowedVlans.join(',')||'none'));
@@ -45,7 +46,9 @@ function portLines(p:InterfaceConfig,c:DeviceConfig):string[] {
   if(f.vpcId!==undefined)lines.push(' vpc '+f.vpcId);
   if(nsosConfig({kind:'datacenter',config:c} as Device).vpc?.peerLink===p.name)lines.push(' vpc peer-link');
   if(f.vpcOrphanSuspend)lines.push(' vpc orphan-port suspend');
-  lines.push(p.adminUp?' no shutdown':' shutdown',' exit');
+  const defaultUp=/^Ethernet/.test(p.name)?p.switchport:/^(Port-channel|Loopback|mgmt)/.test(p.name);
+  if(f.nsosAdminExplicit!==false||p.adminUp!==defaultUp)lines.push(p.adminUp?' no shutdown':' shutdown');
+  lines.push(' exit');
   return lines;
 }
 
