@@ -1,5 +1,10 @@
 import type {Device, InterfaceConfig, StpPortState} from './model.ts';
 
+export function stpRegion(d:Device):string {
+  const m=d.config.features.stp?.mst;
+  return JSON.stringify([m?.name??'',m?.revision??0,[...(m?.instances??[])].sort((a:{id:number},b:{id:number})=>a.id-b.id).map((i:{id:number;vlans:number[]})=>[i.id,[...i.vlans].sort((a,b)=>a-b)])]);
+}
+
 /** STP owns the aggregate. Physical forwarding and cable indicators use its state. */
 export function stpPortName(device:Device, port:string):string {
   const group=device.config.interfaces[port]?.features.channelGroup;

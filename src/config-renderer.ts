@@ -1,4 +1,5 @@
 import {renderFTPClient} from './ios-ftp.ts';
+import {renderNSOSConfig} from './nsos-config.ts';
 import {slaLife,slaStartText,type SLAOperation,type SLASchedule} from './sla-config.ts';
 import {isIPv4,isIPv6} from './ip.ts';
 import {endpointGlobalLines,endpointInterfaceLines} from './ios-endpoint.ts';
@@ -261,6 +262,7 @@ export function isRenderedDefaultBlock(device: Device, head: string, children: s
 
 /** Deterministic original IOS-like configuration rendering from real state. */
 export function renderConfig(device: Device, config: DeviceConfig = device.config): string[] {
+  if(device.kind==='datacenter')return renderNSOSConfig(device,config);
   const c = config, router = device.kind === 'router';
   const platformGlobal = renderPlatformGlobal(c), timestampOrder = (type: string) => type === 'debug' ? 0 : 1;
   const lines = ['!', `version ${NETSIM_VERSION}`];

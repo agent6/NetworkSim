@@ -1,12 +1,12 @@
 import type { Link } from './model.ts';
 export interface LinkMedium {medium:'copper-cat5e'|'copper-cat6a'|'fiber-om3'|'fiber-smf';length:number;fault:'none'|'open'|'short'|'miswire'|'dirty';bitErrorRate:number}
-export const LINK_MEDIA=[['copper-cat5e','Cat 5e copper · up to 1 Gbps / 100 m'],['copper-cat6a','Cat 6A copper · up to 10 Gbps / 100 m'],['fiber-om3','OM3 fiber · SR optics / 300 m at 10 Gbps'],['fiber-smf','Single-mode fiber · LR optics / 10 km']] as const;
+export const LINK_MEDIA=[['copper-cat5e','Cat 5e copper · up to 1 Gbps / 100 m'],['copper-cat6a','Cat 6A copper · up to 10 Gbps / 100 m'],['fiber-om3','OM3 fiber · SR optics / 300 m at 10 Gbps; 100 m at 40 Gbps'],['fiber-smf','Single-mode fiber · LR optics / 10 km']] as const;
 export const LINK_FAULTS=[['none','None'],['open','Open / disconnected conductor'],['short','Short circuit'],['miswire','Incorrect pinout / fiber polarity'],['dirty','Signal degradation / dirty connector']] as const;
 export function validateLinkMedium(value:unknown):asserts value is LinkMedium{
  if(value===undefined)return;const p=value as LinkMedium;if(!p||typeof p!=='object'||!LINK_MEDIA.some(([id])=>id===p.medium)||!LINK_FAULTS.some(([id])=>id===p.fault)||!Number.isFinite(p.length)||p.length<0||p.length>100000||!Number.isFinite(p.bitErrorRate)||p.bitErrorRate<0||p.bitErrorRate>1)throw Error('Invalid physical link medium, length, fault or bit error rate.');
 }
 export function mediumState(p:LinkMedium|undefined,speed:number,localMedia?:string,peerMedia?:string):{carrier:boolean;reason?:string;medium?:string;length?:number;propagation:number;bitErrorRate:number}{
- if(!p)return{carrier:true,propagation:0,bitErrorRate:0};const fiber=p.medium.startsWith('fiber'),maxLength=fiber?p.medium==='fiber-smf'?10000:speed>=10000?300:550:100,maxSpeed=p.medium==='copper-cat5e'?1000:10000;
+ if(!p)return{carrier:true,propagation:0,bitErrorRate:0};const fiber=p.medium.startsWith('fiber'),maxLength=fiber?p.medium==='fiber-smf'?10000:speed>=40000?100:speed>=10000?300:550:100,maxSpeed=fiber?40000:p.medium==='copper-cat5e'?1000:10000;
  const reason=['open','short','miswire'].includes(p.fault)?'Physical '+p.fault+' fault':speed>maxSpeed?'Cable category does not support the negotiated speed':p.length>maxLength?`Cable length exceeds the ${maxLength} m ${p.medium} profile`: [localMedia,peerMedia].some(m=>m==='rj45'&&fiber||m==='sfp'&&!fiber)?'Configured media type does not match the cable':undefined;
  return{carrier:!reason,...reason?{reason}:{},medium:p.medium,length:p.length,propagation:p.length/200000,bitErrorRate:Math.max(p.bitErrorRate,p.fault==='dirty'?1e-4:0)};
 }

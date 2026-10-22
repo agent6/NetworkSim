@@ -10,6 +10,8 @@ import { renderConfig } from './config-renderer.ts';
 import { iosRejected } from './ios-help.ts';
 import type { Device } from './model.ts';
 import type { Simulator, ServiceResult } from './engine.ts';
+import {createCLISession} from './session.ts';
+import {nsosFeature} from './datacenter.ts';
 
 export interface ManagedCLI {
   readonly prompt: string;
@@ -70,13 +72,14 @@ export class ManagementController {
   private readonly factory: Factory;
   private accounting:AAAAccountingClient;
   private automationRuns = new Map<string, number>();
+  private clientVRFs=new Map<string,string>();
   sessionSnapshot(deviceId:string):{id:string;source:string;port:number;line:string;phase:string;username?:string;expires:number;lastActivity:number;lineNumber:number}[]{
     return [...this.sessions.values()].filter(s=>s.deviceId===deviceId&&this.alive(s)).map(({id,source,port,line,phase,username,expires,lastActivity,lineNumber})=>({id,source,port,line,phase,username,expires,lastActivity,lineNumber}));
   }
   sessionIdFor(cli:ManagedCLI):string|undefined{return [...this.sessions.values()].find(s=>s.cli===cli&&this.alive(s))?.id;}
   accountingSnapshot(deviceId:string):AccountingContext[]{return [...this.sessions.values()].filter(s=>s.deviceId===deviceId&&this.alive(s)&&!!s.accounting).map(s=>({...s.accounting!}));}
   constructor(engine: Simulator, factory: Factory) {
-    this.engine = engine; this.factory = factory; this.accounting=new AAAAccountingClient(engine);
+    this.engine = engine; this.factory = id=>engine.getDevice(id)?.kind==='datacenter'?createCLISession(engine,id,{skipConsoleLogin:true}):factory(id); this.accounting=new AAAAccountingClient(engine);
     engine.subscribe(()=>this.syncAutomation());
     engine.registerHTTPAuthenticator((deviceId,list,user,password)=>this.authenticate(deviceId,list,user,password));
     engine.registerUDPService(1812,d=>!!d.config.services.radius?.enabled,(d,payload,source)=>this.aaaRequest(d,'radius',payload,source));
@@ -136,6 +139,7 @@ export class ManagementController {
     return Object.entries<any>(d.config.features.lines || {}).find(([name, line]) => name.startsWith('vty ') && (line.transport === 'all' || String(line.transport || '').split(' ').includes(transport)));
   }
   accepts(d: Device, port: number): boolean {
+    if(d.kind==='datacenter'&&(port!==22||!nsosFeature(d,'ssh')))return false;
     return d.powered && (port===22&&sshFileEnabled(d)||!!this.vty(d, port) && (port !== 22 || !!d.config.features.ssh?.keys));
   }
   private method(d: Device, line: any): RemoteSession['method'] {
@@ -161,6 +165,7 @@ export class ManagementController {
     if(!this.sessions.has(session.id))return;
     this.engine.clock.cancel(session.expiryTimer);
     this.sessions.delete(session.id);
+    for(const key of this.clientVRFs.keys())if(key.endsWith('|'+session.id))this.clientVRFs.delete(key);
     const device = this.engine.getDevice(session.deviceId);
     // A restarted runtime has lost the session; do not invent a later Stop after power returns.
     if(device?.powered&&device.runtime.features.managementSessions?.includes(session.id)&&session.accounting)this.accounting.exec(device,session.accounting,'stop',reason);
@@ -246,17 +251,17 @@ export class ManagementController {
     if (!this.alive(session)) { this.close(session); return { closed: true, output: [...output, 'Connection closed.'] }; }
     return this.reply(session, output);
   }
-  open(sourceId: string, address: string, port: number, username?: string,transport?:'ssh'|'telnet',columns?:number): ServiceResult {
-    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'open', username,transport,columns });
-    this.wait(result);return result;
+  open(sourceId: string, address: string, port: number, username?: string,transport?:'ssh'|'telnet',columns?:number,vrf?:string): ServiceResult {
+    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'open', username,transport,columns },{vrf});
+    this.wait(result);if(vrf&&result.status==='success'&&!result.closed&&typeof result.sessionId==='string')this.clientVRFs.set(sourceId+'|'+result.sessionId,vrf);return result;
   }
   send(sourceId: string, address: string, port: number, sessionId: string, line: string,columns?:number): ServiceResult {
-    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'line', sessionId, line,columns });
+    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'line', sessionId, line,columns },{vrf:this.clientVRFs.get(sourceId+'|'+sessionId)});
     this.wait(result);return result;
   }
-  query(sourceId:string,address:string,port:number,sessionId:string,operation:string,line:string,columns?:number):ServiceResult{const result=this.engine.tcpRequest(sourceId,address,port,{operation,sessionId,line,columns});this.wait(result);return result;}
+  query(sourceId:string,address:string,port:number,sessionId:string,operation:string,line:string,columns?:number):ServiceResult{const result=this.engine.tcpRequest(sourceId,address,port,{operation,sessionId,line,columns},{vrf:this.clientVRFs.get(sourceId+'|'+sessionId)});this.wait(result);return result;}
   disconnect(sourceId: string, address: string, port: number, sessionId: string): ServiceResult {
-    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'close', sessionId });
+    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'close', sessionId },{vrf:this.clientVRFs.get(sourceId+'|'+sessionId)});
     this.wait(result);return result;
   }
   archive(device: Device, configuration: string): string {

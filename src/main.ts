@@ -5,6 +5,7 @@ import {showNetworkTools} from './network-tools-ui.ts';
 import{showPoE}from'./poe-ui.ts';
 import{showSimulation}from'./simulation-ui.ts';
 import projectLogo from './assets/networksim-logo.png';
+import datacenterExample from '../examples/datacenter-vpc.netsim.json' with {type:'json'};
 import{showWireless}from'./wireless-ui.ts';
 import{wirelessConfig}from'./wireless-model.ts';
 import { layoutLinks, orderedPairLinks, shortInterface, type LinkLayout, type PortLabel } from "./link-layout.ts";
@@ -13,7 +14,8 @@ import { setupTooltips } from "./tooltips.ts";
 import { nodeIconDefinitions } from "./node-icons.ts";
 import { alignMove, type AlignmentGuide, type AlignmentItem } from "./alignment.ts";
 import { Simulator } from "./engine.ts";
-import { IOSSession, CLI_CAPABILITIES } from "./cli.ts";
+import { CLI_CAPABILITIES } from "./cli.ts";
+import { createCLISession, type CLISession } from "./session.ts";
 import { terminalRows, terminalPage, terminalCompletionEdit } from "./ios-terminal.ts";
 import { CONTROL_PLANE_CAPABILITIES } from "./control-plane.ts";
 import { isIPv6, parseCidr } from "./ip.ts";
@@ -66,12 +68,13 @@ const $$ = <T extends HTMLElement = HTMLElement>(
   parent: ParentNode = document,
 ): T[] => [...parent.querySelectorAll<T>(selector)];
 const app = $("#app");
-const kinds: DeviceKind[] = ["router", "switch", "l3switch", "poeswitch", "pc", "server", "wlc", "ap", "laptop", "phone"];
+const kinds: DeviceKind[] = ["router", "switch", "l3switch", "poeswitch", "datacenter", "pc", "server", "wlc", "ap", "laptop", "phone"];
 const kindDescriptions = [
   "Routing & WAN",
   "VLANs & switching",
   "Multilayer switching",
   "Switching & PoE power",
+  "NS-OS · 24 × 10G access + 6 × 40G uplinks",
   "End-user workstation",
   "Network services",
   "Wireless LAN controller",
@@ -84,7 +87,7 @@ const paletteLabels: Partial<Record<DeviceKind, string>> = {
 };
 const selected = new Set<string>();
 type TerminalSession = {
-  cli: IOSSession;
+  cli: CLISession;
   lines: string[];
   history: string[];
   cursor: number;
@@ -635,7 +638,7 @@ function revealConsoleDevice() {
 }
 function ensureConsoleSession(id: string) {
   if (sessions.has(id)||sim.getDevice(id)?.kind==='phone') return;
-  sessions.set(id, { cli: new IOSSession(sim, id), lines: [], history: [], cursor: 0 });
+  sessions.set(id, { cli: createCLISession(sim, id), lines: [], history: [], cursor: 0 });
   if (renderedSession === id) renderedSession = null;
 }
 function syncConsoleDevices() {
@@ -1430,7 +1433,7 @@ function filesDialog() {
   dialog(
     "My labs",
     `<div class="flex flex-wrap items-center justify-between gap-2"><span class="section-label">Saved in this browser</span><span class="text-[10px] text-slate-400">Current workspace saves automatically</span></div>${err ? `<p class="notice mt-3">${esc(err)}</p>` : ""}<div class="mt-3 divide-y divide-slate-100">${labs.length ? labs.map((l) => `<div class="flex items-center justify-between gap-2 py-3"><button data-open-saved="${esc(l.id)}" class="min-w-0 flex-1 text-left"><div class="truncate text-xs font-semibold">${esc(l.name)}</div><div class="mt-1 text-[10px] text-slate-400">${new Date(l.savedAt).toLocaleString()}</div></button><button class="icon-btn" data-rename-saved="${esc(l.id)}" aria-label="Rename ${esc(l.name)}">${icon("edit", 16)}</button><button class="icon-btn" data-download-saved="${esc(l.id)}" title="Export saved lab" aria-label="Export ${esc(l.name)}">${icon("download", 16)}</button><button class="icon-btn" data-delete-saved="${esc(l.id)}" title="Delete saved lab" aria-label="Delete ${esc(l.name)}">${icon("trash", 16)}</button></div>`).join("") : '<p class="py-5 text-xs text-slate-400">No saved labs yet. Use Save or Save as in the toolbar to add one.</p>'}</div><p class="mt-4 text-[10px] leading-5 text-slate-400">Browser saves depend on browser permissions and can be cleared with browsing data. A downloaded lab file is the reliable way to move or back up your work.</p>`,
-    `<button class="btn-primary" data-action="close-dialog">Done</button>`,
+    `<button class="btn" data-action="datacenter-example">Open Datacenter Switch vPC example</button><button class="btn-primary" data-action="close-dialog">Done</button>`,
   );
   setImportReading(importReading);
 }
@@ -1630,15 +1633,16 @@ function interfaceConfig(d: Device, name: string) {
   if (!p) return;
   formDialog(
     `${d.config.hostname} · ${name}`,
-    `${textField("Description", "description", p.description)}${!p.switchport ? `<div class="grid grid-cols-2 gap-4">${textField("IPv4 address", "ip", p.ip || "")}${textField("Subnet mask", "mask", p.mask || "")}</div>` : ""}${p.switchport ? `<div class="grid grid-cols-2 gap-4"><label class="field">Switchport mode<select name="mode">${["access", "trunk", "dynamic-auto", "dynamic-desirable"].map((m) => `<option ${m === p.mode ? "selected" : ""}>${m}</option>`).join("")}</select></label>${textField("Access VLAN", "vlan", p.vlan)}</div>` : ""}<div class="grid grid-cols-2 gap-4">${textField("IP MTU", "mtu", p.mtu)}<label class="mt-6 flex items-center gap-2"><input type="checkbox" name="up" ${p.adminUp ? "checked" : ""}>Enabled (no shutdown)</label></div>`,
+    `${textField("Description", "description", p.description)}${!p.switchport ? `<div class="grid grid-cols-2 gap-4">${textField("IPv4 address", "ip", p.ip || "")}${textField("Subnet mask", "mask", p.mask || "")}</div>` : ""}${p.switchport ? `<div class="grid grid-cols-2 gap-4"><label class="field">Switchport mode<select name="mode">${(d.kind==='datacenter'?["access","trunk"]:["access", "trunk", "dynamic-auto", "dynamic-desirable"]).map((m) => `<option ${m === p.mode ? "selected" : ""}>${m}</option>`).join("")}</select></label>${textField("Access VLAN", "vlan", p.vlan)}</div>` : ""}<div class="grid grid-cols-2 gap-4">${textField("IP MTU", "mtu", p.mtu)}<label class="mt-6 flex items-center gap-2"><input type="checkbox" name="up" ${p.adminUp ? "checked" : ""}>Enabled (no shutdown)</label></div>`,
     (f) => {
       const ip = p.switchport ? p.ip : String(f.get("ip") ?? "").trim(),
         mask = p.switchport ? p.mask : String(f.get("mask") ?? "").trim(),
         mtu = Number(f.get("mtu"));
       if (ip && (!validIPv4(ip) || !validMask(mask || "")))
         throw Error("Enter a valid IPv4 address and contiguous mask.");
-      if (!Number.isInteger(mtu) || mtu < 68 || mtu > 65535)
-        throw Error("MTU must be 68–65535 bytes.");
+      const minMTU=d.kind==='datacenter'?576:68,maxMTU=d.kind==='datacenter'?9216:65535;
+      if (!Number.isInteger(mtu) || mtu < minMTU || mtu > maxMTU)
+        throw Error(`MTU must be ${minMTU}–${maxMTU} bytes.`);
       transaction(() => {
         if (
           !p.switchport &&
@@ -1947,6 +1951,7 @@ const actions: Record<string, () => void> = {
     dialog("Terminal keyboard shortcuts", `<div class="terminal-shortcuts"><p>Click anywhere in the terminal to type. Drag across output to select and copy it.</p><dl><dt>Tab · ?</dt><dd>Complete a command · show context help</dd><dt>↑ / ↓ · Ctrl P / N</dt><dd>Command history</dd><dt>Ctrl A / E</dt><dd>Beginning / end of the line</dd><dt>Ctrl U / K / W</dt><dd>Delete before cursor / after cursor / previous word</dd><dt>Ctrl C · Ctrl Z</dt><dd>Cancel input · return to privileged mode</dd><dt>Space / Enter / q</dt><dd>Next page / next line / stop paged output</dd><dt>Ctrl Shift 6, then X</dt><dd>Suspend a remote session</dd><dt>Shift Tab</dt><dd>Move keyboard focus out of the terminal</dd></dl><p>Each device keeps its draft, history and scroll position. Pasted lines execute at line breaks; a final line without a line break remains editable.</p></div>`, '<button class="btn-primary" data-action="close-dialog">Done</button>');
   },
   files: filesDialog,
+  "datacenter-example": () => requestLabReplacement(parseDocument(JSON.stringify(datacenterExample)), "open", "Datacenter Switch vPC example"),
   export: exportLab,
   import: chooseLabFile,
   "save-local": saveLab,
@@ -1986,8 +1991,8 @@ const actions: Record<string, () => void> = {
   "export-config": () => {
     const d = selectedDevice();
     if (d) {
-      const s = new IOSSession(sim, d.id);
-      s.execute("enable");
+      const s = createCLISession(sim, d.id, {skipConsoleLogin:true});
+      if(d.kind!=='datacenter')s.execute("enable");
       download(
         `${d.config.hostname}.txt`,
         s.execute("show running-config").join("\n"),

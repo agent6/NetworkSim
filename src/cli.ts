@@ -1,4 +1,5 @@
 import {endpointCommands} from './ios-endpoint.ts';
+import {createCLISession} from './session.ts';
 import {iosBootState,iosBooting,type IOSBootState} from './ios-boot.ts';
 import {refreshMacAging} from './mac-aging.ts';
 import { slaDefaults, slaReservedPorts, type SLAOperation, type SLASchedule } from './sla-config.ts';
@@ -148,7 +149,7 @@ export class IOSSession {
   public readonly engine: Simulator;
   public readonly deviceId: string;
   constructor(engine: Simulator, deviceId: string, options:{skipConsoleLogin?:boolean}={}) { this.engine=engine;this.deviceId=deviceId;this.consoleSession=!options.skipConsoleLogin;this.management; if(!options.skipConsoleLogin)this.beginLogin(); }
-  private get management(){return managementFor(this.engine,id=>new IOSSession(this.engine,id,{skipConsoleLogin:true}));}
+  private get management(){return managementFor(this.engine,id=>createCLISession(this.engine,id,{skipConsoleLogin:true}));}
   private syncBoot():void {
     if(!this.consoleSession)return;
     const boot=iosBootState(this.device);if(boot===this.consoleBoot)return;
@@ -199,7 +200,8 @@ export class IOSSession {
   private authenticate(text:string):string[]{const auth=this.auth!,f=this.device.config.features,line=f.lines?.['console 0']||{};if(auth.kind==='username'){auth.username=text.trim();auth.kind='password';return [];}const user=ownRecordValue(f.users,auth.username),expected=accountCredential(user);const remote=f.aaa?.enabled?(auth.kind==='enable'&&f.aaa.enable?.default?this.management.authenticate(this.deviceId,'default',this.identity?.username||'$enab15$',text,'enable'):auth.username!==undefined?this.management.authenticate(this.deviceId,line.authentication||'default',auth.username,text,'login','console 0'):undefined):undefined;const valid=remote?remote.accepted:auth.kind==='enable'?typeof(f.enableSecret??f.enablePassword)==='string'&&(f.enableSecret??f.enablePassword).length>0&&text===(f.enableSecret??f.enablePassword):auth.username!==undefined?expected!==undefined&&text===expected:typeof line.password==='string'&&line.password.length>0&&text===line.password;if(valid){const authorization=auth.kind==='enable'?{accepted:true,privilege:auth.level??15}:this.management.execPrivilege(this.deviceId,'console 0',auth.username,true,remote?.privilege??user?.privilege??line.privilege??1);if(!authorization.accepted){this.auth={kind:'username',attempts:0};return ['% EXEC authorization failed.'];}if(auth.kind!=='enable')this.setIdentity(auth.username,true,'console 0');this.setPrivilege(authorization.privilege);return f.banners?.exec?[f.banners.exec]:[];}auth.attempts++;if(auth.kind==='enable'&&auth.attempts>=3){this.auth=undefined;return ['% Bad secrets'];}if(auth.username!==undefined){auth.kind='username';delete auth.username;}return ['% Authentication failed'];}
   private enable(level=15):void{const f=this.device.config.features;if(level>this.privilege&&(f.enableSecret!==undefined||f.enablePassword!==undefined||f.aaa?.enabled&&f.aaa.enable?.default)&&!(f.aaa?.enabled&&f.aaa.enable?.default?.length===1&&f.aaa.enable.default[0]==='none'))this.auth={kind:'enable',attempts:0,level};else this.setPrivilege(level);}
   private remoteReply(result:any,address:string,port:number,opening?:{protocol:'telnet'|'ssh';label:string}):string[]{const label=opening?.label??address,trying=label===address?`Trying ${address} ... `:`Trying ${label} (${address})... `;if(result.status!=='success'){this.remote=undefined;if(this.windowsMode)return [`% Connection failed: ${result.error||'No response'}`];if(!opening)return [`[Connection to ${address} closed by foreign host]`];const error=String(result.error||''),message=/refused/i.test(error)?'% Connection refused by remote host':/unreachable|prohibited|source address|no route/i.test(error)?'% Destination unreachable; gateway or host down':'% Connection timed out; remote host not responding';return opening.protocol==='telnet'?[trying,message]:[message];}if(result.closed)this.remote=undefined;else this.remote={address,port,id:result.sessionId,prompt:result.prompt,passwordInput:!!result.passwordInput,pageLength:result.pageLength,pageWidth:result.pageWidth,editing:result.editing,history:result.history,timestamp:result.timestamp};let output:string[]=result.output||[];if(!this.windowsMode&&result.closed){if(output.at(-1)==='Connection closed.')output=output.slice(0,-1);output=[...output,'',`[Connection to ${label} closed by foreign host]`];}return opening?.protocol==='telnet'?[trying+'Open','',...output]:output;}
-  private openRemote(protocol:'telnet'|'ssh',args:string[],options:WindowsRemoteOptions={}):string[]{
+  openSSH(address:string,username:string,vrf?:string):string[]{return this.openRemote('ssh',['-l',username,address],{vrf});}
+  private openRemote(protocol:'telnet'|'ssh',args:string[],options:WindowsRemoteOptions&{vrf?:string}={}):string[]{
     const hostClient=this.windowsMode;
     try {
       const line=this.device.config.features.lines?.[this.identity?.line||'console 0'],allowed=String(line?.transportOutput??'all').split(/\s+/);
@@ -220,7 +222,7 @@ export class IOSSession {
       const port=protocol==='ssh'?options.port??22:23,acl=isIPv6(address)?line?.ipv6AccessClassOut:line?.accessClassOut,outPort=resolveForwardingPaths(this.device,address,undefined,p=>this.engine.interfaceUp(this.deviceId,p))[0]?.port;
       const source=isIPv6(address)?this.engine.preferredIPv6Address(this.deviceId,outPort||'')||'::':this.device.config.features.acls?.[acl]?.type==='standard'?address:this.device.config.interfaces[outPort||'']?.ip||'0.0.0.0';
       if(acl&&!this.engine.aclPermits(this.deviceId,acl,source,address,'tcp',{destinationPort:port}))fail('% Connection refused by output access-class.');
-      const result=this.management.open(this.deviceId,address,port,username,protocol,this.viewportColumns);
+      const result=this.management.open(this.deviceId,address,port,username,protocol,this.viewportColumns,options.vrf);
       if(hostClient&&result.status!=='success')return [`${protocol}: connect to host ${address} port ${port}: ${result.error||'Connection failed'}`];
       if(result.status==='success'&&!result.closed&&(typeof result.sessionId!=='string'||typeof result.prompt!=='string'))return [(hostClient?'': '% ')+protocol+': remote terminal protocol negotiation failed.'];
       return [...lookup,...this.remoteReply(result,address,port,hostClient?undefined:{protocol,label:isIPv4(typed)||isIPv6(typed)?address:typed})];

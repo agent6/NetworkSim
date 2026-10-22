@@ -1,8 +1,9 @@
 import type {Device,MacEntry} from './model.ts';
 import {macAgingSeconds} from './mac-aging.ts';
 export const C9300_MAC_CAPACITY=32000;
+export const NS_DC_MAC_CAPACITY=32000;
 /** Shared CAM budget for the selected C9300 profiles; not a TCAM partition model. */
-export function macCapacity(d:Device):number{return ['switch','l3switch','poeswitch'].includes(d.kind)?C9300_MAC_CAPACITY:Infinity;}
+export function macCapacity(d:Device):number{return d.kind==='datacenter'?NS_DC_MAC_CAPACITY:['switch','l3switch','poeswitch'].includes(d.kind)?C9300_MAC_CAPACITY:Infinity;}
 export function learnMac(d:Device,port:string,vlan:number,mac:string,now:number):'learned'|'updated'|'full'|'ignored'{
  if(!/^(?:[0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac)||(parseInt(mac.slice(0,2),16)&1)||/^00(?::00){5}$/.test(mac))return'ignored';
  const key=vlan+'|'+mac.toLowerCase(),old=d.runtime.mac[key];if(old?.static)return'ignored';

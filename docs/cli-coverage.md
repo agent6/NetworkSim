@@ -6,6 +6,13 @@ The CLI is `src/cli.ts`, deterministic configuration rendering is `src/config-re
 
 Unknown commands fail. Known settings with no operational model return an explicit configuration-only message. Operational `show` output comes from structured configuration or actual engine state. No command fabricates a successful ping, remote login, protocol neighbor, or service response.
 
+**Datacenter Switch is a separate dialect.** `src/session.ts` selects `NSOSSession`
+for `kind: datacenter` and retains IOS/host sessions for existing kinds. The
+standalone NX-OS-style NS-OS grammar/help, role checks and renderer are in
+`src/nsos.ts` and `src/nsos-config.ts`; IOS-only families are not aliases.
+See [NS-OS capabilities, explicit feature gates, management and limitations](features/datacenter.md).
+Focused evidence is in `tests/nsos.test.ts` and `tests/datacenter-vpc.test.ts`.
+
 ## Verified CLI integration evidence
 
 The last complete checkpoint passes **299/299 tests and TypeScript checking** (`.cache/final-measured-parity.log`, 2026-10-16). The CLI/management work has **77 directly owned tests** across the six files below; independent packet and control-plane suites supply additional behavioral evidence. Later integration work must retain that distinction: a renderer test alone does not establish packet behavior.

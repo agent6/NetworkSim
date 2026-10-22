@@ -18,6 +18,7 @@ export function speedIsAuto(port: InterfaceConfig): boolean {
   return port.features.speedAuto ?? port.speed === 1000;
 }
 export function ethernetSpeeds(port: InterfaceConfig): number[] {
+  if(Array.isArray(port.features.ethernetSpeeds))return port.features.ethernetSpeeds.filter((n:unknown):n is number=>typeof n==='number'&&[10,100,1000,10000,25000,40000,100000].includes(n));
   return /^TenGigabitEthernet/i.test(port.name) ? [10000] : /^FastEthernet/i.test(port.name) ? [10, 100] : [10, 100, 1000];
 }
 export function interfaceSpeed(device: Device, port: InterfaceConfig): number {

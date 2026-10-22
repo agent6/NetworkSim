@@ -7,6 +7,7 @@ const crops: Record<DeviceKind, readonly [number, number, number, number]> = {
   router: [31, 78, 340, 340],
   switch: [380, 80, 340, 340],
   l3switch: [734, 80, 340, 340],
+  datacenter: [734, 80, 340, 340],
   poeswitch: [1082, 81, 340, 340],
   pc: [32, 408, 340, 340],
   server: [385, 399, 340, 340],

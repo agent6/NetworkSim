@@ -1,6 +1,6 @@
 import {defaultWireless} from './wireless-model.ts';
 /** Original browser-local network simulation domain contract. */
-export type DeviceKind = 'router' | 'switch' | 'poeswitch' | 'l3switch' | 'pc' | 'server' | 'wlc' | 'ap' | 'laptop' | 'phone';
+export type DeviceKind = 'router' | 'switch' | 'poeswitch' | 'l3switch' | 'datacenter' | 'pc' | 'server' | 'wlc' | 'ap' | 'laptop' | 'phone';
 export type SwitchportMode = 'access' | 'trunk' | 'dynamic-auto' | 'dynamic-desirable';
 export type Disposition = 'info' | 'send' | 'receive' | 'forward' | 'drop' | 'success' | 'warning';
 
@@ -144,6 +144,26 @@ export function defaultInterface(name: string, switchport = false): InterfaceCon
 }
 
 export function factoryDeviceConfig(kind: DeviceKind, hostname: string): DeviceConfig {
+  if (kind === 'datacenter') {
+    const interfaces: Record<string, InterfaceConfig> = {};
+    for (let n = 1; n <= 30; n++) {
+      const p = interfaces[`Ethernet1/${n}`] = defaultInterface(`Ethernet1/${n}`, true);
+      p.adminUp = false;
+      p.speed = n <= 24 ? 10000 : 40000;
+      p.features.ethernetSpeeds = n <= 24 ? [1000, 10000] : [1000, 10000, 40000];
+      p.features.speedAuto = true;
+      p.features.nonegotiate = true;
+    }
+    const management = interfaces.mgmt0 = defaultInterface('mgmt0');
+    management.vrf = 'management';
+    management.features.ethernetSpeeds = [10, 100, 1000];
+    management.features.speedAuto = true;
+    management.features.proxyArp = false;
+    return {hostname, interfaces, vlans: {1: {id: 1, name: 'default', active: true}}, ipRouting: true, ipv6Routing: false,
+      dnsServers: [], staticRoutes: [], protocols: {}, services: {},
+      features: {nsos: {enabled: []}, vrfs: {management: {}}, stp: {mode: 'rapid-pvst',pathcostMethod:'long'}, cdp: true,
+        vtp: {domain: '', mode: 'transparent', version: 1, revision: 0, enabled: false}}};
+  }
   const switchport = kind === 'switch' || kind === 'poeswitch' || kind === 'l3switch', interfaces: Record<string, InterfaceConfig> = {};
   const ports = switchport ? [...Array.from({ length: 24 }, (_, i) => 'GigabitEthernet0/' + (i + 1)), 'GigabitEthernet1/1', 'GigabitEthernet1/2'] : kind === 'router' ? Array.from({ length: 4 }, (_, i) => 'GigabitEthernet0/' + i) : kind==='wlc'?['GigabitEthernet1']:kind==='laptop'?['Wireless0']:kind==='phone'?['Network','PC']:['GigabitEthernet0'];
   for (const port of ports) { interfaces[port] = defaultInterface(port, switchport); interfaces[port].adminUp = kind !== 'router'; }

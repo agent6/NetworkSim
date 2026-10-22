@@ -2,6 +2,7 @@ import {endpointProfile,endpointVoicePolicy,validVoicePolicy,switchVoiceVlan,typ
 import type { Device, Lab, Neighbor, NewSimEvent } from './model.ts';
 import type { SimulationClock, TimerHandle } from './clock.ts';
 import {platformIdentity,platformSoftware} from './platform-identity.ts';
+import {nsosFeature} from './datacenter.ts';
 
 export interface DiscoveryHost {
   lab: Lab;
@@ -26,6 +27,7 @@ function enabled(d:Device,p:string,protocol:Protocol,direction:'send'|'receive')
   if(d.kind==='phone'&&p!=='Network')return false;
   if(!d.powered||['pc','server','laptop'].includes(d.kind)&&!phone||!d.config.interfaces[p]?.adminUp)return false;
   if(protocol==='CDP')return d.config.features.cdp!==false&&d.config.interfaces[p].features.cdp!==false;
+  if(d.kind==='datacenter'&&!nsosFeature(d,'lldp'))return false;
   return (phone?d.config.features.lldp!==false:!!d.config.features.lldp)&&d.config.interfaces[p].features[direction==='send'?'lldpTransmit':'lldpReceive']!==false;
 }
 function configuration(d:Device,protocol:Protocol):{interval:number;holdtime:number}{
@@ -53,7 +55,7 @@ function advertise(engine:DiscoveryHost,d:Device,port:string,protocol:Protocol):
  if(!enabled(d,port,protocol,'send')||!engine.interfaceUp(d.id,port))return;
  const p=d.config.interfaces[port],cfg=configuration(d,protocol),phone=(d.kind==='pc'||d.kind==='phone')&&endpointProfile(d).role==='phone',voicePolicy=advertisedVoice(d,port,protocol,engine.clock.now()),medCapabilities=protocol==='LLDP'&&(phone||Object.values(table(d)).some(row=>row.interface===port&&row.protocol==='LLDP'&&row.medCapabilities&&row.expires>engine.clock.now()));
  const kind=phone?'phone':d.kind;
- engine.sendLinkControl?.(d.id,port,{kind:'link-control',protocol,body:{deviceId:d.id,port,hostname:d.config.hostname,address:p.ip||p.ipv6[0]?.split('/')[0],platform:'NetSim '+platformIdentity(kind).model,software:platformSoftware(kind),capabilities:phone?['telephone','station']:d.kind==='router'?['router']:d.kind==='l3switch'?['router','bridge']:['bridge'],description:p.description||'',holdtime:cfg.holdtime,...(protocol==='CDP'?{duplex:engine.ethernetState?.(d.id,port)?.duplex}: {}),...medCapabilities?{medCapabilities:true}:{},...voicePolicy?{voicePolicy}:{} }});
+ engine.sendLinkControl?.(d.id,port,{kind:'link-control',protocol,body:{deviceId:d.id,port,hostname:d.config.hostname,address:p.ip||p.ipv6[0]?.split('/')[0],platform:'NetSim '+platformIdentity(kind).model,software:platformSoftware(kind),capabilities:phone?['telephone','station']:d.kind==='router'?['router']:d.kind==='l3switch'||d.kind==='datacenter'?['router','bridge']:['bridge'],description:p.description||'',holdtime:cfg.holdtime,...(protocol==='CDP'?{duplex:engine.ethernetState?.(d.id,port)?.duplex}: {}),...medCapabilities?{medCapabilities:true}:{},...voicePolicy?{voicePolicy}:{} }});
   const traffic=(d.runtime.features.discoveryTraffic??={})[protocol]??={out:0,in:0,aged:0};traffic.out++;
  }
 

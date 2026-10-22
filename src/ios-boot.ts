@@ -13,6 +13,13 @@ export function iosBootState(device:Device):IOSBootState|undefined{return device
 export function iosBooting(device:Device):boolean{const boot=iosBootState(device);return !!boot&&boot.phase!=='ready';}
 /** Original shortened boot transcript; no firmware, ROMMON or image verification runs. */
 export function iosBootStages(device:Device):Array<{after:number;phase:IOSBootState['phase'];lines:string[]}> {
+  if(device.kind==='datacenter')return [
+    {after:600,phase:'bootstrap',lines:['',`NetSim NS-DC24-6Q Boot Loader, NS-OS Version ${NETSIM_VERSION}`,'Initializing virtual platform hardware...']},
+    {after:1800,phase:'loading',lines:[`Loading "${platformImage(device.kind)}"...`]},
+    {after:3200,phase:'initializing',lines:['Initializing Ethernet interfaces and NS-OS services...']},
+    {after:4800,phase:'configuration',lines:[device.startupConfig?'Loading startup-config...':'Loading platform defaults.']},
+    {after:IOS_BOOT_DURATION,phase:'ready',lines:['','NS-OS: System ready',`${device.config.hostname} console is now available`]},
+  ];
   const type=device.kind==='router'?'Router':device.kind==='wlc'?'WLC':device.kind==='ap'?'Access point':'Switch';
   const ignored=!!((device.configurationRegister?.current??0x2102)&0x40);
   return [

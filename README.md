@@ -21,6 +21,8 @@ For wireless practice, place a WLC, PoE switch, AP and wireless laptop in the wo
 
 The **PoE switch** provides Layer 2 switching and simulated AP power. Double-click it for the total budget, per-port Auto/Never controls, limits and actual allocations. See the [PoE guide](docs/features/poe-switch.md). Layer 2, Layer 3 and PoE switches use distinct rectangular diagram icons.
 
+The **Datacenter Switch** is the fictional NS-DC24-6Q with a separate **NS-OS** personality: 24 × 10-Gbps and 6 × 40-Gbps `Ethernet1/1`–`Ethernet1/30` data ports, plus isolated `mgmt0`. Data ports start shutdown in access VLAN 1. Its NX-OS-style CLI uses named login roles, explicit feature gates and vPC—not IOS `enable`, DTP or PAgP. Save it with `copy running-config startup-config`. Open its built-in vPC example from **My labs**. See the [Datacenter Switch guide and supported boundaries](docs/features/datacenter.md).
+
 The **VoIP phone** has a PoE-powered **Network** uplink and an untagged **PC** passthrough port. It learns the voice VLAN through received CDP or LLDP-MED policy, obtains its own DHCP lease, and bridges PC data without changing its MAC address or IP TTL. Double-click it for live power, VLAN, IP and port status. See the [phone guide](docs/features/voip-phone.md).
 
 PC, laptop and server desktops also provide **Network tools** for typed DNS, SNMP and RESTCONF requests through the actual simulated network. PCs and laptops offer Windows, Ubuntu or macOS networking profiles through **Client profile**. Network tools also provides bounded offline YAML/JSON automation over simulated SSH. Physical copper negotiation, real egress queues, IPv6 BGP and PoE priorities affect traffic. See the [management services guide](docs/features/management-services.md).

@@ -1,0 +1,4620 @@
+{
+  "format": "netsim-lab",
+  "version": 1,
+  "seed": 930042,
+  "lab": {
+    "id": "lab-jxmi",
+    "name": "Datacenter Switch - single-domain vPC",
+    "devices": [
+      {
+        "id": "device-1",
+        "kind": "datacenter",
+        "x": 350,
+        "y": 180,
+        "powered": true,
+        "config": {
+          "hostname": "DC1",
+          "interfaces": {
+            "Ethernet1/1": {
+              "name": "Ethernet1/1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 10,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "Ethernet1/2": {
+              "name": "Ethernet1/2",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 20,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "portfast": true,
+                "stpPortType": "edge"
+              }
+            },
+            "Ethernet1/3": {
+              "name": "Ethernet1/3",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/4": {
+              "name": "Ethernet1/4",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/5": {
+              "name": "Ethernet1/5",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/6": {
+              "name": "Ethernet1/6",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/7": {
+              "name": "Ethernet1/7",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/8": {
+              "name": "Ethernet1/8",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/9": {
+              "name": "Ethernet1/9",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/10": {
+              "name": "Ethernet1/10",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/11": {
+              "name": "Ethernet1/11",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/12": {
+              "name": "Ethernet1/12",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/13": {
+              "name": "Ethernet1/13",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/14": {
+              "name": "Ethernet1/14",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/15": {
+              "name": "Ethernet1/15",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/16": {
+              "name": "Ethernet1/16",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/17": {
+              "name": "Ethernet1/17",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/18": {
+              "name": "Ethernet1/18",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/19": {
+              "name": "Ethernet1/19",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/20": {
+              "name": "Ethernet1/20",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/21": {
+              "name": "Ethernet1/21",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/22": {
+              "name": "Ethernet1/22",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/23": {
+              "name": "Ethernet1/23",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/24": {
+              "name": "Ethernet1/24",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/25": {
+              "name": "Ethernet1/25",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/26": {
+              "name": "Ethernet1/26",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/27": {
+              "name": "Ethernet1/27",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/28": {
+              "name": "Ethernet1/28",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/29": {
+              "name": "Ethernet1/29",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 1,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "Ethernet1/30": {
+              "name": "Ethernet1/30",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 1,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "mgmt0": {
+              "name": "mgmt0",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": false,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  10,
+                  100,
+                  1000
+                ],
+                "speedAuto": true,
+                "proxyArp": false
+              },
+              "vrf": "management",
+              "ip": "10.255.0.1",
+              "mask": "255.255.255.0"
+            },
+            "Port-channel1": {
+              "name": "Port-channel1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "stpPortType": "network"
+              }
+            },
+            "Port-channel10": {
+              "name": "Port-channel10",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "vpcId": 10
+              }
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            },
+            "20": {
+              "id": 20,
+              "name": "VLAN20",
+              "active": true
+            },
+            "30": {
+              "id": 30,
+              "name": "VLAN30",
+              "active": true
+            }
+          },
+          "ipRouting": true,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {
+            "nsos": {
+              "enabled": [
+                "vpc",
+                "lacp",
+                "interface-vlan"
+              ],
+              "vpc": {
+                "domain": 42,
+                "rolePriority": 100,
+                "systemPriority": 32667,
+                "peerSwitch": false,
+                "peerGateway": false,
+                "arpSynchronize": false,
+                "autoRecovery": false,
+                "reloadDelay": 240000,
+                "delayRestore": 30000,
+                "delayRestoreSVI": 0,
+                "gracefulConsistency": true,
+                "peerLink": "Port-channel1",
+                "keepalive": {
+                  "destination": "10.255.0.2",
+                  "source": "10.255.0.1",
+                  "vrf": "management",
+                  "interval": 1000,
+                  "timeout": 5000,
+                  "holdTimeout": 3000
+                }
+              }
+            },
+            "vrfs": {
+              "management": {}
+            },
+            "stp": {
+              "mode": "rapid-pvst",
+              "pathcostMethod": "long",
+              "vlanPriorities": {
+                "1": 4096,
+                "20": 4096,
+                "30": 4096
+              }
+            },
+            "cdp": true,
+            "vtp": {
+              "domain": "",
+              "mode": "transparent",
+              "version": 1,
+              "revision": 0,
+              "enabled": false
+            }
+          }
+        },
+        "runtime": {
+          "routes": [],
+          "arp": {},
+          "mac": {},
+          "neighbors": [],
+          "stp": {},
+          "counters": {},
+          "logs": [],
+          "features": {}
+        },
+        "startupConfig": {
+          "hostname": "DC1",
+          "interfaces": {
+            "Ethernet1/1": {
+              "name": "Ethernet1/1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 10,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "Ethernet1/2": {
+              "name": "Ethernet1/2",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 20,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "portfast": true,
+                "stpPortType": "edge"
+              }
+            },
+            "Ethernet1/3": {
+              "name": "Ethernet1/3",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/4": {
+              "name": "Ethernet1/4",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/5": {
+              "name": "Ethernet1/5",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/6": {
+              "name": "Ethernet1/6",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/7": {
+              "name": "Ethernet1/7",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/8": {
+              "name": "Ethernet1/8",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/9": {
+              "name": "Ethernet1/9",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/10": {
+              "name": "Ethernet1/10",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/11": {
+              "name": "Ethernet1/11",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/12": {
+              "name": "Ethernet1/12",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/13": {
+              "name": "Ethernet1/13",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/14": {
+              "name": "Ethernet1/14",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/15": {
+              "name": "Ethernet1/15",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/16": {
+              "name": "Ethernet1/16",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/17": {
+              "name": "Ethernet1/17",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/18": {
+              "name": "Ethernet1/18",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/19": {
+              "name": "Ethernet1/19",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/20": {
+              "name": "Ethernet1/20",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/21": {
+              "name": "Ethernet1/21",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/22": {
+              "name": "Ethernet1/22",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/23": {
+              "name": "Ethernet1/23",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/24": {
+              "name": "Ethernet1/24",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/25": {
+              "name": "Ethernet1/25",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/26": {
+              "name": "Ethernet1/26",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/27": {
+              "name": "Ethernet1/27",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/28": {
+              "name": "Ethernet1/28",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/29": {
+              "name": "Ethernet1/29",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 1,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "Ethernet1/30": {
+              "name": "Ethernet1/30",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 1,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "mgmt0": {
+              "name": "mgmt0",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": false,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  10,
+                  100,
+                  1000
+                ],
+                "speedAuto": true,
+                "proxyArp": false
+              },
+              "vrf": "management",
+              "ip": "10.255.0.1",
+              "mask": "255.255.255.0"
+            },
+            "Port-channel1": {
+              "name": "Port-channel1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "stpPortType": "network"
+              }
+            },
+            "Port-channel10": {
+              "name": "Port-channel10",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "vpcId": 10
+              }
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            },
+            "20": {
+              "id": 20,
+              "name": "VLAN20",
+              "active": true
+            },
+            "30": {
+              "id": 30,
+              "name": "VLAN30",
+              "active": true
+            }
+          },
+          "ipRouting": true,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {
+            "nsos": {
+              "enabled": [
+                "vpc",
+                "lacp",
+                "interface-vlan"
+              ],
+              "vpc": {
+                "domain": 42,
+                "rolePriority": 100,
+                "systemPriority": 32667,
+                "peerSwitch": false,
+                "peerGateway": false,
+                "arpSynchronize": false,
+                "autoRecovery": false,
+                "reloadDelay": 240000,
+                "delayRestore": 30000,
+                "delayRestoreSVI": 0,
+                "gracefulConsistency": true,
+                "peerLink": "Port-channel1",
+                "keepalive": {
+                  "destination": "10.255.0.2",
+                  "source": "10.255.0.1",
+                  "vrf": "management",
+                  "interval": 1000,
+                  "timeout": 5000,
+                  "holdTimeout": 3000
+                }
+              }
+            },
+            "vrfs": {
+              "management": {}
+            },
+            "stp": {
+              "mode": "rapid-pvst",
+              "pathcostMethod": "long",
+              "vlanPriorities": {
+                "1": 4096,
+                "20": 4096,
+                "30": 4096
+              }
+            },
+            "cdp": true,
+            "vtp": {
+              "domain": "",
+              "mode": "transparent",
+              "version": 1,
+              "revision": 0,
+              "enabled": false
+            }
+          }
+        }
+      },
+      {
+        "id": "device-w",
+        "kind": "datacenter",
+        "x": 750,
+        "y": 180,
+        "powered": true,
+        "config": {
+          "hostname": "DC2",
+          "interfaces": {
+            "Ethernet1/1": {
+              "name": "Ethernet1/1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 20,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "Ethernet1/2": {
+              "name": "Ethernet1/2",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 20,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "portfast": true,
+                "stpPortType": "edge"
+              }
+            },
+            "Ethernet1/3": {
+              "name": "Ethernet1/3",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/4": {
+              "name": "Ethernet1/4",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/5": {
+              "name": "Ethernet1/5",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/6": {
+              "name": "Ethernet1/6",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/7": {
+              "name": "Ethernet1/7",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/8": {
+              "name": "Ethernet1/8",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/9": {
+              "name": "Ethernet1/9",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/10": {
+              "name": "Ethernet1/10",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/11": {
+              "name": "Ethernet1/11",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/12": {
+              "name": "Ethernet1/12",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/13": {
+              "name": "Ethernet1/13",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/14": {
+              "name": "Ethernet1/14",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/15": {
+              "name": "Ethernet1/15",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/16": {
+              "name": "Ethernet1/16",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/17": {
+              "name": "Ethernet1/17",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/18": {
+              "name": "Ethernet1/18",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/19": {
+              "name": "Ethernet1/19",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/20": {
+              "name": "Ethernet1/20",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/21": {
+              "name": "Ethernet1/21",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/22": {
+              "name": "Ethernet1/22",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/23": {
+              "name": "Ethernet1/23",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/24": {
+              "name": "Ethernet1/24",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/25": {
+              "name": "Ethernet1/25",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/26": {
+              "name": "Ethernet1/26",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/27": {
+              "name": "Ethernet1/27",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/28": {
+              "name": "Ethernet1/28",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/29": {
+              "name": "Ethernet1/29",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 1,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "Ethernet1/30": {
+              "name": "Ethernet1/30",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 1,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "mgmt0": {
+              "name": "mgmt0",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": false,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  10,
+                  100,
+                  1000
+                ],
+                "speedAuto": true,
+                "proxyArp": false
+              },
+              "vrf": "management",
+              "ip": "10.255.0.2",
+              "mask": "255.255.255.0"
+            },
+            "Port-channel1": {
+              "name": "Port-channel1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "stpPortType": "network"
+              }
+            },
+            "Port-channel20": {
+              "name": "Port-channel20",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "vpcId": 10
+              }
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            },
+            "20": {
+              "id": 20,
+              "name": "VLAN20",
+              "active": true
+            },
+            "30": {
+              "id": 30,
+              "name": "VLAN30",
+              "active": true
+            }
+          },
+          "ipRouting": true,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {
+            "nsos": {
+              "enabled": [
+                "vpc",
+                "lacp",
+                "interface-vlan"
+              ],
+              "vpc": {
+                "domain": 42,
+                "rolePriority": 200,
+                "systemPriority": 32667,
+                "peerSwitch": false,
+                "peerGateway": false,
+                "arpSynchronize": false,
+                "autoRecovery": false,
+                "reloadDelay": 240000,
+                "delayRestore": 30000,
+                "delayRestoreSVI": 0,
+                "gracefulConsistency": true,
+                "peerLink": "Port-channel1",
+                "keepalive": {
+                  "destination": "10.255.0.1",
+                  "source": "10.255.0.2",
+                  "vrf": "management",
+                  "interval": 1000,
+                  "timeout": 5000,
+                  "holdTimeout": 3000
+                }
+              }
+            },
+            "vrfs": {
+              "management": {}
+            },
+            "stp": {
+              "mode": "rapid-pvst",
+              "pathcostMethod": "long",
+              "vlanPriorities": {
+                "1": 4096,
+                "20": 4096,
+                "30": 4096
+              }
+            },
+            "cdp": true,
+            "vtp": {
+              "domain": "",
+              "mode": "transparent",
+              "version": 1,
+              "revision": 0,
+              "enabled": false
+            }
+          }
+        },
+        "runtime": {
+          "routes": [],
+          "arp": {},
+          "mac": {},
+          "neighbors": [],
+          "stp": {},
+          "counters": {},
+          "logs": [],
+          "features": {}
+        },
+        "startupConfig": {
+          "hostname": "DC2",
+          "interfaces": {
+            "Ethernet1/1": {
+              "name": "Ethernet1/1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 20,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "Ethernet1/2": {
+              "name": "Ethernet1/2",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 20,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "portfast": true,
+                "stpPortType": "edge"
+              }
+            },
+            "Ethernet1/3": {
+              "name": "Ethernet1/3",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/4": {
+              "name": "Ethernet1/4",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/5": {
+              "name": "Ethernet1/5",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/6": {
+              "name": "Ethernet1/6",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/7": {
+              "name": "Ethernet1/7",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/8": {
+              "name": "Ethernet1/8",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/9": {
+              "name": "Ethernet1/9",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/10": {
+              "name": "Ethernet1/10",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/11": {
+              "name": "Ethernet1/11",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/12": {
+              "name": "Ethernet1/12",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/13": {
+              "name": "Ethernet1/13",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/14": {
+              "name": "Ethernet1/14",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/15": {
+              "name": "Ethernet1/15",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/16": {
+              "name": "Ethernet1/16",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/17": {
+              "name": "Ethernet1/17",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/18": {
+              "name": "Ethernet1/18",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/19": {
+              "name": "Ethernet1/19",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/20": {
+              "name": "Ethernet1/20",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/21": {
+              "name": "Ethernet1/21",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/22": {
+              "name": "Ethernet1/22",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/23": {
+              "name": "Ethernet1/23",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/24": {
+              "name": "Ethernet1/24",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 10000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/25": {
+              "name": "Ethernet1/25",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/26": {
+              "name": "Ethernet1/26",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/27": {
+              "name": "Ethernet1/27",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/28": {
+              "name": "Ethernet1/28",
+              "adminUp": false,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true
+              }
+            },
+            "Ethernet1/29": {
+              "name": "Ethernet1/29",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 1,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "Ethernet1/30": {
+              "name": "Ethernet1/30",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 40000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  1000,
+                  10000,
+                  40000
+                ],
+                "speedAuto": true,
+                "nonegotiate": true,
+                "channelGroup": 1,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "mgmt0": {
+              "name": "mgmt0",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": false,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "ethernetSpeeds": [
+                  10,
+                  100,
+                  1000
+                ],
+                "speedAuto": true,
+                "proxyArp": false
+              },
+              "vrf": "management",
+              "ip": "10.255.0.2",
+              "mask": "255.255.255.0"
+            },
+            "Port-channel1": {
+              "name": "Port-channel1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "stpPortType": "network"
+              }
+            },
+            "Port-channel20": {
+              "name": "Port-channel20",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "vpcId": 10
+              }
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            },
+            "20": {
+              "id": 20,
+              "name": "VLAN20",
+              "active": true
+            },
+            "30": {
+              "id": 30,
+              "name": "VLAN30",
+              "active": true
+            }
+          },
+          "ipRouting": true,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {
+            "nsos": {
+              "enabled": [
+                "vpc",
+                "lacp",
+                "interface-vlan"
+              ],
+              "vpc": {
+                "domain": 42,
+                "rolePriority": 200,
+                "systemPriority": 32667,
+                "peerSwitch": false,
+                "peerGateway": false,
+                "arpSynchronize": false,
+                "autoRecovery": false,
+                "reloadDelay": 240000,
+                "delayRestore": 30000,
+                "delayRestoreSVI": 0,
+                "gracefulConsistency": true,
+                "peerLink": "Port-channel1",
+                "keepalive": {
+                  "destination": "10.255.0.1",
+                  "source": "10.255.0.2",
+                  "vrf": "management",
+                  "interval": 1000,
+                  "timeout": 5000,
+                  "holdTimeout": 3000
+                }
+              }
+            },
+            "vrfs": {
+              "management": {}
+            },
+            "stp": {
+              "mode": "rapid-pvst",
+              "pathcostMethod": "long",
+              "vlanPriorities": {
+                "1": 4096,
+                "20": 4096,
+                "30": 4096
+              }
+            },
+            "cdp": true,
+            "vtp": {
+              "domain": "",
+              "mode": "transparent",
+              "version": 1,
+              "revision": 0,
+              "enabled": false
+            }
+          }
+        }
+      },
+      {
+        "id": "device-2l",
+        "kind": "switch",
+        "x": 550,
+        "y": 480,
+        "powered": true,
+        "config": {
+          "hostname": "ACCESS1",
+          "interfaces": {
+            "GigabitEthernet0/1": {
+              "name": "GigabitEthernet0/1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "channelGroup": 3,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "GigabitEthernet0/2": {
+              "name": "GigabitEthernet0/2",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "channelGroup": 3,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "GigabitEthernet0/3": {
+              "name": "GigabitEthernet0/3",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 20,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "portfast": true,
+                "stpPortType": "edge"
+              }
+            },
+            "GigabitEthernet0/4": {
+              "name": "GigabitEthernet0/4",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/5": {
+              "name": "GigabitEthernet0/5",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/6": {
+              "name": "GigabitEthernet0/6",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/7": {
+              "name": "GigabitEthernet0/7",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/8": {
+              "name": "GigabitEthernet0/8",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/9": {
+              "name": "GigabitEthernet0/9",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/10": {
+              "name": "GigabitEthernet0/10",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/11": {
+              "name": "GigabitEthernet0/11",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/12": {
+              "name": "GigabitEthernet0/12",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/13": {
+              "name": "GigabitEthernet0/13",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/14": {
+              "name": "GigabitEthernet0/14",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/15": {
+              "name": "GigabitEthernet0/15",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/16": {
+              "name": "GigabitEthernet0/16",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/17": {
+              "name": "GigabitEthernet0/17",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/18": {
+              "name": "GigabitEthernet0/18",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/19": {
+              "name": "GigabitEthernet0/19",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/20": {
+              "name": "GigabitEthernet0/20",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/21": {
+              "name": "GigabitEthernet0/21",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/22": {
+              "name": "GigabitEthernet0/22",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/23": {
+              "name": "GigabitEthernet0/23",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/24": {
+              "name": "GigabitEthernet0/24",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet1/1": {
+              "name": "GigabitEthernet1/1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet1/2": {
+              "name": "GigabitEthernet1/2",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "Port-channel3": {
+              "name": "Port-channel3",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            },
+            "20": {
+              "id": 20,
+              "name": "VLAN20",
+              "active": true
+            },
+            "30": {
+              "id": 30,
+              "name": "VLAN30",
+              "active": true
+            }
+          },
+          "ipRouting": false,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {
+            "vtp": {
+              "domain": "",
+              "mode": "server",
+              "version": 1,
+              "revision": 1
+            }
+          }
+        },
+        "runtime": {
+          "routes": [],
+          "arp": {},
+          "mac": {},
+          "neighbors": [],
+          "stp": {},
+          "counters": {},
+          "logs": [],
+          "features": {}
+        },
+        "startupConfig": {
+          "hostname": "ACCESS1",
+          "interfaces": {
+            "GigabitEthernet0/1": {
+              "name": "GigabitEthernet0/1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "channelGroup": 3,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "GigabitEthernet0/2": {
+              "name": "GigabitEthernet0/2",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "channelGroup": 3,
+                "channelMode": "active",
+                "lacpRate": "fast"
+              }
+            },
+            "GigabitEthernet0/3": {
+              "name": "GigabitEthernet0/3",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 20,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {
+                "portfast": true,
+                "stpPortType": "edge"
+              }
+            },
+            "GigabitEthernet0/4": {
+              "name": "GigabitEthernet0/4",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/5": {
+              "name": "GigabitEthernet0/5",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/6": {
+              "name": "GigabitEthernet0/6",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/7": {
+              "name": "GigabitEthernet0/7",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/8": {
+              "name": "GigabitEthernet0/8",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/9": {
+              "name": "GigabitEthernet0/9",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/10": {
+              "name": "GigabitEthernet0/10",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/11": {
+              "name": "GigabitEthernet0/11",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/12": {
+              "name": "GigabitEthernet0/12",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/13": {
+              "name": "GigabitEthernet0/13",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/14": {
+              "name": "GigabitEthernet0/14",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/15": {
+              "name": "GigabitEthernet0/15",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/16": {
+              "name": "GigabitEthernet0/16",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/17": {
+              "name": "GigabitEthernet0/17",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/18": {
+              "name": "GigabitEthernet0/18",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/19": {
+              "name": "GigabitEthernet0/19",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/20": {
+              "name": "GigabitEthernet0/20",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/21": {
+              "name": "GigabitEthernet0/21",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/22": {
+              "name": "GigabitEthernet0/22",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/23": {
+              "name": "GigabitEthernet0/23",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet0/24": {
+              "name": "GigabitEthernet0/24",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet1/1": {
+              "name": "GigabitEthernet1/1",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "GigabitEthernet1/2": {
+              "name": "GigabitEthernet1/2",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            },
+            "Port-channel3": {
+              "name": "Port-channel3",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": true,
+              "mode": "trunk",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {}
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            },
+            "20": {
+              "id": 20,
+              "name": "VLAN20",
+              "active": true
+            },
+            "30": {
+              "id": 30,
+              "name": "VLAN30",
+              "active": true
+            }
+          },
+          "ipRouting": false,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {
+            "vtp": {
+              "domain": "",
+              "mode": "server",
+              "version": 1,
+              "revision": 1
+            }
+          }
+        }
+      },
+      {
+        "id": "device-8n",
+        "kind": "pc",
+        "x": 550,
+        "y": 700,
+        "powered": true,
+        "config": {
+          "hostname": "CLIENT",
+          "interfaces": {
+            "GigabitEthernet0": {
+              "name": "GigabitEthernet0",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": false,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {},
+              "ip": "192.0.2.10",
+              "mask": "255.255.255.0"
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            }
+          },
+          "ipRouting": false,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {}
+        },
+        "runtime": {
+          "routes": [],
+          "arp": {},
+          "mac": {},
+          "neighbors": [],
+          "stp": {},
+          "counters": {},
+          "logs": [],
+          "features": {}
+        },
+        "startupConfig": {
+          "hostname": "CLIENT",
+          "interfaces": {
+            "GigabitEthernet0": {
+              "name": "GigabitEthernet0",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": false,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {},
+              "ip": "192.0.2.10",
+              "mask": "255.255.255.0"
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            }
+          },
+          "ipRouting": false,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {}
+        }
+      },
+      {
+        "id": "device-8u",
+        "kind": "pc",
+        "x": 160,
+        "y": 370,
+        "powered": true,
+        "config": {
+          "hostname": "ORPHAN1",
+          "interfaces": {
+            "GigabitEthernet0": {
+              "name": "GigabitEthernet0",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": false,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {},
+              "ip": "192.0.2.20",
+              "mask": "255.255.255.0"
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            }
+          },
+          "ipRouting": false,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {}
+        },
+        "runtime": {
+          "routes": [],
+          "arp": {},
+          "mac": {},
+          "neighbors": [],
+          "stp": {},
+          "counters": {},
+          "logs": [],
+          "features": {}
+        },
+        "startupConfig": {
+          "hostname": "ORPHAN1",
+          "interfaces": {
+            "GigabitEthernet0": {
+              "name": "GigabitEthernet0",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": false,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {},
+              "ip": "192.0.2.20",
+              "mask": "255.255.255.0"
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            }
+          },
+          "ipRouting": false,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {}
+        }
+      },
+      {
+        "id": "device-91",
+        "kind": "pc",
+        "x": 950,
+        "y": 370,
+        "powered": true,
+        "config": {
+          "hostname": "ORPHAN2",
+          "interfaces": {
+            "GigabitEthernet0": {
+              "name": "GigabitEthernet0",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": false,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {},
+              "ip": "192.0.2.30",
+              "mask": "255.255.255.0"
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            }
+          },
+          "ipRouting": false,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {}
+        },
+        "runtime": {
+          "routes": [],
+          "arp": {},
+          "mac": {},
+          "neighbors": [],
+          "stp": {},
+          "counters": {},
+          "logs": [],
+          "features": {}
+        },
+        "startupConfig": {
+          "hostname": "ORPHAN2",
+          "interfaces": {
+            "GigabitEthernet0": {
+              "name": "GigabitEthernet0",
+              "adminUp": true,
+              "description": "",
+              "ipv6": [],
+              "switchport": false,
+              "mode": "access",
+              "vlan": 1,
+              "nativeVlan": 1,
+              "allowedVlans": null,
+              "mtu": 1500,
+              "speed": 1000,
+              "duplex": "auto",
+              "features": {},
+              "ip": "192.0.2.30",
+              "mask": "255.255.255.0"
+            }
+          },
+          "vlans": {
+            "1": {
+              "id": 1,
+              "name": "default",
+              "active": true
+            }
+          },
+          "ipRouting": false,
+          "ipv6Routing": false,
+          "dnsServers": [],
+          "staticRoutes": [],
+          "protocols": {},
+          "services": {},
+          "features": {}
+        }
+      }
+    ],
+    "links": [
+      {
+        "id": "link-46",
+        "a": {
+          "deviceId": "device-1",
+          "port": "Ethernet1/29"
+        },
+        "b": {
+          "deviceId": "device-w",
+          "port": "Ethernet1/29"
+        },
+        "enabled": true,
+        "delay": 0.1,
+        "loss": 0
+      },
+      {
+        "id": "link-6l",
+        "a": {
+          "deviceId": "device-1",
+          "port": "Ethernet1/30"
+        },
+        "b": {
+          "deviceId": "device-w",
+          "port": "Ethernet1/30"
+        },
+        "enabled": true,
+        "delay": 0.1,
+        "loss": 0
+      },
+      {
+        "id": "link-88",
+        "a": {
+          "deviceId": "device-1",
+          "port": "mgmt0"
+        },
+        "b": {
+          "deviceId": "device-w",
+          "port": "mgmt0"
+        },
+        "enabled": true,
+        "delay": 0.1,
+        "loss": 0
+      },
+      {
+        "id": "link-8d",
+        "a": {
+          "deviceId": "device-1",
+          "port": "Ethernet1/1"
+        },
+        "b": {
+          "deviceId": "device-2l",
+          "port": "GigabitEthernet0/1"
+        },
+        "enabled": true,
+        "delay": 0.1,
+        "loss": 0
+      },
+      {
+        "id": "link-8i",
+        "a": {
+          "deviceId": "device-w",
+          "port": "Ethernet1/1"
+        },
+        "b": {
+          "deviceId": "device-2l",
+          "port": "GigabitEthernet0/2"
+        },
+        "enabled": true,
+        "delay": 0.1,
+        "loss": 0
+      },
+      {
+        "id": "link-8o",
+        "a": {
+          "deviceId": "device-8n",
+          "port": "GigabitEthernet0"
+        },
+        "b": {
+          "deviceId": "device-2l",
+          "port": "GigabitEthernet0/3"
+        },
+        "enabled": true,
+        "delay": 0.1,
+        "loss": 0
+      },
+      {
+        "id": "link-8v",
+        "a": {
+          "deviceId": "device-8u",
+          "port": "GigabitEthernet0"
+        },
+        "b": {
+          "deviceId": "device-1",
+          "port": "Ethernet1/2"
+        },
+        "enabled": true,
+        "delay": 0.1,
+        "loss": 0
+      },
+      {
+        "id": "link-92",
+        "a": {
+          "deviceId": "device-91",
+          "port": "GigabitEthernet0"
+        },
+        "b": {
+          "deviceId": "device-w",
+          "port": "Ethernet1/2"
+        },
+        "enabled": true,
+        "delay": 0.1,
+        "loss": 0
+      }
+    ],
+    "notes": [
+      {
+        "id": "datacenter-guide",
+        "x": 80,
+        "y": 30,
+        "locked": true,
+        "text": "NS-OS Datacenter Switch / vPC domain 42\n24 x Ethernet1/1-24 (10G); 6 x Ethernet1/25-30 (40G)\nPeer-link: Po1, Ethernet1/29-30 (2 x 40G)\nKeepalive: mgmt0, management VRF, 10.255.0.1/2\nvPC 10: DC1 Po10 / DC2 Po20 -> ACCESS1 Po3\nVLAN 20: CLIENT .10, ORPHAN1 .20, ORPHAN2 .30 (192.0.2.0/24)\nWait 35 simulated seconds after import (peer establishment + delay-restore).\nshow vpc / show vpc brief / show port-channel summary\nTry cable failures separately; auto-recovery is disabled.\nBoth control paths lost can produce dual-active risk; this is not a stack."
+      }
+    ]
+  }
+}

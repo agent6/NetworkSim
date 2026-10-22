@@ -1,4 +1,5 @@
 import {validateFTPConfiguration} from './ftp-files.ts';
+import {validateNSOSConfiguration} from './datacenter.ts';
 import {validateSLAConfiguration} from './sla-config.ts';
 import {validateTunnelConfiguration} from './tunnel.ts';
 import {validateEndpoint} from './endpoint.ts';
@@ -17,7 +18,7 @@ import { validateLesson } from "./lessons.ts";
 const STORAGE_KEY = "network-sim.labs.v1";
 const WORKSPACE_KEY = "network-sim.workspace.v1";
 const MAX_LAB_FILE_BYTES = 10 * 1024 * 1024;
-const KINDS = new Set(["router", "switch", "poeswitch", "l3switch", "pc", "server", "wlc", "ap", "laptop", "phone"]);
+const KINDS = new Set(["router", "switch", "poeswitch", "l3switch", "datacenter", "pc", "server", "wlc", "ap", "laptop", "phone"]);
 export interface SavedLab {
   id: string;
   name: string;
@@ -53,6 +54,7 @@ function validateConfig(c: any) {
   validateSNMPConfiguration(c);
   validateSLAConfiguration(c);
   validateTunnelConfiguration(c);
+  validateNSOSConfiguration(c);
   if(c.services.dns?.resourceRecords!==undefined){
     if(!Array.isArray(c.services.dns.resourceRecords)||c.services.dns.resourceRecords.length>10000)throw Error('Invalid DNS resource record table.');
     validateDNSRecords(dnsRecords(c.services.dns));
