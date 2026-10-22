@@ -4,6 +4,8 @@
 **NS-OS** CLI inspired by the standalone Cisco Nexus 9000 NX-OS 10.6(x) command
 model. It is not a Cisco image, an ACI switch, or a complete NX-OS implementation.
 Existing routers and switches retain their IOS-style CLI and lab format.
+The palette, topology and device details use the shorter **DC Switch** label
+so the name fits below the icon.
 
 ## Platform-selected defaults
 

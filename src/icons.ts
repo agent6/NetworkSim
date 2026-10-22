@@ -47,7 +47,7 @@ export const deviceLabels: Record<DeviceKind, string> = {
   switch: "Layer 2 switch",
   poeswitch: "PoE switch",
   l3switch: "Layer 3 switch",
-  datacenter: "Datacenter Switch",
+  datacenter: "DC Switch",
   pc: "Computer",
   server: "Server",
   phone: "VoIP phone",
