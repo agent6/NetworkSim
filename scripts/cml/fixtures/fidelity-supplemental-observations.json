@@ -1,0 +1,354 @@
+{
+  "schemaVersion": 1,
+  "description": "Reviewed supplemental live facts. Acceptance alone is not enforcement. Historical diagnostic flags are not authoritative: the duplicate-sequence native error is classified from its raw output. Full raw dumps remain private.",
+  "runs": {
+    "live-02": {
+      "captureSha256": "fd70d70242194c66aa5e011c2d8f947e1ad1ab2fa1d9a2fea9979b47d4f06c70",
+      "status": "captured",
+      "stepCount": 88,
+      "packetEvidence": [
+        {
+          "sha256": "dbdfec488075e0c5d25c091654ca3ad198c4664d518693309bd41881b7df7228",
+          "ARP": 2,
+          "ICMP": 12,
+          "ICMPv6": 1,
+          "OSPF": 38,
+          "STP": 47,
+          "CDP": 1,
+          "LLDP": 6,
+          "packets": 116
+        },
+        {
+          "sha256": "a470845726ac69920a00ec8aacad8c1549212a340a22c9bf2277f15402604064",
+          "ARP": 4,
+          "ICMP": 12,
+          "ICMPv6": 7,
+          "OSPF": 39,
+          "STP": 48,
+          "CDP": 1,
+          "LLDP": 3,
+          "packets": 123
+        },
+        {
+          "sha256": "964fce492c13fadfd17b72081415d8ec1839fa9bdf539f7e13f7ed71c6cd4acc",
+          "ARP": 3,
+          "ICMP": 0,
+          "ICMPv6": 7,
+          "OSPF": 25,
+          "STP": 47,
+          "CDP": 1,
+          "LLDP": 3,
+          "packets": 95
+        },
+        {
+          "sha256": "6aec1bfb2803924401b7db9f02fe04e00896d2b204d37dc69bfa552573fbc87c",
+          "ARP": 0,
+          "ICMP": 12,
+          "ICMPv6": 0,
+          "OSPF": 33,
+          "STP": 0,
+          "CDP": 2,
+          "LLDP": 6,
+          "packets": 62
+        },
+        {
+          "sha256": "f36406ebce1e7228f327156ef67abe63b89765b44c21d50615d8a5c97980e63d",
+          "ARP": 0,
+          "ICMP": 12,
+          "ICMPv6": 0,
+          "OSPF": 0,
+          "STP": 0,
+          "CDP": 4,
+          "LLDP": 6,
+          "packets": 41
+        }
+      ]
+    },
+    "live-03": {
+      "captureSha256": "7095a827ee72f913ab4f5f2314c29d310b2fe7b4f857d8726028a69c7dfab2bc",
+      "status": "captured",
+      "stepCount": 48,
+      "packetEvidence": [
+        {
+          "sha256": "164e1bb577ffd2313758e527822ba17a0c4ed744c8b67b926910629ad3381d1b",
+          "ARP": 0,
+          "ICMP": 15,
+          "ICMPv6": 0,
+          "OSPF": 10,
+          "STP": 21,
+          "CDP": 0,
+          "LLDP": 3,
+          "packets": 54
+        },
+        {
+          "sha256": "dd96b0bdcb4ad99f0644f5204fe0045b4c9a3c064f8b204c09fe44ff110e4256",
+          "ARP": 0,
+          "ICMP": 15,
+          "ICMPv6": 0,
+          "OSPF": 10,
+          "STP": 22,
+          "CDP": 1,
+          "LLDP": 1,
+          "packets": 50
+        },
+        {
+          "sha256": "01dbd87ad85a2e47d9dd1b1ce067b241c171846ec4bee8e5c39e9dd1b6f5d2e5",
+          "ARP": 0,
+          "ICMP": 0,
+          "ICMPv6": 0,
+          "OSPF": 10,
+          "STP": 22,
+          "CDP": 1,
+          "LLDP": 1,
+          "packets": 35
+        },
+        {
+          "sha256": "ad5dd2f58c5f46e01767626007b1c5473d381477c43275b763572ab52bd1dfce",
+          "ARP": 0,
+          "ICMP": 12,
+          "ICMPv6": 0,
+          "OSPF": 10,
+          "STP": 0,
+          "CDP": 2,
+          "LLDP": 4,
+          "packets": 32
+        },
+        {
+          "sha256": "1465d64bb972fa099b130014c60d0f44a71269b59d6c68bd971562f8d87dda0a",
+          "ARP": 0,
+          "ICMP": 12,
+          "ICMPv6": 0,
+          "OSPF": 0,
+          "STP": 0,
+          "CDP": 0,
+          "LLDP": 3,
+          "packets": 23
+        }
+      ]
+    },
+    "live-04": {
+      "captureSha256": "2d6ba92de9ac69ae56455934cc0456dfbafee06a918b9eae8ecc11b8c8b17423",
+      "status": "captured",
+      "stepCount": 45,
+      "packetEvidence": [
+        {
+          "sha256": "ffe0b2940a1b50173944818124aaad80c513b620ed9339c1afc7a6d7f46088c5",
+          "ARP": 0,
+          "ICMP": 15,
+          "ICMPv6": 0,
+          "OSPF": 11,
+          "STP": 26,
+          "CDP": 1,
+          "LLDP": 3,
+          "packets": 61
+        },
+        {
+          "sha256": "39f5d11f96f50d3a70a7ab08479263f65d4d22737917d50785a526aee540caa7",
+          "ARP": 0,
+          "ICMP": 15,
+          "ICMPv6": 0,
+          "OSPF": 11,
+          "STP": 27,
+          "CDP": 1,
+          "LLDP": 2,
+          "packets": 58
+        },
+        {
+          "sha256": "d33ca6dfc6f13056afa0444f501589479432b273ad38182425fe2eac7b5d478d",
+          "ARP": 0,
+          "ICMP": 0,
+          "ICMPv6": 0,
+          "OSPF": 11,
+          "STP": 27,
+          "CDP": 1,
+          "LLDP": 2,
+          "packets": 43
+        },
+        {
+          "sha256": "d5b6fd5380f0f39bcfcb68ae8b79757780da63346d79d403b14e83ea5d705933",
+          "ARP": 0,
+          "ICMP": 12,
+          "ICMPv6": 1,
+          "OSPF": 12,
+          "STP": 0,
+          "CDP": 2,
+          "LLDP": 4,
+          "packets": 36
+        },
+        {
+          "sha256": "4146e6b46f1e645bbe05e3b7ce40e79496b0f4bdee43b437c6fbfd097b009a65",
+          "ARP": 0,
+          "ICMP": 12,
+          "ICMPv6": 0,
+          "OSPF": 0,
+          "STP": 0,
+          "CDP": 2,
+          "LLDP": 3,
+          "packets": 28
+        }
+      ]
+    }
+  },
+  "checks": [
+    {
+      "feature": "outbound-acl-baseline",
+      "run": "live-03",
+      "stepIndex": 1,
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "pattern": "Success rate is 100 percent \\(3/3\\)",
+      "observed": "Success rate is 100 percent (3/3)",
+      "status": "observed"
+    },
+    {
+      "feature": "outbound-acl-denial",
+      "run": "live-03",
+      "stepIndex": 15,
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "pattern": "Success rate is 0 percent \\(0/3\\)",
+      "observed": "Success rate is 0 percent (0/3)",
+      "status": "observed"
+    },
+    {
+      "feature": "outbound-acl-real-counter",
+      "run": "live-03",
+      "stepIndex": 16,
+      "node": "nxos",
+      "command": "show ip access-lists NS_AUDIT",
+      "pattern": "10 deny icmp 10\\.10\\.10\\.0/24 192\\.0\\.2\\.9/32 \\[match=3\\]",
+      "observed": "10 deny icmp 10.10.10.0/24 192.0.2.9/32 [match=3]",
+      "status": "observed"
+    },
+    {
+      "feature": "outbound-acl-removal-recovery",
+      "run": "live-03",
+      "stepIndex": 29,
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "pattern": "Success rate is 100 percent \\(3/3\\)",
+      "observed": "Success rate is 100 percent (3/3)",
+      "status": "observed"
+    },
+    {
+      "feature": "ingress-not-enforced",
+      "run": "live-03",
+      "stepIndex": 23,
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "pattern": "Success rate is 100 percent \\(3/3\\)",
+      "observed": "Success rate is 100 percent (3/3)",
+      "status": "excluded-not-validated"
+    },
+    {
+      "feature": "svi-ingress-not-enforced",
+      "run": "live-02",
+      "stepIndex": 39,
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "pattern": "Success rate is 100 percent \\(3/3\\)",
+      "observed": "Success rate is 100 percent (3/3)",
+      "status": "excluded-not-validated"
+    },
+    {
+      "feature": "empty-acl-permits",
+      "run": "live-04",
+      "stepIndex": 8,
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "pattern": "Success rate is 100 percent \\(3/3\\)",
+      "observed": "Success rate is 100 percent (3/3)",
+      "status": "observed"
+    },
+    {
+      "feature": "configured-acl-denies",
+      "run": "live-04",
+      "stepIndex": 16,
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "pattern": "Success rate is 0 percent \\(0/3\\)",
+      "observed": "Success rate is 0 percent (0/3)",
+      "status": "observed"
+    },
+    {
+      "feature": "deleted-acl-permits",
+      "run": "live-04",
+      "stepIndex": 26,
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "pattern": "Success rate is 100 percent \\(3/3\\)",
+      "observed": "Success rate is 100 percent (3/3)",
+      "status": "observed"
+    },
+    {
+      "feature": "deleted-acl-retains-binding",
+      "run": "live-04",
+      "stepIndex": 27,
+      "node": "nxos",
+      "command": "show running-config interface Ethernet1/3",
+      "pattern": "ip access-group NS_AUDIT out",
+      "observed": "ip access-group NS_AUDIT out",
+      "status": "observed"
+    },
+    {
+      "feature": "duplicate-sequence-rejects",
+      "run": "live-04",
+      "stepIndex": 20,
+      "node": "nxos",
+      "command": "10 permit ip any any",
+      "pattern": "Duplicate sequence number",
+      "observed": "Duplicate sequence number",
+      "status": "rejected-native-error"
+    },
+    {
+      "feature": "reference-bandwidth-updates-remote-spf",
+      "run": "live-02",
+      "stepIndex": 24,
+      "node": "ios",
+      "command": "show ip route 198.51.100.0 255.255.255.252",
+      "pattern": "metric 11",
+      "observed": "metric 11",
+      "status": "observed"
+    },
+    {
+      "feature": "root-guard-all-members-svi-down",
+      "run": "live-02",
+      "stepIndex": 57,
+      "node": "nxos",
+      "command": "show interface Vlan10",
+      "pattern": "Vlan10 is down \\(VLAN/BD is down\\), line protocol is down, autostate enabled",
+      "observed": "Vlan10 is down (VLAN/BD is down), line protocol is down, autostate enabled",
+      "status": "observed"
+    },
+    {
+      "feature": "root-guard-all-members-physical-up",
+      "run": "live-02",
+      "stepIndex": 56,
+      "node": "nxos",
+      "command": "show spanning-tree vlan 10",
+      "pattern": "Eth1/1\\s+Desg BKN\\*",
+      "observed": "Eth1/1           Desg BKN*",
+      "status": "observed"
+    },
+    {
+      "feature": "root-guard-recovery-svi-up",
+      "run": "live-02",
+      "stepIndex": 68,
+      "node": "nxos",
+      "command": "show interface Vlan10",
+      "pattern": "Vlan10 is up, line protocol is up, autostate enabled",
+      "observed": "Vlan10 is up, line protocol is up, autostate enabled",
+      "status": "observed"
+    },
+    {
+      "feature": "management-svi-up",
+      "run": "live-02",
+      "stepIndex": 8,
+      "node": "switch",
+      "command": "show interface Vlan10",
+      "pattern": "Vlan10 is up, line protocol is up",
+      "observed": "Vlan10 is up, line protocol is up",
+      "status": "observed"
+    }
+  ]
+}

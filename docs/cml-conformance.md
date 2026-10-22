@@ -107,3 +107,10 @@ npm run check
 Raw evidence stays in the ignored `.cache/cml-runs/` directory. Export only reviewed, sanitized observations into repository fixtures; never commit controller credentials, bearer tokens, private lab configurations or full device-image contents.
 
 References: [Cisco CML console server](https://developer.cisco.com/docs/modeling-labs/2-10/console-server/), [IOS login defaults](https://www.cisco.com/c/en/us/td/docs/ios/termserv/command/reference/tsv_book/tsv_a1.html), [IOS transport input](https://www.cisco.com/c/en/us/td/docs/ios/termserv/command/reference/tsv_book/tsv_s1.html).
+
+
+## Operational fidelity regression scenario
+
+Use `scripts/cml/scenarios/fidelity-regressions.json` with the same capture/replay/compare commands above and a fresh output directory. It creates a separate owned lab and runs 74 commands/checks plus the 80-command survey. It tests OSPF reference-bandwidth changes, outbound Nexus RACL deny/counters/deletion and forwarding recovery, dual root-guard failure, SVI route withdrawal and recovery. It does not require the intermittently observed IOSvL2 trunk discovery adjacency; full discovery output and PCAPs are retained for review. The original operational scenario and failed reruns remain unchanged.
+
+The runner now waits for every linked physical port to be available after BOOTED/privileged EXEC. This prevents an early Nexus prompt from being treated as a ready linecard. Native duplicate ACL sequence errors are rejected by the evidence gate. Consult [the follow-up audit and exclusions](audits/cml-fidelity-followup.md) before promoting a feature; native CLI acceptance alone remains insufficient.

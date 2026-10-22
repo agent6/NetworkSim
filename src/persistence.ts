@@ -51,6 +51,11 @@ function validateConfig(c: any) {
     typeof c.ipv6Routing !== "boolean"
   )
     throw Error("A device configuration is incomplete.");
+  for (const vlan of Object.values<any>(c.vlans)) {
+    if (!object(vlan)) throw Error('Invalid VLAN configuration.');
+    if (vlan.active === undefined) vlan.active = true;
+    else if (typeof vlan.active !== 'boolean') throw Error('Invalid VLAN active state.');
+  }
   validateSNMPConfiguration(c);
   validateSLAConfiguration(c);
   validateTunnelConfiguration(c);

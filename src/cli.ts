@@ -179,9 +179,12 @@ export class IOSSession {
     const index=this.monitorLast?entries.findIndex(e=>e.id===this.monitorLast):-1,unread=entries.slice(index+1);this.monitorLast=entries.at(-1)?.id;
     const debugEntries:any[]=runtime.features.debugEntries||[],debugIndex=this.debugLast?debugEntries.findIndex(entry=>entry.id===this.debugLast):-1,debug=debugEntries.slice(debugIndex+1);this.debugLast=debugEntries.at(-1)?.id;
     const debugOutput=!this.auth&&(this.monitorEnabled||!this.identity||this.identity.line.startsWith('console'))?debug.map(entry=>iosLogLine(this.device,entry,'debug')):[];
-    if(!this.monitorEnabled||this.auth)return debugOutput;
-    const level=this.device.config.features.logging?.monitorLevel??7;
-    return [...debugOutput,...(this.device.config.features.logging?.monitor===false?[]:unread.filter(e=>e.severity<=level).map(e=>iosLogLine(this.device,e)))];
+    if(this.auth)return debugOutput;
+    const console=this.consoleSession&&(!this.identity||this.identity.line.startsWith('console')),logging=this.device.config.features.logging??{};
+    if(logging.enabled===false||(console?logging.console===false:!this.monitorEnabled||logging.monitor===false))return debugOutput;
+    const rows=unread.filter(e=>e.severity<=(console?logging.consoleLevel??7:logging.monitorLevel??7));
+    if(!console){const counts=runtime.features.logSinkCounts??={console:0,monitor:0,buffer:0,trap:0};counts.monitor+=rows.length;}
+    return [...debugOutput,...rows.map(e=>iosLogLine(this.device,e))];
   }
   private setMonitor(enabled:boolean):void{this.monitorEnabled=enabled;this.monitorRuntime=this.device.runtime;this.monitorLast=(this.device.runtime.features.logEntries||[]).at(-1)?.id;}
   /** The attached terminal supplies its actual cells; explicit IOS widths take precedence. */

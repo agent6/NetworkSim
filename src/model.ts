@@ -40,6 +40,8 @@ export interface StaticRoute {
   tag?: number;
 }
 export interface Route {
+  /** Local host-mode forwarding through ip default-gateway; not an installed routed default. */
+  management?: boolean;
   network: string;
   prefix: number;
   nextHop?: string;
@@ -161,7 +163,7 @@ export function factoryDeviceConfig(kind: DeviceKind, hostname: string): DeviceC
     management.features.proxyArp = false;
     return {hostname, interfaces, vlans: {1: {id: 1, name: 'default', active: true}}, ipRouting: true, ipv6Routing: false,
       dnsServers: [], staticRoutes: [], protocols: {}, services: {},
-      features: {nsos: {enabled: ['ssh']}, ssh: {keys: true, version: 2}, lines: {'vty 0 15': {login: 'local', transport: 'ssh', exec: true}}, vrfs: {management: {}}, stp: {mode: 'rapid-pvst',pathcostMethod:'short'}, cdp: true,
+      features: {logging:{consoleLevel:2,monitorLevel:5,bufferedLevel:5}, nsos: {enabled: ['ssh']}, ssh: {keys: true, version: 2}, lines: {'vty 0 15': {login: 'local', transport: 'ssh', exec: true}}, vrfs: {management: {}}, stp: {mode: 'rapid-pvst',pathcostMethod:'short'}, cdp: true,
         vtp: {domain: '', mode: 'transparent', version: 1, revision: 0, enabled: false}}};
   }
   const switchport = kind === 'switch' || kind === 'poeswitch' || kind === 'l3switch', interfaces: Record<string, InterfaceConfig> = {};

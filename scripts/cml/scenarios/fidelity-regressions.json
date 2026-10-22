@@ -1,0 +1,1006 @@
+{
+  "schemaVersion": 1,
+  "id": "operational-fidelity-regressions",
+  "description": "Executable follow-up: OSPF reference bandwidth, outbound Nexus IPv4 ACL traffic/counters, empty/deleted ACL semantics, STP-gated SVI withdrawal/recovery and the 20-command survey. Trunk CDP/LLDP interoperability is observed, not assumed.",
+  "nodes": [
+    {
+      "id": "ios",
+      "kind": "router",
+      "hostname": "IOS",
+      "cml": {
+        "definition": "iosv",
+        "image": "iosv-159-3-m12",
+        "port": "GigabitEthernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname IOS",
+        "no ip domain-lookup",
+        "ipv6 unicast-routing",
+        "lldp run",
+        "interface GigabitEthernet0/0",
+        "ip address 10.10.10.10 255.255.255.0",
+        "ipv6 address 2001:db8:10::10/64",
+        "no shutdown",
+        "exit",
+        "router ospf 1",
+        "router-id 1.1.1.1",
+        "network 10.10.10.0 0.0.0.255 area 0",
+        "exit",
+        "ipv6 route ::/0 2001:db8:10::1",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname IOS",
+        "no ip domain-lookup",
+        "ipv6 unicast-routing",
+        "lldp run",
+        "interface GigabitEthernet0/0",
+        "ip address 10.10.10.10 255.255.255.0",
+        "ipv6 address 2001:db8:10::10/64",
+        "no shutdown",
+        "exit",
+        "router ospf 1",
+        "router-id 1.1.1.1",
+        "network 10.10.10.0 0.0.0.255 area 0",
+        "exit",
+        "ipv6 route ::/0 2001:db8:10::1",
+        "end"
+      ]
+    },
+    {
+      "id": "switch",
+      "kind": "l3switch",
+      "hostname": "SW",
+      "cml": {
+        "definition": "iosvl2",
+        "image": "iosvl2-2020",
+        "port": "GigabitEthernet0/0"
+      },
+      "simPort": "GigabitEthernet0/1",
+      "startup": [
+        "hostname SW",
+        "no ip domain-lookup",
+        "vtp mode transparent",
+        "lldp run",
+        "vlan 10",
+        "name Users",
+        "exit",
+        "spanning-tree mode rapid-pvst",
+        "interface GigabitEthernet0/0",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/1",
+        "switchport trunk encapsulation dot1q",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/2",
+        "switchport trunk encapsulation dot1q",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10",
+        "no shutdown",
+        "exit",
+        "interface Vlan10",
+        "ip address 10.10.10.4 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip default-gateway 10.10.10.1",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname SW",
+        "no ip domain-lookup",
+        "vtp mode transparent",
+        "lldp run",
+        "vlan 10",
+        "name Users",
+        "exit",
+        "spanning-tree mode rapid-pvst",
+        "interface GigabitEthernet0/1",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/2",
+        "switchport trunk encapsulation dot1q",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/3",
+        "switchport trunk encapsulation dot1q",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10",
+        "no shutdown",
+        "exit",
+        "interface Vlan10",
+        "ip address 10.10.10.4 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip default-gateway 10.10.10.1",
+        "end"
+      ],
+      "portMap": {
+        "GigabitEthernet0/0": "GigabitEthernet0/1",
+        "GigabitEthernet0/1": "GigabitEthernet0/2",
+        "GigabitEthernet0/2": "GigabitEthernet0/3"
+      }
+    },
+    {
+      "id": "nxos",
+      "kind": "datacenter",
+      "hostname": "NEXUS",
+      "cml": {
+        "definition": "nxosv9000",
+        "image": "nxosv9300-10-6-2-f",
+        "port": "Ethernet1/1"
+      },
+      "simPort": "Ethernet1/1",
+      "startup": [
+        "hostname NEXUS",
+        "no password strength-check",
+        "username admin password NetSimLab42! role network-admin",
+        "feature interface-vlan",
+        "feature ospf",
+        "feature lldp",
+        "vlan 10",
+        "name Users",
+        "exit",
+        "spanning-tree mode rapid-pvst",
+        "spanning-tree vlan 10 priority 4096",
+        "router ospf LAB",
+        "router-id 2.2.2.2",
+        "exit",
+        "interface Ethernet1/1",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10",
+        "no shutdown",
+        "exit",
+        "interface Ethernet1/2",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10",
+        "no shutdown",
+        "exit",
+        "interface Vlan10",
+        "ip address 10.10.10.1/24",
+        "ipv6 address 2001:db8:10::1/64",
+        "ip router ospf LAB area 0",
+        "no shutdown",
+        "exit",
+        "interface Ethernet1/3",
+        "no switchport",
+        "ip address 198.51.100.1/30",
+        "ipv6 address 2001:db8:12::1/64",
+        "ip router ospf LAB area 0",
+        "no shutdown",
+        "exit",
+        "ipv6 route ::/0 2001:db8:12::2",
+        "end"
+      ],
+      "simulatorSetup": [
+        "configure terminal",
+        "hostname NEXUS",
+        "username admin password NetSimLab42! role network-admin",
+        "ipv6 unicast-routing",
+        "feature interface-vlan",
+        "feature ospf",
+        "feature lldp",
+        "vlan 10",
+        "name Users",
+        "exit",
+        "spanning-tree mode rapid-pvst",
+        "spanning-tree vlan 10 priority 4096",
+        "router ospf LAB",
+        "router-id 2.2.2.2",
+        "exit",
+        "interface Ethernet1/1",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10",
+        "no shutdown",
+        "exit",
+        "interface Ethernet1/2",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10",
+        "no shutdown",
+        "exit",
+        "interface Vlan10",
+        "ip address 10.10.10.1/24",
+        "ipv6 address 2001:db8:10::1/64",
+        "ip router ospf LAB area 0",
+        "no shutdown",
+        "exit",
+        "interface Ethernet1/3",
+        "no switchport",
+        "ip address 198.51.100.1/30",
+        "ipv6 address 2001:db8:12::1/64",
+        "ip router ospf LAB area 0",
+        "no shutdown",
+        "exit",
+        "ipv6 route ::/0 2001:db8:12::2",
+        "end"
+      ]
+    },
+    {
+      "id": "iosxe",
+      "kind": "router",
+      "hostname": "IOSXE",
+      "cml": {
+        "definition": "iol-xe",
+        "image": "iol-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname IOSXE",
+        "no ip domain-lookup",
+        "ipv6 unicast-routing",
+        "lldp run",
+        "interface Ethernet0/0",
+        "ip address 198.51.100.2 255.255.255.252",
+        "ipv6 address 2001:db8:12::2/64",
+        "ip nat inside",
+        "no shutdown",
+        "exit",
+        "interface Ethernet0/1",
+        "ip address 203.0.113.1 255.255.255.0",
+        "ipv6 address 2001:db8:203::1/64",
+        "ip nat outside",
+        "no shutdown",
+        "exit",
+        "ip route 0.0.0.0 0.0.0.0 203.0.113.2",
+        "ipv6 route 2001:db8:10::/64 2001:db8:12::1",
+        "ipv6 route 2001:db8:9::9/128 2001:db8:203::2",
+        "router ospf 1",
+        "router-id 3.3.3.3",
+        "network 198.51.100.0 0.0.0.3 area 0",
+        "default-information originate",
+        "exit",
+        "access-list 10 permit 10.10.10.0 0.0.0.255",
+        "ip nat inside source list 10 interface Ethernet0/1 overload",
+        "ip access-list extended OBSERVE",
+        "permit icmp 10.10.10.0 0.0.0.255 any",
+        "permit ip any any",
+        "exit",
+        "interface Ethernet0/0",
+        "ip access-group OBSERVE in",
+        "exit",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname IOSXE",
+        "no ip domain-lookup",
+        "ipv6 unicast-routing",
+        "lldp run",
+        "interface GigabitEthernet0/0",
+        "ip address 198.51.100.2 255.255.255.252",
+        "ipv6 address 2001:db8:12::2/64",
+        "ip nat inside",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/1",
+        "ip address 203.0.113.1 255.255.255.0",
+        "ipv6 address 2001:db8:203::1/64",
+        "ip nat outside",
+        "no shutdown",
+        "exit",
+        "ip route 0.0.0.0 0.0.0.0 203.0.113.2",
+        "ipv6 route 2001:db8:10::/64 2001:db8:12::1",
+        "ipv6 route 2001:db8:9::9/128 2001:db8:203::2",
+        "router ospf 1",
+        "router-id 3.3.3.3",
+        "network 198.51.100.0 0.0.0.3 area 0",
+        "default-information originate",
+        "exit",
+        "access-list 10 permit 10.10.10.0 0.0.0.255",
+        "ip nat inside source list 10 interface GigabitEthernet0/1 overload",
+        "ip access-list extended OBSERVE",
+        "permit icmp 10.10.10.0 0.0.0.255 any",
+        "permit ip any any",
+        "exit",
+        "interface GigabitEthernet0/0",
+        "ip access-group OBSERVE in",
+        "exit",
+        "end"
+      ],
+      "portMap": {
+        "Ethernet0/0": "GigabitEthernet0/0",
+        "Ethernet0/1": "GigabitEthernet0/1"
+      }
+    },
+    {
+      "id": "outside",
+      "kind": "router",
+      "hostname": "OUTSIDE",
+      "cml": {
+        "definition": "iosv",
+        "image": "iosv-159-3-m12",
+        "port": "GigabitEthernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname OUTSIDE",
+        "no ip domain-lookup",
+        "ipv6 unicast-routing",
+        "lldp run",
+        "interface GigabitEthernet0/0",
+        "ip address 203.0.113.2 255.255.255.0",
+        "ipv6 address 2001:db8:203::2/64",
+        "no shutdown",
+        "exit",
+        "interface Loopback0",
+        "ip address 192.0.2.9 255.255.255.255",
+        "ipv6 address 2001:db8:9::9/128",
+        "exit",
+        "ipv6 route ::/0 2001:db8:203::1",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname OUTSIDE",
+        "no ip domain-lookup",
+        "ipv6 unicast-routing",
+        "lldp run",
+        "interface GigabitEthernet0/0",
+        "ip address 203.0.113.2 255.255.255.0",
+        "ipv6 address 2001:db8:203::2/64",
+        "no shutdown",
+        "exit",
+        "interface Loopback0",
+        "ip address 192.0.2.9 255.255.255.255",
+        "ipv6 address 2001:db8:9::9/128",
+        "exit",
+        "ipv6 route ::/0 2001:db8:203::1",
+        "end"
+      ]
+    }
+  ],
+  "links": [
+    [
+      {
+        "node": "ios",
+        "port": "GigabitEthernet0/0"
+      },
+      {
+        "node": "switch",
+        "port": "GigabitEthernet0/0"
+      }
+    ],
+    [
+      {
+        "node": "switch",
+        "port": "GigabitEthernet0/1"
+      },
+      {
+        "node": "nxos",
+        "port": "Ethernet1/1"
+      }
+    ],
+    [
+      {
+        "node": "switch",
+        "port": "GigabitEthernet0/2"
+      },
+      {
+        "node": "nxos",
+        "port": "Ethernet1/2"
+      }
+    ],
+    [
+      {
+        "node": "nxos",
+        "port": "Ethernet1/3"
+      },
+      {
+        "node": "iosxe",
+        "port": "Ethernet0/0"
+      }
+    ],
+    [
+      {
+        "node": "iosxe",
+        "port": "Ethernet0/1"
+      },
+      {
+        "node": "outside",
+        "port": "GigabitEthernet0/0"
+      }
+    ]
+  ],
+  "steps": [
+    {
+      "id": "converged-ios-ospf",
+      "node": "ios",
+      "command": "show ip ospf neighbor",
+      "waitSeconds": 90,
+      "expect": [
+        "2\\.2\\.2\\.2.*FULL"
+      ]
+    },
+    {
+      "id": "iosxe-ospf",
+      "node": "iosxe",
+      "command": "show ip ospf neighbor",
+      "expect": [
+        "2\\.2\\.2\\.2.*FULL"
+      ]
+    },
+    {
+      "id": "nxos-ospf",
+      "node": "nxos",
+      "command": "show ip ospf neighbors",
+      "expect": [
+        "1\\.1\\.1\\.1",
+        "3\\.3\\.3\\.3",
+        "FULL"
+      ]
+    },
+    {
+      "id": "warm-ipv4",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 2"
+    },
+    {
+      "id": "routed-nat-icmp",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 5",
+      "expect": [
+        "Success rate is 100 percent"
+      ]
+    },
+    {
+      "id": "translated-flow",
+      "node": "iosxe",
+      "command": "show ip nat translations",
+      "expect": [
+        "icmp",
+        "203\\.0\\.113\\.1",
+        "10\\.10\\.10\\.10",
+        "192\\.0\\.2\\.9"
+      ]
+    },
+    {
+      "id": "acl-hits",
+      "node": "iosxe",
+      "command": "show access-lists OBSERVE",
+      "expect": [
+        "matches"
+      ]
+    },
+    {
+      "id": "warm-ipv6",
+      "node": "ios",
+      "command": "ping 2001:db8:9::9 repeat 2"
+    },
+    {
+      "id": "routed-ipv6",
+      "node": "ios",
+      "command": "ping 2001:db8:9::9 repeat 5",
+      "expect": [
+        "Success rate is 100 percent"
+      ]
+    },
+    {
+      "id": "nexus-root",
+      "node": "nxos",
+      "command": "show spanning-tree vlan 10",
+      "expect": [
+        "This bridge is the root"
+      ]
+    },
+    {
+      "id": "switch-alternate",
+      "node": "switch",
+      "command": "show spanning-tree vlan 10",
+      "expect": [
+        "Altn.*BLK"
+      ]
+    },
+    {
+      "id": "switch-learned",
+      "node": "switch",
+      "command": "show mac address-table dynamic vlan 10",
+      "expect": [
+        "DYNAMIC"
+      ]
+    },
+    {
+      "id": "nexus-discovery",
+      "node": "nxos",
+      "command": "show cdp neighbors detail",
+      "expect": [
+        "IOSXE"
+      ]
+    },
+    {
+      "id": "nexus-lldp",
+      "node": "nxos",
+      "command": "show lldp neighbors detail",
+      "expect": [
+        "System Name: IOSXE",
+        "Management Address: 198\\.51\\.100\\.2"
+      ]
+    },
+    {
+      "id": "regression-001",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "regression-002",
+      "node": "nxos",
+      "command": "router ospf LAB"
+    },
+    {
+      "id": "regression-003",
+      "node": "nxos",
+      "command": "auto-cost reference-bandwidth 10000 Mbps"
+    },
+    {
+      "id": "regression-004",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "regression-005",
+      "node": "ios",
+      "command": "show ip route 198.51.100.0 255.255.255.252",
+      "expect": [
+        "metric 11"
+      ],
+      "waitSeconds": 10
+    },
+    {
+      "id": "regression-006",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "regression-007",
+      "node": "nxos",
+      "command": "router ospf LAB"
+    },
+    {
+      "id": "regression-008",
+      "node": "nxos",
+      "command": "no auto-cost reference-bandwidth"
+    },
+    {
+      "id": "regression-009",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "regression-010",
+      "node": "ios",
+      "command": "show ip route 198.51.100.0 255.255.255.252",
+      "expect": [
+        "metric 41"
+      ],
+      "waitSeconds": 10
+    },
+    {
+      "id": "regression-011",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "regression-012",
+      "node": "nxos",
+      "command": "ip access-list NS_AUDIT"
+    },
+    {
+      "id": "regression-013",
+      "node": "nxos",
+      "command": "exit"
+    },
+    {
+      "id": "regression-014",
+      "node": "nxos",
+      "command": "interface Ethernet1/3"
+    },
+    {
+      "id": "regression-015",
+      "node": "nxos",
+      "command": "ip access-group NS_AUDIT out"
+    },
+    {
+      "id": "regression-016",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "regression-017",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "expect": [
+        "Success rate is 100 percent"
+      ],
+      "waitSeconds": 10
+    },
+    {
+      "id": "regression-018",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "regression-019",
+      "node": "nxos",
+      "command": "ip access-list NS_AUDIT"
+    },
+    {
+      "id": "regression-020",
+      "node": "nxos",
+      "command": "statistics per-entry"
+    },
+    {
+      "id": "regression-021",
+      "node": "nxos",
+      "command": "10 deny icmp 10.10.10.0/24 host 192.0.2.9"
+    },
+    {
+      "id": "regression-022",
+      "node": "nxos",
+      "command": "20 permit ip any any"
+    },
+    {
+      "id": "regression-023",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "regression-024",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "expect": [
+        "Success rate is 0 percent"
+      ],
+      "waitSeconds": 10
+    },
+    {
+      "id": "regression-025",
+      "node": "nxos",
+      "command": "show ip access-lists NS_AUDIT",
+      "expect": [
+        "10 deny icmp 10\\.10\\.10\\.0/24 192\\.0\\.2\\.9/32 \\[match=3\\]"
+      ]
+    },
+    {
+      "id": "regression-026",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "regression-027",
+      "node": "nxos",
+      "command": "no ip access-list NS_AUDIT"
+    },
+    {
+      "id": "regression-028",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "regression-029",
+      "node": "nxos",
+      "command": "show running-config interface Ethernet1/3",
+      "expect": [
+        "ip access-group NS_AUDIT out"
+      ]
+    },
+    {
+      "id": "regression-030",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "expect": [
+        "Success rate is 100 percent"
+      ],
+      "waitSeconds": 10
+    },
+    {
+      "id": "regression-031",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "regression-032",
+      "node": "nxos",
+      "command": "interface Ethernet1/3"
+    },
+    {
+      "id": "regression-033",
+      "node": "nxos",
+      "command": "no ip access-group NS_AUDIT out"
+    },
+    {
+      "id": "regression-034",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "regression-035",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "regression-036",
+      "node": "nxos",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "regression-037",
+      "node": "nxos",
+      "command": "spanning-tree guard root"
+    },
+    {
+      "id": "regression-038",
+      "node": "nxos",
+      "command": "interface Ethernet1/2"
+    },
+    {
+      "id": "regression-039",
+      "node": "nxos",
+      "command": "spanning-tree guard root"
+    },
+    {
+      "id": "regression-040",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "regression-041",
+      "node": "switch",
+      "command": "configure terminal"
+    },
+    {
+      "id": "regression-042",
+      "node": "switch",
+      "command": "spanning-tree vlan 10 priority 0"
+    },
+    {
+      "id": "regression-043",
+      "node": "switch",
+      "command": "end"
+    },
+    {
+      "id": "regression-044",
+      "node": "nxos",
+      "command": "show interface Vlan10",
+      "expect": [
+        "Vlan10 is down.*line protocol is down.*autostate enabled"
+      ],
+      "waitSeconds": 15
+    },
+    {
+      "id": "regression-045",
+      "node": "nxos",
+      "command": "show spanning-tree vlan 10",
+      "expect": [
+        "ROOT_Inc"
+      ]
+    },
+    {
+      "id": "regression-046",
+      "node": "nxos",
+      "command": "show ip route",
+      "absent": [
+        "10\\.10\\.10\\.0/24,"
+      ]
+    },
+    {
+      "id": "regression-047",
+      "node": "switch",
+      "command": "configure terminal"
+    },
+    {
+      "id": "regression-048",
+      "node": "switch",
+      "command": "spanning-tree vlan 10 priority 32768"
+    },
+    {
+      "id": "regression-049",
+      "node": "switch",
+      "command": "end"
+    },
+    {
+      "id": "regression-050",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "regression-051",
+      "node": "nxos",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "regression-052",
+      "node": "nxos",
+      "command": "spanning-tree guard none"
+    },
+    {
+      "id": "regression-053",
+      "node": "nxos",
+      "command": "interface Ethernet1/2"
+    },
+    {
+      "id": "regression-054",
+      "node": "nxos",
+      "command": "spanning-tree guard none"
+    },
+    {
+      "id": "regression-055",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "regression-056",
+      "node": "nxos",
+      "command": "show interface Vlan10",
+      "expect": [
+        "Vlan10 is up.*line protocol is up.*autostate enabled"
+      ],
+      "waitSeconds": 45
+    },
+    {
+      "id": "recovery-ospf-ready",
+      "node": "nxos",
+      "command": "show ip ospf neighbors",
+      "waitSeconds": 90,
+      "expect": [
+        "1\\.1\\.1\\.1\\s+1\\s+FULL",
+        "3\\.3\\.3\\.3\\s+1\\s+FULL"
+      ]
+    },
+    {
+      "id": "recovery-route-ready",
+      "node": "ios",
+      "command": "show ip route 198.51.100.0 255.255.255.252",
+      "expect": [
+        "metric 41"
+      ]
+    },
+    {
+      "id": "regression-057",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "expect": [
+        "Success rate is 100 percent"
+      ]
+    },
+    {
+      "id": "regression-058",
+      "node": "nxos",
+      "command": "show ip route",
+      "expect": [
+        "10\\.10\\.10\\.0/24,"
+      ]
+    }
+  ],
+  "surveys": [
+    {
+      "node": "ios",
+      "commands": [
+        "show version",
+        "show inventory",
+        "show environment",
+        "show processes cpu",
+        "show processes memory",
+        "show memory statistics",
+        "show clock",
+        "show logging",
+        "show users",
+        "show interfaces",
+        "show ip interface brief",
+        "show ip route",
+        "show ipv6 route",
+        "show spanning-tree",
+        "show mac address-table",
+        "show cdp neighbors detail",
+        "show lldp neighbors detail",
+        "show ip ospf neighbor",
+        "show ip nat translations",
+        "show access-lists"
+      ]
+    },
+    {
+      "node": "iosxe",
+      "commands": [
+        "show version",
+        "show inventory",
+        "show environment",
+        "show processes cpu",
+        "show processes memory",
+        "show memory statistics",
+        "show clock",
+        "show logging",
+        "show users",
+        "show interfaces",
+        "show ip interface brief",
+        "show ip route",
+        "show ipv6 route",
+        "show spanning-tree",
+        "show mac address-table",
+        "show cdp neighbors detail",
+        "show lldp neighbors detail",
+        "show ip ospf neighbor",
+        "show ip nat translations",
+        "show access-lists"
+      ]
+    },
+    {
+      "node": "switch",
+      "commands": [
+        "show version",
+        "show inventory",
+        "show environment",
+        "show processes cpu",
+        "show processes memory",
+        "show memory statistics",
+        "show clock",
+        "show logging",
+        "show users",
+        "show interfaces",
+        "show ip interface brief",
+        "show ip route",
+        "show ipv6 route",
+        "show spanning-tree",
+        "show mac address-table",
+        "show cdp neighbors detail",
+        "show lldp neighbors detail",
+        "show ip ospf neighbor",
+        "show ip nat translations",
+        "show access-lists"
+      ]
+    },
+    {
+      "node": "nxos",
+      "commands": [
+        "show version",
+        "show inventory",
+        "show environment",
+        "show processes cpu",
+        "show processes memory",
+        "show memory statistics",
+        "show clock",
+        "show logging",
+        "show users",
+        "show interfaces",
+        "show ip interface brief",
+        "show ip route",
+        "show ipv6 route",
+        "show spanning-tree",
+        "show mac address-table",
+        "show cdp neighbors detail",
+        "show lldp neighbors detail",
+        "show ip ospf neighbor",
+        "show ip nat translations",
+        "show access-lists"
+      ]
+    }
+  ],
+  "packetEvidence": {
+    "kind": "operational",
+    "minimum": {
+      "OSPF": 1,
+      "STP": 1,
+      "CDP": 1,
+      "LLDP": 1,
+      "ICMP": 1,
+      "ICMPv6": 1
+    }
+  }
+}

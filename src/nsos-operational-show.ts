@@ -1,10 +1,12 @@
 import type {Simulator} from './engine.ts';
-import type {Device,Route,Neighbor} from './model.ts';
-import {prefixContains,isIPv6,ipToInt,ipv6ToBigInt} from './ip.ts';
+import type {Device,Route,Neighbor,InterfaceConfig} from './model.ts';
+import {prefixContains,isIPv6,ipToInt,ipv6ToBigInt,maskToPrefix} from './ip.ts';
 import {iosClock,severityNames} from './ios-system.ts';
 import {iosDuration} from './ios-system-show.ts';
 import {managementSessionSnapshot} from './management.ts';
-import {neighborIdentity} from './ios-show.ts';
+import {neighborIdentity,iosInterfaceName} from './ios-show.ts';
+import {interfaceRates} from './interface-telemetry.ts';
+import {interfaceSpeed,interfaceBandwidth,interfaceDuplex} from './ethernet.ts';
 import {refreshMacAging} from './mac-aging.ts';
 
 export const nsosPort=(port:string)=>port.replace(/^Ethernet/,'Eth').replace(/^Port-channel/,'Po').replace(/^Loopback/,'Lo');
@@ -39,7 +41,7 @@ export function nsosRouteTable(engine:Simulator,d:Device,family:4|6,vrf='default
 export function nsosIPBrief(engine:Simulator,d:Device,vrf='default'):string[]{
   if(badVRF(d,vrf))return ['% VRF does not exist.'];
   return ['',`IP Interface Status for VRF "${vrf}"${vrf==='default'?'(1)':''}`,'Interface            IP Address      Interface Status',
-    ...Object.values(d.config.interfaces).filter(p=>p.ip&&!p.switchport&&(p.vrf||'default')===vrf).map(p=>{
+    ...Object.values(d.config.interfaces).filter(p=>p.ip&&!p.switchport&&(p.vrf||'default')===vrf).sort((a,b)=>{const rank=(p:InterfaceConfig)=>/^Vlan/.test(p.name)?0:/^Loopback/.test(p.name)?1:2;return rank(a)-rank(b)||a.name.localeCompare(b.name,undefined,{numeric:true});}).map(p=>{
       const up=engine.interfaceUp(d.id,p.name),state=`protocol-${up?'up':'down'}/link-${up?'up':'down'}/admin-${p.adminUp?'up':'down'}`;
       return nsosPort(p.name).padEnd(21)+p.ip!.padEnd(16)+state;
     })];
@@ -54,8 +56,8 @@ export function nsosClock(d:Device,now:number):string[]{
 export function nsosLogging(d:Device):string[]{
   const f=d.config.features.logging??{},on=(value:boolean)=>value?'enabled':'disabled',severity=(n:number)=>severityNames[n]??String(n);
   // Facilities, linecards, logflash and rate limiting are deliberately absent: no such runtime exists.
-  return ['',`Logging console:                ${on(f.enabled!==false&&f.console!==false)} (Severity: ${severity(f.consoleLevel??7)})`,
-    `Logging monitor:                ${on(f.enabled!==false&&f.monitor!==false)} (Severity: ${severity(f.monitorLevel??7)})`,
+  return ['',`Logging console:                ${on(f.enabled!==false&&f.console!==false)} (Severity: ${severity(f.consoleLevel??2)})`,
+    `Logging monitor:                ${on(f.enabled!==false&&f.monitor!==false)} (Severity: ${severity(f.monitorLevel??5)})`,
     `Logging server:                 ${on(f.enabled!==false&&f.trapEnabled!==false&&!!f.hosts?.length)}`,
     `Logging logfile:                ${on(f.enabled!==false&&f.buffered!==false)}`,'',...d.runtime.logs];
 }
@@ -68,21 +70,43 @@ export function nsosUsers(engine:Simulator,d:Device,identity:{username?:string;s
   }
   return rows;
 }
-export function nsosMAC(d:Device,now:number):string[]{
+export function nsosMAC(engine:Simulator,d:Device,now:number):string[]{
   refreshMacAging(d,now);
-  return ['Legend: * - primary entry','        age - seconds since last seen; - - static entry','   VLAN     MAC Address      Type      age     Ports','---------+-----------------+--------+---------+----------------',
-    ...Object.values(d.runtime.mac).sort((a,b)=>a.vlan-b.vlan||a.mac.localeCompare(b.mac)).map(m=>`* ${String(m.vlan).padStart(4)}     ${dotted(m.mac).padEnd(17)}${(m.static?'static':'dynamic').padEnd(10)}${(m.static||m.lastSeen===undefined?'-':String(Math.max(0,Math.floor((now-m.lastSeen)/1000)))).padEnd(8)}${nsosPort(m.port)}`)];
+  const gateways=Object.values(d.config.interfaces).filter(p=>/^Vlan\d+$/.test(p.name)&&(p.ip||p.ipv6.length)&&engine.interfaceUp(d.id,p.name));
+  return ['Legend: * - primary entry, G - Gateway MAC, (R) - Routed MAC','        age - seconds since last seen; - - static entry','   VLAN     MAC Address      Type      age     Ports','---------+-----------------+--------+---------+----------------',
+    ...Object.values(d.runtime.mac).sort((a,b)=>a.vlan-b.vlan||a.mac.localeCompare(b.mac)).map(m=>`* ${String(m.vlan).padStart(4)}     ${dotted(m.mac).padEnd(17)}${(m.static?'static':'dynamic').padEnd(10)}${(m.static||m.lastSeen===undefined?'-':String(Math.max(0,Math.floor((now-m.lastSeen)/1000)))).padEnd(8)}${nsosPort(m.port)}`),...gateways.map(p=>`G ${p.name.slice(4).padStart(4)}     ${dotted(engine.macOf(d.id,p.name)).padEnd(17)}${'static'.padEnd(10)}${'-'.padEnd(8)}${p.name}(R)`)];
 }
-export function nsosDiscovery(d:Device,protocol:'CDP'|'LLDP',now:number):string[]{
+export function nsosDiscovery(engine:Simulator,d:Device,protocol:'CDP'|'LLDP',now:number):string[]{
   const peers=d.runtime.neighbors.filter(n=>n.protocol===protocol&&(n.expires===undefined||n.expires>now));
   const left=(n:Neighbor)=>Math.max(0,Math.ceil(((n.expires??now)-now)/1000));
   const addresses=(n:Neighbor):string[]=>n.addresses??(n.address?[n.address]:[]);
   if(protocol==='CDP')return [...peers.flatMap(n=>{
     const id=neighborIdentity(n),a=addresses(n);
-    return ['----------------------------------------',`Device ID:${n.hostname??n.deviceId}`,`Interface address(es): ${a.length}`,
+    return ['----------------------------------------',`Device ID:${n.hostname??n.deviceId}`,'',`Interface address(es): ${a.length}`,
       ...a.map(v=>`    ${isIPv6(v)?'IPv6':'IPv4'} Address: ${v}`),`Platform: ${id.platform}, Capabilities: ${id.cdpWords}`,
-      `Interface: ${nsosPort(n.interface)}, Port ID (outgoing port): ${n.peerInterface??''}`,`Holdtime: ${left(n)} sec(s)`,'','Version:',...id.version,'','Advertisement Version: 2',...(n.duplex?[`Duplex: ${n.duplex}`]:[]),''];
-  }),`Total entries displayed: ${peers.length}`];
-  return ['Capability codes:','  (R) Router, (B) Bridge, (T) Telephone, (S) Station, (O) Other','Device ID            Local Intf      Hold-time  Capability  Port ID',
-    ...peers.flatMap(n=>{const id=neighborIdentity(n);return ['----------------------------------------',`Chassis id: ${n.chassisMac?dotted(n.chassisMac):'not advertised'}`,`Port id: ${n.peerInterface??''}`,`Local Port id: ${nsosPort(n.interface)}`,`Port Description: ${n.description||n.peerInterface||''}`,`System Name: ${n.hostname??n.deviceId}`,'System Description:',...id.version,`Time remaining: ${left(n)} seconds`,`System Capabilities: ${id.lldpCodes}`,`Enabled Capabilities: ${id.lldpCodes}`,...(addresses(n).length?addresses(n).map(v=>`Management Address: ${v}`):['Management Address: not advertised']),''];}),`Total entries displayed: ${peers.length}`];
+      `Interface: ${n.interface}, Port ID (outgoing port): ${n.peerInterface??''}`,`Holdtime: ${left(n)} sec`,'','Version:',...id.version,'','Advertisement Version: 2','',...(n.nativeVlan!==undefined?[`Native VLAN: ${n.nativeVlan}`]:[]),...(n.duplex?[`Duplex: ${n.duplex}`]:[]),...(n.managementAddresses?.length?['Mgmt address(es):',...n.managementAddresses.map((v:string)=>`    ${isIPv6(v)?'IPv6':'IPv4'} Address: ${v}`)]:[]),`Local Interface MAC: ${engine.macOf(d.id,n.interface)}`,...(n.portMac?[`Remote Interface MAC: ${n.portMac}`]:[]),''];
+  })];
+  return ['Capability codes:','  (R) Router, (B) Bridge, (T) Telephone, (C) DOCSIS Cable Device','  (W) WLAN Access Point, (P) Repeater, (S) Station, (O) Other','Device ID            Local Intf      Hold-time  Capability  Port ID',
+    ...peers.flatMap(n=>{const id=neighborIdentity(n);return ['',`Chassis id: ${n.chassisMac?dotted(n.chassisMac):'not advertised'}`,`Port id: ${iosInterfaceName(n.peerInterface??'')}`,`Local Port id: ${nsosPort(n.interface)}`,`Port Description: ${n.description||n.peerInterface||''}`,`System Name: ${n.hostname??n.deviceId}`,'System Description: '+id.version.join(' '),`Time remaining: ${left(n)} seconds`,`System Capabilities: ${id.lldpCodes}`,`Enabled Capabilities: ${neighborIdentity({...n,capabilities:n.enabledCapabilities??n.capabilities}).lldpCodes}`,...(n.managementAddresses?.length?n.managementAddresses.map((v:string)=>`Management Address${isIPv6(v)?' IPV6':''}: ${v}`):['Management Address: not advertised']),'Vlan ID: not advertised','Max Frame Size: not advertised','Vlan Name TLV:','[Vlan ID: Vlan Name]  not advertised','Link Aggregation TLV:','Capability: not advertised','Status : not advertised','Link agg ID : 0',''];}),`Total entries displayed: ${peers.length}`];
+}
+
+/** Only measured counters are printed; there are no ASIC registers or reset statistics. */
+export function nsosInterface(engine:Simulator,d:Device,p:InterfaceConfig):string[]{
+ const now=engine.clock.now(),up=engine.interfaceUp(d.id,p.name),svi=/^Vlan/.test(p.name),c=d.runtime.counters[p.name],short=svi?60:30;
+ const cleared=d.runtime.features.countersClearedAt?.[p.name],mac=dotted(engine.macOf(d.id,p.name));
+ const windows=[short,300].flatMap((seconds,index)=>{
+  const r=interfaceRates(d,p.name,now,seconds);
+  return [`  Load-Interval #${index+1}: ${seconds===300?'5 minute (300 seconds)':seconds+' seconds'}`,`    ${seconds} seconds input rate ${r.inputBits} bits/sec, ${r.inputPackets} packets/sec`,`    ${seconds} seconds output rate ${r.outputBits} bits/sec, ${r.outputPackets} packets/sec`];
+ });
+ return [`${p.name} is ${up?'up':'down'}${svi?`${up?'':p.adminUp?' (VLAN/BD is down)':' (Administratively down)'}, line protocol is ${up?'up':'down'}, autostate enabled`:''}`,
+  ...svi?[]:[`admin state is ${p.adminUp?'up':'down'}, Dedicated Interface`],
+  `  Hardware${svi?' is EtherSVI':': Ethernet'}, address${svi?' is':':'} ${mac}`,...(p.description?[`  Description: ${p.description}`]:[]),
+  ...(p.ip?[`  Internet Address is ${p.ip}/${maskToPrefix(p.mask??'255.255.255.0')}`]:[]),...p.ipv6.map(a=>'  IPv6 address: '+a),
+  `  MTU ${p.mtu} bytes, BW ${interfaceBandwidth(d,p)} Kbit , DLY ${(p.features.delay??1)*10} usec`,
+  ...svi?['  Encapsulation ARPA, loopback not set','  Keepalive not supported','  ARP type: ARPA']:['  Encapsulation ARPA, medium is broadcast',`  ${interfaceDuplex(d,p)}-duplex, ${interfaceSpeed(d,p)} Mb/s`],
+  `  Last clearing of "show interface" counters ${cleared===undefined?'never':iosDuration(now-cleared)}`,...windows,
+  '  RX',`    ${c?.rxUnicast??0} unicast packets  ${c?.rxMulticast??0} multicast packets  ${c?.rxBroadcast??0} broadcast packets`,`    ${c?.rx??0} input packets  ${c?.rxBytes??0} bytes`,
+  `    ${c?.inputErrors??0} input error  ${c?.crc??0} CRC`,
+  '  TX',`    ${c?.txUnicast??0} unicast packets  ${c?.txMulticast??0} multicast packets  ${c?.txBroadcast??0} broadcast packets`,`    ${c?.tx??0} output packets  ${c?.txBytes??0} bytes`,
+  `    ${c?.outputErrors??0} output error  ${c?.collisions??0} collision  ${c?.lateCollisions??0} late collision`, `    ${c?.drops??0} total interface discards`];
 }

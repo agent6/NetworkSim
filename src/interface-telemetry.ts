@@ -12,12 +12,12 @@ export function recordInterfaceSample(c:PortCounters,now:number,direction:'rx'|'
 }
 
 /** Read-only rolling average; no synthetic CPU work or clock advancement. */
-export function interfaceRates(device:Device,port:string,now:number){
+export function interfaceRates(device:Device,port:string,now:number,windowSeconds=300){
   const cleared=device.runtime.features.countersClearedAt?.[port];
   const since=cleared??device.runtime.features.bootTime??0;
-  const seconds=Math.min(300,Math.max(1,(now-since)/1000));
+  const seconds=Math.min(windowSeconds,Math.max(1,(now-since)/1000));
   const total={rx:0,tx:0,rxBytes:0,txBytes:0};
-  for(const sample of device.runtime.counters[port]?.rateSamples??[])if(sample.at>now-300000)
+  for(const sample of device.runtime.counters[port]?.rateSamples??[])if(sample.at>now-windowSeconds*1000)
     for(const key of ['rx','tx','rxBytes','txBytes'] as const)total[key]+=sample[key];
   return {inputBits:Math.floor(total.rxBytes*8/seconds),outputBits:Math.floor(total.txBytes*8/seconds),
     inputPackets:Math.floor(total.rx/seconds),outputPackets:Math.floor(total.tx/seconds)};

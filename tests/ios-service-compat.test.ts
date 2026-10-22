@@ -23,12 +23,12 @@ test('new sessions inherit terminal line settings and session overrides do not a
  const {a,ca,engine}=pair();run(ca,'conf t','line console 0','length 8','width 100','history size 3','no exec-timeout','end');assert.equal(a.config.features.lines['console 0'].execTimeout,0);const cli=new IOSSession(engine,a.id);assert.equal(cli.pageLength,8);assert.equal(cli.pageWidth,100);run(cli,'terminal length 4','terminal width 120','enable','show clock','show version');assert.equal(cli.pageLength,4);assert.equal(cli.pageWidth,120);assert.equal(cli.history.length,3);assert.equal(a.config.features.lines['console 0'].width,100);run(cli,'conf t','line console 0','default exec-timeout','end');assert.equal(a.config.features.lines['console 0'].execTimeout,600);assert.match(renderConfig(a).join('\n'),/history size 3/);
 });
 test('debug emits only real matching events and undebug stops future output',()=>{
- const {engine,a,ca}=pair();run(ca,'debug ip packet detail','debug condition interface g0/0');assert.match(ca.execute('show debugging').join('\n'),/IP PACKET DETAIL debugging is on/);assert.deepEqual(ca.pollOutput(),[]);
+ const {engine,a,ca}=pair();ca.pollOutput();run(ca,'debug ip packet detail','debug condition interface g0/0');assert.match(ca.execute('show debugging').join('\n'),/IP PACKET DETAIL debugging is on/);assert.deepEqual(ca.pollOutput(),[]);
  const ping=engine.ping(a.id,'10.0.0.2',{count:1});engine.advance(1000);assert.equal(ping.received,1);const output=ca.pollOutput().join('\n');assert.match(output,/s=10\.0\.0\./);assert.match(output,/GigabitEthernet0\/0/);assert.deepEqual(ca.pollOutput(),[]);
  run(ca,'no debug ip packet detail');engine.ping(a.id,'10.0.0.2',{count:1});engine.advance(1000);assert.deepEqual(ca.pollOutput(),[]);run(ca,'debug arp','undebug all');assert.ok(!ca.execute('show debugging').some(line=>line.includes('debugging is on')));
 });
 test('no debug interface aliases conditional removal and changes actual event visibility without changing traffic',()=>{
- const {engine,a,ca}=pair();run(ca,'debug ip packet detail','debug condition interface g0/1');
+ const {engine,a,ca}=pair();ca.pollOutput();run(ca,'debug ip packet detail','debug condition interface g0/1');
  let ping=engine.ping(a.id,'10.0.0.2',{count:1});engine.advance(1000);assert.equal(ping.received,1);assert.deepEqual(ca.pollOutput(),[]);
  const before=JSON.stringify(a.runtime.features.debug);assert.match(ca.execute('no debug interface invalid-port').join('\n'),/Invalid/);assert.equal(JSON.stringify(a.runtime.features.debug),before);
  run(ca,'no debug interface g0/1');assert.ok(!ca.execute('show debugging condition').some(row=>row.includes('GigabitEthernet0/1')));

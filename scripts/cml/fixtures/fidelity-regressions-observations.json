@@ -1,0 +1,975 @@
+{
+  "schemaVersion": 1,
+  "description": "Fresh owned-lab operational conformance after all 90 original differences were reviewed. This establishes the listed working subset, not full IOS/NX-OS output equivalence. Failed attempts are retained and hashed.",
+  "scenarioSha256": "10557ccf700e04658fb87899cafaa312909348a830680d4a41b7174825f96036",
+  "captureSha256": "2f4193f6499de429f908292c7dbd54184409a7f03092637fe123b7db84b3b0e0",
+  "simulatorSourceSha256": "dd9cfcb5bd71cfa3e0c20a92fdffc137dacb8f95dff4e4898fed9da3a9cdf5ad",
+  "capturedAt": "2026-10-22T13:02:13.654051+00:00",
+  "baseline": "fresh-owned-lab",
+  "status": "captured",
+  "labStopped": true,
+  "controllerVersion": "2.10.0+build.13",
+  "images": {
+    "ios": {
+      "definition": "iosv",
+      "image": "iosv-159-3-m12",
+      "port": "GigabitEthernet0/0"
+    },
+    "switch": {
+      "definition": "iosvl2",
+      "image": "iosvl2-2020",
+      "port": "GigabitEthernet0/0"
+    },
+    "nxos": {
+      "definition": "nxosv9000",
+      "image": "nxosv9300-10-6-2-f",
+      "port": "Ethernet1/1"
+    },
+    "iosxe": {
+      "definition": "iol-xe",
+      "image": "iol-xe-17-18-02",
+      "port": "Ethernet0/0"
+    },
+    "outside": {
+      "definition": "iosv",
+      "image": "iosv-159-3-m12",
+      "port": "GigabitEthernet0/0"
+    }
+  },
+  "stepCount": 74,
+  "observationCount": 80,
+  "comparisonStatus": "output-review-required",
+  "outputDifferenceCount": 98,
+  "problems": [],
+  "packetEvidence": [
+    {
+      "file": "ffd30a85-686e-40c7-8db4-276699097405.pcap",
+      "ARP": 4,
+      "ICMP": 35,
+      "ICMPv6": 18,
+      "OSPF": 137,
+      "STP": 264,
+      "CDP": 19,
+      "LLDP": 36,
+      "packets": 566,
+      "sha256": "600666da4094550f93480979060e7fa162f77fd99951d604582f88d75c6a3b18"
+    },
+    {
+      "file": "816eaebe-90b5-475c-8419-e09094434485.pcap",
+      "ARP": 5,
+      "ICMP": 35,
+      "ICMPv6": 25,
+      "OSPF": 138,
+      "STP": 267,
+      "CDP": 19,
+      "LLDP": 18,
+      "packets": 532,
+      "sha256": "486a98dd279bfe391de312e4cf16ed18a3300e3df7b57f9df996ac6277994fb0"
+    },
+    {
+      "file": "d70f0090-8c30-4eb5-9314-465568d6dafe.pcap",
+      "ARP": 3,
+      "ICMP": 0,
+      "ICMPv6": 11,
+      "OSPF": 122,
+      "STP": 266,
+      "CDP": 19,
+      "LLDP": 18,
+      "packets": 464,
+      "sha256": "c51a832a8011bdd81499d3b3505dd758b48558f5705ba6dce21f9b345f21cce7"
+    },
+    {
+      "file": "b1134740-2c3b-4686-aefa-f7290593668e.pcap",
+      "ARP": 0,
+      "ICMP": 32,
+      "ICMPv6": 20,
+      "OSPF": 131,
+      "STP": 0,
+      "CDP": 19,
+      "LLDP": 35,
+      "packets": 289,
+      "sha256": "f63f5cfc0653411abb92b82f7437c774eeecc4f7c9d640bd94cc737c1244b3cc"
+    },
+    {
+      "file": "67235148-984c-438b-853a-fccbc2f745ad.pcap",
+      "ARP": 0,
+      "ICMP": 32,
+      "ICMPv6": 28,
+      "OSPF": 0,
+      "STP": 0,
+      "CDP": 20,
+      "LLDP": 36,
+      "packets": 221,
+      "sha256": "17c9c350f798636bc30e2f9d4f05e3c2ba4cb387fcb012dc0d3ed0c94df4604c"
+    }
+  ],
+  "commandAvailability": [
+    {
+      "node": "ios",
+      "command": "show version",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show inventory",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show environment",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "ios",
+      "command": "show processes cpu",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "ios",
+      "command": "show processes memory",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "ios",
+      "command": "show memory statistics",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "ios",
+      "command": "show clock",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show logging",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show users",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show interfaces",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show ip interface brief",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show ip route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show ipv6 route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show spanning-tree",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show mac address-table",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "ios",
+      "command": "show cdp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show lldp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show ip ospf neighbor",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show ip nat translations",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show access-lists",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show version",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show inventory",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show environment",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "iosxe",
+      "command": "show processes cpu",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "iosxe",
+      "command": "show processes memory",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "iosxe",
+      "command": "show memory statistics",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "iosxe",
+      "command": "show clock",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show logging",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show users",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show interfaces",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show ip interface brief",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show ip route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show ipv6 route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show spanning-tree",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show mac address-table",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "iosxe",
+      "command": "show cdp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show lldp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show ip ospf neighbor",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show ip nat translations",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show access-lists",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show version",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show inventory",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show environment",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "switch",
+      "command": "show processes cpu",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "switch",
+      "command": "show processes memory",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "switch",
+      "command": "show memory statistics",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "switch",
+      "command": "show clock",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show logging",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show users",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show interfaces",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show ip interface brief",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show ip route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show ipv6 route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show spanning-tree",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show mac address-table",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show cdp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show lldp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show ip ospf neighbor",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show ip nat translations",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show access-lists",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show version",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show inventory",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show environment",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show processes cpu",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show processes memory",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show memory statistics",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show clock",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show logging",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show users",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show interfaces",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show ip interface brief",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ipv6 route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show spanning-tree",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show mac address-table",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show cdp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show lldp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip ospf neighbor",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip nat translations",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show access-lists",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    }
+  ],
+  "contracts": [
+    {
+      "id": "converged-ios-ospf",
+      "node": "ios",
+      "command": "show ip ospf neighbor",
+      "checks": [
+        {
+          "pattern": "2\\.2\\.2\\.2.*FULL",
+          "passed": true,
+          "observed": "2.2.2.2           1   FULL"
+        }
+      ]
+    },
+    {
+      "id": "iosxe-ospf",
+      "node": "iosxe",
+      "command": "show ip ospf neighbor",
+      "checks": [
+        {
+          "pattern": "2\\.2\\.2\\.2.*FULL",
+          "passed": true,
+          "observed": "2.2.2.2           1   FULL"
+        }
+      ]
+    },
+    {
+      "id": "nxos-ospf",
+      "node": "nxos",
+      "command": "show ip ospf neighbors",
+      "checks": [
+        {
+          "pattern": "1\\.1\\.1\\.1",
+          "passed": true,
+          "observed": "1.1.1.1"
+        },
+        {
+          "pattern": "3\\.3\\.3\\.3",
+          "passed": true,
+          "observed": "3.3.3.3"
+        },
+        {
+          "pattern": "FULL",
+          "passed": true,
+          "observed": "FULL"
+        }
+      ]
+    },
+    {
+      "id": "routed-nat-icmp",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 5",
+      "checks": [
+        {
+          "pattern": "Success rate is 100 percent",
+          "passed": true,
+          "observed": "Success rate is 100 percent"
+        }
+      ]
+    },
+    {
+      "id": "translated-flow",
+      "node": "iosxe",
+      "command": "show ip nat translations",
+      "checks": [
+        {
+          "pattern": "icmp",
+          "passed": true,
+          "observed": "icmp"
+        },
+        {
+          "pattern": "203\\.0\\.113\\.1",
+          "passed": true,
+          "observed": "203.0.113.1"
+        },
+        {
+          "pattern": "10\\.10\\.10\\.10",
+          "passed": true,
+          "observed": "10.10.10.10"
+        },
+        {
+          "pattern": "192\\.0\\.2\\.9",
+          "passed": true,
+          "observed": "192.0.2.9"
+        }
+      ]
+    },
+    {
+      "id": "acl-hits",
+      "node": "iosxe",
+      "command": "show access-lists OBSERVE",
+      "checks": [
+        {
+          "pattern": "matches",
+          "passed": true,
+          "observed": "matches"
+        }
+      ]
+    },
+    {
+      "id": "routed-ipv6",
+      "node": "ios",
+      "command": "ping 2001:db8:9::9 repeat 5",
+      "checks": [
+        {
+          "pattern": "Success rate is 100 percent",
+          "passed": true,
+          "observed": "Success rate is 100 percent"
+        }
+      ]
+    },
+    {
+      "id": "nexus-root",
+      "node": "nxos",
+      "command": "show spanning-tree vlan 10",
+      "checks": [
+        {
+          "pattern": "This bridge is the root",
+          "passed": true,
+          "observed": "This bridge is the root"
+        }
+      ]
+    },
+    {
+      "id": "switch-alternate",
+      "node": "switch",
+      "command": "show spanning-tree vlan 10",
+      "checks": [
+        {
+          "pattern": "Altn.*BLK",
+          "passed": true,
+          "observed": "Altn BLK"
+        }
+      ]
+    },
+    {
+      "id": "switch-learned",
+      "node": "switch",
+      "command": "show mac address-table dynamic vlan 10",
+      "checks": [
+        {
+          "pattern": "DYNAMIC",
+          "passed": true,
+          "observed": "DYNAMIC"
+        }
+      ]
+    },
+    {
+      "id": "nexus-discovery",
+      "node": "nxos",
+      "command": "show cdp neighbors detail",
+      "checks": [
+        {
+          "pattern": "IOSXE",
+          "passed": true,
+          "observed": "IOSXE"
+        }
+      ]
+    },
+    {
+      "id": "nexus-lldp",
+      "node": "nxos",
+      "command": "show lldp neighbors detail",
+      "checks": [
+        {
+          "pattern": "System Name: IOSXE",
+          "passed": true,
+          "observed": "System Name: IOSXE"
+        },
+        {
+          "pattern": "Management Address: 198\\.51\\.100\\.2",
+          "passed": true,
+          "observed": "Management Address: 198.51.100.2"
+        }
+      ]
+    },
+    {
+      "id": "regression-005",
+      "node": "ios",
+      "command": "show ip route 198.51.100.0 255.255.255.252",
+      "checks": [
+        {
+          "pattern": "metric 11",
+          "passed": true,
+          "observed": "metric 11"
+        }
+      ]
+    },
+    {
+      "id": "regression-010",
+      "node": "ios",
+      "command": "show ip route 198.51.100.0 255.255.255.252",
+      "checks": [
+        {
+          "pattern": "metric 41",
+          "passed": true,
+          "observed": "metric 41"
+        }
+      ]
+    },
+    {
+      "id": "regression-017",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "checks": [
+        {
+          "pattern": "Success rate is 100 percent",
+          "passed": true,
+          "observed": "Success rate is 100 percent"
+        }
+      ]
+    },
+    {
+      "id": "regression-024",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "checks": [
+        {
+          "pattern": "Success rate is 0 percent",
+          "passed": true,
+          "observed": "Success rate is 0 percent"
+        }
+      ]
+    },
+    {
+      "id": "regression-025",
+      "node": "nxos",
+      "command": "show ip access-lists NS_AUDIT",
+      "checks": [
+        {
+          "pattern": "10 deny icmp 10\\.10\\.10\\.0/24 192\\.0\\.2\\.9/32 \\[match=3\\]",
+          "passed": true,
+          "observed": "10 deny icmp 10.10.10.0/24 192.0.2.9/32 [match=3]"
+        }
+      ]
+    },
+    {
+      "id": "regression-029",
+      "node": "nxos",
+      "command": "show running-config interface Ethernet1/3",
+      "checks": [
+        {
+          "pattern": "ip access-group NS_AUDIT out",
+          "passed": true,
+          "observed": "ip access-group NS_AUDIT out"
+        }
+      ]
+    },
+    {
+      "id": "regression-030",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "checks": [
+        {
+          "pattern": "Success rate is 100 percent",
+          "passed": true,
+          "observed": "Success rate is 100 percent"
+        }
+      ]
+    },
+    {
+      "id": "regression-044",
+      "node": "nxos",
+      "command": "show interface Vlan10",
+      "checks": [
+        {
+          "pattern": "Vlan10 is down.*line protocol is down.*autostate enabled",
+          "passed": true,
+          "observed": "Vlan10 is down (VLAN/BD is down), line protocol is down, autostate enabled"
+        }
+      ]
+    },
+    {
+      "id": "regression-045",
+      "node": "nxos",
+      "command": "show spanning-tree vlan 10",
+      "checks": [
+        {
+          "pattern": "ROOT_Inc",
+          "passed": true,
+          "observed": "ROOT_Inc"
+        }
+      ]
+    },
+    {
+      "id": "regression-046",
+      "node": "nxos",
+      "command": "show ip route",
+      "checks": [
+        {
+          "absent": "10\\.10\\.10\\.0/24,",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "regression-056",
+      "node": "nxos",
+      "command": "show interface Vlan10",
+      "checks": [
+        {
+          "pattern": "Vlan10 is up.*line protocol is up.*autostate enabled",
+          "passed": true,
+          "observed": "Vlan10 is up, line protocol is up, autostate enabled"
+        }
+      ]
+    },
+    {
+      "id": "recovery-ospf-ready",
+      "node": "nxos",
+      "command": "show ip ospf neighbors",
+      "checks": [
+        {
+          "pattern": "1\\.1\\.1\\.1\\s+1\\s+FULL",
+          "passed": true,
+          "observed": "1.1.1.1           1 FULL"
+        },
+        {
+          "pattern": "3\\.3\\.3\\.3\\s+1\\s+FULL",
+          "passed": true,
+          "observed": "3.3.3.3           1 FULL"
+        }
+      ]
+    },
+    {
+      "id": "recovery-route-ready",
+      "node": "ios",
+      "command": "show ip route 198.51.100.0 255.255.255.252",
+      "checks": [
+        {
+          "pattern": "metric 41",
+          "passed": true,
+          "observed": "metric 41"
+        }
+      ]
+    },
+    {
+      "id": "regression-057",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 3",
+      "checks": [
+        {
+          "pattern": "Success rate is 100 percent",
+          "passed": true,
+          "observed": "Success rate is 100 percent"
+        }
+      ]
+    },
+    {
+      "id": "regression-058",
+      "node": "nxos",
+      "command": "show ip route",
+      "checks": [
+        {
+          "pattern": "10\\.10\\.10\\.0/24,",
+          "passed": true,
+          "observed": "10.10.10.0/24,"
+        }
+      ]
+    }
+  ],
+  "priorFailedRuns": {
+    "operations-03": {
+      "captureSha256": "9bc8777063dd55f7aa8d5b845a8fa57ad065a3f681053eb03bbd4c8b12a5bd69",
+      "status": "failed",
+      "error": "Step failed: nexus-discovery",
+      "passedStepCount": 12
+    },
+    "fidelity-regressions-01": {
+      "captureSha256": "8493e797930e1828b0e7c03103f97f400693493c8c29dff3440b5c06845ac550",
+      "status": "failed",
+      "error": "Step failed: regression-057",
+      "passedStepCount": 70
+    }
+  },
+  "postFailureRecovery": {
+    "captureSha256": "c67825b9883909e7e7461ad4badacfc93fbf155ef93a25683e1eed1992ae0134",
+    "configurationChanges": false,
+    "forwarding": "Success rate is 100 percent (3/3)"
+  },
+  "notValidated": [
+    "NS-OS ingress/SVI/port-channel ACL attachment",
+    "NS-OS IPv6 or TCP/UDP-qualified ACL rules",
+    "Full per-device CPU/process/allocator/sensor telemetry",
+    "Complete IOS/NX-OS output equivalence",
+    "Guaranteed fixed-time recovery from SVI-up alone",
+    "IOSvL2/Nexus trunk discovery interoperability"
+  ]
+}

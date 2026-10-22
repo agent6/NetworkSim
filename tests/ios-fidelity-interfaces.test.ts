@@ -95,7 +95,7 @@ test('controllers, CEF, NAT, DHCP and ACL displays use IOS layouts', () => {
   has(cef, 'Prefix               Next Hop             Interface', '0.0.0.0/8            drop', '10.0.12.1/32         receive              GigabitEthernet0/0', '255.255.255.255/32   receive');
   assert.deepEqual(show('show ip cef 2.2.2.2'), ['2.2.2.2/32', '  nexthop 10.0.12.2 GigabitEthernet0/0']);
   assert.equal(show('show ip cef detail')[0], 'IPv4 CEF is enabled and running');
-  assert.equal(show('show ip nat translations')[0], 'Pro Inside global         Inside local          Outside local         Outside global');
+  assert.deepEqual(show('show ip nat translations'), []);
   assert.equal(show('show ip dhcp binding')[0], 'Bindings from all pools not associated with VRF:');
   const acl = show('show access-lists');
   has(acl, 'Standard IP access list 1', '    10 permit 10.0.0.0, wildcard bits 0.0.0.255', '    20 deny   any', 'Extended IP access list WEB', '    10 permit tcp any any eq www', '    20 permit udp any host 10.0.12.2 eq domain', '    30 deny ip any any log');

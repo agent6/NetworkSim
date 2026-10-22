@@ -1,0 +1,1118 @@
+{
+  "schemaVersion": 1,
+  "description": "Disposition of every original raw output difference. Reviewed is not equal to output-equivalent. Original numeric differences are preserved.",
+  "sourceComparisonSha256": "576c12960a58367b07a0802d897b8edadf2962f130f200215219868b0c722c5e",
+  "scenarioSha256": "cfaf753edd267e6264fcabc53f79d1b32d0ed349f1f857076b59101c206541d7",
+  "originalDifferenceCount": 90,
+  "entries": [
+    {
+      "number": 1,
+      "id": "converged-ios-ospf",
+      "node": "ios",
+      "command": "show ip ospf neighbor",
+      "disposition": "runtime-difference",
+      "finding": "Neighbor identity, dead timer, FULL uptime and non-preemptive DR/BDR election reflect different clock and startup order. Both paths form FULL adjacency.",
+      "remaining": "Raw values remain distinct; no timer or DR-role normalization.",
+      "evidence": [
+        "operations-02 and supplemental live-02; OSPF traffic and routing checks"
+      ]
+    },
+    {
+      "number": 2,
+      "id": "iosxe-ospf",
+      "node": "iosxe",
+      "command": "show ip ospf neighbor",
+      "disposition": "runtime-difference",
+      "finding": "Neighbor identity, dead timer, FULL uptime and non-preemptive DR/BDR election reflect different clock and startup order. Both paths form FULL adjacency.",
+      "remaining": "Raw values remain distinct; no timer or DR-role normalization.",
+      "evidence": [
+        "operations-02 and supplemental live-02; OSPF traffic and routing checks"
+      ]
+    },
+    {
+      "number": 3,
+      "id": "nxos-ospf",
+      "node": "nxos",
+      "command": "show ip ospf neighbors",
+      "disposition": "runtime-difference",
+      "finding": "Neighbor identity, dead timer, FULL uptime and non-preemptive DR/BDR election reflect different clock and startup order. Both paths form FULL adjacency.",
+      "remaining": "Raw values remain distinct; no timer or DR-role normalization.",
+      "evidence": [
+        "operations-02 and supplemental live-02; OSPF traffic and routing checks"
+      ]
+    },
+    {
+      "number": 4,
+      "id": "warm-ipv4",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 2",
+      "disposition": "runtime-difference",
+      "finding": "Round trips succeed on both platforms; hardware/VM latency differs from the simulated link and packet scheduler.",
+      "remaining": "Real min/avg/max values are preserved.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 5,
+      "id": "routed-nat-icmp",
+      "node": "ios",
+      "command": "ping 192.0.2.9 repeat 5",
+      "disposition": "runtime-difference",
+      "finding": "Round trips succeed on both platforms; hardware/VM latency differs from the simulated link and packet scheduler.",
+      "remaining": "Real min/avg/max values are preserved.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 6,
+      "id": "translated-flow",
+      "node": "iosxe",
+      "command": "show ip nat translations",
+      "disposition": "runtime-difference",
+      "finding": "Both translated ICMP tuples are correct after the earlier PAT fix; allocator IDs and expiry clocks belong to each independent run.",
+      "remaining": "No copied Cisco allocation IDs or forced ages.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 7,
+      "id": "acl-hits",
+      "node": "iosxe",
+      "command": "show access-lists OBSERVE",
+      "disposition": "runtime-difference",
+      "finding": "Counters count packets processed by their respective ACLs, including warm-run background traffic.",
+      "remaining": "Raw match counts remain visible; they cannot be compared as identical traffic workloads.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 8,
+      "id": "warm-ipv6",
+      "node": "ios",
+      "command": "ping 2001:db8:9::9 repeat 2",
+      "disposition": "runtime-difference",
+      "finding": "Round trips succeed on both platforms; hardware/VM latency differs from the simulated link and packet scheduler.",
+      "remaining": "Real min/avg/max values are preserved.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 9,
+      "id": "routed-ipv6",
+      "node": "ios",
+      "command": "ping 2001:db8:9::9 repeat 5",
+      "disposition": "runtime-difference",
+      "finding": "Round trips succeed on both platforms; hardware/VM latency differs from the simulated link and packet scheduler.",
+      "remaining": "Real min/avg/max values are preserved.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 10,
+      "id": "nexus-root",
+      "node": "nxos",
+      "command": "show spanning-tree vlan 10",
+      "disposition": "profile-difference",
+      "finding": "Root/alternate roles and short cost 4 agree; bridge MACs, mapped port IDs and whitespace differ.",
+      "remaining": "Physical port mappings and independent NetSim bridge identities are retained.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 11,
+      "id": "switch-alternate",
+      "node": "switch",
+      "command": "show spanning-tree vlan 10",
+      "disposition": "profile-difference",
+      "finding": "Root/alternate roles and short cost 4 agree; bridge MACs, mapped port IDs and whitespace differ.",
+      "remaining": "Physical port mappings and independent NetSim bridge identities are retained.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 12,
+      "id": "switch-learned",
+      "node": "switch",
+      "command": "show mac address-table dynamic vlan 10",
+      "disposition": "profile-difference",
+      "finding": "Dynamic entries are packet-learned; NetSim reserved local control-plane MAC rows and mapped port names differ from IOSvL2.",
+      "remaining": "A physical Catalyst-style virtual profile does not share the IOSvL2 port/MAC programming table.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 13,
+      "id": "nexus-discovery",
+      "node": "nxos",
+      "command": "show cdp neighbors detail",
+      "disposition": "fixed-with-boundaries",
+      "finding": "CDP now caches advertised management IPv4/IPv6 addresses, stable chassis/port MACs, native VLAN, VTP domain and duplex. Native NX-style detail uses those received TLVs.",
+      "remaining": "Platform/software strings and mapped port names differ. Trunk discovery was intermittent in the reference; no peer is invented or silently suppressed.",
+      "evidence": [
+        "tests/discovery.test.ts",
+        "live-02/live-03 and failed operations-03 capture"
+      ]
+    },
+    {
+      "number": 14,
+      "id": "nexus-lldp",
+      "node": "nxos",
+      "command": "show lldp neighbors detail",
+      "disposition": "fixed-with-boundaries",
+      "finding": "LLDP now preserves received management addresses separately from interface addresses, stable chassis identity and supported versus enabled capabilities, including switch SVI management.",
+      "remaining": "IOSvL2/Nexus trunk interoperability remains unproven; NetSim still models delivered standards-based advertisements. PHY/aggregation TLVs not generated by the model are labeled unadvertised.",
+      "evidence": [
+        "tests/discovery.test.ts",
+        "live-03 discovery captures; original PCAPs show trunk LLDP advertisements"
+      ]
+    },
+    {
+      "number": 15,
+      "id": "observe/ios/show version",
+      "node": "ios",
+      "command": "show version",
+      "disposition": "profile-difference",
+      "finding": "Version/inventory identify the original NetSim virtual device and its actual modeled port capacity.",
+      "remaining": "No licensed image, Cisco serial, physical linecard or invented flash/DRAM inventory is impersonated.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 16,
+      "id": "observe/ios/show inventory",
+      "node": "ios",
+      "command": "show inventory",
+      "disposition": "profile-difference",
+      "finding": "Version/inventory identify the original NetSim virtual device and its actual modeled port capacity.",
+      "remaining": "No licensed image, Cisco serial, physical linecard or invented flash/DRAM inventory is impersonated.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 17,
+      "id": "observe/ios/show environment",
+      "node": "ios",
+      "command": "show environment",
+      "disposition": "presentation-difference",
+      "finding": "The exact unsupported command is rejected on both platforms. Caret placement and error text vary between native parsers and the bounded simulator parser.",
+      "remaining": "No successful command or stored configuration is added to hide a rejection.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 18,
+      "id": "observe/ios/show processes cpu",
+      "node": "ios",
+      "command": "show processes cpu",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 19,
+      "id": "observe/ios/show processes memory",
+      "node": "ios",
+      "command": "show processes memory",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 20,
+      "id": "observe/ios/show memory statistics",
+      "node": "ios",
+      "command": "show memory statistics",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 21,
+      "id": "observe/ios/show clock",
+      "node": "ios",
+      "command": "show clock",
+      "disposition": "runtime-difference",
+      "finding": "Each clock reports its own epoch, configured source and simulated elapsed time; NX-style output removes the IOS marker.",
+      "remaining": "No hard-coded CML wall clock or unsupported NTP-status claim.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 22,
+      "id": "observe/ios/show logging",
+      "node": "ios",
+      "command": "show logging",
+      "disposition": "fixed-with-boundaries",
+      "finding": "Console, monitor, buffer and trap counters now track their eligible/delivered sink events independently. Console output no longer requires terminal monitor. NS-OS monitor delivery works with native timestamps and default severity.",
+      "remaining": "VM boot messages, hardware facilities and linecard/Linux logs differ; global rate-limit/queue fields in the IOS view are still bounded presentation rather than hardware telemetry.",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts",
+        "tests/management.test.ts",
+        "live-03 terminal monitor acceptance; operations-02 logging defaults"
+      ]
+    },
+    {
+      "number": 23,
+      "id": "observe/ios/show interfaces",
+      "node": "ios",
+      "command": "show interfaces",
+      "disposition": "fixed-with-boundaries",
+      "finding": "Interface rates use counted traffic and effective interface bandwidth; port capacity, hardware descriptions and native NIC defaults differ by profile. SVI line protocol now follows forwarding STP members.",
+      "remaining": "IOS error/queue fields without an engine counterpart remain documented presentation limits. IOL Ethernet 10-Mb/s versus NetSim Gigabit affects costs legitimately.",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts",
+        "live-02 interface bandwidth and SVI failure/recovery"
+      ]
+    },
+    {
+      "number": 24,
+      "id": "observe/ios/show ip interface brief",
+      "node": "ios",
+      "command": "show ip interface brief",
+      "disposition": "profile-difference",
+      "finding": "Interface names/counts and initial method values reflect the configured virtual profile and explicit scenario mapping.",
+      "remaining": "SW SVI states now depend on real STP forwarding; the old down SVI observation was transient and recovered in live-02.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 25,
+      "id": "observe/ios/show ip route",
+      "node": "ios",
+      "command": "show ip route",
+      "disposition": "runtime-difference",
+      "finding": "IPv4 prefixes, next hops, AD and metrics agree; route installation ages reflect different run clocks.",
+      "remaining": "Raw ages remain distinct.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 26,
+      "id": "observe/ios/show ipv6 route",
+      "node": "ios",
+      "command": "show ipv6 route",
+      "disposition": "presentation-difference",
+      "finding": "IPv6 routes, connected/local entries and multicast receive route exist on both sides; platform legends and mapped port names differ.",
+      "remaining": "No new routing protocol is inferred from a native legend entry.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 27,
+      "id": "observe/ios/show spanning-tree",
+      "node": "ios",
+      "command": "show spanning-tree",
+      "disposition": "fixed-with-boundaries",
+      "finding": "Router no-instance output now uses captured IOSv wording and spacing.",
+      "remaining": "IOS XE uses singular wording on this image; the virtual IOS profile uses the IOSv plural form.",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts"
+      ]
+    },
+    {
+      "number": 28,
+      "id": "observe/ios/show mac address-table",
+      "node": "ios",
+      "command": "show mac address-table",
+      "disposition": "presentation-difference",
+      "finding": "The exact unsupported command is rejected on both platforms. Caret placement and error text vary between native parsers and the bounded simulator parser.",
+      "remaining": "No successful command or stored configuration is added to hide a rejection.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 29,
+      "id": "observe/ios/show cdp neighbors detail",
+      "node": "ios",
+      "command": "show cdp neighbors detail",
+      "disposition": "fixed-with-boundaries",
+      "finding": "CDP now caches advertised management IPv4/IPv6 addresses, stable chassis/port MACs, native VLAN, VTP domain and duplex. Native NX-style detail uses those received TLVs.",
+      "remaining": "Platform/software strings and mapped port names differ. Trunk discovery was intermittent in the reference; no peer is invented or silently suppressed.",
+      "evidence": [
+        "tests/discovery.test.ts",
+        "live-02/live-03 and failed operations-03 capture"
+      ]
+    },
+    {
+      "number": 30,
+      "id": "observe/ios/show lldp neighbors detail",
+      "node": "ios",
+      "command": "show lldp neighbors detail",
+      "disposition": "fixed-with-boundaries",
+      "finding": "LLDP now preserves received management addresses separately from interface addresses, stable chassis identity and supported versus enabled capabilities, including switch SVI management.",
+      "remaining": "IOSvL2/Nexus trunk interoperability remains unproven; NetSim still models delivered standards-based advertisements. PHY/aggregation TLVs not generated by the model are labeled unadvertised.",
+      "evidence": [
+        "tests/discovery.test.ts",
+        "live-03 discovery captures; original PCAPs show trunk LLDP advertisements"
+      ]
+    },
+    {
+      "number": 31,
+      "id": "observe/ios/show ip ospf neighbor",
+      "node": "ios",
+      "command": "show ip ospf neighbor",
+      "disposition": "runtime-difference",
+      "finding": "Neighbor identity, dead timer, FULL uptime and non-preemptive DR/BDR election reflect different clock and startup order. Both paths form FULL adjacency.",
+      "remaining": "Raw values remain distinct; no timer or DR-role normalization.",
+      "evidence": [
+        "operations-02 and supplemental live-02; OSPF traffic and routing checks"
+      ]
+    },
+    {
+      "number": 32,
+      "id": "observe/ios/show ip nat translations",
+      "node": "ios",
+      "command": "show ip nat translations",
+      "disposition": "fixed",
+      "finding": "An empty IOS NAT translation table emits no header, matching the captured commands.",
+      "remaining": "",
+      "evidence": [
+        "tests/ios-fidelity-interfaces.test.ts",
+        "tests/cml-fidelity-regressions.test.ts"
+      ]
+    },
+    {
+      "number": 33,
+      "id": "observe/iosxe/show version",
+      "node": "iosxe",
+      "command": "show version",
+      "disposition": "profile-difference",
+      "finding": "Version/inventory identify the original NetSim virtual device and its actual modeled port capacity.",
+      "remaining": "No licensed image, Cisco serial, physical linecard or invented flash/DRAM inventory is impersonated.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 34,
+      "id": "observe/iosxe/show inventory",
+      "node": "iosxe",
+      "command": "show inventory",
+      "disposition": "profile-difference",
+      "finding": "Version/inventory identify the original NetSim virtual device and its actual modeled port capacity.",
+      "remaining": "No licensed image, Cisco serial, physical linecard or invented flash/DRAM inventory is impersonated.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 35,
+      "id": "observe/iosxe/show environment",
+      "node": "iosxe",
+      "command": "show environment",
+      "disposition": "presentation-difference",
+      "finding": "The exact unsupported command is rejected on both platforms. Caret placement and error text vary between native parsers and the bounded simulator parser.",
+      "remaining": "No successful command or stored configuration is added to hide a rejection.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 36,
+      "id": "observe/iosxe/show processes cpu",
+      "node": "iosxe",
+      "command": "show processes cpu",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 37,
+      "id": "observe/iosxe/show processes memory",
+      "node": "iosxe",
+      "command": "show processes memory",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 38,
+      "id": "observe/iosxe/show memory statistics",
+      "node": "iosxe",
+      "command": "show memory statistics",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 39,
+      "id": "observe/iosxe/show clock",
+      "node": "iosxe",
+      "command": "show clock",
+      "disposition": "runtime-difference",
+      "finding": "Each clock reports its own epoch, configured source and simulated elapsed time; NX-style output removes the IOS marker.",
+      "remaining": "No hard-coded CML wall clock or unsupported NTP-status claim.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 40,
+      "id": "observe/iosxe/show logging",
+      "node": "iosxe",
+      "command": "show logging",
+      "disposition": "fixed-with-boundaries",
+      "finding": "Console, monitor, buffer and trap counters now track their eligible/delivered sink events independently. Console output no longer requires terminal monitor. NS-OS monitor delivery works with native timestamps and default severity.",
+      "remaining": "VM boot messages, hardware facilities and linecard/Linux logs differ; global rate-limit/queue fields in the IOS view are still bounded presentation rather than hardware telemetry.",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts",
+        "tests/management.test.ts",
+        "live-03 terminal monitor acceptance; operations-02 logging defaults"
+      ]
+    },
+    {
+      "number": 41,
+      "id": "observe/iosxe/show interfaces",
+      "node": "iosxe",
+      "command": "show interfaces",
+      "disposition": "fixed-with-boundaries",
+      "finding": "Interface rates use counted traffic and effective interface bandwidth; port capacity, hardware descriptions and native NIC defaults differ by profile. SVI line protocol now follows forwarding STP members.",
+      "remaining": "IOS error/queue fields without an engine counterpart remain documented presentation limits. IOL Ethernet 10-Mb/s versus NetSim Gigabit affects costs legitimately.",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts",
+        "live-02 interface bandwidth and SVI failure/recovery"
+      ]
+    },
+    {
+      "number": 42,
+      "id": "observe/iosxe/show ip interface brief",
+      "node": "iosxe",
+      "command": "show ip interface brief",
+      "disposition": "profile-difference",
+      "finding": "Interface names/counts and initial method values reflect the configured virtual profile and explicit scenario mapping.",
+      "remaining": "SW SVI states now depend on real STP forwarding; the old down SVI observation was transient and recovered in live-02.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 43,
+      "id": "observe/iosxe/show ip route",
+      "node": "iosxe",
+      "command": "show ip route",
+      "disposition": "profile-difference",
+      "finding": "IOL Ethernet0/0 has 10-Mb/s bandwidth; the corresponding NetSim Gigabit interface is 1 Gb/s. This explains remote OSPF metric 50 versus 41.",
+      "remaining": "Set explicit interface bandwidth when comparing equal profiles. New NS-OS reference-bandwidth configuration changes remote SPF cost (41 to 11 and back), not just display text.",
+      "evidence": [
+        "live-02 native show interfaces and remote route",
+        "tests/cml-fidelity-regressions.test.ts"
+      ]
+    },
+    {
+      "number": 44,
+      "id": "observe/iosxe/show ipv6 route",
+      "node": "iosxe",
+      "command": "show ipv6 route",
+      "disposition": "presentation-difference",
+      "finding": "IPv6 routes, connected/local entries and multicast receive route exist on both sides; platform legends and mapped port names differ.",
+      "remaining": "No new routing protocol is inferred from a native legend entry.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 45,
+      "id": "observe/iosxe/show spanning-tree",
+      "node": "iosxe",
+      "command": "show spanning-tree",
+      "disposition": "fixed-with-boundaries",
+      "finding": "Router no-instance output now uses captured IOSv wording and spacing.",
+      "remaining": "IOS XE uses singular wording on this image; the virtual IOS profile uses the IOSv plural form.",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts"
+      ]
+    },
+    {
+      "number": 46,
+      "id": "observe/iosxe/show mac address-table",
+      "node": "iosxe",
+      "command": "show mac address-table",
+      "disposition": "presentation-difference",
+      "finding": "The exact unsupported command is rejected on both platforms. Caret placement and error text vary between native parsers and the bounded simulator parser.",
+      "remaining": "No successful command or stored configuration is added to hide a rejection.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 47,
+      "id": "observe/iosxe/show cdp neighbors detail",
+      "node": "iosxe",
+      "command": "show cdp neighbors detail",
+      "disposition": "fixed-with-boundaries",
+      "finding": "CDP now caches advertised management IPv4/IPv6 addresses, stable chassis/port MACs, native VLAN, VTP domain and duplex. Native NX-style detail uses those received TLVs.",
+      "remaining": "Platform/software strings and mapped port names differ. Trunk discovery was intermittent in the reference; no peer is invented or silently suppressed.",
+      "evidence": [
+        "tests/discovery.test.ts",
+        "live-02/live-03 and failed operations-03 capture"
+      ]
+    },
+    {
+      "number": 48,
+      "id": "observe/iosxe/show lldp neighbors detail",
+      "node": "iosxe",
+      "command": "show lldp neighbors detail",
+      "disposition": "fixed-with-boundaries",
+      "finding": "LLDP now preserves received management addresses separately from interface addresses, stable chassis identity and supported versus enabled capabilities, including switch SVI management.",
+      "remaining": "IOSvL2/Nexus trunk interoperability remains unproven; NetSim still models delivered standards-based advertisements. PHY/aggregation TLVs not generated by the model are labeled unadvertised.",
+      "evidence": [
+        "tests/discovery.test.ts",
+        "live-03 discovery captures; original PCAPs show trunk LLDP advertisements"
+      ]
+    },
+    {
+      "number": 49,
+      "id": "observe/iosxe/show ip ospf neighbor",
+      "node": "iosxe",
+      "command": "show ip ospf neighbor",
+      "disposition": "runtime-difference",
+      "finding": "Neighbor identity, dead timer, FULL uptime and non-preemptive DR/BDR election reflect different clock and startup order. Both paths form FULL adjacency.",
+      "remaining": "Raw values remain distinct; no timer or DR-role normalization.",
+      "evidence": [
+        "operations-02 and supplemental live-02; OSPF traffic and routing checks"
+      ]
+    },
+    {
+      "number": 50,
+      "id": "observe/iosxe/show ip nat translations",
+      "node": "iosxe",
+      "command": "show ip nat translations",
+      "disposition": "runtime-difference",
+      "finding": "The warm native PAT entry expired before its later survey; the deterministic simulator survey still retains the active entry.",
+      "remaining": "An empty table now returns no header; no forced expiry is introduced to hide different observation timing.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 51,
+      "id": "observe/iosxe/show access-lists",
+      "node": "iosxe",
+      "command": "show access-lists",
+      "disposition": "runtime-difference",
+      "finding": "Counters count packets processed by their respective ACLs, including warm-run background traffic.",
+      "remaining": "Raw match counts remain visible; they cannot be compared as identical traffic workloads.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 52,
+      "id": "observe/switch/show version",
+      "node": "switch",
+      "command": "show version",
+      "disposition": "profile-difference",
+      "finding": "Version/inventory identify the original NetSim virtual device and its actual modeled port capacity.",
+      "remaining": "No licensed image, Cisco serial, physical linecard or invented flash/DRAM inventory is impersonated.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 53,
+      "id": "observe/switch/show inventory",
+      "node": "switch",
+      "command": "show inventory",
+      "disposition": "profile-difference",
+      "finding": "Version/inventory identify the original NetSim virtual device and its actual modeled port capacity.",
+      "remaining": "No licensed image, Cisco serial, physical linecard or invented flash/DRAM inventory is impersonated.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 54,
+      "id": "observe/switch/show environment",
+      "node": "switch",
+      "command": "show environment",
+      "disposition": "presentation-difference",
+      "finding": "The exact unsupported command is rejected on both platforms. Caret placement and error text vary between native parsers and the bounded simulator parser.",
+      "remaining": "No successful command or stored configuration is added to hide a rejection.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 55,
+      "id": "observe/switch/show processes cpu",
+      "node": "switch",
+      "command": "show processes cpu",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 56,
+      "id": "observe/switch/show processes memory",
+      "node": "switch",
+      "command": "show processes memory",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 57,
+      "id": "observe/switch/show memory statistics",
+      "node": "switch",
+      "command": "show memory statistics",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 58,
+      "id": "observe/switch/show clock",
+      "node": "switch",
+      "command": "show clock",
+      "disposition": "runtime-difference",
+      "finding": "Each clock reports its own epoch, configured source and simulated elapsed time; NX-style output removes the IOS marker.",
+      "remaining": "No hard-coded CML wall clock or unsupported NTP-status claim.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 59,
+      "id": "observe/switch/show logging",
+      "node": "switch",
+      "command": "show logging",
+      "disposition": "fixed-with-boundaries",
+      "finding": "Console, monitor, buffer and trap counters now track their eligible/delivered sink events independently. Console output no longer requires terminal monitor. NS-OS monitor delivery works with native timestamps and default severity.",
+      "remaining": "VM boot messages, hardware facilities and linecard/Linux logs differ; global rate-limit/queue fields in the IOS view are still bounded presentation rather than hardware telemetry.",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts",
+        "tests/management.test.ts",
+        "live-03 terminal monitor acceptance; operations-02 logging defaults"
+      ]
+    },
+    {
+      "number": 60,
+      "id": "observe/switch/show interfaces",
+      "node": "switch",
+      "command": "show interfaces",
+      "disposition": "fixed-with-boundaries",
+      "finding": "Interface rates use counted traffic and effective interface bandwidth; port capacity, hardware descriptions and native NIC defaults differ by profile. SVI line protocol now follows forwarding STP members.",
+      "remaining": "IOS error/queue fields without an engine counterpart remain documented presentation limits. IOL Ethernet 10-Mb/s versus NetSim Gigabit affects costs legitimately.",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts",
+        "live-02 interface bandwidth and SVI failure/recovery"
+      ]
+    },
+    {
+      "number": 61,
+      "id": "observe/switch/show ip interface brief",
+      "node": "switch",
+      "command": "show ip interface brief",
+      "disposition": "profile-difference",
+      "finding": "Interface names/counts and initial method values reflect the configured virtual profile and explicit scenario mapping.",
+      "remaining": "SW SVI states now depend on real STP forwarding; the old down SVI observation was transient and recovered in live-02.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 62,
+      "id": "observe/switch/show ip route",
+      "node": "switch",
+      "command": "show ip route",
+      "disposition": "fixed-with-boundaries",
+      "finding": "ip default-gateway remains usable for switch-originated management traffic but is excluded from the displayed routed default. STP-gated SVI changes now refresh connected/local RIB entries.",
+      "remaining": "Live-02 showed native SVI10 up with C/L entries; the original down SVI snapshot was transient.",
+      "evidence": [
+        "live-02 switch SVI/RIB captures",
+        "tests/cml-fidelity-regressions.test.ts"
+      ]
+    },
+    {
+      "number": 63,
+      "id": "observe/switch/show ipv6 route",
+      "node": "switch",
+      "command": "show ipv6 route",
+      "disposition": "fixed",
+      "finding": "A switch with no initialized IPv6 stack returns no fabricated empty IPv6 route table.",
+      "remaining": "",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts"
+      ]
+    },
+    {
+      "number": 64,
+      "id": "observe/switch/show spanning-tree",
+      "node": "switch",
+      "command": "show spanning-tree",
+      "disposition": "profile-difference",
+      "finding": "VLAN10 root/alternate tree agrees after port mapping. IOSvL2 also reports a VLAN1 instance on an otherwise unused virtual NIC.",
+      "remaining": "NetSim requires an actual connected/up forwarding member; an unconnected hypervisor NIC is not fabricated as a live cable.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 65,
+      "id": "observe/switch/show mac address-table",
+      "node": "switch",
+      "command": "show mac address-table",
+      "disposition": "profile-difference",
+      "finding": "Dynamic entries are packet-learned; NetSim reserved local control-plane MAC rows and mapped port names differ from IOSvL2.",
+      "remaining": "A physical Catalyst-style virtual profile does not share the IOSvL2 port/MAC programming table.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 66,
+      "id": "observe/switch/show cdp neighbors detail",
+      "node": "switch",
+      "command": "show cdp neighbors detail",
+      "disposition": "fixed-with-boundaries",
+      "finding": "CDP now caches advertised management IPv4/IPv6 addresses, stable chassis/port MACs, native VLAN, VTP domain and duplex. Native NX-style detail uses those received TLVs.",
+      "remaining": "Platform/software strings and mapped port names differ. Trunk discovery was intermittent in the reference; no peer is invented or silently suppressed.",
+      "evidence": [
+        "tests/discovery.test.ts",
+        "live-02/live-03 and failed operations-03 capture"
+      ]
+    },
+    {
+      "number": 67,
+      "id": "observe/switch/show lldp neighbors detail",
+      "node": "switch",
+      "command": "show lldp neighbors detail",
+      "disposition": "fixed-with-boundaries",
+      "finding": "LLDP now preserves received management addresses separately from interface addresses, stable chassis identity and supported versus enabled capabilities, including switch SVI management.",
+      "remaining": "IOSvL2/Nexus trunk interoperability remains unproven; NetSim still models delivered standards-based advertisements. PHY/aggregation TLVs not generated by the model are labeled unadvertised.",
+      "evidence": [
+        "tests/discovery.test.ts",
+        "live-03 discovery captures; original PCAPs show trunk LLDP advertisements"
+      ]
+    },
+    {
+      "number": 68,
+      "id": "observe/switch/show ip ospf neighbor",
+      "node": "switch",
+      "command": "show ip ospf neighbor",
+      "disposition": "fixed",
+      "finding": "show ip ospf neighbor returns empty output when no IOS OSPF process exists, matching IOSvL2.",
+      "remaining": "",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts"
+      ]
+    },
+    {
+      "number": 69,
+      "id": "observe/switch/show ip nat translations",
+      "node": "switch",
+      "command": "show ip nat translations",
+      "disposition": "fixed",
+      "finding": "An empty IOS NAT translation table emits no header, matching the captured commands.",
+      "remaining": "",
+      "evidence": [
+        "tests/ios-fidelity-interfaces.test.ts",
+        "tests/cml-fidelity-regressions.test.ts"
+      ]
+    },
+    {
+      "number": 70,
+      "id": "observe/switch/show access-lists",
+      "node": "switch",
+      "command": "show access-lists",
+      "disposition": "profile-difference",
+      "finding": "IOSvL2 ships internal web-authentication ACLs; the simulator has no such internal web-auth feature or factory ACL state.",
+      "remaining": "No unused factory ACLs are inserted into the simulated user configuration.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 71,
+      "id": "observe/nxos/show version",
+      "node": "nxos",
+      "command": "show version",
+      "disposition": "profile-difference",
+      "finding": "Version/inventory identify the original NetSim virtual device and its actual modeled port capacity.",
+      "remaining": "No licensed image, Cisco serial, physical linecard or invented flash/DRAM inventory is impersonated.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 72,
+      "id": "observe/nxos/show inventory",
+      "node": "nxos",
+      "command": "show inventory",
+      "disposition": "profile-difference",
+      "finding": "Version/inventory identify the original NetSim virtual device and its actual modeled port capacity.",
+      "remaining": "No licensed image, Cisco serial, physical linecard or invented flash/DRAM inventory is impersonated.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 73,
+      "id": "observe/nxos/show environment",
+      "node": "nxos",
+      "command": "show environment",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 74,
+      "id": "observe/nxos/show processes cpu",
+      "node": "nxos",
+      "command": "show processes cpu",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 75,
+      "id": "observe/nxos/show processes memory",
+      "node": "nxos",
+      "command": "show processes memory",
+      "disposition": "unsupported-telemetry",
+      "finding": "Per-device CPU/process runtime, allocator pools or environmental sensors do not exist in the shared JavaScript simulator.",
+      "remaining": "These views remain explicit rejections. Synthetic PIDs, temperatures, utilization and allocator statistics are not added.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 76,
+      "id": "observe/nxos/show memory statistics",
+      "node": "nxos",
+      "command": "show memory statistics",
+      "disposition": "presentation-difference",
+      "finding": "The exact unsupported command is rejected on both platforms. Caret placement and error text vary between native parsers and the bounded simulator parser.",
+      "remaining": "No successful command or stored configuration is added to hide a rejection.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 77,
+      "id": "observe/nxos/show clock",
+      "node": "nxos",
+      "command": "show clock",
+      "disposition": "runtime-difference",
+      "finding": "Each clock reports its own epoch, configured source and simulated elapsed time; NX-style output removes the IOS marker.",
+      "remaining": "No hard-coded CML wall clock or unsupported NTP-status claim.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 78,
+      "id": "observe/nxos/show logging",
+      "node": "nxos",
+      "command": "show logging",
+      "disposition": "fixed-with-boundaries",
+      "finding": "Console, monitor, buffer and trap counters now track their eligible/delivered sink events independently. Console output no longer requires terminal monitor. NS-OS monitor delivery works with native timestamps and default severity.",
+      "remaining": "VM boot messages, hardware facilities and linecard/Linux logs differ; global rate-limit/queue fields in the IOS view are still bounded presentation rather than hardware telemetry.",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts",
+        "tests/management.test.ts",
+        "live-03 terminal monitor acceptance; operations-02 logging defaults"
+      ]
+    },
+    {
+      "number": 79,
+      "id": "observe/nxos/show users",
+      "node": "nxos",
+      "command": "show users",
+      "disposition": "presentation-difference",
+      "finding": "Users reflect actual simulated local/remote identities and active management sessions. Linux pts IDs, process PIDs and login dates are not tracked.",
+      "remaining": "Unavailable fields remain dashes; sessions close on actual disconnect/timeout.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 80,
+      "id": "observe/nxos/show interfaces",
+      "node": "nxos",
+      "command": "show interfaces",
+      "disposition": "presentation-difference",
+      "finding": "The exact unsupported command is rejected on both platforms. Caret placement and error text vary between native parsers and the bounded simulator parser.",
+      "remaining": "No successful command or stored configuration is added to hide a rejection.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 81,
+      "id": "observe/nxos/show ip interface brief",
+      "node": "nxos",
+      "command": "show ip interface brief",
+      "disposition": "fixed",
+      "finding": "NS-OS IP interface brief now orders SVI rows before routed Ethernet rows while preserving actual admin/link/protocol state.",
+      "remaining": "",
+      "evidence": [
+        "tests/nsos-operational-show.test.ts",
+        "tests/cml-fidelity-regressions.test.ts"
+      ]
+    },
+    {
+      "number": 82,
+      "id": "observe/nxos/show ip route",
+      "node": "nxos",
+      "command": "show ip route",
+      "disposition": "reviewed-platform-boundary",
+      "finding": "Installed native IPv4 prefixes, next hops and metrics agree. Route ages differ; Nexus displays tag 1 for the IOL-originated default while the simulator default has no explicit tag.",
+      "remaining": "Tag origination differs across Cisco software: the IOS reference example uses tag 0 while IOS XR documents process-number defaults. No universal tag is inferred or hard-coded from this one IOL run. Explicit route tags already propagate when configured.",
+      "evidence": [
+        "operations-02 Nexus RIB capture",
+        "Cisco IOS default-route LSA example; Cisco IOS XR default-information reference"
+      ]
+    },
+    {
+      "number": 83,
+      "id": "observe/nxos/show ipv6 route",
+      "node": "nxos",
+      "command": "show ipv6 route",
+      "disposition": "runtime-difference",
+      "finding": "Native IPv6 static/connected/local prefixes, preference/metric and next hops agree. Route ages and trailing whitespace differ.",
+      "remaining": "Raw timestamps remain distinct.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 84,
+      "id": "observe/nxos/show spanning-tree",
+      "node": "nxos",
+      "command": "show spanning-tree",
+      "disposition": "profile-difference",
+      "finding": "Root/alternate roles and short cost 4 agree; bridge MACs, mapped port IDs and whitespace differ.",
+      "remaining": "Physical port mappings and independent NetSim bridge identities are retained.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 85,
+      "id": "observe/nxos/show mac address-table",
+      "node": "nxos",
+      "command": "show mac address-table",
+      "disposition": "fixed-with-boundaries",
+      "finding": "Operational SVIs now contribute actual local gateway MAC entries and withdraw them when autostate drops. Learned MACs retain measured ages and mapped ports.",
+      "remaining": "Uses virtual Vlan10(R), not a fabricated sup-eth1 ASIC row or overlay/security flags.",
+      "evidence": [
+        "tests/cml-fidelity-regressions.test.ts"
+      ]
+    },
+    {
+      "number": 86,
+      "id": "observe/nxos/show cdp neighbors detail",
+      "node": "nxos",
+      "command": "show cdp neighbors detail",
+      "disposition": "fixed-with-boundaries",
+      "finding": "CDP now caches advertised management IPv4/IPv6 addresses, stable chassis/port MACs, native VLAN, VTP domain and duplex. Native NX-style detail uses those received TLVs.",
+      "remaining": "Platform/software strings and mapped port names differ. Trunk discovery was intermittent in the reference; no peer is invented or silently suppressed.",
+      "evidence": [
+        "tests/discovery.test.ts",
+        "live-02/live-03 and failed operations-03 capture"
+      ]
+    },
+    {
+      "number": 87,
+      "id": "observe/nxos/show lldp neighbors detail",
+      "node": "nxos",
+      "command": "show lldp neighbors detail",
+      "disposition": "fixed-with-boundaries",
+      "finding": "LLDP now preserves received management addresses separately from interface addresses, stable chassis identity and supported versus enabled capabilities, including switch SVI management.",
+      "remaining": "IOSvL2/Nexus trunk interoperability remains unproven; NetSim still models delivered standards-based advertisements. PHY/aggregation TLVs not generated by the model are labeled unadvertised.",
+      "evidence": [
+        "tests/discovery.test.ts",
+        "live-03 discovery captures; original PCAPs show trunk LLDP advertisements"
+      ]
+    },
+    {
+      "number": 88,
+      "id": "observe/nxos/show ip ospf neighbor",
+      "node": "nxos",
+      "command": "show ip ospf neighbor",
+      "disposition": "runtime-difference",
+      "finding": "Neighbor identity, dead timer, FULL uptime and non-preemptive DR/BDR election reflect different clock and startup order. Both paths form FULL adjacency.",
+      "remaining": "Raw values remain distinct; no timer or DR-role normalization.",
+      "evidence": [
+        "operations-02 and supplemental live-02; OSPF traffic and routing checks"
+      ]
+    },
+    {
+      "number": 89,
+      "id": "observe/nxos/show ip nat translations",
+      "node": "nxos",
+      "command": "show ip nat translations",
+      "disposition": "presentation-difference",
+      "finding": "The exact unsupported command is rejected on both platforms. Caret placement and error text vary between native parsers and the bounded simulator parser.",
+      "remaining": "No successful command or stored configuration is added to hide a rejection.",
+      "evidence": [
+        "operations-02 capture and strict raw comparison"
+      ]
+    },
+    {
+      "number": 90,
+      "id": "observe/nxos/show access-lists",
+      "node": "nxos",
+      "command": "show access-lists",
+      "disposition": "fixed",
+      "finding": "NS-OS has a real bounded outbound IPv4 RACL configuration, packet enforcement, per-entry statistics, removal, NVGEN and replay. Empty show access-lists is now valid because the feature is implemented.",
+      "remaining": "Ingress, SVI/port-channel attachment, IPv6 and TCP/UDP qualifiers remain rejected.",
+      "evidence": [
+        "live-03 egress deny=3, 0/3 ping, recovery 3/3",
+        "live-04 empty/deleted ACL forwarding and duplicate-sequence rejection",
+        "tests/cml-fidelity-regressions.test.ts"
+      ]
+    }
+  ]
+}

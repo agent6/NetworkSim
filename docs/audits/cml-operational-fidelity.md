@@ -1,5 +1,7 @@
 # CML operational command fidelity audit
 
+**Historical baseline.** The 90 differences below describe the first completed run. The [follow-up implementation and validation](cml-fidelity-followup.md) and [complete 90-entry disposition](cml-90-differences.md) supersede its current-feature exclusions, including NS-OS outbound IPv4 ACLs, logging sinks, SVI autostate and discovery metadata. Original fixtures remain unchanged as historical evidence.
+
 The requested 20 commands were captured on IOSv 15.9(3)M12, IOL XE 17.18.02, IOSvL2 2020, and Nexus 9300v 10.6.2.F, using CML 2.10.0+build.13. The complete run finished on 2026-10-22 UTC (2026-10-21 in Arizona). Fourteen positive operational tests pass in both CML and NetworkSim; 80 exact command observations and five PCAPs containing 1,124 packets were collected. No captured CLI timeout or evidence integrity gate failed. This validates this topology and these versions, not complete IOS/NX-OS equivalence.
 
 The reusable procedure is in [CML conformance](../cml-conformance.md). The versioned scenario is `scripts/cml/scenarios/operations.json`; reviewed facts, command availability, image IDs, reference patterns and SHA-256 hashes are in `scripts/cml/fixtures/operations-observations.json`. Full configurations, console dumps and PCAPs remain private under `.cache/cml-runs/operations-02/`. The raw comparison and replay are `.cache/cml-runs/operations-comparison.json` and `.cache/cml-runs/operations-replay.json`.

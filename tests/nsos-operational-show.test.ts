@@ -41,7 +41,7 @@ test('NX RIB and IP brief isolate tenant and management VRFs',()=>{
   assert.match(text(ca,'show ip route vrf RED'),/192\.0\.2\.10\/32/);assert.doesNotMatch(text(ca,'show ip route'),/192\.0\.2\.10/);
   assert.match(text(ca,'show ip interface brief vrf RED'),/Lo10\s+192\.0\.2\.10/);assert.doesNotMatch(text(ca,'show ip interface brief'),/Lo10/);
   const before=JSON.stringify(a.config);
-  for(const command of ['show interfaces','show environment','show processes cpu','show processes memory','show memory statistics','show ip nat translations','show access-lists'])assert.ok(ca.execute(command).some(iosRejected),command);
+  for(const command of ['show interfaces','show environment','show processes cpu','show processes memory','show memory statistics','show ip nat translations'])assert.ok(ca.execute(command).some(iosRejected),command);
   assert.equal(JSON.stringify(a.config),before);
 });
 test('NX STP shows real roots and native port names; MAC rows follow learning and aging',()=>{

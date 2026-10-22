@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch, Mock
 
 from client import CML
-from capture import step_result, nxos_boot_image, verify_owned_lab
+from capture import step_result, nxos_boot_image, verify_owned_lab, wait_for_ports
 from compare import compare, normalize, packet_count, packet_protocols
 from capture import load_scenario
 
@@ -41,6 +41,15 @@ class WorkflowTests(unittest.TestCase):
                 with self.assertRaises(ValueError): load_scenario(path)
             path.write_text(json.dumps(base | {'surveys':[{'node':'dut','commands':['show interfaces']}]}))
             self.assertEqual(load_scenario(path)[0]['surveys'][0]['commands'], ['show interfaces'])
+
+    def test_nexus_prompt_is_not_linecard_readiness(self):
+        console=Mock(command=Mock(side_effect=[('Invalid range at marker',False),('Ethernet1/3 is up',False)]));observations=[]
+        with patch('capture.time.sleep'):
+            wait_for_ports(console,{'cml':{'definition':'nxosv9000'}},{'Ethernet1/3'},observe=observations.append)
+        self.assertEqual([v['ready'] for v in observations],[False,True])
+        self.assertEqual(console.command.call_args.args[0],'show interface Ethernet1/3')
+        with patch('capture.time.monotonic',side_effect=[0,100]):
+            with self.assertRaises(TimeoutError):wait_for_ports(Mock(command=Mock(return_value=('NEXUS#',False))),{'cml':{'definition':'nxosv9000'}},{'Ethernet1/3'},timeout=10)
 
     def test_owned_reuse_rejects_foreign_labs_changed_images_and_links(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -115,6 +124,9 @@ class WorkflowTests(unittest.TestCase):
         self.assertFalse(step_result(step, 'refused\nPROBE#', timed_out=True)['passed'])
         self.assertFalse(step_result({'id': 'c', 'node': 'dut', 'command': 'echo'}, '% configuration stored only')['passed'])
         self.assertTrue(step_result({'id': 'c', 'node': 'dut', 'command': 'show feature'}, 'Other NX-OS features are not implemented.')['passed'])
+
+    def test_duplicate_nexus_acl_sequence_is_not_a_successful_configuration(self):
+        self.assertFalse(step_result({'id':'a','node':'nxos','command':'10 permit ip any any'},'Duplicate sequence number\nNEXUS(config-acl)#')['passed'])
 
     def test_terminal_normalization_does_not_erase_meaningful_values(self):
         self.assertEqual(normalize('show x\r\n\x1b[32m  VLAN 10\x1b[0m\r\nDUT#', 'show x'), '  VLAN 10\nDUT#')

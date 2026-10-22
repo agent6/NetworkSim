@@ -50,3 +50,27 @@ test('reviewed operational evidence retains exact scenario provenance and full c
   assert.equal(fixture.packetEvidence.length,5);assert.equal(fixture.packetEvidence.reduce((n:number,p:any)=>n+p.packets,0),1124);
   for(const item of fixture.contracts)assert.match(item.observed,new RegExp(item.pattern));
 });
+
+test('CML follow-up scenario enforces ACL denial/recovery and STP SVI withdrawal through public CLI',async()=>{
+ const {readFileSync}=await import('node:fs'),{replayScenario}=await import('../scripts/cml/replay.ts');
+ const spec=JSON.parse(readFileSync('scripts/cml/scenarios/fidelity-regressions.json','utf8')),result=replayScenario(spec);
+ assert.equal(result.status,'replayed',JSON.stringify(result.steps.at(-1)));assert.equal(result.steps.length,74);assert.equal(result.observations.length,80);
+ const checks=result.steps.filter(s=>s.checks.length);assert.ok(checks.some(s=>s.command==='show ip access-lists NS_AUDIT'&&s.raw.includes('[match=3]')));
+ assert.ok(checks.some(s=>s.command==='show interface Vlan10'&&s.raw.includes('Vlan10 is down')));assert.ok(checks.some(s=>s.command==='show interface Vlan10'&&s.raw.includes('Vlan10 is up')));
+ assert.ok(result.events.some(e=>e.label==='Egress ACL denied'));assert.ok(result.steps.filter(s=>s.command==='ping 192.0.2.9 repeat 3').at(-1).raw.includes('Success rate is 100 percent'));
+ const node={...spec.nodes.find((n:any)=>n.id==='nxos'),simulatorSetup:[]};for(const commands of [['conf t','ip access-list TEST','10 permit ip any any','10 deny icmp any any'],['conf t','router ospf MISSING']]){const invalid={schemaVersion:1,id:'invalid-config',nodes:[node],links:[],steps:commands.map((command,i)=>({id:'invalid-'+i,node:'nxos',command}))};const negative=replayScenario(invalid);assert.equal(negative.status,'failed');assert.equal(negative.steps.at(-1).passed,false);}
+});
+
+test('all original 90 differences have a unique source-bound disposition without hiding unsupported views',async()=>{
+ const {readFileSync}=await import('node:fs'),{createHash}=await import('node:crypto'),source=readFileSync('scripts/cml/scenarios/operations.json'),spec=JSON.parse(source.toString()),ledger=JSON.parse(readFileSync('scripts/cml/fixtures/operations-difference-ledger.json','utf8'));
+ assert.equal(ledger.scenarioSha256,createHash('sha256').update(source).digest('hex'));assert.match(ledger.sourceComparisonSha256,/^[0-9a-f]{64}$/);
+ assert.equal(ledger.entries.length,90);assert.equal(new Set(ledger.entries.map((e:any)=>e.id)).size,90);assert.deepEqual(ledger.entries.map((e:any)=>e.number),Array.from({length:90},(_,i)=>i+1));
+ const expected=new Set([...spec.steps.map((s:any)=>s.id),...spec.surveys.flatMap((s:any)=>s.commands.map((c:string)=>'observe/'+s.node+'/'+c))]);
+ for(const entry of ledger.entries){assert.ok(expected.has(entry.id));assert.ok(entry.finding.length>20);assert.ok(entry.evidence.length);}
+ assert.equal(ledger.entries.filter((e:any)=>e.disposition==='unsupported-telemetry').length,12);assert.equal(ledger.entries.find((e:any)=>e.id==='observe/nxos/show access-lists').disposition,'fixed');
+ const facts=JSON.parse(readFileSync('scripts/cml/fixtures/fidelity-supplemental-observations.json','utf8'));assert.equal(facts.checks.length,16);
+ for(const fact of facts.checks){assert.match(fact.observed,new RegExp(fact.pattern));assert.match(facts.runs[fact.run].captureSha256,/^[0-9a-f]{64}$/);}
+ assert.equal(facts.checks.find((f:any)=>f.feature==='ingress-not-enforced').status,'excluded-not-validated');assert.equal(facts.checks.find((f:any)=>f.feature==='svi-ingress-not-enforced').status,'excluded-not-validated');
+ const freshSource=readFileSync('scripts/cml/scenarios/fidelity-regressions.json'),freshSpec=JSON.parse(freshSource.toString()),fresh=JSON.parse(readFileSync('scripts/cml/fixtures/fidelity-regressions-observations.json','utf8'));assert.equal(fresh.scenarioSha256,createHash('sha256').update(freshSource).digest('hex'));assert.equal(fresh.status,'captured');assert.equal(fresh.labStopped,true);assert.equal(fresh.stepCount,freshSpec.steps.length);assert.equal(fresh.observationCount,80);assert.deepEqual(fresh.problems,[]);assert.equal(fresh.packetEvidence.length,5);assert.equal(fresh.packetEvidence.reduce((n:number,p:any)=>n+p.packets,0),2072);assert.equal(fresh.commandAvailability.filter((a:any)=>a.cmlAccepted!==a.simulatorAccepted).length,12);
+ for(const contract of fresh.contracts)for(const check of contract.checks){assert.equal(check.passed,true);if(check.pattern)assert.match(check.observed,new RegExp(check.pattern));}
+});

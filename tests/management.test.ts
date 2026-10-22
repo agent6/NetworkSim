@@ -83,10 +83,10 @@ test('Type 7 input and service password-encryption preserve real authentication 
 });
 
 test('terminal monitor drains severity-filtered logs locally and over TCP without renewing idle sessions',()=>{
-  const {engine,a,b,ca,cb}=setup();ok(cb,'conf t','logging source-interface g0/0','logging facility local4','logging buffered 4096 warnings','logging monitor errors','line vty 0 4','transport input telnet','privilege level 15','no login','exec-timeout 0 3','end');
+  const {engine,a,b,ca,cb}=setup();ok(cb,'conf t','logging source-interface g0/0','logging facility local4','logging buffered 4096 warnings','logging console errors','logging monitor errors','line vty 0 4','transport input telnet','privilege level 15','no login','exec-timeout 0 3','end');
   ok(cb,'terminal monitor');engine.log(b.id,'debug not displayed',7);engine.log(b.id,'error displayed',3);const now=engine.clock.now();assert.deepEqual(cb.pollOutput(),['%SYS-3-USERLOG: error displayed']);assert.equal(engine.clock.now(),now);assert.deepEqual(cb.pollOutput(),[]);assert.ok(!b.runtime.logs.some(x=>x.includes('debug not displayed')));
   const rendered=cb.execute('show running-config').join('\n');assert.match(rendered,/logging source-interface GigabitEthernet0\/0/);assert.match(rendered,/logging facility 20/);assert.match(rendered,/logging buffered 4096 4/);assert.match(rendered,/logging monitor 3/);
-  ok(ca,'telnet 10.0.0.2','terminal monitor');engine.log(b.id,'remote event',2);engine.log(a.id,'wrong device',1);assert.deepEqual(ca.pollOutput(),['%SYS-2-USERLOG: remote event']);assert.deepEqual(ca.pollOutput(),[]);engine.clock.advance(3100);assert.match(ca.pollOutput().join('\n'),/expired/);assert.equal(ca.prompt,'R1#');ok(cb,'terminal no monitor');engine.log(b.id,'disabled event');assert.deepEqual(cb.pollOutput(),[]);
+  ok(ca,'telnet 10.0.0.2','terminal monitor');engine.log(b.id,'remote event',2);engine.log(a.id,'wrong device',1);assert.deepEqual(ca.pollOutput(),['%SYS-2-USERLOG: remote event']);assert.deepEqual(ca.pollOutput(),[]);engine.clock.advance(3100);assert.match(ca.pollOutput().join('\n'),/expired/);assert.equal(ca.prompt,'R1#');ok(cb,'terminal no monitor','conf t','no logging console','end');cb.pollOutput();engine.log(b.id,'disabled event');assert.deepEqual(cb.pollOutput(),[]);
 });
 
 

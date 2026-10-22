@@ -112,7 +112,7 @@ function spanningTree(e:Simulator,d:Device,a:string[]):string[] {
   }
   if(vlans&&!list.length)return [`Spanning tree instance(s) for vlan ${vlanText} does not exist.`];
   if(logical){list=list.filter(i=>i.ports.some(([n])=>n===logical));if(!list.length)return [`no spanning tree info available for ${port!.name}`];}
-  if(!list.length)return ['No spanning tree instance exists.'];
+  if(!list.length)return ['No spanning tree instances exist.',''];
   if(view==='root')return stpRoot(d,list);
   if(view==='bridge')return stpBridge(d,list);
   if(view==='detail')return list.flatMap(i=>[...(logical?[]:stpDetailHeader(e,d,i)),...i.ports.filter(([n])=>!logical||n===logical).flatMap(([n,s])=>stpPortDetail(e,d,i,n,s))]);

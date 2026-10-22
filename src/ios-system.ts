@@ -21,6 +21,10 @@ export function iosClock(device: Device, now: number, calendar = false, detail =
   return rows;
 }
 export function iosLogLine(device: Device, entry: { time: number; message: string; severity: number; sequence?: number }, kind:'log'|'debug'='log'): string {
+  if(device.kind==='datacenter'&&kind==='log'){
+    const d=instant(device,entry.time,false,true),message=/^%[A-Z0-9_]+-\d-[A-Z0-9_]+:/.test(entry.message)?entry.message:`%SYS-${entry.severity}-USERLOG: ${entry.message}`;
+    return `${d.getUTCFullYear()} ${months[d.getUTCMonth()]} ${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} ${device.config.hostname} ${message}`;
+  }
   const f = device.config.features, timestamp = f.timestamps?.[kind];
   let prefix = f.sequenceNumbers ? `${pad(entry.sequence ?? 0,6)}: ` : '';
   if (timestamp?.mode === 'datetime') {
@@ -35,9 +39,9 @@ export function iosLogLine(device: Device, entry: { time: number; message: strin
   return prefix + (/^%[A-Z0-9_]+-\d-[A-Z0-9_]+:/.test(entry.message) ? entry.message : `%SYS-${entry.severity}-USERLOG: ${entry.message}`);
 }
 export function iosLogging(device: Device): string[] {
-  const f = device.config.features.logging ?? {}, entries: any[] = device.runtime.features.logEntries ?? [];
-  const level = (n: number) => severityNames[n] ?? String(n), logged = (n: number) => entries.filter(entry => entry.severity <= n).length;
-  const sink = (name: string, enabled: boolean, severity: number, indent: string) => enabled ? [`    ${name} level ${level(severity)}, ${logged(severity)} messages logged, xml disabled,`, `${indent}filtering disabled`] : [`    ${name} disabled`];
+  const f = device.config.features.logging ?? {}, counts=device.runtime.features.logSinkCounts??{};
+  const level = (n: number) => severityNames[n] ?? String(n), logged = (name:string) => Number(counts[name]??0);
+  const sink = (name: string, enabled: boolean, severity: number, indent: string) => enabled ? [`    ${name} level ${level(severity)}, ${logged(name.startsWith('Console')?'console':name.startsWith('Monitor')?'monitor':'buffer')} messages logged, xml disabled,`, `${indent}filtering disabled`] : [`    ${name} disabled`];
   const trap = f.trap ?? 6;
   return [
     `Syslog logging: ${f.enabled === false ? 'disabled' : 'enabled'} (0 messages dropped, 0 messages rate-limited, 0 flushes, 0 overruns, xml disabled, filtering disabled)`,
@@ -49,11 +53,11 @@ export function iosLogging(device: Device): string[] {
     '    Count and timestamp logging messages: disabled',
     '    Persistent logging: disabled',
     '', 'No active filter modules.', '',
-    f.enabled === false || f.trapEnabled === false ? '    Trap logging: disabled' : `    Trap logging: level ${level(trap)}, ${logged(trap)} message lines logged`,
+    f.enabled === false || f.trapEnabled === false ? '    Trap logging: disabled' : `    Trap logging: level ${level(trap)}, ${logged('trap')} message lines logged`,
     ...((f.hosts ?? []) as string[]).flatMap(address => [
       `        Logging to ${address}  (udp port 514, audit disabled,`,
       '              link up),',
-      `              ${f.enabled === false || f.trapEnabled === false ? 0 : logged(trap)} message lines logged, `,
+      `              ${f.enabled === false || f.trapEnabled === false ? 0 : logged('trap')} message lines logged, `,
       '              0 message lines rate-limited, ',
       '              0 message lines dropped-by-MD, ',
       `              xml disabled, sequence number ${device.config.features.sequenceNumbers ? 'enabled' : 'disabled'}`,

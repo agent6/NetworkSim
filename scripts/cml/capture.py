@@ -19,7 +19,7 @@ from client import CML
 CSI = r"\x1b\[[0-?]*[ -/]*[@-~]"
 PROMPT = r"(?m)(?:^|[\r\n])(?:" + CSI + r"|[ \t\r])*[A-Za-z0-9_.-]+(?:\([^\r\n]*\))?[>#](?:" + CSI + r"|[ \t\r])*$"
 AUTH_PROMPT = r"(?im)(?:^|[\r\n])(?:" + CSI + r"|[ \t\r])*(?:[A-Za-z0-9_.-]+ )?(?:username|login|password):(?:" + CSI + r"|[ \t\r])*$"
-REJECTED = r"(?im)^\s*(?:%?\s*(?:Invalid\b|Incomplete\b|Ambiguous\b|Unsupported\b|Unrecognized command|Configuration update aborted|Error:|Please define )|%[^\r\n]*(?:not implemented|configuration stored only|operational behavior is not simulated))"
+REJECTED = r"(?im)^\s*(?:%?\s*(?:Invalid\b|Incomplete\b|Ambiguous\b|Unsupported\b|Unrecognized command|Duplicate sequence number|Sequence number already exists|Permission denied|Value must be|Configuration update aborted|Error:|Please define )|%[^\r\n]*(?:not implemented|configuration stored only|operational behavior is not simulated))"
 
 
 def write_json(path, value):
@@ -146,6 +146,21 @@ class Console:
     def close(self):
         self.child.close(force=True)
         self.log.close()
+
+
+def wait_for_ports(console, node, ports, timeout=720, observe=None):
+    """A CLI prompt and BOOTED state do not prove the Nexus linecard is online."""
+    pending=set(ports);deadline=time.monotonic()+timeout
+    family='show interface ' if node['cml']['definition'].startswith('nxos') else 'show interfaces '
+    while pending:
+        for port in sorted(pending):
+            raw,timed_out=console.command(family+port,45)
+            ready=not timed_out and not re.search(REJECTED,raw) and bool(re.search(r'(?m)^\s*'+re.escape(port)+r' is (?:up|down|administratively)',raw))
+            if observe: observe({'port':port,'command':family+port,'raw':raw,'ready':ready,'timedOut':timed_out})
+            if ready: pending.remove(port)
+        if not pending: return
+        if time.monotonic()>=deadline: raise TimeoutError('Physical ports did not become available: '+', '.join(sorted(pending)))
+        time.sleep(5)
 
 
 def verify_owned_lab(client, scenario, previous_path):
@@ -309,6 +324,10 @@ def capture(client, scenario_path, output, username, password, known_hosts, *, b
                     time.sleep(5)
                 report.setdefault('hardwarePreparation', {})[node['id']] = preparation
             save()
+        for node in scenario['nodes']:
+            ports={endpoint['port'] for link in scenario['links'] for endpoint in link if endpoint['node']==node['id']}
+            observations=report.setdefault('portReadiness',{}).setdefault(node['id'],[])
+            wait_for_ports(consoles[node['id']],node,ports,boot_timeout,lambda value:(observations.append(value),save()))
         for link_id in links:
             client.request("PUT", f"/labs/{lab_id}/links/{link_id}/capture/start", {"maxtime": 1800, "maxpackets": 100000})
             started_captures.append(link_id)

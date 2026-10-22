@@ -1,4 +1,5 @@
 import type {Device, DeviceConfig, InterfaceConfig, StaticRoute} from './model.ts';
+import {nsosACLConfig} from './nsos-acl.ts';
 import {nsosConfig} from './datacenter.ts';
 import {maskToPrefix} from './ip.ts';
 import {NETSIM_VERSION} from './platform-identity.ts';
@@ -19,6 +20,7 @@ function portLines(p:InterfaceConfig,c:DeviceConfig):string[] {
   if(f.speedAuto===false)lines.push(' speed '+p.speed);
   if(p.ip)lines.push(` ip address ${p.ip}/${maskToPrefix(p.mask||'255.255.255.0')}`);
   for(const address of p.ipv6)lines.push(' ipv6 address '+address);
+  if(f.aclOut)lines.push(' ip access-group '+f.aclOut+' out');
   if(f.channelGroup)lines.push(` channel-group ${f.channelGroup} mode ${f.channelMode||'on'}`);
   if(f.lacpRate)lines.push(' lacp rate '+(f.lacpRate==='slow'?'normal':f.lacpRate));
   if(f.lacpPortPriority!==undefined)lines.push(' lacp port-priority '+f.lacpPortPriority);
@@ -86,6 +88,7 @@ export function renderNSOSConfig(device:Device,c:DeviceConfig=device.config):str
     if(!v.gracefulConsistency)lines.push(' no graceful consistency-check');
     lines.push(' exit');
   }
+  lines.push(...nsosACLConfig({config:c}));
   const ports=Object.values(c.interfaces).sort((a,b)=>{
     const rank=(p:InterfaceConfig)=>/^Port-channel/.test(p.name)?0:/^Vlan/.test(p.name)?2:1;
     return rank(a)-rank(b)||compare(a.name,b.name);
@@ -103,6 +106,7 @@ export function renderNSOSConfig(device:Device,c:DeviceConfig=device.config):str
         if(vrf)lines.push(' vrf '+vrf);
         const indent=vrf?'  ':' ';
         if(p.routerId)lines.push(indent+'router-id '+p.routerId);
+        if(p.referenceBandwidth!==undefined&&p.referenceBandwidth!==40000)lines.push(indent+'auto-cost reference-bandwidth '+p.referenceBandwidth+' Mbps');
         for(const name of p.passiveInterfaces||[])lines.push(indent+'passive-interface '+name);
         if(vrf)lines.push(' exit');
       }

@@ -304,3 +304,32 @@ deliberate defaults are defined above.
 ### CML operational fidelity
 
 Fresh NS-OS devices use short STP path costs. `spanning-tree pathcost method short|long` changes actual tree calculations and survives save/replay. Existing saved explicit long settings retain long costs. Named OSPF uses a 40 Gb/s default reference bandwidth rather than the IOS 100 Mb/s default. Route, STP, OSPF neighbor, IP interface brief, MAC, CDP/LLDP detail, clock, logging and users views use local/received runtime state; unavailable CPU, memory allocator and environmental telemetry is rejected. See [the 20-command CML audit](../audits/cml-operational-fidelity.md) for platform availability and remaining boundaries.
+
+
+## CML-validated operational corrections
+
+STP forwarding determines SVI autostate, connected-route presence and local gateway MAC presence. Blocking every usable VLAN member withdraws the SVI; recovery restores its routes. Physical link-up alone is insufficient.
+
+`router ospf NAME` accepts `auto-cost reference-bandwidth N [Mbps|Gbps]` and `no auto-cost reference-bandwidth`. This changes advertised costs and remote SPF calculations; the default is 40,000 Mbps.
+
+The bounded IPv4 ACL surface is packet-enforced and was validated against Nexus egress traffic:
+
+```text
+configure terminal
+ip access-list LAB
+ statistics per-entry
+ 10 deny icmp 10.10.10.0/24 host 192.0.2.9
+ 20 permit ip any any
+ exit
+interface Ethernet1/3
+ no switchport
+ ip access-group LAB out
+end
+show ip access-lists LAB
+```
+
+Configure addressing, routing and link state separately for the traffic path. Packet statistics are collected only while `statistics per-entry` is enabled. Entries require explicit sequence numbers and support `ip` or `icmp`, with `any`, `host` or IPv4 CIDR addresses. `no SEQUENCE` removes an entry; remove it before reusing its sequence. `no ip access-list LAB` deletes the list and leaves its interface reference; empty or deleted lists permit traffic. `no ip access-group LAB out` removes the matching interface reference. Save/reload and NVGEN/replay preserve the implemented ACL configuration.
+
+Only outbound routed physical Ethernet attachment is supported. Ingress, SVI/port-channel attachment, IPv6, TCP/UDP qualifiers, logging, remarks and time ranges are rejected. Remove the physical ACL before converting its interface to a switchport or channel member. No ingress support is inferred from native command acceptance without an enforced traffic test.
+
+`terminal monitor` and `terminal no monitor` control asynchronous remote log delivery. Console delivery is independent. Native interface detail uses actual packet/byte/error counters and rolling 30-second/300-second rates (60-second short window for SVIs); there is no fake ASIC or linecard telemetry. See [the full follow-up audit](../audits/cml-fidelity-followup.md).

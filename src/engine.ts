@@ -198,6 +198,7 @@ export class Simulator {
       }
       for (const d of this.lab.devices) d.runtime.features.ethernet = Object.fromEntries(Object.keys(d.config.interfaces).flatMap(port => { const value = this.ethernetState(d.id, port); return value ? [[port, value]] : []; }));
       prepareLinkState(this);
+      const sviBefore=new Map(this.lab.devices.flatMap(d=>Object.keys(d.config.interfaces).filter(p=>/^Vlan\d+$/.test(p)).map(p=>[d.id+'|'+p,this.interfaceUp(d.id,p)] as const)));
       this.cryptoServices.synchronize();
       for(const wait of this.pendingTunnels.values())if(!this.tunnelResolutionValid(wait))this.finishTunnelResolution(wait,'NHRP resolution cancelled');
       this.egressQueues.sync();
@@ -218,7 +219,7 @@ export class Simulator {
         if (d.powered) for (const s of [...d.config.staticRoutes,...(d.runtime.features.windowsRoutes??[])]) d.runtime.routes.push({ ...s, interface: s.interface ?? '', protocol: 'static', ad: s.ad ?? 1, metric: s.metric ?? 0 });
         if(d.powered&&d.config.ipRouting)for(const [port,lease]of Object.entries<any>(d.runtime.features.dhcpClientLeases??{})){if(lease.gateway&&lease.expires>this.clock.now()&&d.config.interfaces[port]?.ip===lease.address&&this.interfaceUp(d.id,port))d.runtime.routes.push({network:'0.0.0.0',prefix:0,nextHop:lease.gateway,interface:port,protocol:'dhcp',ad:254,metric:0,vrf:d.config.interfaces[port].vrf});}
         if(d.powered&&!d.config.ipRouting)for(const row of Object.values<any>(d.runtime.features.icmpRedirects||{}))if(row.expires>this.clock.now()&&this.interfaceUp(d.id,row.interface))d.runtime.routes.push({...row});
-        if (d.powered && d.config.defaultGateway && !d.config.ipRouting) d.runtime.routes.push({ network: '0.0.0.0', prefix: 0, nextHop: d.config.defaultGateway, interface: '', protocol: 'static', ad: 1, metric: 0 });
+        if (d.powered && d.config.defaultGateway && !d.config.ipRouting) d.runtime.routes.push({ network: '0.0.0.0', prefix: 0, nextHop: d.config.defaultGateway, interface: '', protocol: 'static', ad: 1, metric: 0, management:true });
       }
       let removedStatic:boolean;
       do {
@@ -234,6 +235,10 @@ export class Simulator {
       for (const d of this.lab.devices) {
         const previous: Record<string, boolean> | undefined = d.runtime.features.interfaceStates, next: Record<string, boolean> = {};
         for (const port of Object.keys(d.config.interfaces)) { const up = next[port] = this.interfaceUp(d.id, port); if (previous && port in previous && previous[port] !== up) { this.log(d.id, '%LINK-3-UPDOWN: Interface ' + port + ', changed state to ' + (up ? 'up' : 'down'), 3); this.log(d.id, '%LINEPROTO-5-UPDOWN: Line protocol on Interface ' + port + ', changed state to ' + (up ? 'up' : 'down'), 5); } }
+        if(Object.keys(next).some(port=>/^Vlan\d+$/.test(port)&&sviBefore.get(d.id+'|'+port)!==next[port])&&!d.runtime.features.sviRoutingRefresh){
+          const runtime=d.runtime;runtime.features.sviRoutingRefresh=true;
+          this.clock.schedule(0,()=>{if(d.runtime!==runtime)return;delete runtime.features.sviRoutingRefresh;this.recompute();this.notify();},{owner:d.id,label:'SVI autostate routing refresh'});
+        }
         d.runtime.features.interfaceStates = next;
       }
       for (const device of this.lab.devices) if (device.runtime.features.ntpAssociations || device.config.features.ntp?.master!==undefined || device.runtime.features.ntp?.localMaster) this.selectNTP(device);
@@ -274,7 +279,7 @@ export class Simulator {
       const source = cfg.features.tunnelSource;
       return (!!cfg.features.tunnelDestination || (cfg.features.tunnelMode === 'gre multipoint' && !!cfg.features.nhrp?.networkId)) && !!source && Object.entries(d.config.interfaces).some(([p, c]) => !/^Tunnel/i.test(p) && (p === source || c.ip === source) && this.interfaceUp(d.id, p, new Set(seen)));
     }
-    if (/^Vlan\d+$/i.test(port)) { const vlan = Number(port.slice(4)); return d.config.vlans[vlan]?.active !== false && Object.entries(d.config.interfaces).some(([p, c]) => c.switchport && !c.features.autostateExclude && this.carriesVlan(d, p, vlan) && this.interfaceUp(d.id, p, new Set(seen))); }
+    if (/^Vlan\d+$/i.test(port)) { const vlan = Number(port.slice(4)); return !!d.config.vlans[vlan]?.active && Object.entries(d.config.interfaces).some(([p, c]) => c.switchport && !c.features.autostateExclude && this.carriesVlan(d, p, vlan) && (!stpPortState(d,p,vlan)||stpPortState(d,p,vlan)!.state==='forwarding') && this.interfaceUp(d.id, p, new Set(seen))); }
     if (/^Port-channel/i.test(port)) { const group = port.replace(/^Port-channel/i, ''); const members = d.runtime.features.portChannels?.[group]?.activeMembers ?? Object.entries(d.config.interfaces).filter(([, c]) => String(c.features.channelGroup) === group).map(([p]) => p); return members.some((p: string) => this.interfaceUp(d.id, p, new Set(seen))); }
     if (port.includes('.')) return this.interfaceUp(d.id, port.split('.')[0], seen);
     const link = this.linkAt(d.id, port); if (!link || !link.enabled) return false;
@@ -906,7 +911,9 @@ export class Simulator {
   packetACLPermits(d: Device, name: string | undefined, packet: IPPacket): boolean { return this.aclAllows(d, name, packet); }
   private aclAllows(d: Device, name: string | undefined, packet: IPPacket): boolean {
     if (!name) return true;
-    const acl = d.config.features.acls?.[name]; if (!acl) return true;
+    const acl = ownRecordValue(d.config.features.acls, name); if (!acl) return true;
+    // NX-OS empty RACLs permit packets until the first entry is configured.
+    if (d.kind === 'datacenter' && !(acl.entries ?? []).length) return true;
     for (const entry of [...(acl.entries ?? [])].sort((a: any, b: any) => a.sequence - b.sequence)) {
       if (entry.action === 'remark' || entry.remark !== undefined) continue;
       if (entry.timeRange && !this.timeRangeActive(d.id, entry.timeRange, d.config)) continue;
@@ -915,7 +922,7 @@ export class Simulator {
       if (acl.type !== 'standard' && !this.addressMatches(packet.destination, entry.destination, entry.destinationWildcard)) continue;
       if (!this.portMatches(packet.sourcePort, entry.sourcePort) || !this.portMatches(packet.destinationPort, entry.destinationPort)) continue;
       if(!aclIcmpMatches(entry,packet))continue;
-      const hits = d.runtime.features.aclHits ??= {}; hits[name + ':' + entry.sequence] = (hits[name + ':' + entry.sequence] ?? 0) + 1;
+      if (d.kind !== 'datacenter' || acl.statistics) { const hits = d.runtime.features.aclHits ??= {}; hits[name + ':' + entry.sequence] = (hits[name + ':' + entry.sequence] ?? 0) + 1; }
       return entry.action === 'permit';
     }
     return false;
@@ -1282,8 +1289,12 @@ export class Simulator {
     const config = d.config.features.logging ?? {}, facility = config.facility ?? 23, time = this.clock.now(), entries = d.runtime.features.logEntries ??= [];
     if (config.enabled === false) return;
     const entry = { id: this.id('log'), time, message, severity, facility, sequence: d.runtime.features.logSequence = (d.runtime.features.logSequence ?? 0) + 1 };
+    const sinks=d.runtime.features.logSinkCounts??={console:0,monitor:0,buffer:0,trap:0};
+    if(config.console!==false&&severity<=(config.consoleLevel??(d.kind==='datacenter'?2:7)))sinks.console++;
+    if(config.trapEnabled!==false&&severity<=(config.trap??6))sinks.trap++;
     entries.push(entry); if (entries.length > 500) entries.splice(0, entries.length - 500);
-    if (config.buffered !== false && severity <= (config.bufferedLevel ?? 7)) {
+    if (config.buffered !== false && severity <= (config.bufferedLevel ?? (d.kind==='datacenter'?5:7))) {
+      sinks.buffer++;
       d.runtime.logs.push(iosLogLine(d, entry)); let bytes = d.runtime.logs.reduce((sum, line) => sum + new TextEncoder().encode(line).length + 1, 0); const limit = Math.max(0, config.bufferSize ?? 16384);
       while (d.runtime.logs.length && (bytes > limit || d.runtime.logs.length > 500)) bytes -= new TextEncoder().encode(d.runtime.logs.shift()!).length + 1; d.runtime.features.logBufferBytes = bytes;
     }
