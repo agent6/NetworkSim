@@ -1,0 +1,1502 @@
+{
+  "schemaVersion": 1,
+  "id": "nxos-vpc-pair",
+  "description": "Two Nexus vPC peers, dedicated management-VRF keepalive, two-member LACP peer-link, dual-homed IOS access, two VLANs, SVIs and orphan endpoints. Native access Po10 maps to simulator Po3 (local aggregate IDs need not match the vPC ID).",
+  "nodes": [
+    {
+      "id": "dc1",
+      "kind": "datacenter",
+      "hostname": "DC1",
+      "cml": {
+        "definition": "nxosv9000",
+        "image": "nxosv9300-10-6-2-f",
+        "port": "Ethernet1/1"
+      },
+      "simPort": "Ethernet1/1",
+      "startup": [
+        "hostname DC1",
+        "no password strength-check",
+        "username admin password NetSimLab42! role network-admin",
+        "feature vpc",
+        "feature lacp",
+        "feature interface-vlan",
+        "vlan 10,20",
+        "exit",
+        "spanning-tree vlan 10,20 priority 4096",
+        "interface mgmt0",
+        "ip address 192.168.100.1/30",
+        "no shutdown",
+        "vpc domain 1",
+        "role priority 100",
+        "peer-keepalive destination 192.168.100.2 source 192.168.100.1",
+        "interface port-channel1",
+        "description vPC_PEER_LINK",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "vpc peer-link",
+        "no shutdown",
+        "interface Ethernet1/1",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/2",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface port-channel10",
+        "description ACCESS_VPC",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "vpc 10",
+        "no shutdown",
+        "interface Ethernet1/3",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 10 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/4",
+        "switchport",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree port type edge",
+        "no shutdown",
+        "interface Vlan10",
+        "ip address 10.10.10.1/24",
+        "no shutdown",
+        "interface Vlan20",
+        "ip address 10.10.20.1/24",
+        "no shutdown",
+        "end"
+      ],
+      "simulatorSetup": [
+        "configure terminal",
+        "hostname DC1",
+        "feature vpc",
+        "feature lacp",
+        "feature interface-vlan",
+        "vlan 10,20",
+        "exit",
+        "spanning-tree vlan 10,20 priority 4096",
+        "interface mgmt0",
+        "ip address 192.168.100.1/30",
+        "no shutdown",
+        "vpc domain 1",
+        "role priority 100",
+        "peer-keepalive destination 192.168.100.2 source 192.168.100.1",
+        "interface port-channel1",
+        "description vPC_PEER_LINK",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "vpc peer-link",
+        "no shutdown",
+        "interface Ethernet1/1",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/2",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface port-channel10",
+        "description ACCESS_VPC",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "vpc 10",
+        "no shutdown",
+        "interface Ethernet1/3",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 10 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/4",
+        "switchport",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree port type edge",
+        "no shutdown",
+        "interface Vlan10",
+        "ip address 10.10.10.1/24",
+        "no shutdown",
+        "interface Vlan20",
+        "ip address 10.10.20.1/24",
+        "no shutdown",
+        "end"
+      ]
+    },
+    {
+      "id": "dc2",
+      "kind": "datacenter",
+      "hostname": "DC2",
+      "cml": {
+        "definition": "nxosv9000",
+        "image": "nxosv9300-10-6-2-f",
+        "port": "Ethernet1/1"
+      },
+      "simPort": "Ethernet1/1",
+      "startup": [
+        "hostname DC2",
+        "no password strength-check",
+        "username admin password NetSimLab42! role network-admin",
+        "feature vpc",
+        "feature lacp",
+        "feature interface-vlan",
+        "vlan 10,20",
+        "exit",
+        "spanning-tree vlan 10,20 priority 4096",
+        "interface mgmt0",
+        "ip address 192.168.100.2/30",
+        "no shutdown",
+        "vpc domain 1",
+        "role priority 200",
+        "peer-keepalive destination 192.168.100.1 source 192.168.100.2",
+        "interface port-channel1",
+        "description vPC_PEER_LINK",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "vpc peer-link",
+        "no shutdown",
+        "interface Ethernet1/1",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/2",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface port-channel10",
+        "description ACCESS_VPC",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "vpc 10",
+        "no shutdown",
+        "interface Ethernet1/3",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 10 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/4",
+        "switchport",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree port type edge",
+        "no shutdown",
+        "interface Ethernet1/5",
+        "switchport",
+        "switchport mode access",
+        "switchport access vlan 20",
+        "spanning-tree port type edge",
+        "no shutdown",
+        "interface Vlan10",
+        "ip address 10.10.10.2/24",
+        "no shutdown",
+        "interface Vlan20",
+        "ip address 10.10.20.2/24",
+        "no shutdown",
+        "end"
+      ],
+      "simulatorSetup": [
+        "configure terminal",
+        "hostname DC2",
+        "feature vpc",
+        "feature lacp",
+        "feature interface-vlan",
+        "vlan 10,20",
+        "exit",
+        "spanning-tree vlan 10,20 priority 4096",
+        "interface mgmt0",
+        "ip address 192.168.100.2/30",
+        "no shutdown",
+        "vpc domain 1",
+        "role priority 200",
+        "peer-keepalive destination 192.168.100.1 source 192.168.100.2",
+        "interface port-channel1",
+        "description vPC_PEER_LINK",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "vpc peer-link",
+        "no shutdown",
+        "interface Ethernet1/1",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/2",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 1 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface port-channel10",
+        "description ACCESS_VPC",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "vpc 10",
+        "no shutdown",
+        "interface Ethernet1/3",
+        "switchport",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 10 mode active",
+        "lacp rate fast",
+        "no shutdown",
+        "interface Ethernet1/4",
+        "switchport",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree port type edge",
+        "no shutdown",
+        "interface Ethernet1/5",
+        "switchport",
+        "switchport mode access",
+        "switchport access vlan 20",
+        "spanning-tree port type edge",
+        "no shutdown",
+        "interface Vlan10",
+        "ip address 10.10.10.2/24",
+        "no shutdown",
+        "interface Vlan20",
+        "ip address 10.10.20.2/24",
+        "no shutdown",
+        "end"
+      ]
+    },
+    {
+      "id": "access",
+      "kind": "switch",
+      "hostname": "ACCESS",
+      "cml": {
+        "definition": "ioll2-xe",
+        "image": "ioll2-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/1",
+      "portMap": {
+        "Ethernet0/0": "GigabitEthernet0/1",
+        "Ethernet0/1": "GigabitEthernet0/2",
+        "Ethernet0/2": "GigabitEthernet0/3",
+        "Ethernet0/3": "GigabitEthernet0/4"
+      },
+      "startup": [
+        "hostname ACCESS",
+        "no ip domain-lookup",
+        "spanning-tree mode rapid-pvst",
+        "vlan 10",
+        "exit",
+        "vlan 20",
+        "exit",
+        "interface Ethernet0/0",
+        "switchport trunk encapsulation dot1q",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 10 mode active",
+        "no shutdown",
+        "exit",
+        "interface Ethernet0/1",
+        "switchport trunk encapsulation dot1q",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 10 mode active",
+        "no shutdown",
+        "exit",
+        "interface Port-channel10",
+        "switchport trunk encapsulation dot1q",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "no shutdown",
+        "exit",
+        "interface Ethernet0/2",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree portfast",
+        "no shutdown",
+        "exit",
+        "interface Ethernet0/3",
+        "switchport mode access",
+        "switchport access vlan 20",
+        "spanning-tree portfast",
+        "no shutdown",
+        "exit",
+        "line console 0",
+        "exec-timeout 0 0",
+        "exit",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname ACCESS",
+        "no ip domain-lookup",
+        "spanning-tree mode rapid-pvst",
+        "vlan 10",
+        "exit",
+        "vlan 20",
+        "exit",
+        "interface GigabitEthernet0/1",
+        "switchport trunk encapsulation dot1q",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 3 mode active",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/2",
+        "switchport trunk encapsulation dot1q",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "channel-group 3 mode active",
+        "no shutdown",
+        "exit",
+        "interface Port-channel3",
+        "switchport trunk encapsulation dot1q",
+        "switchport mode trunk",
+        "switchport trunk allowed vlan 10,20",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/3",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree portfast",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/4",
+        "switchport mode access",
+        "switchport access vlan 20",
+        "spanning-tree portfast",
+        "no shutdown",
+        "exit",
+        "end"
+      ]
+    },
+    {
+      "id": "client",
+      "kind": "router",
+      "hostname": "CLIENT",
+      "cml": {
+        "definition": "iol-xe",
+        "image": "iol-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "portMap": {
+        "Ethernet0/0": "GigabitEthernet0/0",
+        "Ethernet0/1": "GigabitEthernet0/1"
+      },
+      "startup": [
+        "hostname CLIENT",
+        "no ip domain-lookup",
+        "interface Ethernet0/0",
+        "ip address 10.10.10.10 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "interface Ethernet0/1",
+        "ip address 10.10.20.10 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip route 0.0.0.0 0.0.0.0 10.10.10.1",
+        "line console 0",
+        "exec-timeout 0 0",
+        "exit",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname CLIENT",
+        "no ip domain-lookup",
+        "interface GigabitEthernet0/0",
+        "ip address 10.10.10.10 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/1",
+        "ip address 10.10.20.10 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip route 0.0.0.0 0.0.0.0 10.10.10.1",
+        "end"
+      ]
+    },
+    {
+      "id": "orphan1",
+      "kind": "router",
+      "hostname": "ORPHAN1",
+      "cml": {
+        "definition": "iol-xe",
+        "image": "iol-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "portMap": {
+        "Ethernet0/0": "GigabitEthernet0/0",
+        "Ethernet0/1": "GigabitEthernet0/1"
+      },
+      "startup": [
+        "hostname ORPHAN1",
+        "no ip domain-lookup",
+        "interface Ethernet0/0",
+        "ip address 10.10.10.11 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip route 0.0.0.0 0.0.0.0 10.10.10.1",
+        "line console 0",
+        "exec-timeout 0 0",
+        "exit",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname ORPHAN1",
+        "no ip domain-lookup",
+        "interface GigabitEthernet0/0",
+        "ip address 10.10.10.11 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip route 0.0.0.0 0.0.0.0 10.10.10.1",
+        "end"
+      ]
+    },
+    {
+      "id": "orphan2",
+      "kind": "router",
+      "hostname": "ORPHAN2",
+      "cml": {
+        "definition": "iol-xe",
+        "image": "iol-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "portMap": {
+        "Ethernet0/0": "GigabitEthernet0/0",
+        "Ethernet0/1": "GigabitEthernet0/1"
+      },
+      "startup": [
+        "hostname ORPHAN2",
+        "no ip domain-lookup",
+        "interface Ethernet0/0",
+        "ip address 10.10.10.12 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "interface Ethernet0/1",
+        "ip address 10.10.20.12 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip route 0.0.0.0 0.0.0.0 10.10.10.2",
+        "line console 0",
+        "exec-timeout 0 0",
+        "exit",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname ORPHAN2",
+        "no ip domain-lookup",
+        "interface GigabitEthernet0/0",
+        "ip address 10.10.10.12 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/1",
+        "ip address 10.10.20.12 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip route 0.0.0.0 0.0.0.0 10.10.10.2",
+        "end"
+      ]
+    }
+  ],
+  "links": [
+    [
+      {
+        "node": "dc1",
+        "port": "Ethernet1/1"
+      },
+      {
+        "node": "dc2",
+        "port": "Ethernet1/1"
+      }
+    ],
+    [
+      {
+        "node": "dc1",
+        "port": "Ethernet1/2"
+      },
+      {
+        "node": "dc2",
+        "port": "Ethernet1/2"
+      }
+    ],
+    [
+      {
+        "node": "dc1",
+        "port": "mgmt0"
+      },
+      {
+        "node": "dc2",
+        "port": "mgmt0"
+      }
+    ],
+    [
+      {
+        "node": "dc1",
+        "port": "Ethernet1/3"
+      },
+      {
+        "node": "access",
+        "port": "Ethernet0/0"
+      }
+    ],
+    [
+      {
+        "node": "dc2",
+        "port": "Ethernet1/3"
+      },
+      {
+        "node": "access",
+        "port": "Ethernet0/1"
+      }
+    ],
+    [
+      {
+        "node": "access",
+        "port": "Ethernet0/2"
+      },
+      {
+        "node": "client",
+        "port": "Ethernet0/0"
+      }
+    ],
+    [
+      {
+        "node": "access",
+        "port": "Ethernet0/3"
+      },
+      {
+        "node": "client",
+        "port": "Ethernet0/1"
+      }
+    ],
+    [
+      {
+        "node": "dc1",
+        "port": "Ethernet1/4"
+      },
+      {
+        "node": "orphan1",
+        "port": "Ethernet0/0"
+      }
+    ],
+    [
+      {
+        "node": "dc2",
+        "port": "Ethernet1/4"
+      },
+      {
+        "node": "orphan2",
+        "port": "Ethernet0/0"
+      }
+    ],
+    [
+      {
+        "node": "dc2",
+        "port": "Ethernet1/5"
+      },
+      {
+        "node": "orphan2",
+        "port": "Ethernet0/1"
+      }
+    ]
+  ],
+  "packetEvidence": {
+    "protocolMinimums": {
+      "STP": 20,
+      "ICMP": 20,
+      "ARP": 10
+    }
+  },
+  "steps": [
+    {
+      "id": "vpc-001",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ],
+      "waitSeconds": 90
+    },
+    {
+      "id": "vpc-002",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ]
+    },
+    {
+      "id": "vpc-003",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5"
+    },
+    {
+      "id": "vpc-004",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5"
+    },
+    {
+      "id": "vpc-005",
+      "node": "client",
+      "command": "ping 10.10.20.12 repeat 5"
+    },
+    {
+      "id": "vpc-006",
+      "node": "orphan1",
+      "command": "ping 10.10.20.12 repeat 5"
+    },
+    {
+      "id": "vpc-007",
+      "node": "orphan2",
+      "command": "ping 10.10.10.11 repeat 5"
+    },
+    {
+      "id": "vpc-008",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-009",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-010",
+      "node": "client",
+      "command": "ping 10.10.20.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-011",
+      "node": "orphan1",
+      "command": "ping 10.10.20.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-012",
+      "node": "orphan2",
+      "command": "ping 10.10.10.11 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-013",
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "expect": [
+        "Po1\\(SU\\).*LACP.*Eth1/1\\(P\\).*Eth1/2\\(P\\)",
+        "Po10\\(SU\\).*LACP.*Eth1/3\\(P\\)"
+      ]
+    },
+    {
+      "id": "vpc-014",
+      "node": "dc1",
+      "command": "show vpc consistency-parameters interface po 10",
+      "expect": [
+        "STP Port Type\\s+1\\s+Default\\s+Default"
+      ]
+    },
+    {
+      "id": "vpc-015",
+      "node": "dc2",
+      "command": "show running-config vpc",
+      "expect": [
+        "vpc domain 1",
+        "vpc peer-link",
+        "vpc 10"
+      ]
+    },
+    {
+      "id": "vpc-016",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-017",
+      "node": "dc1",
+      "command": "vpc domain 1"
+    },
+    {
+      "id": "vpc-018",
+      "node": "dc1",
+      "command": "peer-keepalive destination 192.168.100.2 source 192.168.100.1 interval 2000 timeout 5"
+    },
+    {
+      "id": "vpc-019",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "vpc-020",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ],
+      "waitSeconds": 8
+    },
+    {
+      "id": "vpc-021",
+      "node": "dc2",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-022",
+      "node": "dc2",
+      "command": "interface Port-channel10"
+    },
+    {
+      "id": "vpc-023",
+      "node": "dc2",
+      "command": "spanning-tree port type normal"
+    },
+    {
+      "id": "vpc-024",
+      "node": "dc2",
+      "command": "end"
+    },
+    {
+      "id": "vpc-025",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "Configuration consistency status\\s+: success",
+        "10\\s+Po10\\s+down\\*\\s+failed"
+      ],
+      "waitSeconds": 5
+    },
+    {
+      "id": "vpc-026",
+      "node": "dc2",
+      "command": "show vpc consistency-parameters vpc 10",
+      "expect": [
+        "STP Port Type\\s+1\\s+Normal Port\\s+Default"
+      ]
+    },
+    {
+      "id": "vpc-027",
+      "node": "dc2",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-028",
+      "node": "dc2",
+      "command": "interface Port-channel10"
+    },
+    {
+      "id": "vpc-029",
+      "node": "dc2",
+      "command": "no spanning-tree port type"
+    },
+    {
+      "id": "vpc-030",
+      "node": "dc2",
+      "command": "end"
+    },
+    {
+      "id": "vpc-031",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ],
+      "waitSeconds": 40
+    },
+    {
+      "id": "vpc-032",
+      "node": "dc2",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-033",
+      "node": "dc2",
+      "command": "interface Vlan20"
+    },
+    {
+      "id": "vpc-034",
+      "node": "dc2",
+      "command": "shutdown"
+    },
+    {
+      "id": "vpc-035",
+      "node": "dc2",
+      "command": "end"
+    },
+    {
+      "id": "vpc-036",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "Type-2 consistency status\\s+: failed",
+        "SVI type-2 configuration incompatible",
+        "10\\s+Po10\\s+up\\s+success"
+      ],
+      "waitSeconds": 5
+    },
+    {
+      "id": "vpc-037",
+      "node": "dc2",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-038",
+      "node": "dc2",
+      "command": "interface Vlan20"
+    },
+    {
+      "id": "vpc-039",
+      "node": "dc2",
+      "command": "no shutdown"
+    },
+    {
+      "id": "vpc-040",
+      "node": "dc2",
+      "command": "end"
+    },
+    {
+      "id": "vpc-041",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ],
+      "waitSeconds": 8
+    },
+    {
+      "id": "vpc-042",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-043",
+      "node": "dc1",
+      "command": "vpc domain 1"
+    },
+    {
+      "id": "vpc-044",
+      "node": "dc1",
+      "command": "peer-switch"
+    },
+    {
+      "id": "vpc-045",
+      "node": "dc1",
+      "command": "peer-gateway"
+    },
+    {
+      "id": "vpc-046",
+      "node": "dc1",
+      "command": "ip arp synchronize"
+    },
+    {
+      "id": "vpc-047",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "vpc-048",
+      "node": "dc2",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-049",
+      "node": "dc2",
+      "command": "vpc domain 1"
+    },
+    {
+      "id": "vpc-050",
+      "node": "dc2",
+      "command": "peer-switch"
+    },
+    {
+      "id": "vpc-051",
+      "node": "dc2",
+      "command": "peer-gateway"
+    },
+    {
+      "id": "vpc-052",
+      "node": "dc2",
+      "command": "ip arp synchronize"
+    },
+    {
+      "id": "vpc-053",
+      "node": "dc2",
+      "command": "end"
+    },
+    {
+      "id": "vpc-054",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ],
+      "waitSeconds": 40
+    },
+    {
+      "id": "vpc-055",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ]
+    },
+    {
+      "id": "vpc-056",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-057",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-058",
+      "node": "client",
+      "command": "ping 10.10.20.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-059",
+      "node": "orphan1",
+      "command": "ping 10.10.20.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-060",
+      "node": "orphan2",
+      "command": "ping 10.10.10.11 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-061",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-062",
+      "node": "dc1",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "vpc-063",
+      "node": "dc1",
+      "command": "shutdown"
+    },
+    {
+      "id": "vpc-064",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "vpc-065",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ],
+      "waitSeconds": 100
+    },
+    {
+      "id": "vpc-066",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ]
+    },
+    {
+      "id": "vpc-067",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-068",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-069",
+      "node": "client",
+      "command": "ping 10.10.20.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-070",
+      "node": "orphan1",
+      "command": "ping 10.10.20.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-071",
+      "node": "orphan2",
+      "command": "ping 10.10.10.11 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-072",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-073",
+      "node": "dc1",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "vpc-074",
+      "node": "dc1",
+      "command": "no shutdown"
+    },
+    {
+      "id": "vpc-075",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "vpc-076",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ],
+      "waitSeconds": 100
+    },
+    {
+      "id": "vpc-077",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-078",
+      "node": "dc1",
+      "command": "interface Ethernet1/3"
+    },
+    {
+      "id": "vpc-079",
+      "node": "dc1",
+      "command": "shutdown"
+    },
+    {
+      "id": "vpc-080",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "vpc-081",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "10\\s+Po10\\s+down\\*\\s+success"
+      ],
+      "waitSeconds": 100
+    },
+    {
+      "id": "vpc-082",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ]
+    },
+    {
+      "id": "vpc-083",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-084",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-085",
+      "node": "client",
+      "command": "ping 10.10.20.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-086",
+      "node": "orphan1",
+      "command": "ping 10.10.20.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-087",
+      "node": "orphan2",
+      "command": "ping 10.10.10.11 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-088",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-089",
+      "node": "dc1",
+      "command": "interface Ethernet1/3"
+    },
+    {
+      "id": "vpc-090",
+      "node": "dc1",
+      "command": "no shutdown"
+    },
+    {
+      "id": "vpc-091",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "vpc-092",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ],
+      "waitSeconds": 100
+    },
+    {
+      "id": "vpc-093",
+      "node": "dc2",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-094",
+      "node": "dc2",
+      "command": "interface Ethernet1/4"
+    },
+    {
+      "id": "vpc-095",
+      "node": "dc2",
+      "command": "vpc orphan-port suspend"
+    },
+    {
+      "id": "vpc-096",
+      "node": "dc2",
+      "command": "end"
+    },
+    {
+      "id": "vpc-097",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-098",
+      "node": "dc1",
+      "command": "interface Port-channel1"
+    },
+    {
+      "id": "vpc-099",
+      "node": "dc1",
+      "command": "shutdown"
+    },
+    {
+      "id": "vpc-100",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "vpc-101",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer link is down",
+        "10\\s+Po10\\s+up\\s+success"
+      ],
+      "waitSeconds": 100
+    },
+    {
+      "id": "vpc-102",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer link is down",
+        "10\\s+Po10\\s+down\\s+failed\\s+Peer-link is down"
+      ]
+    },
+    {
+      "id": "vpc-103",
+      "node": "dc2",
+      "command": "show interface Vlan10",
+      "expect": [
+        "Vlan10 is down"
+      ]
+    },
+    {
+      "id": "vpc-104",
+      "node": "dc2",
+      "command": "show interface Ethernet1/4",
+      "expect": [
+        "Ethernet1/4 is down"
+      ]
+    },
+    {
+      "id": "vpc-105",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-106",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "expect": [
+        "Success rate is 0 percent \\(0/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-107",
+      "node": "dc1",
+      "command": "configure terminal"
+    },
+    {
+      "id": "vpc-108",
+      "node": "dc1",
+      "command": "interface Port-channel1"
+    },
+    {
+      "id": "vpc-109",
+      "node": "dc1",
+      "command": "no shutdown"
+    },
+    {
+      "id": "vpc-110",
+      "node": "dc1",
+      "command": "end"
+    },
+    {
+      "id": "vpc-111",
+      "node": "dc1",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ],
+      "waitSeconds": 100
+    },
+    {
+      "id": "vpc-112",
+      "node": "dc2",
+      "command": "show vpc",
+      "expect": [
+        "Peer status\\s+: peer adjacency formed ok",
+        "Configuration consistency status\\s+: success",
+        "Per-vlan consistency status\\s+: success",
+        "Type-2 consistency status\\s+: success",
+        "10\\s+Po10\\s+up\\s+success\\s+success\\s+10,20"
+      ]
+    },
+    {
+      "id": "vpc-113",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-114",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-115",
+      "node": "client",
+      "command": "ping 10.10.20.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-116",
+      "node": "orphan1",
+      "command": "ping 10.10.20.12 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    },
+    {
+      "id": "vpc-117",
+      "node": "orphan2",
+      "command": "ping 10.10.10.11 repeat 5",
+      "expect": [
+        "Success rate is 100 percent \\(5/5\\)"
+      ]
+    }
+  ],
+  "surveys": [
+    {
+      "node": "dc1",
+      "commands": [
+        "show vpc",
+        "show vpc role",
+        "show vpc peer-keepalive",
+        "show vpc consistency-parameters global",
+        "show vpc consistency-parameters vpc 10",
+        "show vpc consistency-parameters interface port-channel10",
+        "show vpc orphan-ports",
+        "show running-config vpc",
+        "show port-channel summary",
+        "show spanning-tree vlan 10"
+      ]
+    },
+    {
+      "node": "dc2",
+      "commands": [
+        "show vpc",
+        "show vpc role",
+        "show vpc peer-keepalive",
+        "show vpc consistency-parameters global",
+        "show vpc consistency-parameters vpc 10",
+        "show vpc consistency-parameters interface port-channel10",
+        "show vpc orphan-ports",
+        "show running-config vpc",
+        "show port-channel summary",
+        "show spanning-tree vlan 10"
+      ]
+    }
+  ]
+}

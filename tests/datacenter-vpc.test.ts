@@ -105,14 +105,60 @@ test('peer failure promotes the survivor; a saved-config reload does not preempt
   assert.equal(vpcRuntime(a)!.role,'secondary');assert.equal(vpcRuntime(b)!.role,'primary');ping(s,client,hb);
 });
 
-test('type-1 native VLAN mismatch suspends the secondary, while type-2 peer-gateway mismatch warns without suspending healthy forwarding',()=>{
+test('type-1 native VLAN mismatch suspends the secondary; differing peer-gateway settings do not invent a type-2 fault',()=>{
   const {s,a,b,client,ha}=topology();
   nsosConfig(a).vpc!.peerGateway=true;s.changed();advance(s,3000);
-  assert.ok(vpcRuntime(b)!.consistency.some(c=>c.type===2&&c.name==='Peer-gateway'));
+  assert.ok(!vpcRuntime(b)!.consistency.some(c=>c.name==='Peer-gateway'));
   assert.equal(vpcRuntime(b)!.members[10].up,true);ping(s,client,ha);
   b.config.interfaces['Port-channel20'].nativeVlan=30;s.changed();advance(s,3000);
   assert.ok(vpcRuntime(b)!.consistency.some(c=>c.type===1&&c.name==='Native VLAN'));
   assert.equal(vpcRuntime(a)!.members[10].up,true);assert.equal(vpcRuntime(b)!.members[10].up,false);
+});
+
+test('SVI presence and admin-state mismatches warn as type-2 while the vPC continues forwarding',()=>{
+  const {s,a,b,client,ha,hb}=topology(),cli=new NSOSSession(s,b.id,{skipConsoleLogin:true});
+  // This SVI is deliberately unrelated to the hosts' VLAN; the diagnostic must
+  // not suspend an otherwise compatible Layer 2 vPC.
+  nsosConfig(a).enabled.push('interface-vlan');nsosConfig(b).enabled.push('interface-vlan');
+  for(const d of[a,b])d.config.interfaces.Vlan30={...defaultInterface('Vlan30'),adminUp:true};
+  s.changed();advance(s,3000);assert.deepEqual(vpcRuntime(b)!.consistency,[]);
+  b.config.interfaces.Vlan30.adminUp=false;s.changed();advance(s,3000);
+  for(const d of[a,b]){
+    assert.ok(vpcRuntime(d)!.consistency.some(row=>row.type===2&&row.vlan===30&&row.name==='SVI type-2 configuration incompatible'));
+    assert.equal(vpcRuntime(d)!.members[10].up,true);
+  }
+  assert.match(cli.execute('show vpc').join('\n'),/Type-2 consistency status\s+: failed/);
+  assert.match(cli.execute('show vpc').join('\n'),/Configuration consistency status\s+: success/);
+  ping(s,client,ha);ping(s,client,hb);
+  delete b.config.interfaces.Vlan30;s.changed();advance(s,3000);
+  assert.ok(vpcRuntime(a)!.consistency.some(row=>row.type===2&&row.vlan===30));
+  delete a.config.interfaces.Vlan30;s.changed();advance(s,3000);assert.deepEqual(vpcRuntime(b)!.consistency,[]);
+});
+
+test('vPC keepalives use delivered UDP/3200 packets with native control-plane DSCP and TTL',()=>{
+  const {s,a,b}=topology();s.events=[];advance(s,2500);
+  const received=s.events.filter(e=>e.nodeId===b.id&&e.label==='Frame received'&&e.packet?.source==='10.255.0.1'&&e.packet?.destinationPort===3200);
+  assert.ok(received.length>0,JSON.stringify(s.events.filter(e=>e.packet?.destinationPort===3200).map(e=>e.label)));
+  for(const {packet}of received){assert.equal(packet!.sourcePort,3200);assert.equal(packet!.dscp,48);assert.equal(packet!.ttl,64);}
+  assert.equal(vpcRuntime(a)!.peerAlive,true);
+});
+
+test('received vPC STP port type and guard mismatches suspend the secondary and recover without dropping the primary',()=>{
+  const {s,a,b,client,ha}=topology(),cli=new NSOSSession(s,b.id,{skipConsoleLogin:true});
+  for(const [command,repair,parameter] of [
+    ['spanning-tree port type edge trunk','no spanning-tree port type','STP Port Type'],
+    ['spanning-tree port type normal','no spanning-tree port type','STP Port Type'],
+    ['spanning-tree guard none','no spanning-tree guard','STP Port Guard'],
+    ['spanning-tree guard root','no spanning-tree guard','STP Port Guard'],
+    ['spanning-tree guard loop','no spanning-tree guard','STP Port Guard'],
+  ]){
+    for(const line of ['conf t','interface Port-channel20',command,'end'])assert.ok(!cli.execute(line).some(row=>row.startsWith('%')),line);
+    advance(s,4000);
+    for(const d of[a,b])assert.ok(vpcRuntime(d)!.consistency.some(row=>row.type===1&&row.name===parameter&&row.vpc===10));
+    assert.equal(vpcRuntime(a)!.members[10].up,true);assert.equal(vpcRuntime(b)!.members[10].up,false);ping(s,client,ha);
+    for(const line of ['conf t','interface Port-channel20',repair,'end'])assert.ok(!cli.execute(line).some(row=>row.startsWith('%')),line);
+    advance(s,6000);assert.equal(vpcRuntime(b)!.members[10].up,true);assert.deepEqual(vpcRuntime(b)!.consistency,[]);
+  }
 });
 
 test('per-VLAN consistency suspends only affected VLANs, including physical ingress and egress, and recovers when repaired',()=>{
@@ -265,9 +311,34 @@ test('disabling vPC removes synchronized state and cancels peer timers rather th
 
 test('keepalive packets cannot cross an incorrectly selected VRF, even with a healthy peer-link',()=>{
   const {s,a,b}=topology();
+  const counts=[a,b].map(d=>vpcRuntime(d)!.rxKeepalives);
   for(const d of[a,b])nsosConfig(d).vpc!.keepalive!.vrf='wrong-vrf';
   s.changed();advance(s,7000);
-  for(const d of[a,b]){assert.equal(vpcRuntime(d)!.adjacency,false);assert.equal(vpcRuntime(d)!.rxKeepalives,0);assert.equal(vpcRuntime(d)!.members[10].up,false);}
+  for(const [index,d] of [a,b].entries()){
+    assert.equal(vpcRuntime(d)!.peerAlive,false);assert.equal(vpcRuntime(d)!.rxKeepalives,counts[index]);
+    assert.equal(vpcRuntime(d)!.adjacency,true);assert.equal(vpcRuntime(d)!.members[10].up,true);
+  }
+  // A fresh domain still cannot establish without real keepalive delivery.
+  s.load(s.serialize());advance(s,40000);
+  for(const id of [a.id,b.id]){const d=s.getDevice(id)!;assert.equal(vpcRuntime(d)!.adjacency,false);assert.equal(vpcRuntime(d)!.rxKeepalives,0);assert.equal(vpcRuntime(d)!.members[10].up,false);}
+});
+
+test('updating keepalive timers preserves an established vPC and reschedules actual packet delivery',()=>{
+  const {s,a,b,client,ha}=topology(),cli=new NSOSSession(s,a.id,{skipConsoleLogin:true});
+  const before=vpcRuntime(b)!.rxKeepalives;
+  for(const line of ['conf t','vpc domain 42','peer-keepalive destination 10.255.0.2 source 10.255.0.1 interval 400 timeout 5','end'])assert.ok(!cli.execute(line).some(row=>row.startsWith('%')),line);
+  for(const d of[a,b]){assert.equal(vpcRuntime(d)!.adjacency,true);assert.equal(vpcRuntime(d)!.members[10].up,true);assert.equal(vpcRuntime(d)!.restoreUntil,undefined);}
+  advance(s,2400);assert.ok(vpcRuntime(b)!.rxKeepalives-before>=5);ping(s,client,ha);
+});
+
+test('peer-link restoration does not interrupt the primary that kept forwarding during the outage',()=>{
+  const {s,a,b,client,ha}=topology(),cli=new NSOSSession(s,a.id,{skipConsoleLogin:true});
+  for(const line of ['conf t','interface Port-channel1','shutdown','end'])assert.ok(!cli.execute(line).some(row=>row.startsWith('%')),line);
+  advance(s,10000);assert.equal(vpcRuntime(a)!.members[10].up,true);assert.equal(vpcRuntime(b)!.members[10].up,false);
+  for(const line of ['conf t','interface Port-channel1','no shutdown','end'])assert.ok(!cli.execute(line).some(row=>row.startsWith('%')),line);
+  advance(s,4000);assert.equal(vpcRuntime(a)!.adjacency,true);assert.equal(vpcRuntime(a)!.members[10].up,true);assert.ok(vpcRuntime(a)!.restoreUntil!>s.clock.now());
+  assert.equal(vpcRuntime(b)!.members[10].up,false);assert.ok(vpcRuntime(b)!.restoreUntil!>s.clock.now());ping(s,client,ha);
+  advance(s,35000);assert.equal(vpcRuntime(b)!.members[10].up,true);
 });
 
 test('regression: default-VRF keepalives form a fresh vPC using explicit or automatically selected source addresses',()=>{

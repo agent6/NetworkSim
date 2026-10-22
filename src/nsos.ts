@@ -2,7 +2,8 @@ import type {Simulator} from './engine.ts';
 import {defaultInterface, type Device, type InterfaceConfig, type StaticRoute} from './model.ts';
 import {IOSSession} from './cli.ts';
 import {createCLISession} from './session.ts';
-import {nsosConfig,nsosFeature,defaultVPC,vpcRuntime,vpcPortReason,vpcAggregationSuspended,type VPCConfig} from './datacenter.ts';
+import {nsosConfig,nsosFeature,defaultVPC,vpcPortReason,vpcAggregationSuspended,vpcInterfaceMTU,type VPCConfig} from './datacenter.ts';
+import {nsosVPCShow,nsosVPCConfig} from './nsos-vpc-show.ts';
 import {nsosACLEntry,nsosACLShow} from './nsos-acl.ts';
 import {renderNSOSConfig} from './nsos-config.ts';
 import {platformIdentity,platformSoftware,platformImage,NETSIM_VERSION} from './platform-identity.ts';
@@ -21,8 +22,8 @@ import {interfaceSpeed,interfaceBandwidth} from './ethernet.ts';
 import {filterIOSOutput,iosLogLine} from './ios-system.ts';
 import {iosRejected} from './ios-help.ts';
 
-type Mode='priv'|'config'|'interface'|'vlan'|'vrf'|'router'|'router-vrf'|'vpc'|'mst'|'acl';
-type Context={mode:Mode;name?:string;vrf?:string;parent?:Context};
+type Mode='priv'|'config'|'interface'|'interface-range'|'vlan'|'vrf'|'router'|'router-vrf'|'vpc'|'mst'|'acl';
+type Context={mode:Mode;name?:string;interfaces?:string[];vrf?:string;parent?:Context};
 type Command={syntax:string;description:string;run:(args:string[],no:boolean)=>string[]|void;no?:string;write:boolean};
 type Variant={command:Command;words:string[];no:boolean};
 const FEATURES=['interface-vlan','lacp','lldp','ospf','ssh','vpc','vtp'];
@@ -84,7 +85,7 @@ export class NSOSSession {
     if(this.remoteConnected)return this.transport.prompt;
     if(this.login)return this.login.phase==='username'?'login:':'Password:';
     if(this.pendingReload)return 'Proceed with reload? (y/n) [n] ';
-    const suffix:Record<Mode,string>={priv:'',config:'(config)',interface:'(config-if)',vlan:'(config-vlan)',vrf:'(config-vrf)',router:'(config-router)', 'router-vrf':'(config-router-vrf)',vpc:'(config-vpc-domain)',mst:'(config-mst)',acl:'(config-acl)'};
+    const suffix:Record<Mode,string>={priv:'',config:'(config)',interface:'(config-if)','interface-range':'(config-if-range)',vlan:'(config-vlan)',vrf:'(config-vrf)',router:'(config-router)', 'router-vrf':'(config-router-vrf)',vpc:'(config-vpc-domain)',mst:'(config-mst)',acl:'(config-acl)'};
     return this.device.config.hostname+suffix[this.context.mode]+'#';
   }
   get busy():boolean{return iosBooting(this.device);}
@@ -142,9 +143,9 @@ export class NSOSSession {
   private port(input:string,create=false):InterfaceConfig{
     const compact=input.replace(/\s/g,''),exact=Object.values(this.device.config.interfaces).find(p=>p.name.toLowerCase()===compact.toLowerCase());
     if(exact)return exact;
-    const match=/^(eth(?:ernet)?|po(?:rt-channel)?|vl(?:an)?|lo(?:opback)?)(\d+(?:\/\d+)?)$/i.exec(compact);
+    const match=/^(e|eth(?:ernet)?|po(?:rt-channel)?|vl(?:an)?|lo(?:opback)?)(\d+(?:\/\d+)?)$/i.exec(compact);
     if(!match)return fail('Invalid interface name.');
-    const prefix=match[1].toLowerCase(),label=prefix.startsWith('eth')?'Ethernet':prefix.startsWith('po')?'Port-channel':prefix.startsWith('vl')?'Vlan':'Loopback',canonical=label+match[2];
+    const prefix=match[1].toLowerCase(),label=prefix.startsWith('e')?'Ethernet':prefix.startsWith('po')?'Port-channel':prefix.startsWith('vl')?'Vlan':'Loopback',canonical=label+match[2];
     if(this.device.config.interfaces[canonical])return this.device.config.interfaces[canonical];
     if(!create||label==='Ethernet')return fail(`Interface ${canonical} does not exist.`);
     this.requireAdmin();
@@ -156,6 +157,39 @@ export class NSOSSession {
     if(label==='Port-channel'){p.features.nonegotiate=true;p.speed=10000;}
     this.device.config.interfaces[p.name]=p;
     return p;
+  }
+  private configureInterfaces(args:string[],no:boolean):void{
+    const input=args.join(''),range=/^(?:e|eth(?:ernet)?)(\d+)\/(\d+)-(\d+)$/i.exec(input);
+    if(range){
+      if(no)fail('Physical interfaces cannot be deleted.');
+      const first=integer(range[2],1,65535),last=integer(range[3],first,65535),interfaces:string[]=[];
+      for(let port=first;port<=last;port++)interfaces.push(this.port('Ethernet'+range[1]+'/'+port).name);
+      this.context={mode:'interface-range',name:interfaces[0],interfaces,parent:{mode:'config'}};return;
+    }
+    const p=this.port(input,!no);
+    if(no){
+      this.requireAdmin();if(!/^(Port-channel|Vlan|Loopback)/.test(p.name))fail('Physical interfaces cannot be deleted.');
+      if(Object.values(this.device.config.interfaces).some(x=>x.features.channelGroup&&'Port-channel'+x.features.channelGroup===p.name))fail('Remove channel-group members first.');
+      delete this.device.config.interfaces[p.name];if(nsosConfig(this.device).vpc?.peerLink===p.name)delete nsosConfig(this.device).vpc!.peerLink;
+      this.context={mode:'config'};return;
+    }
+    this.context={mode:'interface',name:p.name,parent:{mode:'config'}};
+  }
+  private rangeCommands():Command[]{
+    return this.interfaceCommands().map(command=>({...command,run:(args:string[],no:boolean)=>{
+      const range=this.context,output:string[]=[];
+      try{
+        for(const name of range.interfaces!){
+          this.context={mode:'interface',name,parent:{mode:'config'}};
+          const before=clone(this.device.config),handler=this.interfaceCommands().find(c=>c.syntax===command.syntax)!;
+          const lines=handler.run(args,no)||[];
+          if(lines.some(iosRejected))throw new NSOSError(lines.join('\n'));
+          if(command.write)this.synchronizeChannel(before,this.context);
+          output.push(...lines);
+        }
+        return output;
+      }finally{this.context=range;}
+    }}));
   }
   private get selected():InterfaceConfig{return this.device.config.interfaces[this.context.name!]??fail('No interface selected.');}
   private process(tag:string,vrf?:string,create=true):any{
@@ -233,10 +267,7 @@ export class NSOSSession {
       },{no:'ip access-list <name>'}),
       cmd('hostname <name>','Set hostname',(a,no)=>{c.hostname=no?'DC':name(a[0]);},{no:'hostname'}),
       cmd('feature <feature>','Enable an implemented feature',(a,no)=>this.feature(a[0],no),{no:'feature <feature>'}),
-      cmd('interface <interface>','Select Ethernet or logical interface',(a,no)=>{
-        if(no){this.requireAdmin();const p=this.port(a[0]);if(!/^(Port-channel|Vlan|Loopback)/.test(p.name))fail('Physical interfaces cannot be deleted.');if(Object.values(c.interfaces).some(x=>x.features.channelGroup&&'Port-channel'+x.features.channelGroup===p.name))fail('Remove channel-group members first.');delete c.interfaces[p.name];if(nsosConfig(this.device).vpc?.peerLink===p.name)delete nsosConfig(this.device).vpc!.peerLink;this.context={mode:'config'};return;}
-        const p=this.port(a[0],true);this.context={mode:'interface',name:p.name,parent:{mode:'config'}};
-      },{no:'interface <interface>',read:true}),
+      ...['<interface>','<interface> <number>'].map(syntax=>cmd('interface '+syntax,'Select Ethernet or logical interface',(a,no)=>this.configureInterfaces(a,no),{no:'interface '+syntax,read:true})),
       cmd('vlan <vlans>','Create and select VLANs',(a,no)=>{
         this.requireAdmin();const list=vlanList(a[0]);if(no&&list.includes(1))fail('VLAN 1 cannot be deleted.');
         for(const id of list)if(no)delete c.vlans[id];else c.vlans[id]??={id,name:'VLAN'+String(id).padStart(4,'0'),active:true};
@@ -297,10 +328,17 @@ export class NSOSSession {
       cmd(`${family===4?'ip':'ipv6'} route <prefix> <interface> <next-hop> <distance>`,'Configure interface-qualified static route',(a,no)=>this.route(a[0],a[2],a[3],no,family as 4|6,a[1]),{no:`${family===4?'ip':'ipv6'} route <prefix> <interface> <next-hop> <distance>`}),
     ]);
     if(mode==='config')return [...common,...globals,...routes];
-    if(mode==='interface')return [...common,...globals.filter(x=>x.syntax==='interface <interface>'),...this.interfaceCommands()];
+    // NX-OS falls back to global configuration when a command belongs there.
+    // Keep local definitions first (notably VRF routes), and change context
+    // only when the inherited handler executes, never during help/completion.
+    const scoped=(local:Command[]):Command[]=>[...local,...[...globals,...routes]
+      .filter(global=>!local.some(command=>command.syntax===global.syntax))
+      .map(command=>({...command,run:(args:string[],no:boolean)=>{this.context={mode:'config'};return command.run(args,no);}}))];
+    if(mode==='interface')return scoped([...common,...this.interfaceCommands()]);
+    if(mode==='interface-range')return scoped([...common,...this.rangeCommands()]);
     if(mode==='acl'){
       const acl=()=>ownRecordValue(f.acls,this.context.name!)??fail('Access list no longer exists.');
-      return [...common,
+      return scoped([...common,
         cmd('statistics per-entry','Collect actual per-rule packet matches',(_a,no)=>{acl().statistics=!no;},{no:'statistics per-entry'}),
         cmd('<sequence> <rule...>','Set an ip/icmp permit/deny entry',a=>{
           const sequence=integer(a[0],1,4294967295),entry=nsosACLEntry(a.slice(1),sequence);
@@ -308,23 +346,23 @@ export class NSOSSession {
           acl().entries.push(entry);acl().entries.sort((a:any,b:any)=>a.sequence-b.sequence);this.clearACLHits(this.context.name!,sequence);
         }),
         cmd('no <sequence>','Remove one ACL entry',a=>{const sequence=integer(a[0],1,4294967295);acl().entries=acl().entries.filter((e:any)=>e.sequence!==sequence);this.clearACLHits(this.context.name!,sequence);}),
-      ];
+      ]);
     }
-    if(mode==='vrf')return [...common,...routes];
-    if(mode==='vlan')return [...common,
+    if(mode==='vrf')return scoped([...common,...routes]);
+    if(mode==='vlan')return scoped([...common,
       cmd('name <name>','Name VLAN',a=>{const n=name(a[0]);for(const id of vlanList(this.context.name!))c.vlans[id].name=n;}),
       cmd('shutdown','Suspend VLAN',(_a,no)=>{for(const id of vlanList(this.context.name!))c.vlans[id].active=no;},{no:'shutdown'}),
-    ];
+    ]);
     if(mode==='router'||mode==='router-vrf'){
       const p=()=>this.process(this.context.name!,this.context.vrf);
-      return [...common,
+      return scoped([...common,
         ...['',' Mbps',' Gbps'].map(unit=>cmd('auto-cost reference-bandwidth <number>'+unit,'Set operational OSPF reference bandwidth',(a,no)=>{const value=a[0]===undefined?undefined:integer(a[0],1,unit===' Gbps'?4000:4000000)*(unit===' Gbps'?1000:1);if(no)delete p().referenceBandwidth;else p().referenceBandwidth=value;},{no:'auto-cost reference-bandwidth'+(unit?' <number>'+unit:'')})),
         cmd('router-id <address>','Set OSPF router ID',(a,no)=>{if(no)delete p().routerId;else p().routerId=ip4(a[0]);},{no:'router-id'}),
         cmd('passive-interface default','Suppress OSPF hellos unless an interface overrides the default',(_a,no)=>{p().passiveDefault=!no;},{no:'passive-interface default'}),
         ...(mode==='router'?[cmd('vrf <vrf>','Select OSPF VRF',a=>{this.process(this.context.name!,name(a[0]));this.enter('router-vrf',this.context.name,name(a[0]));})]:[]),
-      ];
+      ]);
     }
-    if(mode==='mst')return [...common,
+    if(mode==='mst')return scoped([...common,
       cmd('name <name>','Set MST region name',a=>{f.stp.mst.name=name(a[0]);}),
       cmd('revision <revision>','Set MST revision',a=>{f.stp.mst.revision=integer(a[0],0,65535);}),
       cmd('instance <instance> vlan <vlans>','Map VLANs to MST instance',(a,no)=>{
@@ -333,9 +371,9 @@ export class NSOSSession {
         m.instances=m.instances.filter((r:any)=>r.vlans.length);
         if(!no){const prior=m.instances.find((r:any)=>r.id===id);if(prior)prior.vlans=[...new Set([...prior.vlans,...vlans])].sort((a:any,b:any)=>a-b);else m.instances.push({id,vlans});}
       },{no:'instance <instance> vlan <vlans>'}),
-    ];
-    if(mode==='vpc')return [...common,...this.vpcCommands()];
-    return common;
+    ]);
+    if(mode==='vpc')return scoped([...common,...this.vpcCommands()]);
+    return scoped(common);
   }
   private user(a:string[],role:'network-admin'|'network-operator'):void{
     const username=name(a[0]);if(!a[1]||a[1].length>128)fail('Password must contain 1–128 non-space characters.');
@@ -378,7 +416,7 @@ export class NSOSSession {
         const speed=integer(a[0],10,40000);if(!supported.includes(speed))fail('Unsupported speed for this port. Supported: '+supported.join(', ')+'.');
         p.speed=speed;f.speedAuto=false;
       },{no:'speed'}),
-      cmd('mtu <mtu>','Set interface MTU',(a,no)=>{p.mtu=no?1500:integer(a[0],576,9216);},{no:'mtu'}),
+      cmd('mtu <mtu>','Set interface MTU',(a,no)=>{const mtu=no?1500:integer(a[0],576,9216);if(p.switchport&&mtu!==1500&&mtu!==9216)throw new NSOSError('ERROR: MTU can only be default or system jumbo MTU');p.mtu=mtu;},{no:'mtu'}),
       cmd('vrf member <vrf>','Assign interface to routing context',(a,no)=>{
         routed();const vrf=no?undefined:name(a[0]);if(vrf&&!c.features.vrfs?.[vrf])fail('VRF does not exist.');
         if(p.name==='mgmt0'&&vrf!=='management')fail('mgmt0 must remain in the management VRF.');
@@ -407,11 +445,12 @@ export class NSOSSession {
         if(f.aclOut)fail('Remove the outbound physical ACL before joining a port-channel.');
         if(f.channelGroup&&f.channelGroup!==group)fail('Remove current channel-group membership first.');
         if(f.vpcOrphanSuspend)fail('Remove orphan-port suspension before joining a port-channel; configure it on the logical port-channel.');
+        const prior=c.interfaces['Port-channel'+group];
+        if(prior&&nsosConfig(this.device).vpc?.peerLink===prior.name)p.mtu=prior.mtu;
         const members=Object.values(c.interfaces).filter(x=>x.name!==p.name&&x.features.channelGroup===group);
         if(members.some(x=>(x.features.channelMode==='on')!==(mode==='on')))fail('Static and LACP members cannot share a port-channel.');
         const compatible=(x:InterfaceConfig)=>x.switchport===p.switchport&&x.mtu===p.mtu&&x.vrf===p.vrf&&(!p.switchport||x.mode===p.mode&&x.vlan===p.vlan&&x.nativeVlan===p.nativeVlan&&JSON.stringify(x.allowedVlans)===JSON.stringify(p.allowedVlans));
         if(members.some(x=>!compatible(x)))fail('Port-channel members must have compatible Layer 2/3, MTU and VRF configuration.');
-        const prior=c.interfaces['Port-channel'+group];
         if(prior&&!compatible(prior))fail('Interface must be compatible with the port-channel Layer 2/3, MTU and VRF configuration.');
         const po=this.port('Port-channel'+group,true);
         if(!prior){po.switchport=p.switchport;po.mode=p.mode;po.vlan=p.vlan;po.nativeVlan=p.nativeVlan;po.allowedVlans=clone(p.allowedVlans);po.mtu=p.mtu;po.vrf=p.vrf;}
@@ -426,7 +465,9 @@ export class NSOSSession {
         data();if(!p.switchport)fail('Spanning-tree requires a switchport.');f.stpPortType=type;f.portfast=type.startsWith('edge');f.portfastTrunk=type==='edge trunk';
       })),
       ...['bpduguard','bpdufilter'].flatMap(key=>['enable','disable'].map(value=>cmd('spanning-tree '+key+' '+value,'Set BPDU protection',()=>{data();f[key]=value==='enable';}))),
-      ...['root','loop','none'].map(value=>cmd('spanning-tree guard '+value,'Set spanning-tree guard',()=>{data();f.rootGuard=value==='root';f.loopGuard=value==='loop';})),
+      cmd('no spanning-tree port type','Restore the default STP port type',()=>{data();if(nsosConfig(this.device).vpc?.peerLink===p.name)f.stpPortType='network';else delete f.stpPortType;f.portfast=false;f.portfastTrunk=false;}),
+      ...['root','loop','none'].map(value=>cmd('spanning-tree guard '+value,'Set spanning-tree guard',()=>{data();f.stpGuard=value;f.rootGuard=value==='root';f.loopGuard=value==='loop';})),
+      cmd('no spanning-tree guard','Restore the default STP guard',()=>{data();delete f.stpGuard;delete f.rootGuard;delete f.loopGuard;}),
       cmd('spanning-tree cost <cost>','Set spanning-tree port cost',a=>{data();f.stpCost=integer(a[0],1,200000000);}),
       cmd('ip router ospf <tag> area <area>','Enable named OSPF on interface',(a,no)=>{
         routed();if(p.name==='mgmt0')fail('Routing protocols are not supported on mgmt0.');this.requireFeature('ospf');const area=this.area(a[1]);
@@ -504,6 +545,7 @@ export class NSOSSession {
       else if(option==='hold-timeout')k.holdTimeout=integer(value,3,10)*1000;
       else fail('Unsupported peer-keepalive option: '+option+'.');
     }
+    if(seen.has('interval')!==seen.has('timeout'))fail('Incomplete command: interval requires timeout.');
     if(k.timeout<=k.interval)fail('Keepalive timeout must exceed interval.');
     v.keepalive=k;
   }
@@ -572,16 +614,21 @@ export class NSOSSession {
       if(remainder(token))return true;
       if(token==='<next-hop>'&&!isIPv4(words[i])&&!isIPv6(words[i]))return false;
       if(token==='<distance>'&&!/^\d+$/.test(words[i]))return false;
+      if(token==='<interface>'&&i===grammar.length-1&&!partial&&/^(e|eth|ethernet|po|port-channel|vl|vlan|lo|loopback|mgmt)$/i.test(words[i]))return false;
       if(!wildcard(token)&&!token.toLowerCase().startsWith(words[i].toLowerCase()))return false;
     }
     return partial||grammar.length===words.length||remainder(grammar.at(-1)!)&&words.length>=grammar.length;
   }
-  private choices(token:string):string[]{
+  private choices(token:string,words:string[]=[]):string[]{
     if(token==='<feature>')return FEATURES;
     if(token==='<interface>')return Object.keys(this.device.config.interfaces);
     if(token==='<vrf>')return ['default',...Object.keys(this.device.config.features.vrfs||{})];
     if(token==='<ospf-tag>')return [...new Set([this.device.config.protocols.ospf?.nsosTag,...Object.values<any>(this.device.config.protocols.ospf?.vrfs??{}).map(p=>p?.nsosTag)].filter(Boolean))];
-    if(token==='<speed>')return ['auto',...(this.context.mode==='interface'?this.selected.features.ethernetSpeeds||[]:[]).map(String)];
+    if(token==='<number>'&&words[0]&&'interface'.startsWith(words[0].toLowerCase())){
+      const type=words[1]?.toLowerCase(),family=/^(e|eth|ethernet)$/.test(type)?'Ethernet':/^(po|port-channel)$/.test(type)?'Port-channel':/^(vl|vlan)$/.test(type)?'Vlan':/^(lo|loopback)$/.test(type)?'Loopback':type==='mgmt'?'mgmt':undefined;
+      if(family)return Object.keys(this.device.config.interfaces).filter(p=>p.startsWith(family)).map(p=>p.slice(family.length));
+    }
+    if(token==='<speed>')return ['auto',...(['interface','interface-range'].includes(this.context.mode)?this.selected.features.ethernetSpeeds||[]:[]).map(String)];
     return [];
   }
   help(line=''):string[]{
@@ -598,8 +645,8 @@ export class NSOSSession {
     for(const v of variants){
       if(!this.match(words,v,true))continue;
       const token=v.words[words.length];
-      if(!token){if(!prefix)rows.set('<CR>','Execute command');continue;}
-      const choices=wildcard(token)?this.choices(token):[token],values=choices.length?choices:[token];
+      if(!token){if(!prefix&&this.match(words,v))rows.set('<CR>','Execute command');continue;}
+      const choices=wildcard(token)?this.choices(token,words):[token],values=choices.length?choices:[token];
       for(const value of values)if(wildcard(value)||value.toLowerCase().startsWith(prefix.toLowerCase()))rows.set(value,v.command.description);
       if(remainder(v.words.at(-1)!)&&words.length>=v.words.length&&!prefix)rows.set('<CR>','Execute command');
     }
@@ -656,9 +703,9 @@ export class NSOSSession {
     }
   }
   private showSyntax():string[]{
-    return ['show access-lists','show access-lists <name>','show ip access-lists','show ip access-lists <name>','show clock','show logging','show users','show ip interface brief','show ip interface brief vrf <vrf>','show version','show hostname','show inventory','show feature','show running-config','show running-config interface <interface>','show startup-config','show user-account','show role','show vrf',
+    return ['show access-lists','show access-lists <name>','show ip access-lists','show ip access-lists <name>','show clock','show logging','show users','show ip interface brief','show ip interface brief vrf <vrf>','show version','show hostname','show inventory','show feature','show running-config','show running-config vpc','show running-config interface <interface>','show startup-config','show user-account','show role','show vrf',
       'show interface','show interface brief','show interface status','show interface trunk','show interface <interface>','show interface <interface> switchport','show port-channel summary','show lacp neighbor',
-      'show vpc','show vpc brief','show vpc role','show vpc peer-keepalive','show vpc consistency-parameters global','show vpc consistency-parameters vpc <vpc-id>',
+      'show vpc','show vpc brief','show vpc role','show vpc peer-keepalive','show vpc consistency-parameters global','show vpc consistency-parameters vpc <vpc-id>','show vpc consistency-parameters interface <interface>','show vpc consistency-parameters interface <interface> <number>','show vpc orphan-ports',
       'show vlan','show vlan brief','show spanning-tree','show spanning-tree summary','show spanning-tree pathcost method','show spanning-tree vlan <vlan>','show spanning-tree interface <interface>',
       'show spanning-tree mst configuration','show mac address-table','show ip route','show ip route vrf <vrf>','show ipv6 route','show ipv6 route vrf <vrf>',
       ...['','<ospf-tag> '].flatMap(tag=>['','neighbors','interface','interface <interface>'].flatMap(suffix=>(suffix.includes('<interface>')?['']:['',' vrf <vrf>']).map(vrf=>('show ip ospf '+tag+suffix).trim()+vrf))),
@@ -692,7 +739,7 @@ export class NSOSSession {
     if(a[0]==='feature')return ['Feature Name           Instance   State',...FEATURES.map(x=>(x==='ssh'?'sshServer':x).padEnd(23)+'1          '+(nsosFeature(d,x)?'enabled':'disabled')),'Other NX-OS features are not implemented.'];
     if(a[0]==='running-config'||a[0]==='startup-config'){
       this.requireAdmin();const config=a[0]==='startup-config'?d.startupConfig:c;if(!config)return ['Startup configuration is not present.'];
-      const lines=renderNSOSConfig(d,config);if(a[1]==='interface'){const p=this.port(a[2]),index=lines.indexOf('interface '+p.name),end=lines.indexOf(' exit',index);return index<0?[]:lines.slice(index,end+1);}return lines;
+      if(a[1]==='vpc')return nsosVPCConfig(d);const lines=renderNSOSConfig(d,config);if(a[1]==='interface'){const p=this.port(a[2]),index=lines.indexOf('interface '+p.name),end=lines.indexOf(' exit',index);return index<0?[]:lines.slice(index,end+1);}return lines;
     }
     if(a[0]==='user-account')return Object.entries<any>(f.users||{}).flatMap(([username,u])=>[`user:${username}`,`  roles: ${u.role||'network-operator'}`]);
     if(a[0]==='role')return ['Role: network-admin — all implemented read/write operations','Role: network-operator — operational reads; configure terminal permitted; configuration changes and running/startup configuration reads denied'];
@@ -700,7 +747,7 @@ export class NSOSSession {
     if(a[0]==='interface')return this.showInterfaces(a.slice(1));
     if(a[0]==='port-channel')return this.showChannels();
     if(a[0]==='lacp'){this.requireFeature('lacp');return formatIOSL2Show(this.engine,d,'lacp',['neighbor'])||[];}
-    if(a[0]==='vpc')return this.showVPC(a.slice(1));
+    if(a[0]==='vpc')return (this.requireFeature('vpc'),nsosVPCShow(this.engine,d,a.slice(1)));
     if(a[0]==='vlan')return ['VLAN Name                             Status    Ports',...Object.values(c.vlans).sort((a,b)=>a.id-b.id).map(v=>`${String(v.id).padEnd(5)}${v.name.padEnd(33)}${(v.active?'active':'suspended').padEnd(10)}${Object.values(c.interfaces).filter(p=>p.switchport&&p.mode==='access'&&p.vlan===v.id).map(p=>p.name).join(', ')}`)];
     if(a[0]==='spanning-tree')return this.showSTP(a.slice(1));
     if(a[0]==='mac')return nsosMAC(this.engine,d,this.engine.clock.now());
@@ -725,16 +772,26 @@ export class NSOSSession {
   private showInterfaces(a:string[]):string[]{
     const d=this.device,list=a.length&&!['brief','status','trunk'].includes(a[0])?[this.port(a[0])]:Object.values(d.config.interfaces);
     if(a[1]==='switchport')return list.flatMap(p=>[`Name: ${p.name}`,`Switchport: ${p.switchport?'Enabled':'Disabled'}`,...p.switchport?[`Administrative Mode: ${p.mode}`,`Operational Mode: ${this.engine.interfaceUp(d.id,p.name)?d.runtime.features.trunks?.[p.name]?.operational?'trunk':'access':'down'}`,`Access Mode VLAN: ${p.vlan}`,`Trunking Native Mode VLAN: ${p.nativeVlan}`,`Trunking VLANs Allowed: ${p.allowedVlans===null?'ALL':p.allowedVlans.join(',')||'NONE'}`]:[]]);
-    if(a[0]==='brief'||a[0]==='status')return ['Interface       Status         VLAN/VRF        Speed(Mbps) MTU',...list.map(p=>`${p.name.padEnd(16)}${(!p.adminUp?'admin-down':vpcPortReason(d,p.name)?'suspended':this.engine.interfaceUp(d.id,p.name)?'up':'down').padEnd(15)}${(p.switchport?p.mode==='trunk'?'trunk':String(p.vlan):p.vrf||'routed').padEnd(16)}${String(interfaceSpeed(d,p)).padEnd(12)}${p.mtu}`)];
+    if(a[0]==='brief'||a[0]==='status')return ['Interface       Status         VLAN/VRF        Speed(Mbps) MTU',...list.map(p=>`${p.name.padEnd(16)}${(!p.adminUp?'admin-down':vpcPortReason(d,p.name)?'suspended':this.engine.interfaceUp(d.id,p.name)?'up':'down').padEnd(15)}${(p.switchport?p.mode==='trunk'?'trunk':String(p.vlan):p.vrf||'routed').padEnd(16)}${String(interfaceSpeed(d,p)).padEnd(12)}${vpcInterfaceMTU(d,p)}`)];
     if(a[0]==='trunk')return ['Port             Operational  Native  Allowed VLANs',...list.filter(p=>p.switchport&&p.mode==='trunk').map(p=>`${p.name.padEnd(17)}${(d.runtime.features.trunks?.[p.name]?.operational?'trunking':'down').padEnd(13)}${String(p.nativeVlan).padEnd(8)}${p.allowedVlans?.join(',')??'1-4094'}`)];
     return list.flatMap(p=>nsosInterface(this.engine,d,p));
   }
   private showChannels():string[]{
     const d=this.device;
-    return ['Flags: D - Down, U - Up, P - bundled, I - individual, s - suspended','Group Port-channel      Protocol  Status      Ports',...Object.values(d.config.interfaces).filter(p=>/^Port-channel/.test(p.name)).map(p=>{
-      const id=p.name.slice(12),r=d.runtime.features.portChannels?.[id],members=Object.values(d.config.interfaces).filter(m=>String(m.features.channelGroup)===id),suspended=vpcAggregationSuspended(d,p.name),status=suspended?'suspended':r?.state||'down';
-      return `${id.padEnd(6)}${p.name.padEnd(18)}${String(r?.protocol||'NONE').padEnd(10)}${String(status).padEnd(12)}${members.map(m=>m.name+'('+(!m.adminUp?'D':suspended?'s':r?.activeMembers?.includes(m.name)?'P':r?.state==='suspended'?'s':'I')+')').join(' ')}`;
-    })];
+    return ['Flags: D - Down        P - Up in port-channel (members)',
+      '       I - Individual  H - Hot-standby (LACP only)',
+      '       s - Suspended   r - Module-removed',
+      '       S - Switched    R - Routed',
+      '       U - Up (port-channel)',
+      '--------------------------------------------------------------------------------',
+      'Group Port-       Type     Protocol  Member Ports',
+      '      Channel',
+      '--------------------------------------------------------------------------------',
+      ...Object.values(d.config.interfaces).filter(p=>/^Port-channel/.test(p.name)).sort((a,b)=>Number(a.name.slice(12))-Number(b.name.slice(12))).map(p=>{
+        const id=p.name.slice(12),r=d.runtime.features.portChannels?.[id],members=Object.values(d.config.interfaces).filter(m=>String(m.features.channelGroup)===id),suspended=vpcAggregationSuspended(d,p.name),up=this.engine.interfaceUp(d.id,p.name);
+        const protocol=r?.protocol??(members.some(m=>m.features.channelMode!=='on')?'LACP':'NONE');
+        return id.padEnd(6)+(nsosPort(p.name)+'('+(p.switchport?'S':'R')+(up?'U':'D')+')').padEnd(12)+'Eth'.padEnd(9)+(String(protocol).toUpperCase()==='STATIC'?'NONE':String(protocol).toUpperCase()).padEnd(10)+members.map(m=>nsosPort(m.name)+'('+(!p.adminUp||!m.adminUp||!this.engine.interfaceUp(d.id,m.name)&&!suspended?'D':suspended?'s':r?.activeMembers?.includes(m.name)?'P':r?.state==='suspended'?'s':'I')+')').join(' ');
+      })];
   }
   private showSTP(a:string[]):string[]{
     const d=this.device,stp=d.config.features.stp||{},mode=stp.mode||'rapid-pvst',trees=Object.entries(d.runtime.stp);
@@ -786,20 +843,5 @@ export class NSOSSession {
       });
     }
     return [` Routing Process ${p.nsosTag} with ID ${p.routerId||live?.interfaces?.[0]?.routerId||'0.0.0.0'} VRF ${vrf||'default'}`,` Reference Bandwidth is ${p.referenceBandwidth??40000} Mbps`,...(p.passiveDefault||p.passiveInterfaces?.includes('default')?[' Default Passive Interface is enabled']:[]),` Number of LSAs: ${live?.lsas.length||0}`,` SPF calculation has run ${live?.spfRuns||0} times`];
-  }
-  private showVPC(a:string[]):string[]{
-    this.requireFeature('vpc');const v=nsosConfig(this.device).vpc,r=vpcRuntime(this.device);
-    if(!v)return ['vPC domain is not configured.'];
-    if(a[0]==='consistency-parameters'){
-      const id=a[1]==='vpc'?integer(a[2],1,4096):undefined;
-      if(!r?.adjacency)return ['Consistency status: not evaluated (no peer adjacency)'];
-      const rows=r.consistency.filter(x=>id===undefined||x.vpc===id);
-      return ['Name                         Type Local                  Peer',...rows.map(x=>`${x.name.padEnd(29)}${String(x.type).padEnd(5)}${x.local.padEnd(23)}${x.peer}`),rows.length?'Consistency status: failed':'Consistency status: success (received peer state)'];
-    }
-    if(a[0]==='peer-keepalive')return [`Destination: ${v.keepalive?.destination||'not configured'}, source: ${v.keepalive?.source||'automatic'}, VRF: ${v.keepalive?.vrf||'management'}`,`Peer alive: ${r?.peerAlive?'yes':'no'}`,`Keepalives sent: ${r?.txKeepalives||0}, received: ${r?.rxKeepalives||0}`,`Last received: ${r?.lastKeepalive===undefined?'never':this.engine.clock.now()-r.lastKeepalive+' ms ago'}`];
-    if(a[0]==='role')return [`vPC role: ${r?.role||'undetermined'}`,`Configured election role: ${r?.configuredRole||'undetermined'}`,`Role priority: ${v.rolePriority}`,`System MAC: ${r?.systemMac||v.systemMac||'not yet selected'}`];
-    return [`vPC domain id: ${v.domain}`,`Peer status: ${r?.adjacency?'peer adjacency formed':'peer adjacency not formed'}`,`Peer keep-alive status: ${r?.peerAlive?'peer is alive':'not alive'}`,`vPC role: ${r?.role||'undetermined'}`,`State: ${r?.state||'initializing'}; ${r?.reason||'waiting for runtime state'}`,`Dual-active: ${r?.dualActive?'yes':'no'}`,`Peer-link: ${v.peerLink||'not configured'} (${r?.peerLinkUp?'up':'down'})`,'vPC id  Port            Status  Active VLANs       Reason',...Object.values(this.device.config.interfaces).filter(p=>p.features.vpcId).map(p=>{
-      const id=p.features.vpcId,m=r?.members[id];return `${String(id).padEnd(8)}${p.name.padEnd(16)}${(m?.up?'up':'down').padEnd(8)}${(m?.activeVlans.join(',')||'--').padEnd(19)}${m?.reason||'waiting for runtime state'}`;
-    })];
   }
 }

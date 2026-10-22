@@ -167,6 +167,22 @@ def wait_for_ports(console, node, ports, timeout=720, observe=None):
         time.sleep(5)
 
 
+def ensure_link_interfaces(client, lab_id, node_id, definition, ports):
+    """Allocate required physical slots before boot, using the CML definition."""
+    physical = definition.get('device', {}).get('interfaces', {}).get('physical', [])
+    if any(port not in physical for port in ports):
+        raise ValueError('Scenario references a port absent from its CML node definition')
+    path = f'/labs/{lab_id}/nodes/{node_id}/interfaces?data=true'
+    present = {item['label'] for item in client.request('GET', path)}
+    missing = set(ports) - present
+    if missing:
+        client.request('POST', f'/labs/{lab_id}/interfaces',
+                       {'node': node_id, 'slot': max(physical.index(port) for port in missing)})
+        present = {item['label'] for item in client.request('GET', path)}
+        if not set(ports) <= present:
+            raise RuntimeError('CML did not allocate all required scenario interfaces')
+
+
 def verify_owned_lab(client, scenario, previous_path):
     previous = json.loads(previous_path.read_text())
     previous_scenario, previous_digest = load_scenario(previous_path.parent/'scenario.json')
@@ -257,6 +273,9 @@ def capture(client, scenario_path, output, username, password, known_hosts, *, b
                 "label": node["id"], "x": i * 200, "y": 0, "configuration": config})
             report["nodes"][node["id"]] = response["id"]
             save()
+            required = {endpoint['port'] for link in scenario['links'] for endpoint in link
+                        if endpoint['node'] == node['id']}
+            ensure_link_interfaces(client, lab_id, response['id'], definitions[node['cml']['definition']], required)
         links = report.get("links", []) if resume or reuse_owned_from else []
         for link in ([] if resume or reuse_owned_from else scenario["links"]):
             endpoints = []

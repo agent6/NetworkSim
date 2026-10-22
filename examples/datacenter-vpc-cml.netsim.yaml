@@ -1,0 +1,2391 @@
+format: netsim-lab
+version: 1
+seed: 20261022
+lab:
+  id: lab-c29i6
+  name: NX-OS-style vPC pair — CML validation topology
+  devices:
+    - id: device-1
+      kind: datacenter
+      x: 300
+      y: 140
+      powered: true
+      config:
+        hostname: DC1
+        interfaces:
+          Ethernet1/1:
+            name: Ethernet1/1
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+              channelGroup: 1
+              channelMode: active
+              lacpRate: fast
+          Ethernet1/2:
+            name: Ethernet1/2
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+              channelGroup: 1
+              channelMode: active
+              lacpRate: fast
+          Ethernet1/3:
+            name: Ethernet1/3
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+              channelGroup: 10
+              channelMode: active
+              lacpRate: fast
+          Ethernet1/4:
+            name: Ethernet1/4
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 10
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+              stpPortType: edge
+              portfast: true
+              portfastTrunk: false
+          Ethernet1/5:
+            name: Ethernet1/5
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/6:
+            name: Ethernet1/6
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/7:
+            name: Ethernet1/7
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/8:
+            name: Ethernet1/8
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/9:
+            name: Ethernet1/9
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/10:
+            name: Ethernet1/10
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/11:
+            name: Ethernet1/11
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/12:
+            name: Ethernet1/12
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/13:
+            name: Ethernet1/13
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/14:
+            name: Ethernet1/14
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/15:
+            name: Ethernet1/15
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/16:
+            name: Ethernet1/16
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/17:
+            name: Ethernet1/17
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/18:
+            name: Ethernet1/18
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/19:
+            name: Ethernet1/19
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/20:
+            name: Ethernet1/20
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/21:
+            name: Ethernet1/21
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/22:
+            name: Ethernet1/22
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/23:
+            name: Ethernet1/23
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/24:
+            name: Ethernet1/24
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/25:
+            name: Ethernet1/25
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/26:
+            name: Ethernet1/26
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/27:
+            name: Ethernet1/27
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/28:
+            name: Ethernet1/28
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/29:
+            name: Ethernet1/29
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/30:
+            name: Ethernet1/30
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          mgmt0:
+            name: mgmt0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 10
+                - 100
+                - 1000
+              speedAuto: true
+              proxyArp: false
+            vrf: management
+            ip: 192.168.100.1
+            mask: 255.255.255.252
+          Port-channel1:
+            name: Port-channel1
+            adminUp: true
+            description: vPC_PEER_LINK
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              nonegotiate: true
+              stpPortType: network
+              portfast: false
+          Port-channel10:
+            name: Port-channel10
+            adminUp: true
+            description: ACCESS_VPC
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              nonegotiate: true
+              vpcId: 10
+          Vlan10:
+            name: Vlan10
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+            ip: 10.10.10.1
+            mask: 255.255.255.0
+          Vlan20:
+            name: Vlan20
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+            ip: 10.10.20.1
+            mask: 255.255.255.0
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+          "10":
+            id: 10
+            name: VLAN0010
+            active: true
+          "20":
+            id: 20
+            name: VLAN0020
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes: []
+        protocols: {}
+        services: {}
+        features:
+          logging:
+            consoleLevel: 2
+            monitorLevel: 5
+            bufferedLevel: 5
+          nsos:
+            enabled:
+              - ssh
+              - vpc
+              - lacp
+              - interface-vlan
+            vpc:
+              domain: 1
+              rolePriority: 100
+              systemPriority: 32667
+              peerSwitch: false
+              peerGateway: false
+              arpSynchronize: false
+              autoRecovery: false
+              reloadDelay: 240000
+              delayRestore: 30000
+              delayRestoreSVI: 10000
+              gracefulConsistency: true
+              keepalive:
+                destination: 192.168.100.2
+                source: 192.168.100.1
+                vrf: management
+                interval: 1000
+                timeout: 5000
+                holdTimeout: 3000
+              peerLink: Port-channel1
+          ssh:
+            keys: true
+            version: 2
+          lines:
+            vty 0 15:
+              login: local
+              transport: ssh
+              exec: true
+          vrfs:
+            management: {}
+          stp:
+            mode: rapid-pvst
+            pathcostMethod: short
+            vlanPriorities:
+              "10": 4096
+              "20": 4096
+          cdp: true
+          vtp:
+            domain: ""
+            mode: transparent
+            version: 1
+            revision: 0
+            enabled: false
+      runtime:
+        routes: []
+        arp: {}
+        mac: {}
+        neighbors: []
+        stp: {}
+        counters: {}
+        logs: []
+        features: {}
+    - id: device-23
+      kind: datacenter
+      x: 800
+      y: 140
+      powered: true
+      config:
+        hostname: DC2
+        interfaces:
+          Ethernet1/1:
+            name: Ethernet1/1
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+              channelGroup: 1
+              channelMode: active
+              lacpRate: fast
+          Ethernet1/2:
+            name: Ethernet1/2
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+              channelGroup: 1
+              channelMode: active
+              lacpRate: fast
+          Ethernet1/3:
+            name: Ethernet1/3
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+              channelGroup: 10
+              channelMode: active
+              lacpRate: fast
+          Ethernet1/4:
+            name: Ethernet1/4
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 10
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+              stpPortType: edge
+              portfast: true
+              portfastTrunk: false
+          Ethernet1/5:
+            name: Ethernet1/5
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 20
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+              stpPortType: edge
+              portfast: true
+              portfastTrunk: false
+          Ethernet1/6:
+            name: Ethernet1/6
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/7:
+            name: Ethernet1/7
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/8:
+            name: Ethernet1/8
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/9:
+            name: Ethernet1/9
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/10:
+            name: Ethernet1/10
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/11:
+            name: Ethernet1/11
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/12:
+            name: Ethernet1/12
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/13:
+            name: Ethernet1/13
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/14:
+            name: Ethernet1/14
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/15:
+            name: Ethernet1/15
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/16:
+            name: Ethernet1/16
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/17:
+            name: Ethernet1/17
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/18:
+            name: Ethernet1/18
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/19:
+            name: Ethernet1/19
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/20:
+            name: Ethernet1/20
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/21:
+            name: Ethernet1/21
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/22:
+            name: Ethernet1/22
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/23:
+            name: Ethernet1/23
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/24:
+            name: Ethernet1/24
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/25:
+            name: Ethernet1/25
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/26:
+            name: Ethernet1/26
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/27:
+            name: Ethernet1/27
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/28:
+            name: Ethernet1/28
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/29:
+            name: Ethernet1/29
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          Ethernet1/30:
+            name: Ethernet1/30
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 40000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 1000
+                - 10000
+                - 40000
+              speedAuto: true
+              nonegotiate: true
+          mgmt0:
+            name: mgmt0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              ethernetSpeeds:
+                - 10
+                - 100
+                - 1000
+              speedAuto: true
+              proxyArp: false
+            vrf: management
+            ip: 192.168.100.2
+            mask: 255.255.255.252
+          Port-channel1:
+            name: Port-channel1
+            adminUp: true
+            description: vPC_PEER_LINK
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              nonegotiate: true
+              stpPortType: network
+              portfast: false
+          Port-channel10:
+            name: Port-channel10
+            adminUp: true
+            description: ACCESS_VPC
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 10000
+            duplex: auto
+            features:
+              nonegotiate: true
+              vpcId: 10
+          Vlan10:
+            name: Vlan10
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+            ip: 10.10.10.2
+            mask: 255.255.255.0
+          Vlan20:
+            name: Vlan20
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+            ip: 10.10.20.2
+            mask: 255.255.255.0
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+          "10":
+            id: 10
+            name: VLAN0010
+            active: true
+          "20":
+            id: 20
+            name: VLAN0020
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes: []
+        protocols: {}
+        services: {}
+        features:
+          logging:
+            consoleLevel: 2
+            monitorLevel: 5
+            bufferedLevel: 5
+          nsos:
+            enabled:
+              - ssh
+              - vpc
+              - lacp
+              - interface-vlan
+            vpc:
+              domain: 1
+              rolePriority: 200
+              systemPriority: 32667
+              peerSwitch: false
+              peerGateway: false
+              arpSynchronize: false
+              autoRecovery: false
+              reloadDelay: 240000
+              delayRestore: 30000
+              delayRestoreSVI: 10000
+              gracefulConsistency: true
+              keepalive:
+                destination: 192.168.100.1
+                source: 192.168.100.2
+                vrf: management
+                interval: 1000
+                timeout: 5000
+                holdTimeout: 3000
+              peerLink: Port-channel1
+          ssh:
+            keys: true
+            version: 2
+          lines:
+            vty 0 15:
+              login: local
+              transport: ssh
+              exec: true
+          vrfs:
+            management: {}
+          stp:
+            mode: rapid-pvst
+            pathcostMethod: short
+            vlanPriorities:
+              "10": 4096
+              "20": 4096
+          cdp: true
+          vtp:
+            domain: ""
+            mode: transparent
+            version: 1
+            revision: 0
+            enabled: false
+      runtime:
+        routes: []
+        arp: {}
+        mac: {}
+        neighbors: []
+        stp: {}
+        counters: {}
+        logs: []
+        features: {}
+    - id: device-46
+      kind: switch
+      x: 550
+      y: 420
+      powered: true
+      config:
+        hostname: ACCESS
+        interfaces:
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              switchportModeSet: true
+              channelGroup: 3
+              channelMode: active
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              switchportModeSet: true
+              channelGroup: 3
+              channelMode: active
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 10
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              switchportModeSet: true
+              portfastType: edge
+              portfast: true
+              portfastTrunk: false
+          GigabitEthernet0/4:
+            name: GigabitEthernet0/4
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 20
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              switchportModeSet: true
+              portfastType: edge
+              portfast: true
+              portfastTrunk: false
+          GigabitEthernet0/5:
+            name: GigabitEthernet0/5
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/6:
+            name: GigabitEthernet0/6
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/7:
+            name: GigabitEthernet0/7
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/8:
+            name: GigabitEthernet0/8
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/9:
+            name: GigabitEthernet0/9
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/10:
+            name: GigabitEthernet0/10
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/11:
+            name: GigabitEthernet0/11
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/12:
+            name: GigabitEthernet0/12
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/13:
+            name: GigabitEthernet0/13
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/14:
+            name: GigabitEthernet0/14
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/15:
+            name: GigabitEthernet0/15
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/16:
+            name: GigabitEthernet0/16
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/17:
+            name: GigabitEthernet0/17
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/18:
+            name: GigabitEthernet0/18
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/19:
+            name: GigabitEthernet0/19
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/20:
+            name: GigabitEthernet0/20
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/21:
+            name: GigabitEthernet0/21
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/22:
+            name: GigabitEthernet0/22
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/23:
+            name: GigabitEthernet0/23
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/24:
+            name: GigabitEthernet0/24
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet1/1:
+            name: GigabitEthernet1/1
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet1/2:
+            name: GigabitEthernet1/2
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          Port-channel3:
+            name: Port-channel3
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: true
+            mode: trunk
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans:
+              - 10
+              - 20
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              switchportModeSet: true
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+          "10":
+            id: 10
+            name: VLAN0010
+            active: true
+          "20":
+            id: 20
+            name: VLAN0020
+            active: true
+        ipRouting: false
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes: []
+        protocols: {}
+        services: {}
+        features:
+          vtp:
+            domain: ""
+            mode: server
+            version: 1
+            revision: 2
+          domainLookup: false
+          stp:
+            mode: rapid-pvst
+            vlanPriorities: {}
+      runtime:
+        routes: []
+        arp: {}
+        mac: {}
+        neighbors: []
+        stp: {}
+        counters: {}
+        logs: []
+        features: {}
+    - id: device-5t
+      kind: router
+      x: 550
+      y: 660
+      powered: true
+      config:
+        hostname: CLIENT
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 10.10.10.10
+            mask: 255.255.255.0
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 10.10.20.10
+            mask: 255.255.255.0
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes:
+          - network: 0.0.0.0
+            prefix: 0
+            nextHop: 10.10.10.1
+        protocols: {}
+        services: {}
+        features:
+          domainLookup: false
+      runtime:
+        routes: []
+        arp: {}
+        mac: {}
+        neighbors: []
+        stp: {}
+        counters: {}
+        logs: []
+        features: {}
+    - id: device-5u
+      kind: router
+      x: 70
+      y: 420
+      powered: true
+      config:
+        hostname: ORPHAN1
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 10.10.10.11
+            mask: 255.255.255.0
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes:
+          - network: 0.0.0.0
+            prefix: 0
+            nextHop: 10.10.10.1
+        protocols: {}
+        services: {}
+        features:
+          domainLookup: false
+      runtime:
+        routes: []
+        arp: {}
+        mac: {}
+        neighbors: []
+        stp: {}
+        counters: {}
+        logs: []
+        features: {}
+    - id: device-5v
+      kind: router
+      x: 1030
+      y: 420
+      powered: true
+      config:
+        hostname: ORPHAN2
+        interfaces:
+          GigabitEthernet0/0:
+            name: GigabitEthernet0/0
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 10.10.10.12
+            mask: 255.255.255.0
+          GigabitEthernet0/1:
+            name: GigabitEthernet0/1
+            adminUp: true
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features:
+              secondaryIps: []
+            ip: 10.10.20.12
+            mask: 255.255.255.0
+          GigabitEthernet0/2:
+            name: GigabitEthernet0/2
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+          GigabitEthernet0/3:
+            name: GigabitEthernet0/3
+            adminUp: false
+            description: ""
+            ipv6: []
+            switchport: false
+            mode: access
+            vlan: 1
+            nativeVlan: 1
+            allowedVlans: null
+            mtu: 1500
+            speed: 1000
+            duplex: auto
+            features: {}
+        vlans:
+          "1":
+            id: 1
+            name: default
+            active: true
+        ipRouting: true
+        ipv6Routing: false
+        dnsServers: []
+        staticRoutes:
+          - network: 0.0.0.0
+            prefix: 0
+            nextHop: 10.10.10.2
+        protocols: {}
+        services: {}
+        features:
+          domainLookup: false
+      runtime:
+        routes: []
+        arp: {}
+        mac: {}
+        neighbors: []
+        stp: {}
+        counters: {}
+        logs: []
+        features: {}
+  links:
+    - id: link-5w
+      a:
+        deviceId: device-1
+        port: Ethernet1/1
+      b:
+        deviceId: device-23
+        port: Ethernet1/1
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-69
+      a:
+        deviceId: device-1
+        port: Ethernet1/2
+      b:
+        deviceId: device-23
+        port: Ethernet1/2
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-6e
+      a:
+        deviceId: device-1
+        port: mgmt0
+      b:
+        deviceId: device-23
+        port: mgmt0
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-6j
+      a:
+        deviceId: device-1
+        port: Ethernet1/3
+      b:
+        deviceId: device-46
+        port: GigabitEthernet0/1
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-6o
+      a:
+        deviceId: device-23
+        port: Ethernet1/3
+      b:
+        deviceId: device-46
+        port: GigabitEthernet0/2
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-6t
+      a:
+        deviceId: device-46
+        port: GigabitEthernet0/3
+      b:
+        deviceId: device-5t
+        port: GigabitEthernet0/0
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-6z
+      a:
+        deviceId: device-46
+        port: GigabitEthernet0/4
+      b:
+        deviceId: device-5t
+        port: GigabitEthernet0/1
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-75
+      a:
+        deviceId: device-1
+        port: Ethernet1/4
+      b:
+        deviceId: device-5u
+        port: GigabitEthernet0/0
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-7b
+      a:
+        deviceId: device-23
+        port: Ethernet1/4
+      b:
+        deviceId: device-5v
+        port: GigabitEthernet0/0
+      enabled: true
+      delay: 0.1
+      loss: 0
+    - id: link-7h
+      a:
+        deviceId: device-23
+        port: Ethernet1/5
+      b:
+        deviceId: device-5v
+        port: GigabitEthernet0/1
+      enabled: true
+      delay: 0.1
+      loss: 0
+  notes: []

@@ -98,7 +98,7 @@ test('NSOS static and LACP port-channel modes use actual negotiated state and en
   }
   sim.connect({deviceId:d.id,port:'Ethernet1/25'},{deviceId:peer.id,port:'Ethernet1/25'});sim.advance(5000);
   assert.equal(d.runtime.features.portChannels['10'].state,'up');
-  assert.match(text(cli,'show port-channel summary'),/Port-channel10.*up.*Ethernet1\/25\(P\)/);
+  assert.match(text(cli,'show port-channel summary'),/Po10\(SU\).*LACP.*Eth1\/25\(P\)/);
   run(cli,'conf t','interface Port-channel10','switchport trunk allowed vlan 1,10','end');
   assert.deepEqual(d.config.interfaces['Ethernet1/25'].allowedVlans,[1,10]);
   run(cli,'conf t','interface Ethernet1/25');reject(cli,'switchport trunk allowed vlan 1',/Port-channel10/);run(cli,'end');
@@ -229,7 +229,7 @@ test('NSOS vPC CLI validates domain/member/peer-link, shows absent peers honestl
   reject(cli,'layer3 peer-router');run(cli,'exit','interface Port-channel1','switchport mode trunk','vpc peer-link','interface Port-channel2','vpc 20','end');
   assert.equal(d.config.interfaces['Port-channel1'].features.stpPortType,'network');
   assert.match(text(cli,'show vpc'),/adjacency not formed/);assert.doesNotMatch(text(cli,'show vpc'),/Status.*success/);
-  assert.match(text(cli,'show vpc peer-keepalive'),/received: 0/);
+  assert.match(text(cli,'show vpc peer-keepalive'),/--Receive status\s+: Never received/);
   run(cli,'conf t','no feature vpc','end');assert.equal(nsosConfig(d).vpc,undefined);assert.equal(d.config.interfaces['Port-channel2'].features.vpcId,undefined);
 });
 

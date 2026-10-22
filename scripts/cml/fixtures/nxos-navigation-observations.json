@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "image": "nxosv9300-10-6-2-f",
+  "version": "10.6(2)",
+  "captureSha256": "01daaebd76a3935d8a4dd094b2af109606ce5a9f88aa7b9d0cb3516151f57b51",
+  "scope": "Selected configuration-mode navigation observations on one isolated CML switch; no forwarding or full-output conformance claim. The first default-width keepalive echo timed out and is excluded; its clean 132-column repeat is included.",
+  "observations": [
+    {
+      "from": "vpc",
+      "command": "interface port-channel1",
+      "to": "interface",
+      "accepted": true,
+      "rawSha256": "6da1d76397c6fe9ea3c1bc314c4158e6149e7cf714d7c2cc7959d1c6c4e6aa0d"
+    },
+    {
+      "from": "interface",
+      "command": "vlan 10",
+      "to": "vlan",
+      "accepted": true,
+      "rawSha256": "b17c644edf9899cd378e7937184e79c74307ded857e1cca5ce4d3ba972ea7d23"
+    },
+    {
+      "from": "vlan",
+      "command": "interface port-channel1",
+      "to": "interface",
+      "accepted": true,
+      "rawSha256": "6da1d76397c6fe9ea3c1bc314c4158e6149e7cf714d7c2cc7959d1c6c4e6aa0d"
+    },
+    {
+      "from": "interface",
+      "command": "vrf context BLUE",
+      "to": "vrf",
+      "accepted": true,
+      "rawSha256": "31dd5188bf1c0ff831284c86cdb1decaa4fd486849ccc9699eb04a2f51a441e8"
+    },
+    {
+      "from": "vrf",
+      "command": "interface port-channel1",
+      "to": "interface",
+      "accepted": true,
+      "rawSha256": "6da1d76397c6fe9ea3c1bc314c4158e6149e7cf714d7c2cc7959d1c6c4e6aa0d"
+    },
+    {
+      "from": "interface",
+      "command": "router ospf LAB",
+      "to": "router",
+      "accepted": true,
+      "rawSha256": "baf11e8840bc5199e47226e894be17061f288010a3c0190d187bb67f49b498a4"
+    },
+    {
+      "from": "router",
+      "command": "interface port-channel1",
+      "to": "interface",
+      "accepted": true,
+      "rawSha256": "6da1d76397c6fe9ea3c1bc314c4158e6149e7cf714d7c2cc7959d1c6c4e6aa0d"
+    },
+    {
+      "from": "interface",
+      "command": "spanning-tree mst configuration",
+      "to": "mst",
+      "accepted": true,
+      "rawSha256": "6de558de814c63314208d66b54718c62da790b43308be7bc9f5b4b187180e361"
+    },
+    {
+      "from": "mst",
+      "command": "interface port-channel1",
+      "to": "interface",
+      "accepted": true,
+      "rawSha256": "6da1d76397c6fe9ea3c1bc314c4158e6149e7cf714d7c2cc7959d1c6c4e6aa0d"
+    },
+    {
+      "from": "interface",
+      "command": "ip access-list NAV",
+      "to": "acl",
+      "accepted": true,
+      "rawSha256": "f8a32e2a6ab7738e3a50b479742754202ae99411ae014c77682104d47a53fa03"
+    },
+    {
+      "from": "acl",
+      "command": "interface port-channel1",
+      "to": "interface",
+      "accepted": true,
+      "rawSha256": "6da1d76397c6fe9ea3c1bc314c4158e6149e7cf714d7c2cc7959d1c6c4e6aa0d"
+    },
+    {
+      "from": "router",
+      "command": "vrf BLUE",
+      "to": "router-vrf",
+      "accepted": true,
+      "rawSha256": "56cc753d276387602d9fd794c73094ed7e6acaba09e4c683ba57e5f56287ecc0"
+    },
+    {
+      "from": "router-vrf",
+      "command": "interface port-channel1",
+      "to": "interface",
+      "accepted": true,
+      "rawSha256": "6da1d76397c6fe9ea3c1bc314c4158e6149e7cf714d7c2cc7959d1c6c4e6aa0d"
+    },
+    {
+      "from": "interface",
+      "command": "hostname NAV-NEW",
+      "to": "config",
+      "accepted": true,
+      "rawSha256": "5849345102db09e7a5b4ce90d0cb80062b0589554c6874463b74f8488b92e2ac"
+    },
+    {
+      "from": "vpc",
+      "command": "feature lldp",
+      "to": "config",
+      "accepted": true,
+      "rawSha256": "383b3ff9fe0c8eadd7cf16f87ee0cd957318fffe30e33207fcdad738a7d88786"
+    },
+    {
+      "from": "vpc",
+      "command": "hostname NAV-NEW",
+      "to": "config",
+      "accepted": true,
+      "rawSha256": "5849345102db09e7a5b4ce90d0cb80062b0589554c6874463b74f8488b92e2ac"
+    },
+    {
+      "from": "interface",
+      "command": "ip route 203.0.113.0/24 192.0.2.2",
+      "to": "config",
+      "accepted": true,
+      "rawSha256": "b442cd486a1bf43d47e1a45a71d5ef06f33b5cca503fccb96c91390a01668468"
+    },
+    {
+      "from": "vrf",
+      "command": "ip route 198.51.100.0/24 192.0.2.2",
+      "to": "vrf",
+      "accepted": true,
+      "rawSha256": "9d8f72eb89caf2336c263e2f11c8b6caab76a8653c3a022ea7e5c501ff155848"
+    },
+    {
+      "from": "vpc",
+      "command": "peer-keepalive destination 192.168.100.2 source 192.168.100.1",
+      "to": "vpc",
+      "accepted": true,
+      "rawSha256": "e40722f63a3aeab45efa1d09933542961c2cbba8dd2421ace8146b9055423d05"
+    },
+    {
+      "from": "vpc",
+      "command": "no vpc domain 1",
+      "to": "config",
+      "accepted": true,
+      "rawSha256": "8af7e4dfda872a9d8ef4d6a83fe4ccffd7bdeeed162e26583e09acfbf1253c6f"
+    },
+    {
+      "from": "vpc",
+      "command": "interface Ethernet1/99",
+      "to": "vpc",
+      "accepted": false,
+      "rawSha256": "4c092e4c55e90694c65ba10f4254a46c5cd05a92bcf0cd9b8b581b309325663a"
+    },
+    {
+      "from": "vpc",
+      "command": "interface",
+      "to": "vpc",
+      "accepted": false,
+      "rawSha256": "bd061e770f866b6a198b1ae9edb095f3f133b1305efab63a9152a5fd023ce535"
+    },
+    {
+      "from": "vpc",
+      "command": "feature BOGUS",
+      "to": "vpc",
+      "accepted": false,
+      "rawSha256": "c8f3f88f19dc6149059bb8d7cbcb277c4e3996472d01c62afb2f62b28ea2e0f5"
+    }
+  ]
+}

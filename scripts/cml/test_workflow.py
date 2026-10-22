@@ -9,12 +9,27 @@ import unittest
 from unittest.mock import patch, Mock
 
 from client import CML
-from capture import step_result, nxos_boot_image, verify_owned_lab, wait_for_ports, PROMPT
+from capture import step_result, nxos_boot_image, verify_owned_lab, wait_for_ports, ensure_link_interfaces, PROMPT
 from compare import compare, normalize, packet_count, packet_protocols
 from capture import load_scenario
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_required_interfaces_are_allocated_before_boot_from_real_definition_slots(self):
+        definition={'device':{'interfaces':{'physical':['mgmt0','Ethernet1/1','Ethernet1/2','Ethernet1/3','Ethernet1/4']}}}
+        initial=[{'label':'mgmt0'},{'label':'Ethernet1/1'}]
+        complete=initial+[{'label':'Ethernet1/4'}]
+        client=Mock(request=Mock(side_effect=[initial,None,complete]))
+        ensure_link_interfaces(client,'lab','node',definition,{'mgmt0','Ethernet1/4'})
+        self.assertEqual(client.request.call_args_list[1].args,('POST','/labs/lab/interfaces',{'node':'node','slot':4}))
+        client=Mock(request=Mock(return_value=complete))
+        ensure_link_interfaces(client,'lab','node',definition,{'mgmt0','Ethernet1/4'})
+        self.assertEqual(client.request.call_count,1)
+        with self.assertRaises(ValueError):ensure_link_interfaces(client,'lab','node',definition,{'Ethernet1/99'})
+        self.assertEqual(client.request.call_count,1)
+        with self.assertRaises(RuntimeError):
+            ensure_link_interfaces(Mock(request=Mock(side_effect=[initial,None,initial])),'lab','node',definition,{'Ethernet1/4'})
+
     def test_nexus_prompt_survives_same_line_boot_syslog_but_never_command_echo(self):
         for raw in ['\rNEXUS# ', '\rNEXUS(config-if)# \x1b[0m',
                     '\rNEXUS# 2026 Oct 22 14:13:33 NEXUS %$ VDC-1 %$ %USER-2-SYSTEM_MSG: ready\r\n']:

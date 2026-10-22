@@ -28,7 +28,7 @@ export interface VPCRuntime {
   peerId?:string; peerHostname?:string; peerAlive:boolean; adjacency:boolean;
   role:'primary'|'secondary'; configuredRole:'primary'|'secondary';
   state:string; reason:string; systemMac:string; peerLinkUp:boolean;
-  consistency:VPCConsistency[]; members:Record<number,VPCMember>;
+  consistency:VPCConsistency[]; consistencyEvaluated:boolean; members:Record<number,VPCMember>;
   rxKeepalives:number; txKeepalives:number; lastKeepalive?:number;
   dualActive:boolean; restoreUntil?:number; autoRecoveryUntil?:number;
   sviRestoreUntil?:number;
@@ -36,6 +36,7 @@ export interface VPCRuntime {
 type MemberSnapshot = {
   id:number; port:string; up:boolean; mode:string; nativeVlan:number;
   vlans:number[]; mtu:number; protocol:string; forwarding:boolean; activeVlans:number[];
+  stpPortType:string; stpGuard:string;
 };
 type TreeSnapshot = {rootId:string; rootBridgeId:string; bridgeId:string; cost:number; priority:number; rootPort?:string; protections?:Record<string,string>};
 type PeerSnapshot = {
@@ -44,6 +45,7 @@ type PeerSnapshot = {
   localMac:string; survived:boolean; peerSwitch:boolean; peerGateway:boolean;
   stpMode:string; mst:string; bridgeAssurance:boolean; nativeTag:boolean;
   members:MemberSnapshot[]; peerVlans:number[];
+  svis:Record<string,boolean>;
   trees:Record<string,TreeSnapshot>;
   macs:{mac:string; vlan:number; port:string; vpc?:number; age:number; seen:number}[];
   arp:{ip:string; mac:string; port:string; vrf?:string; age:number}[];
@@ -52,12 +54,13 @@ type PeerSnapshot = {
 };
 type Session = {
   runtime:Device['runtime']; configSignature:string; created:number; generation:number;
+  keepaliveBinding?:string; timerPeriod?:number;
   timer?:TimerHandle; peer?:PeerSnapshot; received?:number; keepalive?:number;
   deadline?:TimerHandle; deadlineAt?:number; keepaliveSender?:string;
   peerGeneration?:number; keepaliveSequence:number; txSequence:number;
   sentKeepalive:number; sentCFS:number; everAdjacent:boolean; survived:boolean;
   suspended:boolean; lostAt?:number; restoring?:number; wasAdjacent:boolean;
-  role?:'primary'|'secondary'; sviRestoring?:number;
+  role?:'primary'|'secondary'; sviRestoring?:number; restoreBlocks?:boolean;
   remoteMacs:Set<string>; remoteArp:Set<string>; logSignature?:string;
   clock:SimulationClock;
 };
@@ -71,8 +74,10 @@ export function nsosConfig(d:Device):NSOSConfig {
 }
 export function nsosFeature(d:Device,name:string):boolean {return isDatacenter(d)&&!!d.config.features.nsos?.enabled?.includes(name);}
 export function vpcRuntime(d:Device):VPCRuntime|undefined {return d.runtime.features.vpc;}
+/** Last received peer state, used by operational views rather than remote config reads. */
+export function vpcPeerState(e:ControlPlaneHost,d:Device):Readonly<PeerSnapshot>|undefined {return sessions.get(e)?.get(d.id)?.peer;}
 export function defaultVPC(domain:number):VPCConfig {
-  return {domain,rolePriority:32768,systemPriority:32667,peerSwitch:false,peerGateway:false,arpSynchronize:false,autoRecovery:false,reloadDelay:240000,delayRestore:30000,delayRestoreSVI:0,gracefulConsistency:true};
+  return {domain,rolePriority:32768,systemPriority:32667,peerSwitch:false,peerGateway:false,arpSynchronize:false,autoRecovery:false,reloadDelay:240000,delayRestore:30000,delayRestoreSVI:10000,gracefulConsistency:true};
 }
 export function vpcMemberId(d:Device,port:string):number|undefined {
   const p=d.config.interfaces[port],logical=p?.features.channelGroup?'Port-channel'+p.features.channelGroup:port;
@@ -84,6 +89,8 @@ export function vpcLogicalPort(d:Device,port:string):string {
 export function vpcPeerLink(d:Device,port:string):boolean {
   return isDatacenter(d)&&nsosFeature(d,'vpc')&&nsosConfig(d).vpc?.peerLink===vpcLogicalPort(d,port);
 }
+/** NX-OS uses the system jumbo MTU on a vPC peer-link and its members. */
+export function vpcInterfaceMTU(d:Device,p:InterfaceConfig):number {return vpcPeerLink(d,p.name)?9216:p.mtu;}
 function normalizedMac(mac:string):string {return mac.replace(/[:.]/g,'').toLowerCase();}
 function keepaliveVRF(vrf:string|undefined):string|undefined {return vrf==='default'?undefined:vrf;}
 const stpProtectionRoles=new Set(['root-inconsistent','loop-inconsistent','bpdu-inconsistent','bridge-assurance-inconsistent']);
@@ -118,6 +125,8 @@ function memberSnapshot(d:Device):MemberSnapshot[] {
     id:p.features.vpcId,port:p.name,up:aggregateUp(d,p.name),mode:p.switchport?p.mode:'routed',
     nativeVlan:p.nativeVlan,vlans:vlans(d,p),mtu:p.mtu,
     protocol:d.runtime.features.portChannels?.[p.name.slice(12)]?.protocol??'none',
+    stpPortType:p.features.stpPortType??(p.features.portfast?'edge':'default'),
+    stpGuard:p.features.rootGuard?'root':p.features.loopGuard?'loop':p.features.stpGuard??'default',
     forwarding:!!vpcRuntime(d)?.members[p.features.vpcId]?.up,
     activeVlans:vpcRuntime(d)?.members[p.features.vpcId]?.activeVlans??[],
   }));
@@ -137,6 +146,7 @@ function snapshot(e:ControlPlaneHost,d:Device,c:VPCConfig,s:Session):PeerSnapsho
     peerSwitch:c.peerSwitch,peerGateway:c.peerGateway,stpMode:d.config.features.stp?.mode??'rapid-pvst',
     mst:stpRegion(d),bridgeAssurance:d.config.features.stp?.bridgeAssurance!==false,nativeTag:!!d.config.features.tagNative,
     members:memberSnapshot(d),peerVlans:vlans(d,c.peerLink?d.config.interfaces[c.peerLink]:undefined),trees,
+    svis:Object.fromEntries(Object.values(d.config.interfaces).filter(p=>/^Vlan\d+$/.test(p.name)).map(p=>[p.name,p.adminUp])),
     macs:Object.entries(d.runtime.mac).filter(([key,r])=>!r.static&&!s.remoteMacs.has(key)&&r.expires>now&&!vpcPeerLink(d,r.port)).slice(0,32000).map(([,r])=>({mac:r.mac,vlan:r.vlan,port:r.port,vpc:vpcMemberId(d,r.port),age:r.expires-now,seen:r.lastSeen??0})),
     arp:c.arpSynchronize?Object.entries(d.runtime.arp).filter(([key,r])=>!r.static&&!s.remoteArp.has(key)&&r.expires>now&&/^Vlan/.test(r.port)).slice(0,32000).map(([,r])=>({ip:r.ip,mac:r.mac,port:r.port,vrf:r.vrf,age:r.expires-now})):[],
     gateways:Object.fromEntries(Object.keys(d.config.interfaces).filter(p=>/^Vlan/.test(p)).flatMap(p=>e.macOf?[[p,e.macOf(d.id,p)]]:[])),
@@ -161,11 +171,14 @@ function compareConfig(d:Device,c:VPCConfig,peer:PeerSnapshot):VPCConsistency[] 
   check('Bridge Assurance',d.config.features.stp?.bridgeAssurance!==false,peer.bridgeAssurance);
   check('Native VLAN tagging',!!d.config.features.tagNative,peer.nativeTag);
   check('Peer-switch',c.peerSwitch,peer.peerSwitch);
-  check('Peer-gateway',c.peerGateway,peer.peerGateway,2);
+  if(peer.svis)for(const port of new Set([...Object.keys(peer.svis),...Object.keys(d.config.interfaces).filter(p=>/^Vlan\d+$/.test(p))])){
+    check('SVI type-2 configuration incompatible',d.config.interfaces[port]?.adminUp??'not configured',peer.svis[port]??'not configured',2,undefined,Number(port.slice(4)));
+  }
   for(const local of memberSnapshot(d)){
     const remote=peer.members.find(m=>m.id===local.id);
     if(!remote){rows.push({name:'vPC missing on peer',type:1,local:local.port,peer:'not configured',vpc:local.id});continue;}
     check('Port mode',local.mode,remote.mode,1,local.id);check('Native VLAN',local.nativeVlan,remote.nativeVlan,1,local.id);check('MTU',local.mtu,remote.mtu,1,local.id);check('Aggregation protocol',local.protocol,remote.protocol,1,local.id);
+    check('STP Port Type',local.stpPortType,remote.stpPortType,1,local.id);check('STP Port Guard',local.stpGuard,remote.stpGuard,1,local.id);
     for(const vlan of new Set([...local.vlans,...remote.vlans]))if(local.vlans.includes(vlan)!==remote.vlans.includes(vlan)||!peer.peerVlans.includes(vlan)||!vlans(d,c.peerLink?d.config.interfaces[c.peerLink]:undefined).includes(vlan))rows.push({name:'VLAN availability/allowed list',type:1,local:String(local.vlans.includes(vlan)),peer:String(remote.vlans.includes(vlan)),vpc:local.id,vlan});
   }
   if(c.peerSwitch)for(const[v,t]of Object.entries(peer.trees))check('Peer-switch STP priority',Number(d.runtime.stp[v]?.bridgeId.split('.')[0]),t.priority,1,undefined,Number(v));
@@ -215,9 +228,12 @@ function update(e:ControlPlaneHost,d:Device,c:VPCConfig,s:Session):void {
   if(peer&&(s.survived!==peer.survived))role=s.survived?'primary':'secondary';
   if(adjacency&&!s.wasAdjacent&&s.survived&&peer?.survived)role=configured;
   if(adjacency){
-    if(!s.wasAdjacent){s.restoring=now+c.delayRestore;s.sviRestoring=now+c.delayRestoreSVI;}
+    if(!s.wasAdjacent){
+      const restore=!s.everAdjacent||role==='secondary'&&(s.suspended||s.role==='primary');
+      s.restoreBlocks=restore;s.restoring=now+c.delayRestore;s.sviRestoring=restore?now+c.delayRestoreSVI:undefined;
+    }
     s.everAdjacent=true;s.lostAt=undefined;s.suspended=false;
-  }else if(s.wasAdjacent){s.lostAt=now;s.restoring=undefined;}
+  }else if(s.wasAdjacent){s.lostAt=now;s.restoring=undefined;s.sviRestoring=undefined;}
   if(!adjacency&&s.everAdjacent){
     const lost=s.lostAt??now,hold=c.keepalive?.holdTimeout??3000,timeout=c.keepalive?.timeout??5000;
     if(role==='secondary'&&!s.survived){
@@ -228,18 +244,21 @@ function update(e:ControlPlaneHost,d:Device,c:VPCConfig,s:Session):void {
   const autoAt=s.created+c.reloadDelay,solo=c.autoRecovery&&!s.everAdjacent&&!alive&&now>=autoAt;
   if(solo){role='primary';s.survived=true;}
   const restoring=adjacency&&s.restoring!==undefined&&now<s.restoring;
+  const restoreBlocks=restoring&&s.restoreBlocks;
   const rows=peer&&adjacency?compareConfig(d,c,peer):[];
   const allowed=adjacency||solo||s.everAdjacent&&!s.suspended;
   let reason=adjacency?'Peer adjacency formed; configuration checked':solo?'Auto-recovery reload delay expired':!s.everAdjacent?'Waiting for peer-link and peer-keepalive adjacency':s.suspended?'Peer-link failed; peer is alive; secondary vPCs suspended':alive?'Peer-link unavailable; evaluating peer liveness':'Peer-link and peer-keepalive unavailable';
-  if(restoring)reason='Delay-restore timer running';
-  const r:VPCRuntime={peerId:peer?.sender,peerHostname:peer?.hostname,peerAlive:alive,adjacency,role,configuredRole:configured,state:adjacency?'peer adjacency formed':solo?'auto-recovery':s.suspended?'secondary suspended':!s.everAdjacent?'initializing':'peer adjacency lost',reason,systemMac:systemMac(d,c),peerLinkUp:rawLink,consistency:rows,members:{},rxKeepalives:old?.rxKeepalives??0,txKeepalives:old?.txKeepalives??0,lastKeepalive:s.keepalive,dualActive:!adjacency&&!alive&&s.everAdjacent&&!s.suspended,restoreUntil:restoring?s.restoring:undefined,autoRecoveryUntil:c.autoRecovery&&!s.everAdjacent&&!solo?autoAt:undefined};
+  if(restoreBlocks)reason='Delay-restore timer running';
+  // NX-OS retains the last consistency result when the peer-link goes down.
+  // Forwarding below uses only this update's checks, never the cached display.
+  const r:VPCRuntime={peerId:peer?.sender,peerHostname:peer?.hostname,peerAlive:alive,adjacency,role,configuredRole:configured,state:adjacency?'peer adjacency formed':solo?'auto-recovery':s.suspended?'secondary suspended':!s.everAdjacent?'initializing':'peer adjacency lost',reason,systemMac:systemMac(d,c),peerLinkUp:rawLink,consistency:adjacency?rows:old?.consistency??[],consistencyEvaluated:adjacency||old?.consistencyEvaluated===true,members:{},rxKeepalives:old?.rxKeepalives??0,txKeepalives:old?.txKeepalives??0,lastKeepalive:s.keepalive,dualActive:!adjacency&&!alive&&s.everAdjacent&&!s.suspended,restoreUntil:restoring?s.restoring:undefined,autoRecoveryUntil:c.autoRecovery&&!s.everAdjacent&&!solo?autoAt:undefined};
   for(const local of memberSnapshot(d)){
     const remote=peer?.members.find(m=>m.id===local.id);
     const mismatches=rows.filter(row=>row.type===1&&(row.vpc===undefined||row.vpc===local.id));
     const fatal=mismatches.some(row=>row.vlan===undefined&&(row.name==='vPC missing on peer'||!c.gracefulConsistency||role==='secondary'));
     const suspended=[...new Set(mismatches.flatMap(row=>row.vlan===undefined?[]:[row.vlan]))].sort((a,b)=>a-b);
-    const why=!allowed?reason:restoring?'Delay-restore timer running':fatal?'Type-1 configuration inconsistency':!local.up?'Local port-channel down':'success';
-    r.members[local.id]={port:local.port,peerPort:remote?.port,up:allowed&&!restoring&&!fatal&&local.up,suspended:!allowed||restoring||fatal,reason:why,peerUp:!!remote?.forwarding&&adjacency,activeVlans:allowed&&!restoring&&!fatal&&local.up?local.vlans.filter(v=>!suspended.includes(v)):[],suspendedVlans:suspended};
+    const why=!allowed?reason:restoreBlocks?'Delay-restore timer running':fatal?'Type-1 configuration inconsistency':!local.up?'Local port-channel down':'success';
+    r.members[local.id]={port:local.port,peerPort:remote?.port,up:allowed&&!restoreBlocks&&!fatal&&local.up,suspended:!allowed||!!restoreBlocks||fatal,reason:why,peerUp:!!remote?.forwarding&&adjacency,activeVlans:allowed&&!restoreBlocks&&!fatal&&local.up?local.vlans.filter(v=>!suspended.includes(v)):[],suspendedVlans:suspended};
   }
   r.sviRestoreUntil=s.sviRestoring!==undefined&&now<s.sviRestoring?s.sviRestoring:undefined;
   d.runtime.features.vpc=r;s.wasAdjacent=adjacency;if(adjacency||s.survived)s.role=role;
@@ -265,7 +284,7 @@ function tick(e:ControlPlaneHost,d:Device,s:Session):void {
     const k=c.keepalive,vrf=keepaliveVRF(k.vrf),source=k.source??Object.values(d.config.interfaces).find(p=>keepaliveVRF(p.vrf)===vrf&&p.ip&&e.interfaceUp(d.id,p.name))?.ip;
     if(source&&Object.values(d.config.interfaces).some(p=>keepaliveVRF(p.vrf)===vrf&&(p.ip===source||p.name===source)&&e.interfaceUp(d.id,p.name))){
       const ip=d.config.interfaces[source]?.ip??source;
-      e.sendControlDatagram?.(d.id,ip,k.destination,3200,{protocol:'vpc-keepalive',sender:d.id,domain:c.domain,generation:s.generation,sequence:++s.txSequence},{vrf});
+      e.sendControlDatagram?.(d.id,ip,k.destination,3200,{protocol:'vpc-keepalive',sender:d.id,domain:c.domain,generation:s.generation,sequence:++s.txSequence},{vrf,dscp:48});
       const r=vpcRuntime(d);if(r)r.txKeepalives++;
     }
     s.sentKeepalive=now;
@@ -283,14 +302,20 @@ export function syncVPC(e:ControlPlaneHost):void {
   for(const d of e.lab.devices){
     const c=isDatacenter(d)&&nsosFeature(d,'vpc')?nsosConfig(d).vpc:undefined;
     if(!c||!d.powered){delete d.runtime.features.vpc;continue;}
-    wanted.add(d.id);const signature=JSON.stringify([c.domain,c.peerLink,c.keepalive,c.systemMac]),old=map.get(d.id);
+    wanted.add(d.id);const signature=JSON.stringify([c.domain,c.peerLink,c.systemMac]),old=map.get(d.id);
     let s=old;
     if(!s||s.runtime!==d.runtime||s.configSignature!==signature){
       if(s){s.clock.cancel(s.timer);s.clock.cancel(s.deadline);if(s.runtime===d.runtime)purgeRemote(d,s);}
       delete d.runtime.features.vpc;
       s={runtime:d.runtime,clock:e.clock,configSignature:signature,created:e.clock.now(),generation:++generation,keepaliveSequence:0,txSequence:0,sentKeepalive:-Infinity,sentCFS:-Infinity,everAdjacent:false,survived:false,suspended:false,wasAdjacent:false,remoteMacs:new Set(),remoteArp:new Set()};
-      map.set(d.id,s);const current=s;s.timer=e.clock.schedule(0,()=>tick(e,d,current),{owner:d.id,repeat:Math.min(1000,c.keepalive?.interval??1000),label:'vPC keepalive / peer state'});
+      map.set(d.id,s);
     }
+    // Keepalive transport and timers are independent of an established CFS
+    // adjacency. A changed binding invalidates only its received keepalive.
+    const binding=JSON.stringify(c.keepalive??null);
+    if(s.keepaliveBinding!==binding){s.keepaliveBinding=binding;s.keepalive=undefined;s.keepaliveSender=undefined;s.peerGeneration=undefined;s.keepaliveSequence=0;}
+    const period=Math.min(1000,c.keepalive?.interval??1000);
+    if(s.timerPeriod!==period){s.clock.cancel(s.timer);s.timerPeriod=period;const current=s;s.timer=e.clock.schedule(0,()=>tick(e,d,current),{owner:d.id,repeat:period,label:'vPC keepalive / peer state'});}
     update(e,d,c,s);
   }
   for(const[id,s]of map)if(!wanted.has(id)){s.clock.cancel(s.timer);s.clock.cancel(s.deadline);const d=e.getDevice(id);if(d&&s.runtime===d.runtime)purgeRemote(d,s);map.delete(id);}
@@ -402,6 +427,9 @@ export function validateNSOSConfiguration(config:DeviceConfig,kind?:Device['kind
     if(p.features.vpcId!==undefined){const id=p.features.vpcId;if(!c||!integer(id,1,4096)||!/^Port-channel\d+$/.test(p.name)||!p.switchport||ids.has(id))throw Error('Invalid or duplicate vPC member.');ids.add(id);}
     if(p.features.vpcOrphanSuspend!==undefined&&typeof p.features.vpcOrphanSuspend!=='boolean')throw Error('Invalid vPC orphan suspension.');
     if(p.features.stpPortType!==undefined&&!['normal','edge','edge trunk','network'].includes(p.features.stpPortType))throw Error('Invalid NS-OS spanning-tree port type.');
+    if(p.features.stpGuard!==undefined&&!['root','loop','none'].includes(p.features.stpGuard))throw Error('Invalid NS-OS spanning-tree guard.');
+    if(p.features.stpGuard!==undefined&&(p.features.rootGuard!==(p.features.stpGuard==='root')||p.features.loopGuard!==(p.features.stpGuard==='loop')))throw Error('Inconsistent NS-OS spanning-tree guard state.');
+    if(p.switchport&&p.mtu!==1500&&p.mtu!==9216)throw Error('NS-OS Layer 2 MTU must be default or system jumbo MTU.');
     if(p.switchport&&!['access','trunk'].includes(p.mode))throw Error('NS-OS does not support dynamic trunk negotiation.');
     if(['auto','desirable'].includes(p.features.channelMode))throw Error('NS-OS does not support PAgP.');
   }

@@ -184,7 +184,7 @@ for(const mode of['active','on']as const)test(`${mode} orphan Layer 2 port-chann
   assert.equal(access.runtime.features.portChannels[2].activeMembers.length,2);ping(s,endpoint,client.config.interfaces.GigabitEthernet0.ip!);
   for(const link of peerLinks)s.disconnect(link.id);advance(s,10000);
   assert.equal(s.interfaceUp(b.id,'Port-channel50'),false);
-  assert.match(c.execute('show port-channel summary').join('\n'),/^50\s+Port-channel50\s+\S+\s+suspended\s+Ethernet1\/25\(s\).*Ethernet1\/26\(s\)/m);
+  assert.match(c.execute('show port-channel summary').join('\n'),/^50\s+Po50\(SD\)\s+Eth\s+(?:LACP|NONE)\s+Eth1\/25\(s\).*Eth1\/26\(s\)/m);
   assert.equal(access.runtime.features.portChannels[2].activeMembers.length,0,'the IOS neighbor must not retain collecting/distributing links to a suspended orphan bundle');
   for(const n of[29,30])s.connect({deviceId:a.id,port:eth(n)},{deviceId:b.id,port:eth(n)});
   advance(s,45000);
@@ -210,5 +210,5 @@ test('NS-OS rejects member addressing and incompatible pre-created port-channels
   run(c,'interface Port-channel12','switchport mode trunk','interface '+eth(26),'no switchport');
   reject(s,c,'channel-group 12 mode active',/compatible|Layer 2|Layer 3/);
   run(c,'interface Port-channel4096','end');
-  assert.match(c.execute('show port-channel summary').join('\n'),/^4096\s+Port-channel4096\s+NONE\s+down\b/m);
+  assert.match(c.execute('show port-channel summary').join('\n'),/^4096\s+Po4096\(SD\)\s+Eth\s+NONE\b/m);
 });

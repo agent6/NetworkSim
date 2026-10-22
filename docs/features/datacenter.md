@@ -73,6 +73,19 @@ feature gates. IOS `enable`, DTP/PAgP, `switchport nonegotiate`, IOS routing
 `| include`, `| exclude` and `| begin` regular-expression filters, with help and
 Tab completion for those implemented modifiers.
 
+Configuration selectors also work inside configuration subsections. For example,
+`interface port-channel1` at `(config-vpc-domain)#` switches directly to
+`(config-if)#`; the following `description`, `switchport` and `vpc peer-link`
+commands configure that port-channel. `exit` then returns to `(config)#`.
+Other implemented global commands work from subsections too, including their
+`?` and Tab support: `hostname` or `feature` returns to global configuration,
+while a selector enters its target subsection. Local commands take precedence,
+so a static route inside `vrf context BLUE` still belongs to BLUE. Interface
+settings still require interface mode, and existing feature and role checks apply.
+The [23 reviewed CML navigation observations](../../scripts/cml/fixtures/nxos-navigation-observations.json)
+record these mode transitions and expected rejections on Nexus 9300v 10.6(2).
+They validate CLI navigation, not additional vPC forwarding combinations.
+
 ## VLANs, trunks and port-channels
 
 ```text
@@ -106,6 +119,14 @@ must be changed on the logical port-channel rather than one member. Members
 must be compatible; unsupported speeds and inconsistent member configurations
 are rejected. There is no PAgP or DTP.
 
+Physical selectors accept compact and spaced forms, including
+`interface port-channel 1` and `interface ethernet 1/1-2`. A contiguous physical
+range uses `(config-if-range)#`; interface commands apply to every selected
+port, and a rejected operation rolls back the entire range. Layer 2 `mtu`
+accepts 1500 or the modeled system jumbo MTU, 9216. Routed ports also accept
+intermediate MTUs. A vPC peer-link and its members report an effective MTU of
+9216 without adding implicit configuration lines.
+
 STP supports `rapid-pvst`, MST region name/revision/instance mappings, per-VLAN
 priority, cost and BPDU/root/loop protection. NX-style port types are `normal`,
 `edge`, `edge trunk` and `network`. Edge is for endpoints, never an inter-switch
@@ -113,6 +134,11 @@ link. Network ports use the bounded operational **Bridge Assurance** model:
 both sides must send reciprocal network-port BPDUs; missing BPDUs cause blocking
 after three configured Hello intervals. This is not a hardware-specific
 84-second peer-link bring-up timer emulation.
+
+vPC consistency distinguishes the default STP port type/guard from explicit
+`normal`/`none`, matching the measured Nexus behavior. Use
+`no spanning-tree port type` and `no spanning-tree guard` to return to the
+defaults. `spanning-tree guard none` is an explicit setting, not a reset.
 
 VTP can be explicitly enabled with `feature vtp`, but accepts only transparent
 mode and version 1/2. Server/client distribution and VTPv3 are rejected.
@@ -248,12 +274,35 @@ unavailable, not knowledge of an unreachable peer's real state.
 `layer3 peer-router` is explicitly unsupported.
 
 Keepalive `interval` is milliseconds; `timeout` and `hold-timeout` are seconds.
+An explicit `interval` requires `timeout`, and vice versa. Updating keepalive
+parameters invalidates keepalive freshness without resetting an established
+peer-link adjacency. Delivered UDP3200 keepalives use DSCP48 (ToS192), TTL64.
 `delay restore`, `delay restore interface-vlan` and auto-recovery `reload-delay`
 are seconds. Auto-recovery is off by default; enabling it is a deliberate
 failure-recovery choice, not universally safe.
 Disabling `feature vpc` deletes the vPC domain and interface membership settings.
 
+The default member restore timer is 30 seconds; the default SVI timer is
+10 seconds. Initial adjacency delays both peers. After peer-link failure,
+the still-forwarding primary keeps forwarding during recovery; the suspended
+secondary waits for restoration. A running restore timer on the primary is
+not itself a reason to suspend its vPC. SVI presence/admin-state mismatches
+produce Type-2 warnings without suspending compatible Layer 2 members.
+Different peer-gateway settings do not produce an invented Type-2 fault.
+
+The [CML full-pair audit](../audits/cml-vpc-pair.md) separates native observations,
+simulator regressions and unresolved comparisons. The independent
+[six-node importable lab](../../examples/datacenter-vpc-cml.netsim.yaml) and
+[117-step capture/replay scenario](../../scripts/cml/scenarios/nxos-vpc-pair.json)
+exercise management-VRF keepalive, a two-link peer-link, a dual-homed IOS
+access switch, two VLANs, SVIs and orphan endpoints. Native IOS access Po10
+maps to simulator Po3; Nexus Po10/vPC10 are unchanged. Local aggregate IDs
+are independent of the shared vPC ID.
+
 ### Validated topology matrix
+
+This matrix describes simulator integration tests, not a claim that every row
+has been independently validated on native switches in CML.
 
 | Topology | Exercised behavior |
 | --- | --- |
@@ -302,10 +351,19 @@ show vpc
 show vpc role
 show vpc peer-keepalive
 show vpc consistency-parameters global
+show vpc consistency-parameters vpc 10
+show vpc consistency-parameters interface po 10
+show vpc orphan-ports
+show running-config vpc
 ```
 
 Operational displays use local counters, RIB, received neighbors, BPDU/LACP state
 and received vPC runtime—not the remote configuration or hardcoded healthy values.
+vPC summaries separate global, per-VLAN, member and Type-2 checks; they retain
+the last completed consistency result across a peer-link outage. Port-channel
+summaries use native-style `Po1(SU)` and `Eth1/1(P)` flags. Consistency tables
+show modeled parameters and received peer values; unmodeled ASIC/QoS rows and
+unmeasured keepalive transmit timestamps are omitted.
 `show running-config` is rendered separately in replayable NS-OS syntax.
 `copy running-config startup-config`, `reload`, `copy running-config
 bootflash:backup.cfg`, `copy bootflash:backup.cfg running-config` and

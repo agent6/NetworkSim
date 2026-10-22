@@ -43,7 +43,7 @@ export interface ControlPlaneHost {
   log?(deviceId:string,message:string,severity?:number):unknown;
   recompute(): void;
   notify(): void;
-  sendControlDatagram?(deviceId:string,source:string,destination:string,destinationPort:number,body:any,options?:{interface?:string;vrf?:string;ttl?:number;protocol?:string}):void;
+  sendControlDatagram?(deviceId:string,source:string,destination:string,destinationPort:number,body:any,options?:{interface?:string;vrf?:string;ttl?:number;protocol?:string;dscp?:number}):void;
   sendNhrpDatagram?(deviceId:string,port:string,nbma:string,message:NhrpMessage):void;
   cefLookup?(deviceId:string,target:string,vrf?:string):{route:Route;port:string;target:string}|undefined;
   sendBfdEcho?(deviceId:string,port:string,source:string,peer:string,body:any):void;

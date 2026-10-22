@@ -29,6 +29,7 @@ function portLines(p:InterfaceConfig,c:DeviceConfig):string[] {
     if(f[key]!==undefined)lines.push(` spanning-tree ${cmd} ${f[key]?'enable':'disable'}`);
   if(f.rootGuard)lines.push(' spanning-tree guard root');
   if(f.loopGuard)lines.push(' spanning-tree guard loop');
+  if(f.stpGuard==='none')lines.push(' spanning-tree guard none');
   if(f.stpCost!==undefined)lines.push(' spanning-tree cost '+f.stpCost);
   if(f.ospf?.area!==undefined){
     const root=c.protocols.ospf,process=p.vrf?root?.vrfs?.[p.vrf]:root;

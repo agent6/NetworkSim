@@ -581,9 +581,10 @@ export class Simulator {
     for (const port of forwarding.outgoing) this.forwardIP(d, { port, target: packet.destination, route: { network: packet.destination, prefix: 32, interface: port, protocol: 'multicast', ad: 0, metric: 0 } }, { ...clone(packet), ttl: packet.ttl - 1 }, input);
   }
   receiveRegisteredMulticast(deviceId: string, packet: IPPacket): void { const d = this.getDevice(deviceId); if (d?.powered) this.receiveMulticast(d, 'register', packet); }
-  sendControlDatagram(deviceId: string, source: string, destination: string, destinationPort: number, body: any, options: { interface?: string; vrf?: string; ttl?: number; protocol?: string } = {}): void {
+  sendControlDatagram(deviceId: string, source: string, destination: string, destinationPort: number, body: any, options: { interface?: string; vrf?: string; ttl?: number; protocol?: string; dscp?: number } = {}): void {
     const d = this.getDevice(deviceId); if (!d?.powered) return;
     const packet = this.makePacket(source, destination, options.protocol ?? 'udp', 64 + JSON.stringify(body).length, { kind: 'control-plane', payload: body });
+    if(options.dscp!==undefined)packet.dscp=options.dscp;
     if(body?.wireless&&body.frame?.id)packet.parentId=body.frame.id;
     packet.sourcePort = destinationPort; packet.destinationPort = destinationPort; packet.ttl = options.ttl ?? 64; packet.vrf = options.vrf;
     if (options.interface && this.interfaceUp(d.id, options.interface)) {

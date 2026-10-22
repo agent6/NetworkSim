@@ -8,6 +8,7 @@ import {neighborIdentity,iosInterfaceName} from './ios-show.ts';
 import {interfaceRates} from './interface-telemetry.ts';
 import {interfaceSpeed,interfaceBandwidth,interfaceDuplex} from './ethernet.ts';
 import {refreshMacAging} from './mac-aging.ts';
+import {vpcInterfaceMTU,vpcPortReason} from './datacenter.ts';
 
 export const nsosPort=(port:string)=>port.replace(/^Ethernet/,'Eth').replace(/^Port-channel/,'Po').replace(/^Loopback/,'Lo');
 const dotted=(value:string)=>(value.replace(/[^a-f0-9]/gi,'').match(/.{4}/g)??[]).join('.').toLowerCase();
@@ -92,18 +93,19 @@ export function nsosDiscovery(engine:Simulator,d:Device,protocol:'CDP'|'LLDP',no
 
 /** Only measured counters are printed; there are no ASIC registers or reset statistics. */
 export function nsosInterface(engine:Simulator,d:Device,p:InterfaceConfig):string[]{
- const now=engine.clock.now(),up=engine.interfaceUp(d.id,p.name),svi=/^Vlan/.test(p.name),c=d.runtime.counters[p.name],short=svi?60:30;
+ const now=engine.clock.now(),up=engine.interfaceUp(d.id,p.name),svi=/^Vlan/.test(p.name),channel=/^Port-channel/.test(p.name),c=d.runtime.counters[p.name],short=svi?60:30;
  if(/^Loopback/.test(p.name))return [`${p.name.toLowerCase()} is ${up?'up':'down'}`,`admin state is ${p.adminUp?'up':'down'},`,'  Hardware: Loopback',...(p.description?['  Description: '+p.description]:[]),...(p.ip?[`  Internet Address is ${p.ip}/${maskToPrefix(p.mask??'255.255.255.255')}`]:[]),...p.ipv6.map(a=>'  IPv6 address: '+a),`  MTU ${p.mtu} bytes, BW ${interfaceBandwidth(d,p)} Kbit , DLY ${(p.features.delay??500)*10} usec`,'  Encapsulation LOOPBACK, medium is broadcast',`    ${c?.rx??0} packets input ${c?.rxBytes??0} bytes`,`    ${c?.inputErrors??0} input errors`,`    ${c?.tx??0} packets output ${c?.txBytes??0} bytes`,`    ${c?.outputErrors??0} output errors`,''];
  const cleared=d.runtime.features.countersClearedAt?.[p.name],mac=dotted(engine.macOf(d.id,p.name));
  const windows=[short,300].flatMap((seconds,index)=>{
   const r=interfaceRates(d,p.name,now,seconds);
   return [`  Load-Interval #${index+1}: ${seconds===300?'5 minute (300 seconds)':seconds+' seconds'}`,`    ${seconds} seconds input rate ${r.inputBits} bits/sec, ${r.inputPackets} packets/sec`,`    ${seconds} seconds output rate ${r.outputBits} bits/sec, ${r.outputPackets} packets/sec`];
  });
- return [`${p.name} is ${up?'up':'down'}${svi?`${up?'':p.adminUp?' (VLAN/BD is down)':' (Administratively down)'}, line protocol is ${up?'up':'down'}, autostate enabled`:''}`,
+ const vpcReason=vpcPortReason(d,p.name),peerDown=!!vpcReason&&/peer-link failed|orphan port suspended/.test(vpcReason);
+ return [`${channel?p.name.toLowerCase():p.name} is ${up?'up':'down'}${svi?`${up?'':!p.adminUp?' (Administratively down)':peerDown?' (vPC peer-link down)':' (VLAN/BD is down)'}, line protocol is ${up?'up':'down'}, autostate enabled`:!up&&peerDown?' (vpc peerlink is down)':''}`,
   ...svi?[]:[`admin state is ${p.adminUp?'up':'down'}, Dedicated Interface`],
-  `  Hardware${svi?' is EtherSVI':': Ethernet'}, address${svi?' is':':'} ${mac}`,...(p.description?[`  Description: ${p.description}`]:[]),
+  `  Hardware${svi?' is EtherSVI':channel?': Port-Channel':': Ethernet'}, address${svi?' is':':'} ${mac}`,...(p.description?[`  Description: ${p.description}`]:[]),
   ...(p.ip?[`  Internet Address is ${p.ip}/${maskToPrefix(p.mask??'255.255.255.0')}`]:[]),...p.ipv6.map(a=>'  IPv6 address: '+a),
-  `  MTU ${p.mtu} bytes, BW ${interfaceBandwidth(d,p)} Kbit , DLY ${(p.features.delay??1)*10} usec`,
+  `  MTU ${vpcInterfaceMTU(d,p)} bytes, BW ${interfaceBandwidth(d,p)} Kbit , DLY ${(p.features.delay??1)*10} usec`,
   ...svi?['  Encapsulation ARPA, loopback not set','  Keepalive not supported','  ARP type: ARPA']:['  Encapsulation ARPA, medium is broadcast',`  ${interfaceDuplex(d,p)}-duplex, ${interfaceSpeed(d,p)} Mb/s`],
   `  Last clearing of "show interface" counters ${cleared===undefined?'never':iosDuration(now-cleared)}`,...windows,
   '  RX',`    ${c?.rxUnicast??0} unicast packets  ${c?.rxMulticast??0} multicast packets  ${c?.rxBroadcast??0} broadcast packets`,`    ${c?.rx??0} input packets  ${c?.rxBytes??0} bytes`,

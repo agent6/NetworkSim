@@ -1,0 +1,2115 @@
+{
+  "schemaVersion": 1,
+  "source": "reviewed-cml-vpc-pair-probes",
+  "status": "observed-with-unresolved-difference",
+  "baseline": "restarted-owned-lab",
+  "startedAt": "2026-10-22T17:33:28.445566+00:00",
+  "finishedAt": "2026-10-22T18:22:57.503519+00:00",
+  "captureSha256": "6721eb1a51a0a05e919d7c97f93cc9b4f3913c672252420051b2c28cfdc0d7e9",
+  "nativeScenarioSha256": "6ee112ecc0eec3682a5901012362c1526dc75aa2968d1a2b666bf735d2b6f180",
+  "replayScenarioSha256": "c875db3881e868046f12c06f98907be63332a96957949e0d05da8dbff7480417",
+  "scope": "Selected CLI and forwarding observations from a restarted task-owned six-node lab. The published replay scenario was derived from these probes; this is not a strict fresh-capture transcript match. Failed/transient probes and an unresolved native dataplane difference are retained.",
+  "images": {
+    "nexus": "nxosv9300-10-6-2-f",
+    "nxosVersion": "10.6(2)",
+    "iolVersion": "17.18.02",
+    "cmlVersion": "2.10.0+build.13"
+  },
+  "labStopped": true,
+  "cleanupErrors": [],
+  "nativeStepCount": 481,
+  "reviewedObservations": [
+    {
+      "job": "07-cli-forms.json",
+      "node": "dc1",
+      "command": "show vpc consistency-parameters vpc 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "9c46f13be2cdc192209d168199cc7b3fee728b9f16cd2b30e4f00b3676dadd99",
+      "excerpt": [
+        "STP Port Guard              1     Default                Default",
+        "STP Port Type               1     Default                Default"
+      ]
+    },
+    {
+      "job": "07-cli-forms.json",
+      "node": "dc1",
+      "command": "show vpc consistency-parameters interface po 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "f08610c3f9d5fafb35c7c8a975b1bf8632e799d39f79a6fc421dcca14107f95a",
+      "excerpt": [
+        "STP Port Guard              1     Default                Default",
+        "STP Port Type               1     Default                Default"
+      ]
+    },
+    {
+      "job": "20-keepalive-syntax.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "7e71b7f61a1a77a283a5a3bb952a88c949356121de5ae0053e1b59a38820fe70",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is not reachable through peer-keepalive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     1,10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "20-keepalive-syntax.json",
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "ceff63039d6420505e5767cacc9354f395c7d674742f371544fdd99a6a566249",
+      "excerpt": [
+        "vPC keep-alive status             : peer is not reachable through peer-keepalive"
+      ]
+    },
+    {
+      "job": "23-l2-mtu.json",
+      "node": "dc2",
+      "command": "show interface port-channel1",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "d4b85933b4c84127c7f43bfedbfd2e6969f68135834102c000d8669b6b24c218",
+      "excerpt": [
+        "MTU 9216 bytes, BW 2000000 Kbit , DLY 10 usec"
+      ]
+    },
+    {
+      "job": "23-l2-mtu.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "cc5c253549b9f200fe2e7b984bb8a3ddc31d5263bdaf91e04ef486ce2dd837c8",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          down*  failed      Compatibility check   -"
+      ]
+    },
+    {
+      "job": "23-l2-mtu.json",
+      "node": "dc2",
+      "command": "show vpc consistency-parameters interface port-channel10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "7ccd0fd626c1b0f337f01b69db959055263e04eba16d94867caade941069dff5",
+      "excerpt": [
+        "STP Port Guard              1     Default                Default",
+        "STP Port Type               1     Default                Default"
+      ]
+    },
+    {
+      "job": "23-l2-mtu.json",
+      "node": "dc2",
+      "command": "show interface port-channel10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "227c40f8368cc41a9da3ab83474f4e748076eb0e664a838ed649240a7aad10b9",
+      "excerpt": [
+        "MTU 9216 bytes, BW 100000 Kbit , DLY 10 usec"
+      ]
+    },
+    {
+      "job": "25-mtu-repair.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "9296e8d5032271efa442fdb4ace49cb06ad27c67346cb3b033bd4f7c53bcac82",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          down*  success     success               -"
+      ]
+    },
+    {
+      "job": "31-settled-consistency.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "dc276a52e5e191c5a72aed16bdc293b37bde54ffbb87ba628e48cdf818c21479",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          down*  failed      vPC type-1            -"
+      ]
+    },
+    {
+      "job": "31-settled-consistency.json",
+      "node": "dc2",
+      "command": "show vpc consistency-parameters interface port-channel10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "c327aca156c92fbc5919d70ad8fea269497da5d1e034f5f136d5620e44ac8e54",
+      "excerpt": [
+        "STP Port Guard              1     Default                Default",
+        "STP Port Type               1     Normal Port            Default"
+      ]
+    },
+    {
+      "job": "31-settled-consistency.json",
+      "node": "dc2",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "8a47df0c8c7eb10781addf30b562c3587bb8dede4fbb2bb62747e9282b29cf6b",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)",
+        "10    Po10(SD)    Eth      LACP      Eth1/3(D)"
+      ]
+    },
+    {
+      "job": "32-native-port-params.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "139b72a5ff05b50c69d757f65331fef4ea2cea7baafa77a6f4cb2d35677a62e4",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "32-native-port-params.json",
+      "node": "dc1",
+      "command": "show vpc consistency-parameters interface port-channel10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "787b83de52fcd5d1adedb59034cc869f88083335710020790adaddcd9b979218",
+      "excerpt": [
+        "STP Port Guard              1     Default                Default",
+        "STP Port Type               1     Default                Default"
+      ]
+    },
+    {
+      "job": "32-native-port-params.json",
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "f8a113bac8bb6d535a35f11e60974a7b8166dab46ae91312da36e1b6d5428f4d",
+      "excerpt": [
+        "vPC keep-alive status             : peer is alive"
+      ]
+    },
+    {
+      "job": "43-current-dc1.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "139b72a5ff05b50c69d757f65331fef4ea2cea7baafa77a6f4cb2d35677a62e4",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "43-current-dc1.json",
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "39969022edf6f8999b518220371f5fd2355153395f2b7ffe1913c132a7d11b36",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "43-current-dc1.json",
+      "node": "dc1",
+      "command": "show cfs peers",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "2a9ea46e6eb7e22160a809bf85d85c5c9c9418bd71bf741a8258c71fccf7de6f",
+      "excerpt": []
+    },
+    {
+      "job": "43-current-dc1.json",
+      "node": "dc1",
+      "command": "show logging last 12",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "24a7f40c3a60de62a5bc7c1ebed3c20626a4086436406c7eac1072a85efb62e4",
+      "excerpt": []
+    },
+    {
+      "job": "44-current-dc2.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "d351dbdef65926e6a5529f3609fe2d59cf9734ef153139b883cc95bc9f2a90ba",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "44-current-dc2.json",
+      "node": "dc2",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "3dd7058e0969e266cd0ffc67fd0b35087e6b838701e25a6af7ccbaa3bae41539",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "44-current-dc2.json",
+      "node": "dc2",
+      "command": "show cfs peers",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "1cb84fe0e525159dfa3805a40d0c670093a18606e5b97895d0480f00500b7256",
+      "excerpt": []
+    },
+    {
+      "job": "44-current-dc2.json",
+      "node": "dc2",
+      "command": "show logging last 12",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "45d3ee37d7cf75dccbfe97ae4204d51f3e765b7f6c916ef9b3d7f6f9612733b5",
+      "excerpt": []
+    },
+    {
+      "job": "46-peer-gateway-check1.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "139b72a5ff05b50c69d757f65331fef4ea2cea7baafa77a6f4cb2d35677a62e4",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "46-peer-gateway-check1.json",
+      "node": "dc1",
+      "command": "show vpc consistency-parameters global",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "5e5fdb4d373ec1563cefb1013da4acc589e6b5afa69aa280cc7f1877c0f0b238",
+      "excerpt": [
+        "STP Port Type, Edge         1     Normal, Disabled,      Normal, Disabled,"
+      ]
+    },
+    {
+      "job": "47-peer-gateway-check2.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "d026f4161ed9026a2be7e0c3d548cc2893cfac6858c34dc3d3deaf2e1dd0fd91",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "47-peer-gateway-check2.json",
+      "node": "dc2",
+      "command": "show vpc consistency-parameters global",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "565c8c723ba208814bd0f1ce3b380fe6ca04c8fb5a2bd5c278eea6fb09d4b51b",
+      "excerpt": [
+        "STP Port Type, Edge         1     Normal, Disabled,      Normal, Disabled,"
+      ]
+    },
+    {
+      "job": "49-svi-check1.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "fe2bf62ed6ddbf1d809df68a8a71f3c2b195d72f1e5b54537b0c9e669d3a8470",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : failed",
+        "Type-2 inconsistency reason       : SVI type-2 configuration incompatible",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "49-svi-check1.json",
+      "node": "dc1",
+      "command": "show vpc consistency-parameters global",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "c4564514c92fcb8fbd4b356e39f80d0af7030df0fa70036b63207ae0e73ce034",
+      "excerpt": [
+        "STP Port Type, Edge         1     Normal, Disabled,      Normal, Disabled,"
+      ]
+    },
+    {
+      "job": "50-svi-check2.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "9946380c445bd737d2bc93ca9a4637ff6feefa260a52b3b06b7c6395c4c970e0",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : failed",
+        "Type-2 inconsistency reason       : SVI type-2 configuration incompatible",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "50-svi-check2.json",
+      "node": "dc2",
+      "command": "show vpc consistency-parameters global",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "0c011d607ce76b59a8b273b0908a649f79e6975253a927771cbf04b78f03fac4",
+      "excerpt": [
+        "STP Port Type, Edge         1     Normal, Disabled,      Normal, Disabled,"
+      ]
+    },
+    {
+      "job": "58-arp-sync-and-peer-switch.json",
+      "node": "dc2",
+      "command": "show ip arp 10.10.10.111",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "c3ae50c7fb976dc96667669c7ba4def58b9c51df2bbfa67fa49431106e680515",
+      "excerpt": [
+        "10.10.10.111    00:00:03  aabb.cc00.7300  Vlan10"
+      ]
+    },
+    {
+      "job": "58-arp-sync-and-peer-switch.json",
+      "node": "dc2",
+      "command": "show spanning-tree vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "780cee70dd941ea779e2da6a7625ce889663b49bd156f3b0f9b570f2a48cb300",
+      "excerpt": []
+    },
+    {
+      "job": "58-arp-sync-and-peer-switch.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "d351dbdef65926e6a5529f3609fe2d59cf9734ef153139b883cc95bc9f2a90ba",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "58-arp-sync-and-peer-switch.json",
+      "node": "dc2",
+      "command": "show vpc orphan-ports",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "27603aa1222692c39fb622e369b81c9e3407a6ca360c3650c97eaa57cccbe2d7",
+      "excerpt": []
+    },
+    {
+      "job": "61-keepalive-down-primary.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "f909d4f17a4260ec03ffde84c1d3b94a987e0d8c79b05f6eedb54ddeda2e8bbb",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is not reachable through peer-keepalive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "61-keepalive-down-primary.json",
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "e99b7036e9a1ad14cf8583bbd56f863b9e360d6234813a79fda163135188bced",
+      "excerpt": [
+        "vPC keep-alive status             : peer is not reachable through peer-keepalive"
+      ]
+    },
+    {
+      "job": "62-keepalive-down-secondary.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "1997dca3bb19a7d09769175a214e9d734e7a891a98c0686e7401c35d08db9d0d",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is not reachable through peer-keepalive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "62-keepalive-down-secondary.json",
+      "node": "dc2",
+      "command": "show vpc peer-keepalive",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "020efee13cd2aed7a19dbdcdb6d12129c69da17c8c908b25386f54de9f4ce126",
+      "excerpt": [
+        "vPC keep-alive status             : peer is not reachable through peer-keepalive"
+      ]
+    },
+    {
+      "job": "63-keepalive-down-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "1f693d4c19b05789aa769b54f55ee8211f98b57a55bb50812ec49ab3edd5d376",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms"
+      ]
+    },
+    {
+      "job": "63-keepalive-down-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "45cc49fcd7b9207541ee65e3f5ac66115e50f642e4d6df5610377a9e5c2010fd",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "66-one-peer-member-primary.json",
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "6921f719cd3ab53addbba8d8bc0bd808a90881b6b875794f9e4e86cc232b3b47",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(D)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "66-one-peer-member-primary.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "139b72a5ff05b50c69d757f65331fef4ea2cea7baafa77a6f4cb2d35677a62e4",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "67-one-peer-member-secondary.json",
+      "node": "dc2",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "e67f2f3ae70e26674da9c80c4a141d2819affe68fd48a886b1bb1798b8849f5c",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(D)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "67-one-peer-member-secondary.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "d351dbdef65926e6a5529f3609fe2d59cf9734ef153139b883cc95bc9f2a90ba",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "68-one-peer-member-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "be60214b20e41e920d8552981e4eef154960f08f09f9036afc89cdd9f5654c23",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "68-one-peer-member-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "4d924b6ef6c80149b7556ad3d5e7c47f87d349b43697f20a1fafac5ec72fd18c",
+      "excerpt": [
+        "Success rate is 0 percent (0/5)"
+      ]
+    },
+    {
+      "job": "71-downstream-leg-state.json",
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "6ec1d69a356d8e47e3d426a6964b31f00450dfbe5ddc92f1c345aca7d1d503b1",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)",
+        "10    Po10(SD)    Eth      LACP      Eth1/3(D)"
+      ]
+    },
+    {
+      "job": "71-downstream-leg-state.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "3fbbc7b1814cad9cb9b24c6e085cda048adcee6491efcb808e4aca702467919d",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          down*  success     success               -"
+      ]
+    },
+    {
+      "job": "72-downstream-leg-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "979e0d0a2637e4e879067f10bd4a6635b23b9812dba6dd9d7e898b54bbf73d5d",
+      "excerpt": [
+        "Success rate is 0 percent (0/5)"
+      ]
+    },
+    {
+      "job": "72-downstream-leg-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "4d924b6ef6c80149b7556ad3d5e7c47f87d349b43697f20a1fafac5ec72fd18c",
+      "excerpt": [
+        "Success rate is 0 percent (0/5)"
+      ]
+    },
+    {
+      "job": "76-peer-link-down-primary.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "e7caab253135a8cb01dd00c7ab385f8a53d8fde8af993e84fe6288f77e264a21",
+      "excerpt": [
+        "Peer status                       : peer link is down",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    down   -",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "76-peer-link-down-primary.json",
+      "node": "dc1",
+      "command": "show interface Vlan10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "ceac18eb8fd1aad962bbc0d7c4c5618b1ab3f9f1801ff09f9c61400c00cba085",
+      "excerpt": [
+        "MTU 1500 bytes, BW 1000000 Kbit, DLY 10 usec,"
+      ]
+    },
+    {
+      "job": "77-peer-link-down-secondary.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "58b107c1c61a681700ed869d765a4fc1bd887b8434dd79f7da664c12340caa16",
+      "excerpt": [
+        "Peer status                       : peer link is down",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    down   -",
+        "10    Po10          down   failed      Peer-link is down     -"
+      ]
+    },
+    {
+      "job": "77-peer-link-down-secondary.json",
+      "node": "dc2",
+      "command": "show interface Vlan10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "2f36ccb8712b39e1772a0559cd7693bbac59d76485a39ff7a49ebfb8a5e816d7",
+      "excerpt": [
+        "MTU 1500 bytes, BW 1000000 Kbit, DLY 10 usec,"
+      ]
+    },
+    {
+      "job": "77-peer-link-down-secondary.json",
+      "node": "dc2",
+      "command": "show interface Ethernet1/4",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "2e4f111c97bbde4739afb2d15b1507092135e2321a4897145041d8aa59208577",
+      "excerpt": [
+        "MTU 1500 bytes, BW 10000000 Kbit , DLY 10 usec"
+      ]
+    },
+    {
+      "job": "77-peer-link-down-secondary.json",
+      "node": "dc2",
+      "command": "show vpc orphan-ports",
+      "accepted": false,
+      "timedOut": false,
+      "rawSha256": "5cd3a7ec6167d7e69e861b2ea51fb999fa09c35930fac268e8630a32aac8b4c8",
+      "excerpt": [
+        "ERROR: Peer-link is down"
+      ]
+    },
+    {
+      "job": "78-peer-link-down-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "6dc8baaec90e551cbe40682432b259c5a2630b8d754b12306c74633b7fbe2a31",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "78-peer-link-down-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "4d924b6ef6c80149b7556ad3d5e7c47f87d349b43697f20a1fafac5ec72fd18c",
+      "excerpt": [
+        "Success rate is 0 percent (0/5)"
+      ]
+    },
+    {
+      "job": "80-final-primary.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "235863d6a3912ba294d61d03a8e4d79b07dda622505830efbefb7b6e221b406f",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is on.(timeout = 30s, 19s left)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "80-final-primary.json",
+      "node": "dc1",
+      "command": "show vpc role",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "8cf83453e10d0ccc09660264c58a11de42bd4a8cb3c5dd51909adacac83f7202",
+      "excerpt": [
+        "vPC role                        : primary"
+      ]
+    },
+    {
+      "job": "80-final-primary.json",
+      "node": "dc1",
+      "command": "show vpc consistency-parameters global",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "8c8a57b49b271c79f24f26b8f83d2ce3c7e37a6249bd225a69e81e90feb3bf74",
+      "excerpt": [
+        "STP Port Type, Edge         1     Normal, Disabled,      Normal, Disabled,"
+      ]
+    },
+    {
+      "job": "80-final-primary.json",
+      "node": "dc1",
+      "command": "show vpc consistency-parameters vpc 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "a7c2b6a1fa5a61ba57e64d1457251bb957b376501332263f7ba562a697eb905f",
+      "excerpt": [
+        "STP Port Guard              1     Default                Default",
+        "STP Port Type               1     Default                Default"
+      ]
+    },
+    {
+      "job": "80-final-primary.json",
+      "node": "dc1",
+      "command": "show vpc consistency-parameters interface port-channel10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "787b83de52fcd5d1adedb59034cc869f88083335710020790adaddcd9b979218",
+      "excerpt": [
+        "STP Port Guard              1     Default                Default",
+        "STP Port Type               1     Default                Default"
+      ]
+    },
+    {
+      "job": "80-final-primary.json",
+      "node": "dc1",
+      "command": "show vpc peer-keepalive",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "3390a637b694bce5c229c2b860ae1c84a313ca94ef0936abf2a95a2475861dc8",
+      "excerpt": [
+        "vPC keep-alive status             : peer is alive"
+      ]
+    },
+    {
+      "job": "80-final-primary.json",
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "39969022edf6f8999b518220371f5fd2355153395f2b7ffe1913c132a7d11b36",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "80-final-primary.json",
+      "node": "dc1",
+      "command": "show spanning-tree vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "1c9f412b7234dbbced682d44fd1c908df144ed93484acc68d82cc7c0551c182e",
+      "excerpt": []
+    },
+    {
+      "job": "80-final-primary.json",
+      "node": "dc1",
+      "command": "show vpc orphan-ports",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "138203128a91d679965420147ad54e59764228a7b382cb556d86dba4d5d0bb0e",
+      "excerpt": []
+    },
+    {
+      "job": "80-final-primary.json",
+      "node": "dc1",
+      "command": "show running-config vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "8cbdbd4378566c042f6b7e3b1e6e3b0ad09e53edff495266ed74c39894ddd395",
+      "excerpt": []
+    },
+    {
+      "job": "81-final-secondary.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "316efa9790afea3daf6e8b26a308091a1773445d7dc7921fe984f2bb65a5e739",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is on.(timeout = 30s, 14s left)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          down*  success     success               -"
+      ]
+    },
+    {
+      "job": "81-final-secondary.json",
+      "node": "dc2",
+      "command": "show vpc role",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "852c8dc8d49efdf0ef7d5388ad7e4c2d61f4970ba383b71acb6057c932fb4685",
+      "excerpt": [
+        "vPC role                        : secondary"
+      ]
+    },
+    {
+      "job": "81-final-secondary.json",
+      "node": "dc2",
+      "command": "show vpc consistency-parameters vpc 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "5ea493f9b39af176f938c3fdd04873e22de4f6fa632687b47023010e2b02a428",
+      "excerpt": [
+        "STP Port Guard              1     Default                Default",
+        "STP Port Type               1     Default                Default"
+      ]
+    },
+    {
+      "job": "81-final-secondary.json",
+      "node": "dc2",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "8a47df0c8c7eb10781addf30b562c3587bb8dede4fbb2bb62747e9282b29cf6b",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)",
+        "10    Po10(SD)    Eth      LACP      Eth1/3(D)"
+      ]
+    },
+    {
+      "job": "81-final-secondary.json",
+      "node": "dc2",
+      "command": "show spanning-tree vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "33d4fe5a85035dcf18cbbc6922bf5b3de6fae37d181eb9e35d2a3c40b87b7a3c",
+      "excerpt": []
+    },
+    {
+      "job": "81-final-secondary.json",
+      "node": "dc2",
+      "command": "show vpc orphan-ports",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "35f5197efb438278792915355aabc01b580a504d15e383de70356300640ecf21",
+      "excerpt": []
+    },
+    {
+      "job": "83-final-client.json",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "b2a34bab3d888ff7fb4a2932dfc186a4011d40b004c58f50d031986ee9527af0",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "83-final-client.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "6f4021d1bfaec910664b8fb6f3cf46e02e782dbba3fd72203768f5c819efc1e8",
+      "excerpt": [
+        "Success rate is 80 percent (4/5), round-trip min/avg/max = 1/86/340 ms"
+      ]
+    },
+    {
+      "job": "83-final-client.json",
+      "node": "client",
+      "command": "ping 10.10.20.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "69cf848457ffaceafbae6359d48ec18800681b73c9dc192d68fc768846bed851",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "84-final-routed-orphan1.json",
+      "node": "orphan1",
+      "command": "ping 10.10.20.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "4057cd70a9209da44263dfebefdb8ab3b78377e1fdd7a80eded3f94dbf6efee9",
+      "excerpt": [
+        "Success rate is 80 percent (4/5), round-trip min/avg/max = 2/2/3 ms"
+      ]
+    },
+    {
+      "job": "85-final-routed-orphan2.json",
+      "node": "orphan2",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "ff0c87981f7134fcd04a6c85f65510f075bac7cac5eb50b9bf817d6e56097247",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "87-guard-root-check.json",
+      "node": "dc2",
+      "command": "show vpc consistency-parameters vpc 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "ef830408dba9452eda1cd833aa06be8328f8b7ec83eb5d734075cc23f2dab46f",
+      "excerpt": [
+        "STP Port Guard              1     Root                   Default",
+        "STP Port Type               1     Default                Default"
+      ]
+    },
+    {
+      "job": "87-guard-root-check.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "c04121054db65ad2e5b6811516f876bce798e69e10ae2992fe0ab581f4e0ce54",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          down*  failed      vPC type-1            -"
+      ]
+    },
+    {
+      "job": "89-guard-none-check.json",
+      "node": "dc2",
+      "command": "show vpc consistency-parameters vpc 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "05687c7215535334f9b50131589253850e3228d4124d1d2aa2db9ff430cfaee4",
+      "excerpt": [
+        "STP Port Guard              1     None                   Default",
+        "STP Port Type               1     Default                Default"
+      ]
+    },
+    {
+      "job": "89-guard-none-check.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "c04121054db65ad2e5b6811516f876bce798e69e10ae2992fe0ab581f4e0ce54",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          down*  failed      vPC type-1            -"
+      ]
+    },
+    {
+      "job": "91-guard-default-check.json",
+      "node": "dc2",
+      "command": "show vpc consistency-parameters vpc 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "5ea493f9b39af176f938c3fdd04873e22de4f6fa632687b47023010e2b02a428",
+      "excerpt": [
+        "STP Port Guard              1     Default                Default",
+        "STP Port Type               1     Default                Default"
+      ]
+    },
+    {
+      "job": "91-guard-default-check.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "d351dbdef65926e6a5529f3609fe2d59cf9734ef153139b883cc95bc9f2a90ba",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "97-member-loss-settled-primary.json",
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "6921f719cd3ab53addbba8d8bc0bd808a90881b6b875794f9e4e86cc232b3b47",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(D)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "97-member-loss-settled-primary.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "139b72a5ff05b50c69d757f65331fef4ea2cea7baafa77a6f4cb2d35677a62e4",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "97-member-loss-settled-primary.json",
+      "node": "dc1",
+      "command": "show spanning-tree vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "1c9f412b7234dbbced682d44fd1c908df144ed93484acc68d82cc7c0551c182e",
+      "excerpt": []
+    },
+    {
+      "job": "98-member-loss-settled-secondary.json",
+      "node": "dc2",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "53c3a160ebbed9e92fe9fb22bdc535adbdb8f95badc39c5f98d081ac758b7b48",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(s)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "98-member-loss-settled-secondary.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "d351dbdef65926e6a5529f3609fe2d59cf9734ef153139b883cc95bc9f2a90ba",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "98-member-loss-settled-secondary.json",
+      "node": "dc2",
+      "command": "show spanning-tree vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "780cee70dd941ea779e2da6a7625ce889663b49bd156f3b0f9b570f2a48cb300",
+      "excerpt": []
+    },
+    {
+      "job": "99-member-loss-settled-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "be60214b20e41e920d8552981e4eef154960f08f09f9036afc89cdd9f5654c23",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "99-member-loss-settled-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "4d924b6ef6c80149b7556ad3d5e7c47f87d349b43697f20a1fafac5ec72fd18c",
+      "excerpt": [
+        "Success rate is 0 percent (0/5)"
+      ]
+    },
+    {
+      "job": "100a-path-primary.json",
+      "node": "dc1",
+      "command": "ping 10.10.10.12 count 3",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "dbe63a5bd7a3bea706db4fc8fcfba8fb589185f570c8abbb1efb1356aa9b50aa",
+      "excerpt": [
+        "3 packets transmitted, 1 packets received, 66.67% packet loss"
+      ]
+    },
+    {
+      "job": "100a-path-primary.json",
+      "node": "dc1",
+      "command": "show ip arp",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "189004babd4728ca6f6b163f90212e321a6c2216d1d8d1f1ce1a90380ae8723f",
+      "excerpt": [
+        "10.10.10.10     00:03:30  aabb.cc00.7100  Vlan10          +",
+        "10.10.10.12     00:00:04  aabb.cc00.1700  Vlan10",
+        "10.10.10.111    00:10:01  aabb.cc00.7300  Vlan10"
+      ]
+    },
+    {
+      "job": "100a-path-primary.json",
+      "node": "dc1",
+      "command": "show mac address-table dynamic vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "5c74829744887a3f00195ebb029d28e9804ded3108b1e41734d6f4027e12d451",
+      "excerpt": [
+        "*   10     aabb.cc00.7100   dynamic  NA         F      F    Po10",
+        "+   10     aabb.cc00.1700   dynamic  NA         F      F    vPC Peer-Link"
+      ]
+    },
+    {
+      "job": "100b-path-secondary.json",
+      "node": "dc2",
+      "command": "ping 10.10.10.12 count 3",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "eccea09c74fd537d91b0b731fac2feaf3826911782285767099220f991de4477",
+      "excerpt": [
+        "3 packets transmitted, 3 packets received, 0.00% packet loss"
+      ]
+    },
+    {
+      "job": "100b-path-secondary.json",
+      "node": "dc2",
+      "command": "show ip arp",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "1d5897735bd5755e67d2753867a1044712a39b5324851889e084a3f5d6253bed",
+      "excerpt": [
+        "10.10.10.10     00:03:30  aabb.cc00.7100  Vlan10",
+        "10.10.10.12     00:00:04  aabb.cc00.1700  Vlan10          +"
+      ]
+    },
+    {
+      "job": "100b-path-secondary.json",
+      "node": "dc2",
+      "command": "show mac address-table dynamic vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "970035498e53167b227fbaa8b9bab576518293227cd43b5fc12e98e67351be5d",
+      "excerpt": [
+        "*   10     aabb.cc00.1700   dynamic  NA         F      F    Eth1/4",
+        "+   10     aabb.cc00.7100   dynamic  NA         F      F    Po10"
+      ]
+    },
+    {
+      "job": "1011-fault-path-primary.json",
+      "node": "dc1",
+      "command": "ping 10.10.10.12 count 3",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "ebc897c9dcedfc34724ee77dfd4dfc5e4e9296d0c9edcbca0c71de2168704693",
+      "excerpt": [
+        "3 packets transmitted, 3 packets received, 0.00% packet loss"
+      ]
+    },
+    {
+      "job": "1011-fault-path-primary.json",
+      "node": "dc1",
+      "command": "ping 10.10.10.11 count 3",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "1ffb38851d30248ba57b53da82582fb7ba5294f86c9be6923aa97c0138d5941b",
+      "excerpt": [
+        "3 packets transmitted, 3 packets received, 0.00% packet loss"
+      ]
+    },
+    {
+      "job": "1011-fault-path-primary.json",
+      "node": "dc1",
+      "command": "show ip arp",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "f7b6394b0bc2b5978e3552d7cf7f61be088fdbcc4a23ef21fc4797eb1da29591",
+      "excerpt": [
+        "10.10.10.10     00:04:11  aabb.cc00.7100  Vlan10          +",
+        "10.10.10.12     00:00:44  aabb.cc00.1700  Vlan10",
+        "10.10.10.111    00:10:41  aabb.cc00.7300  Vlan10"
+      ]
+    },
+    {
+      "job": "1011-fault-path-primary.json",
+      "node": "dc1",
+      "command": "show mac address-table dynamic vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "afc09200e1b0ee560c38917cecbe7d5d76143153d333eab183889ab42513fcef",
+      "excerpt": [
+        "10     aabb.cc00.7100   dynamic  NA         F      F    vPC Peer-Link",
+        "+   10     aabb.cc00.1700   dynamic  NA         F      F    vPC Peer-Link"
+      ]
+    },
+    {
+      "job": "1012-fault-path-secondary.json",
+      "node": "dc2",
+      "command": "ping 10.10.10.12 count 3",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "2f9413c8b7e819bc636b934c361805e6536b890ecef48508fc65b21f67063eb1",
+      "excerpt": [
+        "3 packets transmitted, 3 packets received, 0.00% packet loss"
+      ]
+    },
+    {
+      "job": "1012-fault-path-secondary.json",
+      "node": "dc2",
+      "command": "ping 10.10.10.11 count 3",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "2f81c6def35ba910916aff37727350615db6f55554621947d6fdbf9a0a098235",
+      "excerpt": [
+        "3 packets transmitted, 3 packets received, 0.00% packet loss"
+      ]
+    },
+    {
+      "job": "1012-fault-path-secondary.json",
+      "node": "dc2",
+      "command": "show ip arp",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "ae28a422075870e9f7c7139d681530b98dacaa3950eaa06cb4e2f387cc215af5",
+      "excerpt": [
+        "10.10.10.10     00:04:12  aabb.cc00.7100  Vlan10",
+        "10.10.10.12     00:00:46  aabb.cc00.1700  Vlan10          +"
+      ]
+    },
+    {
+      "job": "1012-fault-path-secondary.json",
+      "node": "dc2",
+      "command": "show mac address-table dynamic vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "970035498e53167b227fbaa8b9bab576518293227cd43b5fc12e98e67351be5d",
+      "excerpt": [
+        "*   10     aabb.cc00.1700   dynamic  NA         F      F    Eth1/4",
+        "+   10     aabb.cc00.7100   dynamic  NA         F      F    Po10"
+      ]
+    },
+    {
+      "job": "104-downstream-loss-settled-access.json",
+      "node": "access",
+      "command": "show etherchannel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "2d793f0d8b0c54eb013f957f044b553109a1a60fe3686c3b6b5707d2516a4426",
+      "excerpt": [
+        "10     Po10(SU)        LACP        Et0/0(s)        Et0/1(P)"
+      ]
+    },
+    {
+      "job": "104-downstream-loss-settled-access.json",
+      "node": "access",
+      "command": "show spanning-tree vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "d6e9d6fd26c78489bde68b101ffb52f610c0e1359ea918828175f10c52051970",
+      "excerpt": []
+    },
+    {
+      "job": "105-downstream-loss-settled-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "b2a34bab3d888ff7fb4a2932dfc186a4011d40b004c58f50d031986ee9527af0",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "105-downstream-loss-settled-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "45cc49fcd7b9207541ee65e3f5ac66115e50f642e4d6df5610377a9e5c2010fd",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "107-complete-restored-primary.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "139b72a5ff05b50c69d757f65331fef4ea2cea7baafa77a6f4cb2d35677a62e4",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "107-complete-restored-primary.json",
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "39969022edf6f8999b518220371f5fd2355153395f2b7ffe1913c132a7d11b36",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "107-complete-restored-primary.json",
+      "node": "dc1",
+      "command": "show spanning-tree vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "1c9f412b7234dbbced682d44fd1c908df144ed93484acc68d82cc7c0551c182e",
+      "excerpt": []
+    },
+    {
+      "job": "108-complete-restored-secondary.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "d351dbdef65926e6a5529f3609fe2d59cf9734ef153139b883cc95bc9f2a90ba",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "108-complete-restored-secondary.json",
+      "node": "dc2",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "3dd7058e0969e266cd0ffc67fd0b35087e6b838701e25a6af7ccbaa3bae41539",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "108-complete-restored-secondary.json",
+      "node": "dc2",
+      "command": "show spanning-tree vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "780cee70dd941ea779e2da6a7625ce889663b49bd156f3b0f9b570f2a48cb300",
+      "excerpt": []
+    },
+    {
+      "job": "109-complete-restored-access.json",
+      "node": "access",
+      "command": "show etherchannel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "0f4dbd17bd08697cd5300bd607e661b60a47f8831025962b467e390715e25df0",
+      "excerpt": [
+        "10     Po10(SU)        LACP        Et0/0(P)        Et0/1(P)"
+      ]
+    },
+    {
+      "job": "110-complete-restored-client.json",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "b2a34bab3d888ff7fb4a2932dfc186a4011d40b004c58f50d031986ee9527af0",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "110-complete-restored-client.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "45cc49fcd7b9207541ee65e3f5ac66115e50f642e4d6df5610377a9e5c2010fd",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "110-complete-restored-client.json",
+      "node": "client",
+      "command": "ping 10.10.20.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "baf9d10836d4cec8e7619037e092ea4c03a21c9c6f21294df6d61c4bafd38368",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/2/3 ms"
+      ]
+    },
+    {
+      "job": "111-complete-restored-routed1.json",
+      "node": "orphan1",
+      "command": "ping 10.10.20.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "74fbbea0df8825b24da77e54a0ead4458bec7a3d1f04ddc82a81b005ff2d75c2",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "112-complete-restored-routed2.json",
+      "node": "orphan2",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "ff0c87981f7134fcd04a6c85f65510f075bac7cac5eb50b9bf817d6e56097247",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "115-member-loss-client-probe.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "4d924b6ef6c80149b7556ad3d5e7c47f87d349b43697f20a1fafac5ec72fd18c",
+      "excerpt": [
+        "Success rate is 0 percent (0/5)"
+      ]
+    },
+    {
+      "job": "115-member-loss-client-probe.json",
+      "node": "client",
+      "command": "show arp",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "b2fb7058211189e095fe47d0bfbe9ed61b125cba324dbf73e634ded1604ee7ad",
+      "excerpt": [
+        "Internet  10.10.10.10             -   aabb.cc00.7100  ARPA   Ethernet0/0",
+        "Internet  10.10.10.12            34   aabb.cc00.1700  ARPA   Ethernet0/0"
+      ]
+    },
+    {
+      "job": "116-member-loss-primary-probe.json",
+      "node": "dc1",
+      "command": "ping 10.10.10.12 count 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "6fc28786e28a39d1ca19f523f618910631b8d5ebe950d8cd7e7fc8e6a3b62b41",
+      "excerpt": [
+        "5 packets transmitted, 5 packets received, 0.00% packet loss"
+      ]
+    },
+    {
+      "job": "116-member-loss-primary-probe.json",
+      "node": "dc1",
+      "command": "show mac address-table dynamic vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "fefc86780713bbb7c6a2b216f026c974e5df7c700d53a1d464c67695a5845b17",
+      "excerpt": [
+        "+   10     aabb.cc00.7100   dynamic  NA         F      F    Po10",
+        "+   10     aabb.cc00.1700   dynamic  NA         F      F    vPC Peer-Link"
+      ]
+    },
+    {
+      "job": "117-member-loss-secondary-probe.json",
+      "node": "dc2",
+      "command": "ping 10.10.10.12 count 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "ac4dbc278c1065ff1b9375eb255099af3e4cb5df856c1f3496b40d19a6d8585e",
+      "excerpt": [
+        "5 packets transmitted, 5 packets received, 0.00% packet loss"
+      ]
+    },
+    {
+      "job": "117-member-loss-secondary-probe.json",
+      "node": "dc2",
+      "command": "show mac address-table dynamic vlan 10",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "970035498e53167b227fbaa8b9bab576518293227cd43b5fc12e98e67351be5d",
+      "excerpt": [
+        "*   10     aabb.cc00.1700   dynamic  NA         F      F    Eth1/4",
+        "+   10     aabb.cc00.7100   dynamic  NA         F      F    Po10"
+      ]
+    },
+    {
+      "job": "118-member-loss-client-reprobe.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "4d924b6ef6c80149b7556ad3d5e7c47f87d349b43697f20a1fafac5ec72fd18c",
+      "excerpt": [
+        "Success rate is 0 percent (0/5)"
+      ]
+    },
+    {
+      "job": "124-non-peer-switch-primary-state.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "139b72a5ff05b50c69d757f65331fef4ea2cea7baafa77a6f4cb2d35677a62e4",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "124-non-peer-switch-primary-state.json",
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "6921f719cd3ab53addbba8d8bc0bd808a90881b6b875794f9e4e86cc232b3b47",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(D)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "125-non-peer-switch-secondary-state.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "d351dbdef65926e6a5529f3609fe2d59cf9734ef153139b883cc95bc9f2a90ba",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "125-non-peer-switch-secondary-state.json",
+      "node": "dc2",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "53c3a160ebbed9e92fe9fb22bdc535adbdb8f95badc39c5f98d081ac758b7b48",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(s)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "126-non-peer-switch-member-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "8bfc2d6171106ccec713cdf1f3e48fc67b265b5baa0fa7105b00d8ae91630fd0",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms"
+      ]
+    },
+    {
+      "job": "126-non-peer-switch-member-traffic.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "4d924b6ef6c80149b7556ad3d5e7c47f87d349b43697f20a1fafac5ec72fd18c",
+      "excerpt": [
+        "Success rate is 0 percent (0/5)"
+      ]
+    },
+    {
+      "job": "128-final-complete-client.json",
+      "node": "client",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "b2a34bab3d888ff7fb4a2932dfc186a4011d40b004c58f50d031986ee9527af0",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "128-final-complete-client.json",
+      "node": "client",
+      "command": "ping 10.10.10.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "4d924b6ef6c80149b7556ad3d5e7c47f87d349b43697f20a1fafac5ec72fd18c",
+      "excerpt": [
+        "Success rate is 0 percent (0/5)"
+      ]
+    },
+    {
+      "job": "128-final-complete-client.json",
+      "node": "client",
+      "command": "ping 10.10.20.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "69cf848457ffaceafbae6359d48ec18800681b73c9dc192d68fc768846bed851",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "129-final-complete-routed1.json",
+      "node": "orphan1",
+      "command": "ping 10.10.20.12 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "74fbbea0df8825b24da77e54a0ead4458bec7a3d1f04ddc82a81b005ff2d75c2",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "130-final-complete-routed2.json",
+      "node": "orphan2",
+      "command": "ping 10.10.10.11 repeat 5",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "ff0c87981f7134fcd04a6c85f65510f075bac7cac5eb50b9bf817d6e56097247",
+      "excerpt": [
+        "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms"
+      ]
+    },
+    {
+      "job": "131-final-complete-primary.json",
+      "node": "dc1",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "139b72a5ff05b50c69d757f65331fef4ea2cea7baafa77a6f4cb2d35677a62e4",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : primary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "131-final-complete-primary.json",
+      "node": "dc1",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "39969022edf6f8999b518220371f5fd2355153395f2b7ffe1913c132a7d11b36",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    },
+    {
+      "job": "132-final-complete-secondary.json",
+      "node": "dc2",
+      "command": "show vpc",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "d351dbdef65926e6a5529f3609fe2d59cf9734ef153139b883cc95bc9f2a90ba",
+      "excerpt": [
+        "Peer status                       : peer adjacency formed ok",
+        "vPC keep-alive status             : peer is alive",
+        "Configuration consistency status  : success",
+        "Per-vlan consistency status       : success",
+        "Type-2 consistency status         : success",
+        "vPC role                          : secondary",
+        "Delay-restore status              : Timer is off.(timeout = 30s)",
+        "Delay-restore SVI status          : Timer is off.(timeout = 10s)",
+        "Delay-restore Orphan-port status  : Timer is off.(timeout = 0s)",
+        "1     Po1    up     10,20",
+        "10    Po10          up     success     success               10,20"
+      ]
+    },
+    {
+      "job": "132-final-complete-secondary.json",
+      "node": "dc2",
+      "command": "show port-channel summary",
+      "accepted": true,
+      "timedOut": false,
+      "rawSha256": "3dd7058e0969e266cd0ffc67fd0b35087e6b838701e25a6af7ccbaa3bae41539",
+      "excerpt": [
+        "1     Po1(SU)     Eth      LACP      Eth1/1(P)    Eth1/2(P)",
+        "10    Po10(SU)    Eth      LACP      Eth1/3(P)"
+      ]
+    }
+  ],
+  "captureEvidence": [
+    {
+      "linkId": "9a255993-f59b-4022-a979-ada63f5972c7",
+      "sha256": "8cbcd343471b0f1041bb9f966c95c4998b032591ab476b0d1dac28da1d4365b0",
+      "file": "9a255993-f59b-4022-a979-ada63f5972c7.pcap",
+      "bytes": 1786906,
+      "packets": 10955,
+      "protocolCounts": {
+        "LACP": 3457
+      },
+      "keepaliveTosTtl": []
+    },
+    {
+      "linkId": "ab4ceb09-625f-4a0e-aff8-7ea7cfcdac03",
+      "sha256": "1f22539898003a37be931ca8814aff90f76ec202a3980b55029f18b86d23458e",
+      "file": "ab4ceb09-625f-4a0e-aff8-7ea7cfcdac03.pcap",
+      "bytes": 877198,
+      "packets": 6575,
+      "protocolCounts": {
+        "LACP": 3997
+      },
+      "keepaliveTosTtl": []
+    },
+    {
+      "linkId": "23edc555-76e8-4986-a0d8-34802f0127a2",
+      "sha256": "0d90390267292a552b4a4764c424c2fb25ecdd8419664fe08562380046ed7a63",
+      "file": "23edc555-76e8-4986-a0d8-34802f0127a2.pcap",
+      "bytes": 435673,
+      "packets": 3965,
+      "protocolCounts": {
+        "vPC keepalive": 3867
+      },
+      "keepaliveTosTtl": [
+        {
+          "tos": 192,
+          "ttl": 64,
+          "count": 3867
+        }
+      ]
+    },
+    {
+      "linkId": "7619ef41-84dc-4512-b486-380ba9e47327",
+      "sha256": "14653a12234aa22aeeb9e440936a01423d950d6722fab7a646c2fc7013905f0b",
+      "file": "7619ef41-84dc-4512-b486-380ba9e47327.pcap",
+      "bytes": 505328,
+      "packets": 4466,
+      "protocolCounts": {
+        "LACP": 1549
+      },
+      "keepaliveTosTtl": []
+    },
+    {
+      "linkId": "cf56531b-84d7-44c3-af0d-200cf2c1fd12",
+      "sha256": "5dc6cadb339de8fd10cdcf461cbe6c4293fcbacc0a7e2b024c042a083792e7fa",
+      "file": "cf56531b-84d7-44c3-af0d-200cf2c1fd12.pcap",
+      "bytes": 413150,
+      "packets": 3272,
+      "protocolCounts": {
+        "LACP": 1799
+      },
+      "keepaliveTosTtl": []
+    },
+    {
+      "linkId": "116c3510-0f38-4509-9550-720be7b0b514",
+      "sha256": "b389cc147d62ebd8aec4d540682e98fe928fc7a24716c849d62c10f4ce618105",
+      "file": "116c3510-0f38-4509-9550-720be7b0b514.pcap",
+      "bytes": 229086,
+      "packets": 2372,
+      "protocolCounts": {},
+      "keepaliveTosTtl": []
+    },
+    {
+      "linkId": "7f27b3cc-a2aa-4a47-9f7b-af80ad9656b7",
+      "sha256": "c00d23f0c2ab38c7f374d4e308e8b1ad727993722dd2e9dbbfb5b15cfe07cc85",
+      "file": "7f27b3cc-a2aa-4a47-9f7b-af80ad9656b7.pcap",
+      "bytes": 189366,
+      "packets": 2019,
+      "protocolCounts": {},
+      "keepaliveTosTtl": []
+    },
+    {
+      "linkId": "94647967-34fb-4fc2-b457-9ae2b6e1abb6",
+      "sha256": "cc76183efebbc8caeca6f2a8b1d05830efe4d9791f25a3471a4e650c81af3c89",
+      "file": "94647967-34fb-4fc2-b457-9ae2b6e1abb6.pcap",
+      "bytes": 192305,
+      "packets": 1990,
+      "protocolCounts": {},
+      "keepaliveTosTtl": []
+    },
+    {
+      "linkId": "596cd1ad-59eb-4a3b-90f4-889266dee4ef",
+      "sha256": "ad285f318cc1cecff181e04ea677c3fe4cf817afe4f115f5ec5e8da374d3aced",
+      "file": "596cd1ad-59eb-4a3b-90f4-889266dee4ef.pcap",
+      "bytes": 199221,
+      "packets": 2114,
+      "protocolCounts": {},
+      "keepaliveTosTtl": []
+    },
+    {
+      "linkId": "7487f582-5ce1-4c9b-b19d-4df5f554964e",
+      "sha256": "953ad4e0e65f9b2b0833744c6376b1a858ab7aee5c6aad0944a6bd4f394f9f3b",
+      "file": "7487f582-5ce1-4c9b-b19d-4df5f554964e.pcap",
+      "bytes": 159976,
+      "packets": 1714,
+      "protocolCounts": {},
+      "keepaliveTosTtl": []
+    }
+  ],
+  "harnessTimeouts": [
+    {
+      "job": "54-alternate-host-ip.json",
+      "node": "orphan1",
+      "command": "configure terminal",
+      "rawSha256": "addcd9b56b71012cc91b119b760cf1ec1f361b1b0f0cd52266e098ff92ad6840"
+    },
+    {
+      "job": "54-alternate-host-ip.json",
+      "node": "orphan1",
+      "command": "interface Ethernet0/0",
+      "rawSha256": "addcd9b56b71012cc91b119b760cf1ec1f361b1b0f0cd52266e098ff92ad6840"
+    },
+    {
+      "job": "54-alternate-host-ip.json",
+      "node": "orphan1",
+      "command": "ip address 10.10.10.111 255.255.255.0",
+      "rawSha256": "addcd9b56b71012cc91b119b760cf1ec1f361b1b0f0cd52266e098ff92ad6840"
+    },
+    {
+      "job": "60-keepalive-down.json",
+      "node": "dc1",
+      "command": "shutdown",
+      "rawSha256": "d96ae3f0e436b7ae74301089a713013656c8b3c13f36bce07d8c8dc0befea19f"
+    },
+    {
+      "job": "60b-confirm-management-shutdown.json",
+      "node": "dc1",
+      "command": "shutdown",
+      "rawSha256": "d96ae3f0e436b7ae74301089a713013656c8b3c13f36bce07d8c8dc0befea19f"
+    }
+  ],
+  "unresolved": [
+    {
+      "id": "native-single-peer-link-member-return-path",
+      "status": "unresolved",
+      "jobs": [
+        "99-member-loss-settled-traffic.json",
+        "115-member-loss-client-probe.json",
+        "118-member-loss-client-reprobe.json",
+        "126-non-peer-switch-member-traffic.json",
+        "128-final-complete-client.json"
+      ],
+      "observation": "Both bundles and vPCs report up, but client to secondary orphan is 0/5 with one peer-link member shut, including after 95 seconds, after Nexus-originated probes pass, and without peer-switch. The final 40-second restoration wait still left this flow failing. An earlier settled full restoration passed all five paths.",
+      "packetTrace": "Echo requests and replies are present on the secondary orphan link. In failing probes, replies return across the surviving peer-link, and no matching reply is observed on either access uplink or client link. In the successful recovery probe, replies instead leave the secondary access uplink and reach the client. This locates the native return-path discrepancy but does not establish its root cause.",
+      "modelContract": "Continue forwarding over the remaining peer-link member; do not encode this unexplained reference failure as desired NX-OS behavior."
+    }
+  ]
+}

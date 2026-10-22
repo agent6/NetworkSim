@@ -11,10 +11,15 @@ import type {DeviceKind} from '../../src/model.ts';
 interface NodeSpec {id:string;kind:DeviceKind;hostname:string;simPort:string;cml:{port:string};portMap?:Record<string,string>;simulatorSetup:string[]}
 interface Step {id:string;node:string;command:string;simCommand?:string;waitSeconds?:number;expect?:string[];absent?:string[];sensitive?:boolean}
 export interface Scenario {schemaVersion:number;id:string;nodes:NodeSpec[];links:{node:string;port:string}[][];steps:Step[];surveys?:{node:string;commands:string[]}[]}
-const rejectedOutput=(raw:string)=>/^\s*(?:%?\s*(?:Invalid\b|Incomplete\b|Ambiguous\b|Unrecognized command|Unsupported\b|Duplicate sequence number|Sequence number already exists|Area mismatch|Permission denied|Value must be)|%[^\r\n]*(?:not implemented|configuration stored only|operational behavior is not simulated))/im.test(raw);
+const rejectedOutput=(raw:string)=>/^\s*(?:%?\s*(?:Invalid\b|Incomplete\b|Ambiguous\b|Unrecognized command|Unsupported\b|Duplicate sequence number|Sequence number already exists|Area mismatch|Permission denied|Value must be|ERROR:)|%[^\r\n]*(?:not implemented|configuration stored only|operational behavior is not simulated))/im.test(raw);
 export function replayScenario(scenario:Scenario,digest=''){
   if(scenario.schemaVersion!==1)throw new Error('Unsupported scenario schema');
   const engine=new Simulator(20261021),nodes=new Map<string,{deviceId:string;cli:CLISession;spec:NodeSpec}>();
+  const advance=(ms:number)=>{
+    for(let remaining=ms;remaining>0;remaining-=Math.min(1000,remaining)){
+      if(!engine.advance(Math.min(1000,remaining),100000).targetReached)throw new Error('Simulation event budget exhausted during convergence');
+    }
+  };
   for(const spec of scenario.nodes){
     if(nodes.has(spec.id))throw new Error('Duplicate scenario node');
     const device=engine.addDevice(spec.kind);
@@ -29,11 +34,11 @@ export function replayScenario(scenario:Scenario,digest=''){
     const command=line.replaceAll('${port}',spec.simPort),out=cli.execute(command);
     if(out.some(iosRejected))throw new Error(`${spec.id} setup rejected ${command}: ${out.join('\n')}`);
   }
-  engine.advance(2000);
+  advance(2000);
   const steps:any[]=[];
   for(const step of scenario.steps){
     const session=nodes.get(step.node);if(!session)throw new Error('Unknown step node');
-    engine.advance((step.waitSeconds??0)*1000);
+    advance((step.waitSeconds??0)*1000);
     const configuring=session.cli.configurationMode;
     const out=session.cli.execute(step.simCommand??step.command),raw=[...out,session.cli.prompt].join('\n');
     const checks=[...(step.expect??[]).map(pattern=>({pattern,passed:new RegExp(pattern,'m').test(raw)})),

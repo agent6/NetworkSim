@@ -4,7 +4,7 @@ import { IOS_ARGUMENT_ROWS, IOS_KEYWORD_HELP } from './ios-help-keywords.ts';
 export const IOS_UNRECOGNIZED = '% Unrecognized command';
 /** IOS prints some successful-command notices with a leading `%`; callers that treat `%` as failure must skip these. */
 export const iosInformational = (line: string): boolean => /^% (?:The key modulus size is|Generating \d+ bit RSA keys|You already have RSA keys defined|They will be replaced|All keys will be removed|All router certs issued)/.test(line);
-export const iosRejected = (line: string): boolean => line.startsWith('%') && !iosInformational(line) || line.trim()==='Area mismatch';
+export const iosRejected = (line: string): boolean => line.startsWith('%') && !iosInformational(line) || line.trim()==='Area mismatch' || /^\s*ERROR:/i.test(line);
 export const iosAmbiguous = (input: string): string => `% Ambiguous command:  "${input.trim()}"`;
 
 /** Catalog scope for a CLI mode: EXEC levels share one tree, as do interface and range modes. */
