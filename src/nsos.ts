@@ -8,7 +8,7 @@ import {renderNSOSConfig} from './nsos-config.ts';
 import {platformIdentity,platformSoftware,platformImage,NETSIM_VERSION} from './platform-identity.ts';
 import {iosSerial,iosUptime} from './ios-system-show.ts';
 import {iosBootState,iosBooting} from './ios-boot.ts';
-import {isIPv4,isIPv6,parseCidr,maskToPrefix} from './ip.ts';
+import {isIPv4,isIPv6,parseCidr,maskToPrefix,intToIp} from './ip.ts';
 import {ownRecordValue,accountCredential,setRecordValue} from './record-map.ts';
 import {managementFor} from './management.ts';
 import {formatIOSL2Show} from './ios-show-l2.ts';
@@ -19,6 +19,7 @@ import {iosDuration} from './ios-system-show.ts';
 import {writeFlashFile} from './filesystem.ts';
 import {interfaceSpeed,interfaceBandwidth} from './ethernet.ts';
 import {filterIOSOutput,iosLogLine} from './ios-system.ts';
+import {iosRejected} from './ios-help.ts';
 
 type Mode='priv'|'config'|'interface'|'vlan'|'vrf'|'router'|'router-vrf'|'vpc'|'mst'|'acl';
 type Context={mode:Mode;name?:string;vrf?:string;parent?:Context};
@@ -150,7 +151,8 @@ export class NSOSSession {
     const id=integer(match[2],label==='Loopback'?0:1,label==='Vlan'?4094:label==='Port-channel'?4096:1023);
     if(label==='Vlan')this.requireFeature('interface-vlan');
     const p=defaultInterface(label+id,label==='Port-channel');
-    p.adminUp=false;
+    p.adminUp=label==='Loopback';
+    if(label==='Loopback'){p.features.bandwidth=8000000;p.features.delay=500;}
     if(label==='Port-channel'){p.features.nonegotiate=true;p.speed=10000;}
     this.device.config.interfaces[p.name]=p;
     return p;
@@ -162,7 +164,7 @@ export class NSOSSession {
     let root=c.protocols.ospf;
     if(!root&&create)root=c.protocols.ospf={vrfs:{}};
     const prior=vrf?root?.vrfs?.[vrf]:root;
-    if(prior?.nsosTag&&prior.nsosTag!==tag)fail(`Only one OSPF instance per VRF is supported; ${prior.nsosTag} already exists in ${vrf||'default'}.`);
+    if(create&&prior?.nsosTag&&prior.nsosTag!==tag)fail(`Only one OSPF instance per VRF is supported; ${prior.nsosTag} already exists in ${vrf||'default'}.`);
     if(!create)return prior?.nsosTag===tag?prior:undefined;
     if(vrf&&!c.features.vrfs?.[vrf])fail(`VRF ${vrf} does not exist.`);
     if(prior?.nsosTag)return prior;
@@ -219,6 +221,8 @@ export class NSOSSession {
       cmd('ssh <destination> vrf <vrf>','Connect through a selected VRF',a=>this.ssh(a[0],a[1]),{read:true}),
       cmd('ping <address>','Send IPv4/IPv6 probes',a=>this.ping(a[0]),{read:true}),
       cmd('ping <address> vrf <vrf>','Send probes in a VRF',a=>this.ping(a[0],a[1]),{read:true}),
+      cmd('ping <address> count <count>','Send a bounded number of IPv4/IPv6 probes',a=>this.ping(a[0],undefined,integer(a[1],1,20)),{read:true}),
+      cmd('ping <address> vrf <vrf> count <count>','Send a bounded number of probes in a VRF',a=>this.ping(a[0],a[1],integer(a[2],1,20)),{read:true}),
     ];
     const globals=[
       cmd('ip access-list <name>','Configure an implemented IPv4 access list',(a,no)=>{
@@ -264,6 +268,9 @@ export class NSOSSession {
           for(const p of Object.values(c.interfaces))if(scopes.has(p.vrf||''))delete p.features.ospf;
           return;
         }
+        // A second tag may be used to select a different VRF without replacing
+        // the one supported instance in the default routing table.
+        if(!c.protocols.ospf?.nsosTag||c.protocols.ospf.nsosTag===a[0])this.process(a[0]);
         this.context={mode:'router',name:a[0],parent:{mode:'config'}};
       },{no:'router ospf <tag>'}),
       cmd('vpc domain <domain>','Configure a vPC domain',(a,no)=>{
@@ -313,7 +320,7 @@ export class NSOSSession {
       return [...common,
         ...['',' Mbps',' Gbps'].map(unit=>cmd('auto-cost reference-bandwidth <number>'+unit,'Set operational OSPF reference bandwidth',(a,no)=>{const value=a[0]===undefined?undefined:integer(a[0],1,unit===' Gbps'?4000:4000000)*(unit===' Gbps'?1000:1);if(no)delete p().referenceBandwidth;else p().referenceBandwidth=value;},{no:'auto-cost reference-bandwidth'+(unit?' <number>'+unit:'')})),
         cmd('router-id <address>','Set OSPF router ID',(a,no)=>{if(no)delete p().routerId;else p().routerId=ip4(a[0]);},{no:'router-id'}),
-        cmd('passive-interface <interface>','Suppress OSPF hellos',(a,no)=>{const i=this.port(a[0]).name;p().passiveInterfaces=p().passiveInterfaces.filter((v:string)=>v!==i);if(!no)p().passiveInterfaces.push(i);},{no:'passive-interface <interface>'}),
+        cmd('passive-interface default','Suppress OSPF hellos unless an interface overrides the default',(_a,no)=>{p().passiveDefault=!no;},{no:'passive-interface default'}),
         ...(mode==='router'?[cmd('vrf <vrf>','Select OSPF VRF',a=>{this.process(this.context.name!,name(a[0]));this.enter('router-vrf',this.context.name,name(a[0]));})]:[]),
       ];
     }
@@ -375,7 +382,7 @@ export class NSOSSession {
       cmd('vrf member <vrf>','Assign interface to routing context',(a,no)=>{
         routed();const vrf=no?undefined:name(a[0]);if(vrf&&!c.features.vrfs?.[vrf])fail('VRF does not exist.');
         if(p.name==='mgmt0'&&vrf!=='management')fail('mgmt0 must remain in the management VRF.');
-        if(p.vrf!==vrf){p.vrf=vrf;delete p.ip;delete p.mask;p.ipv6=[];delete f.ospf;}
+        if(p.vrf!==vrf){p.vrf=vrf;delete p.ip;delete p.mask;p.ipv6=[];delete f.ospf;return ['Warning: Deleted all L3 config on interface '+(/^Loopback/.test(p.name)?p.name.toLowerCase():p.name)];}
       },{no:'vrf member'}),
       cmd('ip access-group <name> out','Apply an enforced outbound IPv4 routed ACL',(a,no)=>{
         routed();data();if(!/^Ethernet/.test(p.name))fail('Outbound RACLs are currently implemented on routed physical Ethernet ports only.');
@@ -423,8 +430,26 @@ export class NSOSSession {
       cmd('spanning-tree cost <cost>','Set spanning-tree port cost',a=>{data();f.stpCost=integer(a[0],1,200000000);}),
       cmd('ip router ospf <tag> area <area>','Enable named OSPF on interface',(a,no)=>{
         routed();if(p.name==='mgmt0')fail('Routing protocols are not supported on mgmt0.');this.requireFeature('ospf');const area=this.area(a[1]);
-        this.process(a[0],p.vrf,!no);if(no)delete f.ospf;else f.ospf={...f.ospf,processId:1,area};
+        const process=this.process(a[0],p.vrf,!no);
+        if(no){
+          if(!process||f.ospf?.area===undefined)return ['Already not configured'];
+          if(String(f.ospf.area)!==area)return ['Area mismatch'];
+          delete f.ospf.area;delete f.ospf.processId;
+        }else f.ospf={...f.ospf,processId:1,area};
       },{no:'ip router ospf <tag> area <area>'}),
+      cmd('ip ospf passive-interface','Suppress OSPF hellos on this interface',(_a,no)=>{
+        routed();if(p.name==='mgmt0')fail('Routing protocols are not supported on mgmt0.');this.requireFeature('ospf');f.ospf??={};f.ospf.passive=!no;
+        const process=p.vrf?c.protocols.ospf?.vrfs?.[p.vrf]:c.protocols.ospf;
+        if(process){process.passiveInterfaces=process.passiveInterfaces?.filter((i:string)=>i!==p.name);process.activeInterfaces=process.activeInterfaces?.filter((i:string)=>i!==p.name);}
+      },{no:'ip ospf passive-interface'}),
+      cmd('default ip ospf passive-interface','Inherit the router or VRF passive-interface default',()=>{
+        routed();if(p.name==='mgmt0')fail('Routing protocols are not supported on mgmt0.');this.requireFeature('ospf');if(f.ospf)delete f.ospf.passive;
+        const process=p.vrf?c.protocols.ospf?.vrfs?.[p.vrf]:c.protocols.ospf;
+        if(process){process.passiveInterfaces=process.passiveInterfaces?.filter((i:string)=>i!==p.name);process.activeInterfaces=process.activeInterfaces?.filter((i:string)=>i!==p.name);}
+      }),
+      cmd('ip ospf mtu-ignore','Ignore an oversized received OSPF database-description MTU',(_a,no)=>{
+        routed();if(p.name==='mgmt0')fail('Routing protocols are not supported on mgmt0.');this.requireFeature('ospf');f.ospf??={};if(no)delete f.ospf.mtuIgnore;else f.ospf.mtuIgnore=true;
+      },{no:'ip ospf mtu-ignore'}),
       ...[['cost','cost',1,65535],['priority','priority',0,255],['hello-interval','helloInterval',1,65535],['dead-interval','deadInterval',1,65535]].map(([command,field,min,max])=>cmd(`ip ospf ${command} <number>`,'Set OSPF interface parameter',(a,no)=>{
         routed();if(p.name==='mgmt0')fail('Routing protocols are not supported on mgmt0.');this.requireFeature('ospf');f.ospf??={};if(no)delete f.ospf[field];else f.ospf[field]=integer(a[0],+min,+max);
       },{no:`ip ospf ${command}`})),
@@ -497,18 +522,24 @@ export class NSOSSession {
         if(!line.trim()||line.trim().startsWith('!'))continue;
         if(this.context.mode==='priv')fail('Configuration replay cannot execute EXEC commands after leaving configuration mode.');
         const output=this.execute(line.trim());
-        if(output.some(x=>x.startsWith('%')))fail(`Configuration replay rejected "${line.trim()}": ${output.join(' ')}`);
+        if(output.some(iosRejected))fail(`Configuration replay rejected "${line.trim()}": ${output.join(' ')}`);
       }
       return ['Configuration applied.'];
     }catch(error){this.device.config=before;this.engine.changed();throw error;}
     finally{this.context=old;}
   }
-  private ping(address:string,vrf?:string):string[]{
+  private ping(address:string,vrf?:string,count=5):string[]{
     if(!isIPv4(address)&&!isIPv6(address))fail('A literal IPv4 or IPv6 destination is required.');
     if(vrf&&vrf!=='default'&&!this.device.config.features.vrfs?.[vrf])fail('VRF does not exist.');
-    const r=this.engine.ping(this.deviceId,address,{count:5,vrf:vrf==='default'?undefined:vrf});
+    const r=this.engine.ping(this.deviceId,address,{count,vrf:vrf==='default'?undefined:vrf,size:isIPv6(address)?104:84});
     let iterations=0;while(r.status==='running'&&iterations++<600)this.engine.advance(100);
-    return [`PING ${address}`, ...r.replies.map(x=>x.error?`Request ${x.sequence}: ${x.error}`:`Reply from ${x.from}: time=${x.time??0} ms`),`${r.sent} packets transmitted, ${r.received} packets received`];
+    const replies=r.replies.filter(x=>!x.error),times=replies.map(x=>x.time??0),milliseconds=(n:number)=>String(Number(n.toFixed(3)));
+    const output=r.replies.flatMap(x=>{
+      if(!x.error)return [`64 bytes from ${x.from}: icmp_seq=${x.sequence-1}${x.ttl===undefined?'':' ttl='+x.ttl} time=${milliseconds(x.time??0)} ms`];
+      const detail=!x.from&&/network unreachable|route/i.test(x.error)?[`ping: sendto ${address} 64 chars, No route to host`]:x.error==='Request timed out'?[]:[x.from?`From ${x.from}: ${x.error}`:'ping: '+x.error];
+      return [...detail,`Request ${x.sequence-1} timed out`];
+    });
+    return [`PING ${address} (${address}): 56 data bytes`,...output,'',`--- ${address} ping statistics ---`,`${r.sent} packets transmitted, ${r.received} packets received, ${(100*(r.sent-r.received)/Math.max(1,r.sent)).toFixed(2)}% packet loss`,...(times.length?[`round-trip min/avg/max = ${milliseconds(Math.min(...times))}/${milliseconds(times.reduce((a,b)=>a+b,0)/times.length)}/${milliseconds(Math.max(...times))} ms`]:[])];
   }
   private ssh(destination:string,vrf?:string):string[]{
     const m=/^([^@\s]+)@(.+)$/.exec(destination);if(!m)fail('Use ssh username@address.');
@@ -549,6 +580,7 @@ export class NSOSSession {
     if(token==='<feature>')return FEATURES;
     if(token==='<interface>')return Object.keys(this.device.config.interfaces);
     if(token==='<vrf>')return ['default',...Object.keys(this.device.config.features.vrfs||{})];
+    if(token==='<ospf-tag>')return [...new Set([this.device.config.protocols.ospf?.nsosTag,...Object.values<any>(this.device.config.protocols.ospf?.vrfs??{}).map(p=>p?.nsosTag)].filter(Boolean))];
     if(token==='<speed>')return ['auto',...(this.context.mode==='interface'?this.selected.features.ethernetSpeeds||[]:[]).map(String)];
     return [];
   }
@@ -629,7 +661,8 @@ export class NSOSSession {
       'show vpc','show vpc brief','show vpc role','show vpc peer-keepalive','show vpc consistency-parameters global','show vpc consistency-parameters vpc <vpc-id>',
       'show vlan','show vlan brief','show spanning-tree','show spanning-tree summary','show spanning-tree pathcost method','show spanning-tree vlan <vlan>','show spanning-tree interface <interface>',
       'show spanning-tree mst configuration','show mac address-table','show ip route','show ip route vrf <vrf>','show ipv6 route','show ipv6 route vrf <vrf>',
-      'show ip ospf','show ip ospf neighbors','show ip ospf neighbors vrf <vrf>','show ip ospf interface','show ip ospf interface vrf <vrf>','show ip arp','show ip arp vrf <vrf>',
+      ...['','<ospf-tag> '].flatMap(tag=>['','neighbors','interface','interface <interface>'].flatMap(suffix=>(suffix.includes('<interface>')?['']:['',' vrf <vrf>']).map(vrf=>('show ip ospf '+tag+suffix).trim()+vrf))),
+      'show ip arp','show ip arp vrf <vrf>',
       'show lldp neighbors','show lldp neighbors detail','show cdp neighbors','show cdp neighbors detail','show ssh server','show vtp status','show snmp','show archive','show capabilities'];
   }
   private show(args:string[]):string[]{
@@ -714,18 +747,45 @@ export class NSOSSession {
     const args=a[0]==='interface'?['interface',this.port(a[1]).name]:a;
     return formatIOSL2Show(this.engine,d,'spanning-tree',args)||[];
   }
-  private showOSPF(a:string[]):string[]{
-    this.requireFeature('ospf');const vrf=a.includes('vrf')?a[a.indexOf('vrf')+1]:undefined,root=this.device.config.protocols.ospf,p=vrf?root?.vrfs?.[vrf]:root,live=ospfLiveDetail(this.engine,this.deviceId,'ospf',vrf);
-    if(!p?.nsosTag)return ['OSPF is not configured in VRF '+(vrf||'default')+'.'];
+  private showOSPF(a:string[],scope?:{vrf:string}):string[]{
+    this.requireFeature('ospf');
+    const tag=a.length&&!['neighbors','interface','vrf'].includes(a[0])?a.shift():undefined;
+    const selectedVRF=scope?.vrf??(a.includes('vrf')?a[a.indexOf('vrf')+1]:a[0]==='interface'&&a[1]?this.port(a[1]).vrf:undefined);
+    if(!scope&&a.includes('vrf')&&selectedVRF==='all')return ['default',...Object.keys(this.device.config.features.vrfs??{})].flatMap(vrf=>this.showOSPF([...(tag?[tag]:[]),...a.slice(0,a.indexOf('vrf')),'vrf',vrf],{vrf}));
+    const root=this.device.config.protocols.ospf;
+    if(tag&&![root?.nsosTag,...Object.values<any>(root?.vrfs??{}).map(p=>p?.nsosTag)].includes(tag))return fail('Invalid OSPF instance tag.');
+    if(selectedVRF&&selectedVRF!=='default'&&!this.device.config.features.vrfs?.[selectedVRF])return [];
+    const vrf=selectedVRF==='default'?undefined:selectedVRF,p=vrf?root?.vrfs?.[vrf]:root,live=ospfLiveDetail(this.engine,this.deviceId,'ospf',vrf);
+    if(tag&&p?.nsosTag!==tag)return [];
+    if(!p?.nsosTag)return [];
     if(a[0]==='neighbors'){
       const neighbors=(live?.neighbors||[]).filter(n=>n.state!=='DOWN');
+      if(!neighbors.length)return [];
       return [` OSPF Process ID ${p.nsosTag} VRF ${vrf||'default'}`,` Total number of neighbors: ${neighbors.length}`,' Neighbor ID     Pri State            Up Time  Address         Interface',...neighbors.map(n=>{
         const state=n.state+'/'+(n.peerRole==='DR'?'DR':n.peerRole==='BDR'?'BDR':live?.interfaces.find(i=>i.name===n.interface)?.networkType==='point-to-point'?'-':'DROTHER');
         return ' '+n.routerId.padEnd(16)+String(n.priority).padStart(3)+' '+state.padEnd(17)+(n.upSince===undefined?'-':iosDuration(this.engine.clock.now()-n.upSince)).padEnd(9)+n.address.padEnd(16)+nsosPort(n.interface);
       })];
     }
-    if(a[0]==='interface')return [`OSPF Process ${p.nsosTag}`, ...Object.values(this.device.config.interfaces).filter(i=>i.features.ospf?.area!==undefined&&(i.vrf||'')===(vrf||'')).map(i=>`${i.name}, Area ${i.features.ospf.area}, ${this.engine.interfaceUp(this.deviceId,i.name)?'up':'down'}, cost ${i.features.ospf.cost??Math.max(1,Math.min(65535,Math.floor((p.referenceBandwidth??40000)/(interfaceBandwidth(this.device,i)/1000))))}`)];
-    return [`OSPF Process ${p.nsosTag}, VRF ${vrf||'default'}`,`Reference Bandwidth is ${p.referenceBandwidth??40000} Mbps`,`Router ID ${p.routerId||live?.interfaces?.[0]?.routerId||'not yet selected'}`,`Received database LSAs: ${live?.lsas.length||0}`,`SPF runs: ${live?.spfRuns||0}`];
+    if(a[0]==='interface'){
+      const selected=a[1]&&a[1]!=='vrf'?this.port(a[1]).name:undefined;
+      const ports=Object.values(this.device.config.interfaces).filter(i=>i.features.ospf?.area!==undefined&&(i.vrf||'')===(vrf||''));
+      return ports.filter(i=>!selected||i.name===selected).flatMap(i=>{
+        const up=this.engine.interfaceUp(this.deviceId,i.name),loopback=/^Loopback/.test(i.name),f=i.features.ospf,local=live?.interfaces.find(p=>p.name===i.name),state=this.device.runtime.features.ospfInterfaces?.[i.name];
+        const passive=f.passive??(p.passiveInterfaces?.includes(i.name)||p.activeInterfaces?.includes(i.name)?!p.activeInterfaces?.includes(i.name):p.passiveDefault??p.passiveInterfaces?.includes('default')??false);
+        const cost=f.cost??(loopback?1:Math.max(1,Math.min(65535,Math.floor((p.referenceBandwidth??40000)/(interfaceBandwidth(this.device,i)/1000))))),neighbors=(live?.neighbors??[]).filter(n=>n.interface===i.name&&n.state!=='DOWN'),full=neighbors.filter(n=>n.state==='FULL');
+        const rows=[` ${loopback?i.name.toLowerCase():i.name} is ${up?'up':'down'}, line protocol is ${up?'up':'down'}`,...(i.ip?[`    IP address ${i.ip}/${maskToPrefix(i.mask!)}`]:[]),`    Process ID ${p.nsosTag} VRF ${vrf||'default'}, area ${isIPv4(String(f.area))?f.area:intToIp(Number(f.area))}`,'    Enabled by interface configuration',`    State ${!up?'DOWN':loopback?'LOOPBACK':passive&&i.ip?'DR':state?.role??'DOWN'}, Network type ${loopback?'LOOPBACK':String(f.networkType??'broadcast').toUpperCase()}, cost ${cost}`];
+        if(!up||loopback||passive)return [...rows,...passive&&!loopback?['    Passive interface']:[],''];
+        rows.push(`    Router Priority ${f.priority??1}`);
+        for(const [role,key]of [['Designated','drRouterId'],['Backup Designated','bdrRouterId']] as const){
+          const id=state?.[key],address=id===local?.routerId?i.ip:neighbors.find(n=>n.routerId===id)?.address;
+          if(id)rows.push(`    ${role} Router ID: ${id}${address?', address: '+address:''}`);
+        }
+        rows.push(`    ${neighbors.length} Neighbors, flooding to ${full.length}, adjacent with ${full.length}`,`    Timer intervals: Hello ${f.helloInterval??10}, Dead ${f.deadInterval??40}`);
+        if(live?.helloDue[i.name]!==undefined)rows.push('      Hello timer due in '+iosDuration(live.helloDue[i.name]));
+        rows.push('    No authentication','');return rows;
+      });
+    }
+    return [` Routing Process ${p.nsosTag} with ID ${p.routerId||live?.interfaces?.[0]?.routerId||'0.0.0.0'} VRF ${vrf||'default'}`,` Reference Bandwidth is ${p.referenceBandwidth??40000} Mbps`,...(p.passiveDefault||p.passiveInterfaces?.includes('default')?[' Default Passive Interface is enabled']:[]),` Number of LSAs: ${live?.lsas.length||0}`,` SPF calculation has run ${live?.spfRuns||0} times`];
   }
   private showVPC(a:string[]):string[]{
     this.requireFeature('vpc');const v=nsosConfig(this.device).vpc,r=vpcRuntime(this.device);

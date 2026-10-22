@@ -25,7 +25,7 @@ export function nsosRouteTable(engine:Simulator,d:Device,family:4|6,vrf='default
   for(const [prefix,paths]of groups){
     const attached=paths.every(r=>['connected','local'].includes(r.protocol));
     lines.push(`${family===6&&prefix==='::/0'?'0::/0':prefix}, ubest/mbest: ${paths.length}/0${attached?', attached':''}`);
-    for(const r of paths){
+    for(const r of [...paths].sort((a,b)=>Number(b.protocol==='local')-Number(a.protocol==='local'))){
       const intf=d.config.interfaces[r.interface],local=r.protocol==='local',direct=r.protocol==='connected';
       const next=r.nextHop||(local?r.network:family===4?intf?.ip:intf?.ipv6.map(v=>v.split('/')[0]).find(v=>prefixContains(r.network,r.prefix,v)));
       const since=d.runtime.features.routeSince?.[routeKey(r)],age=typeof since==='number'?iosDuration(engine.clock.now()-since):undefined;
@@ -93,6 +93,7 @@ export function nsosDiscovery(engine:Simulator,d:Device,protocol:'CDP'|'LLDP',no
 /** Only measured counters are printed; there are no ASIC registers or reset statistics. */
 export function nsosInterface(engine:Simulator,d:Device,p:InterfaceConfig):string[]{
  const now=engine.clock.now(),up=engine.interfaceUp(d.id,p.name),svi=/^Vlan/.test(p.name),c=d.runtime.counters[p.name],short=svi?60:30;
+ if(/^Loopback/.test(p.name))return [`${p.name.toLowerCase()} is ${up?'up':'down'}`,`admin state is ${p.adminUp?'up':'down'},`,'  Hardware: Loopback',...(p.description?['  Description: '+p.description]:[]),...(p.ip?[`  Internet Address is ${p.ip}/${maskToPrefix(p.mask??'255.255.255.255')}`]:[]),...p.ipv6.map(a=>'  IPv6 address: '+a),`  MTU ${p.mtu} bytes, BW ${interfaceBandwidth(d,p)} Kbit , DLY ${(p.features.delay??500)*10} usec`,'  Encapsulation LOOPBACK, medium is broadcast',`    ${c?.rx??0} packets input ${c?.rxBytes??0} bytes`,`    ${c?.inputErrors??0} input errors`,`    ${c?.tx??0} packets output ${c?.txBytes??0} bytes`,`    ${c?.outputErrors??0} output errors`,''];
  const cleared=d.runtime.features.countersClearedAt?.[p.name],mac=dotted(engine.macOf(d.id,p.name));
  const windows=[short,300].flatMap((seconds,index)=>{
   const r=interfaceRates(d,p.name,now,seconds);

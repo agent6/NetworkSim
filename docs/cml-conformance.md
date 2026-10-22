@@ -114,3 +114,25 @@ References: [Cisco CML console server](https://developer.cisco.com/docs/modeling
 Use `scripts/cml/scenarios/fidelity-regressions.json` with the same capture/replay/compare commands above and a fresh output directory. It creates a separate owned lab and runs 74 commands/checks plus the 80-command survey. It tests OSPF reference-bandwidth changes, outbound Nexus RACL deny/counters/deletion and forwarding recovery, dual root-guard failure, SVI route withdrawal and recovery. It does not require the intermittently observed IOSvL2 trunk discovery adjacency; full discovery output and PCAPs are retained for review. The original operational scenario and failed reruns remain unchanged.
 
 The runner now waits for every linked physical port to be available after BOOTED/privileged EXEC. This prevents an early Nexus prompt from being treated as a ready linecard. Native duplicate ACL sequence errors are rejected by the evidence gate. Consult [the follow-up audit and exclusions](audits/cml-fidelity-followup.md) before promoting a feature; native CLI acceptance alone remains insufficient.
+
+## NX-OS OSPF CLI regression scenario
+
+`scripts/cml/scenarios/nxos-ospf.json` creates Nexus 9300v 10.6.2.F and IOL XE
+17.18.02 with one link wired before boot. Its 111 commands/checks test passive
+defaults and interface overrides, loopback status/cost, MTU failure and recovery,
+VRF migration, scoped route withdrawal and recovery. Twelve exact show-command
+observations include rejected selectors; they are observations, not positive
+feature checks. Use the same capture/replay/compare commands above with this
+scenario and a fresh output directory.
+
+The MTU checks restart the IOS interface before interpreting a new database
+exchange. Both adjacency and forwarding must recover. The scenario uses bounded
+convergence waits and does not treat SVI/interface-up as proof of routing. IOL's
+10-Mbps default differs from NetworkSim's Gigabit port; resulting numerical
+route-metric differences remain visible in comparison.
+
+The console reader recognizes a timestamped Nexus VDC syslog message appended
+to an already printed prompt. It still rejects command echoes as prompt fences.
+Unprefixed native `Area mismatch` is a command rejection; `Already not
+configured` remains an idempotent notice. No numerical output fields are removed
+to make comparisons match.

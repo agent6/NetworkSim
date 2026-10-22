@@ -1,0 +1,656 @@
+{
+  "schemaVersion": 1,
+  "description": "Fresh two-node NX-OS CLI/OSPF conformance. Numeric/profile/presentation differences remain visible; this is not complete NX-OS parity.",
+  "scenarioSha256": "b32650396216ae2c21869b3c49ae626c7cf51ae7b0c4c5e42cf49bc08554f99f",
+  "captureSha256": "dbfa447a25e95f7139d7b8fe42538bc9efcd65b1ab69c3ac04f36c8783dc9096",
+  "simulatorSourceSha256": "ddb1639c46cafac1f120fa62cb7f87b6b348af9e388b448b19b66df8776d4e30",
+  "capturedAt": "2026-10-22T14:50:56.445411+00:00",
+  "baseline": "fresh-owned-lab",
+  "status": "captured",
+  "labStopped": true,
+  "controllerVersion": "2.10.0+build.13",
+  "images": {
+    "nxos": {
+      "definition": "nxosv9000",
+      "image": "nxosv9300-10-6-2-f",
+      "port": "Ethernet1/1"
+    },
+    "iosxe": {
+      "definition": "iol-xe",
+      "image": "iol-xe-17-18-02",
+      "port": "Ethernet0/0"
+    }
+  },
+  "stepCount": 111,
+  "observationCount": 12,
+  "comparisonStatus": "output-review-required",
+  "outputDifferenceCount": 31,
+  "problems": [],
+  "packetEvidence": [
+    {
+      "file": "2819c798-bca2-4799-b80d-78bc505025eb.pcap",
+      "ARP": 19,
+      "ICMP": 30,
+      "ICMPv6": 0,
+      "OSPF": 311,
+      "STP": 0,
+      "CDP": 56,
+      "LLDP": 0,
+      "packets": 492,
+      "sha256": "49587ae80473ea54ea2f15963728b591020e29c3ccbb41330d601655ac9f1364"
+    }
+  ],
+  "dbdMtuEvidence": [
+    {
+      "source": "198.51.100.1",
+      "advertisedMtu": 1500,
+      "packets": 15
+    },
+    {
+      "source": "198.51.100.1",
+      "advertisedMtu": 1600,
+      "packets": 23
+    },
+    {
+      "source": "198.51.100.2",
+      "advertisedMtu": 1500,
+      "packets": 31
+    }
+  ],
+  "commandAvailability": [
+    {
+      "node": "nxos",
+      "command": "show ip ospf",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip ospf LAB",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip ospf LAB vrf BLUE",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip ospf neighbors vrf all",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip ospf interface vrf BLUE",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip ospf LAB interface Ethernet1/1",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip ospf LAB interface Ethernet1/1 vrf BLUE",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show ip ospf MISSING neighbors",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors vrf MISSING",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show interface Loopback0",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show running-config interface Ethernet1/1",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip route vrf BLUE",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    }
+  ],
+  "contracts": [
+    {
+      "id": "nx-001",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors",
+      "checks": [
+        {
+          "pattern": "3\\.3\\.3\\.3.*FULL",
+          "passed": true,
+          "observed": "3.3.3.3           1 FULL"
+        }
+      ]
+    },
+    {
+      "id": "nx-002",
+      "node": "nxos",
+      "command": "show interface Loopback0",
+      "checks": [
+        {
+          "pattern": "loopback0 is up",
+          "passed": true,
+          "observed": "loopback0 is up"
+        },
+        {
+          "pattern": "Hardware: Loopback",
+          "passed": true,
+          "observed": "Hardware: Loopback"
+        },
+        {
+          "pattern": "BW 8000000",
+          "passed": true,
+          "observed": "BW 8000000"
+        }
+      ]
+    },
+    {
+      "id": "nx-003",
+      "node": "nxos",
+      "command": "show ip ospf LAB interface Loopback0",
+      "checks": [
+        {
+          "pattern": "LOOPBACK, Network type LOOPBACK, cost 1",
+          "passed": true,
+          "observed": "LOOPBACK, Network type LOOPBACK, cost 1"
+        }
+      ]
+    },
+    {
+      "id": "nx-004",
+      "node": "iosxe",
+      "command": "ping 192.0.2.1 repeat 3 timeout 1",
+      "checks": [
+        {
+          "pattern": "Success rate is 100 percent \\(3/3\\)",
+          "passed": true,
+          "observed": "Success rate is 100 percent (3/3)"
+        }
+      ]
+    },
+    {
+      "id": "nx-009",
+      "node": "nxos",
+      "command": "show ip ospf LAB interface Ethernet1/1",
+      "checks": [
+        {
+          "pattern": "Passive interface",
+          "passed": true,
+          "observed": "Passive interface"
+        }
+      ]
+    },
+    {
+      "id": "nx-010",
+      "node": "iosxe",
+      "command": "show ip route",
+      "checks": [
+        {
+          "absent": "192\\.0\\.2\\.1(?:/32|\\s)",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "nx-011",
+      "node": "iosxe",
+      "command": "ping 192.0.2.1 repeat 3 timeout 1",
+      "checks": [
+        {
+          "pattern": "Success rate is 0 percent \\(0/3\\)",
+          "passed": true,
+          "observed": "Success rate is 0 percent (0/3)"
+        }
+      ]
+    },
+    {
+      "id": "nx-016",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors",
+      "checks": [
+        {
+          "pattern": "3\\.3\\.3\\.3.*FULL",
+          "passed": true,
+          "observed": "3.3.3.3           1 FULL"
+        }
+      ]
+    },
+    {
+      "id": "nx-017",
+      "node": "iosxe",
+      "command": "ping 192.0.2.1 repeat 3 timeout 1",
+      "checks": [
+        {
+          "pattern": "Success rate is 100 percent \\(3/3\\)",
+          "passed": true,
+          "observed": "Success rate is 100 percent (3/3)"
+        }
+      ]
+    },
+    {
+      "id": "nx-022",
+      "node": "nxos",
+      "command": "show ip ospf LAB interface Ethernet1/1",
+      "checks": [
+        {
+          "pattern": "Passive interface",
+          "passed": true,
+          "observed": "Passive interface"
+        }
+      ]
+    },
+    {
+      "id": "nx-036",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors",
+      "checks": [
+        {
+          "absent": "FULL",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "nx-037",
+      "node": "iosxe",
+      "command": "show ip route",
+      "checks": [
+        {
+          "absent": "192\\.0\\.2\\.1(?:/32|\\s)",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "nx-038",
+      "node": "iosxe",
+      "command": "ping 192.0.2.1 repeat 3 timeout 1",
+      "checks": [
+        {
+          "pattern": "Success rate is 0 percent \\(0/3\\)",
+          "passed": true,
+          "observed": "Success rate is 0 percent (0/3)"
+        }
+      ]
+    },
+    {
+      "id": "nx-045",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors",
+      "checks": [
+        {
+          "pattern": "3\\.3\\.3\\.3.*FULL",
+          "passed": true,
+          "observed": "3.3.3.3           1 FULL"
+        }
+      ]
+    },
+    {
+      "id": "nx-046",
+      "node": "iosxe",
+      "command": "ping 192.0.2.1 repeat 3 timeout 1",
+      "checks": [
+        {
+          "pattern": "Success rate is 100 percent \\(3/3\\)",
+          "passed": true,
+          "observed": "Success rate is 100 percent (3/3)"
+        }
+      ]
+    },
+    {
+      "id": "nx-058",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors",
+      "checks": [
+        {
+          "pattern": "3\\.3\\.3\\.3.*FULL",
+          "passed": true,
+          "observed": "3.3.3.3           1 FULL"
+        }
+      ]
+    },
+    {
+      "id": "nx-094",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors vrf BLUE",
+      "checks": [
+        {
+          "pattern": "3\\.3\\.3\\.33.*FULL",
+          "passed": true,
+          "observed": "3.3.3.33          1 FULL"
+        }
+      ]
+    },
+    {
+      "id": "nx-095",
+      "node": "nxos",
+      "command": "show ip ospf LAB interface Ethernet1/1",
+      "checks": [
+        {
+          "pattern": "VRF BLUE",
+          "passed": true,
+          "observed": "VRF BLUE"
+        }
+      ]
+    },
+    {
+      "id": "nx-096",
+      "node": "nxos",
+      "command": "ping 192.0.2.20 vrf BLUE count 3",
+      "checks": [
+        {
+          "pattern": "3 packets transmitted, 3 packets received",
+          "passed": true,
+          "observed": "3 packets transmitted, 3 packets received"
+        }
+      ]
+    },
+    {
+      "id": "nx-097",
+      "node": "nxos",
+      "command": "show ip route",
+      "checks": [
+        {
+          "absent": "192\\.0\\.2\\.20",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "nx-103",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors vrf BLUE",
+      "checks": [
+        {
+          "absent": "FULL",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "nx-104",
+      "node": "nxos",
+      "command": "ping 192.0.2.20 vrf BLUE count 3",
+      "checks": [
+        {
+          "pattern": "3 packets transmitted, 0 packets received",
+          "passed": true,
+          "observed": "3 packets transmitted, 0 packets received"
+        }
+      ]
+    },
+    {
+      "id": "nx-110",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors vrf BLUE",
+      "checks": [
+        {
+          "pattern": "3\\.3\\.3\\.33.*FULL",
+          "passed": true,
+          "observed": "3.3.3.33          1 FULL"
+        }
+      ]
+    },
+    {
+      "id": "nx-111",
+      "node": "nxos",
+      "command": "ping 192.0.2.20 vrf BLUE count 3",
+      "checks": [
+        {
+          "pattern": "3 packets transmitted, 3 packets received",
+          "passed": true,
+          "observed": "3 packets transmitted, 3 packets received"
+        }
+      ]
+    }
+  ],
+  "supplementalCLI": {
+    "captureSha256": "e867d36572098475c63fb949b4b65a5703a5f1a736898eace225802bc4671879",
+    "scope": "Exploratory CLI facts only. Cleanup was incomplete and its hot-added second link did not forward Nexus traffic; it is not a complete packet conformance pass. Original area-mismatch acceptance metadata predates the rejection fix.",
+    "facts": [
+      {
+        "command": "show ip ospf LAB interface Loopback9",
+        "classification": "explicit-loopback-cost",
+        "observed": "LOOPBACK, Network type LOOPBACK, cost 9",
+        "rawSha256": "b230f23c62f7cb4612a3aac42928915fad951a26be2281727154d0521bf83428"
+      },
+      {
+        "command": "no ip router ospf WRONG area 0",
+        "classification": "idempotent-no-change",
+        "observed": "Already not configured",
+        "rawSha256": "076cf16e531ec1a7968af4b8b7075fa08aafa1f54b009221f7af755366f50298"
+      },
+      {
+        "command": "no ip router ospf LAB area 1",
+        "classification": "rejected-no-change",
+        "observed": "Area mismatch",
+        "rawSha256": "3d9b30fcf593445ca977a7d927705ee9d1fc113b6e5564e8c4695bb1fc6fa2c1"
+      },
+      {
+        "command": "show running-config interface Loopback9",
+        "classification": "matching-detach-preserves-cost",
+        "observed": "ip ospf cost 9\n\n",
+        "rawSha256": "dee1dfca8301637c4f8a0fc3fbb0a12ba514f6d60537163b71b40e867e1a2b73"
+      }
+    ]
+  },
+  "notValidated": [
+    "Complete NX-OS output equivalence",
+    "Additional NX-OS routing protocols, AAA or ACL attachment types",
+    "New vPC feature combinations",
+    "Live MTU test with Nexus as the smaller receiver",
+    "Forwarding on an interface hot-added after Nexus boot",
+    "Full hardware/process telemetry"
+  ],
+  "comparisonSha256": "8e3463c470c9798d330a189a53dfb62fa973e1d07a67e07240c9ef63cab8e87d",
+  "remainingDifferenceReview": [
+    {
+      "id": "nx-001",
+      "diffSha256": "86aa9a859c34631de3f87b1c616dab981ace741a9671426ec01e347c47363a9d",
+      "classification": "runtime",
+      "reason": "Measured timing/age and non-preemptive DR/BDR election depend on boot and convergence order; no role or number was forced to match."
+    },
+    {
+      "id": "nx-002",
+      "diffSha256": "c4510f4e27fcf2d58b4892371278842db3883f41579ea960bafd68619e963b86",
+      "classification": "output-subset",
+      "reason": "Unmodeled hardware/load/compression fields or native interface indexes are omitted. Loopback input counters now match delivered packets."
+    },
+    {
+      "id": "nx-003",
+      "diffSha256": "ec8beb89ee8729fff51bcb5db6ebff18299f3980fa6ee1e3345aabbccefe2caf",
+      "classification": "output-subset",
+      "reason": "Unmodeled hardware/load/compression fields or native interface indexes are omitted. Loopback input counters now match delivered packets."
+    },
+    {
+      "id": "nx-004",
+      "diffSha256": "ac7a4e20c6fc22738dc979e4f9c153257920585f0b0561c882630be3757d50de",
+      "classification": "runtime",
+      "reason": "Measured timing/age and non-preemptive DR/BDR election depend on boot and convergence order; no role or number was forced to match."
+    },
+    {
+      "id": "nx-009",
+      "diffSha256": "b6d6af705b7946102fc72c89ba1cfd839f96c498a2f3d6b67c1da2250cf5673b",
+      "classification": "output-subset",
+      "reason": "Unmodeled hardware/load/compression fields or native interface indexes are omitted. Loopback input counters now match delivered packets."
+    },
+    {
+      "id": "nx-010",
+      "diffSha256": "02b1f4beef40dba4e33cb4b38be07a3eb4a0f89de48f59581b1c8bea2fd67fba",
+      "classification": "platform-presentation",
+      "reason": "IOL Ethernet-to-Gigabit interface mapping and platform-specific route-code legend; route presence/withdrawal is validated."
+    },
+    {
+      "id": "nx-016",
+      "diffSha256": "3167ace381134c7c4c0cbc42c0a12173fb65660a80d3efd1ef6fd6302bfaad75",
+      "classification": "runtime",
+      "reason": "Measured timing/age and non-preemptive DR/BDR election depend on boot and convergence order; no role or number was forced to match."
+    },
+    {
+      "id": "nx-022",
+      "diffSha256": "b6d6af705b7946102fc72c89ba1cfd839f96c498a2f3d6b67c1da2250cf5673b",
+      "classification": "output-subset",
+      "reason": "Unmodeled hardware/load/compression fields or native interface indexes are omitted. Loopback input counters now match delivered packets."
+    },
+    {
+      "id": "nx-036",
+      "diffSha256": "0f06b1fb15656a96671c9a28db7b71c38cf37c24f6f19cd01ef2a6dd9ebb74be",
+      "classification": "runtime-and-unmodeled-neighbor-age",
+      "reason": "Persistent EXCHANGE and five-second retries are implemented. DR/BDR depends on startup order; neighbor-age display before FULL remains unavailable."
+    },
+    {
+      "id": "nx-037",
+      "diffSha256": "02b1f4beef40dba4e33cb4b38be07a3eb4a0f89de48f59581b1c8bea2fd67fba",
+      "classification": "platform-presentation",
+      "reason": "IOL Ethernet-to-Gigabit interface mapping and platform-specific route-code legend; route presence/withdrawal is validated."
+    },
+    {
+      "id": "nx-045",
+      "diffSha256": "6ff17257e25bea09feeb255e9a3a57faee92a0c52889256fa60e3cf422eb650a",
+      "classification": "runtime",
+      "reason": "Measured timing/age and non-preemptive DR/BDR election depend on boot and convergence order; no role or number was forced to match."
+    },
+    {
+      "id": "nx-058",
+      "diffSha256": "cbc901d43af28a606d773d2425a71bf44996ec51fcc188b43d76a4427bd8dabc",
+      "classification": "runtime",
+      "reason": "Measured timing/age and non-preemptive DR/BDR election depend on boot and convergence order; no role or number was forced to match."
+    },
+    {
+      "id": "nx-079",
+      "diffSha256": "25804671a2472fa98b8fc2249c8ecb70509faa40b38ed09e406bb71fb2cb1a44",
+      "classification": "ios-prompt-presentation",
+      "reason": "IOS XE config-vrf-af versus the simulator config-vrf-af-ipv4 prompt; actual routing context and address-family behavior are validated."
+    },
+    {
+      "id": "nx-083",
+      "diffSha256": "58726f1892b475ac17f6b698bb39ebed6fa6872ae3e421a52782524bc9ede9d6",
+      "classification": "ios-notice-presentation",
+      "reason": "IOS XE emits an informational IPv4-address-removal notice; simulator performs the removal without that notice."
+    },
+    {
+      "id": "nx-094",
+      "diffSha256": "903ca975bbde70c3c0085a8c621f3b564c62ab532a3e034548a56bab2e6d3b6c",
+      "classification": "runtime",
+      "reason": "Measured timing/age and non-preemptive DR/BDR election depend on boot and convergence order; no role or number was forced to match."
+    },
+    {
+      "id": "nx-095",
+      "diffSha256": "c65551a677e14f173fb3845b6f94122f87b0ef79acd261fd6097e800173ca00f",
+      "classification": "runtime-and-output-subset",
+      "reason": "Actual election and Hello deadline differ by execution order; unsupported index, transmit/wait/retransmit displays, opaque checksums and state-change counters are omitted."
+    },
+    {
+      "id": "nx-096",
+      "diffSha256": "d8bdd383150cb8ef7126a2ef966354c947b475b826821779634301bb47d1504a",
+      "classification": "software-profile-and-runtime",
+      "reason": "Actual virtual RTT and simulated router echo-reply TTL (64 versus this native path 254) remain visible; no numeric normalization or fake TTL is applied."
+    },
+    {
+      "id": "nx-097",
+      "diffSha256": "d28eb2c964d4e9647abd6023deb15026bc8348c1d87aac8897d87c58a684fa9e",
+      "classification": "runtime-and-whitespace",
+      "reason": "Route ages and trailing whitespace differ; local/direct path ordering now follows the reference."
+    },
+    {
+      "id": "nx-110",
+      "diffSha256": "ba589c90254c339f26707e8a6bd8e03533dca92c98b98add7951bb2d5a6a6c37",
+      "classification": "runtime",
+      "reason": "Measured timing/age and non-preemptive DR/BDR election depend on boot and convergence order; no role or number was forced to match."
+    },
+    {
+      "id": "nx-111",
+      "diffSha256": "b7deddfe6fdd439b3698a2f253454b8f10697d98a54dc494d9e06ae0715bf57f",
+      "classification": "software-profile-and-runtime",
+      "reason": "Actual virtual RTT and simulated router echo-reply TTL (64 versus this native path 254) remain visible; no numeric normalization or fake TTL is applied."
+    },
+    {
+      "id": "observe/nxos/show ip ospf",
+      "diffSha256": "5507b3f52c2686a345ad8a982baf5234df3f467b1071850e6b4f27a8b0c816d9",
+      "classification": "output-subset",
+      "reason": "Logical LSDB/SPF counts describe the simulator; native HA/graceful-restart, binary LSA checksums, per-area instrumentation and unsupported timer fields are not invented."
+    },
+    {
+      "id": "observe/nxos/show ip ospf LAB",
+      "diffSha256": "5507b3f52c2686a345ad8a982baf5234df3f467b1071850e6b4f27a8b0c816d9",
+      "classification": "output-subset",
+      "reason": "Logical LSDB/SPF counts describe the simulator; native HA/graceful-restart, binary LSA checksums, per-area instrumentation and unsupported timer fields are not invented."
+    },
+    {
+      "id": "observe/nxos/show ip ospf LAB vrf BLUE",
+      "diffSha256": "fa8b1726ed4e1f1a443154f9e57e1169290064e0f8359c0c4b515fc1f20669ed",
+      "classification": "output-subset",
+      "reason": "Logical LSDB/SPF counts describe the simulator; native HA/graceful-restart, binary LSA checksums, per-area instrumentation and unsupported timer fields are not invented."
+    },
+    {
+      "id": "observe/nxos/show ip ospf neighbors vrf all",
+      "diffSha256": "c3f4469239671259a4a65ede0a6172f936563edeb19f26e8bd44b3765c013e07",
+      "classification": "runtime",
+      "reason": "Measured timing/age and non-preemptive DR/BDR election depend on boot and convergence order; no role or number was forced to match."
+    },
+    {
+      "id": "observe/nxos/show ip ospf interface vrf BLUE",
+      "diffSha256": "f96be58e84d30f4663a2c6d3dabaa4a0674e4e72acdcd165ddfb72b38d705412",
+      "classification": "runtime-and-output-subset",
+      "reason": "Actual election and Hello deadline differ by execution order; unsupported index, transmit/wait/retransmit displays, opaque checksums and state-change counters are omitted."
+    },
+    {
+      "id": "observe/nxos/show ip ospf LAB interface Ethernet1/1",
+      "diffSha256": "fc530a24ac63371207fd8b0af0e9ebace87be324bd18aea944ea8d6f85c3ed4a",
+      "classification": "runtime-and-output-subset",
+      "reason": "Actual election and Hello deadline differ by execution order; unsupported index, transmit/wait/retransmit displays, opaque checksums and state-change counters are omitted."
+    },
+    {
+      "id": "observe/nxos/show ip ospf LAB interface Ethernet1/1 vrf BLUE",
+      "diffSha256": "310cb34916b1745aa3cf96e46796cad5ec68777111409ac0bcaa78fda4da9e24",
+      "classification": "error-presentation",
+      "reason": "Both implementations reject the form; the simulator uses a descriptive error rather than the native caret placement."
+    },
+    {
+      "id": "observe/nxos/show ip ospf MISSING neighbors",
+      "diffSha256": "12c226cd595e1c9abe79298e366e34e070b7ea48393a76bbbdd3ad3fac97f0b8",
+      "classification": "error-presentation",
+      "reason": "Both implementations reject the form; the simulator uses a descriptive error rather than the native caret placement."
+    },
+    {
+      "id": "observe/nxos/show interface Loopback0",
+      "diffSha256": "98bebf4e9c6b13e54a57235e9939242acd61589c9a0af1ef70f4457ac274e9e0",
+      "classification": "output-subset",
+      "reason": "Unmodeled hardware/load/compression fields or native interface indexes are omitted. Loopback input counters now match delivered packets."
+    },
+    {
+      "id": "observe/nxos/show running-config interface Ethernet1/1",
+      "diffSha256": "478d2d3761bdda010207461a4f88b245733786288565cefede9c0c7b944548f4",
+      "classification": "nvgen-presentation",
+      "reason": "Native version/time headers, indentation, explicit exit and decimal versus dotted area 0 differ; the exported configuration is replayable and packet-tested."
+    },
+    {
+      "id": "observe/nxos/show ip route vrf BLUE",
+      "diffSha256": "405ca57ead0a9692b75a0582641deeb7cefaaee7397ed078a2017ba447021398",
+      "classification": "runtime-and-whitespace",
+      "reason": "Route ages and trailing whitespace differ; local/direct path ordering now follows the reference."
+    }
+  ]
+}

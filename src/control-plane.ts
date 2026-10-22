@@ -732,9 +732,10 @@ function networkMatch(p:RoutedPort, protocol:string):NetworkStatement|undefined 
 }
 function passive(p:RoutedPort,protocol:string):boolean {
   const c=config(p.device,protocol)!;
+  if(p.device.kind==='datacenter'&&protocol==='ospf'&&typeof p.iface.features.ospf?.passive==='boolean')return p.iface.features.ospf.passive;
   return(c.passiveInterfaces??[]).includes(p.name)||(c.passiveInterfaces??[]).includes('default')&&!c.activeInterfaces?.includes(p.name)||!!c.passiveDefault&&!c.activeInterfaces?.includes(p.name);
 }
-function ospfCost(p:RoutedPort,stub=false,protocol=p.family===6?'ospfv3':'ospf'):number {const c=config(p.device,protocol);if(c?.maxMetric&&(!stub||c.maxMetric.includeStub))return 65535;return Math.max(1,Math.min(65535,Number(p.iface.features[protocol]?.cost??Math.floor(Number(c?.referenceBandwidth??(p.device.kind==='datacenter'?40000:100))/Math.max(interfaceBandwidth(p.device,p.iface)/1000,.001)))));}
+function ospfCost(p:RoutedPort,stub=false,protocol=p.family===6?'ospfv3':'ospf'):number {const c=config(p.device,protocol);if(c?.maxMetric&&(!stub||c.maxMetric.includeStub))return 65535;return Math.max(1,Math.min(65535,Number(p.iface.features[protocol]?.cost??(p.device.kind==='datacenter'&&/^Loopback/.test(p.name)?1:Math.floor(Number(c?.referenceBandwidth??(p.device.kind==='datacenter'?40000:100))/Math.max(interfaceBandwidth(p.device,p.iface)/1000,.001))))));}
 function deviceTime(engine:Simulator,d:Device):number{return Number(d.config.features.clockEpoch??Date.UTC(2026,0,1))+engine.clock.now()+Number(d.config.features.clockOffset??d.runtime.features.clockOffset??0);}
 function activeKeys(engine:Simulator,d:Device,name:string,direction:'send'|'accept'):{id:string;keyString:string;algorithm:string;sendEnd:number}[]{
   const now=deviceTime(engine,d),keys=d.config.features.keychains?.[name]?.keys??{};
@@ -799,7 +800,7 @@ function adjacency(engine:Simulator,endpoints:RoutedPort[],peers:Map<string,Rout
         if((a.areas?.[area]?.type??'normal')!==(b.areas?.[area]?.type??'normal'))continue;
         const af=from.iface.features[protocol]??{},bf=to.iface.features[protocol]??{};
         if(ospfTimers(from,protocol).hello!==ospfTimers(to,protocol).hello||ospfTimers(from,protocol).dead!==ospfTimers(to,protocol).dead||(af.instanceId??0)!==(bf.instanceId??0)||routerId(from.device,protocol)===routerId(to.device,protocol))continue;
-        neighborState=from.iface.mtu===to.iface.mtu||af.mtuIgnore||bf.mtuIgnore?'FULL':'EXSTART';
+        neighborState=(from.iface.mtu>=to.iface.mtu||af.mtuIgnore)&&(to.iface.mtu>=from.iface.mtu||bf.mtuIgnore)?'FULL':'EXSTART';
         const election=from.device.runtime.features[`${protocol}Interfaces`]?.[from.name],other=to.device.runtime.features[`${protocol}Interfaces`]?.[to.name];
         if(neighborState==='FULL'&&election?.role!=='POINT-TO-POINT'&&other?.role!=='POINT-TO-POINT'&&!['DR','BDR'].includes(election?.role)&&!['DR','BDR'].includes(other?.role))neighborState='2WAY';
       }
@@ -1395,7 +1396,13 @@ function installOspfPackets(engine:Simulator,endpoints:RoutedPort[],protocol:OSP
       const iface=structuredClone(ep.snapshot?.interfaceConfig??defaultOspfInterface(ep));iface.features??={};iface.features[protocol]={...iface.features[protocol],area:ep.area};port={device,iface,name:ep.name,ip:ep.address,prefix:ep.prefix,node:ep.node,family:ep.family};decoded.set(key,port);return port;
     };
     for(const p of endpoints.filter(p=>p.node===local.node&&networkMatch(p,protocol)))decoded.set(`${p.device.id}|${p.name}|${p.ip}`,p);
-    for(const p of view.prefixes)decode(p.endpoint);
+    for(const p of view.prefixes){
+      const port=decode(p.endpoint);
+      // A received prefix LSA carries its advertised metric. Recomputing it
+      // with the decoded peer's generic interface defaults changes remote
+      // costs (notably Nexus loopbacks) and ignores received max-metric state.
+      if(p.kind==='prefix'&&p.cost!==undefined&&port.device.id!==local.device.id)port.iface.features[protocol].cost=p.cost;
+    }
     let links:Adj[]=view.links.map(l=>({from:decode(l.from),to:decode(l.to),area:l.area,cost:l.cost,bandwidth:l.bandwidth,delay:l.delay}));
     // SPF requires reciprocal advertisements. A stale one-way edge cannot manufacture a path.
     links=links.filter(e=>links.some(other=>other.from.node===e.to.node&&other.to.node===e.from.node&&other.from.name===e.to.name&&other.to.name===e.from.name&&other.area===e.area));

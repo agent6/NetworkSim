@@ -104,10 +104,12 @@ function originate(engine: OSPFHost, node: NodeState, refresh = false,scheduled=
 }
 function complete(engine: OSPFHost, node: NodeState, n: Neighbor): void { if (n.dbdReceived && n.initialReceived && n.initialAcknowledged && n.state !== 'FULL') { engine.clock.cancel(n.exchange); setState(engine, node, n, 'FULL', 'Database exchange and acknowledgement completed'); } }
 function startExchange(engine: OSPFHost, node: NodeState, n: Neighbor): void {
-  if (!n.local.mtuIgnore && !(n.peer as OSPFInterface).mtuIgnore && (n.local.mtu ?? 1500) !== ((n.peer as OSPFInterface).mtu ?? 1500)) { clearExchange(engine, n); setState(engine, node, n, 'EXSTART', 'Interface MTU mismatch prevents database exchange'); return; }
+  if (!n.local.mtuIgnore && ((n.peer as OSPFInterface).mtu ?? 1500) > (n.local.mtu ?? 1500)) { clearExchange(engine, n); setState(engine, node, n, 'EXSTART', 'Peer database-description MTU exceeds local interface MTU'); return; }
   if (['EXCHANGE', 'LOADING', 'FULL'].includes(n.state)) return; setState(engine, node, n, 'EXSTART', 'Two-way Hello communication verified');
-  clearExchange(engine, n); n.exchangeId = node.key + ':' + (++node.serial); let attempt = 0;
-  const exchange = () => { if (!active(engine, node) || n.state === 'DOWN' || n.state === 'FULL') return; if (++attempt > 8) { down(engine, node, n, 'Database exchange retry limit exceeded'); return; } send(engine, node, n.local, 'database-description', { exchangeId: n.exchangeId, summaries: liveLSAs(engine, node).map(l => ({ origin: l.origin, sequence: l.sequence })) }, n.peer); n.exchange = engine.clock.schedule(1000, exchange, { owner: node.deviceId, label: 'OSPF database-description retry' }); };
+  clearExchange(engine, n); n.exchangeId = node.key + ':' + (++node.serial);
+  // Valid Hellos keep the neighbor alive even when DBD exchange cannot finish.
+  // The dead timer, interface teardown or a completed exchange stops retries.
+  const exchange = () => { if (!active(engine, node) || n.state === 'DOWN' || n.state === 'FULL') return; send(engine, node, n.local, 'database-description', { exchangeId: n.exchangeId, summaries: liveLSAs(engine, node).map(l => ({ origin: l.origin, sequence: l.sequence })) }, n.peer); n.exchange = engine.clock.schedule(5000, exchange, { owner: node.deviceId, label: 'OSPF database-description retry' }); };
   setState(engine, node, n, 'EXCHANGE', 'MTU compatibility confirmed'); exchange();
 }
 function dispose(engine: OSPFHost, node: NodeState): void { engine.clock.cancel(node.spfTimer);engine.clock.cancel(node.originTimer); for (const timer of [...node.timers, ...node.helloTimers.values()]) engine.clock.cancel(timer); engine.clock.cancel(node.refresh); for (const n of node.neighbors.values()) { engine.clock.cancel(n.dead); clearExchange(engine, n); } }
@@ -174,6 +176,7 @@ export function receiveOSPFControl(engine: OSPFHost, deviceId: string, source: s
   }
   if (!n || ['DOWN','INIT','2WAY'].includes(n.state)) return true;
   if (payload.type === 'database-description') {
+    if(!local.mtuIgnore&&(remote.mtu??1500)>(local.mtu??1500)){clearExchange(engine,n);setState(engine,node,n,'EXSTART','Received database-description MTU exceeds local interface MTU');return true;}
     if (!Array.isArray(payload.summaries) || typeof payload.exchangeId !== 'string') return true; if (n.state === 'FULL' && n.peerExchangeId !== payload.exchangeId) { clearExchange(engine, n); setState(engine, node, n, '2WAY', 'Peer restarted database exchange'); startExchange(engine, node, n); } n.peerExchangeId = payload.exchangeId; n.dbdReceived = true; if (!payload.response) send(engine, node, local, 'database-description', { exchangeId: n.exchangeId, response: true, summaries: liveLSAs(engine, node).map(l => ({ origin: l.origin, sequence: l.sequence })) }, n.peer); if (n.state !== 'FULL') setState(engine, node, n, 'LOADING', 'Database summaries received');
     send(engine, node, local, 'request', { exchangeId: payload.exchangeId, origins: payload.summaries.filter((s: any) => typeof s.origin === 'string' && Number(s.sequence) > (node.database.get(s.origin)?.sequence ?? 0)).map((s: any) => s.origin) }, n.peer); sendUpdate(engine, node, n, liveLSAs(engine, node), n.exchangeId); complete(engine, node, n);
   } else if (payload.type === 'request') { if (!Array.isArray(payload.origins)) return true; sendUpdate(engine, node, n, liveLSAs(engine, node).filter(l => payload.origins.includes(l.origin)), payload.exchangeId); }

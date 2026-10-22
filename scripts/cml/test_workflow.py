@@ -1,6 +1,7 @@
 """Offline tests for evidence handling. No CML connections or real credentials."""
 import hashlib
 import json
+import re
 from pathlib import Path
 import struct
 import tempfile
@@ -8,12 +9,27 @@ import unittest
 from unittest.mock import patch, Mock
 
 from client import CML
-from capture import step_result, nxos_boot_image, verify_owned_lab, wait_for_ports
+from capture import step_result, nxos_boot_image, verify_owned_lab, wait_for_ports, PROMPT
 from compare import compare, normalize, packet_count, packet_protocols
 from capture import load_scenario
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_nexus_prompt_survives_same_line_boot_syslog_but_never_command_echo(self):
+        for raw in ['\rNEXUS# ', '\rNEXUS(config-if)# \x1b[0m',
+                    '\rNEXUS# 2026 Oct 22 14:13:33 NEXUS %$ VDC-1 %$ %USER-2-SYSTEM_MSG: ready\r\n']:
+            match=re.search(PROMPT,raw)
+            self.assertIsNotNone(match,repr(raw))
+            self.assertNotIn('SYSTEM_MSG',match[0])
+        for raw in ['NEXUS# show version\r\n', 'NEXUS(config)# boot nxos bootflash:nxos.bin\r\n',
+                    'not a hostname NEXUS#', 'NEXUS# 2026 release notes']:
+            self.assertIsNone(re.search(PROMPT,raw),repr(raw))
+
+    def test_nexus_unprefixed_area_mismatch_is_a_rejection(self):
+        step={'id':'remove','node':'nxos','command':'no ip router ospf LAB area 1'}
+        self.assertFalse(step_result(step,'Area mismatch\r\nNEXUS(config-if)#')['passed'])
+        self.assertTrue(step_result(step,'Already not configured\r\nNEXUS(config-if)#')['passed'])
+
     def test_operational_packet_evidence_decodes_tagged_protocols(self):
         header = struct.pack('<IHHIIII', 0xa1b2c3d4, 2, 4, 0, 0, 65535, 1)
         def frame(kind, body):

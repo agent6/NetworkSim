@@ -665,7 +665,11 @@ export class Simulator {
     packet = this.translateInbound(d, input, packet);
     const linkLocalDestination = isIPv6(packet.destination) && prefixContains('fe80::', 10, packet.destination);
     const localDestination = linkLocalDestination ? (c.ipv6.length || c.features.ipv6Enabled) && this.ipv6AddressUsable(d.id,input,this.linkLocalAddress(d.id,input)) && sameAddress(this.linkLocalAddress(d.id, input), packet.destination) : this.localInterface(d, packet.destination, packet.vrf);
-    if (localDestination || (packet.body?.kind === 'control-plane' && (this.isMulticast(packet.destination) || /^ff/i.test(packet.destination) || packet.destination === '255.255.255.255'))) { if (!applyQos(this, d, 'control-plane', 'in', packet, (name, p) => this.aclAllows(d, name, p))) return; this.deliverIP(d, packet, input); return; }
+    if (localDestination || (packet.body?.kind === 'control-plane' && (this.isMulticast(packet.destination) || /^ff/i.test(packet.destination) || packet.destination === '255.255.255.255'))) {
+      if (!applyQos(this, d, 'control-plane', 'in', packet, (name, p) => this.aclAllows(d, name, p))) return;
+      if(isDatacenter(d)&&typeof localDestination==='string'&&/^Loopback/.test(localDestination)&&localDestination!==input)this.count(d,localDestination,'rx',packet.size,this.macOf(d.id,localDestination));
+      this.deliverIP(d, packet, input);return;
+    }
     if (linkLocalDestination || (isIPv6(packet.source) && prefixContains('fe80::', 10, packet.source))) { this.packetEvent(d, packet, 'IPv6 link-local scope', 'Link-local traffic cannot be routed to another interface.', 'drop', input); return; }
     if(isDatacenter(d)&&input==='mgmt0'){this.packetEvent(d,packet,'Management-plane isolation','mgmt0 does not forward transit traffic.','drop',input);return;}
     if (this.isMulticast(packet.destination)) { this.receiveMulticast(d, input, packet); return; }

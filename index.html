@@ -9843,7 +9843,7 @@ ${end.comment}` : end.comment;
   // src/ios-help.ts
   var IOS_UNRECOGNIZED = "% Unrecognized command";
   var iosInformational = (line2) => /^% (?:The key modulus size is|Generating \d+ bit RSA keys|You already have RSA keys defined|They will be replaced|All keys will be removed|All router certs issued)/.test(line2);
-  var iosRejected = (line2) => line2.startsWith("%") && !iosInformational(line2);
+  var iosRejected = (line2) => line2.startsWith("%") && !iosInformational(line2) || line2.trim() === "Area mismatch";
   var iosAmbiguous = (input5) => `% Ambiguous command:  "${input5.trim()}"`;
   function iosHelpScope(mode, protocol) {
     if (mode === "user" || mode === "priv") return "exec";
@@ -11663,11 +11663,15 @@ ${end.comment}` : end.comment;
     if (f.loopGuard) lines2.push(" spanning-tree guard loop");
     if (f.stpCost !== void 0) lines2.push(" spanning-tree cost " + f.stpCost);
     if (f.ospf?.area !== void 0) {
-      const root = c.protocols.ospf, process = p.vrf ? root?.vrfs?.[p.vrf] : root;
-      lines2.push(` ip router ospf ${process?.nsosTag || "OSPF"} area ${f.ospf.area}`);
+      const root = c.protocols.ospf, process2 = p.vrf ? root?.vrfs?.[p.vrf] : root;
+      lines2.push(` ip router ospf ${process2?.nsosTag || "OSPF"} area ${f.ospf.area}`);
     }
     for (const [key4, cmd] of [["cost", "cost"], ["priority", "priority"], ["helloInterval", "hello-interval"], ["deadInterval", "dead-interval"], ["networkType", "network"]])
       if (f.ospf?.[key4] !== void 0) lines2.push(` ip ospf ${cmd} ${f.ospf[key4]}`);
+    const process = p.vrf ? c.protocols.ospf?.vrfs?.[p.vrf] : c.protocols.ospf;
+    const passive2 = f.ospf?.passive ?? (process?.passiveInterfaces?.includes(p.name) ? true : process?.activeInterfaces?.includes(p.name) ? false : void 0);
+    if (passive2 !== void 0) lines2.push(` ${passive2 ? "" : "no "}ip ospf passive-interface`);
+    if (f.ospf?.mtuIgnore) lines2.push(" ip ospf mtu-ignore");
     if (f.vpcId !== void 0) lines2.push(" vpc " + f.vpcId);
     if (nsosConfig({ kind: "datacenter", config: c }).vpc?.peerLink === p.name) lines2.push(" vpc peer-link");
     if (f.vpcOrphanSuspend) lines2.push(" vpc orphan-port suspend");
@@ -11735,7 +11739,8 @@ ${end.comment}` : end.comment;
           const indent = vrf2 ? "  " : " ";
           if (p.routerId) lines2.push(indent + "router-id " + p.routerId);
           if (p.referenceBandwidth !== void 0 && p.referenceBandwidth !== 4e4) lines2.push(indent + "auto-cost reference-bandwidth " + p.referenceBandwidth + " Mbps");
-          for (const name2 of p.passiveInterfaces || []) lines2.push(indent + "passive-interface " + name2);
+          const passive2 = p.passiveDefault ?? (p.passiveInterfaces?.includes("default") ? true : void 0);
+          if (passive2 !== void 0) lines2.push(indent + (passive2 ? "" : "no ") + "passive-interface default");
           if (vrf2) lines2.push(" exit");
         }
         lines2.push(" exit");
@@ -14104,24 +14109,19 @@ ${end.comment}` : end.comment;
     }
   }
   function startExchange(engine, node, n) {
-    if (!n.local.mtuIgnore && !n.peer.mtuIgnore && (n.local.mtu ?? 1500) !== (n.peer.mtu ?? 1500)) {
+    if (!n.local.mtuIgnore && (n.peer.mtu ?? 1500) > (n.local.mtu ?? 1500)) {
       clearExchange(engine, n);
-      setState(engine, node, n, "EXSTART", "Interface MTU mismatch prevents database exchange");
+      setState(engine, node, n, "EXSTART", "Peer database-description MTU exceeds local interface MTU");
       return;
     }
     if (["EXCHANGE", "LOADING", "FULL"].includes(n.state)) return;
     setState(engine, node, n, "EXSTART", "Two-way Hello communication verified");
     clearExchange(engine, n);
     n.exchangeId = node.key + ":" + ++node.serial;
-    let attempt = 0;
     const exchange = () => {
       if (!active(engine, node) || n.state === "DOWN" || n.state === "FULL") return;
-      if (++attempt > 8) {
-        down(engine, node, n, "Database exchange retry limit exceeded");
-        return;
-      }
       send(engine, node, n.local, "database-description", { exchangeId: n.exchangeId, summaries: liveLSAs(engine, node).map((l) => ({ origin: l.origin, sequence: l.sequence })) }, n.peer);
-      n.exchange = engine.clock.schedule(1e3, exchange, { owner: node.deviceId, label: "OSPF database-description retry" });
+      n.exchange = engine.clock.schedule(5e3, exchange, { owner: node.deviceId, label: "OSPF database-description retry" });
     };
     setState(engine, node, n, "EXCHANGE", "MTU compatibility confirmed");
     exchange();
@@ -14345,6 +14345,11 @@ ${end.comment}` : end.comment;
     }
     if (!n || ["DOWN", "INIT", "2WAY"].includes(n.state)) return true;
     if (payload.type === "database-description") {
+      if (!local.mtuIgnore && (remote.mtu ?? 1500) > (local.mtu ?? 1500)) {
+        clearExchange(engine, n);
+        setState(engine, node, n, "EXSTART", "Received database-description MTU exceeds local interface MTU");
+        return true;
+      }
       if (!Array.isArray(payload.summaries) || typeof payload.exchangeId !== "string") return true;
       if (n.state === "FULL" && n.peerExchangeId !== payload.exchangeId) {
         clearExchange(engine, n);
@@ -17917,12 +17922,13 @@ ${end.comment}` : end.comment;
   }
   function passive(p, protocol) {
     const c = config2(p.device, protocol);
+    if (p.device.kind === "datacenter" && protocol === "ospf" && typeof p.iface.features.ospf?.passive === "boolean") return p.iface.features.ospf.passive;
     return (c.passiveInterfaces ?? []).includes(p.name) || (c.passiveInterfaces ?? []).includes("default") && !c.activeInterfaces?.includes(p.name) || !!c.passiveDefault && !c.activeInterfaces?.includes(p.name);
   }
   function ospfCost(p, stub = false, protocol = p.family === 6 ? "ospfv3" : "ospf") {
     const c = config2(p.device, protocol);
     if (c?.maxMetric && (!stub || c.maxMetric.includeStub)) return 65535;
-    return Math.max(1, Math.min(65535, Number(p.iface.features[protocol]?.cost ?? Math.floor(Number(c?.referenceBandwidth ?? (p.device.kind === "datacenter" ? 4e4 : 100)) / Math.max(interfaceBandwidth(p.device, p.iface) / 1e3, 1e-3)))));
+    return Math.max(1, Math.min(65535, Number(p.iface.features[protocol]?.cost ?? (p.device.kind === "datacenter" && /^Loopback/.test(p.name) ? 1 : Math.floor(Number(c?.referenceBandwidth ?? (p.device.kind === "datacenter" ? 4e4 : 100)) / Math.max(interfaceBandwidth(p.device, p.iface) / 1e3, 1e-3))))));
   }
   function deviceTime(engine, d) {
     return Number(d.config.features.clockEpoch ?? Date.UTC(2026, 0, 1)) + engine.clock.now() + Number(d.config.features.clockOffset ?? d.runtime.features.clockOffset ?? 0);
@@ -18033,7 +18039,7 @@ ${end.comment}` : end.comment;
           if ((a.areas?.[area]?.type ?? "normal") !== (b.areas?.[area]?.type ?? "normal")) continue;
           const af = from.iface.features[protocol] ?? {}, bf = to.iface.features[protocol] ?? {};
           if (ospfTimers(from, protocol).hello !== ospfTimers(to, protocol).hello || ospfTimers(from, protocol).dead !== ospfTimers(to, protocol).dead || (af.instanceId ?? 0) !== (bf.instanceId ?? 0) || routerId(from.device, protocol) === routerId(to.device, protocol)) continue;
-          neighborState = from.iface.mtu === to.iface.mtu || af.mtuIgnore || bf.mtuIgnore ? "FULL" : "EXSTART";
+          neighborState = (from.iface.mtu >= to.iface.mtu || af.mtuIgnore) && (to.iface.mtu >= from.iface.mtu || bf.mtuIgnore) ? "FULL" : "EXSTART";
           const election = from.device.runtime.features[`${protocol}Interfaces`]?.[from.name], other = to.device.runtime.features[`${protocol}Interfaces`]?.[to.name];
           if (neighborState === "FULL" && election?.role !== "POINT-TO-POINT" && other?.role !== "POINT-TO-POINT" && !["DR", "BDR"].includes(election?.role) && !["DR", "BDR"].includes(other?.role)) neighborState = "2WAY";
         }
@@ -18918,7 +18924,10 @@ ${end.comment}` : end.comment;
         return port3;
       };
       for (const p of endpoints.filter((p2) => p2.node === local.node && networkMatch(p2, protocol))) decoded.set(`${p.device.id}|${p.name}|${p.ip}`, p);
-      for (const p of view.prefixes) decode2(p.endpoint);
+      for (const p of view.prefixes) {
+        const port3 = decode2(p.endpoint);
+        if (p.kind === "prefix" && p.cost !== void 0 && port3.device.id !== local.device.id) port3.iface.features[protocol].cost = p.cost;
+      }
       let links = view.links.map((l) => ({ from: decode2(l.from), to: decode2(l.to), area: l.area, cost: l.cost, bandwidth: l.bandwidth, delay: l.delay }));
       links = links.filter((e) => links.some((other) => other.from.node === e.to.node && other.to.node === e.from.node && other.from.name === e.to.name && other.to.name === e.from.name && other.area === e.area));
       const known = [...decoded.values()], observerEngine = { ...engine, lab: { ...engine.lab, devices: [...devices.values()] }, getDevice: (id2) => devices.get(id2) };
@@ -37396,7 +37405,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     for (const [prefix2, paths2] of groups) {
       const attached = paths2.every((r) => ["connected", "local"].includes(r.protocol));
       lines2.push(`${family === 6 && prefix2 === "::/0" ? "0::/0" : prefix2}, ubest/mbest: ${paths2.length}/0${attached ? ", attached" : ""}`);
-      for (const r of paths2) {
+      for (const r of [...paths2].sort((a, b) => Number(b.protocol === "local") - Number(a.protocol === "local"))) {
         const intf = d.config.interfaces[r.interface], local = r.protocol === "local", direct = r.protocol === "connected";
         const next = r.nextHop || (local ? r.network : family === 4 ? intf?.ip : intf?.ipv6.map((v) => v.split("/")[0]).find((v) => prefixContains(r.network, r.prefix, v)));
         const since = d.runtime.features.routeSince?.[routeKey3(r)], age4 = typeof since === "number" ? iosDuration(engine.clock.now() - since) : void 0;
@@ -37505,6 +37514,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
   function nsosInterface(engine, d, p) {
     const now = engine.clock.now(), up = engine.interfaceUp(d.id, p.name), svi = /^Vlan/.test(p.name), c = d.runtime.counters[p.name], short3 = svi ? 60 : 30;
+    if (/^Loopback/.test(p.name)) return [`${p.name.toLowerCase()} is ${up ? "up" : "down"}`, `admin state is ${p.adminUp ? "up" : "down"},`, "  Hardware: Loopback", ...p.description ? ["  Description: " + p.description] : [], ...p.ip ? [`  Internet Address is ${p.ip}/${maskToPrefix(p.mask ?? "255.255.255.255")}`] : [], ...p.ipv6.map((a) => "  IPv6 address: " + a), `  MTU ${p.mtu} bytes, BW ${interfaceBandwidth(d, p)} Kbit , DLY ${(p.features.delay ?? 500) * 10} usec`, "  Encapsulation LOOPBACK, medium is broadcast", `    ${c?.rx ?? 0} packets input ${c?.rxBytes ?? 0} bytes`, `    ${c?.inputErrors ?? 0} input errors`, `    ${c?.tx ?? 0} packets output ${c?.txBytes ?? 0} bytes`, `    ${c?.outputErrors ?? 0} output errors`, ""];
     const cleared = d.runtime.features.countersClearedAt?.[p.name], mac4 = dotted2(engine.macOf(d.id, p.name));
     const windows = [short3, 300].flatMap((seconds4, index) => {
       const r = interfaceRates(d, p.name, now, seconds4);
@@ -37735,7 +37745,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const id2 = integer3(match[2], label === "Loopback" ? 0 : 1, label === "Vlan" ? 4094 : label === "Port-channel" ? 4096 : 1023);
       if (label === "Vlan") this.requireFeature("interface-vlan");
       const p = defaultInterface(label + id2, label === "Port-channel");
-      p.adminUp = false;
+      p.adminUp = label === "Loopback";
+      if (label === "Loopback") {
+        p.features.bandwidth = 8e6;
+        p.features.delay = 500;
+      }
       if (label === "Port-channel") {
         p.features.nonegotiate = true;
         p.speed = 1e4;
@@ -37752,7 +37766,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       let root = c.protocols.ospf;
       if (!root && create) root = c.protocols.ospf = { vrfs: {} };
       const prior = vrf2 ? root?.vrfs?.[vrf2] : root;
-      if (prior?.nsosTag && prior.nsosTag !== tag) fail4(`Only one OSPF instance per VRF is supported; ${prior.nsosTag} already exists in ${vrf2 || "default"}.`);
+      if (create && prior?.nsosTag && prior.nsosTag !== tag) fail4(`Only one OSPF instance per VRF is supported; ${prior.nsosTag} already exists in ${vrf2 || "default"}.`);
       if (!create) return prior?.nsosTag === tag ? prior : void 0;
       if (vrf2 && !c.features.vrfs?.[vrf2]) fail4(`VRF ${vrf2} does not exist.`);
       if (prior?.nsosTag) return prior;
@@ -37865,7 +37879,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         cmd("ssh <destination>", "Connect to a simulated SSH server", (a) => this.ssh(a[0]), { read: true }),
         cmd("ssh <destination> vrf <vrf>", "Connect through a selected VRF", (a) => this.ssh(a[0], a[1]), { read: true }),
         cmd("ping <address>", "Send IPv4/IPv6 probes", (a) => this.ping(a[0]), { read: true }),
-        cmd("ping <address> vrf <vrf>", "Send probes in a VRF", (a) => this.ping(a[0], a[1]), { read: true })
+        cmd("ping <address> vrf <vrf>", "Send probes in a VRF", (a) => this.ping(a[0], a[1]), { read: true }),
+        cmd("ping <address> count <count>", "Send a bounded number of IPv4/IPv6 probes", (a) => this.ping(a[0], void 0, integer3(a[1], 1, 20)), { read: true }),
+        cmd("ping <address> vrf <vrf> count <count>", "Send a bounded number of probes in a VRF", (a) => this.ping(a[0], a[1], integer3(a[2], 1, 20)), { read: true })
       ];
       const globals = [
         cmd("ip access-list <name>", "Configure an implemented IPv4 access list", (a, no) => {
@@ -37966,6 +37982,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
             for (const p of Object.values(c.interfaces)) if (scopes.has(p.vrf || "")) delete p.features.ospf;
             return;
           }
+          if (!c.protocols.ospf?.nsosTag || c.protocols.ospf.nsosTag === a[0]) this.process(a[0]);
           this.context = { mode: "router", name: a[0], parent: { mode: "config" } };
         }, { no: "router ospf <tag>" }),
         cmd("vpc domain <domain>", "Configure a vPC domain", (a, no) => {
@@ -38069,11 +38086,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
             if (no) delete p().routerId;
             else p().routerId = ip4(a[0]);
           }, { no: "router-id" }),
-          cmd("passive-interface <interface>", "Suppress OSPF hellos", (a, no) => {
-            const i = this.port(a[0]).name;
-            p().passiveInterfaces = p().passiveInterfaces.filter((v) => v !== i);
-            if (!no) p().passiveInterfaces.push(i);
-          }, { no: "passive-interface <interface>" }),
+          cmd("passive-interface default", "Suppress OSPF hellos unless an interface overrides the default", (_a, no) => {
+            p().passiveDefault = !no;
+          }, { no: "passive-interface default" }),
           ...mode === "router" ? [cmd("vrf <vrf>", "Select OSPF VRF", (a) => {
             this.process(this.context.name, name(a[0]));
             this.enter("router-vrf", this.context.name, name(a[0]));
@@ -38197,6 +38212,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
             delete p.mask;
             p.ipv6 = [];
             delete f.ospf;
+            return ["Warning: Deleted all L3 config on interface " + (/^Loopback/.test(p.name) ? p.name.toLowerCase() : p.name)];
           }
         }, { no: "vrf member" }),
         cmd("ip access-group <name> out", "Apply an enforced outbound IPv4 routed ACL", (a, no) => {
@@ -38309,10 +38325,45 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           if (p.name === "mgmt0") fail4("Routing protocols are not supported on mgmt0.");
           this.requireFeature("ospf");
           const area = this.area(a[1]);
-          this.process(a[0], p.vrf, !no);
-          if (no) delete f.ospf;
-          else f.ospf = { ...f.ospf, processId: 1, area };
+          const process = this.process(a[0], p.vrf, !no);
+          if (no) {
+            if (!process || f.ospf?.area === void 0) return ["Already not configured"];
+            if (String(f.ospf.area) !== area) return ["Area mismatch"];
+            delete f.ospf.area;
+            delete f.ospf.processId;
+          } else f.ospf = { ...f.ospf, processId: 1, area };
         }, { no: "ip router ospf <tag> area <area>" }),
+        cmd("ip ospf passive-interface", "Suppress OSPF hellos on this interface", (_a, no) => {
+          routed();
+          if (p.name === "mgmt0") fail4("Routing protocols are not supported on mgmt0.");
+          this.requireFeature("ospf");
+          f.ospf ??= {};
+          f.ospf.passive = !no;
+          const process = p.vrf ? c.protocols.ospf?.vrfs?.[p.vrf] : c.protocols.ospf;
+          if (process) {
+            process.passiveInterfaces = process.passiveInterfaces?.filter((i) => i !== p.name);
+            process.activeInterfaces = process.activeInterfaces?.filter((i) => i !== p.name);
+          }
+        }, { no: "ip ospf passive-interface" }),
+        cmd("default ip ospf passive-interface", "Inherit the router or VRF passive-interface default", () => {
+          routed();
+          if (p.name === "mgmt0") fail4("Routing protocols are not supported on mgmt0.");
+          this.requireFeature("ospf");
+          if (f.ospf) delete f.ospf.passive;
+          const process = p.vrf ? c.protocols.ospf?.vrfs?.[p.vrf] : c.protocols.ospf;
+          if (process) {
+            process.passiveInterfaces = process.passiveInterfaces?.filter((i) => i !== p.name);
+            process.activeInterfaces = process.activeInterfaces?.filter((i) => i !== p.name);
+          }
+        }),
+        cmd("ip ospf mtu-ignore", "Ignore an oversized received OSPF database-description MTU", (_a, no) => {
+          routed();
+          if (p.name === "mgmt0") fail4("Routing protocols are not supported on mgmt0.");
+          this.requireFeature("ospf");
+          f.ospf ??= {};
+          if (no) delete f.ospf.mtuIgnore;
+          else f.ospf.mtuIgnore = true;
+        }, { no: "ip ospf mtu-ignore" }),
         ...[["cost", "cost", 1, 65535], ["priority", "priority", 0, 255], ["hello-interval", "helloInterval", 1, 65535], ["dead-interval", "deadInterval", 1, 65535]].map(([command, field2, min, max]) => cmd(`ip ospf ${command} <number>`, "Set OSPF interface parameter", (a, no) => {
           routed();
           if (p.name === "mgmt0") fail4("Routing protocols are not supported on mgmt0.");
@@ -38436,7 +38487,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           if (!line2.trim() || line2.trim().startsWith("!")) continue;
           if (this.context.mode === "priv") fail4("Configuration replay cannot execute EXEC commands after leaving configuration mode.");
           const output = this.execute(line2.trim());
-          if (output.some((x) => x.startsWith("%"))) fail4(`Configuration replay rejected "${line2.trim()}": ${output.join(" ")}`);
+          if (output.some(iosRejected)) fail4(`Configuration replay rejected "${line2.trim()}": ${output.join(" ")}`);
         }
         return ["Configuration applied."];
       } catch (error) {
@@ -38447,13 +38498,19 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         this.context = old;
       }
     }
-    ping(address, vrf2) {
+    ping(address, vrf2, count = 5) {
       if (!isIPv4(address) && !isIPv6(address)) fail4("A literal IPv4 or IPv6 destination is required.");
       if (vrf2 && vrf2 !== "default" && !this.device.config.features.vrfs?.[vrf2]) fail4("VRF does not exist.");
-      const r = this.engine.ping(this.deviceId, address, { count: 5, vrf: vrf2 === "default" ? void 0 : vrf2 });
+      const r = this.engine.ping(this.deviceId, address, { count, vrf: vrf2 === "default" ? void 0 : vrf2, size: isIPv6(address) ? 104 : 84 });
       let iterations = 0;
       while (r.status === "running" && iterations++ < 600) this.engine.advance(100);
-      return [`PING ${address}`, ...r.replies.map((x) => x.error ? `Request ${x.sequence}: ${x.error}` : `Reply from ${x.from}: time=${x.time ?? 0} ms`), `${r.sent} packets transmitted, ${r.received} packets received`];
+      const replies = r.replies.filter((x) => !x.error), times = replies.map((x) => x.time ?? 0), milliseconds = (n) => String(Number(n.toFixed(3)));
+      const output = r.replies.flatMap((x) => {
+        if (!x.error) return [`64 bytes from ${x.from}: icmp_seq=${x.sequence - 1}${x.ttl === void 0 ? "" : " ttl=" + x.ttl} time=${milliseconds(x.time ?? 0)} ms`];
+        const detail = !x.from && /network unreachable|route/i.test(x.error) ? [`ping: sendto ${address} 64 chars, No route to host`] : x.error === "Request timed out" ? [] : [x.from ? `From ${x.from}: ${x.error}` : "ping: " + x.error];
+        return [...detail, `Request ${x.sequence - 1} timed out`];
+      });
+      return [`PING ${address} (${address}): 56 data bytes`, ...output, "", `--- ${address} ping statistics ---`, `${r.sent} packets transmitted, ${r.received} packets received, ${(100 * (r.sent - r.received) / Math.max(1, r.sent)).toFixed(2)}% packet loss`, ...times.length ? [`round-trip min/avg/max = ${milliseconds(Math.min(...times))}/${milliseconds(times.reduce((a, b) => a + b, 0) / times.length)}/${milliseconds(Math.max(...times))} ms`] : []];
     }
     ssh(destination2, vrf2) {
       const m = /^([^@\s]+)@(.+)$/.exec(destination2);
@@ -38501,6 +38558,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (token === "<feature>") return FEATURES;
       if (token === "<interface>") return Object.keys(this.device.config.interfaces);
       if (token === "<vrf>") return ["default", ...Object.keys(this.device.config.features.vrfs || {})];
+      if (token === "<ospf-tag>") return [...new Set([this.device.config.protocols.ospf?.nsosTag, ...Object.values(this.device.config.protocols.ospf?.vrfs ?? {}).map((p) => p?.nsosTag)].filter(Boolean))];
       if (token === "<speed>") return ["auto", ...(this.context.mode === "interface" ? this.selected.features.ethernetSpeeds || [] : []).map(String)];
       return [];
     }
@@ -38661,11 +38719,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         "show ip route vrf <vrf>",
         "show ipv6 route",
         "show ipv6 route vrf <vrf>",
-        "show ip ospf",
-        "show ip ospf neighbors",
-        "show ip ospf neighbors vrf <vrf>",
-        "show ip ospf interface",
-        "show ip ospf interface vrf <vrf>",
+        ...["", "<ospf-tag> "].flatMap((tag) => ["", "neighbors", "interface", "interface <interface>"].flatMap((suffix) => (suffix.includes("<interface>") ? [""] : ["", " vrf <vrf>"]).map((vrf2) => ("show ip ospf " + tag + suffix).trim() + vrf2))),
         "show ip arp",
         "show ip arp vrf <vrf>",
         "show lldp neighbors",
@@ -38778,19 +38832,46 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const args = a[0] === "interface" ? ["interface", this.port(a[1]).name] : a;
       return formatIOSL2Show(this.engine, d, "spanning-tree", args) || [];
     }
-    showOSPF(a) {
+    showOSPF(a, scope) {
       this.requireFeature("ospf");
-      const vrf2 = a.includes("vrf") ? a[a.indexOf("vrf") + 1] : void 0, root = this.device.config.protocols.ospf, p = vrf2 ? root?.vrfs?.[vrf2] : root, live2 = ospfLiveDetail(this.engine, this.deviceId, "ospf", vrf2);
-      if (!p?.nsosTag) return ["OSPF is not configured in VRF " + (vrf2 || "default") + "."];
+      const tag = a.length && !["neighbors", "interface", "vrf"].includes(a[0]) ? a.shift() : void 0;
+      const selectedVRF = scope?.vrf ?? (a.includes("vrf") ? a[a.indexOf("vrf") + 1] : a[0] === "interface" && a[1] ? this.port(a[1]).vrf : void 0);
+      if (!scope && a.includes("vrf") && selectedVRF === "all") return ["default", ...Object.keys(this.device.config.features.vrfs ?? {})].flatMap((vrf3) => this.showOSPF([...tag ? [tag] : [], ...a.slice(0, a.indexOf("vrf")), "vrf", vrf3], { vrf: vrf3 }));
+      const root = this.device.config.protocols.ospf;
+      if (tag && ![root?.nsosTag, ...Object.values(root?.vrfs ?? {}).map((p2) => p2?.nsosTag)].includes(tag)) return fail4("Invalid OSPF instance tag.");
+      if (selectedVRF && selectedVRF !== "default" && !this.device.config.features.vrfs?.[selectedVRF]) return [];
+      const vrf2 = selectedVRF === "default" ? void 0 : selectedVRF, p = vrf2 ? root?.vrfs?.[vrf2] : root, live2 = ospfLiveDetail(this.engine, this.deviceId, "ospf", vrf2);
+      if (tag && p?.nsosTag !== tag) return [];
+      if (!p?.nsosTag) return [];
       if (a[0] === "neighbors") {
         const neighbors = (live2?.neighbors || []).filter((n) => n.state !== "DOWN");
+        if (!neighbors.length) return [];
         return [` OSPF Process ID ${p.nsosTag} VRF ${vrf2 || "default"}`, ` Total number of neighbors: ${neighbors.length}`, " Neighbor ID     Pri State            Up Time  Address         Interface", ...neighbors.map((n) => {
           const state4 = n.state + "/" + (n.peerRole === "DR" ? "DR" : n.peerRole === "BDR" ? "BDR" : live2?.interfaces.find((i) => i.name === n.interface)?.networkType === "point-to-point" ? "-" : "DROTHER");
           return " " + n.routerId.padEnd(16) + String(n.priority).padStart(3) + " " + state4.padEnd(17) + (n.upSince === void 0 ? "-" : iosDuration(this.engine.clock.now() - n.upSince)).padEnd(9) + n.address.padEnd(16) + nsosPort(n.interface);
         })];
       }
-      if (a[0] === "interface") return [`OSPF Process ${p.nsosTag}`, ...Object.values(this.device.config.interfaces).filter((i) => i.features.ospf?.area !== void 0 && (i.vrf || "") === (vrf2 || "")).map((i) => `${i.name}, Area ${i.features.ospf.area}, ${this.engine.interfaceUp(this.deviceId, i.name) ? "up" : "down"}, cost ${i.features.ospf.cost ?? Math.max(1, Math.min(65535, Math.floor((p.referenceBandwidth ?? 4e4) / (interfaceBandwidth(this.device, i) / 1e3))))}`)];
-      return [`OSPF Process ${p.nsosTag}, VRF ${vrf2 || "default"}`, `Reference Bandwidth is ${p.referenceBandwidth ?? 4e4} Mbps`, `Router ID ${p.routerId || live2?.interfaces?.[0]?.routerId || "not yet selected"}`, `Received database LSAs: ${live2?.lsas.length || 0}`, `SPF runs: ${live2?.spfRuns || 0}`];
+      if (a[0] === "interface") {
+        const selected2 = a[1] && a[1] !== "vrf" ? this.port(a[1]).name : void 0;
+        const ports4 = Object.values(this.device.config.interfaces).filter((i) => i.features.ospf?.area !== void 0 && (i.vrf || "") === (vrf2 || ""));
+        return ports4.filter((i) => !selected2 || i.name === selected2).flatMap((i) => {
+          const up = this.engine.interfaceUp(this.deviceId, i.name), loopback = /^Loopback/.test(i.name), f = i.features.ospf, local = live2?.interfaces.find((p2) => p2.name === i.name), state4 = this.device.runtime.features.ospfInterfaces?.[i.name];
+          const passive2 = f.passive ?? (p.passiveInterfaces?.includes(i.name) || p.activeInterfaces?.includes(i.name) ? !p.activeInterfaces?.includes(i.name) : p.passiveDefault ?? p.passiveInterfaces?.includes("default") ?? false);
+          const cost = f.cost ?? (loopback ? 1 : Math.max(1, Math.min(65535, Math.floor((p.referenceBandwidth ?? 4e4) / (interfaceBandwidth(this.device, i) / 1e3))))), neighbors = (live2?.neighbors ?? []).filter((n) => n.interface === i.name && n.state !== "DOWN"), full = neighbors.filter((n) => n.state === "FULL");
+          const rows2 = [` ${loopback ? i.name.toLowerCase() : i.name} is ${up ? "up" : "down"}, line protocol is ${up ? "up" : "down"}`, ...i.ip ? [`    IP address ${i.ip}/${maskToPrefix(i.mask)}`] : [], `    Process ID ${p.nsosTag} VRF ${vrf2 || "default"}, area ${isIPv4(String(f.area)) ? f.area : intToIp(Number(f.area))}`, "    Enabled by interface configuration", `    State ${!up ? "DOWN" : loopback ? "LOOPBACK" : passive2 && i.ip ? "DR" : state4?.role ?? "DOWN"}, Network type ${loopback ? "LOOPBACK" : String(f.networkType ?? "broadcast").toUpperCase()}, cost ${cost}`];
+          if (!up || loopback || passive2) return [...rows2, ...passive2 && !loopback ? ["    Passive interface"] : [], ""];
+          rows2.push(`    Router Priority ${f.priority ?? 1}`);
+          for (const [role, key4] of [["Designated", "drRouterId"], ["Backup Designated", "bdrRouterId"]]) {
+            const id2 = state4?.[key4], address = id2 === local?.routerId ? i.ip : neighbors.find((n) => n.routerId === id2)?.address;
+            if (id2) rows2.push(`    ${role} Router ID: ${id2}${address ? ", address: " + address : ""}`);
+          }
+          rows2.push(`    ${neighbors.length} Neighbors, flooding to ${full.length}, adjacent with ${full.length}`, `    Timer intervals: Hello ${f.helloInterval ?? 10}, Dead ${f.deadInterval ?? 40}`);
+          if (live2?.helloDue[i.name] !== void 0) rows2.push("      Hello timer due in " + iosDuration(live2.helloDue[i.name]));
+          rows2.push("    No authentication", "");
+          return rows2;
+        });
+      }
+      return [` Routing Process ${p.nsosTag} with ID ${p.routerId || live2?.interfaces?.[0]?.routerId || "0.0.0.0"} VRF ${vrf2 || "default"}`, ` Reference Bandwidth is ${p.referenceBandwidth ?? 4e4} Mbps`, ...p.passiveDefault || p.passiveInterfaces?.includes("default") ? [" Default Passive Interface is enabled"] : [], ` Number of LSAs: ${live2?.lsas.length || 0}`, ` SPF calculation has run ${live2?.spfRuns || 0} times`];
     }
     showVPC(a) {
       this.requireFeature("vpc");
@@ -49126,6 +49207,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const localDestination = linkLocalDestination ? (c.ipv6.length || c.features.ipv6Enabled) && this.ipv6AddressUsable(d.id, input5, this.linkLocalAddress(d.id, input5)) && sameAddress(this.linkLocalAddress(d.id, input5), packet.destination) : this.localInterface(d, packet.destination, packet.vrf);
       if (localDestination || packet.body?.kind === "control-plane" && (this.isMulticast(packet.destination) || /^ff/i.test(packet.destination) || packet.destination === "255.255.255.255")) {
         if (!applyQos(this, d, "control-plane", "in", packet, (name2, p) => this.aclAllows(d, name2, p))) return;
+        if (isDatacenter(d) && typeof localDestination === "string" && /^Loopback/.test(localDestination) && localDestination !== input5) this.count(d, localDestination, "rx", packet.size, this.macOf(d.id, localDestination));
         this.deliverIP(d, packet, input5);
         return;
       }

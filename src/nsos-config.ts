@@ -36,6 +36,11 @@ function portLines(p:InterfaceConfig,c:DeviceConfig):string[] {
   }
   for(const [key,cmd] of [['cost','cost'],['priority','priority'],['helloInterval','hello-interval'],['deadInterval','dead-interval'],['networkType','network']] as const)
     if(f.ospf?.[key]!==undefined)lines.push(` ip ospf ${cmd} ${f.ospf[key]}`);
+  const process=p.vrf?c.protocols.ospf?.vrfs?.[p.vrf]:c.protocols.ospf;
+  // Older lab documents stored interface overrides in the IOS-style process lists.
+  const passive=f.ospf?.passive??(process?.passiveInterfaces?.includes(p.name)?true:process?.activeInterfaces?.includes(p.name)?false:undefined);
+  if(passive!==undefined)lines.push(` ${passive?'':'no '}ip ospf passive-interface`);
+  if(f.ospf?.mtuIgnore)lines.push(' ip ospf mtu-ignore');
   if(f.vpcId!==undefined)lines.push(' vpc '+f.vpcId);
   if(nsosConfig({kind:'datacenter',config:c} as Device).vpc?.peerLink===p.name)lines.push(' vpc peer-link');
   if(f.vpcOrphanSuspend)lines.push(' vpc orphan-port suspend');
@@ -107,7 +112,8 @@ export function renderNSOSConfig(device:Device,c:DeviceConfig=device.config):str
         const indent=vrf?'  ':' ';
         if(p.routerId)lines.push(indent+'router-id '+p.routerId);
         if(p.referenceBandwidth!==undefined&&p.referenceBandwidth!==40000)lines.push(indent+'auto-cost reference-bandwidth '+p.referenceBandwidth+' Mbps');
-        for(const name of p.passiveInterfaces||[])lines.push(indent+'passive-interface '+name);
+        const passive=p.passiveDefault??(p.passiveInterfaces?.includes('default')?true:undefined);
+        if(passive!==undefined)lines.push(indent+(passive?'':'no ')+'passive-interface default');
         if(vrf)lines.push(' exit');
       }
       lines.push(' exit');

@@ -117,7 +117,11 @@ test('OSPF enforces area/timer/MTU eligibility, and passive interfaces still adv
   address(a,rp(0),'10.0.0.1');address(b,rp(0),'10.0.0.2');address(b,'Loopback0','192.0.2.2','255.255.255.255');
   igp(a);igp(b,'ospf',{passiveInterfaces:['Loopback0']});link(s,a,rp(0),b,rp(0));s.advance(12000);
   assert.ok(route(a,'192.0.2.2','O'));
-  b.config.interfaces[rp(0)].mtu=1400;s.changed();s.advance(12000);assert.equal(neighbors(a,'OSPF')[0]?.state,'EXSTART');assert.equal(route(a,'192.0.2.2','O'),undefined);
+  // DBD MTU is checked by its receiver during exchange. Restart the link to
+  // avoid treating a pre-existing, possibly asymmetric FULL state as evidence.
+  b.config.interfaces[rp(0)].mtu=1400;b.config.interfaces[rp(0)].adminUp=false;s.changed();s.advance(100);
+  b.config.interfaces[rp(0)].adminUp=true;s.changed();s.advance(12000);
+  assert.equal(neighbors(b,'OSPF')[0]?.state,'EXSTART');assert.notEqual(neighbors(a,'OSPF')[0]?.state,'FULL');assert.equal(route(a,'192.0.2.2','O'),undefined);
   b.config.interfaces[rp(0)].mtu=1500;b.config.interfaces[rp(0)].features.ospf={area:1};s.changed();s.advance(12000);assert.equal(neighbors(a,'OSPF').length,0);
   b.config.interfaces[rp(0)].features.ospf={area:0,helloInterval:30};s.changed();s.advance(12000);assert.equal(neighbors(a,'OSPF').length,0);
 });

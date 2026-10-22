@@ -1,0 +1,783 @@
+{
+  "schemaVersion": 1,
+  "id": "nxos-ospf-cli",
+  "description": "Packet-validated NX-OS CLI: passive defaults and interface precedence, loopback metrics, directional MTU ignore, OSPF selectors, and VRF migration/withdrawal/recovery on one pre-wired link.",
+  "nodes": [
+    {
+      "id": "nxos",
+      "kind": "datacenter",
+      "hostname": "NEXUS",
+      "cml": {
+        "definition": "nxosv9000",
+        "image": "nxosv9300-10-6-2-f",
+        "port": "Ethernet1/1"
+      },
+      "simPort": "Ethernet1/1",
+      "startup": [
+        "hostname NEXUS",
+        "no password strength-check",
+        "username admin password NetSimLab42! role network-admin",
+        "feature ospf",
+        "router ospf LAB",
+        "router-id 2.2.2.2",
+        "exit",
+        "interface Ethernet1/1",
+        "no switchport",
+        "ip address 198.51.100.1/30",
+        "ip router ospf LAB area 0",
+        "no shutdown",
+        "exit",
+        "interface Loopback0",
+        "ip address 192.0.2.1/32",
+        "ip router ospf LAB area 0",
+        "end"
+      ],
+      "simulatorSetup": [
+        "configure terminal",
+        "hostname NEXUS",
+        "username admin password NetSimLab42! role network-admin",
+        "feature ospf",
+        "router ospf LAB",
+        "router-id 2.2.2.2",
+        "exit",
+        "interface Ethernet1/1",
+        "no switchport",
+        "ip address 198.51.100.1/30",
+        "ip router ospf LAB area 0",
+        "no shutdown",
+        "exit",
+        "interface Loopback0",
+        "ip address 192.0.2.1/32",
+        "ip router ospf LAB area 0",
+        "end"
+      ]
+    },
+    {
+      "id": "iosxe",
+      "kind": "router",
+      "hostname": "IOSXE",
+      "cml": {
+        "definition": "iol-xe",
+        "image": "iol-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname IOSXE",
+        "no ip domain-lookup",
+        "interface Ethernet0/0",
+        "ip address 198.51.100.2 255.255.255.252",
+        "no shutdown",
+        "exit",
+        "interface Loopback0",
+        "ip address 192.0.2.2 255.255.255.255",
+        "exit",
+        "router ospf 1",
+        "router-id 3.3.3.3",
+        "network 198.51.100.0 0.0.0.3 area 0",
+        "network 192.0.2.2 0.0.0.0 area 0",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname IOSXE",
+        "no ip domain-lookup",
+        "interface GigabitEthernet0/0",
+        "ip address 198.51.100.2 255.255.255.252",
+        "no shutdown",
+        "exit",
+        "interface Loopback0",
+        "ip address 192.0.2.2 255.255.255.255",
+        "exit",
+        "router ospf 1",
+        "router-id 3.3.3.3",
+        "network 198.51.100.0 0.0.0.3 area 0",
+        "network 192.0.2.2 0.0.0.0 area 0",
+        "end"
+      ]
+    }
+  ],
+  "links": [
+    [
+      {
+        "node": "nxos",
+        "port": "Ethernet1/1"
+      },
+      {
+        "node": "iosxe",
+        "port": "Ethernet0/0"
+      }
+    ]
+  ],
+  "steps": [
+    {
+      "id": "nx-001",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors",
+      "expect": [
+        "3\\.3\\.3\\.3.*FULL"
+      ],
+      "waitSeconds": 90
+    },
+    {
+      "id": "nx-002",
+      "node": "nxos",
+      "command": "show interface Loopback0",
+      "expect": [
+        "loopback0 is up",
+        "Hardware: Loopback",
+        "BW 8000000"
+      ]
+    },
+    {
+      "id": "nx-003",
+      "node": "nxos",
+      "command": "show ip ospf LAB interface Loopback0",
+      "expect": [
+        "LOOPBACK, Network type LOOPBACK, cost 1"
+      ]
+    },
+    {
+      "id": "nx-004",
+      "node": "iosxe",
+      "command": "ping 192.0.2.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is 100 percent \\(3/3\\)"
+      ]
+    },
+    {
+      "id": "nx-005",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-006",
+      "node": "nxos",
+      "command": "router ospf LAB"
+    },
+    {
+      "id": "nx-007",
+      "node": "nxos",
+      "command": "passive-interface default"
+    },
+    {
+      "id": "nx-008",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "nx-009",
+      "node": "nxos",
+      "command": "show ip ospf LAB interface Ethernet1/1",
+      "expect": [
+        "Passive interface"
+      ]
+    },
+    {
+      "id": "nx-010",
+      "node": "iosxe",
+      "command": "show ip route",
+      "absent": [
+        "192\\.0\\.2\\.1(?:/32|\\s)"
+      ],
+      "waitSeconds": 50
+    },
+    {
+      "id": "nx-011",
+      "node": "iosxe",
+      "command": "ping 192.0.2.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is 0 percent \\(0/3\\)"
+      ]
+    },
+    {
+      "id": "nx-012",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-013",
+      "node": "nxos",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "nx-014",
+      "node": "nxos",
+      "command": "no ip ospf passive-interface"
+    },
+    {
+      "id": "nx-015",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "nx-016",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors",
+      "expect": [
+        "3\\.3\\.3\\.3.*FULL"
+      ],
+      "waitSeconds": 90
+    },
+    {
+      "id": "nx-017",
+      "node": "iosxe",
+      "command": "ping 192.0.2.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is 100 percent \\(3/3\\)"
+      ]
+    },
+    {
+      "id": "nx-018",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-019",
+      "node": "nxos",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "nx-020",
+      "node": "nxos",
+      "command": "default ip ospf passive-interface"
+    },
+    {
+      "id": "nx-021",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "nx-022",
+      "node": "nxos",
+      "command": "show ip ospf LAB interface Ethernet1/1",
+      "expect": [
+        "Passive interface"
+      ]
+    },
+    {
+      "id": "nx-023",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-024",
+      "node": "nxos",
+      "command": "router ospf LAB"
+    },
+    {
+      "id": "nx-025",
+      "node": "nxos",
+      "command": "no passive-interface default"
+    },
+    {
+      "id": "nx-026",
+      "node": "nxos",
+      "command": "exit"
+    },
+    {
+      "id": "nx-027",
+      "node": "nxos",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "nx-028",
+      "node": "nxos",
+      "command": "mtu 1600"
+    },
+    {
+      "id": "nx-029",
+      "node": "nxos",
+      "command": "ip ospf mtu-ignore"
+    },
+    {
+      "id": "nx-030",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "nx-031",
+      "node": "iosxe",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-032",
+      "node": "iosxe",
+      "command": "interface Ethernet0/0",
+      "simCommand": "interface GigabitEthernet0/0"
+    },
+    {
+      "id": "nx-033",
+      "node": "iosxe",
+      "command": "shutdown"
+    },
+    {
+      "id": "nx-034",
+      "node": "iosxe",
+      "command": "no shutdown"
+    },
+    {
+      "id": "nx-035",
+      "node": "iosxe",
+      "command": "end"
+    },
+    {
+      "id": "nx-036",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors",
+      "absent": [
+        "FULL"
+      ],
+      "waitSeconds": 90
+    },
+    {
+      "id": "nx-037",
+      "node": "iosxe",
+      "command": "show ip route",
+      "absent": [
+        "192\\.0\\.2\\.1(?:/32|\\s)"
+      ]
+    },
+    {
+      "id": "nx-038",
+      "node": "iosxe",
+      "command": "ping 192.0.2.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is 0 percent \\(0/3\\)"
+      ]
+    },
+    {
+      "id": "nx-039",
+      "node": "iosxe",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-040",
+      "node": "iosxe",
+      "command": "interface Ethernet0/0",
+      "simCommand": "interface GigabitEthernet0/0"
+    },
+    {
+      "id": "nx-041",
+      "node": "iosxe",
+      "command": "ip ospf mtu-ignore"
+    },
+    {
+      "id": "nx-042",
+      "node": "iosxe",
+      "command": "shutdown"
+    },
+    {
+      "id": "nx-043",
+      "node": "iosxe",
+      "command": "no shutdown"
+    },
+    {
+      "id": "nx-044",
+      "node": "iosxe",
+      "command": "end"
+    },
+    {
+      "id": "nx-045",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors",
+      "expect": [
+        "3\\.3\\.3\\.3.*FULL"
+      ],
+      "waitSeconds": 90
+    },
+    {
+      "id": "nx-046",
+      "node": "iosxe",
+      "command": "ping 192.0.2.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is 100 percent \\(3/3\\)"
+      ]
+    },
+    {
+      "id": "nx-047",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-048",
+      "node": "nxos",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "nx-049",
+      "node": "nxos",
+      "command": "no ip ospf mtu-ignore"
+    },
+    {
+      "id": "nx-050",
+      "node": "nxos",
+      "command": "mtu 1500"
+    },
+    {
+      "id": "nx-051",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "nx-052",
+      "node": "iosxe",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-053",
+      "node": "iosxe",
+      "command": "interface Ethernet0/0",
+      "simCommand": "interface GigabitEthernet0/0"
+    },
+    {
+      "id": "nx-054",
+      "node": "iosxe",
+      "command": "no ip ospf mtu-ignore"
+    },
+    {
+      "id": "nx-055",
+      "node": "iosxe",
+      "command": "shutdown"
+    },
+    {
+      "id": "nx-056",
+      "node": "iosxe",
+      "command": "no shutdown"
+    },
+    {
+      "id": "nx-057",
+      "node": "iosxe",
+      "command": "end"
+    },
+    {
+      "id": "nx-058",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors",
+      "expect": [
+        "3\\.3\\.3\\.3.*FULL"
+      ],
+      "waitSeconds": 90
+    },
+    {
+      "id": "nx-059",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-060",
+      "node": "nxos",
+      "command": "vrf context BLUE"
+    },
+    {
+      "id": "nx-061",
+      "node": "nxos",
+      "command": "exit"
+    },
+    {
+      "id": "nx-062",
+      "node": "nxos",
+      "command": "router ospf LAB"
+    },
+    {
+      "id": "nx-063",
+      "node": "nxos",
+      "command": "passive-interface default"
+    },
+    {
+      "id": "nx-064",
+      "node": "nxos",
+      "command": "vrf BLUE"
+    },
+    {
+      "id": "nx-065",
+      "node": "nxos",
+      "command": "router-id 2.2.2.22"
+    },
+    {
+      "id": "nx-066",
+      "node": "nxos",
+      "command": "exit"
+    },
+    {
+      "id": "nx-067",
+      "node": "nxos",
+      "command": "exit"
+    },
+    {
+      "id": "nx-068",
+      "node": "nxos",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "nx-069",
+      "node": "nxos",
+      "command": "vrf member BLUE"
+    },
+    {
+      "id": "nx-070",
+      "node": "nxos",
+      "command": "ip address 198.51.100.1/30"
+    },
+    {
+      "id": "nx-071",
+      "node": "nxos",
+      "command": "ip router ospf LAB area 0"
+    },
+    {
+      "id": "nx-072",
+      "node": "nxos",
+      "command": "interface Loopback20"
+    },
+    {
+      "id": "nx-073",
+      "node": "nxos",
+      "command": "vrf member BLUE"
+    },
+    {
+      "id": "nx-074",
+      "node": "nxos",
+      "command": "ip address 192.0.2.10/32"
+    },
+    {
+      "id": "nx-075",
+      "node": "nxos",
+      "command": "ip router ospf LAB area 0"
+    },
+    {
+      "id": "nx-076",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "nx-077",
+      "node": "iosxe",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-078",
+      "node": "iosxe",
+      "command": "vrf definition BLUE"
+    },
+    {
+      "id": "nx-079",
+      "node": "iosxe",
+      "command": "address-family ipv4"
+    },
+    {
+      "id": "nx-080",
+      "node": "iosxe",
+      "command": "exit-address-family"
+    },
+    {
+      "id": "nx-081",
+      "node": "iosxe",
+      "command": "exit"
+    },
+    {
+      "id": "nx-082",
+      "node": "iosxe",
+      "command": "interface Ethernet0/0",
+      "simCommand": "interface GigabitEthernet0/0"
+    },
+    {
+      "id": "nx-083",
+      "node": "iosxe",
+      "command": "vrf forwarding BLUE"
+    },
+    {
+      "id": "nx-084",
+      "node": "iosxe",
+      "command": "ip address 198.51.100.2 255.255.255.252"
+    },
+    {
+      "id": "nx-085",
+      "node": "iosxe",
+      "command": "interface Loopback20"
+    },
+    {
+      "id": "nx-086",
+      "node": "iosxe",
+      "command": "vrf forwarding BLUE"
+    },
+    {
+      "id": "nx-087",
+      "node": "iosxe",
+      "command": "ip address 192.0.2.20 255.255.255.255"
+    },
+    {
+      "id": "nx-088",
+      "node": "iosxe",
+      "command": "exit"
+    },
+    {
+      "id": "nx-089",
+      "node": "iosxe",
+      "command": "router ospf 2 vrf BLUE"
+    },
+    {
+      "id": "nx-090",
+      "node": "iosxe",
+      "command": "router-id 3.3.3.33"
+    },
+    {
+      "id": "nx-091",
+      "node": "iosxe",
+      "command": "network 198.51.100.0 0.0.0.3 area 0"
+    },
+    {
+      "id": "nx-092",
+      "node": "iosxe",
+      "command": "network 192.0.2.20 0.0.0.0 area 0"
+    },
+    {
+      "id": "nx-093",
+      "node": "iosxe",
+      "command": "end"
+    },
+    {
+      "id": "nx-094",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors vrf BLUE",
+      "expect": [
+        "3\\.3\\.3\\.33.*FULL"
+      ],
+      "waitSeconds": 90
+    },
+    {
+      "id": "nx-095",
+      "node": "nxos",
+      "command": "show ip ospf LAB interface Ethernet1/1",
+      "expect": [
+        "VRF BLUE"
+      ]
+    },
+    {
+      "id": "nx-096",
+      "node": "nxos",
+      "command": "ping 192.0.2.20 vrf BLUE count 3",
+      "expect": [
+        "3 packets transmitted, 3 packets received"
+      ]
+    },
+    {
+      "id": "nx-097",
+      "node": "nxos",
+      "command": "show ip route",
+      "absent": [
+        "192\\.0\\.2\\.20"
+      ]
+    },
+    {
+      "id": "nx-098",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-099",
+      "node": "nxos",
+      "command": "router ospf LAB"
+    },
+    {
+      "id": "nx-100",
+      "node": "nxos",
+      "command": "vrf BLUE"
+    },
+    {
+      "id": "nx-101",
+      "node": "nxos",
+      "command": "passive-interface default"
+    },
+    {
+      "id": "nx-102",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "nx-103",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors vrf BLUE",
+      "absent": [
+        "FULL"
+      ],
+      "waitSeconds": 50
+    },
+    {
+      "id": "nx-104",
+      "node": "nxos",
+      "command": "ping 192.0.2.20 vrf BLUE count 3",
+      "expect": [
+        "3 packets transmitted, 0 packets received"
+      ]
+    },
+    {
+      "id": "nx-105",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nx-106",
+      "node": "nxos",
+      "command": "router ospf LAB"
+    },
+    {
+      "id": "nx-107",
+      "node": "nxos",
+      "command": "vrf BLUE"
+    },
+    {
+      "id": "nx-108",
+      "node": "nxos",
+      "command": "no passive-interface default"
+    },
+    {
+      "id": "nx-109",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "nx-110",
+      "node": "nxos",
+      "command": "show ip ospf LAB neighbors vrf BLUE",
+      "expect": [
+        "3\\.3\\.3\\.33.*FULL"
+      ],
+      "waitSeconds": 90
+    },
+    {
+      "id": "nx-111",
+      "node": "nxos",
+      "command": "ping 192.0.2.20 vrf BLUE count 3",
+      "expect": [
+        "3 packets transmitted, 3 packets received"
+      ]
+    }
+  ],
+  "surveys": [
+    {
+      "node": "nxos",
+      "commands": [
+        "show ip ospf",
+        "show ip ospf LAB",
+        "show ip ospf LAB vrf BLUE",
+        "show ip ospf neighbors vrf all",
+        "show ip ospf interface vrf BLUE",
+        "show ip ospf LAB interface Ethernet1/1",
+        "show ip ospf LAB interface Ethernet1/1 vrf BLUE",
+        "show ip ospf MISSING neighbors",
+        "show ip ospf LAB neighbors vrf MISSING",
+        "show interface Loopback0",
+        "show running-config interface Ethernet1/1",
+        "show ip route vrf BLUE"
+      ]
+    }
+  ],
+  "packetEvidence": {
+    "kind": "operational",
+    "minimum": {
+      "OSPF": 20,
+      "ICMP": 20
+    }
+  }
+}

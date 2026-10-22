@@ -156,6 +156,50 @@ instance is explicitly rejected rather than replacing the first. Different VRFs
 may have different tags. OSPFv3, BGP and HSRP are not exposed as working NS-OS
 features in this foundation.
 
+Passive interfaces use the native NX-OS commands:
+
+```text
+router ospf FABRIC
+ passive-interface default
+exit
+interface Ethernet1/1
+ no ip ospf passive-interface
+end
+```
+
+`ip ospf passive-interface` suppresses Hellos; `no ip ospf passive-interface`
+explicitly enables them, overriding the current routing context's default.
+`default ip ospf passive-interface` removes that override. Each OSPF VRF has its
+own `passive-interface default` / `no passive-interface default`; changing the
+default VRF does not change a named VRF. Passive interfaces still advertise
+their network through other active adjacencies. The IOS router-mode command
+`passive-interface Ethernet1/1` is rejected. Older saved interface lists still
+operate and export as native interface commands.
+
+`ip ospf mtu-ignore` / `no ip ospf mtu-ignore` control the receiving interface's
+DBD MTU check. A setting on the larger-MTU peer cannot disable the smaller
+receiver's check. This does not change packet MTU or fragmentation. To test a
+mismatch, force a new database exchange and check both peers plus forwarding;
+an old FULL state on one peer alone is insufficient.
+
+New loopbacks are administratively up, with 8,000,000-Kbit bandwidth and OSPF
+cost 1 unless an explicit OSPF cost overrides it. Removing `ip router ospf TAG
+area AREA` preserves interface OSPF parameters. A different tag leaves the
+attachment unchanged; a different area reports `Area mismatch` without changing
+configuration. Configuration-file replay treats that response as an error and
+rolls back the whole merge.
+
+Use `show ip ospf TAG neighbors vrf BLUE`, `show ip ospf interface vrf all` or
+`show ip ospf TAG interface Ethernet1/1`. A selected interface determines its
+VRF, so appending `vrf BLUE` to the selected-interface form is rejected, as on
+the tested Nexus image. Missing instance tags reject; a missing queried VRF
+returns no rows. Interface detail uses local state, received neighbors and
+actual Hello timers; unmodeled ASIC and process fields are omitted.
+
+`ping ADDRESS count N` and `ping ADDRESS vrf BLUE count N` send actual probes,
+with a simulator limit of 1–20. Their native-style output reports measured
+replies, TTL, timing and loss. The app continues to run fully offline.
+
 ## vPC
 
 Open **My labs → Open Datacenter Switch vPC example** for the embedded six-node

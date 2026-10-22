@@ -236,13 +236,13 @@ test('NSOS vPC CLI validates domain/member/peer-link, shows absent peers honestl
 test('regression: NSOS configuration replay resolves passive logical interfaces and qualified routes in default and named VRFs',()=>{
   const {sim,d,cli}=setup(9614);
   run(cli,'conf t','feature ospf','feature interface-vlan','vrf context BLUE','exit',
-    'interface Vlan20','ip address 10.0.20.1/24','ip router ospf CORE area 0','no shutdown',
-    'interface Loopback0','ip address 10.0.0.1/32','ip router ospf CORE area 0',
-    'interface Port-channel10','no switchport','ip address 10.0.10.1/30','ip router ospf CORE area 0',
-    'interface Loopback1','vrf member BLUE','ip address 10.1.0.1/32','ip router ospf CORE area 0',
-    'interface Port-channel20','no switchport','vrf member BLUE','ip address 10.1.10.1/30','ip router ospf CORE area 0',
-    'exit','router ospf CORE','router-id 10.0.0.1','passive-interface Vlan20','passive-interface Loopback0','passive-interface Port-channel10',
-    'vrf BLUE','router-id 10.1.0.1','passive-interface Loopback1','passive-interface Port-channel20','end',
+    'interface Vlan20','ip address 10.0.20.1/24','ip router ospf CORE area 0','ip ospf passive-interface','no shutdown',
+    'interface Loopback0','ip address 10.0.0.1/32','ip router ospf CORE area 0','ip ospf passive-interface',
+    'interface Port-channel10','no switchport','ip address 10.0.10.1/30','ip router ospf CORE area 0','ip ospf passive-interface',
+    'interface Loopback1','vrf member BLUE','ip address 10.1.0.1/32','ip router ospf CORE area 0','ip ospf passive-interface',
+    'interface Port-channel20','no switchport','vrf member BLUE','ip address 10.1.10.1/30','ip router ospf CORE area 0','ip ospf passive-interface',
+    'exit','router ospf CORE','router-id 10.0.0.1',
+    'vrf BLUE','router-id 10.1.0.1','end',
     'conf t','ip route 192.0.2.0/24 Port-channel10 10.0.10.2','vrf context BLUE','ip route 198.51.100.0/24 Port-channel20 10.1.10.2','end');
   const rendered=renderConfig(d).join('\n'),peer=sim.addDevice('datacenter'),replay=new NSOSSession(sim,peer.id,{skipConsoleLogin:true});
   peer.config.features.files={replay:rendered};

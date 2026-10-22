@@ -17,9 +17,13 @@ import uuid
 from client import CML
 
 CSI = r"\x1b\[[0-?]*[ -/]*[@-~]"
-PROMPT = r"(?m)(?:^|[\r\n])(?:" + CSI + r"|[ \t\r])*[A-Za-z0-9_.-]+(?:\([^\r\n]*\))?[>#](?:" + CSI + r"|[ \t\r])*$"
+# Nexus boot syslog can start on the already printed EXEC prompt's line.
+# Recognize only its timestamped VDC syslog prefix as an alternative boundary;
+# an echoed command after '#' must never satisfy this fence.
+NX_SYSLOG = r"20\d\d [A-Z][a-z]{2} +\d{1,2} \d\d:\d\d:\d\d [^\r\n]*%\$ VDC-\d+ %\$"
+PROMPT = r"(?m)(?:^|[\r\n])(?:" + CSI + r"|[ \t\r])*[A-Za-z0-9_.-]+(?:\([^\r\n]*\))?[>#](?:" + CSI + r"|[ \t\r])*(?=$|" + NX_SYSLOG + r")"
 AUTH_PROMPT = r"(?im)(?:^|[\r\n])(?:" + CSI + r"|[ \t\r])*(?:[A-Za-z0-9_.-]+ )?(?:username|login|password):(?:" + CSI + r"|[ \t\r])*$"
-REJECTED = r"(?im)^\s*(?:%?\s*(?:Invalid\b|Incomplete\b|Ambiguous\b|Unsupported\b|Unrecognized command|Duplicate sequence number|Sequence number already exists|Permission denied|Value must be|Configuration update aborted|Error:|Please define )|%[^\r\n]*(?:not implemented|configuration stored only|operational behavior is not simulated))"
+REJECTED = r"(?im)^\s*(?:%?\s*(?:Invalid\b|Incomplete\b|Ambiguous\b|Unsupported\b|Unrecognized command|Duplicate sequence number|Sequence number already exists|Area mismatch|Permission denied|Value must be|Configuration update aborted|Error:|Please define )|%[^\r\n]*(?:not implemented|configuration stored only|operational behavior is not simulated))"
 
 
 def write_json(path, value):

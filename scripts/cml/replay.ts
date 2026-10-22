@@ -11,7 +11,7 @@ import type {DeviceKind} from '../../src/model.ts';
 interface NodeSpec {id:string;kind:DeviceKind;hostname:string;simPort:string;cml:{port:string};portMap?:Record<string,string>;simulatorSetup:string[]}
 interface Step {id:string;node:string;command:string;simCommand?:string;waitSeconds?:number;expect?:string[];absent?:string[];sensitive?:boolean}
 export interface Scenario {schemaVersion:number;id:string;nodes:NodeSpec[];links:{node:string;port:string}[][];steps:Step[];surveys?:{node:string;commands:string[]}[]}
-const rejectedOutput=(raw:string)=>/^\s*(?:%?\s*(?:Invalid\b|Incomplete\b|Ambiguous\b|Unrecognized command|Unsupported\b|Duplicate sequence number|Sequence number already exists|Permission denied|Value must be)|%[^\r\n]*(?:not implemented|configuration stored only|operational behavior is not simulated))/im.test(raw);
+const rejectedOutput=(raw:string)=>/^\s*(?:%?\s*(?:Invalid\b|Incomplete\b|Ambiguous\b|Unrecognized command|Unsupported\b|Duplicate sequence number|Sequence number already exists|Area mismatch|Permission denied|Value must be)|%[^\r\n]*(?:not implemented|configuration stored only|operational behavior is not simulated))/im.test(raw);
 export function replayScenario(scenario:Scenario,digest=''){
   if(scenario.schemaVersion!==1)throw new Error('Unsupported scenario schema');
   const engine=new Simulator(20261021),nodes=new Map<string,{deviceId:string;cli:CLISession;spec:NodeSpec}>();
