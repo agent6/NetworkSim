@@ -35,8 +35,8 @@ test('NSOS factory exposes 24 access-facing and 6 uplink Ethernet ports plus iso
     assert.deepEqual(p.features.ethernetSpeeds,n<=24?[1000,10000]:[1000,10000,40000]);assert.equal(p.features.speedAuto,true);
   }
   assert.equal(d.config.interfaces.mgmt0.vrf,'management');assert.equal(d.config.interfaces.mgmt0.speed,1000);
-  assert.equal(d.config.interfaces.mgmt0.features.proxyArp,false);assert.equal(d.config.features.stp.pathcostMethod,'long');
-  assert.deepEqual(nsosConfig(d).enabled,[]);assert.equal(d.config.features.vtp.enabled,false);
+  assert.equal(d.config.interfaces.mgmt0.features.proxyArp,false);assert.equal(d.config.features.stp.pathcostMethod,'short');
+  assert.deepEqual(nsosConfig(d).enabled,['ssh']);assert.equal(d.config.features.vtp.enabled,false);
   const old=sim.addDevice('switch'),before=JSON.stringify(old.config);
   assert.deepEqual(nsosConfig(old),{enabled:[]});assert.equal(JSON.stringify(old.config),before);
   assert.equal(Object.keys(factoryDeviceConfig('switch','SW').interfaces).length,26);
@@ -231,4 +231,77 @@ test('NSOS vPC CLI validates domain/member/peer-link, shows absent peers honestl
   assert.match(text(cli,'show vpc'),/adjacency not formed/);assert.doesNotMatch(text(cli,'show vpc'),/Status.*success/);
   assert.match(text(cli,'show vpc peer-keepalive'),/received: 0/);
   run(cli,'conf t','no feature vpc','end');assert.equal(nsosConfig(d).vpc,undefined);assert.equal(d.config.interfaces['Port-channel2'].features.vpcId,undefined);
+});
+
+test('regression: NSOS configuration replay resolves passive logical interfaces and qualified routes in default and named VRFs',()=>{
+  const {sim,d,cli}=setup(9614);
+  run(cli,'conf t','feature ospf','feature interface-vlan','vrf context BLUE','exit',
+    'interface Vlan20','ip address 10.0.20.1/24','ip router ospf CORE area 0','no shutdown',
+    'interface Loopback0','ip address 10.0.0.1/32','ip router ospf CORE area 0',
+    'interface Port-channel10','no switchport','ip address 10.0.10.1/30','ip router ospf CORE area 0',
+    'interface Loopback1','vrf member BLUE','ip address 10.1.0.1/32','ip router ospf CORE area 0',
+    'interface Port-channel20','no switchport','vrf member BLUE','ip address 10.1.10.1/30','ip router ospf CORE area 0',
+    'exit','router ospf CORE','router-id 10.0.0.1','passive-interface Vlan20','passive-interface Loopback0','passive-interface Port-channel10',
+    'vrf BLUE','router-id 10.1.0.1','passive-interface Loopback1','passive-interface Port-channel20','end',
+    'conf t','ip route 192.0.2.0/24 Port-channel10 10.0.10.2','vrf context BLUE','ip route 198.51.100.0/24 Port-channel20 10.1.10.2','end');
+  const rendered=renderConfig(d).join('\n'),peer=sim.addDevice('datacenter'),replay=new NSOSSession(sim,peer.id,{skipConsoleLogin:true});
+  peer.config.features.files={replay:rendered};
+  run(replay,'copy bootflash:replay running-config');
+  assert.equal(renderConfig(peer).join('\n'),rendered);
+  assert.deepEqual(peer.config.protocols.ospf,d.config.protocols.ospf);
+  for(const vrf of [undefined,'BLUE'])
+    assert.deepEqual(peer.config.staticRoutes.filter(r=>r.vrf===vrf),d.config.staticRoutes.filter(r=>r.vrf===vrf));
+  run(replay,'copy running-config startup-config');sim.reload(peer.id);
+  assert.deepEqual(peer.config.protocols.ospf,d.config.protocols.ospf);
+});
+
+test('regression: explicit NSOS terminal width survives local viewport changes and SSH column updates',()=>{
+  const {sim,d,cli}=setup(9615);
+  assert.equal(cli.pageWidth,80);cli.setViewportColumns(140);assert.equal(cli.pageWidth,140);
+  run(cli,'terminal width 60');cli.setViewportColumns(200);assert.equal(cli.pageWidth,60);
+  run(cli,'terminal width 132');cli.setViewportColumns(90);assert.equal(cli.pageWidth,132);
+  run(cli,'conf t','username admin password LabAdmin42 role network-admin','feature ssh','interface mgmt0','ip address 192.0.2.1/24','end');
+  const host=sim.addDevice('pc'),p=host.config.interfaces.GigabitEthernet0;
+  delete p.features.dhcp;Object.assign(p,{ip:'192.0.2.2',mask:'255.255.255.0'});
+  sim.connect({deviceId:d.id,port:'mgmt0'},{deviceId:host.id,port:p.name});sim.advance(1000);
+  const controller=managementFor(sim,id=>createCLISession(sim,id,{skipConsoleLogin:true}));
+  const opened=controller.open(host.id,'192.0.2.1',22,'admin','ssh',140);
+  assert.equal(opened.status,'success');
+  const id=opened.sessionId;
+  assert.equal(controller.send(host.id,'192.0.2.1',22,id,'LabAdmin42',140).pageWidth,140);
+  assert.equal(controller.send(host.id,'192.0.2.1',22,id,'show version',100).pageWidth,100);
+  assert.equal(controller.send(host.id,'192.0.2.1',22,id,'terminal width 60',100).pageWidth,60);
+  assert.equal(controller.send(host.id,'192.0.2.1',22,id,'show interface status',180).pageWidth,60);
+  assert.equal(controller.query(host.id,'192.0.2.1',22,id,'help','show ',120).pageWidth,60);
+  // A reload starts a new terminal session while retaining the attached viewport.
+  sim.reload(d.id);cli.pollOutput();assert.equal(cli.pageWidth,90);
+});
+
+test('CML regression: SSH is enabled by default, gated by feature ssh and retained when disabled in NVGEN',()=>{
+  const {sim,d,cli}=setup(9616),host=sim.addDevice('router'),client=new IOSSession(sim,host.id);
+  sim.connect({deviceId:d.id,port:'Ethernet1/1'},{deviceId:host.id,port:'GigabitEthernet0/0'});
+  run(cli,'conf t','username admin password LabAdmin42 role network-admin','interface Ethernet1/1','no switchport','ip address 192.0.2.1/24','no shutdown','end');
+  run(client,'enable','conf t','interface g0/0','ip address 192.0.2.2 255.255.255.0','no shutdown','end');
+  assert.match(text(cli,'show feature | include ssh'),/sshServer\s+1\s+enabled/);
+  assert.match(text(client,'ssh -l admin 192.0.2.1'),/User Access Verification/);run(client,'LabAdmin42');assert.equal(client.prompt,d.config.hostname+'#');
+  assert.equal(text(client,'show hostname'),d.config.hostname);run(client,'exit');
+  run(cli,'conf t','no feature ssh','end');assert.match(text(cli,'show feature | include ssh'),/sshServer\s+1\s+disabled/);
+  assert.match(client.execute('ssh -l admin 192.0.2.1').join('\n'),/refused/);
+  const config=renderConfig(d).join('\n');assert.match(config,/^no feature ssh$/m);
+  const peer=sim.addDevice('datacenter'),replay=new NSOSSession(sim,peer.id);run(replay,'conf t');
+  for(const line of config.split('\n').filter(l=>l&&!l.startsWith('!')))run(replay,line);
+  assert.equal(nsosConfig(peer).enabled.includes('ssh'),false);
+  run(cli,'conf t','feature ssh','end');run(client,'ssh -l admin 192.0.2.1','LabAdmin42');assert.equal(client.prompt,d.config.hostname+'#');
+  assert.ok(sim.events.some(e=>e.protocol==='TCP'));
+});
+
+test('NSOS show filters use real output, expose help and completion, and preserve invalid-command failures',()=>{
+  const {cli}=setup(9617);
+  const row=text(cli,'show feature | include ssh');assert.match(row,/^sshServer\s+1\s+enabled$/);assert.doesNotMatch(row,/Feature Name/);
+  assert.doesNotMatch(text(cli,'show feature | exclude ssh'),/sshServer/);
+  assert.match(text(cli,'show feature | begin ssh'),/^sshServer/m);
+  assert.match(cli.help('show feature | ').join('\n'),/include/);assert.equal(cli.complete('show feature | inc'),'show feature | include ');
+  reject(cli,'show feature | include [',/Invalid output filter/);
+  reject(cli,'show invalid | include ssh',/Invalid or incomplete show command/);
+  reject(cli,'show feature | redirect flash:out',/Invalid or incomplete output filter/);
 });

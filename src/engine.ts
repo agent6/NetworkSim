@@ -1,3 +1,4 @@
+import {recordInterfaceSample} from './interface-telemetry.ts';
 import {stpPortState,stpMemberActive} from './stp-ports.ts';
 import {installFTPServices,validateFTPConfiguration} from './ftp-files.ts';
 import { validateSLAConfiguration } from './sla-config.ts';
@@ -319,6 +320,7 @@ export class Simulator {
   }
   private count(d: Device, port: string, kind: 'tx' | 'rx' | 'drops', bytes = 0, destinationMac?: string): void {
     const c = d.runtime.counters[port] ??= { tx: 0, rx: 0, drops: 0, txBytes: 0, rxBytes: 0 }; c[kind]++; if (kind === 'tx') { c.txBytes += bytes; c.lastOutput = this.clock.now(); } if (kind === 'rx') { c.rxBytes += bytes; c.lastInput = this.clock.now(); }
+    if(kind!=='drops')recordInterfaceSample(c,this.clock.now(),kind,bytes);
     if(kind!=='drops'&&destinationMac){const normalized=destinationMac.replace(/[^0-9a-f]/gi,'').toLowerCase(),category=normalized==='ffffffffffff'?'Broadcast':(parseInt(normalized.slice(0,2),16)&1)?'Multicast':'Unicast',field=`${kind}${category}` as 'txUnicast'|'txMulticast'|'txBroadcast'|'rxUnicast'|'rxMulticast'|'rxBroadcast';c[field]=(c[field]??0)+1;}
   }
   private packetSummary(p: IPPacket): PacketSummary {

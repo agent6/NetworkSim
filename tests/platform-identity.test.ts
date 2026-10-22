@@ -90,18 +90,14 @@ test('IDENTITY physical interface counts ignore subinterfaces and keep virtual i
   assert.match(text(cs, 'show version'), /^1 Virtual Ethernet interface$/m);
 });
 
-test('IDENTITY version and memory views share profile capacities while flash reports the actual configured bytes', () => {
+test('IDENTITY version retains declared capacity while unmeasured allocator telemetry is rejected', () => {
   const sim = new Simulator(4404);
   for (const [kind, , , processorKiB, ioKiB] of profiles.filter(([kind]) => kind !== 'ap')) {
     const device = sim.addDevice(kind), cli = new IOSSession(sim, device.id);
     run(cli, 'enable');
     const memory = text(cli, 'show memory statistics');
-    const processor = /^Processor\s+\S+\s+(\d+)\s+(\d+)\s+(\d+)/m.exec(memory)!;
-    const io = /^\s+I\/O\s+\S+\s+(\d+)\s+(\d+)\s+(\d+)/m.exec(memory)!;
-    assert.equal(Number(processor[1]), processorKiB * 1024);
-    assert.equal(Number(io[1]), ioKiB * 1024);
-    assert.equal(Number(processor[2]) + Number(processor[3]), Number(processor[1]));
-    assert.equal(Number(io[2]) + Number(io[3]), Number(io[1]));
+    assert.match(memory, /^% Memory allocator statistics are not implemented/);
+    assert.match(text(cli, 'show version'),new RegExp('with '+processorKiB+'K/'+ioKiB+'K bytes of memory'));
     device.config.features.fileSystem = { capacityBytes: 2049 };
     device.config.features.files = { 'notes.txt': 'abc' };
     assert.match(text(cli, 'show version'), /^2049 bytes of flash storage \(Read\/Write, simulated\)\.$/m);

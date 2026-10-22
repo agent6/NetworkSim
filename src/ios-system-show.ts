@@ -67,73 +67,15 @@ export function iosInventory(device: Device): string[] {
   return [`NAME: "Chassis", DESCR: "NetSim ${profile.model} ${profile.description} (virtual chassis)"`, `PID: ${profile.model.padEnd(18)}, VID: ${NETSIM_HARDWARE_VID}, SN: ${serial}`, ''];
 }
 
-interface ProcessRow { pid: number; name: string; tty: number }
-const BASE_PROCESSES = ['Chunk Manager', 'Load Meter', 'PKI Trustpool', 'Retransmission of IPC messages', 'Check heaps', 'Pool Manager', 'DiscardQ Background Mgr', 'Timers', 'WATCH_AFS', 'MEMLEAK PROCESS', 'ARP Input', 'ARP Background', 'ATM Idle Timer', 'ATM ASYNC PROC', 'AAA_SERVER_DEADTIME', 'Policy Manager', 'DDR Timers', 'Entity MIB API', 'PrstVbl', 'RO Notify Timers', 'RMI RM Notify Watched Policy', 'EEM ED Syslog', 'SMART', 'GraphIt', 'Dialer event', 'IOS Licensing Expiry', 'SERIAL A\'detect', 'XML Proxy Client', 'Critical Bkgnd', 'Net Background', 'IDB Work', 'Logger', 'TTY Background', 'BACK CHECK', 'IF-MGR control process', 'IF-MGR event process', 'IPC Seat Manager', 'IPC Event Notifier', 'IPC Session Service', 'IP Input', 'ICMP event handler', 'IPv6 Input', 'TCP Timer', 'TCP Protocols', 'Socket Timers', 'HTTP CORE', 'CEF background', 'IP ARP Retry Ager', 'IP RIB Update', 'SSS Manager', 'Syslog Traps'];
-
-function processList(device: Device, vty: Array<{ lineNumber: number }>): ProcessRow[] {
-  const names = [...BASE_PROCESSES], f = device.config.features, p = device.config.protocols, s = device.config.services;
-  if (f.cdp !== false) names.push('CDP Protocol');
-  if (f.lldp) names.push('LLDP Protocol');
-  if (isSwitch(device)) names.push('Spanning Tree', 'DTP Protocol', 'VTP Trap Process', 'PAgP Protocol', 'LACP Protocol');
-  const id = (protocol: any) => protocol?.processId ?? protocol?.asn ?? '';
-  if (p.ospf) names.push(`OSPF-${id(p.ospf)} Router`, `OSPF-${id(p.ospf)} Hello`);
-  if (p.ospfv3) names.push(`OSPFv3-${id(p.ospfv3)} Router`, `OSPFv3-${id(p.ospfv3)} Hello`);
-  if (p.eigrp) names.push('EIGRP-IPv4 Hello', `EIGRP-IPv4 Router: ${id(p.eigrp) || p.eigrp.name || ''}`.trim());
-  if (p.eigrp6) names.push('EIGRP-IPv6 Hello', 'EIGRP-IPv6 Router');
-  if (p.bgp) names.push('BGP Scheduler', 'BGP Router', 'BGP I/O', 'BGP Scanner', 'BGP Event');
-  if (p.rip) names.push('RIP Router', 'RIP Send', 'RIP Timers');
-  if (p.ripng) names.push('RIPng Router');
-  if (Object.values(device.config.interfaces).some((i: any) => i.features?.hsrp || i.features?.standby)) names.push('HSRP IPv4');
-  if (f.ntp) names.push('NTP');
-  if (s.dhcp?.enabled !== false && s.dhcp?.pools?.length) names.push('DHCPD Receive', 'DHCPD Timer', 'DHCPD Database');
-  if (f.snmp || s.snmp) names.push('SNMP ENGINE', 'SNMP Timers');
-  if (f.ssh?.keys) names.push('SSH Event handler');
-  const rows: ProcessRow[] = names.map((name, index) => ({ pid: index + 1, name, tty: 0 }));
-  for (const session of vty) rows.push({ pid: rows.length + 1, name: 'Virtual Exec', tty: session.lineNumber + 1 });
-  return rows;
+/** Per-device CPU time and allocator counters are not observable in this shared
+ * JavaScript engine. Reject these views rather than publishing invented PIDs,
+ * processor utilization, addresses or memory usage as hardware telemetry. */
+export function iosProcesses(_device: Device, _now: number, _vty: Array<{ lineNumber: number }>, _view: 'plain' | 'cpu' | 'memory', _sorted = false): string[] {
+  return ['% Per-device process telemetry is not implemented on this virtual platform.'];
 }
 
-function processCounters(row: ProcessRow, uptime: number) {
-  const seed = hash(row.name), seconds = Math.max(1, Math.floor(uptime / 1000));
-  const invoked = 1 + Math.floor(seconds * ((seed % 97) + 3) / 60);
-  const usecs = 50 + seed % 900;
-  return { runtime: Math.floor(invoked * usecs / 1000), invoked, usecs };
-}
-
-export function iosProcesses(device: Device, now: number, vty: Array<{ lineNumber: number }>, view: 'plain' | 'cpu' | 'memory', sorted = false): string[] {
-  const uptime = uptimeMs(device, now), rows = processList(device, vty), counters = new Map(rows.map(row => [row, processCounters(row, uptime)]));
-  const name16 = (name: string) => name.slice(0, 16).padEnd(16);
-  if (view === 'memory') {
-    const memory = iosMemoryPools(device), held = new Map(rows.map(row => [row, 4096 + (hash(row.name + 'm') % 60) * 1024]));
-    if (sorted) rows.sort((a, b) => held.get(b)! - held.get(a)!);
-    const line = (pid: number, tty: number, allocated: number, freed: number, holding: number, name: string) => String(pid).padStart(4) + String(tty).padStart(4) + String(allocated).padStart(11) + String(freed).padStart(11) + String(holding).padStart(11) + '0'.padStart(11) + '0'.padStart(11) + ' ' + name16(name);
-    return [
-      `Processor Pool Total: ${String(memory.processor.total).padStart(10)} Used: ${String(memory.processor.used).padStart(10)} Free: ${String(memory.processor.total - memory.processor.used).padStart(10)}`,
-      `      I/O Pool Total: ${String(memory.io.total).padStart(10)} Used: ${String(memory.io.used).padStart(10)} Free: ${String(memory.io.total - memory.io.used).padStart(10)}`, '',
-      ' PID TTY  Allocated      Freed    Holding    Getbufs    Retbufs Process',
-      line(0, 0, 157498784, 36883336, 113426928, '*Init*'),
-      ...rows.map(row => { const holding = held.get(row)!; return line(row.pid, row.tty, holding + 2048 * (counters.get(row)!.invoked % 7), 2048 * (counters.get(row)!.invoked % 7), holding, row.name); }),
-      String(memory.processor.used).padStart(63) + ' Total',
-    ];
-  }
-  if (sorted) rows.sort((a, b) => counters.get(b)!.runtime - counters.get(a)!.runtime || a.pid - b.pid);
-  const header = 'CPU utilization for five seconds: 0%/0%; one minute: 0%; five minutes: 0%';
-  if (view === 'cpu') return [header, ' PID Runtime(ms)     Invoked      uSecs   5Sec   1Min   5Min TTY Process ', ...rows.map(row => { const c = counters.get(row)!; return String(row.pid).padStart(4) + String(c.runtime).padStart(12) + String(c.invoked).padStart(12) + String(c.usecs).padStart(11) + '  0.00%'.repeat(3) + String(row.tty).padStart(4) + ' ' + name16(row.name); })];
-  return [header, ' PID QTy       PC Runtime(ms)    Invoked   uSecs    Stacks TTY Process', ...rows.map(row => { const c = counters.get(row)!, seed = hash(row.name + 'pc'); return String(row.pid).padStart(4) + ' ' + (row.name === 'Virtual Exec' ? 'M* ' : ['Cwe', 'Csp', 'Mwe', 'Lwe', 'Hwe', 'Lsi', 'Msi'][seed % 7]) + ' ' + (0x20000000 + seed % 0x0fffffff).toString(16).toUpperCase().padStart(8, '0') + String(c.runtime).padStart(12) + String(c.invoked).padStart(11) + String(c.usecs).padStart(8) + `${[5660, 2620, 9764, 10764, 4800][seed % 5]}/${[6000, 3000, 12000, 12000, 6000][seed % 5]}`.padStart(10) + String(row.tty).padStart(4) + ' ' + row.name; })];
-}
-
-function iosMemoryPools(device: Device) {
-  const configBytes = JSON.stringify(device.config).length, state = device.runtime.routes.length + device.runtime.neighbors.length + Object.keys(device.runtime.arp).length;
-  const profile = platformIdentity(device.kind), processor = profile.processorKiB * 1024, io = profile.ioKiB * 1024;
-  return { processor: { head: 'F6E0E2A0', total: processor, used: Math.min(processor, 135061928 + configBytes * 4 + state * 1024) }, io: { head: 'E400000', total: io, used: Math.min(io, 20330608 + Object.keys(device.config.interfaces).length * 65536) } };
-}
-
-export function iosMemoryStatistics(device: Device): string[] {
-  const pools = iosMemoryPools(device), row = (name: string, pool: { head: string; total: number; used: number }) => {
-    const free = pool.total - pool.used, lowest = Math.max(0, free - 1694288), largest = Math.floor(lowest * 0.987);
-    return name.padStart(9) + pool.head.padStart(11) + [pool.total, pool.used, free, lowest, largest].map(n => String(n).padStart(12)).join('');
-  };
-  return ['                Head    Total(b)     Used(b)     Free(b)   Lowest(b)  Largest(b)', row('Processor', pools.processor), row('I/O', pools.io)];
+export function iosMemoryStatistics(_device: Device): string[] {
+  return ['% Memory allocator statistics are not implemented on this virtual platform.'];
 }
 
 export const iosLineNumber = (line: string): number => line.startsWith('vty ') ? Number(line.split(' ')[1]) + 2 : line.startsWith('aux') ? 1 : 0;

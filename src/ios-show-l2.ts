@@ -85,7 +85,7 @@ const helloLine=(h:number,m:number,f:number)=>`             Hello Time ${String(
 function treeHeader(e:Simulator,d:Device,i:Instance):string[] {
   const t=i.tree,root=splitId(t.rootBridgeId),bridge=splitId(t.bridgeId),isRoot=t.rootBridgeId===t.bridgeId||t.rootId===d.id,ext=bridge.priority%4096,mst=stpMode(d)==='mst',rp=t.rootPort?t.ports[t.rootPort]:undefined;
   return ['',i.label,`  Spanning tree enabled protocol ${protocolName(stpMode(d))}`,`  Root ID    Priority    ${root.priority}`,`             Address     ${root.mac}`,...(isRoot?['             This bridge is the root']:[`             Cost        ${t.cost??0}`,`             Port        ${rp?.portNumber??0} (${t.rootPort})`]),helloLine(secs(t.helloTime,2),secs(t.maxAge,20),secs(t.forwardTime,15)),'',
-    `  Bridge ID  Priority    ${String(bridge.priority).padEnd(6)} (priority ${bridge.priority-ext} sys-id-ext ${ext})`,`             Address     ${bridge.mac}`,helloLine(configuredTimer(d,i.key,'helloTime',2),configuredTimer(d,i.key,'maxAge',20),configuredTimer(d,i.key,'forwardTime',15)),...(mst?[]:[`             Aging Time  ${d.config.features.macAgingVlans?.[i.id]??d.config.features.macAgingTime??300} sec`]),''];
+    `  Bridge ID  Priority    ${String(bridge.priority).padEnd(6)} (priority ${bridge.priority-ext} sys-id-ext ${ext})`,`             Address     ${bridge.mac}`,helloLine(configuredTimer(d,i.key,'helloTime',2),configuredTimer(d,i.key,'maxAge',20),configuredTimer(d,i.key,'forwardTime',15)),...(mst||d.kind==='datacenter'?[]:[`             Aging Time  ${d.config.features.macAgingVlans?.[i.id]??d.config.features.macAgingTime??300} sec`]),''];
 }
 function spanningTree(e:Simulator,d:Device,a:string[]):string[] {
   const stp=d.config.features.stp??{};let vlans:number[]|undefined,vlanText='',port:InterfaceConfig|undefined,view='tree';
@@ -117,7 +117,8 @@ function spanningTree(e:Simulator,d:Device,a:string[]):string[] {
   if(view==='bridge')return stpBridge(d,list);
   if(view==='detail')return list.flatMap(i=>[...(logical?[]:stpDetailHeader(e,d,i)),...i.ports.filter(([n])=>!logical||n===logical).flatMap(([n,s])=>stpPortDetail(e,d,i,n,s))]);
   if(logical&&view==='tree')return ['',(stpMode(d)==='mst'?'Mst Instance':'Vlan').padEnd(19)+' Role Sts Cost      Prio.Nbr Type','------------------- ---- --- --------- -------- --------------------------------',...list.map(i=>stpRow(e,d,i.label,19,logical,i.ports.find(([n])=>n===logical)![1]))];
-  return list.flatMap(i=>[...treeHeader(e,d,i),'Interface           Role Sts Cost      Prio.Nbr Type','------------------- ---- --- --------- -------- --------------------------------',...i.ports.filter(([n])=>!logical||n===logical).map(([n,s])=>stpRow(e,d,short(n),19,n,s))]);
+  const width=d.kind==='datacenter'?16:19, label=(n:string)=>d.kind==='datacenter'?short(n).replace(/^Et(?=\d)/,'Eth'):short(n);
+  return list.flatMap(i=>[...treeHeader(e,d,i),'Interface'.padEnd(width)+' Role Sts Cost      Prio.Nbr Type','-'.repeat(width)+' ---- --- --------- -------- --------------------------------',...i.ports.filter(([n])=>!logical||n===logical).map(([n,s])=>stpRow(e,d,label(n),width,n,s))]);
 }
 function stpSummary(d:Device,list:Instance[],totals:boolean):string[] {
   const stp=d.config.features.stp??{},mode=stpMode(d),flag=(label:string,on:boolean)=>label.padEnd(40)+'is '+(on?'enabled':'disabled'),roots=list.filter(i=>i.tree.rootBridgeId===i.tree.bridgeId||i.tree.rootId===d.id).map(i=>i.label);

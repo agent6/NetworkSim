@@ -44,7 +44,8 @@ function portLines(p:InterfaceConfig,c:DeviceConfig):string[] {
 /** NS-OS NVGEN is separate from IOS; every emitted command is accepted by NSOSSession. */
 export function renderNSOSConfig(device:Device,c:DeviceConfig=device.config):string[] {
   const n=nsosConfig({...device,config:c}),lines=[`! NetSim NS-OS ${NETSIM_VERSION}`,`hostname ${c.hostname}`];
-  for(const feature of [...n.enabled].sort(compare))lines.push('feature '+feature);
+  for(const feature of [...n.enabled].sort(compare))if(feature!=='ssh')lines.push('feature '+feature);
+  if(!n.enabled.includes('ssh'))lines.push('no feature ssh');
   if(c.ipv6Routing)lines.push('ipv6 unicast-routing');
   for(const community of Object.keys(c.features.snmp?.communities||{}).sort(compare))lines.push(`snmp-server community ${community} group network-operator`);
   for(const field of ['contact','location'])if(c.features.snmp?.[field])lines.push(`snmp-server ${field} ${c.features.snmp[field]}`);
@@ -56,6 +57,7 @@ export function renderNSOSConfig(device:Device,c:DeviceConfig=device.config):str
   }
   lines.push('spanning-tree mode '+(c.features.stp?.mode||'rapid-pvst'));
   const stp=c.features.stp||{},mst=stp.mst;
+  if(stp.pathcostMethod&&stp.pathcostMethod!=='short')lines.push('spanning-tree pathcost method '+stp.pathcostMethod);
   for(const [v,priority] of Object.entries(stp.vlanPriorities||{}))lines.push(`spanning-tree vlan ${v} priority ${priority}`);
   if(mst){
     lines.push('spanning-tree mst configuration',' name '+(mst.name||'NSOS'),' revision '+(mst.revision||0));
@@ -68,23 +70,7 @@ export function renderNSOSConfig(device:Device,c:DeviceConfig=device.config):str
     lines.push(' exit');
   }
   for(const name of Object.keys(c.features.vrfs||{}).sort(compare)){
-    lines.push('vrf context '+name,...c.staticRoutes.filter(r=>r.vrf===name).map(r=>' '+route(r)),' exit');
-  }
-  const ospf=c.protocols.ospf;
-  if(ospf){
-    const rows:[string|undefined,any][]=[...(ospf.nsosTag?[[undefined,ospf] as [undefined,any]]:[]),...Object.entries<any>(ospf.vrfs||{})];
-    const tags=[...new Set(rows.map(([,p])=>p.nsosTag))].sort(compare);
-    for(const tag of tags){
-      lines.push('router ospf '+tag);
-      for(const [vrf,p] of rows.filter(([,p])=>p.nsosTag===tag)){
-        if(vrf)lines.push(' vrf '+vrf);
-        const indent=vrf?'  ':' ';
-        if(p.routerId)lines.push(indent+'router-id '+p.routerId);
-        for(const name of p.passiveInterfaces||[])lines.push(indent+'passive-interface '+name);
-        if(vrf)lines.push(' exit');
-      }
-      lines.push(' exit');
-    }
+    lines.push('vrf context '+name,' exit');
   }
   const v=n.vpc;
   if(v){
@@ -105,6 +91,28 @@ export function renderNSOSConfig(device:Device,c:DeviceConfig=device.config):str
     return rank(a)-rank(b)||compare(a.name,b.name);
   });
   for(const p of ports)lines.push(...portLines(p,c));
+  // Interface OSPF attachments create their named process as needed. Emit
+  // explicit interface references only after every logical interface exists.
+  const ospf=c.protocols.ospf;
+  if(ospf){
+    const rows:[string|undefined,any][]=[...(ospf.nsosTag?[[undefined,ospf] as [undefined,any]]:[]),...Object.entries<any>(ospf.vrfs||{})];
+    const tags=[...new Set(rows.map(([,p])=>p.nsosTag))].sort(compare);
+    for(const tag of tags){
+      lines.push('router ospf '+tag);
+      for(const [vrf,p] of rows.filter(([,p])=>p.nsosTag===tag)){
+        if(vrf)lines.push(' vrf '+vrf);
+        const indent=vrf?'  ':' ';
+        if(p.routerId)lines.push(indent+'router-id '+p.routerId);
+        for(const name of p.passiveInterfaces||[])lines.push(indent+'passive-interface '+name);
+        if(vrf)lines.push(' exit');
+      }
+      lines.push(' exit');
+    }
+  }
+  for(const name of Object.keys(c.features.vrfs||{}).sort(compare)){
+    const routes=c.staticRoutes.filter(r=>r.vrf===name);
+    if(routes.length)lines.push('vrf context '+name,...routes.map(r=>' '+route(r)),' exit');
+  }
   for(const r of c.staticRoutes.filter(r=>!r.vrf))lines.push(route(r));
   lines.push('end');
   return lines;

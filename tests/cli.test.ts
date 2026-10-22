@@ -96,10 +96,10 @@ test('DHCP CLI configuration drives the actual host address exchange',()=>{
   const out=host.execute('ipconfig /renew');assert.match(out.join('\n'),/10.50.0.11/);assert.equal(pc.config.defaultGateway,'10.50.0.1');
 });
 
-test('unsupported commands never return fake success and configuration-only features disclose their limit',()=>{
+test('unsupported commands reject configuration without pretending to operate',()=>{
   const {cli}=lab();conf(cli);assert.match(cli.execute('crypto isakmp certificate 10').join('\n'),/Invalid/);
   ok(cli,'enable secret training');
-  ok(cli,'vrf definition TEST');assert.match(cli.execute('rd 65000:1')[0],/configuration stored only/);ok(cli,'exit');
+  ok(cli,'vrf definition TEST');assert.match(cli.execute('rd 65000:1')[0],/not implemented.*No configuration was changed/);ok(cli,'exit');
   ok(cli,'router ospf 1');assert.match(cli.execute('redistribute isis').join('\n'),/Invalid/);
 });
 
@@ -182,8 +182,8 @@ test('interface NAT role arguments retain precedence over global NAT source pref
   const {device,cli}=lab();conf(cli,'interface g0/0','ip nat inside','ip nat inside source list 1 interface g0/1 overload','interface g0/1','ip nat outside','end');assert.equal(device.config.interfaces['GigabitEthernet0/0'].features.nat,'inside');assert.equal(device.config.interfaces['GigabitEthernet0/1'].features.nat,'outside');assert.equal(device.config.features.nat.rules[0].interface,'GigabitEthernet0/1');
 });
 
-test('SNMP runtime configuration and partial security/SSO settings round-trip with accurate disclosure',()=>{
-  const {engine,device,cli}=lab();conf(cli);ok(cli,'snmp-server community monitor ro 10','snmp-server group OPS v3 priv read READ','snmp-server view READ iso included');assert.deepEqual(cli.execute('snmp-server user admin OPS v3 auth sha authpass priv aes 128 privpass'),[]);assert.deepEqual(cli.execute('snmp-server engineid local 0123456789'),[]);assert.deepEqual(cli.execute('snmp-server host 192.0.2.5 version 3 priv admin'),[]);for(const command of ['redundancy','mode sso'])assert.ok(cli.execute(command).some(x=>x.includes('configuration stored only')),command);ok(cli,'end');const target=engine.addDevice('router'),session=new IOSSession(engine,target.id);target.config.features.files={config:renderConfig(device).join('\n')};ok(session,'enable','copy flash:config running-config');assert.deepEqual(target.config.features.snmp,device.config.features.snmp);assert.deepEqual(target.config.features.redundancy,device.config.features.redundancy);
+test('SNMP runtime configuration round-trips while unsupported SSO is rejected',()=>{
+  const {engine,device,cli}=lab();conf(cli);ok(cli,'snmp-server community monitor ro 10','snmp-server group OPS v3 priv read READ','snmp-server view READ iso included');assert.deepEqual(cli.execute('snmp-server user admin OPS v3 auth sha authpass priv aes 128 privpass'),[]);assert.deepEqual(cli.execute('snmp-server engineid local 0123456789'),[]);assert.deepEqual(cli.execute('snmp-server host 192.0.2.5 version 3 priv admin'),[]);const before=JSON.stringify(device.config);assert.match(cli.execute('redundancy').join('\n'),/not implemented/);assert.equal(JSON.stringify(device.config),before);assert.equal(cli.mode,'config');ok(cli,'end');const target=engine.addDevice('router'),session=new IOSSession(engine,target.id);target.config.features.files={config:renderConfig(device).join('\n')};ok(session,'enable','copy flash:config running-config');assert.deepEqual(target.config.features.snmp,device.config.features.snmp);assert.deepEqual(target.config.features.redundancy,device.config.features.redundancy);
 });
 
 test('advanced security and flexible flow settings round-trip to the exact consumed fields',()=>{
@@ -274,7 +274,7 @@ test('BFD template, AS-path policy and persistent BGP timer syntax round-trip wi
 });
 
 test('static IPv6 host names resolve locally and truthful platform displays use current model state',()=>{
-  const {engine,device,cli}=lab();conf(cli,'ipv6 host self 2001:db8::1','int loopback0','ipv6 address 2001:db8::1/128','no shutdown','end');assert.match(cli.execute('ping self repeat 1').join('\n'),/100 percent/);assert.equal(engine.events.filter(e=>e.protocol==='DNS').length,0);assert.match(cli.execute('show inventory').join('\n'),/^NAME: "Chassis", DESCR: "NetSim NS-R4 .*"\nPID: NS-R4\s+, VID: V01, SN: NS\w{13}$/m);assert.match(cli.execute('show processes cpu').join('\n'),/^CPU utilization for five seconds: \d+%\/\d+%; one minute: \d+%; five minutes: \d+%/);assert.match(renderConfig(device).join('\n'),/ip host self 2001:db8::1/);
+  const {engine,device,cli}=lab();conf(cli,'ipv6 host self 2001:db8::1','int loopback0','ipv6 address 2001:db8::1/128','no shutdown','end');assert.match(cli.execute('ping self repeat 1').join('\n'),/100 percent/);assert.equal(engine.events.filter(e=>e.protocol==='DNS').length,0);assert.match(cli.execute('show inventory').join('\n'),/^NAME: "Chassis", DESCR: "NetSim NS-R4 .*"\nPID: NS-R4\s+, VID: V01, SN: NS\w{13}$/m);assert.match(cli.execute('show processes cpu').join('\n'),/^% Per-device process telemetry is not implemented/);assert.match(renderConfig(device).join('\n'),/ip host self 2001:db8::1/);
 });
 
 test('named RA guard roles change actual ingress admission and persist named attachments',()=>{

@@ -1,0 +1,643 @@
+{
+  "schemaVersion": 1,
+  "description": "Reviewed facts and short operational contracts from actual CML outputs. Acceptance is separate from operational validation; this is not complete IOS/NX-OS output equivalence.",
+  "scenarioSha256": "cfaf753edd267e6264fcabc53f79d1b32d0ed349f1f857076b59101c206541d7",
+  "captureSha256": "46ab3214ce70f284708fcd645b5e849bbea75b040a260b3e115dc648302e6b7e",
+  "capturedAt": "2026-10-22T04:49:23.745832+00:00",
+  "baseline": "warm-owned-lab",
+  "controllerVersion": "2.10.0+build.13",
+  "images": {
+    "ios": {
+      "definition": "iosv",
+      "image": "iosv-159-3-m12",
+      "label": "IOSv 15.9(3) M12"
+    },
+    "switch": {
+      "definition": "iosvl2",
+      "image": "iosvl2-2020",
+      "label": "IOSv L2 2020"
+    },
+    "nxos": {
+      "definition": "nxosv9000",
+      "image": "nxosv9300-10-6-2-f",
+      "label": "NX-OS 9300v 10.6.2.F"
+    },
+    "iosxe": {
+      "definition": "iol-xe",
+      "image": "iol-xe-17-18-02",
+      "label": "IOL XE 17.18.02"
+    },
+    "outside": {
+      "definition": "iosv",
+      "image": "iosv-159-3-m12",
+      "label": "IOSv 15.9(3) M12"
+    }
+  },
+  "stepCount": 14,
+  "observationCount": 80,
+  "comparisonStatus": "output-review-required",
+  "outputDifferenceCount": 90,
+  "packetEvidence": [
+    {
+      "file": "638c3bba-fa25-4063-831b-409b39355030.pcap",
+      "ARP": 0,
+      "ICMP": 14,
+      "ICMPv6": 17,
+      "OSPF": 66,
+      "STP": 150,
+      "CDP": 10,
+      "LLDP": 20,
+      "packets": 308,
+      "sha256": "ae13ece0b2745cbeddd85f4257179f9ab3fba66cbcf396d814aa73ca96accfc7"
+    },
+    {
+      "file": "b7a3e89a-d16b-4d18-9e2c-0115fb532029.pcap",
+      "ARP": 0,
+      "ICMP": 14,
+      "ICMPv6": 17,
+      "OSPF": 66,
+      "STP": 150,
+      "CDP": 10,
+      "LLDP": 10,
+      "packets": 278,
+      "sha256": "2ede9c514b4c83d06f889973d803a199a3fcb9aa93e1ef0fa4bb2148fd4abca5"
+    },
+    {
+      "file": "bfbe2f3a-4c8c-48f7-8232-4c911ac739e8.pcap",
+      "ARP": 0,
+      "ICMP": 0,
+      "ICMPv6": 3,
+      "OSPF": 66,
+      "STP": 150,
+      "CDP": 10,
+      "LLDP": 10,
+      "packets": 250,
+      "sha256": "5f98dfad3013756e0e9de7934326d87665b00a40c48b459098ca887cc999fcdf"
+    },
+    {
+      "file": "3bc80440-00ef-4484-bd29-8f394b663cb1.pcap",
+      "ARP": 0,
+      "ICMP": 14,
+      "ICMPv6": 19,
+      "OSPF": 65,
+      "STP": 0,
+      "CDP": 11,
+      "LLDP": 20,
+      "packets": 159,
+      "sha256": "dd416be84ffa9e2dae1b0d6c8c4e708989d53a37c66a4c93cbcc7f1f4ade4c3d"
+    },
+    {
+      "file": "e657a4e1-0896-47c3-9947-9625e25caee7.pcap",
+      "ARP": 0,
+      "ICMP": 14,
+      "ICMPv6": 25,
+      "OSPF": 0,
+      "STP": 0,
+      "CDP": 10,
+      "LLDP": 20,
+      "packets": 129,
+      "sha256": "0dbdca133507cd4393d71ca08e1de288ead589704f22d68ed0963582b5dcdcb9"
+    }
+  ],
+  "commandAvailability": [
+    {
+      "node": "ios",
+      "command": "show version",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show inventory",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show environment",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "ios",
+      "command": "show processes cpu",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "ios",
+      "command": "show processes memory",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "ios",
+      "command": "show memory statistics",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "ios",
+      "command": "show clock",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show logging",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show users",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show interfaces",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show ip interface brief",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show ip route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show ipv6 route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show spanning-tree",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show mac address-table",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "ios",
+      "command": "show cdp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show lldp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show ip ospf neighbor",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show ip nat translations",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "ios",
+      "command": "show access-lists",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show version",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show inventory",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show environment",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "iosxe",
+      "command": "show processes cpu",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "iosxe",
+      "command": "show processes memory",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "iosxe",
+      "command": "show memory statistics",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "iosxe",
+      "command": "show clock",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show logging",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show users",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show interfaces",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show ip interface brief",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show ip route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show ipv6 route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show spanning-tree",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show mac address-table",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "iosxe",
+      "command": "show cdp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show lldp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show ip ospf neighbor",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show ip nat translations",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "iosxe",
+      "command": "show access-lists",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show version",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show inventory",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show environment",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "switch",
+      "command": "show processes cpu",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "switch",
+      "command": "show processes memory",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "switch",
+      "command": "show memory statistics",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "switch",
+      "command": "show clock",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show logging",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show users",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show interfaces",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show ip interface brief",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show ip route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show ipv6 route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show spanning-tree",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show mac address-table",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show cdp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show lldp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show ip ospf neighbor",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show ip nat translations",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "switch",
+      "command": "show access-lists",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show version",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show inventory",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show environment",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show processes cpu",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show processes memory",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show memory statistics",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show clock",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show logging",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show users",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show interfaces",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show ip interface brief",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ipv6 route",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show spanning-tree",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show mac address-table",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show cdp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show lldp neighbors detail",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip ospf neighbor",
+      "cmlAccepted": true,
+      "simulatorAccepted": true
+    },
+    {
+      "node": "nxos",
+      "command": "show ip nat translations",
+      "cmlAccepted": false,
+      "simulatorAccepted": false
+    },
+    {
+      "node": "nxos",
+      "command": "show access-lists",
+      "cmlAccepted": true,
+      "simulatorAccepted": false
+    }
+  ],
+  "contracts": [
+    {
+      "node": "ios",
+      "command": "show ip route",
+      "pattern": "198\\.51\\.100\\.0 \\[110/41\\]",
+      "observed": "198.51.100.0 [110/41]"
+    },
+    {
+      "node": "nxos",
+      "command": "show ip route",
+      "pattern": "0\\.0\\.0\\.0/0, ubest/mbest: 1/0",
+      "observed": "0.0.0.0/0, ubest/mbest: 1/0"
+    },
+    {
+      "node": "nxos",
+      "command": "show ipv6 route",
+      "pattern": "IPv6 Routing Table for VRF \"default\"",
+      "observed": "IPv6 Routing Table for VRF \"default\""
+    },
+    {
+      "node": "nxos",
+      "command": "show ip interface brief",
+      "pattern": "Eth1/3\\s+198\\.51\\.100\\.1\\s+protocol-up/link-up/admin-up",
+      "observed": "Eth1/3               198.51.100.1    protocol-up/link-up/admin-up"
+    },
+    {
+      "node": "nxos",
+      "command": "show spanning-tree",
+      "pattern": "Eth1/1\\s+Desg FWD 4\\s",
+      "observed": "Eth1/1           Desg FWD 4 "
+    },
+    {
+      "node": "switch",
+      "command": "show spanning-tree",
+      "pattern": "Gi0/2\\s+Altn BLK",
+      "observed": "Gi0/2               Altn BLK"
+    },
+    {
+      "node": "nxos",
+      "command": "show ip ospf neighbor",
+      "pattern": "Total number of neighbors: 2",
+      "observed": "Total number of neighbors: 2"
+    },
+    {
+      "node": "nxos",
+      "command": "show lldp neighbors detail",
+      "pattern": "System Name: IOSXE",
+      "observed": "System Name: IOSXE"
+    }
+  ],
+  "remainingDifferences": {
+    "identity": "NetSim profiles, MAC addresses, software labels, port mappings and capacities intentionally differ from licensed images.",
+    "timeAndTraffic": "Warm CML ages, counters, ICMP IDs/PAT allocations and non-preemptive OSPF DR/BDR election order differ from deterministic fresh simulation.",
+    "hardwareTelemetry": "Per-device CPU/process/memory allocator and environmental telemetry is unavailable; rejected rather than fabricated.",
+    "nexusACL": "Real Nexus accepts an empty show access-lists. NS-OS has no implemented ACL configuration surface, so this command remains rejected.",
+    "lldpInterop": "IOSvL2 LLDP advertisements were captured on both trunks but Nexus learned only IOSXE on the routed link. Cause unproven; no invented native-VLAN gate added.",
+    "nativePresentation": "Native-style bounded tables retain missing NX-OS facility/linecard/Linux PID fields, hardware-local MAC rows, shorter legends and whitespace differences.",
+    "legacyIOSPresentation": "Existing interface hardware queue/error placeholders, simplified system/logging tables, IPv6 receive routes and other platform-specific detail are not bit-for-bit Cisco output."
+  }
+}

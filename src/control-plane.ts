@@ -546,6 +546,7 @@ function spanningTree(engine: Simulator): number | undefined {
       const tree=d.runtime.stp[String(vlan)]={rootId,bridgeId,rootBridgeId,cost,mode:d.config.features.stp?.mode??'rapid-pvst',boundary,hops:rootRx?.mode==='mst'&&rootRx.region===mstRegion(d)?Math.max(0,(rootRx.hops??20)-1):d.config.features.stp?.mst?.maxHops??20,rootPort:rootPort?.name,ports:{} as Record<string,StpPortState>,messageAge:rootRx?rootRx.age+1000+now-rootRx.received:0,maxAge:rootRx?.maxAge??stpTimer(d,vlan,'maxAge',20),helloTime:rootRx?.helloTime??stpTimer(d,vlan,'helloTime',2),forwardTime:rootRx?.forwardTime??stpTimer(d,vlan,'forwardTime',15)};
       const rootChanged=old[String(vlan)]?.rootBridgeId!==rootBridgeId||old[String(vlan)]?.cost!==cost;
       let topologyChanged=false;
+      const portChanges:{name:string;previous?:StpPortState;classic:boolean}[]=[];
       for(const p of localPorts){const{name,iface}=p,previous=old[String(vlan)]?.ports[name],rx=valid(p),heartbeat=stpHeartbeats.get(engine)?.get(`${d.id}|${name}`);
         let role=rootPort?.name===name?'root':'designated';
         if(role!=='root'&&rx&&rx.role==='designated'&&compareStp(stpVector(rx.rootBridgeId,rx.cost,rx.bridgeId,rx.portId),stpVector(rootBridgeId,cost,bridgeId,stpPortId(p,vlan)))<0)role=rx.bridgeId===bridgeId?'backup':'alternate';
@@ -572,10 +573,19 @@ function spanningTree(engine: Simulator): number | undefined {
         if(bpduGuard){status='disabled';role='bpdu-inconsistent';}else if(rootGuard){status='blocking';role='root-inconsistent';}else if(loopGuard){status='blocking';role='loop-inconsistent';}else if(bridgeAssurance&&up){status='blocking';role='bridge-assurance-inconsistent';}
         if(!blocked&&!edge&&status!=='forwarding'){const ready=transition.start+(classic?(elapsed<tree.forwardTime?tree.forwardTime:2*tree.forwardTime):!rx?1000:2*tree.forwardTime);if(ready>now)next=next===undefined?ready:Math.min(next,ready);}
         tree.ports[name]={state:status,role,rootId,cost:portCost(p,vlan),edge,bpduGuard,proposal:!classic&&role==='designated'&&!agreed,agreement:proposed?JSON.stringify([rx!.rootBridgeId,rx!.cost,rx!.bridgeId,rx!.portId]):undefined,portPriority:portPriority(p,vlan),portNumber:stpPortNumber(d,name),linkType:shared?'shared':'point-to-point',members:/^Port-channel/i.test(name)?stpMembers(d,name).slice():undefined};
-        if(previous?.state!==status||previous?.role!==role){event(engine,d,'STP',`${name} ${status}`,`VLAN ${vlan}: ${role} port; root ${rootId}.`,bpduGuard);if(previous&&!edge&&(status==='forwarding'||classic&&previous.state==='forwarding'))topologyChanged=true;}
+        portChanges.push({name,previous,classic});
+      }
+      applyVPCSpanningTree(engine,d,vlan);
+      // Events and CAM aging must reflect the final coordinated port state,
+      // including guards received over the vPC peer-link.
+      for(const {name,previous,classic}of portChanges){
+        const current=tree.ports[name];
+        if(previous?.state!==current.state||previous?.role!==current.role){
+          event(engine,d,'STP',`${name} ${current.state}`,`VLAN ${vlan}: ${current.role} port; root ${rootId}.`,!!current.bpduGuard);
+          if(previous&&!current.edge&&(current.state==='forwarding'||classic&&previous.state==='forwarding'))topologyChanged=true;
+        }
       }
       if(topologyChanged){flushStpMac(d,vlan);const changes=d.runtime.features.stpTopology??={};changes[String(vlan)]={count:(changes[String(vlan)]?.count??0)+1,time:now,id:`${d.id}:${vlan}:${now}`};}
-      applyVPCSpanningTree(engine,d,vlan);
     }
   }
   return next;
@@ -724,7 +734,7 @@ function passive(p:RoutedPort,protocol:string):boolean {
   const c=config(p.device,protocol)!;
   return(c.passiveInterfaces??[]).includes(p.name)||(c.passiveInterfaces??[]).includes('default')&&!c.activeInterfaces?.includes(p.name)||!!c.passiveDefault&&!c.activeInterfaces?.includes(p.name);
 }
-function ospfCost(p:RoutedPort,stub=false,protocol=p.family===6?'ospfv3':'ospf'):number {const c=config(p.device,protocol);if(c?.maxMetric&&(!stub||c.maxMetric.includeStub))return 65535;return Math.max(1,Math.min(65535,Number(p.iface.features[protocol]?.cost??Math.floor(Number(c?.referenceBandwidth??100)/Math.max(interfaceBandwidth(p.device,p.iface)/1000,.001)))));}
+function ospfCost(p:RoutedPort,stub=false,protocol=p.family===6?'ospfv3':'ospf'):number {const c=config(p.device,protocol);if(c?.maxMetric&&(!stub||c.maxMetric.includeStub))return 65535;return Math.max(1,Math.min(65535,Number(p.iface.features[protocol]?.cost??Math.floor(Number(c?.referenceBandwidth??(p.device.kind==='datacenter'?40000:100))/Math.max(interfaceBandwidth(p.device,p.iface)/1000,.001)))));}
 function deviceTime(engine:Simulator,d:Device):number{return Number(d.config.features.clockEpoch??Date.UTC(2026,0,1))+engine.clock.now()+Number(d.config.features.clockOffset??d.runtime.features.clockOffset??0);}
 function activeKeys(engine:Simulator,d:Device,name:string,direction:'send'|'accept'):{id:string;keyString:string;algorithm:string;sendEnd:number}[]{
   const now=deviceTime(engine,d),keys=d.config.features.keychains?.[name]?.keys??{};
@@ -1342,7 +1352,7 @@ function bgp(engine:Simulator,endpoints:RoutedPort[],_peers:Map<string,RoutedPor
 
 function ospfEndpoint(p:RoutedPort,protocol:OSPFProtocol):OSPFEndpoint {
   const statement=networkMatch(p,protocol),c=config(p.device,protocol);
-  return{deviceId:p.device.id,name:p.name,node:p.node,address:p.ip,...(protocol==='ospfv3ipv4'?{transportAddress:p.device.runtime.features.linkLocalAddresses?.[p.name]}:{}),prefix:p.prefix,family:p.family,routerId:routerId(p.device,protocol),area:areaId(statement?.area),vrf:p.iface.vrf,snapshot:{deviceConfig:{ipRouting:p.device.config.ipRouting,ipv6Routing:p.device.config.ipv6Routing,protocols:{[protocol]:{...structuredClone(c??{}),routerId:routerId(p.device,protocol)}},features:{},interfaces:{}},interfaceConfig:structuredClone(p.iface)}};
+  return{deviceId:p.device.id,name:p.name,node:p.node,address:p.ip,...(protocol==='ospfv3ipv4'?{transportAddress:p.device.runtime.features.linkLocalAddresses?.[p.name]}:{}),prefix:p.prefix,family:p.family,routerId:routerId(p.device,protocol),area:areaId(statement?.area),vrf:p.iface.vrf,snapshot:{deviceConfig:{ipRouting:p.device.config.ipRouting,ipv6Routing:p.device.config.ipv6Routing,protocols:{[protocol]:{...structuredClone(c??{}),referenceBandwidth:c?.referenceBandwidth??(p.device.kind==='datacenter'?40000:100),routerId:routerId(p.device,protocol)}},features:{},interfaces:{}},interfaceConfig:{...structuredClone(p.iface),features:{...structuredClone(p.iface.features),bandwidth:interfaceBandwidth(p.device,p.iface)}}}};
 }
 function ospfPacketSnapshot(engine:Simulator,endpoints:RoutedPort[],edges:Adj[],protocol:OSPFProtocol):OSPFSnapshot {
   const active=endpoints.filter(p=>networkMatch(p,protocol)),interfaces=active.filter((p,i,all)=>all.findIndex(q=>q.device.id===p.device.id&&q.name===p.name)===i).map(p=>({...ospfEndpoint(p,protocol),helloInterval:ospfTimers(p,protocol).hello,deadInterval:ospfTimers(p,protocol).dead,networkType:p.iface.features[protocol]?.networkType,passive:passive(p,protocol)||/^loopback/i.test(p.name),mtu:p.iface.mtu,mtuIgnore:!!p.iface.features[protocol]?.mtuIgnore,instanceId:p.iface.features[protocol]?.instanceId??(protocol==='ospfv3ipv4'?64:0),authentication:protocolAuthentication(engine,p,protocol),role:p.device.runtime.features[`${protocol}Interfaces`]?.[p.name]?.role}));

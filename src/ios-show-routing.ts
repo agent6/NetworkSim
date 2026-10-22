@@ -189,7 +189,7 @@ function ospfNeighbors(v: OspfView, args: string[]): string[] {
     return [...(v.v3 ? head : []), ...selected.flatMap((n, index) => {
       const p = portOf(n.interface), role = neighborRole(p, n.deviceId), kind = p ? areaKind(v, p.area) : 'normal';
       const mine = events.filter(x => x.routerId === n.routerId && x.interface === n.interface);
-      const fullAt = [...mine].reverse().find(x => x.to === 'FULL')?.time ?? v.live?.started ?? v.now;
+      const fullAt = n.upSince ?? [...mine].reverse().find(x => x.to === 'FULL')?.time ?? v.now;
       const dr = p && !p.p2p ? segmentAddress(v, p, p.state?.drDeviceId) : '0.0.0.0', bdr = p && !p.p2p ? segmentAddress(v, p, p.state?.bdrDeviceId) : '0.0.0.0';
       const helloOptions = kind === 'stub' ? '0x10 in Hello (L-bit)' : kind === 'nssa' ? '0x18 in Hello (N-bit, L-bit)' : '0x12 in Hello (E-bit, L-bit)';
       const dbdOptions = kind === 'stub' ? '0x50 in DBD (L-bit, O-bit)' : kind === 'nssa' ? '0x58 in DBD (N-bit, L-bit, O-bit)' : '0x52 in DBD (E-bit, L-bit, O-bit)';

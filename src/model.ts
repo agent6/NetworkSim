@@ -75,7 +75,7 @@ export interface DeviceConfig {
 export interface ArpEntry { ip: string; mac: string; port: string; vlan?: number; vrf?: string; expires: number; static?: boolean; reachableUntil?:number }
 export interface MacEntry { mac: string; port: string; vlan: number; expires: number; lastSeen?:number; static?: boolean }
 export interface Neighbor { protocol: string; deviceId: string; interface: string; peerInterface?: string; address?: string; state: string; [key: string]: any }
-export interface PortCounters { tx: number; rx: number; drops: number; txBytes: number; rxBytes: number; txUnicast?: number; txMulticast?: number; txBroadcast?: number; rxUnicast?: number; rxMulticast?: number; rxBroadcast?: number; inputErrors?: number; crc?: number; collisions?: number; lateCollisions?: number; outputErrors?: number; lastInput?: number; lastOutput?: number }
+export interface PortCounters { tx: number; rx: number; drops: number; txBytes: number; rxBytes: number; txUnicast?: number; txMulticast?: number; txBroadcast?: number; rxUnicast?: number; rxMulticast?: number; rxBroadcast?: number; inputErrors?: number; crc?: number; collisions?: number; lateCollisions?: number; outputErrors?: number; lastInput?: number; lastOutput?: number; rateSamples?:{at:number;rx:number;tx:number;rxBytes:number;txBytes:number}[] }
 export interface StpPortState { state: 'forwarding' | 'blocking' | 'discarding' | 'learning' | 'listening' | 'disabled'; role?: string; rootId?: string; cost?: number; [key: string]: any }
 export interface StpVlanState { rootId: string; ports: Record<string, StpPortState>; [key: string]: any }
 export interface DeviceRuntime {
@@ -161,7 +161,7 @@ export function factoryDeviceConfig(kind: DeviceKind, hostname: string): DeviceC
     management.features.proxyArp = false;
     return {hostname, interfaces, vlans: {1: {id: 1, name: 'default', active: true}}, ipRouting: true, ipv6Routing: false,
       dnsServers: [], staticRoutes: [], protocols: {}, services: {},
-      features: {nsos: {enabled: []}, vrfs: {management: {}}, stp: {mode: 'rapid-pvst',pathcostMethod:'long'}, cdp: true,
+      features: {nsos: {enabled: ['ssh']}, ssh: {keys: true, version: 2}, lines: {'vty 0 15': {login: 'local', transport: 'ssh', exec: true}}, vrfs: {management: {}}, stp: {mode: 'rapid-pvst',pathcostMethod:'short'}, cdp: true,
         vtp: {domain: '', mode: 'transparent', version: 1, revision: 0, enabled: false}}};
   }
   const switchport = kind === 'switch' || kind === 'poeswitch' || kind === 'l3switch', interfaces: Record<string, InterfaceConfig> = {};

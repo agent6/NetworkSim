@@ -13,6 +13,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "preview": "node scripts/preview.mjs",
+    "cml:replay": "node scripts/cml/replay.ts scripts/cml/scenarios/management.json .cache/cml-runs/replay.json",
+    "cml:test": "python3 -m unittest discover -s scripts/cml -p test_workflow.py",
     "typecheck": "tsc --noEmit",
     "test": "node --test --test-concurrency=1 tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build"

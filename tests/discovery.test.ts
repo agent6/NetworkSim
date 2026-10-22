@@ -24,3 +24,20 @@ test('per-interface discovery direction controls and timers persist in rendered 
 test('discovery messages terminate on the physical link even before STP forwarding',()=>{
   const engine=new Simulator(411),a=engine.addDevice('router'),sw=engine.addDevice('switch'),b=engine.addDevice('router'),ca=new IOSSession(engine,a.id),cb=new IOSSession(engine,b.id);for(const cli of[ca,cb])command(cli,'enable','configure terminal','interface g0/0','no shutdown','end');engine.connect({deviceId:a.id,port:'GigabitEthernet0/0'},{deviceId:sw.id,port:'GigabitEthernet0/1'});engine.connect({deviceId:b.id,port:'GigabitEthernet0/0'},{deviceId:sw.id,port:'GigabitEthernet0/2'});engine.clock.advance(10);assert.ok(a.runtime.neighbors.some(n=>n.protocol==='CDP'&&n.deviceId===sw.id));assert.ok(!a.runtime.neighbors.some(n=>n.protocol==='CDP'&&n.deviceId===b.id));
 });
+
+test('discovery detail preserves the last received MAC, addresses and description under directional loss',()=>{
+  const {engine,a,b,ca,cb,wire,port}=pair();
+  command(cb,'configure terminal','ipv6 unicast-routing','interface g0/0','ipv6 address 2001:db8:1::2/64','end');engine.advance(20);
+  const received=a.runtime.neighbors.find(n=>n.protocol==='LLDP')!;
+  const cached=received.chassisMac;assert.equal(cached,engine.macOf(b.id,port));
+  assert.match(ca.execute('show lldp neighbors detail').join('\n'),/IPV6: 2001:DB8:1::2/);
+  wire.lossBA=1;
+  command(cb,'configure terminal','hostname CHANGED','interface g0/0','mac-address 0200.0000.9999','ip address 10.0.0.22 255.255.255.0','description changed without reception','end');engine.advance(1000);
+  const output=ca.execute('show lldp neighbors detail').join('\n');
+  assert.ok(output.includes(cached.replaceAll(':','').match(/.{4}/g)!.join('.')));
+  assert.match(output,/IP: 10\.0\.0\.2\b/);assert.match(output,/Port Description: connected neighbor/);
+  assert.doesNotMatch(output,/CHANGED|0200\.0000\.9999|10\.0\.0\.22|changed without reception/);
+  const cdp=ca.execute('show cdp neighbors detail').join('\n');assert.match(cdp,/IPv6 address: 2001:DB8:1::2/);assert.doesNotMatch(cdp,/CHANGED|10\.0\.0\.22/);
+  wire.lossBA=0;engine.advance(5000);
+  assert.match(ca.execute('show lldp neighbors detail').join('\n'),/0200\.0000\.9999[\s\S]*changed without reception/);
+});

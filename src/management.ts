@@ -226,6 +226,7 @@ export class ManagementController {
       if(Number.isInteger(payload.columns)&&payload.columns>0&&payload.columns<=512)session.cli.setViewportColumns?.(payload.columns);
       if (session.phase === 'ready'){const authorization=this.execPrivilege(d.id,name,session.username,false,line.privilege||1);if(!authorization.accepted){this.close(session);return {closed:true,output:['% EXEC authorization failed.']};}session.cli.setPrivilege(authorization.privilege);session.cli.setIdentity(session.username,false,name);this.beginAccounting(session,d,authorization.privilege);}
       const messages = [d.config.features.banners?.motd, d.config.features.banners?.login].filter(Boolean);
+      if((port===23||d.kind==='datacenter')&&session.phase!=='ready')messages.push('', 'User Access Verification', '');
       return this.reply(session, messages);
     }
     const session = this.sessions.get(payload?.sessionId);
@@ -245,9 +246,9 @@ export class ManagementController {
     if(session.phase==='ready')this.scheduleExpiry(session);
     const text = String(payload.line ?? '');
     if (session.phase !== 'ready') return this.authenticateSession(session, d, text);
-    const execExit=!session.cli.remoteConnected&&/^(exit|logout)$/i.test(text.trim())&&['user','priv'].includes(session.cli.mode);
+    const execExit=!session.cli.remoteConnected&&!session.cli.passwordInput&&/^(exit|logout)$/i.test(text.trim())&&['user','priv'].includes(session.cli.mode);
     const output = session.cli.execute(text);
-    if(execExit){this.close(session,'logout');return {closed:true,output:[...output,'Connection closed.']};}
+    if(execExit){this.close(session,'logout');return {closed:true,output:['Connection closed.']};}
     if (!this.alive(session)) { this.close(session); return { closed: true, output: [...output, 'Connection closed.'] }; }
     return this.reply(session, output);
   }

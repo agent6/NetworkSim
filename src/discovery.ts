@@ -10,6 +10,7 @@ export interface DiscoveryHost {
   getDevice(id:string):Device|undefined;
   interfaceUp(id:string,port:string):boolean;
   notify():void;
+  macOf?(deviceId:string,port:string):string;
   emit(event:NewSimEvent):unknown;
   sendLinkControl?(deviceId:string,port:string,message:{kind:'link-control';protocol:string;body:any}):void;
   ethernetState?(deviceId:string,port:string):{duplex:'half'|'full'}|undefined;
@@ -55,7 +56,7 @@ function advertise(engine:DiscoveryHost,d:Device,port:string,protocol:Protocol):
  if(!enabled(d,port,protocol,'send')||!engine.interfaceUp(d.id,port))return;
  const p=d.config.interfaces[port],cfg=configuration(d,protocol),phone=(d.kind==='pc'||d.kind==='phone')&&endpointProfile(d).role==='phone',voicePolicy=advertisedVoice(d,port,protocol,engine.clock.now()),medCapabilities=protocol==='LLDP'&&(phone||Object.values(table(d)).some(row=>row.interface===port&&row.protocol==='LLDP'&&row.medCapabilities&&row.expires>engine.clock.now()));
  const kind=phone?'phone':d.kind;
- engine.sendLinkControl?.(d.id,port,{kind:'link-control',protocol,body:{deviceId:d.id,port,hostname:d.config.hostname,address:p.ip||p.ipv6[0]?.split('/')[0],platform:'NetSim '+platformIdentity(kind).model,software:platformSoftware(kind),capabilities:phone?['telephone','station']:d.kind==='router'?['router']:d.kind==='l3switch'||d.kind==='datacenter'?['router','bridge']:['bridge'],description:p.description||'',holdtime:cfg.holdtime,...(protocol==='CDP'?{duplex:engine.ethernetState?.(d.id,port)?.duplex}: {}),...medCapabilities?{medCapabilities:true}:{},...voicePolicy?{voicePolicy}:{} }});
+ engine.sendLinkControl?.(d.id,port,{kind:'link-control',protocol,body:{deviceId:d.id,port,hostname:d.config.hostname,address:p.ip||p.ipv6[0]?.split('/')[0],addresses:[...(p.ip?[p.ip]:[]),...p.ipv6.map(a=>a.split('/')[0])],chassisMac:engine.macOf?.(d.id,port),platform:'NetSim '+platformIdentity(kind).model,software:platformSoftware(kind),capabilities:phone?['telephone','station']:d.kind==='router'?['router']:d.kind==='l3switch'||d.kind==='datacenter'?['router','bridge']:['bridge'],description:p.description||'',holdtime:cfg.holdtime,...(protocol==='CDP'?{duplex:engine.ethernetState?.(d.id,port)?.duplex}: {}),...medCapabilities?{medCapabilities:true}:{},...voicePolicy?{voicePolicy}:{} }});
   const traffic=(d.runtime.features.discoveryTraffic??={})[protocol]??={out:0,in:0,aged:0};traffic.out++;
  }
 
@@ -67,7 +68,7 @@ export function syncDiscovery(engine:DiscoveryHost):void {
     for(const port of Object.keys(d.config.interfaces).filter(physical))for(const protocol of protocols){
       const key=`${d.id}|${port}|${protocol}`,old=state.get(key),active=enabled(d,port,protocol,'send')&&engine.interfaceUp(d.id,port);
       if(!active){if(old)engine.clock.cancel(old.timer);state.delete(key);continue;}retained.add(key);
-      const p=d.config.interfaces[port],cfg=configuration(d,protocol),signature=JSON.stringify([cfg,d.config.hostname,p.ip,p.ipv6,p.description,engine.ethernetState?.(d.id,port)?.duplex,endpointProfile(d),p.features.voiceVlan,p.features.networkPolicy,p.features.lldpMedNetworkPolicy,d.config.features.networkPolicies,Object.values(table(d)).some(row=>row.interface===port&&row.protocol==='LLDP'&&row.medCapabilities)]);
+      const p=d.config.interfaces[port],cfg=configuration(d,protocol),signature=JSON.stringify([cfg,d.config.hostname,p.ip,p.ipv6,engine.macOf?.(d.id,port),p.description,engine.ethernetState?.(d.id,port)?.duplex,endpointProfile(d),p.features.voiceVlan,p.features.networkPolicy,p.features.lldpMedNetworkPolicy,d.config.features.networkPolicies,Object.values(table(d)).some(row=>row.interface===port&&row.protocol==='LLDP'&&row.medCapabilities)]);
       if(old?.runtime===d.runtime&&old.signature===signature)continue;
       if(old)engine.clock.cancel(old.timer);const record:Advertisement={runtime:d.runtime,signature};state.set(key,record);
       record.timer=engine.clock.schedule(1,()=>{if(state!.get(key)!==record||record.runtime!==d.runtime)return;advertise(engine,d,port,protocol);},{owner:d.id,repeat:cfg.interval*1000,label:`${protocol} advertisement ${port}`});
@@ -85,6 +86,8 @@ export function receiveDiscoveryControl(engine:DiscoveryHost,deviceId:string,por
   ((d.runtime.features.discoveryTraffic??={})[protocol]??={out:0,in:0,aged:0}).in++;
   if(b.holdtime<=0){delete cache[key];publish(d);refreshVoice(engine,d);syncDiscovery(engine);engine.notify();return true;}
   const holdtime=Math.min(65535,Math.max(1,b.holdtime)),row:RecordRow={protocol,deviceId:b.deviceId,interface:port,peerInterface:b.port,address:typeof b.address==='string'?b.address:undefined,state:'UP',expires:engine.clock.now()+holdtime*1000,lastReceived:engine.clock.now(),holdtime,hostname:String(b.hostname||b.deviceId),platform:String(b.platform||'unknown'),capabilities:Array.isArray(b.capabilities)?b.capabilities.map(String):[],description:String(b.description||''),...protocol==='LLDP'&&b.medCapabilities===true?{medCapabilities:true}:{},...validVoicePolicy(b.voicePolicy)?{voicePolicy:structuredClone(b.voicePolicy)}:{}};
+  if(Array.isArray(b.addresses))row.addresses=[...new Set(b.addresses.filter((a:unknown)=>typeof a==='string'))];
+  if(typeof b.chassisMac==='string'&&/^(?:[a-f0-9]{2}:){5}[a-f0-9]{2}$/i.test(b.chassisMac))row.chassisMac=b.chassisMac;
   if(typeof b.software==='string')row.software=b.software;
   if(protocol==='CDP'&&['half','full'].includes(b.duplex)){
     row.duplex=b.duplex;const local=engine.ethernetState?.(deviceId,port)?.duplex,warnings=d.runtime.features.cdpDuplexWarnings??={};

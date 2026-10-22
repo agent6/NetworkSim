@@ -26,7 +26,8 @@ restores negotiation and the port's default maximum.
 `mgmt0` starts enabled, routed and in the `management` VRF. It cannot be a
 switchport, join a port-channel, move to another VRF, run a routing protocol, or
 forward transit traffic. Give it a separate management subnet. VLAN 1, rapid-PVST
-and IPv4 forwarding are present; optional features begin disabled. VTP is disabled.
+and IPv4 forwarding are present. SSH begins enabled, matching the measured Nexus
+9300v 10.6.2.F default; the other optional feature gates begin disabled. VTP is disabled.
 
 ## Console, roles and management
 
@@ -50,6 +51,8 @@ Subsequent local consoles display `login:` and `Password:`. SSH uses the same
 local accounts and actual delivered simulated TCP22 packets. A PC can use
 `ssh admin@192.0.2.11`; IOS nodes can use `ssh -l admin 192.0.2.11`; NS-OS uses
 `ssh admin@192.0.2.11`. Telnet is not enabled for this platform.
+`no feature ssh` disables admission; `feature ssh` restores it. Disabled SSH is
+exported as `no feature ssh`, so configuration replay and reload retain that choice.
 To originate through a management or tenant VRF, use
 `ssh admin@192.0.2.11 vrf management`; subsequent session operations retain that
 VRF rather than falling back to the default table.
@@ -66,6 +69,9 @@ exports; this is not real password storage or a security boundary for exported f
 surface. `show capabilities` lists its scope; `show feature` lists implemented
 feature gates. IOS `enable`, DTP/PAgP, `switchport nonegotiate`, IOS routing
 `network` statements, `vrf forwarding` and `config-register` are not aliases.
+`show hostname` returns the configured hostname. Show output supports
+`| include`, `| exclude` and `| begin` regular-expression filters, with help and
+Tab completion for those implemented modifiers.
 
 ## VLANs, trunks and port-channels
 
@@ -294,3 +300,7 @@ deliberate defaults are defined above.
 - [Layer 3 interfaces](https://www.cisco.com/c/en/us/td/docs/dcn/nx-os/nexus9000/106x/configuration/interfaces/cisco-nexus-9000-series-nx-os-interfaces-configuration-guide-release-106x/m_configuring_layer_3_interfaces_9x.html)
 - [Port-channels](https://www.cisco.com/c/en/us/td/docs/dcn/nx-os/nexus9000/106x/configuration/interfaces/cisco-nexus-9000-series-nx-os-interfaces-configuration-guide-release-106x/m_configuring_port_channels_93x.html)
 - [vPC configuration and restrictions](https://www.cisco.com/c/en/us/td/docs/dcn/nx-os/nexus9000/106x/configuration/interfaces/cisco-nexus-9000-series-nx-os-interfaces-configuration-guide-release-106x/m_configuring_vpcs_9x.html)
+
+### CML operational fidelity
+
+Fresh NS-OS devices use short STP path costs. `spanning-tree pathcost method short|long` changes actual tree calculations and survives save/replay. Existing saved explicit long settings retain long costs. Named OSPF uses a 40 Gb/s default reference bandwidth rather than the IOS 100 Mb/s default. Route, STP, OSPF neighbor, IP interface brief, MAC, CDP/LLDP detail, clock, logging and users views use local/received runtime state; unavailable CPU, memory allocator and environmental telemetry is rejected. See [the 20-command CML audit](../audits/cml-operational-fidelity.md) for platform availability and remaining boundaries.

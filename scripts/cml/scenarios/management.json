@@ -1,0 +1,871 @@
+{
+  "schemaVersion": 1,
+  "id": "management-vty-ssh",
+  "description": "IOS, IOS XE and NX-OS management behavior over isolated links. Synthetic lab credentials only.",
+  "nodes": [
+    {
+      "id": "ios",
+      "kind": "router",
+      "hostname": "IOS",
+      "cml": {
+        "definition": "iosv",
+        "image": "iosv-159-3-m12",
+        "port": "GigabitEthernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname IOS",
+        "no ip domain-lookup",
+        "interface range GigabitEthernet0/0 - 3",
+        "no ip address",
+        "shutdown",
+        "exit",
+        "interface ${port}",
+        "ip address 192.0.2.1 255.255.255.0",
+        "no shutdown",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname IOS",
+        "no ip domain-lookup",
+        "interface ${port}",
+        "ip address 192.0.2.1 255.255.255.0",
+        "no shutdown",
+        "end"
+      ]
+    },
+    {
+      "id": "iosxe",
+      "kind": "router",
+      "hostname": "IOSXE",
+      "cml": {
+        "definition": "iol-xe",
+        "image": "iol-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname IOSXE",
+        "no ip domain lookup",
+        "interface range Ethernet0/0 - 3",
+        "no ip address",
+        "shutdown",
+        "exit",
+        "interface Ethernet0/0",
+        "ip address 198.51.100.1 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "interface Ethernet0/1",
+        "ip address 198.18.0.1 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip route 203.0.113.0 255.255.255.0 198.51.100.2",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname IOSXE",
+        "no ip domain-lookup",
+        "interface GigabitEthernet0/0",
+        "ip address 198.51.100.1 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/1",
+        "ip address 198.18.0.1 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip route 203.0.113.0 255.255.255.0 198.51.100.2",
+        "end"
+      ],
+      "portMap": {
+        "Ethernet0/0": "GigabitEthernet0/0",
+        "Ethernet0/1": "GigabitEthernet0/1"
+      }
+    },
+    {
+      "id": "nxos",
+      "kind": "datacenter",
+      "hostname": "NEXUS",
+      "cml": {
+        "definition": "nxosv9000",
+        "image": "nxosv9300-10-6-2-f",
+        "port": "Ethernet1/1"
+      },
+      "simPort": "Ethernet1/1",
+      "startup": [
+        "hostname NEXUS",
+        "no password strength-check",
+        "username admin password NetSimLab42! role network-admin",
+        "interface ${port}",
+        "no switchport",
+        "ip address 203.0.113.1/24",
+        "no shutdown",
+        "exit",
+        "ip route 198.51.100.0/24 203.0.113.2",
+        "end"
+      ],
+      "simulatorSetup": [
+        "configure terminal",
+        "hostname NEXUS",
+        "username admin password NetSimLab42! role network-admin",
+        "interface ${port}",
+        "no switchport",
+        "ip address 203.0.113.1/24",
+        "no shutdown",
+        "exit",
+        "ip route 198.51.100.0/24 203.0.113.2",
+        "end"
+      ]
+    },
+    {
+      "id": "probe",
+      "kind": "router",
+      "hostname": "PROBE",
+      "cml": {
+        "definition": "iosv",
+        "image": "iosv-159-3-m12",
+        "port": "GigabitEthernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname PROBE",
+        "no ip domain-lookup",
+        "interface range GigabitEthernet0/0 - 3",
+        "no ip address",
+        "shutdown",
+        "exit",
+        "interface GigabitEthernet0/0",
+        "ip address 192.0.2.2 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/1",
+        "ip address 198.51.100.2 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/2",
+        "ip address 203.0.113.2 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname PROBE",
+        "no ip domain-lookup",
+        "interface GigabitEthernet0/0",
+        "ip address 192.0.2.2 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/1",
+        "ip address 198.51.100.2 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "interface GigabitEthernet0/2",
+        "ip address 203.0.113.2 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "end"
+      ]
+    },
+    {
+      "id": "sshprobe",
+      "kind": "router",
+      "hostname": "SSH-PROBE",
+      "cml": {
+        "definition": "iol-xe",
+        "image": "iol-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname SSH-PROBE",
+        "no ip domain lookup",
+        "interface range Ethernet0/0 - 3",
+        "no ip address",
+        "shutdown",
+        "exit",
+        "interface Ethernet0/0",
+        "ip address 198.18.0.2 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip route 198.51.100.0 255.255.255.0 198.18.0.1",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname SSH-PROBE",
+        "interface GigabitEthernet0/0",
+        "ip address 198.18.0.2 255.255.255.0",
+        "no shutdown",
+        "exit",
+        "ip route 198.51.100.0 255.255.255.0 198.18.0.1",
+        "end"
+      ]
+    }
+  ],
+  "links": [
+    [
+      {
+        "node": "ios",
+        "port": "GigabitEthernet0/0"
+      },
+      {
+        "node": "probe",
+        "port": "GigabitEthernet0/0"
+      }
+    ],
+    [
+      {
+        "node": "iosxe",
+        "port": "Ethernet0/0"
+      },
+      {
+        "node": "probe",
+        "port": "GigabitEthernet0/1"
+      }
+    ],
+    [
+      {
+        "node": "nxos",
+        "port": "Ethernet1/1"
+      },
+      {
+        "node": "probe",
+        "port": "GigabitEthernet0/2"
+      }
+    ],
+    [
+      {
+        "node": "iosxe",
+        "port": "Ethernet0/1"
+      },
+      {
+        "node": "sshprobe",
+        "port": "Ethernet0/0"
+      }
+    ]
+  ],
+  "steps": [
+    {
+      "id": "ios-factory-lines",
+      "node": "ios",
+      "command": "show running-config | section line"
+    },
+    {
+      "id": "ios-warm-arp",
+      "node": "probe",
+      "command": "ping 192.0.2.1 repeat 2"
+    },
+    {
+      "id": "ios-reachable",
+      "node": "probe",
+      "command": "ping 192.0.2.1 repeat 2",
+      "expect": [
+        "Success rate is 100 percent"
+      ]
+    },
+    {
+      "id": "ios-factory-telnet",
+      "node": "probe",
+      "command": "telnet 192.0.2.1",
+      "expect": [
+        "(?:refused|Password required, but none set)",
+        "PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "ios-select-line-1",
+      "node": "ios",
+      "command": "configure terminal"
+    },
+    {
+      "id": "ios-select-line-2",
+      "node": "ios",
+      "command": "line vty 0 4"
+    },
+    {
+      "id": "ios-select-line-3",
+      "node": "ios",
+      "command": "transport input all"
+    },
+    {
+      "id": "ios-select-line-4",
+      "node": "ios",
+      "command": "end"
+    },
+    {
+      "id": "ios-all-still-needs-password",
+      "node": "probe",
+      "command": "telnet 192.0.2.1",
+      "expect": [
+        "Password required, but none set",
+        "PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "ios-line-password-1",
+      "node": "ios",
+      "command": "configure terminal"
+    },
+    {
+      "id": "ios-line-password-2",
+      "node": "ios",
+      "command": "line vty 0 4"
+    },
+    {
+      "id": "ios-line-password-3",
+      "node": "ios",
+      "command": "password NetSimLab42!"
+    },
+    {
+      "id": "ios-line-password-4",
+      "node": "ios",
+      "command": "login"
+    },
+    {
+      "id": "ios-line-password-5",
+      "node": "ios",
+      "command": "end"
+    },
+    {
+      "id": "ios-telnet-password-prompt",
+      "node": "probe",
+      "command": "telnet 192.0.2.1",
+      "expect": [
+        "Password:\\s*$"
+      ]
+    },
+    {
+      "id": "ios-telnet-login",
+      "node": "probe",
+      "command": "NetSimLab42!",
+      "expect": [
+        "IOS>\\s*$"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "ios-telnet-exit",
+      "node": "probe",
+      "command": "exit",
+      "expect": [
+        "PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "ios-local-1",
+      "node": "ios",
+      "command": "configure terminal"
+    },
+    {
+      "id": "ios-local-2",
+      "node": "ios",
+      "command": "username admin privilege 15 secret NetSimLab42!"
+    },
+    {
+      "id": "ios-local-3",
+      "node": "ios",
+      "command": "line vty 0 4"
+    },
+    {
+      "id": "ios-local-4",
+      "node": "ios",
+      "command": "login local"
+    },
+    {
+      "id": "ios-local-5",
+      "node": "ios",
+      "command": "end"
+    },
+    {
+      "id": "ios-local-username",
+      "node": "probe",
+      "command": "telnet 192.0.2.1",
+      "expect": [
+        "Username:\\s*$"
+      ]
+    },
+    {
+      "id": "ios-local-password",
+      "node": "probe",
+      "command": "admin",
+      "expect": [
+        "Password:\\s*$"
+      ]
+    },
+    {
+      "id": "ios-local-auth",
+      "node": "probe",
+      "command": "NetSimLab42!",
+      "expect": [
+        "IOS#\\s*$"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "ios-local-exit",
+      "node": "probe",
+      "command": "exit",
+      "expect": [
+        "PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "ios-ssh-setup-1",
+      "node": "ios",
+      "command": "configure terminal"
+    },
+    {
+      "id": "ios-ssh-setup-2",
+      "node": "ios",
+      "command": "ip domain-name cml.test"
+    },
+    {
+      "id": "ios-ssh-setup-3",
+      "node": "ios",
+      "command": "crypto key generate rsa modulus 2048"
+    },
+    {
+      "id": "ios-ssh-setup-4",
+      "node": "ios",
+      "command": "ip ssh version 2"
+    },
+    {
+      "id": "ios-ssh-setup-5",
+      "node": "ios",
+      "command": "line vty 0 4"
+    },
+    {
+      "id": "ios-ssh-setup-6",
+      "node": "ios",
+      "command": "transport input ssh"
+    },
+    {
+      "id": "ios-ssh-setup-7",
+      "node": "ios",
+      "command": "end"
+    },
+    {
+      "id": "ios-telnet-disabled",
+      "node": "probe",
+      "command": "telnet 192.0.2.1",
+      "expect": [
+        "refused",
+        "PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "ios-ssh-password",
+      "node": "probe",
+      "command": "ssh -l admin 192.0.2.1",
+      "expect": [
+        "Password:\\s*$"
+      ],
+      "timeout": 90
+    },
+    {
+      "id": "ios-ssh-login",
+      "node": "probe",
+      "command": "NetSimLab42!",
+      "expect": [
+        "IOS#\\s*$"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "ios-ssh-identity",
+      "node": "probe",
+      "command": "show privilege",
+      "expect": [
+        "Current privilege level is 15"
+      ]
+    },
+    {
+      "id": "ios-ssh-exit",
+      "node": "probe",
+      "command": "exit",
+      "expect": [
+        "PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "ios-reset-transport-1",
+      "node": "ios",
+      "command": "configure terminal"
+    },
+    {
+      "id": "ios-reset-transport-2",
+      "node": "ios",
+      "command": "line vty 0 4"
+    },
+    {
+      "id": "ios-reset-transport-3",
+      "node": "ios",
+      "command": "default transport input"
+    },
+    {
+      "id": "ios-reset-transport-4",
+      "node": "ios",
+      "command": "end"
+    },
+    {
+      "id": "ios-default-lines",
+      "node": "ios",
+      "command": "show running-config | section line"
+    },
+    {
+      "id": "iosxe-factory-lines",
+      "node": "iosxe",
+      "command": "show running-config | section line"
+    },
+    {
+      "id": "iosxe-warm-arp",
+      "node": "probe",
+      "command": "ping 198.51.100.1 repeat 2"
+    },
+    {
+      "id": "iosxe-reachable",
+      "node": "probe",
+      "command": "ping 198.51.100.1 repeat 2",
+      "expect": [
+        "Success rate is 100 percent"
+      ]
+    },
+    {
+      "id": "iosxe-factory-telnet",
+      "node": "probe",
+      "command": "telnet 198.51.100.1",
+      "expect": [
+        "(?:refused|Password required, but none set)",
+        "PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "iosxe-select-line-1",
+      "node": "iosxe",
+      "command": "configure terminal"
+    },
+    {
+      "id": "iosxe-select-line-2",
+      "node": "iosxe",
+      "command": "line vty 0 4"
+    },
+    {
+      "id": "iosxe-select-line-3",
+      "node": "iosxe",
+      "command": "transport input all"
+    },
+    {
+      "id": "iosxe-select-line-4",
+      "node": "iosxe",
+      "command": "end"
+    },
+    {
+      "id": "iosxe-all-still-needs-password",
+      "node": "probe",
+      "command": "telnet 198.51.100.1",
+      "expect": [
+        "Password required, but none set",
+        "PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "iosxe-line-password-1",
+      "node": "iosxe",
+      "command": "configure terminal"
+    },
+    {
+      "id": "iosxe-line-password-2",
+      "node": "iosxe",
+      "command": "line vty 0 4"
+    },
+    {
+      "id": "iosxe-line-password-3",
+      "node": "iosxe",
+      "command": "password NetSimLab42!"
+    },
+    {
+      "id": "iosxe-line-password-4",
+      "node": "iosxe",
+      "command": "login"
+    },
+    {
+      "id": "iosxe-line-password-5",
+      "node": "iosxe",
+      "command": "end"
+    },
+    {
+      "id": "iosxe-telnet-password-prompt",
+      "node": "probe",
+      "command": "telnet 198.51.100.1",
+      "expect": [
+        "Password:\\s*$"
+      ]
+    },
+    {
+      "id": "iosxe-telnet-login",
+      "node": "probe",
+      "command": "NetSimLab42!",
+      "expect": [
+        "IOSXE>\\s*$"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "iosxe-telnet-exit",
+      "node": "probe",
+      "command": "exit",
+      "expect": [
+        "PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "iosxe-local-1",
+      "node": "iosxe",
+      "command": "configure terminal"
+    },
+    {
+      "id": "iosxe-local-2",
+      "node": "iosxe",
+      "command": "username admin privilege 15 secret NetSimLab42!"
+    },
+    {
+      "id": "iosxe-local-3",
+      "node": "iosxe",
+      "command": "line vty 0 4"
+    },
+    {
+      "id": "iosxe-local-4",
+      "node": "iosxe",
+      "command": "login local"
+    },
+    {
+      "id": "iosxe-local-5",
+      "node": "iosxe",
+      "command": "end"
+    },
+    {
+      "id": "iosxe-local-username",
+      "node": "probe",
+      "command": "telnet 198.51.100.1",
+      "expect": [
+        "Username:\\s*$"
+      ]
+    },
+    {
+      "id": "iosxe-local-password",
+      "node": "probe",
+      "command": "admin",
+      "expect": [
+        "Password:\\s*$"
+      ]
+    },
+    {
+      "id": "iosxe-local-auth",
+      "node": "probe",
+      "command": "NetSimLab42!",
+      "expect": [
+        "IOSXE#\\s*$"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "iosxe-local-exit",
+      "node": "probe",
+      "command": "exit",
+      "expect": [
+        "PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "iosxe-ssh-setup-1",
+      "node": "iosxe",
+      "command": "configure terminal"
+    },
+    {
+      "id": "iosxe-ssh-setup-2",
+      "node": "iosxe",
+      "command": "ip domain name cml.test"
+    },
+    {
+      "id": "iosxe-ssh-setup-3",
+      "node": "iosxe",
+      "command": "crypto key generate rsa modulus 3072"
+    },
+    {
+      "id": "iosxe-ssh-setup-4",
+      "node": "iosxe",
+      "command": "ip ssh version 2"
+    },
+    {
+      "id": "iosxe-ssh-setup-5",
+      "node": "iosxe",
+      "command": "line vty 0 4"
+    },
+    {
+      "id": "iosxe-ssh-setup-6",
+      "node": "iosxe",
+      "command": "transport input ssh"
+    },
+    {
+      "id": "iosxe-ssh-setup-7",
+      "node": "iosxe",
+      "command": "end"
+    },
+    {
+      "id": "iosxe-telnet-disabled",
+      "node": "probe",
+      "command": "telnet 198.51.100.1",
+      "expect": [
+        "refused",
+        "PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "iosxe-ssh-password",
+      "node": "sshprobe",
+      "command": "ssh -l admin 198.51.100.1",
+      "expect": [
+        "Password:\\s*$"
+      ],
+      "timeout": 90
+    },
+    {
+      "id": "iosxe-ssh-login",
+      "node": "sshprobe",
+      "command": "NetSimLab42!",
+      "expect": [
+        "IOSXE#\\s*$"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "iosxe-ssh-identity",
+      "node": "sshprobe",
+      "command": "show privilege",
+      "expect": [
+        "Current privilege level is 15"
+      ]
+    },
+    {
+      "id": "iosxe-ssh-exit",
+      "node": "sshprobe",
+      "command": "exit",
+      "expect": [
+        "SSH-PROBE#\\s*$"
+      ]
+    },
+    {
+      "id": "iosxe-reset-transport-1",
+      "node": "iosxe",
+      "command": "configure terminal"
+    },
+    {
+      "id": "iosxe-reset-transport-2",
+      "node": "iosxe",
+      "command": "line vty 0 4"
+    },
+    {
+      "id": "iosxe-reset-transport-3",
+      "node": "iosxe",
+      "command": "default transport input"
+    },
+    {
+      "id": "iosxe-reset-transport-4",
+      "node": "iosxe",
+      "command": "end"
+    },
+    {
+      "id": "iosxe-default-lines",
+      "node": "iosxe",
+      "command": "show running-config | section line"
+    },
+    {
+      "id": "nxos-factory-ssh",
+      "node": "nxos",
+      "command": "show feature | include ssh",
+      "expect": [
+        "sshServer\\s+1\\s+enabled"
+      ]
+    },
+    {
+      "id": "nxos-ssh-disable-1",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nxos-ssh-disable-2",
+      "node": "nxos",
+      "command": "no feature ssh"
+    },
+    {
+      "id": "nxos-ssh-disable-3",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "nxos-no-ssh",
+      "node": "iosxe",
+      "command": "ssh -l admin 203.0.113.1",
+      "expect": [
+        "(?:refused|closed|disabled)",
+        "IOSXE#\\s*$"
+      ],
+      "timeout": 90
+    },
+    {
+      "id": "nxos-ssh-enable-1",
+      "node": "nxos",
+      "command": "configure terminal"
+    },
+    {
+      "id": "nxos-ssh-enable-2",
+      "node": "nxos",
+      "command": "feature ssh"
+    },
+    {
+      "id": "nxos-ssh-enable-3",
+      "node": "nxos",
+      "command": "end"
+    },
+    {
+      "id": "nxos-ssh-password",
+      "node": "iosxe",
+      "command": "ssh -l admin 203.0.113.1",
+      "expect": [
+        "Password:\\s*$"
+      ],
+      "timeout": 90
+    },
+    {
+      "id": "nxos-ssh-login",
+      "node": "iosxe",
+      "command": "NetSimLab42!",
+      "expect": [
+        "NEXUS#\\s*$"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "nxos-ssh-command",
+      "node": "iosxe",
+      "command": "show hostname",
+      "expect": [
+        "NEXUS"
+      ]
+    },
+    {
+      "id": "nxos-ssh-exit",
+      "node": "iosxe",
+      "command": "exit",
+      "expect": [
+        "IOSXE#\\s*$"
+      ]
+    }
+  ]
+}

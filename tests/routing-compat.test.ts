@@ -66,10 +66,13 @@ test('routing clears reset measured state, require protocol recovery, and retain
   run(a.cli,'clear ip ospf 1 process');assert.ok(!a.d.runtime.routes.some(r=>r.protocol==='O'));s.advance(12000);assert.ok(a.d.runtime.routes.some(r=>r.protocol==='O'));
 });
 
-test('EIGRP stored bandwidth reservation imports without abort and persists explicitly',()=>{
-  const s=new Simulator(408),a=make(s,1);run(a.cli,'interface g0/0');assert.match(a.cli.execute('ip bandwidth-percent eigrp 100 25').join('\n'),/configuration stored only/);run(a.cli,'end');
-  const text=renderConfig(a.d).join('\n');assert.match(text,/ip bandwidth-percent eigrp 100 25/);
-  const b=s.addDevice('router'),cli=new IOSSession(s,b.id);run(cli,'enable');b.config.features.files={'restore.cfg':text};const output=cli.execute('copy flash:restore.cfg running-config');assert.ok(!output.some(x=>x.startsWith('%')),output.join('\n'));assert.equal(b.config.interfaces['GigabitEthernet0/0'].features.eigrp?.bandwidthPercent,25);
+test('unimplemented EIGRP bandwidth reservation and imports reject without retaining configuration',()=>{
+  const s=new Simulator(408),a=make(s,1);run(a.cli,'interface g0/0');const before=JSON.stringify(a.d.config);
+  assert.match(a.cli.execute('ip bandwidth-percent eigrp 100 25').join('\n'),/not implemented.*No configuration was changed/);
+  assert.equal(JSON.stringify(a.d.config),before);run(a.cli,'end');
+  a.d.config.features.files={'unsupported.cfg':'interface GigabitEthernet0/0\n ip bandwidth-percent eigrp 100 25\nend'};
+  const original=JSON.stringify(a.d.config);assert.match(a.cli.execute('copy flash:unsupported.cfg running-config').join('\n'),/Configuration import rejected/);
+  assert.equal(JSON.stringify(a.d.config),original);
 });
 
 test('RIP explicit neighbor transmits on a passive port and paced packets deliver successive prefixes',()=>{

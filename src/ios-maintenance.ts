@@ -1,3 +1,4 @@
+import {clearInterfaceCounters} from './interface-telemetry.ts';
 import type {Simulator} from './engine.ts';
 import type {Device} from './model.ts';
 import {isIPv4,isIPv6} from './ip.ts';
@@ -10,7 +11,7 @@ export function maintenanceCommands(h:MaintenanceHost){
  const keyword=(a:string,choices:string[])=>{const found=choices.includes(a)?[a]:choices.filter(word=>word.startsWith(a));if(found.length!==1)h.fail(found.length?'% Ambiguous command.':undefined);return found[0];};
  add('clear ip arp',a=>{if(a.length>1)h.fail();if(a[0]&&!isIPv4(a[0]))h.fail();for(const [key,entry]of Object.entries(r.arp))if(!entry.static&&isIPv4(entry.ip)&&(!a.length||entry.ip===a[0]))delete r.arp[key];},'[address]');
  add('clear ipv6 neighbors',a=>{if(a.length>1)h.fail();const port=a.length?h.interfaceName(a[0]):undefined;for(const [key,entry]of Object.entries(r.arp))if(!entry.static&&isIPv6(entry.ip)&&(!port||entry.port===port))delete r.arp[key];},'[interface]');
- add('clear counters',a=>{if(a.length>2)h.fail();if(a.length)delete r.counters[h.interfaceName(a.join(''))];else r.counters={};},'[interface]');
+ add('clear counters',a=>{if(a.length>2)h.fail();clearInterfaceCounters(d,h.engine.clock.now(),a.length?h.interfaceName(a.join('')):undefined);},'[interface]');
  for(const type of ['binding','conflict'])add('clear ip dhcp '+type,a=>{exact(a,1);if(a[0]!=='*'&&!isIPv4(a[0]))h.fail();const field=type==='binding'?'dhcpLeases':'dhcpConflicts';f[field]=(f[field]||[]).filter((row:any)=>a[0]!=='*'&&row.address!==a[0]);},'*|address');
  add('clear ip dhcp snooping',a=>{if(a[0]){keyword(a[0],['binding']);if(a.length>2||a[1]&&a[1]!=='*')h.fail();}f.dhcpBindings=[];},'[binding] [*]');
  for(const prefix of ['clear access-list counters','clear ip access-list counters'])add(prefix,a=>{if(a.length>1)h.fail();for(const key of Object.keys(f.aclHits||{}))if(!a.length||key.startsWith(a[0]+':'))delete f.aclHits[key];},'[name]');

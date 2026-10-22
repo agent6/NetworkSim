@@ -37,7 +37,7 @@ type MemberSnapshot = {
   id:number; port:string; up:boolean; mode:string; nativeVlan:number;
   vlans:number[]; mtu:number; protocol:string; forwarding:boolean; activeVlans:number[];
 };
-type TreeSnapshot = {rootId:string; rootBridgeId:string; bridgeId:string; cost:number; priority:number; rootPort?:string};
+type TreeSnapshot = {rootId:string; rootBridgeId:string; bridgeId:string; cost:number; priority:number; rootPort?:string; protections?:Record<string,string>};
 type PeerSnapshot = {
   protocol:'VPC-CFS'; sender:string; hostname:string; generation:number; sequence:number;
   domain:number; rolePriority:number; systemPriority:number; systemMac:string;
@@ -85,6 +85,8 @@ export function vpcPeerLink(d:Device,port:string):boolean {
   return isDatacenter(d)&&nsosFeature(d,'vpc')&&nsosConfig(d).vpc?.peerLink===vpcLogicalPort(d,port);
 }
 function normalizedMac(mac:string):string {return mac.replace(/[:.]/g,'').toLowerCase();}
+function keepaliveVRF(vrf:string|undefined):string|undefined {return vrf==='default'?undefined:vrf;}
+const stpProtectionRoles=new Set(['root-inconsistent','loop-inconsistent','bpdu-inconsistent','bridge-assurance-inconsistent']);
 export function datacenterBridgeMac(d:Device):string {
   if(d.config.features.bridgeMac)return normalizedMac(String(d.config.features.bridgeMac));
   let hash=2166136261;for(const c of d.id)hash=Math.imul(hash^c.charCodeAt(0),16777619);
@@ -122,7 +124,14 @@ function memberSnapshot(d:Device):MemberSnapshot[] {
 }
 function snapshot(e:ControlPlaneHost,d:Device,c:VPCConfig,s:Session):PeerSnapshot {
   const now=e.clock.now(),trees:Record<string,TreeSnapshot>={};
-  for(const [v,t]of Object.entries(d.runtime.stp))trees[v]={rootId:t.rootId,rootBridgeId:t.rootBridgeId,bridgeId:t.bridgeId,cost:t.cost,priority:Number(t.bridgeId.split('.')[0]),rootPort:t.rootPort};
+  for(const [v,t]of Object.entries(d.runtime.stp)){
+    const protections:Record<string,string>={};
+    for(const [port,p]of Object.entries(t.ports)){
+      const member=vpcMemberId(d,port);
+      if(member&&stpProtectionRoles.has(p.localProtection))protections[member]=p.localProtection;
+    }
+    trees[v]={rootId:t.rootId,rootBridgeId:t.rootBridgeId,bridgeId:t.bridgeId,cost:t.cost,priority:Number(t.bridgeId.split('.')[0]),rootPort:t.rootPort,protections};
+  }
   return {protocol:'VPC-CFS',sender:d.id,hostname:d.config.hostname,generation:s.generation,sequence:++s.txSequence,
     domain:c.domain,rolePriority:c.rolePriority,systemPriority:c.systemPriority,systemMac:systemMac(d,c),localMac:datacenterBridgeMac(d),survived:s.survived,
     peerSwitch:c.peerSwitch,peerGateway:c.peerGateway,stpMode:d.config.features.stp?.mode??'rapid-pvst',
@@ -253,10 +262,10 @@ function tick(e:ControlPlaneHost,d:Device,s:Session):void {
   if(d.runtime!==s.runtime||!d.powered||!nsosFeature(d,'vpc'))return;
   const c=nsosConfig(d).vpc;if(!c)return;const now=e.clock.now();
   if(c.keepalive&&now-s.sentKeepalive>=c.keepalive.interval){
-    const k=c.keepalive,source=k.source??Object.values(d.config.interfaces).find(p=>p.vrf===k.vrf&&p.ip&&e.interfaceUp(d.id,p.name))?.ip;
-    if(source&&Object.values(d.config.interfaces).some(p=>p.vrf===k.vrf&&(p.ip===source||p.name===source)&&e.interfaceUp(d.id,p.name))){
+    const k=c.keepalive,vrf=keepaliveVRF(k.vrf),source=k.source??Object.values(d.config.interfaces).find(p=>keepaliveVRF(p.vrf)===vrf&&p.ip&&e.interfaceUp(d.id,p.name))?.ip;
+    if(source&&Object.values(d.config.interfaces).some(p=>keepaliveVRF(p.vrf)===vrf&&(p.ip===source||p.name===source)&&e.interfaceUp(d.id,p.name))){
       const ip=d.config.interfaces[source]?.ip??source;
-      e.sendControlDatagram?.(d.id,ip,k.destination,3200,{protocol:'vpc-keepalive',sender:d.id,domain:c.domain,generation:s.generation,sequence:++s.txSequence},{vrf:k.vrf});
+      e.sendControlDatagram?.(d.id,ip,k.destination,3200,{protocol:'vpc-keepalive',sender:d.id,domain:c.domain,generation:s.generation,sequence:++s.txSequence},{vrf});
       const r=vpcRuntime(d);if(r)r.txKeepalives++;
     }
     s.sentKeepalive=now;
@@ -289,7 +298,7 @@ export function syncVPC(e:ControlPlaneHost):void {
 export function receiveVPCKeepalive(e:ControlPlaneHost,d:Device,source:string,destination:string,body:unknown,input?:string):boolean {
   if(!body||typeof body!=='object'||!('protocol'in body)||body.protocol!=='vpc-keepalive')return false;
   const c=nsosConfig(d).vpc,s=mapFor(e).get(d.id),b=body as {sender?:unknown;domain?:unknown;generation?:unknown;sequence?:unknown};
-  if(!c?.keepalive||!s||!input||d.config.interfaces[input]?.vrf!==c.keepalive.vrf||!sameAddress(source,c.keepalive.destination)||c.keepalive.source&&!sameAddress(destination,d.config.interfaces[c.keepalive.source]?.ip??c.keepalive.source)||b.domain!==c.domain||typeof b.sender!=='string'||b.sender===d.id||typeof b.generation!=='number'||typeof b.sequence!=='number')return true;
+  if(!c?.keepalive||!s||!input||!d.config.interfaces[input]||keepaliveVRF(d.config.interfaces[input].vrf)!==keepaliveVRF(c.keepalive.vrf)||!sameAddress(source,c.keepalive.destination)||c.keepalive.source&&!sameAddress(destination,d.config.interfaces[c.keepalive.source]?.ip??c.keepalive.source)||b.domain!==c.domain||typeof b.sender!=='string'||b.sender===d.id||typeof b.generation!=='number'||typeof b.sequence!=='number')return true;
   if(s.peer&&b.sender!==s.peer.sender)return true;
   if(s.peerGeneration===b.generation&&b.sequence<=s.keepaliveSequence)return true;
   s.peerGeneration=b.generation;s.keepaliveSequence=b.sequence;s.keepaliveSender=b.sender;s.keepalive=e.clock.now();
@@ -352,10 +361,16 @@ export function applyVPCSpanningTree(e:ControlPlaneHost,d:Device,vlan:number):vo
   const r=vpcRuntime(d),tree=d.runtime.stp[String(vlan)];
   if(!r||!tree)return;
   for(const [name,p]of Object.entries(tree.ports)){
+    // Advertise only locally detected protection, so a received peer decision
+    // cannot echo back indefinitely and prevent recovery after the fault clears.
+    p.localProtection=stpProtectionRoles.has(p.role??'')?p.role:undefined;
+    const member=vpcMemberId(d,name),peerProtection=member&&r.adjacency?mapFor(e).get(d.id)?.peer?.trees[String(vlan)]?.protections?.[member]:undefined;
     const why=vpcPortReason(d,name,vlan);
     if(why){p.state='blocking';p.role='vpc-suspended';}
-    else if(vpcMemberId(d,name)&&r.adjacency&&p.role!=='bridge-assurance-inconsistent'){p.state='forwarding';p.role=vpcSTP(e,d,name,vlan)?.role??p.role;}
-    else if(vpcPeerLink(d,name)&&r.adjacency&&e.interfaceUp(d.id,name)&&p.role!=='bridge-assurance-inconsistent'){p.state='forwarding';}
+    else if(p.localProtection||p.state==='disabled')continue;
+    else if(peerProtection&&stpProtectionRoles.has(peerProtection)){p.state='blocking';p.role=peerProtection;}
+    else if(member&&r.adjacency){p.state='forwarding';p.role=vpcSTP(e,d,name,vlan)?.role??p.role;}
+    else if(vpcPeerLink(d,name)&&r.adjacency&&e.interfaceUp(d.id,name)){p.state='forwarding';}
   }
 }
 export function vpcPeerGatewayMac(e:ControlPlaneHost,d:Device,logical:string,destinationMac:string):boolean {

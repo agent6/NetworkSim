@@ -36,19 +36,16 @@ test('show version prints the NetSim identity, actual uptime, interface count an
   assert.equal(cs.execute('show inventory')[0], 'NAME: "Chassis", DESCR: "NetSim NS-S24-2G 24-port Layer 2 switch with 2 Gigabit uplinks (virtual chassis)"');
 });
 
-test('show inventory and show processes/memory use IOS layouts', () => {
+test('inventory uses IOS layout while unavailable hardware telemetry is rejected', () => {
   const { c1 } = lab(), inventory = c1.execute('show inventory');
   assert.equal(inventory[0], 'NAME: "Chassis", DESCR: "NetSim NS-R4 4-port Gigabit Ethernet router (virtual chassis)"');
   const serial = inventory[1].match(/SN: (NS\w{13})/)![1];
   assert.equal(inventory[1], `PID: NS-R4             , VID: V01, SN: ${serial}`);
   assert.match(text(c1.execute('show version')), new RegExp(`Processor board ID ${serial}`));
-  const cpu = c1.execute('show processes cpu');
-  assert.match(cpu[0], /^CPU utilization for five seconds: \d+%\/\d+%; one minute: \d+%; five minutes: \d+%$/);
-  assert.equal(cpu[1], ' PID Runtime(ms)     Invoked      uSecs   5Sec   1Min   5Min TTY Process ');
-  const memory = c1.execute('show memory statistics');
-  assert.equal(memory[0], '                Head    Total(b)     Used(b)     Free(b)   Lowest(b)  Largest(b)');
-  assert.match(memory[1], /^Processor\s+[0-9A-F]+\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+$/);
-  assert.match(memory[2], /^      I\/O\s+[0-9A-F]+\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+$/);
+  for(const command of ['show processes cpu','show processes memory','show processes','show memory statistics']){
+    const out=c1.execute(command);assert.equal(out.length,1);assert.match(out[0],/^% .*not implemented/);
+    assert.doesNotMatch(out.join('\n'),/0%|Runtime|Pool Total|F6E0|Init/);
+  }
 });
 
 test('show logging prints the IOS header, per-destination counters and the log buffer', () => {
@@ -167,7 +164,7 @@ test('traceroute prints IOS hop lines without a completion trailer and honours t
 
 test('telnet client failures use IOS connection messages', () => {
   const { c1 } = lab();
-  assert.deepEqual(c1.execute('telnet 10.0.12.2'), ['Trying 10.0.12.2 ... ', '% Connection refused by remote host']);
+  assert.deepEqual(c1.execute('telnet 10.0.12.2'), ['Trying 10.0.12.2 ... ', '% Connection refused by remote host', '']);
   assert.deepEqual(c1.execute('telnet 300.1.1.1'), ['% Bad IP address or host name']);
   assert.equal(c1.prompt, 'R1#');
 });

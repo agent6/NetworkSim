@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "description": "Reviewed operational excerpts from a real, isolated CML run. Cisco legal banners and controller credentials are excluded. This is not a full output-equivalence pass.",
+  "scenarioSha256": "024e330bfbf9839572fe8f77366b1a3f354b35eee5e7988119d27e53d027d7a5",
+  "captureSha256": "770a0eab2c3e072fb9276dd57a4d84d07a93cf4dccd0fbf237cdb700fbe7d00d",
+  "capturedAt": "2026-10-22T04:11:01.211455+00:00",
+  "controllerVersion": "2.10.0+build.13",
+  "images": {
+    "ios": {
+      "definition": "iosv",
+      "image": "iosv-159-3-m12",
+      "label": "IOSv 15.9(3) M12"
+    },
+    "iosxe": {
+      "definition": "iol-xe",
+      "image": "iol-xe-17-18-02",
+      "label": "IOL XE 17.18.02"
+    },
+    "nxos": {
+      "definition": "nxosv9000",
+      "image": "nxosv9300-10-6-2-f",
+      "label": "NX-OS 9300v 10.6.2.F"
+    },
+    "probe": {
+      "definition": "iosv",
+      "image": "iosv-159-3-m12",
+      "label": "IOSv 15.9(3) M12"
+    },
+    "sshprobe": {
+      "definition": "iol-xe",
+      "image": "iol-xe-17-18-02",
+      "label": "IOL XE 17.18.02"
+    }
+  },
+  "stepCount": 98,
+  "comparisonStatus": "output-review-required",
+  "outputDifferenceCount": 17,
+  "packetEvidence": [
+    {
+      "file": "b484e704-43d5-4c74-aa5d-36709bfc2885.pcap",
+      "packets": 228,
+      "sshSyn": 1,
+      "telnetSyn": 5,
+      "synAck": 4,
+      "reset": 2,
+      "sha256": "33c58c43d944564da524244361eb2a0f191724125f8bf0feefedd0f580561410"
+    },
+    {
+      "file": "9fb6d6aa-9950-4ac2-8022-f4bbbe274051.pcap",
+      "packets": 186,
+      "sshSyn": 2,
+      "telnetSyn": 5,
+      "synAck": 5,
+      "reset": 2,
+      "sha256": "f4446ee994a144924f9207050afd1f9de40a72ec602ad5db2a0cb4767d52198a"
+    },
+    {
+      "file": "985aa85e-5313-426d-b83e-9131b1107685.pcap",
+      "packets": 75,
+      "sshSyn": 2,
+      "telnetSyn": 0,
+      "synAck": 2,
+      "reset": 0,
+      "sha256": "7e5abff720c689d9055353f7ebaf9348fda2fd1ba40fceccc7e37c841769209c"
+    },
+    {
+      "file": "99ab9ec5-5257-49c2-8e94-1728d71b9837.pcap",
+      "packets": 87,
+      "sshSyn": 1,
+      "telnetSyn": 0,
+      "synAck": 1,
+      "reset": 0,
+      "sha256": "747809ad2bce209ed235e9e8b08ee735cc49003b630d4880db9c8ae6feff927e"
+    }
+  ],
+  "observations": [
+    {
+      "step": "ios-factory-lines",
+      "node": "ios",
+      "command": "show running-config | section line",
+      "lines": [
+        "line vty 0 4",
+        " login",
+        " transport input none"
+      ]
+    },
+    {
+      "step": "ios-all-still-needs-password",
+      "node": "probe",
+      "command": "telnet 192.0.2.1",
+      "lines": [
+        "Password required, but none set"
+      ]
+    },
+    {
+      "step": "ios-telnet-password-prompt",
+      "node": "probe",
+      "command": "telnet 192.0.2.1",
+      "lines": [
+        "User Access Verification",
+        "Password:"
+      ]
+    },
+    {
+      "step": "ios-ssh-identity",
+      "node": "probe",
+      "command": "show privilege",
+      "lines": [
+        "Current privilege level is 15"
+      ]
+    },
+    {
+      "step": "ios-ssh-exit",
+      "node": "probe",
+      "command": "exit",
+      "lines": [
+        "[Connection to 192.0.2.1 closed by foreign host]"
+      ]
+    },
+    {
+      "step": "ios-default-lines",
+      "node": "ios",
+      "command": "show running-config | section line",
+      "lines": [
+        " login local",
+        " transport input ssh"
+      ]
+    },
+    {
+      "step": "nxos-factory-ssh",
+      "node": "nxos",
+      "command": "show feature | include ssh",
+      "lines": [
+        "sshServer              1          enabled"
+      ]
+    },
+    {
+      "step": "nxos-ssh-command",
+      "node": "iosxe",
+      "command": "show hostname",
+      "lines": [
+        "NEXUS"
+      ]
+    }
+  ],
+  "transportResetProbe": {
+    "sha256": "d064546e036554ae666f529bfe80e4f77871c98a8629ec179e0043ba46ee6135",
+    "commandSteps": 24,
+    "initialTransports": [
+      "none",
+      "telnet"
+    ],
+    "observedReset": "ssh",
+    "nodes": [
+      "ios",
+      "iosxe"
+    ]
+  }
+}

@@ -4,6 +4,8 @@ import {Simulator} from '../src/engine.ts';
 import {defaultInterface, type Device} from '../src/model.ts';
 import {defaultVPC, nsosConfig, vpcRuntime, vpcPortReason, validateNSOSConfiguration} from '../src/datacenter.ts';
 import {negotiateEthernet, interfaceSpeed} from '../src/ethernet.ts';
+import {NSOSSession} from '../src/nsos.ts';
+import {IOSSession} from '../src/cli.ts';
 import {datacenterTopology as topology,configureChannel as channel,ethernet as eth,gigabit as gi,advanceSimulation as advance,addDatacenterHost as host,datacenterTraffic as load} from './helpers/datacenter.ts';
 function ping(s:Simulator,from:Device,to:Device,count=2):void {
   const result=s.ping(from.id,to.config.interfaces.GigabitEthernet0.ip!,{count,interval:20,timeout:1000});
@@ -266,6 +268,57 @@ test('keepalive packets cannot cross an incorrectly selected VRF, even with a he
   for(const d of[a,b])nsosConfig(d).vpc!.keepalive!.vrf='wrong-vrf';
   s.changed();advance(s,7000);
   for(const d of[a,b]){assert.equal(vpcRuntime(d)!.adjacency,false);assert.equal(vpcRuntime(d)!.rxKeepalives,0);assert.equal(vpcRuntime(d)!.members[10].up,false);}
+});
+
+test('regression: default-VRF keepalives form a fresh vPC using explicit or automatically selected source addresses',()=>{
+  for(const automatic of [false,true]){
+    const {s,a,b,keepalive,client,ha}=topology();s.disconnect(keepalive.id);
+    for(const [d,address,destination]of [[a,'10.255.0.1','10.255.0.2'],[b,'10.255.0.2','10.255.0.1']]as const){
+      const cli=new NSOSSession(s,d.id,{skipConsoleLogin:true});
+      for(const line of ['conf t','interface '+eth(4),'no switchport','ip address '+address+'/24','no shutdown','exit','vpc domain 42','no peer-keepalive',`peer-keepalive destination ${destination}${automatic?'':' source '+address} vrf default`,'end'])
+        assert.doesNotMatch(cli.execute(line).join('\n'),/^%/m,line);
+    }
+    s.connect({deviceId:a.id,port:eth(4)},{deviceId:b.id,port:eth(4)});
+    s.load(s.serialize());advance(s,40000);
+    for(const id of [a.id,b.id]){
+      const d=s.getDevice(id)!,r=vpcRuntime(d)!;
+      assert.equal(nsosConfig(d).vpc!.keepalive!.vrf,'default');
+      assert.equal(r.peerAlive,true);assert.equal(r.adjacency,true);
+      assert.ok(r.txKeepalives>20&&r.rxKeepalives>20);assert.equal(r.members[10].up,true);
+    }
+    ping(s,s.getDevice(client.id)!,s.getDevice(ha.id)!);
+  }
+});
+
+test('regression: vPC Root Guard blocks superior access BPDUs on both legs, coordinates received peer state, and recovers',()=>{
+  const {s,a,b,access,client,ha}=topology();
+  for(const [d,port]of [[a,'Port-channel10'],[b,'Port-channel20']]as const){
+    const cli=new NSOSSession(s,d.id,{skipConsoleLogin:true});
+    for(const line of ['conf t','interface '+port,'spanning-tree guard root','end'])assert.doesNotMatch(cli.execute(line).join('\n'),/^%/m,line);
+  }
+  // Only the primary receives the superior BPDU; CFS must convey its protection
+  // decision to the secondary without turning that received state into a local fault.
+  const send=s.sendLinkControl.bind(s);
+  s.sendLinkControl=(id,port,message)=>{if(id===access.id&&port===gi(2)&&message.protocol==='STP')return;send(id,port,message);};
+  const cli=new IOSSession(s,access.id);cli.execute('enable');cli.execute('conf t');
+  assert.deepEqual(cli.execute('spanning-tree vlan 20 priority 0'),[]);cli.execute('end');
+  advance(s,40000);
+  for(const [d,port]of [[a,'Port-channel10'],[b,'Port-channel20']]as const){
+    assert.equal(vpcRuntime(d)!.adjacency,true);
+    assert.equal(d.runtime.stp['20'].ports[port].role,'root-inconsistent');
+    assert.equal(d.runtime.stp['20'].ports[port].state,'blocking');
+  }
+  const changes=b.runtime.features.stpTopology?.['20']?.count;
+  s.events=[];s.recompute();
+  assert.ok(!s.events.some(e=>e.nodeId===b.id&&e.label==='Port-channel20 forwarding'&&e.detail.startsWith('VLAN 20:')));
+  assert.equal(b.runtime.features.stpTopology?.['20']?.count,changes);
+  assert.deepEqual(load(s,client,ha,20),Array(20).fill(0));
+  assert.deepEqual(load(s,ha,client,20),Array(20).fill(0));
+  cli.execute('conf t');cli.execute('spanning-tree vlan 20 priority 32768');cli.execute('end');
+  advance(s,40000);
+  for(const [d,port]of [[a,'Port-channel10'],[b,'Port-channel20']]as const)assert.equal(d.runtime.stp['20'].ports[port].state,'forwarding');
+  assert.deepEqual(load(s,client,ha,20),Array(20).fill(1));
+  s.sendLinkControl=send;advance(s,4000);ping(s,client,ha);
 });
 
 test('delay-restore is enforced to its exact deadline before member forwarding resumes',()=>{

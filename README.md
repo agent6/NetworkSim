@@ -75,6 +75,8 @@ Coverage and remaining differences are recorded in:
 - [CLI and management coverage](docs/cli-coverage.md)
 - [Executable command comparison](docs/command-parity-audit.md)
 - [IOS output references](docs/ios-output-reference.md)
+- [CML capture, replay and comparison workflow](docs/cml-conformance.md)
+- [20-command CML operational audit and platform matrix](docs/audits/cml-operational-fidelity.md)
 - [CLI interaction and switching audit](docs/ios-cli-interaction-audit.md)
 - [System command and service audit](docs/ios-system-command-audit.md)
 - [REA research and reconstruction evidence](docs/rea-research.md)

@@ -26,13 +26,24 @@ test('Telnet rejects incorrect passwords and configured ACLs block new sessions'
   ok(cb,'conf t','ip access-list extended BLOCK','deny tcp any any eq 23','permit ip any any','exit','int g0/0','ip access-group BLOCK in','end');assert.match(ca.execute('telnet 10.0.0.2').join('\n'),/^Trying 10\.0\.0\.2 \.\.\. \n% Destination unreachable; gateway or host down$/);assert.equal(b.runtime.features.managementSessions.length,0);assert.ok(engine.events.some(x=>/ACL/i.test(x.label+' '+x.detail)));
 });
 
+test('remote enable password input is not interpreted as an EXEC exit command',()=>{
+  const {ca,cb}=setup();
+  ok(cb,'conf t','line vty 0 4','password access','login','transport input telnet','end');
+  for(const password of ['exit','logout']){
+    ok(cb,'conf t','enable secret '+password,'end');
+    ok(ca,'telnet 10.0.0.2','access','enable');assert.equal(ca.prompt,'Password:');
+    ok(ca,password);assert.equal(ca.prompt,'R2#');assert.equal(ca.remoteConnected,true);
+    assert.doesNotMatch(ca.execute('exit').join('\n'),/Session returned/);assert.equal(ca.prompt,'R1#');
+  }
+});
+
 test('nested Telnet sessions keep independent prompts and remote changes target only the selected device',()=>{
   const {a,b,ca,cb}=setup();for(const cli of [ca,cb])ok(cli,'conf t','line vty 0 4','transport input telnet','privilege level 15','no login','end');
   ok(ca,'telnet 10.0.0.2');assert.equal(ca.prompt,'R2#');ok(ca,'telnet 10.0.0.1');assert.equal(ca.prompt,'R1#');ok(ca,'conf t','hostname Innermost','end');assert.equal(a.config.hostname,'Innermost');assert.equal(b.config.hostname,'R2');ok(ca,'disable','exit');assert.equal(ca.prompt,'R2#');ok(ca,'disable','exit');assert.equal(ca.prompt,'Innermost#');
 });
 
 test('VTY timeout and reboot invalidate established logical sessions',()=>{
-  const {engine,b,ca,cb}=setup();ok(cb,'conf t','line vty 0 4','transport input telnet','exec-timeout 0 10','end','write memory');ok(ca,'telnet 10.0.0.2');assert.equal(ca.prompt,'R2>');engine.clock.advance(11000);assert.match(ca.execute('show version').join('\n'),/expired/);ok(ca,'telnet 10.0.0.2');engine.power(b.id,false);engine.power(b.id,true);assert.match(ca.execute('show version').join('\n'),/expired/);
+  const {engine,b,ca,cb}=setup();ok(cb,'conf t','line vty 0 4','transport input telnet','no login','exec-timeout 0 10','end','write memory');ok(ca,'telnet 10.0.0.2');assert.equal(ca.prompt,'R2>');engine.clock.advance(11000);assert.match(ca.execute('show version').join('\n'),/expired/);ok(ca,'telnet 10.0.0.2');engine.power(b.id,false);engine.power(b.id,true);assert.match(ca.execute('show version').join('\n'),/expired/);
 });
 
 test('manual, timer and syslog EEM actions change real config and archive snapshots retain a bounded history',()=>{
@@ -72,7 +83,7 @@ test('Type 7 input and service password-encryption preserve real authentication 
 });
 
 test('terminal monitor drains severity-filtered logs locally and over TCP without renewing idle sessions',()=>{
-  const {engine,a,b,ca,cb}=setup();ok(cb,'conf t','logging source-interface g0/0','logging facility local4','logging buffered 4096 warnings','logging monitor errors','line vty 0 4','transport input telnet','privilege level 15','exec-timeout 0 3','end');
+  const {engine,a,b,ca,cb}=setup();ok(cb,'conf t','logging source-interface g0/0','logging facility local4','logging buffered 4096 warnings','logging monitor errors','line vty 0 4','transport input telnet','privilege level 15','no login','exec-timeout 0 3','end');
   ok(cb,'terminal monitor');engine.log(b.id,'debug not displayed',7);engine.log(b.id,'error displayed',3);const now=engine.clock.now();assert.deepEqual(cb.pollOutput(),['%SYS-3-USERLOG: error displayed']);assert.equal(engine.clock.now(),now);assert.deepEqual(cb.pollOutput(),[]);assert.ok(!b.runtime.logs.some(x=>x.includes('debug not displayed')));
   const rendered=cb.execute('show running-config').join('\n');assert.match(rendered,/logging source-interface GigabitEthernet0\/0/);assert.match(rendered,/logging facility 20/);assert.match(rendered,/logging buffered 4096 4/);assert.match(rendered,/logging monitor 3/);
   ok(ca,'telnet 10.0.0.2','terminal monitor');engine.log(b.id,'remote event',2);engine.log(a.id,'wrong device',1);assert.deepEqual(ca.pollOutput(),['%SYS-2-USERLOG: remote event']);assert.deepEqual(ca.pollOutput(),[]);engine.clock.advance(3100);assert.match(ca.pollOutput().join('\n'),/expired/);assert.equal(ca.prompt,'R1#');ok(cb,'terminal no monitor');engine.log(b.id,'disabled event');assert.deepEqual(cb.pollOutput(),[]);

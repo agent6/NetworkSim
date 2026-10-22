@@ -93,6 +93,9 @@ export class CryptoServices {
     if (!sa || b.sequence <= sa.receiveSequence) { this.emit(d, 'ESP rejected', 'No matching unexpired security association, or replayed sequence.', 'drop'); return; }
     if(sa.profile&&(b.inner?.body?.kind!=='gre'||b.inner.source!==sa.peer||b.inner.destination!==sa.local||b.inner.body.key!==sa.greKey)){this.emit(d,'ESP rejected','Protected GRE does not match the negotiated endpoints and tunnel key.','drop');return;}
     // A valid protected data packet confirms receipt even when the separate final IKE message was lost.
-    sa.ready = true; sa.receiveSequence = b.sequence; sa.decaps++; this.emit(d, 'ESP decapsulation', 'Validated modeled association and sequence; forwarding inner packet.'); this.engine.receiveDecryptedPacket(d.id, sa.input??sa.interface, b.inner, sa.profile?{profile:sa.profile,tunnel:sa.tunnel,local:sa.local,peer:sa.peer,key:sa.greKey,vrf:sa.vrf}:undefined);
+    sa.ready = true; sa.receiveSequence = b.sequence; sa.decaps++; this.emit(d, 'ESP decapsulation', 'Validated modeled association and sequence; forwarding inner packet.');
+    // Profile SAs belong to the logical tunnel. A loopback NBMA endpoint may
+    // remain reachable after the physical interface used to negotiate it fails.
+    this.engine.receiveDecryptedPacket(d.id, sa.tunnel??sa.input??sa.interface, b.inner, sa.profile?{profile:sa.profile,tunnel:sa.tunnel,local:sa.local,peer:sa.peer,key:sa.greKey,vrf:sa.vrf}:undefined);
   }
 }

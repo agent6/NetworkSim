@@ -66,6 +66,40 @@ test('loopback-sourced protected DMVPN preserves configured NBMA endpoints acros
     assert.equal(sa.local, n.nbma); assert.equal(sa.vrf, 'WAN'); assert.equal(sa.interface, 'Tunnel0');
   }
 });
+test('regression: protected loopback DMVPN keeps its SAs and delivers packets through WAN failover and recovery', () => {
+  for (const vrf of [false, true]) {
+    const f = fixture({ protectedTunnel: true, loopback: true, vrf }), spoke = f.nodes[1], hub = f.nodes[0];
+    const transit = new IOSSession(f.sim, f.isp.id), routeScope = vrf ? 'vrf WAN ' : '';
+    const probe = (from: typeof spoke, target: string, source: string) => {
+      const result = f.sim.ping(from.device.id, target, { source, count: 2, timeout: 1000 });
+      assert.equal(f.sim.advance(3000, 200000).targetReached, true);
+      assert.equal(result.received, 2, JSON.stringify(result.replies));
+    };
+    probe(spoke, '172.16.1.1', '172.16.2.1');
+    const sa = spoke.device.runtime.features.ipsecSAs.find((s: { peer: string; ready: boolean }) => s.peer === hub.nbma && s.ready);
+    assert.ok(sa); const decaps = sa.decaps;
+    command(transit, 'enable', 'conf t', 'interface g0/3');
+    if (vrf) command(transit, 'vrf forwarding WAN');
+    command(transit, 'ip address 198.20.0.1 255.255.255.252', 'no shutdown', 'exit',
+      `ip route ${routeScope}${spoke.nbma} 255.255.255.255 198.20.0.2 200`, 'end');
+    command(spoke.cli, 'conf t', 'interface g0/1');
+    if (vrf) command(spoke.cli, 'vrf forwarding WAN');
+    command(spoke.cli, 'ip address 198.20.0.2 255.255.255.252', 'no shutdown', 'exit',
+      `ip route ${routeScope}0.0.0.0 0.0.0.0 198.20.0.1 200`, 'end');
+    f.sim.connect({ deviceId: spoke.device.id, port: 'GigabitEthernet0/1' }, { deviceId: f.isp.id, port: 'GigabitEthernet0/3' });
+    command(spoke.cli, 'conf t', 'interface g0/0', 'shutdown', 'end');
+    assert.equal(f.sim.interfaceUp(spoke.device.id, 'Tunnel0'), true);
+    assert.equal(f.sim.cefLookup(spoke.device.id, hub.nbma, vrf ? 'WAN' : undefined)?.port, 'GigabitEthernet0/1');
+    probe(spoke, '172.16.1.1', '172.16.2.1');
+    probe(hub, '172.16.2.1', '172.16.1.1');
+    assert.ok(spoke.device.runtime.features.ipsecSAs.includes(sa));
+    assert.equal(sa.ready, true); assert.ok(sa.decaps > decaps);
+    command(spoke.cli, 'conf t', 'interface g0/0', 'no shutdown', 'end');
+    assert.equal(f.sim.cefLookup(spoke.device.id, hub.nbma, vrf ? 'WAN' : undefined)?.port, 'GigabitEthernet0/0');
+    probe(spoke, '172.16.1.1', '172.16.2.1');
+    assert.ok(spoke.device.runtime.features.ipsecSAs.includes(sa));
+  }
+});
 test('a third spoke dynamically joins without editing the hub configuration or peer keys', () => {
   const f = fixture({ protectedTunnel: true, phase3: true }), before = renderConfig(f.nodes[0].device).join('\n');
   const c = f.add(); f.sim.advance(8500);

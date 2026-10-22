@@ -5,3 +5,4 @@ dist/
 network-sandbox/
 .DS_Store
 *.log
+__pycache__/
