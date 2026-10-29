@@ -5,7 +5,6 @@ import {showNetworkTools} from './network-tools-ui.ts';
 import{showPoE}from'./poe-ui.ts';
 import{showSimulation}from'./simulation-ui.ts';
 import projectLogo from './assets/networksim-logo.png';
-import {createCatalogLab} from './lab-catalog.ts';
 import {showLabCatalog,showLabGuide} from './lab-catalog-ui.ts';
 import type {GuidedLab} from './lessons.ts';
 import{showWireless}from'./wireless-ui.ts';
@@ -1447,7 +1446,7 @@ function filesDialog() {
   dialog(
     "My labs",
     `<div class="flex flex-wrap items-center justify-between gap-2"><span class="section-label">Saved in this browser</span><span class="text-[10px] text-slate-400">Current workspace saves automatically</span></div>${err ? `<p class="notice mt-3">${esc(err)}</p>` : ""}<div class="mt-3 divide-y divide-slate-100">${labs.length ? labs.map((l) => `<div class="flex items-center justify-between gap-2 py-3"><button data-open-saved="${esc(l.id)}" class="min-w-0 flex-1 text-left"><div class="truncate text-xs font-semibold">${esc(l.name)}</div><div class="mt-1 text-[10px] text-slate-400">${new Date(l.savedAt).toLocaleString()}</div></button><button class="icon-btn" data-rename-saved="${esc(l.id)}" aria-label="Rename ${esc(l.name)}">${icon("edit", 16)}</button><button class="icon-btn" data-download-saved="${esc(l.id)}" title="Export saved lab" aria-label="Export ${esc(l.name)}">${icon("download", 16)}</button><button class="icon-btn" data-delete-saved="${esc(l.id)}" title="Delete saved lab" aria-label="Delete ${esc(l.name)}">${icon("trash", 16)}</button></div>`).join("") : '<p class="py-5 text-xs text-slate-400">No saved labs yet. Use Save or Save as in the toolbar to add one.</p>'}</div><p class="mt-4 text-[10px] leading-5 text-slate-400">Browser saves depend on browser permissions and can be cleared with browsing data. A downloaded lab file is the reliable way to move or back up your work.</p>`,
-    `<button class="btn" data-action="datacenter-example">Open Datacenter Switch vPC example</button><button class="btn-primary" data-action="close-dialog">Done</button>`,
+    `<button class="btn-primary" data-action="close-dialog">Done</button>`,
   );
   setImportReading(importReading);
 }
@@ -1967,7 +1966,6 @@ const actions: Record<string, () => void> = {
   files: filesDialog,
   "lab-catalog": () => showLabCatalog(dialog,(doc,source)=>requestLabReplacement(doc,"open",source,"Open catalog lab")),
   "lab-guide": () => showLabGuide(sim,dialog,()=>playing),
-  "datacenter-example": () => requestLabReplacement(createCatalogLab("datacenter-vpc","completed"), "open", "Datacenter Switch vPC example"),
   export: exportLab,
   import: chooseLabFile,
   "save-local": saveLab,
