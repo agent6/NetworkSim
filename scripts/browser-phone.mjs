@@ -29,15 +29,15 @@ function fixture(){
 }
 try{
  await page.goto(pathToFileURL(process.cwd()+'/index.html').href);
- const kinds=['router','switch','l3switch','poeswitch','pc','server','wlc','ap','laptop','phone'];
- assert.equal(await page.locator('.palette-card').count(),10);
- assert.equal(new Set(await page.locator('.palette-card .node-artwork').evaluateAll(icons=>icons.map(icon=>icon.getAttribute('viewBox')))).size,10);
+ const kinds=['router','switch','l3switch','poeswitch','datacenter','pc','server','wlc','ap','laptop','phone'];
+ assert.equal(await page.locator('.palette-card').count(),11);
+ assert.equal(new Set(await page.locator('.palette-card .node-artwork').evaluateAll(icons=>icons.map(icon=>icon.querySelector('use').getAttribute('href')))).size,11);
  for(const kind of kinds){await page.locator(`[data-kind=${kind}]`).click();if(await page.locator('.dialog').count())await close();}
- await page.waitForFunction(()=>document.querySelectorAll('#world .device').length===10);await page.locator('[data-action=fit]').click();await settle();assert.equal(await page.locator('#world .device').count(),10);
+ await page.waitForFunction(()=>document.querySelectorAll('#world .device').length===11);await page.locator('[data-action=fit]').click();await settle();assert.equal(await page.locator('#world .device').count(),11);
  await page.locator('.palette-grid').screenshot({path:folder+'/ten-icons-light.png'});await page.screenshot({path:folder+'/ten-nodes-light.png'});
- check('Ten distinct ImageGen icons render in the palette and workspace');
+ check('Eleven distinct diagram icons render in the palette and workspace');
  await page.locator('[data-action=toggle-theme]').click();await settle();await page.locator('.palette-grid').screenshot({path:folder+'/ten-icons-dark.png'});await page.screenshot({path:folder+'/ten-nodes-dark.png'});
- check('All ten symbols remain consistent and visible in dark mode');
+ check('All eleven symbols remain consistent and visible in dark mode');
  await node('PHONE1').dblclick();assert.match(await page.locator('[data-phone-status]').textContent(),/Waiting for PoE/);assert.equal(await page.locator('[data-phone-renew]').isDisabled(),true);await close();
  check('A disconnected phone has no simulated local power and cannot request DHCP');
  const yaml=stringify(fixture());await writeFile(folder+'/fixture.netsim.yaml',yaml);await page.locator('#import-input').setInputFiles({name:'phone.netsim.yaml',mimeType:'application/yaml',buffer:Buffer.from(yaml)});await page.waitForFunction(()=>document.querySelectorAll('#world .device').length===5);await node('PHONE1').waitFor();await node('PHONE1').dblclick();await phoneAddress();

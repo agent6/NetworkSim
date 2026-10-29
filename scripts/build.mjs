@@ -41,7 +41,16 @@ assert(
   "Reference material must not be bundled",
 );
 const template = await readFile(path.join(root, "src/shell.html"), "utf8");
-const style = await readFile(path.join(root, ".cache/app.css"), "utf8");
+let style = await readFile(path.join(root, ".cache/app.css"), "utf8");
+// Keep the single-file app self-contained, including its licensed UI fonts.
+for (const name of ["Inter", "JetBrainsMono"]) {
+  const font = await readFile(path.join(root, "src/assets/fonts", `${name}.woff2`));
+  style = style.replaceAll(`../src/assets/fonts/${name}.woff2`, `data:font/woff2;base64,${font.toString("base64")}`)
+    .replaceAll(`./assets/fonts/${name}.woff2`, `data:font/woff2;base64,${font.toString("base64")}`);
+}
+assert(!/url\([^)]*\.woff2/.test(style), "Fonts must be embedded for offline use");
+const fontLicenses = await Promise.all(["Inter", "JetBrainsMono"].map(name => readFile(path.join(root, "src/assets/fonts", `${name}-OFL.txt`), "utf8")));
+style = `/* Bundled font licenses:\n${fontLicenses.join("\n").replace(/[ \t]+$/gm, "")}\n*/\n${style}`;
 const yamlLicense = await readFile(path.join(root, "node_modules/yaml/LICENSE"), "utf8");
 const script = (`/* YAML parser (yaml):\n${yamlLicense}*/\n` + output.outputFiles[0].text).replace(/<\/script/gi, "<\\/script");
 const html = template

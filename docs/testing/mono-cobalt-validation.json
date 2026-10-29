@@ -1,0 +1,39 @@
+{
+  "scope": "Mono Cobalt visual refresh, with transparent theme-aware workspace icons",
+  "sourceBaseCommit": "800c88e8668a1eba24c14d79da0156de60ba46b9",
+  "baselineArtifactSha256": "53c8296fe88737a798a690f67d624a20ce7fd3f77036f3d1bd5557615fb55699",
+  "artifactSha256": "b25e26e58214b3ef1d9ef0b632e952bad56cb609f83d57caf8b940fd80758cef",
+  "checks": [
+    "light: original console, fonts, controls, hover, expanded console and shortcuts match the baseline",
+    "light desktop: semantic surfaces, local fonts, all 11 transparent icons visible, focus, inspector and dialogs",
+    "light mobile: semantic surfaces, local fonts, all 11 transparent icons visible, focus, inspector and dialogs",
+    "dark: original console, fonts, controls, hover, expanded console and shortcuts match the baseline",
+    "dark desktop: semantic surfaces, local fonts, all 11 transparent icons visible, focus, inspector and dialogs",
+    "dark mobile: semantic surfaces, local fonts, all 11 transparent icons visible, focus, inspector and dialogs"
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "check": {
+    "command": "npm run check",
+    "typecheck": "passed",
+    "tests": 1292,
+    "passed": 1292,
+    "failed": 0,
+    "productionBuild": "passed; rebuilt after final CSS changes"
+  },
+  "consolePixelComparison": {
+    "light": {
+      "identical": true,
+      "sha256": "8050f2dabd985b0d2ff8470671f6bed295a9d22d623f5b722170ba431b6a034a"
+    },
+    "dark": {
+      "identical": true,
+      "sha256": "1891776e3e72745530610a60a04171a602115789e117f99cfda1dff322836e72"
+    }
+  },
+  "additionalBrowserSuites": [
+    "scripts/browser-console-expand.mjs: desktop, phone, small phone, landscape, tablet and visual viewport passed",
+    "scripts/browser-console-paging.mjs: 9 checks passed"
+  ],
+  "sourceScope": "UI, icon rendering, bundled font assets, build packaging and browser validation; simulation engine and networking logic unchanged"
+}
