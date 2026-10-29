@@ -1,6 +1,6 @@
 {
   "feature": "Offline grouped lab catalog and guided router-on-a-stick exercise",
-  "artifactSha256": "d03ae3c9c31ba042d2154c9973d52ca65a04c390753f0660abe3ddf675ef7c9b",
+  "artifactSha256": "00a2ee5f74b6662c0f5e4cb3c0dbba7932ef5ffae34304248998855ab06d0f5a",
   "groups": [
     "CCNA",
     "CCNP ENCOR",
@@ -46,7 +46,8 @@
     "light 320px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
     "dark 1440px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
     "dark 390px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
-    "dark 320px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress"
+    "dark 320px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
   ],
   "themeAndCLIRegression": [
     "light desktop console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip and shortcuts use Mono Cobalt",
@@ -59,5 +60,9 @@
     "dark mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs"
   ],
   "errors": [],
-  "externalRequests": []
+  "externalRequests": [],
+  "finalUIValidation": [
+    "Guide buttons honor imported action prerequisites and source power",
+    "TypeScript, production build, catalog browser checks and CLI/theme regression passed after the prerequisite guard"
+  ]
 }

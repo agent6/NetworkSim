@@ -52104,6 +52104,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         throw Error("A lab objective action is invalid.");
     }
   }
+  function actionAvailable(sim2, objective) {
+    const action = objective.action;
+    return !!action && !!device(sim2, action.device)?.powered && (!action.when || matches(sim2, action.when));
+  }
   function matches(sim2, criterion, depth = 0) {
     if (!criterion || typeof criterion !== "object" || depth > 16) return false;
     if (criterion.kind === "all" || criterion.kind === "any")
@@ -52638,10 +52642,13 @@ ${output.join("\n")}`);
           state4.textContent = symbol;
           state4.setAttribute("aria-label", complete2 ? "Complete" : "Not complete");
         }
-        const result = running.get(objective.id);
+        const result = running.get(objective.id), button2 = root.querySelector(`[data-guide-test="${CSS.escape(objective.id)}"]`);
+        if (button2) {
+          const available = actionAvailable(sim2, objective);
+          button2.disabled = result?.status === "running" || !available;
+          button2.dataset.tooltip = available ? "Send three ICMP echo requests" : "Power on the source device and complete the action prerequisites first.";
+        }
         if (result) {
-          const button2 = root.querySelector(`[data-guide-test="${CSS.escape(objective.id)}"]`);
-          button2.disabled = result.status === "running";
           const status3 = root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`), message2 = result.status === "running" ? "Checking connectivity\u2026" : result.received ? `${result.received} of ${result.sent} replies received.` : "No replies. Check the VLANs, trunk, subinterfaces and gateways.";
           if (status3.textContent !== message2) status3.textContent = message2;
         }
@@ -52651,7 +52658,7 @@ ${output.join("\n")}`);
       const button2 = event4.target.closest("[data-guide-test]");
       if (!button2) return;
       const objective = progress.lesson.objectives.find((o) => o.id === button2.dataset.guideTest);
-      if (!objective?.action) return;
+      if (!objective?.action || !actionAvailable(sim2, objective)) return;
       if (!isPlaying()) {
         root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`).textContent = "Resume the simulation to run a connectivity check.";
         return;
