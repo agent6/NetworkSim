@@ -14,6 +14,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **DHCP server and relay** under Fundamentals uses a dedicated server and two clients on another subnet. Configure the server pool in **Services → DHCP** and R1’s `ip helper-address`, then use the guide to request leases and test routed connectivity. Lease tasks require actual DHCP exchanges with the correct address, mask, gateway and DNS options.
 
+**Layer 2 switching interfaces** under Switching covers VLAN 10 access ports, descriptions, automatic speed/duplex, PortFast and an unused port’s shutdown state. Both PCs are already addressed. Send traffic to verify dynamic MAC learning and same-VLAN connectivity; no router or default gateway is required.
+
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.
 2. Choose **Connect devices**, then select two devices and their physical ports. Use **Add another** to connect several port pairs in one step.
 3. Double-click a router or switch to open its console. Router interfaces begin administratively down; configure addressing and use `no shutdown`.

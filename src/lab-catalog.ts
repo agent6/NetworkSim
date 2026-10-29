@@ -17,6 +17,7 @@ export const LAB_CATALOG=[
  {id:'ipv4-interface-configuration',group:'CCNA',section:'Fundamentals',title:'IPv4 interface configuration',description:'Address two directly connected router interfaces, enable the link, and verify IPv4 connectivity in both directions.',devices:2,links:1,practice:true},
  {id:'ipv4-addressing-troubleshooting',group:'CCNA',section:'Fundamentals',title:'IPv4 addressing troubleshooting',description:'Find and repair IPv4 address, subnet mask and default gateway faults across two LANs, then restore end-to-end connectivity.',devices:3,links:2,practice:true},
  {id:'dhcp-server-and-relay',group:'CCNA',section:'Fundamentals',title:'DHCP server and relay',description:'Configure a remote DHCP server and an IOS relay, deliver IPv4 settings to two clients, and verify routed connectivity.',devices:5,links:4,practice:true},
+ {id:'layer-2-switching-interfaces',group:'CCNA',section:'Switching',title:'Layer 2 switching interfaces',description:'Configure access interfaces, VLAN membership and link settings, shut an unused port, and verify dynamic MAC learning and host connectivity.',devices:3,links:2,practice:true},
  {id:'router-on-a-stick',group:'CCNA',section:'Routing',title:'Router on a stick',description:'Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.',devices:4,links:3,practice:true},
  {id:'datacenter-vpc',group:'Other',title:'Datacenter Switch vPC',description:'Explore the existing NX-OS-style vPC pair and its downstream port-channel.',devices:datacenterExample.lab.devices.length,links:datacenterExample.lab.links.length,practice:false},
 ] as const satisfies readonly CatalogEntry[];
@@ -41,6 +42,12 @@ export const IPV4_TROUBLESHOOTING_COMMANDS:Readonly<Record<string,readonly strin
 };
 export const DHCP_RELAY_COMMANDS:Readonly<Record<string,readonly string[]>>={R1:['enable','configure terminal','interface GigabitEthernet0/0','ip helper-address 192.168.100.10','end','write memory']};
 export const DHCP_SERVER_SETTINGS={enabled:true,pools:[{name:'CLIENTS',network:'192.168.10.0',prefix:24,defaultRouter:'192.168.10.1',dnsServers:['192.168.100.10'],domain:'lab.example',leaseSeconds:3600}],excluded:[{start:'192.168.10.1',end:'192.168.10.20'}]};
+export const L2_INTERFACE_COMMANDS:Readonly<Record<string,readonly string[]>>={SW1:[
+ 'enable','configure terminal','vlan 10','name USERS',
+ 'interface GigabitEthernet0/1','description TO_PC1','switchport','switchport mode access','switchport access vlan 10','speed auto','duplex auto','spanning-tree portfast','no shutdown',
+ 'interface GigabitEthernet0/2','description TO_PC2','switchport','switchport mode access','switchport access vlan 10','speed auto','duplex auto','spanning-tree portfast','no shutdown',
+ 'interface GigabitEthernet0/3','description UNUSED','shutdown','end','write memory',
+]};
 export interface CatalogGuideResources {
  columns:readonly string[];
  rows:readonly (readonly string[])[];
@@ -50,6 +57,7 @@ export interface CatalogGuideResources {
  setup?:readonly {title:string;instructions:readonly string[]}[];
 }
 const GUIDE_RESOURCES:Readonly<Record<string,CatalogGuideResources>>={
+ 'layer-2-switching-interfaces':{columns:['Device','Interface','VLAN','IPv4 address','Default gateway'],rows:[['PC1','GigabitEthernet0','10','192.168.10.10 /24','—'],['PC2','GigabitEthernet0','10','192.168.10.20 /24','—']],commands:L2_INTERFACE_COMMANDS,verification:{SW1:['show vlan brief','show interfaces status','show interfaces GigabitEthernet0/1 switchport','show interfaces GigabitEthernet0/2 switchport','show interfaces GigabitEthernet0/1','show mac address-table dynamic'],PC1:['ipconfig','ping -n 3 192.168.10.20'],PC2:['ipconfig','ping -n 3 192.168.10.10']},note:'Both PCs already have static /24 addresses and need no default gateway to communicate within their VLAN. Keep switch data ports at Layer 2; do not assign them IP addresses. PortFast is used on these endpoint-facing access ports. Generate traffic before inspecting dynamic MAC entries. To repeat the learning exercise, use clear mac address-table dynamic and send more pings.'},
  'dhcp-server-and-relay':{columns:['Device','Interface','IPv4 address','Subnet mask','Default gateway'],rows:[['R1','GigabitEthernet0/0','192.168.10.1','255.255.255.0','—'],['R1','GigabitEthernet0/1','192.168.100.1','255.255.255.0','—'],['SRV1','GigabitEthernet0','192.168.100.10','255.255.255.0','192.168.100.1'],['PC1','GigabitEthernet0','DHCP: 192.168.10.21–254','255.255.255.0','192.168.10.1'],['PC2','GigabitEthernet0','DHCP: 192.168.10.21–254','255.255.255.0','192.168.10.1']],commands:DHCP_RELAY_COMMANDS,verification:{R1:['show running-config interface GigabitEthernet0/0','show ip interface GigabitEthernet0/0','show ip route'],PC1:['ipconfig /renew','ipconfig /all','ping -n 3 192.168.100.10','nslookup server.lab.example'],PC2:['ipconfig /renew','ipconfig /all','ping -n 3 192.168.100.10']},note:'R1, SW1 and the server network are already addressed and enabled. The helper belongs on the client-facing interface. SRV1 serves DHCP; inspect its leases in Services → DHCP. R1 relays requests and does not maintain the server lease database. DNS on SRV1 is preconfigured for server.lab.example.',setup:[{title:'SRV1 · Services → DHCP',instructions:['Enable the DHCP server and add an address pool named CLIENTS.','Network address: 192.168.10.0. Prefix length: 24.','Default gateway: 192.168.10.1. DNS server: 192.168.100.10.','Lease duration: 3600 seconds. DNS domain: lab.example.','Excluded addresses: 192.168.10.1 - 192.168.10.20. Save changes.']}]},
  'router-on-a-stick':{columns:['Device','Interface','VLAN','IPv4 address','Default gateway'],rows:ROAS_ADDRESS_PLAN,commands:ROAS_COMMANDS,verification:{SW1:['show vlan brief','show interfaces trunk'],R1:['show ip interface brief','show ip route']},note:'The PCs are already addressed. PortFast trunk is used on the router-facing switch port.'},
  'ipv4-interface-configuration':{columns:['Device','Interface','IPv4 address','Subnet mask'],rows:[['R1','GigabitEthernet0/0','192.0.2.1','255.255.255.0'],['R2','GigabitEthernet0/0','192.0.2.2','255.255.255.0']],commands:IPV4_INTERFACE_COMMANDS,verification:{R1:['show ip interface brief','show interfaces GigabitEthernet0/0','show ip route','ping 192.0.2.2'],R2:['show ip interface brief','show interfaces GigabitEthernet0/0','show ip route','ping 192.0.2.1']},note:'Both interfaces share the 192.0.2.0/24 subnet. Directly connected routers do not need a static route or a routing protocol to reach one another.'},
@@ -66,6 +74,35 @@ const ipv4InterfaceCriterion=(device:string,address:string,port='GigabitEthernet
  {kind:'interface',device,interface:port,property:'mask',value:'255.255.255.0'},
  {kind:'interface',device,interface:port,property:'adminUp',value:true},
 ]});
+export function createL2InterfaceLab(mode:CatalogMode='practice'):LabDocument{
+ const make=(id:string,kind:Device['kind'],hostname:string,x:number,y:number):Device=>({id,kind,x,y,powered:true,config:factoryDeviceConfig(kind,hostname),runtime:emptyRuntime()});
+ const sw=make('device-l2-sw1','switch','SW1',500,180),a=make('device-l2-pc1','pc','PC1',280,420),b=make('device-l2-pc2','pc','PC2',720,420);
+ for(const[n,d,address]of [[1,a,'192.168.10.10'],[2,b,'192.168.10.20']]as const){sw.config.interfaces[`GigabitEthernet0/${n}`].adminUp=false;Object.assign(d.config.interfaces.GigabitEthernet0,{ip:address,mask:'255.255.255.0',adminUp:true});d.config.interfaces.GigabitEthernet0.features.dhcp=false;delete d.config.defaultGateway;}
+ sw.startupConfig=structuredClone(sw.config);
+ const accessPort=(n:number):Criterion=>({kind:'all',criteria:[
+  {kind:'interface',device:sw.id,interface:`GigabitEthernet0/${n}`,property:'switchport',value:true},
+  {kind:'interface',device:sw.id,interface:`GigabitEthernet0/${n}`,property:'mode',value:'access'},
+  {kind:'interface',device:sw.id,interface:`GigabitEthernet0/${n}`,property:'vlan',value:10},
+  {kind:'interface',device:sw.id,interface:`GigabitEthernet0/${n}`,property:'description',value:`TO_PC${n}`},
+  {kind:'interface',device:sw.id,interface:`GigabitEthernet0/${n}`,property:'adminUp',value:true},
+  {kind:'interface',device:sw.id,interface:`GigabitEthernet0/${n}`,property:'speedAuto',value:true},
+  {kind:'interface',device:sw.id,interface:`GigabitEthernet0/${n}`,property:'duplex',value:'auto'},
+  {kind:'interface',device:sw.id,interface:`GigabitEthernet0/${n}`,property:'portfast',value:true},
+ ]});
+ const lab:CatalogLab={id:'lab-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)),catalogId:'layer-2-switching-interfaces',name:'Layer 2 switching interfaces'+(mode==='completed'?' · Completed':''),devices:[sw,a,b],links:[
+  {id:'link-l2-pc1',a:{deviceId:sw.id,port:'GigabitEthernet0/1'},b:{deviceId:a.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0},
+  {id:'link-l2-pc2',a:{deviceId:sw.id,port:'GigabitEthernet0/2'},b:{deviceId:b.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0},
+ ],notes:[{id:'note-l2-vlan',x:500,y:540,text:'VLAN 10 · USERS · 192.168.10.0/24\nPC1 and PC2 are already addressed'}],lesson:{title:'Layer 2 switching interfaces',description:'PC1 and PC2 are connected to SW1 and already have static IPv4 addresses in the same /24 subnet. The two connected switch interfaces begin administratively down in VLAN 1. Configure SW1 to connect the PCs through VLAN 10.\n\nCreate VLAN 10 and name it USERS. Configure Gi0/1 and Gi0/2 as access ports in VLAN 10, with descriptions TO_PC1 and TO_PC2. Use automatic speed and duplex, enable PortFast on these endpoint-facing ports, and bring both ports up. Label unused Gi0/3 UNUSED and shut it down.\n\nVerify the interface status and switchport settings, test pings in both directions, and inspect the dynamic MAC address table for both PCs in VLAN 10. A same-VLAN exchange needs no router, switch IP address or PC default gateway. Save SW1 with write memory and save or export your lab.',objectives:[
+  {id:'vlan10',title:'Create VLAN 10 on SW1',description:'Name the VLAN USERS.',criterion:{kind:'vlan',device:sw.id,id:10}},
+  {id:'pc1-port',title:'Configure and enable SW1 Gi0/1 for PC1',description:'Access VLAN 10, description TO_PC1, automatic speed/duplex, and PortFast.',criterion:accessPort(1)},
+  {id:'pc2-port',title:'Configure and enable SW1 Gi0/2 for PC2',description:'Access VLAN 10, description TO_PC2, automatic speed/duplex, and PortFast.',criterion:accessPort(2)},
+  {id:'unused-port',title:'Label and shut down unused SW1 Gi0/3',description:'Description UNUSED; administratively down.',criterion:{kind:'all',criteria:[{kind:'interface',device:sw.id,interface:'GigabitEthernet0/3',property:'description',value:'UNUSED'},{kind:'interface',device:sw.id,interface:'GigabitEthernet0/3',property:'adminUp',value:false}]}},
+  {id:'mac-learning',title:'Verify both PC MAC addresses are learned dynamically',description:'PC1 on Gi0/1 and PC2 on Gi0/2, both in VLAN 10. Send traffic first.',criterion:{kind:'all',criteria:[{kind:'mac-learned',device:sw.id,interface:'GigabitEthernet0/1',source:a.id,sourceInterface:'GigabitEthernet0',vlan:10},{kind:'mac-learned',device:sw.id,interface:'GigabitEthernet0/2',source:b.id,sourceInterface:'GigabitEthernet0',vlan:10}]}},
+  {id:'pc1-ping',title:'Verify PC1 can ping PC2',description:'192.168.10.10 → 192.168.10.20',criterion:{kind:'echo',device:a.id,from:'192.168.10.20'},action:{kind:'ping',device:a.id,target:'192.168.10.20'}},
+  {id:'pc2-ping',title:'Verify PC2 can ping PC1',description:'192.168.10.20 → 192.168.10.10',criterion:{kind:'echo',device:b.id,from:'192.168.10.10'},action:{kind:'ping',device:b.id,target:'192.168.10.10'}},
+ ]}};
+ const doc:LabDocument={format:'netsim-lab',version:1,seed:20261103,lab};return mode==='practice'?doc:completedDocument(doc,L2_INTERFACE_COMMANDS);
+}
 export function createDHCPRelayLab(mode:CatalogMode='practice'):LabDocument{
  const make=(id:string,kind:Device['kind'],hostname:string,x:number,y:number):Device=>({id,kind,x,y,powered:true,config:factoryDeviceConfig(kind,hostname),runtime:emptyRuntime()});
  const r=make('device-dhcp-r1','router','R1',560,180),sw=make('device-dhcp-sw1','switch','SW1',360,360),server=make('device-dhcp-server','server','SRV1',840,180),a=make('device-dhcp-pc1','pc','PC1',200,560),b=make('device-dhcp-pc2','pc','PC2',520,560);
@@ -153,6 +190,7 @@ export function createRouterOnAStickLab(mode:CatalogMode='practice'):LabDocument
  return completedDocument(doc,ROAS_COMMANDS);
 }
 export function createCatalogLab(id:string,mode:CatalogMode='practice'):LabDocument{
+ if(id==='layer-2-switching-interfaces')return createL2InterfaceLab(mode);
  if(id==='dhcp-server-and-relay')return createDHCPRelayLab(mode);
  if(id==='ipv4-addressing-troubleshooting')return createIPv4TroubleshootingLab(mode);
  if(id==='ipv4-interface-configuration')return createIPv4InterfaceLab(mode);

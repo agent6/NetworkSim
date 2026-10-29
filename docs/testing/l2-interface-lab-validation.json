@@ -1,0 +1,70 @@
+{
+  "feature": "CCNA Switching: Layer 2 switching interfaces",
+  "catalogId": "layer-2-switching-interfaces",
+  "artifactSha256": "8da6330aa82183d152b5e08ad253dafcdac5b44a0fe9192a1ff2d9170beec721",
+  "devices": 3,
+  "links": 2,
+  "tasks": 7,
+  "topology": {
+    "switch": "SW1",
+    "accessVlan": 10,
+    "vlanName": "USERS",
+    "pc1": "192.168.10.10/24 on Gi0/1",
+    "pc2": "192.168.10.20/24 on Gi0/2",
+    "unusedInterface": "Gi0/3",
+    "routingRequired": false
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1324,
+    "passed": 1324,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "focusedTests": 31
+  },
+  "scenarioChecks": [
+    "Practice starts with two administratively down access interfaces and no connectivity",
+    "Published IOS commands configure VLAN, access mode, descriptions, automatic speed/duplex, PortFast and unused-port shutdown",
+    "Both links negotiate 1 Gbps full duplex and forward actual same-VLAN traffic without routing",
+    "Wrong VLAN and shutdown each break forwarding; repaired settings restore it",
+    "Configuration goals verify descriptions, switchport mode, VLAN, administrative state, speed/duplex and PortFast",
+    "MAC goals require live dynamic entries for both PC MACs on the correct ports and VLAN",
+    "Static, wrong-port and expired MAC entries cannot earn credit; clear and subsequent traffic remove and restore MAC credit",
+    "Saved labs retain configuration and echo accomplishments while dynamic MAC goals require fresh traffic after reload",
+    "Completed startup configuration and PC addressing survive power cycles",
+    "Every published IOS and Windows verification command executes against working state",
+    "Imported interface and MAC conditions validate bounded data and reject malformed or executable values"
+  ],
+  "browserChecks": [
+    "light 1440px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "light 390px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "light 320px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "dark 1440px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "dark 390px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "dark 320px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "light: shared link preserves current host/path/query, previews without replacing the workspace and returns to Switching",
+    "dark: shared link preserves current host/path/query, previews without replacing the workspace and returns to Switching"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "fundamentalsRegression": [
+    "light 1440px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "light 390px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "light 320px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "dark 1440px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "dark 390px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "dark 320px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "light: new lab direct link and clipboard preserve the current host, subfolder and query; Back restores Fundamentals or Routing without replacing the workspace",
+    "dark: new lab direct link and clipboard preserve the current host, subfolder and query; Back restores Fundamentals or Routing without replacing the workspace"
+  ],
+  "errors": [],
+  "externalRequests": []
+}
