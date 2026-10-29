@@ -1,0 +1,68 @@
+{
+  "feature": "CCNA Fundamentals: IPv4 addressing troubleshooting",
+  "catalogId": "ipv4-addressing-troubleshooting",
+  "artifactSha256": "6f273d8d529607d9b8d63181cc6ac097068347ccc7fe2ca0af1ced627ed1bc5e",
+  "devices": 3,
+  "links": 2,
+  "tasks": 5,
+  "faults": [
+    {
+      "device": "R1",
+      "setting": "GigabitEthernet0/1 IPv4 address",
+      "initial": "192.168.30.1/24",
+      "intended": "192.168.20.1/24"
+    },
+    {
+      "device": "PC1",
+      "setting": "default gateway",
+      "initial": "192.168.10.254",
+      "intended": "192.168.10.1"
+    },
+    {
+      "device": "PC2",
+      "setting": "subnet mask",
+      "initial": "255.255.0.0",
+      "intended": "255.255.255.0"
+    }
+  ],
+  "labBaseline": "Both physical links are operational. Proxy ARP is disabled on R1 so the broad PC2 mask remains observable.",
+  "validation": {
+    "command": "npm run check",
+    "tests": 1311,
+    "passed": 1311,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "finalFocusedTests": 24
+  },
+  "scenarioChecks": [
+    "Each fault independently prevents end-to-end ICMP delivery; repair restores both directions",
+    "Reference IOS and Windows commands execute through the public CLI facade",
+    "Live tasks verify the exact interfaces, addresses, masks and default gateways",
+    "Actual simulated echo replies are required for both traffic tasks",
+    "Completed reference configuration, manual repairs and saved progress survive portable saves and power cycles",
+    "Imported default-gateway predicates reject malformed or executable data",
+    "PC static settings persist without an IOS startup configuration"
+  ],
+  "browserChecks": [
+    "light 1440px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and CLI repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "light 390px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and CLI repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "light 320px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and PC IP settings repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "dark 1440px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and CLI repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "dark 390px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and CLI repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "dark 320px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and PC IP settings repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "light: direct entry, sharing preserves current host/subfolder/query and Back returns to both Fundamentals labs without replacing the workspace",
+    "dark: direct entry, sharing preserves current host/subfolder/query and Back returns to both Fundamentals labs without replacing the workspace"
+  ],
+  "existingCatalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

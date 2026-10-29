@@ -15,6 +15,7 @@ export type CatalogMode='practice'|'completed';
 type CatalogEntry={id:string;title:string;description:string;devices:number;links:number;practice:boolean}&({group:'CCNA';section:CCNASection}|{group:Exclude<LabGroup,'CCNA'>;section?:never});
 export const LAB_CATALOG=[
  {id:'ipv4-interface-configuration',group:'CCNA',section:'Fundamentals',title:'IPv4 interface configuration',description:'Address two directly connected router interfaces, enable the link, and verify IPv4 connectivity in both directions.',devices:2,links:1,practice:true},
+ {id:'ipv4-addressing-troubleshooting',group:'CCNA',section:'Fundamentals',title:'IPv4 addressing troubleshooting',description:'Find and repair IPv4 address, subnet mask and default gateway faults across two LANs, then restore end-to-end connectivity.',devices:3,links:2,practice:true},
  {id:'router-on-a-stick',group:'CCNA',section:'Routing',title:'Router on a stick',description:'Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.',devices:4,links:3,practice:true},
  {id:'datacenter-vpc',group:'Other',title:'Datacenter Switch vPC',description:'Explore the existing NX-OS-style vPC pair and its downstream port-channel.',devices:datacenterExample.lab.devices.length,links:datacenterExample.lab.links.length,practice:false},
 ] as const satisfies readonly CatalogEntry[];
@@ -32,6 +33,11 @@ export const IPV4_INTERFACE_COMMANDS:Readonly<Record<string,readonly string[]>>=
  R1:['enable','configure terminal','interface GigabitEthernet0/0','description TO_R2','ip address 192.0.2.1 255.255.255.0','no shutdown','end','write memory'],
  R2:['enable','configure terminal','interface GigabitEthernet0/0','description TO_R1','ip address 192.0.2.2 255.255.255.0','no shutdown','end','write memory'],
 };
+export const IPV4_TROUBLESHOOTING_COMMANDS:Readonly<Record<string,readonly string[]>>={
+ R1:['enable','configure terminal','interface GigabitEthernet0/0','ip address 192.168.10.1 255.255.255.0','no ip proxy-arp','no shutdown','interface GigabitEthernet0/1','ip address 192.168.20.1 255.255.255.0','no ip proxy-arp','no shutdown','end','write memory'],
+ PC1:['netsh interface ipv4 set address name="Ethernet" source=static address=192.168.10.10 mask=255.255.255.0 gateway=192.168.10.1'],
+ PC2:['netsh interface ipv4 set address name="Ethernet" source=static address=192.168.20.10 mask=255.255.255.0 gateway=192.168.20.1'],
+};
 export interface CatalogGuideResources {
  columns:readonly string[];
  rows:readonly (readonly string[])[];
@@ -42,18 +48,41 @@ export interface CatalogGuideResources {
 const GUIDE_RESOURCES:Readonly<Record<string,CatalogGuideResources>>={
  'router-on-a-stick':{columns:['Device','Interface','VLAN','IPv4 address','Default gateway'],rows:ROAS_ADDRESS_PLAN,commands:ROAS_COMMANDS,verification:{SW1:['show vlan brief','show interfaces trunk'],R1:['show ip interface brief','show ip route']},note:'The PCs are already addressed. PortFast trunk is used on the router-facing switch port.'},
  'ipv4-interface-configuration':{columns:['Device','Interface','IPv4 address','Subnet mask'],rows:[['R1','GigabitEthernet0/0','192.0.2.1','255.255.255.0'],['R2','GigabitEthernet0/0','192.0.2.2','255.255.255.0']],commands:IPV4_INTERFACE_COMMANDS,verification:{R1:['show ip interface brief','show interfaces GigabitEthernet0/0','show ip route','ping 192.0.2.2'],R2:['show ip interface brief','show interfaces GigabitEthernet0/0','show ip route','ping 192.0.2.1']},note:'Both interfaces share the 192.0.2.0/24 subnet. Directly connected routers do not need a static route or a routing protocol to reach one another.'},
+ 'ipv4-addressing-troubleshooting':{columns:['Device','Interface','IPv4 address','Subnet mask','Default gateway'],rows:[['R1','GigabitEthernet0/0','192.168.10.1','255.255.255.0','—'],['R1','GigabitEthernet0/1','192.168.20.1','255.255.255.0','—'],['PC1','GigabitEthernet0','192.168.10.10','255.255.255.0','192.168.10.1'],['PC2','GigabitEthernet0','192.168.20.10','255.255.255.0','192.168.20.1']],commands:IPV4_TROUBLESHOOTING_COMMANDS,verification:{R1:['show ip interface brief','show ip route'],PC1:['ipconfig /all','route print','ping -n 3 192.168.10.1','ping -n 3 192.168.20.10'],PC2:['ipconfig /all','route print','ping -n 3 192.168.20.1','ping -n 3 192.168.10.10']},note:'The practice lab starts with R1 Gi0/1 in the wrong subnet, PC1 using the wrong gateway, and PC2 using an overly broad mask. Correct the router through its IOS console. Correct each PC through its IP settings or the Windows Command prompt commands below. Proxy ARP is disabled on R1 so an incorrect PC mask cannot be hidden by proxy replies. No static routes or routing protocols are needed.'},
 };
 export function catalogGuideResources(id:string|undefined):CatalogGuideResources|undefined{return id&&Object.hasOwn(GUIDE_RESOURCES,id)?GUIDE_RESOURCES[id]:undefined;}
 function completedDocument(doc:LabDocument,commands:Readonly<Record<string,readonly string[]>>):LabDocument{
  const sim=new Simulator(doc.seed);sim.load(doc);
- for(const[name,lines]of Object.entries(commands)){const d=sim.getDevice(name)!,cli=new IOSSession(sim,d.id);for(const command of lines){const output=cli.execute(command);if(output.some(iosRejected))throw Error(`Could not prepare ${name}: ${command}\n${output.join('\n')}`);}}
+ for(const[name,lines]of Object.entries(commands)){const d=sim.getDevice(name)!,cli=new IOSSession(sim,d.id);for(const command of lines){const output=cli.execute(command);if(output.some(iosRejected)||cli.windowsMode&&output.length>0)throw Error(`Could not prepare ${name}: ${command}\n${output.join('\n')}`);}}
  return sim.serialize();
 }
-const ipv4InterfaceCriterion=(device:string,address:string):Criterion=>({kind:'all',criteria:[
- {kind:'interface',device,interface:'GigabitEthernet0/0',property:'ip',value:address},
- {kind:'interface',device,interface:'GigabitEthernet0/0',property:'mask',value:'255.255.255.0'},
- {kind:'interface',device,interface:'GigabitEthernet0/0',property:'adminUp',value:true},
+const ipv4InterfaceCriterion=(device:string,address:string,port='GigabitEthernet0/0'):Criterion=>({kind:'all',criteria:[
+ {kind:'interface',device,interface:port,property:'ip',value:address},
+ {kind:'interface',device,interface:port,property:'mask',value:'255.255.255.0'},
+ {kind:'interface',device,interface:port,property:'adminUp',value:true},
 ]});
+export function createIPv4TroubleshootingLab(mode:CatalogMode='practice'):LabDocument{
+ const make=(id:string,kind:Device['kind'],hostname:string,x:number,y:number):Device=>({id,kind,x,y,powered:true,config:factoryDeviceConfig(kind,hostname),runtime:emptyRuntime()});
+ const r=make('device-ipv4-ts-r1','router','R1',500,160),a=make('device-ipv4-ts-pc1','pc','PC1',260,360),b=make('device-ipv4-ts-pc2','pc','PC2',740,360);
+ Object.assign(r.config.interfaces['GigabitEthernet0/0'],{ip:'192.168.10.1',mask:'255.255.255.0',adminUp:true,description:'LAN_10'});
+ Object.assign(r.config.interfaces['GigabitEthernet0/1'],{ip:'192.168.30.1',mask:'255.255.255.0',adminUp:true,description:'LAN_20'});
+ for(const port of ['GigabitEthernet0/0','GigabitEthernet0/1'])r.config.interfaces[port].features.proxyArp=false;
+ for(const[d,subnet]of [[a,10],[b,20]]as const){const p=d.config.interfaces.GigabitEthernet0;Object.assign(p,{ip:`192.168.${subnet}.10`,mask:subnet===20?'255.255.0.0':'255.255.255.0',adminUp:true});p.features.dhcp=false;d.config.defaultGateway=subnet===10?'192.168.10.254':'192.168.20.1';}
+ // PCs retain their static settings across power cycles without an IOS startup configuration.
+ r.startupConfig=structuredClone(r.config);
+ const hostCriterion=(d:Device,subnet:number):Criterion=>({kind:'all',criteria:[ipv4InterfaceCriterion(d.id,`192.168.${subnet}.10`,'GigabitEthernet0'),{kind:'default-gateway',device:d.id,address:`192.168.${subnet}.1`}]});
+ const lab:CatalogLab={id:'lab-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)),catalogId:'ipv4-addressing-troubleshooting',name:'IPv4 addressing troubleshooting'+(mode==='completed'?' · Completed':''),devices:[r,a,b],links:[
+  {id:'link-ipv4-ts-lan10',a:{deviceId:r.id,port:'GigabitEthernet0/0'},b:{deviceId:a.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0},
+  {id:'link-ipv4-ts-lan20',a:{deviceId:r.id,port:'GigabitEthernet0/1'},b:{deviceId:b.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0},
+ ],notes:[{id:'note-ipv4-ts-lan10',x:260,y:490,text:'Intended LAN: 192.168.10.0/24\nGateway: 192.168.10.1'},{id:'note-ipv4-ts-lan20',x:740,y:490,text:'Intended LAN: 192.168.20.0/24\nGateway: 192.168.20.1'}],lesson:{title:'IPv4 addressing troubleshooting',description:'Users on PC1 and PC2 cannot communicate. The devices are powered on and the cables are connected, but three IPv4 settings are incorrect. The addressing plan shows the intended configuration.\n\nUse show ip interface brief and show ip route on R1, and ipconfig /all and route print in each PC Command prompt. Compare the live addresses, masks and gateways with the plan. Repair the settings without changing the topology or adding routes.\n\nCheck each PC can ping its own gateway, then test connectivity between the PCs in both directions. Save R1 with write memory and save or export your repaired lab.',objectives:[
+  {id:'r1-addressing',title:'Restore R1 interface addressing',description:'Use the planned /24 address on each LAN interface and keep both interfaces enabled.',criterion:{kind:'all',criteria:[ipv4InterfaceCriterion(r.id,'192.168.10.1'),ipv4InterfaceCriterion(r.id,'192.168.20.1','GigabitEthernet0/1')]}},
+  {id:'pc1-addressing',title:'Restore PC1 IPv4 settings',description:'Match its address, subnet mask and default gateway to the addressing plan.',criterion:hostCriterion(a,10)},
+  {id:'pc2-addressing',title:'Restore PC2 IPv4 settings',description:'Match its address, subnet mask and default gateway to the addressing plan.',criterion:hostCriterion(b,20)},
+  {id:'pc1-ping',title:'Verify PC1 can ping PC2',description:'192.168.10.10 → 192.168.20.10',criterion:{kind:'echo',device:a.id,from:'192.168.20.10'},action:{kind:'ping',device:a.id,target:'192.168.20.10'}},
+  {id:'pc2-ping',title:'Verify PC2 can ping PC1',description:'192.168.20.10 → 192.168.10.10',criterion:{kind:'echo',device:b.id,from:'192.168.10.10'},action:{kind:'ping',device:b.id,target:'192.168.10.10'}},
+ ]}};
+ const doc:LabDocument={format:'netsim-lab',version:1,seed:20261101,lab};return mode==='practice'?doc:completedDocument(doc,IPV4_TROUBLESHOOTING_COMMANDS);
+}
 export function createIPv4InterfaceLab(mode:CatalogMode='practice'):LabDocument{
  const routers=[1,2].map(n=>{const config=factoryDeviceConfig('router',`R${n}`);return {id:`device-ipv4-r${n}`,kind:'router' as const,x:n===1?300:700,y:300,powered:true,config,startupConfig:structuredClone(config),runtime:emptyRuntime()};});
  const lab:CatalogLab={id:'lab-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)),catalogId:'ipv4-interface-configuration',name:'IPv4 interface configuration'+(mode==='completed'?' · Completed':''),devices:routers,links:[{id:'link-ipv4',a:{deviceId:routers[0].id,port:'GigabitEthernet0/0'},b:{deviceId:routers[1].id,port:'GigabitEthernet0/0'},enabled:true,delay:.1,loss:0}],notes:[{id:'note-subnet',x:500,y:440,text:'192.0.2.0/24\nR1: 192.0.2.1 · R2: 192.0.2.2'}],lesson:{title:'IPv4 interface configuration',description:'Configure GigabitEthernet0/0 on R1 and R2 using the addressing plan. Both interfaces begin unconfigured and administratively down.\n\nApply the IPv4 address and subnet mask, enable each interface with no shutdown, and verify that both interfaces are up/up. Test connectivity in both directions, then save each configuration.',objectives:[
@@ -97,6 +126,7 @@ export function createRouterOnAStickLab(mode:CatalogMode='practice'):LabDocument
  return completedDocument(doc,ROAS_COMMANDS);
 }
 export function createCatalogLab(id:string,mode:CatalogMode='practice'):LabDocument{
+ if(id==='ipv4-addressing-troubleshooting')return createIPv4TroubleshootingLab(mode);
  if(id==='ipv4-interface-configuration')return createIPv4InterfaceLab(mode);
  if(id==='router-on-a-stick')return createRouterOnAStickLab(mode);
  if(id==='datacenter-vpc'){const doc=parseDocument(JSON.stringify(datacenterExample));(doc.lab as CatalogLab).catalogId='datacenter-vpc';doc.lab.id='lab-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));return doc;}

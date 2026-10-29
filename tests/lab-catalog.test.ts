@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {LAB_GROUPS,CCNA_SECTIONS,LAB_CATALOG,ROAS_COMMANDS,IPV4_INTERFACE_COMMANDS,catalogGuideResources,createCatalogLab,createRouterOnAStickLab,type CatalogLab} from '../src/lab-catalog.ts';
+import {LAB_GROUPS,CCNA_SECTIONS,LAB_CATALOG,ROAS_COMMANDS,IPV4_INTERFACE_COMMANDS,IPV4_TROUBLESHOOTING_COMMANDS,catalogGuideResources,createCatalogLab,createRouterOnAStickLab,type CatalogLab} from '../src/lab-catalog.ts';
 import {Simulator} from '../src/engine.ts';
 import {IOSSession} from '../src/cli.ts';
 import {iosRejected} from '../src/ios-help.ts';
@@ -33,9 +33,9 @@ test('completed configuration, guide and fresh traffic checks survive a YAML sav
 test('Other retains the existing datacenter vPC example with a fresh saved-lab identity',()=>{
  const a=createCatalogLab('datacenter-vpc','completed'),b=createCatalogLab('datacenter-vpc','completed');assert.notEqual(a.lab.id,b.lab.id);const sim=new Simulator();sim.load(a);assert.equal(sim.getDevice('DC1')?.kind,'datacenter');assert.equal((sim.lab as CatalogLab).catalogId,'datacenter-vpc');
 });
-test('CCNA subsections are ordered and both guided labs have section-specific resources',()=>{
+test('CCNA subsections are ordered and guided labs have section-specific resources',()=>{
  assert.deepEqual(CCNA_SECTIONS,['Fundamentals','Switching','Routing','Services & Security']);
- assert.deepEqual(LAB_CATALOG.filter(l=>l.group==='CCNA').map(l=>[l.id,l.section]),[['ipv4-interface-configuration','Fundamentals'],['router-on-a-stick','Routing']]);
+ assert.deepEqual(LAB_CATALOG.filter(l=>l.group==='CCNA').map(l=>[l.id,l.section]),[['ipv4-interface-configuration','Fundamentals'],['ipv4-addressing-troubleshooting','Fundamentals'],['router-on-a-stick','Routing']]);
  for(const entry of LAB_CATALOG.filter(l=>l.practice)){const resources=catalogGuideResources(entry.id)!;assert.ok(resources);for(const row of resources.rows)assert.equal(row.length,resources.columns.length);}
  assert.deepEqual(catalogGuideResources('ipv4-interface-configuration')!.columns,['Device','Interface','IPv4 address','Subnet mask']);for(const id of ['datacenter-vpc','__proto__','constructor'])assert.equal(catalogGuideResources(id),undefined);
 });
@@ -63,4 +63,33 @@ test('IPv4 completed lab keeps startup configuration, guide, stable IDs and prog
 test('imported interface IP and mask criteria accept valid values and reject malformed addresses and masks',()=>{
  const guide=()=>structuredClone((createCatalogLab('ipv4-interface-configuration').lab as CatalogLab).lesson!);
  for(const [property,value,valid]of [['ip','192.0.2.1',true],['ip','999.0.2.1',false],['ip',42,false],['mask','255.255.255.0',true],['mask','255.0.255.0',false],['mask','nonsense',false],['mask',24,false]]as const){const lesson=guide();lesson.objectives[0].criterion={kind:'interface',device:'device-ipv4-r1',interface:'GigabitEthernet0/0',property,value};if(valid)assert.doesNotThrow(()=>validateLesson(lesson));else assert.throws(()=>validateLesson(lesson),/invalid/);}
+});
+const troubleshooting=(mode:'practice'|'completed'='practice')=>{const sim=new Simulator();sim.load(parseLabFile(serializeLabFile(createCatalogLab('ipv4-addressing-troubleshooting',mode))));sim.advance(1500);return sim;};
+const repair=(sim:Simulator,name:string)=>{const cli=new IOSSession(sim,sim.getDevice(name)!.id);for(const command of IPV4_TROUBLESHOOTING_COMMANDS[name]){const out=cli.execute(command);if(cli.windowsMode)assert.deepEqual(out,[],command);else assert.ok(!out.some(iosRejected),command+'\n'+out.join('\n'));}sim.advance(1500);};
+test('IPv4 troubleshooting starts with three discoverable addressing faults and working physical links',()=>{
+ const sim=troubleshooting();assert.equal(sim.lab.devices.length,3);assert.equal(sim.lab.links.length,2);assert.equal(lessonProgress(sim)!.complete,0);
+ for(const link of sim.lab.links){assert.equal(sim.interfaceUp(link.a.deviceId,link.a.port),true);assert.equal(sim.interfaceUp(link.b.deviceId,link.b.port),true);}
+ const cli=new IOSSession(sim,sim.getDevice('R1')!.id);run(cli,['enable']);assert.match(cli.execute('show ip interface brief').join('\n'),/192\.168\.30\.1/);
+ assert.match(new IOSSession(sim,sim.getDevice('PC1')!.id).execute('ipconfig /all').join('\n'),/192\.168\.10\.254/);assert.match(new IOSSession(sim,sim.getDevice('PC2')!.id).execute('ipconfig /all').join('\n'),/255\.255\.0\.0/);
+ assert.equal(ping(sim,'PC1','192.168.10.1'),2,'one local gateway is reachable, so the whole network is not simply offline');assert.equal(ping(sim,'PC2','192.168.20.1'),0);assert.equal(ping(sim,'PC1','192.168.20.10'),0);assert.equal(ping(sim,'PC2','192.168.10.10'),0);assert.equal(lessonProgress(sim)!.complete,0);
+ for(const row of lessonProgress(sim)!.rows.filter(row=>row.objective.action))assert.equal(actionAvailable(sim,row.objective),true,'learners can test the broken network before repairing it');
+});
+test('repairing the published IOS and Windows settings restores real routed ICMP only after all three faults are fixed',()=>{
+ const sim=troubleshooting();repair(sim,'R1');assert.equal(lessonProgress(sim)!.complete,1);assert.equal(ping(sim,'PC1','192.168.20.10'),0);
+ repair(sim,'PC1');assert.equal(lessonProgress(sim)!.complete,2);assert.equal(ping(sim,'PC1','192.168.20.10'),0,'the remaining broad PC2 mask still breaks the return path');
+ repair(sim,'PC2');assert.equal(lessonProgress(sim)!.complete,3);assert.equal(ping(sim,'PC1','192.168.20.10'),2);assert.equal(ping(sim,'PC2','192.168.10.10'),2);assert.equal(lessonProgress(sim)!.complete,5);
+ for(const d of sim.lab.devices){sim.power(d.id,false);sim.power(d.id,true);}sim.advance(1500);assert.equal(ping(sim,'PC1','192.168.20.10'),2,'repaired settings persist through device power cycles');assert.ok(sim.events.some(e=>e.nodeId===sim.getDevice('R1')!.id&&e.packet?.protocol==='ICMP'),'traffic traverses the router');assert.equal(sim.getDevice('R1')!.startupConfig!.interfaces['GigabitEthernet0/1'].ip,'192.168.20.1');
+});
+test('each troubleshooting fault independently breaks delivery and repair restores both directions',()=>{
+ for(const name of ['R1','PC1','PC2']){const sim=troubleshooting('completed'),d=sim.getDevice(name)!;if(name==='R1')d.config.interfaces['GigabitEthernet0/1'].ip='192.168.30.1';else if(name==='PC1')d.config.defaultGateway='192.168.10.254';else d.config.interfaces.GigabitEthernet0.mask='255.255.0.0';sim.changed();sim.advance(1500);assert.equal(lessonProgress(sim)!.complete,2,name+' must fail its configuration task');assert.equal(ping(sim,'PC1','192.168.20.10'),0,name);assert.equal(ping(sim,'PC2','192.168.10.10'),0,name);repair(sim,name);assert.equal(ping(sim,'PC1','192.168.20.10'),2,name);assert.equal(ping(sim,'PC2','192.168.10.10'),2,name);assert.equal(lessonProgress(sim)!.complete,5);}
+});
+test('troubleshooting references, completed startup state and saved progress survive portable copies and renamed nodes',()=>{
+ const a=createCatalogLab('ipv4-addressing-troubleshooting','completed'),b=createCatalogLab('ipv4-addressing-troubleshooting','completed');assert.notEqual(a.lab.id,b.lab.id);const sim=new Simulator();sim.load(parseLabFile(serializeLabFile(a)));sim.advance(1500);assert.equal(lessonProgress(sim)!.complete,3);
+ assert.equal(sim.getDevice('PC1')!.startupConfig,undefined);assert.equal(sim.getDevice('PC2')!.startupConfig,undefined);for(const d of sim.lab.devices){sim.power(d.id,false);sim.power(d.id,true);}sim.advance(1500);assert.equal(sim.getDevice('PC1')!.config.defaultGateway,'192.168.10.1');assert.equal(sim.getDevice('PC2')!.config.interfaces.GigabitEthernet0.mask,'255.255.255.0');
+ for(const[name,commands]of Object.entries(catalogGuideResources('ipv4-addressing-troubleshooting')!.verification)){const cli=new IOSSession(sim,sim.getDevice(name)!.id);if(!cli.windowsMode)run(cli,['enable']);for(const command of commands){const output=cli.execute(command).join('\n');assert.ok(!/not recognized|not implemented|% Invalid/i.test(output),command);if(command.startsWith('ping'))assert.match(output,/Received = 3/);}}
+ sim.getDevice('PC1')!.config.hostname='Workstation';sim.getDevice('R1')!.config.hostname='Gateway';assert.equal(ping(sim,'device-ipv4-ts-pc1','192.168.20.10'),2);assert.equal(ping(sim,'device-ipv4-ts-pc2','192.168.10.10'),2);assert.equal(lessonProgress(sim)!.complete,5);
+ const restored=new Simulator();restored.load(parseLabFile(serializeLabFile(sim.serialize())));assert.equal((restored.lab as CatalogLab).catalogId,'ipv4-addressing-troubleshooting');assert.equal(lessonProgress(restored)!.complete,5);restored.getDevice('device-ipv4-ts-pc1')!.config.defaultGateway='192.168.10.254';assert.equal(lessonProgress(restored)!.complete,4,'configuration criteria stay live even after traffic checks were earned');
+});
+test('imported default-gateway criteria accept IPv4 data and reject invalid or executable shapes',()=>{
+ for(const address of ['192.168.10.1','999.168.10.1','2001:db8::1',42,{},'(()=>true)()']){const lesson=structuredClone((createCatalogLab('ipv4-addressing-troubleshooting').lab as CatalogLab).lesson!);lesson.objectives[0].criterion={kind:'default-gateway',device:'device-ipv4-ts-pc1',address:address as string};if(address==='192.168.10.1')assert.doesNotThrow(()=>validateLesson(lesson));else assert.throws(()=>validateLesson(lesson),/invalid/);}
 });

@@ -7,6 +7,7 @@ export type Criterion =
   | { kind: "device"; device: string; powered?: boolean }
   | { kind: "link"; a: string; b: string }
   | { kind: "address"; device: string; address: string }
+  | { kind: "default-gateway"; device: string; address: string }
   | {
       kind: "route";
       device: string;
@@ -65,6 +66,8 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         return v.powered === undefined || typeof v.powered === "boolean";
       case "address":
         return address(v.address);
+      case "default-gateway":
+        return typeof v.address === "string" && isIPv4(v.address);
       case "echo":
         return address(v.from);
       case "route":
@@ -192,6 +195,8 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind === "default-gateway")
+    return d.config.defaultGateway === criterion.address;
   if (criterion.kind === "device")
     return criterion.powered === undefined || d.powered === criterion.powered;
   if (criterion.kind === "address")
