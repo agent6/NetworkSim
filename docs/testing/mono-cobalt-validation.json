@@ -1,25 +1,27 @@
 {
-  "scope": "Mono Cobalt visual refresh, with transparent theme-aware workspace icons",
+  "scope": "Mono Cobalt visual refresh, with the original ImageGen node artwork restored and transparent workspace icons",
   "sourceBaseCommit": "800c88e8668a1eba24c14d79da0156de60ba46b9",
   "baselineArtifactSha256": "53c8296fe88737a798a690f67d624a20ce7fd3f77036f3d1bd5557615fb55699",
-  "artifactSha256": "b25e26e58214b3ef1d9ef0b632e952bad56cb609f83d57caf8b940fd80758cef",
+  "artifactSha256": "c3565c4f8c5c681ddf74d438b86b92a5d0a70c62a45023d3435e1c7c0bddff83",
   "checks": [
     "light: original console, fonts, controls, hover, expanded console and shortcuts match the baseline",
-    "light desktop: semantic surfaces, local fonts, all 11 transparent icons visible, focus, inspector and dialogs",
-    "light mobile: semantic surfaces, local fonts, all 11 transparent icons visible, focus, inspector and dialogs",
+    "light desktop: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
+    "light mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
     "dark: original console, fonts, controls, hover, expanded console and shortcuts match the baseline",
-    "dark desktop: semantic surfaces, local fonts, all 11 transparent icons visible, focus, inspector and dialogs",
-    "dark mobile: semantic surfaces, local fonts, all 11 transparent icons visible, focus, inspector and dialogs"
+    "dark desktop: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
+    "dark mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs"
   ],
   "errors": [],
   "externalRequests": [],
   "check": {
-    "command": "npm run check",
+    "commands": [
+      "npm run typecheck",
+      "npm run build",
+      "node scripts/browser-mono-cobalt.mjs"
+    ],
     "typecheck": "passed",
-    "tests": 1292,
-    "passed": 1292,
-    "failed": 0,
-    "productionBuild": "passed; rebuilt after final CSS changes"
+    "productionBuild": "passed",
+    "browserValidation": "passed in both themes on desktop and mobile"
   },
   "consolePixelComparison": {
     "light": {
@@ -31,9 +33,25 @@
       "sha256": "1891776e3e72745530610a60a04171a602115789e117f99cfda1dff322836e72"
     }
   },
-  "additionalBrowserSuites": [
+  "sourceScope": "Original icon renderer restored; CSS color filters and browser validation updated. Simulation engine, networking logic and terminal styling unchanged.",
+  "fullRegressionBaseline": {
+    "command": "npm run check",
+    "typecheck": "passed",
+    "tests": 1292,
+    "passed": 1292,
+    "failed": 0,
+    "productionBuild": "passed; rebuilt after final CSS changes",
+    "appliesTo": "Mono Cobalt refresh before restoring the original icon artwork"
+  },
+  "originalArtwork": {
+    "path": "src/assets/node-icons.png",
+    "sha256": "b1b1c1dbc628291f73b1a17e30a21d15f927d659423b1a8a9799ac7cdc7c9a1c",
+    "identicalToCommit": "800c88e",
+    "nodeKinds": 11,
+    "themeTreatment": "Original gray on light workspace; white on dark workspace and palette tiles. CSS filters preserve the original shapes and transparency."
+  },
+  "previousAdditionalBrowserSuites": [
     "scripts/browser-console-expand.mjs: desktop, phone, small phone, landscape, tablet and visual viewport passed",
     "scripts/browser-console-paging.mjs: 9 checks passed"
-  ],
-  "sourceScope": "UI, icon rendering, bundled font assets, build packaging and browser validation; simulation engine and networking logic unchanged"
+  ]
 }

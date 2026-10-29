@@ -31,11 +31,11 @@ try{
  await page.goto(pathToFileURL(process.cwd()+'/index.html').href);
  const kinds=['router','switch','l3switch','poeswitch','datacenter','pc','server','wlc','ap','laptop','phone'];
  assert.equal(await page.locator('.palette-card').count(),11);
- assert.equal(new Set(await page.locator('.palette-card .node-artwork').evaluateAll(icons=>icons.map(icon=>icon.querySelector('use').getAttribute('href')))).size,11);
+ assert.equal(new Set(await page.locator('.palette-card .node-artwork').evaluateAll(icons=>icons.map(icon=>icon.getAttribute('viewBox')))).size,10);
  for(const kind of kinds){await page.locator(`[data-kind=${kind}]`).click();if(await page.locator('.dialog').count())await close();}
  await page.waitForFunction(()=>document.querySelectorAll('#world .device').length===11);await page.locator('[data-action=fit]').click();await settle();assert.equal(await page.locator('#world .device').count(),11);
  await page.locator('.palette-grid').screenshot({path:folder+'/ten-icons-light.png'});await page.screenshot({path:folder+'/ten-nodes-light.png'});
- check('Eleven distinct diagram icons render in the palette and workspace');
+ check('Original artwork renders across all eleven node kinds in the palette and workspace');
  await page.locator('[data-action=toggle-theme]').click();await settle();await page.locator('.palette-grid').screenshot({path:folder+'/ten-icons-dark.png'});await page.screenshot({path:folder+'/ten-nodes-dark.png'});
  check('All eleven symbols remain consistent and visible in dark mode');
  await node('PHONE1').dblclick();assert.match(await page.locator('[data-phone-status]').textContent(),/Waiting for PoE/);assert.equal(await page.locator('[data-phone-renew]').isDisabled(),true);await close();

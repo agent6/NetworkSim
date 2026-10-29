@@ -266,6 +266,10 @@
   display: block; flex-shrink: 0; pointer-events: none;
   color: var(--ui-on-tile); background: var(--ui-node-tile); border-radius: var(--ui-radius);
 }
+/* Recolor the original image only, keeping its silhouette and transparent areas. */
+.node-artwork > use { filter: brightness(0) invert(1); }
+.device .node-artwork > use { filter: none; }
+[data-theme="dark"] .device .node-artwork > use { filter: brightness(0) invert(1); }
 .device-label {
   font-size: 12px;
   font-weight: 600;
