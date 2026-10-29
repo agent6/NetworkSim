@@ -1,20 +1,31 @@
 {
-  "feature": "Offline grouped lab catalog and guided router-on-a-stick exercise",
-  "artifactSha256": "00a2ee5f74b6662c0f5e4cb3c0dbba7932ef5ffae34304248998855ab06d0f5a",
+  "feature": "Offline grouped lab catalog with CCNA subsections and guided IPv4 / router-on-a-stick exercises",
+  "artifactSha256": "0ec0e23737660d4105a311433db25a64be12dfeb95d8f67ded57013b02580870",
   "groups": [
     "CCNA",
     "CCNP ENCOR",
     "CCNP ENARSI",
     "Other"
   ],
+  "ccnaSections": [
+    "Fundamentals",
+    "Switching",
+    "Routing",
+    "Services & Security"
+  ],
   "labs": [
+    {
+      "id": "ipv4-interface-configuration",
+      "group": "CCNA",
+      "section": "Fundamentals",
+      "devices": 2,
+      "links": 1,
+      "tasks": 4
+    },
     {
       "id": "router-on-a-stick",
       "group": "CCNA",
-      "modes": [
-        "practice",
-        "completed"
-      ],
+      "section": "Routing",
       "devices": 4,
       "links": 3,
       "tasks": 6
@@ -27,27 +38,47 @@
   ],
   "check": {
     "command": "npm run check",
-    "tests": 1297,
-    "passed": 1297,
+    "tests": 1306,
+    "passed": 1306,
     "failed": 0,
     "typecheck": "passed",
     "productionBuild": "passed"
   },
   "scenarioValidation": [
-    "Practice starts without inter-VLAN connectivity",
-    "Published IOS commands configure both VLANs, access ports, trunk and 802.1Q subinterfaces",
-    "Both PCs receive replies over VLAN-tagged simulated packet paths",
-    "Removing a trunk VLAN and shutting the router parent each stop delivery; restoration repairs it",
-    "Guide, configuration and device identity survive YAML round trips and workspace reloads"
+    "IPv4 practice starts with two unaddressed, administratively down router interfaces",
+    "Published IOS commands configure and save each router through the real command parser",
+    "Interface objectives verify the exact port, IPv4 address, subnet mask and administrative state independently of the peer",
+    "Wrong masks and shutdown interfaces fail the configuration tasks; shutdown blocks traffic and repair restores delivery",
+    "Both routers receive simulated ICMP replies before their traffic tasks are awarded",
+    "IPv4 guide, configuration, startup state and earned traffic checks survive YAML round trips and workspace reloads",
+    "Router-on-a-stick reference commands still enable inter-VLAN traffic; removing a trunk VLAN or shutting the router parent breaks forwarding",
+    "Imported IPv4 interface predicates reject malformed addresses and noncontiguous subnet masks",
+    "Unknown catalog resource IDs do not use inherited object properties"
   ],
-  "browserChecks": [
-    "light 1440px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
-    "light 390px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
-    "light 320px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
-    "dark 1440px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
-    "dark 390px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
-    "dark 320px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+  "catalogBrowserChecks": [
+    "light 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
     "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "ipv4BrowserChecks": [
+    "light 1440px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "light 390px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "light 320px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "dark 1440px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "dark 390px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "dark 320px: four CCNA sections, keyboard focus, initial practice, per-lab addressing/reference, visible IOS configuration, bidirectional 3/3 replies, restored progress, cancel/save protection and completed reference",
+    "light: new lab direct link and clipboard preserve the current host, subfolder and query; Back restores Fundamentals or Routing without replacing the workspace",
+    "dark: new lab direct link and clipboard preserve the current host, subfolder and query; Back restores Fundamentals or Routing without replacing the workspace"
+  ],
+  "permalinkBrowserChecks": [
+    "light 1440px: current host/path/query links, direct entry, clipboard and manual fallback, keyboard focus, card links, Back/Forward, saved workspace restoration, replacement cancellation and invalid-link recovery",
+    "light 390px: current host/path/query links, direct entry, clipboard and manual fallback, keyboard focus, card links, Back/Forward, saved workspace restoration, replacement cancellation and invalid-link recovery",
+    "dark 1440px: current host/path/query links, direct entry, clipboard and manual fallback, keyboard focus, card links, Back/Forward, saved workspace restoration, replacement cancellation and invalid-link recovery",
+    "dark 390px: current host/path/query links, direct entry, clipboard and manual fallback, keyboard focus, card links, Back/Forward, saved workspace restoration, replacement cancellation and invalid-link recovery"
   ],
   "themeAndCLIRegression": [
     "light desktop console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip and shortcuts use Mono Cobalt",
@@ -60,9 +91,5 @@
     "dark mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs"
   ],
   "errors": [],
-  "externalRequests": [],
-  "finalUIValidation": [
-    "Guide buttons honor imported action prerequisites and source power",
-    "TypeScript, production build, catalog browser checks and CLI/theme regression passed after the prerequisite guard"
-  ]
+  "externalRequests": []
 }

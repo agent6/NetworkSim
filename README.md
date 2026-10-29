@@ -10,6 +10,8 @@ The source build targets Safari 17+, Chrome 120+ and Firefox 121+. The current l
 
 ## Start a lab
 
+Open **Lab catalog** for guided practice or a completed reference topology. **CCNA** is organized into **Fundamentals**, **Switching**, **Routing**, and **Services & Security**. Start with **IPv4 interface configuration** under Fundamentals to address and enable two router interfaces, then verify connectivity in both directions. **Router on a stick** is under Routing. Each lab has a share link that uses the current deployment URL; opening the link previews the guide before replacing your workspace.
+
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.
 2. Choose **Connect devices**, then select two devices and their physical ports. Use **Add another** to connect several port pairs in one step.
 3. Double-click a router or switch to open its console. Router interfaces begin administratively down; configure addressing and use `no shutdown`.
@@ -21,7 +23,7 @@ For wireless practice, place a WLC, PoE switch, AP and wireless laptop in the wo
 
 The **PoE switch** provides Layer 2 switching and simulated AP power. Double-click it for the total budget, per-port Auto/Never controls, limits and actual allocations. See the [PoE guide](docs/features/poe-switch.md). Layer 2, Layer 3 and PoE switches use distinct rectangular diagram icons.
 
-The **Datacenter Switch** is the fictional NS-DC24-6Q with a separate **NS-OS** personality: 24 × 10-Gbps and 6 × 40-Gbps `Ethernet1/1`–`Ethernet1/30` data ports, plus isolated `mgmt0`. Data ports start shutdown in access VLAN 1. Its NX-OS-style CLI uses named login roles, explicit feature gates and vPC—not IOS `enable`, DTP or PAgP. Save it with `copy running-config startup-config`. Open its built-in vPC example from **My labs**. See the [Datacenter Switch guide and supported boundaries](docs/features/datacenter.md).
+The **Datacenter Switch** is the fictional NS-DC24-6Q with a separate **NS-OS** personality: 24 × 10-Gbps and 6 × 40-Gbps `Ethernet1/1`–`Ethernet1/30` data ports, plus isolated `mgmt0`. Data ports start shutdown in access VLAN 1. Its NX-OS-style CLI uses named login roles, explicit feature gates and vPC—not IOS `enable`, DTP or PAgP. Save it with `copy running-config startup-config`. Open its built-in vPC example from **Lab catalog → Other**. See the [Datacenter Switch guide and supported boundaries](docs/features/datacenter.md).
 
 The **VoIP phone** has a PoE-powered **Network** uplink and an untagged **PC** passthrough port. It learns the voice VLAN through received CDP or LLDP-MED policy, obtains its own DHCP lease, and bridges PC data without changing its MAC address or IP TTL. Double-click it for live power, VLAN, IP and port status. See the [phone guide](docs/features/voip-phone.md).
 

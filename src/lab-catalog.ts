@@ -4,16 +4,20 @@ import {parseDocument} from './persistence.ts';
 import {IOSSession} from './cli.ts';
 import {iosRejected} from './ios-help.ts';
 import {factoryDeviceConfig,emptyRuntime,type Device,type LabDocument} from './model.ts';
-import {type GuidedLab,type Lesson} from './lessons.ts';
+import {type Criterion,type GuidedLab,type Lesson} from './lessons.ts';
 
 export const LAB_GROUPS=['CCNA','CCNP ENCOR','CCNP ENARSI','Other'] as const;
 export type LabGroup=typeof LAB_GROUPS[number];
+export const CCNA_SECTIONS=['Fundamentals','Switching','Routing','Services & Security'] as const;
+export type CCNASection=typeof CCNA_SECTIONS[number];
 export type CatalogLab=GuidedLab & {catalogId?:string};
 export type CatalogMode='practice'|'completed';
+type CatalogEntry={id:string;title:string;description:string;devices:number;links:number;practice:boolean}&({group:'CCNA';section:CCNASection}|{group:Exclude<LabGroup,'CCNA'>;section?:never});
 export const LAB_CATALOG=[
- {id:'router-on-a-stick',group:'CCNA' as LabGroup,title:'Router on a stick',description:'Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.',devices:4,links:3,practice:true},
- {id:'datacenter-vpc',group:'Other' as LabGroup,title:'Datacenter Switch vPC',description:'Explore the existing NX-OS-style vPC pair and its downstream port-channel.',devices:datacenterExample.lab.devices.length,links:datacenterExample.lab.links.length,practice:false},
-] as const;
+ {id:'ipv4-interface-configuration',group:'CCNA',section:'Fundamentals',title:'IPv4 interface configuration',description:'Address two directly connected router interfaces, enable the link, and verify IPv4 connectivity in both directions.',devices:2,links:1,practice:true},
+ {id:'router-on-a-stick',group:'CCNA',section:'Routing',title:'Router on a stick',description:'Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.',devices:4,links:3,practice:true},
+ {id:'datacenter-vpc',group:'Other',title:'Datacenter Switch vPC',description:'Explore the existing NX-OS-style vPC pair and its downstream port-channel.',devices:datacenterExample.lab.devices.length,links:datacenterExample.lab.links.length,practice:false},
+] as const satisfies readonly CatalogEntry[];
 export const ROAS_ADDRESS_PLAN=[
  ['R1','GigabitEthernet0/0.10','10','192.168.10.1 /24','—'],
  ['R1','GigabitEthernet0/0.20','20','192.168.20.1 /24','—'],
@@ -24,6 +28,42 @@ export const ROAS_COMMANDS:Readonly<Record<string,readonly string[]>>={
  R1:['enable','configure terminal','interface GigabitEthernet0/0','description TRUNK_TO_SW1','no shutdown','interface GigabitEthernet0/0.10','encapsulation dot1Q 10','ip address 192.168.10.1 255.255.255.0','interface GigabitEthernet0/0.20','encapsulation dot1Q 20','ip address 192.168.20.1 255.255.255.0','end','write memory'],
  SW1:['enable','configure terminal','vlan 10','name SALES','vlan 20','name ENGINEERING','interface GigabitEthernet0/1','description TRUNK_TO_R1','switchport mode trunk','switchport trunk allowed vlan 10,20','spanning-tree portfast trunk','no shutdown','interface GigabitEthernet0/2','switchport mode access','switchport access vlan 10','spanning-tree portfast','no shutdown','interface GigabitEthernet0/3','switchport mode access','switchport access vlan 20','spanning-tree portfast','no shutdown','end','write memory'],
 };
+export const IPV4_INTERFACE_COMMANDS:Readonly<Record<string,readonly string[]>>={
+ R1:['enable','configure terminal','interface GigabitEthernet0/0','description TO_R2','ip address 192.0.2.1 255.255.255.0','no shutdown','end','write memory'],
+ R2:['enable','configure terminal','interface GigabitEthernet0/0','description TO_R1','ip address 192.0.2.2 255.255.255.0','no shutdown','end','write memory'],
+};
+export interface CatalogGuideResources {
+ columns:readonly string[];
+ rows:readonly (readonly string[])[];
+ commands:Readonly<Record<string,readonly string[]>>;
+ verification:Readonly<Record<string,readonly string[]>>;
+ note:string;
+}
+const GUIDE_RESOURCES:Readonly<Record<string,CatalogGuideResources>>={
+ 'router-on-a-stick':{columns:['Device','Interface','VLAN','IPv4 address','Default gateway'],rows:ROAS_ADDRESS_PLAN,commands:ROAS_COMMANDS,verification:{SW1:['show vlan brief','show interfaces trunk'],R1:['show ip interface brief','show ip route']},note:'The PCs are already addressed. PortFast trunk is used on the router-facing switch port.'},
+ 'ipv4-interface-configuration':{columns:['Device','Interface','IPv4 address','Subnet mask'],rows:[['R1','GigabitEthernet0/0','192.0.2.1','255.255.255.0'],['R2','GigabitEthernet0/0','192.0.2.2','255.255.255.0']],commands:IPV4_INTERFACE_COMMANDS,verification:{R1:['show ip interface brief','show interfaces GigabitEthernet0/0','show ip route','ping 192.0.2.2'],R2:['show ip interface brief','show interfaces GigabitEthernet0/0','show ip route','ping 192.0.2.1']},note:'Both interfaces share the 192.0.2.0/24 subnet. Directly connected routers do not need a static route or a routing protocol to reach one another.'},
+};
+export function catalogGuideResources(id:string|undefined):CatalogGuideResources|undefined{return id&&Object.hasOwn(GUIDE_RESOURCES,id)?GUIDE_RESOURCES[id]:undefined;}
+function completedDocument(doc:LabDocument,commands:Readonly<Record<string,readonly string[]>>):LabDocument{
+ const sim=new Simulator(doc.seed);sim.load(doc);
+ for(const[name,lines]of Object.entries(commands)){const d=sim.getDevice(name)!,cli=new IOSSession(sim,d.id);for(const command of lines){const output=cli.execute(command);if(output.some(iosRejected))throw Error(`Could not prepare ${name}: ${command}\n${output.join('\n')}`);}}
+ return sim.serialize();
+}
+const ipv4InterfaceCriterion=(device:string,address:string):Criterion=>({kind:'all',criteria:[
+ {kind:'interface',device,interface:'GigabitEthernet0/0',property:'ip',value:address},
+ {kind:'interface',device,interface:'GigabitEthernet0/0',property:'mask',value:'255.255.255.0'},
+ {kind:'interface',device,interface:'GigabitEthernet0/0',property:'adminUp',value:true},
+]});
+export function createIPv4InterfaceLab(mode:CatalogMode='practice'):LabDocument{
+ const routers=[1,2].map(n=>{const config=factoryDeviceConfig('router',`R${n}`);return {id:`device-ipv4-r${n}`,kind:'router' as const,x:n===1?300:700,y:300,powered:true,config,startupConfig:structuredClone(config),runtime:emptyRuntime()};});
+ const lab:CatalogLab={id:'lab-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)),catalogId:'ipv4-interface-configuration',name:'IPv4 interface configuration'+(mode==='completed'?' · Completed':''),devices:routers,links:[{id:'link-ipv4',a:{deviceId:routers[0].id,port:'GigabitEthernet0/0'},b:{deviceId:routers[1].id,port:'GigabitEthernet0/0'},enabled:true,delay:.1,loss:0}],notes:[{id:'note-subnet',x:500,y:440,text:'192.0.2.0/24\nR1: 192.0.2.1 · R2: 192.0.2.2'}],lesson:{title:'IPv4 interface configuration',description:'Configure GigabitEthernet0/0 on R1 and R2 using the addressing plan. Both interfaces begin unconfigured and administratively down.\n\nApply the IPv4 address and subnet mask, enable each interface with no shutdown, and verify that both interfaces are up/up. Test connectivity in both directions, then save each configuration.',objectives:[
+  {id:'r1-interface',title:'Configure and enable R1 GigabitEthernet0/0',description:'192.0.2.1 with subnet mask 255.255.255.0 (/24).',criterion:ipv4InterfaceCriterion(routers[0].id,'192.0.2.1')},
+  {id:'r2-interface',title:'Configure and enable R2 GigabitEthernet0/0',description:'192.0.2.2 with subnet mask 255.255.255.0 (/24).',criterion:ipv4InterfaceCriterion(routers[1].id,'192.0.2.2')},
+  {id:'r1-ping',title:'Verify R1 can ping R2',description:'192.0.2.1 → 192.0.2.2',criterion:{kind:'echo',device:routers[0].id,from:'192.0.2.2'},action:{kind:'ping',device:routers[0].id,target:'192.0.2.2',when:ipv4InterfaceCriterion(routers[0].id,'192.0.2.1')}},
+  {id:'r2-ping',title:'Verify R2 can ping R1',description:'192.0.2.2 → 192.0.2.1',criterion:{kind:'echo',device:routers[1].id,from:'192.0.2.1'},action:{kind:'ping',device:routers[1].id,target:'192.0.2.1',when:ipv4InterfaceCriterion(routers[1].id,'192.0.2.2')}},
+ ]}};
+ const doc:LabDocument={format:'netsim-lab',version:1,seed:20261031,lab};return mode==='practice'?doc:completedDocument(doc,IPV4_INTERFACE_COMMANDS);
+}
 const LEGACY_ROAS_GUIDE_DESCRIPTION='PC1 and PC2 already have static IPv4 addresses and default gateways. Configure R1 and SW1 through their consoles to route between VLANs 10 and 20.\n\nCabling: R1 Gi0/0 ↔ SW1 Gi0/1; PC1 Gi0 ↔ SW1 Gi0/2; PC2 Gi0 ↔ SW1 Gi0/3.\n\nKeep the router physical interface unnumbered. Use 802.1Q tags 10 and 20 on its subinterfaces. The reference uses PortFast trunk on the router-facing switch link. Save the device configurations after verification.\n\nVerification: show vlan brief; show interfaces trunk; show ip interface brief; show ip route. From PC1, ping 192.168.20.10. From PC2, ping 192.168.10.10.';
 export const ROAS_GUIDE_DESCRIPTION="Configure R1 and SW1 to route between VLANs 10 and 20. Both PCs already have static IPv4 addresses and default gateways.\n\nLeave R1's physical interface unnumbered and use 802.1Q subinterfaces for the VLAN gateways. Complete the tasks below, test connectivity in both directions, and save your configurations.";
 /** Refresh the shipped guide copy without replacing saved configuration, progress or custom instructions. */
@@ -54,11 +94,10 @@ export function createRouterOnAStickLab(mode:CatalogMode='practice'):LabDocument
  ],notes:[{id:'note-vlan10',x:300,y:625,text:'VLAN 10 · SALES\nGateway 192.168.10.1'},{id:'note-vlan20',x:700,y:625,text:'VLAN 20 · ENGINEERING\nGateway 192.168.20.1'}],lesson:lesson()};
  const doc:LabDocument={format:'netsim-lab',version:1,seed:20261030,lab};
  if(mode==='practice')return doc;
- const sim=new Simulator(doc.seed);sim.load(doc);
- for(const[name,commands]of Object.entries(ROAS_COMMANDS)){const d=sim.getDevice(name)!,cli=new IOSSession(sim,d.id);for(const command of commands){const output=cli.execute(command);if(output.some(iosRejected))throw Error(`Could not prepare ${name}: ${command}\n${output.join('\n')}`);}}
- return sim.serialize();
+ return completedDocument(doc,ROAS_COMMANDS);
 }
 export function createCatalogLab(id:string,mode:CatalogMode='practice'):LabDocument{
+ if(id==='ipv4-interface-configuration')return createIPv4InterfaceLab(mode);
  if(id==='router-on-a-stick')return createRouterOnAStickLab(mode);
  if(id==='datacenter-vpc'){const doc=parseDocument(JSON.stringify(datacenterExample));(doc.lab as CatalogLab).catalogId='datacenter-vpc';doc.lab.id='lab-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));return doc;}
  throw Error('This lab is not in the catalog.');

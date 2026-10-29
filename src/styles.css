@@ -647,6 +647,12 @@ input:is([name="ip"], [name="mask"], [name="gateway"], [name="dns"], [name="reco
 .catalog-groups button[aria-pressed=true] { color: var(--ui-accent-text); border-color: var(--ui-accent-border); background: var(--ui-accent-soft); }
 .catalog-count { font: 11px var(--font-mono); }
 .catalog-results h3, .catalog-section-heading { font-size: 13px; font-weight: 600; margin: 0 0 14px; }
+.catalog-subsections { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 6px; margin-bottom: 20px; }
+.catalog-subsections[hidden] { display: none; }
+.catalog-subsections button { min-height: 44px; padding: 8px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); font-size: 11px; line-height: 1.5; color: var(--ui-muted); }
+.catalog-subsections button:hover { background: var(--ui-surface); }
+.catalog-subsections button[aria-pressed=true] { color: var(--ui-accent-text); border-color: var(--ui-accent-border); background: var(--ui-accent-soft); }
+.catalog-subsection-heading { margin: 0 0 12px; font-size: 12px; font-weight: 600; }
 .catalog-card { display: flex; gap: 14px; padding: 18px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); }
 .catalog-card + .catalog-card { margin-top: 12px; }
 .catalog-card h4 { margin: 0; font-size: 14px; font-weight: 600; }
@@ -682,6 +688,7 @@ input:is([name="ip"], [name="mask"], [name="gateway"], [name="dns"], [name="reco
  .catalog-layout { grid-template-columns: minmax(0,1fr); gap: 18px; }
  .catalog-groups { flex-direction: row; flex-wrap: wrap; gap: 6px; }
  .catalog-groups button { flex: 1 1 44%; padding: 8px 10px; }
+ .catalog-subsections { grid-template-columns: repeat(2,minmax(0,1fr)); }
  .catalog-card { padding: 14px; }
  .catalog-card-icon { display: none; }
 }

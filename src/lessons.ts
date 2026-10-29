@@ -1,6 +1,6 @@
 import type { Lab, Device } from "./model.ts";
 import type { Simulator } from "./engine.ts";
-import { isIPv4, isIPv6, sameAddress } from "./ip.ts";
+import { isIPv4, isIPv6, maskToPrefix, sameAddress } from "./ip.ts";
 
 export type Criterion =
   | { kind: "all" | "any"; criteria: Criterion[] }
@@ -21,7 +21,7 @@ export type Criterion =
       kind: "interface";
       device: string;
       interface: string;
-      property: "adminUp" | "vlan" | "mode" | "mtu";
+      property: "adminUp" | "vlan" | "mode" | "mtu" | "ip" | "mask";
       value: string | number | boolean;
     };
 export interface Objective {
@@ -83,6 +83,11 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         return Number.isInteger(v.id) && v.id >= 1 && v.id <= 4094;
       case "interface":
         if (!text(v.interface, 128)) return false;
+        if (v.property === "ip") return typeof v.value === "string" && isIPv4(v.value);
+        if (v.property === "mask") {
+          if (typeof v.value !== "string" || !isIPv4(v.value)) return false;
+          try { maskToPrefix(v.value); return true; } catch { return false; }
+        }
         if (v.property === "adminUp") return typeof v.value === "boolean";
         if (v.property === "mode")
           return [
