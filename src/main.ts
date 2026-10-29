@@ -235,7 +235,7 @@ app.innerHTML = `${nodeIconDefinitions()}
           </div>
           <div class="flex items-center gap-1"><div class="canvas-navigation" role="group" aria-label="Canvas navigation">${button("zoom-out", "minus", "Zoom out")}${button("zoom-in", "plus", "Zoom in")}${button("fit", "fit", "Fit topology")}<button data-action="zoom-reset" id="zoom-value" class="zoom-value" aria-label="Reset zoom to 100 percent">100%</button></div><span class="divider"></span><button class="workspace-panel-button" data-action="tab-console">${icon("terminal", 15)} Console</button><span class="divider"></span>${button("inspector", "settings", "Toggle device details")}</div>
         </div>
-        <div class="relative flex min-h-0 flex-1">
+        <div id="diagram-workspace" class="relative flex min-h-0 flex-1">
           <div class="canvas-wrap" id="canvas-wrap"><svg id="topology" role="application" aria-label="Network topology editor" tabindex="0"><defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".8" fill="#d5dfe6"/></pattern></defs><rect id="grid-bg" width="100%" height="100%" fill="url(#grid)"/><g id="world"></g><g id="alignment-guides" pointer-events="none"></g><rect id="marquee" class="marquee" visibility="hidden"/></svg><div id="empty-hint" class="empty-hint"><div><div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-white text-teal shadow-xs">${icon("router", 32)}</div><h1 class="text-xl font-semibold tracking-tight">A clear space to learn networks.</h1><p class="mt-3 text-xs leading-6 text-slate-400">Add devices from the left, connect their ports,<br>then open a console to bring your network to life.</p></div></div><div id="connection-hint" class="connection-hint" hidden></div><section id="link-details" class="link-details" aria-label="Selected connection" hidden></section></div>
           <aside id="inspector" class="inspector" hidden aria-label="Device details"></aside>
         </div>
@@ -623,15 +623,17 @@ function focusTerminal(scroll = false) {
 }
 function setDock(open: boolean) {
   const before = $("#canvas-wrap").clientHeight;
+  const wasMaximized = dockMaximized;
   dockOpen = open;
+  if (!open) dockMaximized = false;
   renderDock();
-  viewport.y += ($("#canvas-wrap").clientHeight - before) / 2;
+  if (!wasMaximized) viewport.y += ($("#canvas-wrap").clientHeight - before) / 2;
   dirty = true;
 }
 function dockLimit() { return Math.max(150, $("main").clientHeight - 292); }
 function revealConsoleDevice() {
   const device = activeDevice ? sim.getDevice(activeDevice) : undefined;
-  if (!device || !dockOpen) return;
+  if (!device || !dockOpen || dockMaximized) return;
   const canvas = $("#canvas-wrap"), x = device.x * viewport.scale + viewport.x, y = device.y * viewport.scale + viewport.y;
   viewport.x += Math.max(55, Math.min(canvas.clientWidth - 55, x)) - x;
   viewport.y += Math.max(70, Math.min(canvas.clientHeight - 65, y)) - y;
@@ -663,9 +665,15 @@ function openConsole(id: string) {
   focusTerminal();
 }
 function renderDock() {
+  const expanded = dockOpen && dockMaximized;
+  app.classList.toggle("console-expanded", expanded);
   $("#dock").hidden = !dockOpen;
-  $("#dock-resize").hidden = !dockOpen;
-  $("#dock").style.height = `${dockMaximized ? dockLimit() : Math.min(dockHeight, dockLimit())}px`;
+  $("#dock-resize").hidden = !dockOpen || expanded;
+  const dock = $("#dock"), visible = window.visualViewport;
+  dock.style.height = `${expanded ? visible?.height ?? innerHeight : Math.min(dockHeight, dockLimit())}px`;
+  dock.style.width = expanded ? `${visible?.width ?? innerWidth}px` : "";
+  dock.style.top = expanded ? `${visible?.offsetTop ?? 0}px` : "";
+  dock.style.left = expanded ? `${visible?.offsetLeft ?? 0}px` : "";
   $("#dock-resize").setAttribute("aria-valuenow", String(dockHeight));
   for (const b of $$('[data-action^="tab-"]')) {
     const on = dockOpen && b.dataset.action === "tab-console";
@@ -673,8 +681,10 @@ function renderDock() {
     b.setAttribute("aria-pressed", String(on));
   }
   const maximize = $('[data-action="maximize-dock"]');
-  maximize.setAttribute("aria-label", dockMaximized ? "Restore console size" : "Expand console");
-  maximize.dataset.tooltip = dockMaximized ? "Restore console size" : "Expand console";
+  maximize.setAttribute("aria-label", expanded ? "Restore console size" : "Expand console to full window");
+  maximize.setAttribute("aria-expanded", String(expanded));
+  maximize.setAttribute("aria-controls", "dock");
+  maximize.dataset.tooltip = expanded ? "Restore console size" : "Expand console to full window";
   const markup = sim.lab.devices.filter(device=>device.kind!=='phone').map(device =>
     `<div class="console-session ${device.id === activeDevice ? "active" : ""}"><button data-session="${esc(device.id)}" role="tab" aria-selected="${device.id === activeDevice}" aria-controls="console-panel" class="session-name"><span class="session-dot ${sim.devicePowered(device.id) ? "on" : ""}"></span>${esc(device.config.hostname)}</button></div>`,
   ).join("");
@@ -1939,7 +1949,7 @@ const actions: Record<string, () => void> = {
     renderTerminal();
   },
   "close-dock": () => { stashTerminal(); setDock(false); $("#topology").focus(); },
-  "maximize-dock": () => { dockMaximized = !dockMaximized; renderDock(); revealConsoleDevice(); dirty = true; },
+  "maximize-dock": () => { stashTerminal(); dockMaximized = !dockMaximized; renderDock(); focusTerminal(); dirty = true; },
   "terminal-bottom": () => focusTerminal(true),
   "edit-selected-link": () => { if (selectedLink) editLink(selectedLink); },
   "previous-link": () => cycleLink(-1),
@@ -2819,7 +2829,10 @@ $("#dock-resize").addEventListener("keydown", (e) => {
     dirty = true;
   }
 });
-window.addEventListener("resize", () => { dockHeight = Math.min(dockHeight, dockLimit()); renderDock(); dirty = true; });
+window.addEventListener("resize", () => { if (!dockMaximized) dockHeight = Math.min(dockHeight, dockLimit()); renderDock(); dirty = true; });
+// Mobile keyboards resize/pan the visual viewport without always resizing the window.
+window.visualViewport?.addEventListener("resize", () => { if (dockOpen && dockMaximized) renderDock(); });
+window.visualViewport?.addEventListener("scroll", () => { if (dockOpen && dockMaximized) renderDock(); });
 window.addEventListener("beforeunload", (e) => {
   // Flush synchronously so even an immediate refresh retains the latest edit.
   // Only block navigation when the browser actually refuses to store changes.

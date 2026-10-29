@@ -329,6 +329,14 @@
 .terminal::selection, .terminal ::selection { background: #FFB900; color: #333333; }
 .terminal-empty { display: flex; height: 100%; min-height: 90px; align-items: center; justify-content: center; gap: 12px; color: inherit; font: 13px var(--font-sans); }
 #dock { position: relative; min-height: 150px; }
+#app.console-expanded .app-header,
+#app.console-expanded .sidebar,
+#app.console-expanded .editor-toolbar,
+#app.console-expanded #diagram-workspace { display: none; }
+#app.console-expanded #dock { position: fixed; z-index: 20; min-height: 0; }
+#app.console-expanded .dock-tabs { padding-top: env(safe-area-inset-top, 0px); height: calc(39px + env(safe-area-inset-top, 0px)); }
+#app.console-expanded .dock-actions { padding-right: max(5px, env(safe-area-inset-right, 0px)); }
+#app.console-expanded .terminal { padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); padding-bottom: max(28px, env(safe-area-inset-bottom, 0px)); }
 #dock-resize { height: 8px; flex-shrink: 0; cursor: row-resize; display: flex; justify-content: center; align-items: center; background: #f8fafb; border-top: 1px solid #dfe6eb; }
 #dock-resize span { width: 36px; height: 2px; border-radius: 2px; background: #c5d1d9; }
 #dock-resize:hover span, #dock-resize:focus-visible span { background: #087f77; }
