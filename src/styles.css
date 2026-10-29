@@ -126,6 +126,7 @@
     cursor: default;
   }
   button:focus-visible,
+  a[href]:focus-visible,
   input:focus-visible,
   select:focus-visible,
   textarea:focus-visible,
@@ -684,3 +685,11 @@ input:is([name="ip"], [name="mask"], [name="gateway"], [name="dns"], [name="reco
  .catalog-card { padding: 14px; }
  .catalog-card-icon { display: none; }
 }
+
+.catalog-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.catalog-share { margin: -6px 0 18px; }
+.catalog-share-feedback { margin-top: 10px; color: var(--ui-muted); font-size: 11px; line-height: 1.6; }
+.catalog-share-feedback:empty { display: none; }
+.catalog-share-feedback label { display: block; color: var(--ui-muted); }
+.catalog-share-feedback input { display: block; width: 100%; min-width: 0; margin: 6px 0; font: 11px var(--font-mono); }
+.catalog-share-feedback span { display: block; }

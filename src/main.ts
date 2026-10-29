@@ -5,7 +5,7 @@ import {showNetworkTools} from './network-tools-ui.ts';
 import{showPoE}from'./poe-ui.ts';
 import{showSimulation}from'./simulation-ui.ts';
 import projectLogo from './assets/networksim-logo.png';
-import {showLabCatalog,showLabGuide} from './lab-catalog-ui.ts';
+import {showLabCatalog,showLabGuide,setupCatalogPermalinks,clearCatalogLocation} from './lab-catalog-ui.ts';
 import type {GuidedLab} from './lessons.ts';
 import{showWireless}from'./wireless-ui.ts';
 import{wirelessConfig}from'./wireless-model.ts';
@@ -877,6 +877,7 @@ function cliComplete(help = false) {
 }
 
 function closeDialog() {
+  clearCatalogLocation();
   if (importReading) {
     importReadVersion++;
     setImportReading(false);
@@ -1435,6 +1436,10 @@ function newLab() {
     detail => { $("#new-lab-error").textContent = detail; });
 }
 
+function openCatalogLab(doc:LabDocument,source:string) {
+  requestLabReplacement(doc,"open",source,"Open catalog lab");
+}
+
 function filesDialog() {
   let labs: ReturnType<typeof listSaved> = [],
     err = "";
@@ -1964,7 +1969,7 @@ const actions: Record<string, () => void> = {
     dialog("Terminal keyboard shortcuts", `<div class="terminal-shortcuts"><p>Click anywhere in the terminal to type. Drag across output to select and copy it.</p><dl><dt>Tab · ?</dt><dd>Complete a command · show context help</dd><dt>↑ / ↓ · Ctrl P / N</dt><dd>Command history</dd><dt>Ctrl A / E</dt><dd>Beginning / end of the line</dd><dt>Ctrl U / K / W</dt><dd>Delete before cursor / after cursor / previous word</dd><dt>Ctrl C · Ctrl Z</dt><dd>Cancel input · return to privileged mode</dd><dt>Space / Enter / q</dt><dd>Next page / next line / stop paged output</dd><dt>Ctrl Shift 6, then X</dt><dd>Suspend a remote session</dd><dt>Shift Tab</dt><dd>Move keyboard focus out of the terminal</dd></dl><p>Each device keeps its draft, history and scroll position. Pasted lines execute at line breaks; a final line without a line break remains editable.</p></div>`, '<button class="btn-primary" data-action="close-dialog">Done</button>');
   },
   files: filesDialog,
-  "lab-catalog": () => showLabCatalog(dialog,(doc,source)=>requestLabReplacement(doc,"open",source,"Open catalog lab")),
+  "lab-catalog": () => showLabCatalog(dialog,openCatalogLab),
   "lab-guide": () => showLabGuide(sim,dialog,()=>playing),
   export: exportLab,
   import: chooseLabFile,
@@ -2900,4 +2905,5 @@ restoreWorkspace();
 setupTooltips();
 renderTopology();
 renderDock();
+setupCatalogPermalinks(dialog,openCatalogLab,closeDialog);
 requestAnimationFrame(frame);

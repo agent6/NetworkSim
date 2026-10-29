@@ -1,0 +1,30 @@
+{
+  "feature": "Catalog lab permalinks and copy-link actions",
+  "artifactSha256": "775d8634830ffd8316d378fb1f657ef95e0d62fe0c1c42726ef8c2ca17741107",
+  "urlFormat": "#/labs/<catalog-id>",
+  "urlPolicy": "Uses the current page URL; retains host, port, deployment path and query; no fixed domain or server routing required",
+  "unitValidation": {
+    "command": "node --test tests/catalog-links.test.ts tests/lab-catalog.test.ts",
+    "tests": 9,
+    "passed": 9,
+    "failed": 0
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "browserChecks": [
+    "light 1440px: current host/path/query links, direct entry, clipboard and manual fallback, keyboard focus, card links, Back/Forward, saved workspace restoration, replacement cancellation and invalid-link recovery",
+    "light 390px: current host/path/query links, direct entry, clipboard and manual fallback, keyboard focus, card links, Back/Forward, saved workspace restoration, replacement cancellation and invalid-link recovery",
+    "dark 1440px: current host/path/query links, direct entry, clipboard and manual fallback, keyboard focus, card links, Back/Forward, saved workspace restoration, replacement cancellation and invalid-link recovery",
+    "dark 390px: current host/path/query links, direct entry, clipboard and manual fallback, keyboard focus, card links, Back/Forward, saved workspace restoration, replacement cancellation and invalid-link recovery"
+  ],
+  "errors": [],
+  "existingCatalogRegression": [
+    "light 1440px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ]
+}
