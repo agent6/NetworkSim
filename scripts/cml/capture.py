@@ -23,7 +23,7 @@ CSI = r"\x1b\[[0-?]*[ -/]*[@-~]"
 NX_SYSLOG = r"20\d\d [A-Z][a-z]{2} +\d{1,2} \d\d:\d\d:\d\d [^\r\n]*%\$ VDC-\d+ %\$"
 PROMPT = r"(?m)(?:^|[\r\n])(?:" + CSI + r"|[ \t\r])*[A-Za-z0-9_.-]+(?:\([^\r\n]*\))?[>#](?:" + CSI + r"|[ \t\r])*(?=$|" + NX_SYSLOG + r")"
 AUTH_PROMPT = r"(?im)(?:^|[\r\n])(?:" + CSI + r"|[ \t\r])*(?:[A-Za-z0-9_.-]+ )?(?:username|login|password):(?:" + CSI + r"|[ \t\r])*$"
-REJECTED = r"(?im)^\s*(?:%?\s*(?:Invalid\b|Incomplete\b|Ambiguous\b|Unsupported\b|Unrecognized command|Duplicate sequence number|Sequence number already exists|Area mismatch|Permission denied|Value must be|Configuration update aborted|Error:|Please define )|%[^\r\n]*(?:not implemented|configuration stored only|operational behavior is not simulated))"
+REJECTED = r"(?im)^\s*(?:%?\s*(?:Invalid\b|Incomplete\b|Ambiguous\b|Unsupported\b|Unrecognized command|Command rejected|Maximum is less than number of currently secured mac-addresses|Total secure mac-addresses on interface has reached maximum limit|Found duplicate mac-address|Duplicate sequence number|Sequence number already exists|Area mismatch|Permission denied|Value must be|Configuration update aborted|Error:|Please define )|%[^\r\n]*(?:not implemented|configuration stored only|operational behavior is not simulated))"
 
 
 def write_json(path, value):
@@ -42,10 +42,15 @@ def expand(text, variables):
 
 def step_result(step, raw, *, timed_out=False):
     checks = []
+    # Assert returned output, never a keyword present only in the command echo.
+    lines = raw.replace("\r", "").split("\n")
+    if lines and lines[0].strip() == step["command"]:
+        lines = lines[1:]
+    observed = "\n".join(lines)
     for pattern in step.get("expect", []):
-        checks.append({"pattern": pattern, "passed": bool(re.search(pattern, raw, re.M))})
+        checks.append({"pattern": pattern, "passed": bool(re.search(pattern, observed, re.M))})
     for pattern in step.get("absent", []):
-        checks.append({"absent": pattern, "passed": not bool(re.search(pattern, raw, re.M))})
+        checks.append({"absent": pattern, "passed": not bool(re.search(pattern, observed, re.M))})
     rejected = bool(re.search(REJECTED, raw))
     return {"id": step["id"], "node": step["node"], "command": step["command"],
             "raw": raw, "checks": checks, "timedOut": timed_out,

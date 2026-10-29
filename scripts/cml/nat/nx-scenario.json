@@ -1,0 +1,400 @@
+{
+  "schemaVersion": 1,
+  "id": "nx-nat",
+  "steps": [
+    {
+      "id": "nx-nat-001",
+      "kind": "config",
+      "node": "NX",
+      "commands": [
+        "configure terminal",
+        "feature nat",
+        "interface Ethernet1/1",
+        "ip nat inside",
+        "interface Ethernet1/2",
+        "ip nat outside",
+        "ip nat inside source static 192.168.20.10 198.51.100.10",
+        "end"
+      ]
+    },
+    {
+      "id": "nx-nat-002",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "icmp",
+      "source": "192.168.20.10",
+      "destination": "198.51.100.100",
+      "token": "nx-static-icmp-False",
+      "sourcePort": 44410,
+      "success": true,
+      "observedSource": "198.51.100.10"
+    },
+    {
+      "id": "nx-nat-003",
+      "kind": "probe",
+      "node": "O2",
+      "protocol": "icmp",
+      "source": "198.51.100.100",
+      "destination": "198.51.100.10",
+      "token": "nx-static-icmp-True",
+      "sourcePort": 44410,
+      "success": true,
+      "observedSource": "198.51.100.100"
+    },
+    {
+      "id": "nx-nat-004",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "udp",
+      "source": "192.168.20.10",
+      "destination": "198.51.100.100",
+      "token": "nx-static-udp-False",
+      "sourcePort": 44410,
+      "success": true,
+      "observedSource": "198.51.100.10"
+    },
+    {
+      "id": "nx-nat-005",
+      "kind": "probe",
+      "node": "O2",
+      "protocol": "udp",
+      "source": "198.51.100.100",
+      "destination": "198.51.100.10",
+      "token": "nx-static-udp-True",
+      "sourcePort": 44410,
+      "success": true,
+      "observedSource": "198.51.100.100"
+    },
+    {
+      "id": "nx-nat-006",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "tcp",
+      "source": "192.168.20.10",
+      "destination": "198.51.100.100",
+      "token": "nx-static-tcp-False",
+      "sourcePort": 44410,
+      "success": true,
+      "observedSource": "198.51.100.10"
+    },
+    {
+      "id": "nx-nat-007",
+      "kind": "probe",
+      "node": "O2",
+      "protocol": "tcp",
+      "source": "198.51.100.100",
+      "destination": "198.51.100.10",
+      "token": "nx-static-tcp-True",
+      "sourcePort": 44410,
+      "success": true,
+      "observedSource": "198.51.100.100"
+    },
+    {
+      "id": "nx-nat-008",
+      "kind": "survey",
+      "node": "NX",
+      "commands": [
+        "show ip nat translations verbose",
+        "show ip nat statistics",
+        "show ip nat-alias",
+        "show running-config nat"
+      ]
+    },
+    {
+      "id": "nx-nat-009",
+      "kind": "config",
+      "node": "NX",
+      "commands": [
+        "clear ip nat translation all",
+        "configure terminal",
+        "no ip nat inside source static 192.168.20.10 198.51.100.10",
+        "ip access-list NAT-INSIDE",
+        "10 permit ip 192.168.20.0/24 any",
+        "exit",
+        "ip nat pool PUBLIC 198.51.100.10 198.51.100.11 prefix-length 24",
+        "ip nat inside source list NAT-INSIDE pool PUBLIC overload",
+        "end"
+      ]
+    },
+    {
+      "id": "nx-nat-010",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "udp",
+      "source": "192.168.20.10",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-pool-overload-udp-10",
+      "success": true,
+      "observedRange": [
+        "198.51.100.10",
+        "198.51.100.11"
+      ]
+    },
+    {
+      "id": "nx-nat-011",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "udp",
+      "source": "192.168.20.11",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-pool-overload-udp-11",
+      "success": true,
+      "observedRange": [
+        "198.51.100.10",
+        "198.51.100.11"
+      ]
+    },
+    {
+      "id": "nx-nat-012",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "udp",
+      "source": "192.168.20.12",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-pool-overload-udp-12",
+      "success": true,
+      "observedRange": [
+        "198.51.100.10",
+        "198.51.100.11"
+      ]
+    },
+    {
+      "id": "nx-nat-013",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "tcp",
+      "source": "192.168.20.10",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-pool-overload-tcp-10",
+      "success": true,
+      "observedRange": [
+        "198.51.100.10",
+        "198.51.100.11"
+      ]
+    },
+    {
+      "id": "nx-nat-014",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "tcp",
+      "source": "192.168.20.11",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-pool-overload-tcp-11",
+      "success": true,
+      "observedRange": [
+        "198.51.100.10",
+        "198.51.100.11"
+      ]
+    },
+    {
+      "id": "nx-nat-015",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "tcp",
+      "source": "192.168.20.12",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-pool-overload-tcp-12",
+      "success": true,
+      "observedRange": [
+        "198.51.100.10",
+        "198.51.100.11"
+      ]
+    },
+    {
+      "id": "nx-nat-016",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "icmp",
+      "source": "192.168.20.10",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-pool-overload-icmp-10",
+      "success": true,
+      "observedRange": [
+        "198.51.100.10",
+        "198.51.100.11"
+      ]
+    },
+    {
+      "id": "nx-nat-017",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "icmp",
+      "source": "192.168.20.11",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-pool-overload-icmp-11",
+      "success": true,
+      "observedRange": [
+        "198.51.100.10",
+        "198.51.100.11"
+      ]
+    },
+    {
+      "id": "nx-nat-018",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "icmp",
+      "source": "192.168.20.12",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-pool-overload-icmp-12",
+      "success": true,
+      "observedRange": [
+        "198.51.100.10",
+        "198.51.100.11"
+      ]
+    },
+    {
+      "id": "nx-nat-019",
+      "kind": "survey",
+      "node": "NX",
+      "commands": [
+        "show ip nat translations verbose",
+        "show ip nat statistics",
+        "show ip nat-alias",
+        "show running-config nat"
+      ]
+    },
+    {
+      "id": "nx-nat-020",
+      "kind": "config",
+      "node": "NX",
+      "commands": [
+        "clear ip nat translation all",
+        "configure terminal",
+        {
+          "command": "no ip nat inside source list NAT-INSIDE pool PUBLIC overload",
+          "answer": "y"
+        },
+        "ip nat inside source list NAT-INSIDE interface Ethernet1/2 overload",
+        "end"
+      ]
+    },
+    {
+      "id": "nx-nat-021",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "udp",
+      "source": "192.168.20.10",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-interface-overload-udp-10",
+      "success": true,
+      "observedSource": "198.51.100.1"
+    },
+    {
+      "id": "nx-nat-022",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "udp",
+      "source": "192.168.20.11",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-interface-overload-udp-11",
+      "success": true,
+      "observedSource": "198.51.100.1"
+    },
+    {
+      "id": "nx-nat-023",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "udp",
+      "source": "192.168.20.12",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-interface-overload-udp-12",
+      "success": true,
+      "observedSource": "198.51.100.1"
+    },
+    {
+      "id": "nx-nat-024",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "tcp",
+      "source": "192.168.20.10",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-interface-overload-tcp-10",
+      "success": true,
+      "observedSource": "198.51.100.1"
+    },
+    {
+      "id": "nx-nat-025",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "tcp",
+      "source": "192.168.20.11",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-interface-overload-tcp-11",
+      "success": true,
+      "observedSource": "198.51.100.1"
+    },
+    {
+      "id": "nx-nat-026",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "tcp",
+      "source": "192.168.20.12",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-interface-overload-tcp-12",
+      "success": true,
+      "observedSource": "198.51.100.1"
+    },
+    {
+      "id": "nx-nat-027",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "icmp",
+      "source": "192.168.20.10",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-interface-overload-icmp-10",
+      "success": true,
+      "observedSource": "198.51.100.1"
+    },
+    {
+      "id": "nx-nat-028",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "icmp",
+      "source": "192.168.20.11",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-interface-overload-icmp-11",
+      "success": true,
+      "observedSource": "198.51.100.1"
+    },
+    {
+      "id": "nx-nat-029",
+      "kind": "probe",
+      "node": "I2",
+      "protocol": "icmp",
+      "source": "192.168.20.12",
+      "destination": "198.51.100.100",
+      "sourcePort": 44500,
+      "token": "nx-interface-overload-icmp-12",
+      "success": true,
+      "observedSource": "198.51.100.1"
+    },
+    {
+      "id": "nx-nat-030",
+      "kind": "survey",
+      "node": "NX",
+      "commands": [
+        "show ip nat translations verbose",
+        "show ip nat statistics",
+        "show ip nat-alias",
+        "show running-config nat"
+      ]
+    }
+  ]
+}

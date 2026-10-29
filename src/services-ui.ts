@@ -26,7 +26,8 @@ const fileRow = (path = "", body = "") =>
 
 
 const aaaRow = (protocol: string, user = "", record: any = {}) =>
-  `<div class="grid grid-cols-[1fr_1fr_65px_30px] items-end gap-2" data-aaa-row>${input("Username", protocol + "-user", user)}<label class="field">Lab password<input type="password" autocomplete="off" name="${protocol}-password" value="${esc(record.password || "")}"></label>${input("Privilege", protocol + "-privilege", record.privilege ?? 1)}<button class="icon-btn" type="button" data-remove-row aria-label="Remove AAA user">${icon("trash", 15)}</button></div>`;
+  `<div class="space-y-2 rounded-lg border border-slate-200/50 p-2 dark:border-slate-700/50" data-aaa-row><div class="grid grid-cols-[1fr_1fr_65px_30px] items-end gap-2">${input("Username", protocol + "-user", user)}<label class="field">Lab password<input type="password" autocomplete="off" name="${protocol}-password" value="${esc(record.password || "")}"></label>${input("IOS privilege", protocol + "-privilege", record.privilege ?? 1)}<button class="icon-btn" type="button" data-remove-row aria-label="Remove AAA user">${icon("trash", 15)}</button></div>${protocol==='http-local'?'':`<div class="grid grid-cols-2 gap-2"><label class="field">NX-OS role<select name="${protocol}-role">${['network-operator','network-admin'].map(role=>`<option value="${role}" ${(record.role??'network-operator')===role?'selected':''}>${role}</option>`).join('')}</select></label><label class="field">IOS EXEC authorization<select name="${protocol}-authorization"><option value="allow" ${record.authorization!==false?'selected':''}>Allow shell</option><option value="deny" ${record.authorization===false?'selected':''}>Deny shell</option></select></label></div>`}</div>`;
+
 const aaaSection = (protocol: string, label: string, svc: any) =>
   `<div class="space-y-3 rounded-xl border border-slate-200 p-3">${toggle(protocol + "-enabled", label + " server enabled", svc?.enabled)}<label class="field">${label} shared secret<input type="password" autocomplete="off" name="${protocol}-secret" value="${esc(svc?.secret || "")}"></label><div id="${protocol}-users" class="space-y-3">${Object.entries(
     svc?.users || {},
@@ -199,7 +200,7 @@ export function showServices(
         throw Error("NTP stratum must be 1–15.");
       const aaa: Record<string, any> = {};
       for (const protocol of ["radius", "tacacs", "http-local"]) {
-        const users: Record<string, { password: string; privilege: number }> =
+        const users: Record<string, { password: string; privilege: number;role?:string;authorization?:boolean }> =
           Object.create(null);
         data.getAll(protocol + "-user").forEach((raw, i) => {
           const user = String(raw).trim(),
@@ -217,7 +218,10 @@ export function showServices(
             );
           if (Object.hasOwn(users,user))
             throw Error("AAA usernames must be unique per service.");
-          users[user] = { password, privilege };
+          const role=String(data.getAll(protocol+'-role')[i]??''),authorization=String(data.getAll(protocol+'-authorization')[i]??'allow');
+          if(role&&!['network-admin','network-operator'].includes(role))throw Error('Select a supported NX-OS role.');
+          if(!['allow','deny'].includes(authorization))throw Error('Select Allow or Deny shell.');
+          users[user] = { password, privilege,...role?{role}:{},...authorization==='deny'?{authorization:false}:{} };
         });
         aaa[protocol] = {
           enabled: data.has(protocol + "-enabled"),

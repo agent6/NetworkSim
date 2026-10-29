@@ -1,3 +1,5 @@
+import {nsosReservedUser} from './nsos-aaa.ts';
+import {aaaServers,aaaExchange,type AAAAuthentication} from './aaa-client.ts';
 import {ownRecordValue,accountCredential} from './record-map.ts';
 import{handleAAARequest}from'./aaa-service.ts';
 import {AAAAccountingClient,type AccountingContext} from './aaa-accounting.ts';
@@ -29,7 +31,7 @@ export interface ManagedCLI {
   pollOutput():string[];
   execute(line: string): string[];
   setPrivilege(level: number): void;
-  setIdentity(username:string|undefined,authenticated:boolean,line:string):void;
+  setIdentity(username:string|undefined,authenticated:boolean,line:string,role?:string):void;
   setAccountingHook?(hook:(command:string,level:number,status:'start'|'stop',taskId:string)=>void):void;
 }
 type Factory = (deviceId: string) => ManagedCLI;
@@ -83,40 +85,53 @@ export class ManagementController {
     engine.subscribe(()=>this.syncAutomation());
     engine.registerHTTPAuthenticator((deviceId,list,user,password)=>this.authenticate(deviceId,list,user,password));
     engine.registerUDPService(1812,d=>!!d.config.services.radius?.enabled,(d,payload,source)=>this.aaaRequest(d,'radius',payload,source));
-    engine.registerTCPService(49,d=>!!d.config.services.tacacs?.enabled,(d,payload,source)=>this.aaaRequest(d,'tacacs',payload,source));
+    engine.registerTCPService(49,d=>!!d.config.services.tacacs?.enabled,(d,payload,source)=>this.aaaRequest(d,'tacacs',payload,source)??{error:'TACACS+ response unavailable'});
     for (const port of [22, 23]) engine.registerTCPService(port, d => this.accepts(d, port), (d, payload, source, destination) => this.handle(d, port, payload, source, destination));
   }
-  private aaaRequest(device:Device,protocol:string,payload:any,source:string):Record<string,any>{
+  private aaaRequest(device:Device,protocol:string,payload:any,source:string):Record<string,any>|undefined{
     return handleAAARequest(this.engine,device,protocol,payload,source);
   }
-  authenticate(deviceId:string,listName:string,username:string,password:string,purpose:'login'|'enable'='login',lineName?:string):{accepted:boolean;unavailable?:boolean;privilege?:number}{
+  authenticate(deviceId:string,listName:string,username:string,password:string,purpose:'login'|'enable'='login',lineName?:string):AAAAuthentication{
     const device=this.engine.getDevice(deviceId);if(!device)return {accepted:false};
     const aaa=device.config.features.aaa||{},methods=(purpose==='enable'?aaa.enable?.[listName]:aaa.login?.[listName])||[purpose==='enable'?'enable':'local'];
     return this.authenticateMethods(device,methods,username,password,lineName);
   }
-  testAuthentication(deviceId:string,group:string,username:string,password:string):{accepted:boolean;unavailable?:boolean;privilege?:number}{
+  testAuthentication(deviceId:string,group:string,username:string,password:string):AAAAuthentication{
     const device=this.engine.getDevice(deviceId);if(!device)return {accepted:false};
     return this.authenticateMethods(device,['group',group],username,password);
   }
-  private authenticateMethods(device:Device,methods:string[],username:string,password:string,lineName?:string):{accepted:boolean;unavailable?:boolean;privilege?:number}{
-    const deviceId=device.id,aaa=device.config.features.aaa||{};
+  private authenticateMethods(device:Device,methods:string[],username:string,password:string,lineName?:string):AAAAuthentication{
+    const deviceId=device.id,aaa=device.config.features.aaa||{},errors:string[]=[];
     for(let i=0;i<methods.length;i++){
       const method=methods[i];if(method==='none')return {accepted:true,privilege:1};
       if(method==='enable'){const expected=device.config.features.enableSecret??device.config.features.enablePassword;return {accepted:typeof expected==='string'&&expected.length>0&&expected===password,privilege:15};}
       if(method==='line'){const expected=lineName?device.config.features.lines?.[lineName]?.password:undefined;return {accepted:typeof expected==='string'&&expected.length>0&&expected===password,privilege:1};}
-      if(method==='local'){const user=ownRecordValue(device.config.features.users,username),expected=accountCredential(user);return {accepted:expected!==undefined&&typeof password==='string'&&expected===password,privilege:user?.privilege??1};}
-      if(method!=='group')continue;const groupName=methods[++i],group=aaa.groups?.[groupName];
-      const names=group?.servers||Object.keys(aaa.servers||{}).filter(name=>aaa.servers[name].protocol===(groupName==='tacacs+'?'tacacs':groupName));
-      for(const name of names){const server=aaa.servers?.[name];if(!server?.address)continue;const payload={username,password,key:server.key||''};for(let attempt=0;attempt<=(server.protocol==='radius'?server.retransmit??0:0);attempt++){const timeout=(server.timeout??10)*1000,result=server.protocol==='radius'?this.engine.udpRequest(deviceId,server.address,server.port||1812,payload,{timeout}):this.engine.tcpRequest(deviceId,server.address,server.port||49,payload,{timeout});this.wait(result,timeout);if(result.status==='success')return {accepted:!!result.accepted,privilege:result.privilege??1};}}
+      if(method==='local'){const user=ownRecordValue(device.config.features.users,username),expected=accountCredential(user);return {accepted:expected!==undefined&&typeof password==='string'&&expected===password,privilege:user?.privilege??1,role:user?.role,errors};}
+      if(method!=='group')continue;
+      for(const server of aaaServers(device,methods[++i])){
+        const result=aaaExchange(this.engine,device,server,{username,password});
+        if(!result){errors.push(server.name!);continue;}
+        if(device.kind==='datacenter'&&nsosReservedUser(username))return {accepted:false};
+        if(device.kind==='datacenter'&&server.protocol==='tacacs'&&result.accepted){
+          const author=aaaExchange(this.engine,device,server,{operation:'authorize',kind:'exec',username});
+          return {accepted:true,privilege:author?.accepted?author.privilege??1:1,role:author?.accepted?author.role??'network-operator':'network-operator'};
+        }
+        return {accepted:!!result.accepted,privilege:result.privilege??1,role:result.role,...server.protocol==='radius'&&result.accepted?{radius:{server:server.name!,authorized:result.execAuthorized!==false,privilege:result.privilege??1}}:{}};
+      }
     }
     return {accepted:false,unavailable:true};
   }
-  authorize(deviceId:string,kind:'exec'|'commands',listName:string,username:string|undefined,authenticated:boolean,requiredPrivilege=15):{accepted:boolean;privilege?:number;unavailable?:boolean;configured?:boolean}{
+  authorize(deviceId:string,kind:'exec'|'commands',listName:string,username:string|undefined,authenticated:boolean,requiredPrivilege=15,radius?:AAAAuthentication['radius'],errors:string[]=[]):{accepted:boolean;privilege?:number;unavailable?:boolean;configured?:boolean}{
     const device=this.engine.getDevice(deviceId);if(!device)return {accepted:false};const aaa=device.config.features.aaa||{},methods=aaa.enabled?aaa.authorization?.[kind==='commands'?'commands'+requiredPrivilege:'exec']?.[listName]:undefined;if(!methods)return {accepted:true,configured:false};
-    for(let i=0;i<methods.length;i++){const method=methods[i];if(method==='none'||method==='if-authenticated'&&authenticated)return {accepted:true,configured:true};if(method==='if-authenticated')return {accepted:false,configured:true};if(method==='local'){const user=ownRecordValue(device.config.features.users,username),expected=accountCredential(user);return {accepted:expected!==undefined&&(kind==='exec'||(user.privilege??1)>=requiredPrivilege),privilege:user?.privilege??1,configured:true};}if(method!=='group')continue;const name=methods[++i],group=aaa.groups?.[name],servers=group?.servers||Object.keys(aaa.servers||{}).filter(key=>aaa.servers[key].protocol===(name==='tacacs+'?'tacacs':name));for(const key of servers){const server=aaa.servers?.[key];if(!server?.address)continue;const payload={operation:'authorize',kind,requiredPrivilege,username,key:server.key||''},result=server.protocol==='radius'?this.engine.udpRequest(deviceId,server.address,server.port||1812,payload):this.engine.tcpRequest(deviceId,server.address,server.port||49,payload);this.wait(result);if(result.status==='success')return {accepted:!!result.accepted,privilege:result.privilege,configured:true};}}
+    for(let i=0;i<methods.length;i++){
+      const method=methods[i];if(method==='none'||method==='if-authenticated'&&authenticated)return {accepted:true,configured:true};if(method==='if-authenticated')return {accepted:false,configured:true};
+      if(method==='local'){const user=ownRecordValue(device.config.features.users,username),expected=accountCredential(user);return {accepted:expected!==undefined&&(kind==='exec'||(user.privilege??1)>=requiredPrivilege),privilege:user?.privilege??1,configured:true};}
+      if(method!=='group')continue;
+      for(const server of aaaServers(device,methods[++i])){if(server.protocol==='radius'){if(errors.includes(server.name!))continue;return {accepted:kind==='exec'&&radius?.server===server.name&&radius?.authorized===true,privilege:radius?.privilege,configured:true};}const result=aaaExchange(this.engine,device,server,{operation:'authorize',kind,requiredPrivilege,username});if(result)return {accepted:!!result.accepted,privilege:result.privilege,configured:true};}
+    }
     return {accepted:false,configured:true,unavailable:true};
   }
-  execPrivilege(deviceId:string,lineName:string,username:string|undefined,authenticated:boolean,loginPrivilege:number):{accepted:boolean;privilege:number}{const d=this.engine.getDevice(deviceId)!,f=d.config.features,line=f.lines?.[lineName]||{};if(!f.aaa?.enabled)return {accepted:true,privilege:loginPrivilege};const base=line.privilege??1;if(lineName.startsWith('console')&&!f.aaa.authorizeConsole)return {accepted:true,privilege:base};const result=this.authorize(deviceId,'exec',line.authorizationExec||'default',username,authenticated);return {accepted:result.accepted,privilege:result.privilege??base};}
+  execPrivilege(deviceId:string,lineName:string,username:string|undefined,authenticated:boolean,loginPrivilege:number,authentication?:AAAAuthentication):{accepted:boolean;privilege:number}{const d=this.engine.getDevice(deviceId)!,f=d.config.features,line=f.lines?.[lineName]||{};if(!f.aaa?.enabled)return {accepted:true,privilege:loginPrivilege};if(d.kind==='datacenter')return {accepted:true,privilege:loginPrivilege};const base=line.privilege??1;if(lineName.startsWith('console')&&!f.aaa.authorizeConsole)return {accepted:true,privilege:base};const result=this.authorize(deviceId,'exec',line.authorizationExec||'default',username,authenticated,15,authentication?.radius,authentication?.errors);return {accepted:result.accepted,privilege:result.privilege??base};}
   private wait(result:ServiceResult,timeout=10000):void{const deadline=this.engine.clock.now()+timeout,step=Math.max(20,Math.ceil(timeout/2000));let count=0;while(result.status==='running'&&this.engine.clock.now()<deadline&&count++<2001)this.engine.clock.advance(Math.min(step,deadline-this.engine.clock.now()));}
   private syncAutomation():void {
     for(const device of this.engine.lab.devices){
@@ -152,7 +167,7 @@ export class ManagementController {
     return line.login === 'local' ? 'local' : line.login === 'password' ? 'password' : 'none';
   }
   private beginAccounting(session:RemoteSession,device:Device,privilege:number):void{
-    session.accounting={sessionId:session.id,username:session.username,line:session.line,source:session.source,started:this.engine.clock.now(),privilege};
+    session.accounting={sessionId:session.id,username:session.username,line:session.line,source:session.source,started:this.engine.clock.now(),privilege,...device.kind==='datacenter'?{platform:'nxos' as const}:{}};
     this.accounting.exec(device,session.accounting,'start');
     session.cli.setAccountingHook?.((command,level,status,taskId)=>{if(session.accounting)this.accounting.command(device,{...session.accounting,privilege:level},command,status,`${session.id}-${taskId}`);});
     this.scheduleExpiry(session);
@@ -185,7 +200,7 @@ export class ManagementController {
     const remote=session.method==='aaa'?this.authenticate(device.id,line.authentication||'default',session.username||'',text,'login',session.line):undefined;
     const valid = remote?remote.accepted:session.method === 'local' ? expected!==undefined && expected === text : typeof line.password==='string' && line.password.length>0 && line.password === text;
     if (valid) {
-      const authorization=this.execPrivilege(device.id,session.line,session.username,true,remote?.privilege??user?.privilege??line.privilege??1);if(!authorization.accepted){this.close(session);return {closed:true,output:['% EXEC authorization failed.']};}session.phase = 'ready';session.cli.setPrivilege(authorization.privilege);session.cli.setIdentity(session.username,true,session.line);this.beginAccounting(session,device,authorization.privilege);
+      const authorization=this.execPrivilege(device.id,session.line,session.username,true,remote?.privilege??user?.privilege??line.privilege??1,remote);if(!authorization.accepted){this.close(session);return {closed:true,output:['% EXEC authorization failed.']};}session.phase = 'ready';session.cli.setPrivilege(authorization.privilege);session.cli.setIdentity(session.username,true,session.line,session.method==='aaa'?remote?.role??'network-operator':user?.role);this.beginAccounting(session,device,authorization.privilege);
       this.engine.log(device.id, `User ${session.username || 'line'} logged in from ${session.source} on ${session.line}`, 6);
       return this.reply(session, device.config.features.banners?.exec ? [device.config.features.banners.exec] : []);
     }
@@ -203,7 +218,7 @@ export class ManagementController {
       if(!authentication.accepted||!d.powered)return {accepted:false};
       if(['pc','laptop','server'].includes(d.kind))return authentication;
       if(!vty||vty[1].exec===false)return {accepted:false};
-      const authorization=this.execPrivilege(d.id,vty[0],username,true,authentication.privilege??1);
+      const authorization=this.execPrivilege(d.id,vty[0],username,true,authentication.privilege??1,authentication);
       return {accepted:authorization.accepted,privilege:authorization.privilege};
     });
     if(!this.vty(d,port))return {closed:true,output:['% Interactive shell is unavailable on this file-only listener.']};

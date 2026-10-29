@@ -1,0 +1,1540 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-24",
+  "scope": "IPv4 inside-source NAT/PAT; IOS full matrix; NX static and pool/interface PAT only",
+  "nativeRuns": [
+    {
+      "captureSha256": "82e85ff1e2806f287270c7c88b6d72e305f408ba3be1353a30f900941da7b8c3",
+      "scenarioSha256": "af0fb344666fdd185a76c9b759ba2527d9f828a84e339e250c1375b90a5297f5",
+      "status": "passed",
+      "iosStatus": "passed",
+      "nxStatus": "passed",
+      "nxStaticStatus": "passed",
+      "labStopped": true,
+      "unrelatedUserLabState": "STARTED",
+      "captures": [
+        {
+          "linkId": "d16a1217-462d-4287-81f2-8deab027032f",
+          "file": "d16a1217-462d-4287-81f2-8deab027032f.pcap",
+          "bytes": 10417,
+          "sha256": "98e0343d6ef6fa8408a062505414279ad0a4440e507b3b4d289afbd4465e96d0"
+        },
+        {
+          "linkId": "0c9e4d3e-be51-4ca7-a85c-569478eaba02",
+          "file": "0c9e4d3e-be51-4ca7-a85c-569478eaba02.pcap",
+          "bytes": 10701,
+          "sha256": "0fe4f2cf1852cbacde996327b33f7ee2eb24d133d93674fafe72f05cf5d717a1"
+        },
+        {
+          "linkId": "3e162bf4-35de-4275-ac29-9185cc7421d6",
+          "file": "3e162bf4-35de-4275-ac29-9185cc7421d6.pcap",
+          "bytes": 3524,
+          "sha256": "ed26cacfd3cb1aba2795423190c2c8d7a2cc344af63899a649b49f62cbf4c82a"
+        },
+        {
+          "linkId": "8135d6b5-71f7-4619-9e8b-c582fd2a3eed",
+          "file": "8135d6b5-71f7-4619-9e8b-c582fd2a3eed.pcap",
+          "bytes": 3665,
+          "sha256": "4bbd53e104e1492bde755fea3e1e87cf87af2dc831ba83cb7466c32ad11b190b"
+        }
+      ]
+    },
+    {
+      "captureSha256": "71404e0e23c676a83cd6cb6b5978f5163096f26a2e14befc8bd7d61146317cf2",
+      "scenarioSha256": "af0fb344666fdd185a76c9b759ba2527d9f828a84e339e250c1375b90a5297f5",
+      "status": "differences",
+      "iosStatus": "passed",
+      "nxStatus": "differences",
+      "nxStaticStatus": "not-validated",
+      "labStopped": true,
+      "unrelatedUserLabState": "STARTED",
+      "captures": [
+        {
+          "linkId": "d16a1217-462d-4287-81f2-8deab027032f",
+          "file": "d16a1217-462d-4287-81f2-8deab027032f.pcap",
+          "bytes": 11113,
+          "sha256": "7014d5636f73691d362b4ca303b890c59fe5937dacc8c6c741e0e0931b2331ff"
+        },
+        {
+          "linkId": "0c9e4d3e-be51-4ca7-a85c-569478eaba02",
+          "file": "0c9e4d3e-be51-4ca7-a85c-569478eaba02.pcap",
+          "bytes": 12194,
+          "sha256": "334e13fe7159d6ca39a44ef7acd4d4acf38e5b56c8432b5d514135bcb28616e5"
+        },
+        {
+          "linkId": "3e162bf4-35de-4275-ac29-9185cc7421d6",
+          "file": "3e162bf4-35de-4275-ac29-9185cc7421d6.pcap",
+          "bytes": 15757,
+          "sha256": "749f26dcb316f9b51b14f92374e5b00af3a63c8d88b15170ab25df4b5f2a7922"
+        },
+        {
+          "linkId": "8135d6b5-71f7-4619-9e8b-c582fd2a3eed",
+          "file": "8135d6b5-71f7-4619-9e8b-c582fd2a3eed.pcap",
+          "bytes": 15311,
+          "sha256": "f69722fe97cc0ad996b34cf34b4b912a2a11c6583f222ffbec9eb9be573d3fce"
+        }
+      ]
+    }
+  ],
+  "platforms": {
+    "IOS": "IOL XE 17.18.02 / iol-xe-17-18-02",
+    "NX": "C9300v NX-OS 10.6(2) / nxosv9300-10-6-2-f"
+  },
+  "iosTableContracts": [
+    {
+      "id": "nat-005",
+      "command": "show ip nat translations",
+      "rows": [
+        "--- 203.0.113.10 192.168.10.10 --- ---"
+      ]
+    },
+    {
+      "id": "nat-005",
+      "command": "show ip nat translations verbose",
+      "rows": [
+        "--- 203.0.113.10 192.168.10.10 --- ---"
+      ]
+    },
+    {
+      "id": "nat-012",
+      "command": "show ip nat translations verbose",
+      "rows": [
+        "--- 203.0.113.10 192.168.10.10 --- ---",
+        "icmp 203.0.113.10:<icmp-id> 192.168.10.10:<icmp-id> 203.0.113.100:<icmp-id> 203.0.113.100:<icmp-id>",
+        "icmp 203.0.113.10:<icmp-id> 192.168.10.10:<icmp-id> 203.0.113.100:<icmp-id> 203.0.113.100:<icmp-id>",
+        "tcp 203.0.113.10:44080 192.168.10.10:44080 203.0.113.100:9001 203.0.113.100:9001",
+        "tcp 203.0.113.10:9001 192.168.10.10:9001 203.0.113.100:45080 203.0.113.100:45080",
+        "udp 203.0.113.10:44080 192.168.10.10:44080 203.0.113.100:9000 203.0.113.100:9000",
+        "udp 203.0.113.10:9000 192.168.10.10:9000 203.0.113.100:45080 203.0.113.100:45080"
+      ]
+    },
+    {
+      "id": "nat-014",
+      "command": "show ip nat translations",
+      "rows": [
+        "--- 203.0.113.10 192.168.10.10 --- ---"
+      ]
+    },
+    {
+      "id": "nat-017",
+      "command": "show ip nat translations",
+      "rows": [
+        "--- 203.0.113.10 192.168.10.10 --- ---",
+        "udp 203.0.113.10:44081 192.168.10.10:44081 203.0.113.100:9000 203.0.113.100:9000"
+      ]
+    },
+    {
+      "id": "nat-019",
+      "command": "show ip nat translations",
+      "rows": []
+    },
+    {
+      "id": "nat-027",
+      "command": "show ip nat translations verbose",
+      "rows": [
+        "--- 203.0.113.10 192.168.10.10 --- ---",
+        "--- 203.0.113.11 192.168.10.11 --- ---",
+        "icmp 203.0.113.10:<icmp-id> 192.168.10.10:<icmp-id> 203.0.113.100:<icmp-id> 203.0.113.100:<icmp-id>",
+        "tcp 203.0.113.10:44082 192.168.10.10:44082 203.0.113.100:9001 203.0.113.100:9001",
+        "udp 203.0.113.10:44082 192.168.10.10:44082 203.0.113.100:9000 203.0.113.100:9000",
+        "udp 203.0.113.10:9000 192.168.10.10:9000 203.0.113.101:45082 203.0.113.101:45082",
+        "udp 203.0.113.11:44082 192.168.10.11:44082 203.0.113.100:9000 203.0.113.100:9000"
+      ]
+    },
+    {
+      "id": "nat-037",
+      "command": "show ip nat translations verbose",
+      "rows": [
+        "icmp 203.0.113.1:<icmp-id> 192.168.10.10:<icmp-id> 203.0.113.100:<icmp-id> 203.0.113.100:<icmp-id>",
+        "icmp 203.0.113.1:<icmp-id> 192.168.10.11:<icmp-id> 203.0.113.100:<icmp-id> 203.0.113.100:<icmp-id>",
+        "tcp 203.0.113.1:<pat-port> 192.168.10.10:44083 203.0.113.100:9001 203.0.113.100:9001",
+        "tcp 203.0.113.1:<pat-port> 192.168.10.11:44083 203.0.113.100:9001 203.0.113.100:9001",
+        "udp 203.0.113.1:<pat-port> 192.168.10.10:44083 203.0.113.100:9000 203.0.113.100:9000",
+        "udp 203.0.113.1:<pat-port> 192.168.10.10:44083 203.0.113.101:9000 203.0.113.101:9000",
+        "udp 203.0.113.1:<pat-port> 192.168.10.11:44083 203.0.113.100:9000 203.0.113.100:9000"
+      ]
+    },
+    {
+      "id": "nat-040",
+      "command": "show ip nat translations verbose",
+      "rows": [
+        "--- 203.0.113.20 192.168.10.10 --- ---",
+        "udp 203.0.113.20:44084 192.168.10.10:44084 203.0.113.100:9000 203.0.113.100:9000"
+      ]
+    },
+    {
+      "id": "nat-042",
+      "command": "show ip nat translations",
+      "rows": []
+    },
+    {
+      "id": "nat-045",
+      "command": "show ip nat translations",
+      "rows": []
+    }
+  ],
+  "nxPositiveProbes": [
+    {
+      "mode": "static",
+      "spec": {
+        "node": "I2",
+        "protocol": "icmp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-static-icmp-False",
+        "sourcePort": 44410,
+        "success": true,
+        "observedSource": "198.51.100.10"
+      },
+      "result": {
+        "protocol": "icmp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-static-icmp-False",
+        "success": true,
+        "raw": "PING 198.51.100.100 (198.51.100.100) from 192.168.20.10 : 56(84) bytes of data.\n64 bytes from 198.51.100.100: icmp_seq=1 ttl=63 time=3.31 ms\n\n--- 198.51.100.100 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 3.308/3.308/3.308/0.000 ms\n"
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "static",
+      "spec": {
+        "node": "O2",
+        "protocol": "icmp",
+        "source": "198.51.100.100",
+        "destination": "198.51.100.10",
+        "token": "nx-static-icmp-True",
+        "sourcePort": 44410,
+        "success": true,
+        "observedSource": "198.51.100.100"
+      },
+      "result": {
+        "protocol": "icmp",
+        "source": "198.51.100.100",
+        "destination": "198.51.100.10",
+        "token": "nx-static-icmp-True",
+        "success": true,
+        "raw": "PING 198.51.100.10 (198.51.100.10) from 198.51.100.100 : 56(84) bytes of data.\n64 bytes from 198.51.100.10: icmp_seq=1 ttl=63 time=1.58 ms\n\n--- 198.51.100.10 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 1.581/1.581/1.581/0.000 ms\n"
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "static",
+      "spec": {
+        "node": "I2",
+        "protocol": "udp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-static-udp-False",
+        "sourcePort": 44410,
+        "success": true,
+        "observedSource": "198.51.100.10"
+      },
+      "result": {
+        "protocol": "udp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-static-udp-False",
+        "success": true,
+        "observed": {
+          "protocol": "udp",
+          "source": "198.51.100.10",
+          "sourcePort": 44410,
+          "destination": "198.51.100.100",
+          "destinationPort": 9000,
+          "token": "nx-static-udp-False"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9000
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "static",
+      "spec": {
+        "node": "O2",
+        "protocol": "udp",
+        "source": "198.51.100.100",
+        "destination": "198.51.100.10",
+        "token": "nx-static-udp-True",
+        "sourcePort": 44410,
+        "success": true,
+        "observedSource": "198.51.100.100"
+      },
+      "result": {
+        "protocol": "udp",
+        "source": "198.51.100.100",
+        "destination": "198.51.100.10",
+        "token": "nx-static-udp-True",
+        "success": true,
+        "observed": {
+          "protocol": "udp",
+          "source": "198.51.100.100",
+          "sourcePort": 44410,
+          "destination": "192.168.20.10",
+          "destinationPort": 9000,
+          "token": "nx-static-udp-True"
+        },
+        "replySource": "198.51.100.10",
+        "replySourcePort": 9000
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "static",
+      "spec": {
+        "node": "I2",
+        "protocol": "tcp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-static-tcp-False",
+        "sourcePort": 44410,
+        "success": true,
+        "observedSource": "198.51.100.10"
+      },
+      "result": {
+        "protocol": "tcp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-static-tcp-False",
+        "success": true,
+        "observed": {
+          "protocol": "tcp",
+          "source": "198.51.100.10",
+          "sourcePort": 44410,
+          "destination": "198.51.100.100",
+          "destinationPort": 9001,
+          "token": "nx-static-tcp-False"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9001
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "static",
+      "spec": {
+        "node": "O2",
+        "protocol": "tcp",
+        "source": "198.51.100.100",
+        "destination": "198.51.100.10",
+        "token": "nx-static-tcp-True",
+        "sourcePort": 44410,
+        "success": true,
+        "observedSource": "198.51.100.100"
+      },
+      "result": {
+        "protocol": "tcp",
+        "source": "198.51.100.100",
+        "destination": "198.51.100.10",
+        "token": "nx-static-tcp-True",
+        "success": true,
+        "observed": {
+          "protocol": "tcp",
+          "source": "198.51.100.100",
+          "sourcePort": 44410,
+          "destination": "192.168.20.10",
+          "destinationPort": 9001,
+          "token": "nx-static-tcp-True"
+        },
+        "replySource": "198.51.100.10",
+        "replySourcePort": 9001
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "pool-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "udp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-pool-overload-udp-10",
+        "success": true,
+        "observedSource": "198.51.100.10"
+      },
+      "result": {
+        "protocol": "udp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-pool-overload-udp-10",
+        "success": true,
+        "observed": {
+          "protocol": "udp",
+          "source": "198.51.100.11",
+          "sourcePort": 60536,
+          "destination": "198.51.100.100",
+          "destinationPort": 9000,
+          "token": "nx-pool-overload-udp-10"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9000
+      },
+      "nativeAssertionPassed": false,
+      "reviewedTrafficPassed": true,
+      "reviewNote": "Original assertion fixed the first pool address; native allocation of the other configured pool address is valid. Preserve the original failure and observed wire tuple."
+    },
+    {
+      "mode": "pool-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "udp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-pool-overload-udp-11",
+        "success": true,
+        "observedSource": "198.51.100.10"
+      },
+      "result": {
+        "protocol": "udp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "token": "nx-pool-overload-udp-11",
+        "success": true,
+        "observed": {
+          "protocol": "udp",
+          "source": "198.51.100.11",
+          "sourcePort": 60537,
+          "destination": "198.51.100.100",
+          "destinationPort": 9000,
+          "token": "nx-pool-overload-udp-11"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9000
+      },
+      "nativeAssertionPassed": false,
+      "reviewedTrafficPassed": true,
+      "reviewNote": "Original assertion fixed the first pool address; native allocation of the other configured pool address is valid. Preserve the original failure and observed wire tuple."
+    },
+    {
+      "mode": "pool-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "udp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-pool-overload-udp-12",
+        "success": true,
+        "observedSource": "198.51.100.10"
+      },
+      "result": {
+        "protocol": "udp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "token": "nx-pool-overload-udp-12",
+        "success": true,
+        "observed": {
+          "protocol": "udp",
+          "source": "198.51.100.11",
+          "sourcePort": 60538,
+          "destination": "198.51.100.100",
+          "destinationPort": 9000,
+          "token": "nx-pool-overload-udp-12"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9000
+      },
+      "nativeAssertionPassed": false,
+      "reviewedTrafficPassed": true,
+      "reviewNote": "Original assertion fixed the first pool address; native allocation of the other configured pool address is valid. Preserve the original failure and observed wire tuple."
+    },
+    {
+      "mode": "pool-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "tcp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-pool-overload-tcp-10",
+        "success": true,
+        "observedSource": "198.51.100.10"
+      },
+      "result": {
+        "protocol": "tcp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-pool-overload-tcp-10",
+        "success": true,
+        "observed": {
+          "protocol": "tcp",
+          "source": "198.51.100.11",
+          "sourcePort": 60539,
+          "destination": "198.51.100.100",
+          "destinationPort": 9001,
+          "token": "nx-pool-overload-tcp-10"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9001
+      },
+      "nativeAssertionPassed": false,
+      "reviewedTrafficPassed": true,
+      "reviewNote": "Original assertion fixed the first pool address; native allocation of the other configured pool address is valid. Preserve the original failure and observed wire tuple."
+    },
+    {
+      "mode": "pool-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "tcp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-pool-overload-tcp-11",
+        "success": true,
+        "observedSource": "198.51.100.10"
+      },
+      "result": {
+        "protocol": "tcp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "token": "nx-pool-overload-tcp-11",
+        "success": true,
+        "observed": {
+          "protocol": "tcp",
+          "source": "198.51.100.11",
+          "sourcePort": 60540,
+          "destination": "198.51.100.100",
+          "destinationPort": 9001,
+          "token": "nx-pool-overload-tcp-11"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9001
+      },
+      "nativeAssertionPassed": false,
+      "reviewedTrafficPassed": true,
+      "reviewNote": "Original assertion fixed the first pool address; native allocation of the other configured pool address is valid. Preserve the original failure and observed wire tuple."
+    },
+    {
+      "mode": "pool-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "tcp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-pool-overload-tcp-12",
+        "success": true,
+        "observedSource": "198.51.100.10"
+      },
+      "result": {
+        "protocol": "tcp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "token": "nx-pool-overload-tcp-12",
+        "success": true,
+        "observed": {
+          "protocol": "tcp",
+          "source": "198.51.100.11",
+          "sourcePort": 60541,
+          "destination": "198.51.100.100",
+          "destinationPort": 9001,
+          "token": "nx-pool-overload-tcp-12"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9001
+      },
+      "nativeAssertionPassed": false,
+      "reviewedTrafficPassed": true,
+      "reviewNote": "Original assertion fixed the first pool address; native allocation of the other configured pool address is valid. Preserve the original failure and observed wire tuple."
+    },
+    {
+      "mode": "pool-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "icmp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-pool-overload-icmp-10",
+        "success": true
+      },
+      "result": {
+        "protocol": "icmp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-pool-overload-icmp-10",
+        "success": true,
+        "raw": "PING 198.51.100.100 (198.51.100.100) from 192.168.20.10 : 56(84) bytes of data.\n64 bytes from 198.51.100.100: icmp_seq=1 ttl=63 time=1.71 ms\n\n--- 198.51.100.100 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 1.705/1.705/1.705/0.000 ms\n"
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true,
+      "reviewNote": "Original assertion fixed the first pool address; native allocation of the other configured pool address is valid. Preserve the original failure and observed wire tuple."
+    },
+    {
+      "mode": "pool-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "icmp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-pool-overload-icmp-11",
+        "success": true
+      },
+      "result": {
+        "protocol": "icmp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "token": "nx-pool-overload-icmp-11",
+        "success": true,
+        "raw": "PING 198.51.100.100 (198.51.100.100) from 192.168.20.11 : 56(84) bytes of data.\n64 bytes from 198.51.100.100: icmp_seq=1 ttl=63 time=1.87 ms\n\n--- 198.51.100.100 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 1.873/1.873/1.873/0.000 ms\n"
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true,
+      "reviewNote": "Original assertion fixed the first pool address; native allocation of the other configured pool address is valid. Preserve the original failure and observed wire tuple."
+    },
+    {
+      "mode": "pool-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "icmp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-pool-overload-icmp-12",
+        "success": true
+      },
+      "result": {
+        "protocol": "icmp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "token": "nx-pool-overload-icmp-12",
+        "success": true,
+        "raw": "PING 198.51.100.100 (198.51.100.100) from 192.168.20.12 : 56(84) bytes of data.\n64 bytes from 198.51.100.100: icmp_seq=1 ttl=63 time=1.80 ms\n\n--- 198.51.100.100 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 1.802/1.802/1.802/0.000 ms\n"
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true,
+      "reviewNote": "Original assertion fixed the first pool address; native allocation of the other configured pool address is valid. Preserve the original failure and observed wire tuple."
+    },
+    {
+      "mode": "interface-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "udp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-interface-overload-udp-10",
+        "success": true,
+        "observedSource": "198.51.100.1"
+      },
+      "result": {
+        "protocol": "udp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-interface-overload-udp-10",
+        "success": true,
+        "observed": {
+          "protocol": "udp",
+          "source": "198.51.100.1",
+          "sourcePort": 60545,
+          "destination": "198.51.100.100",
+          "destinationPort": 9000,
+          "token": "nx-interface-overload-udp-10"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9000
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "interface-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "udp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-interface-overload-udp-11",
+        "success": true,
+        "observedSource": "198.51.100.1"
+      },
+      "result": {
+        "protocol": "udp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "token": "nx-interface-overload-udp-11",
+        "success": true,
+        "observed": {
+          "protocol": "udp",
+          "source": "198.51.100.1",
+          "sourcePort": 60546,
+          "destination": "198.51.100.100",
+          "destinationPort": 9000,
+          "token": "nx-interface-overload-udp-11"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9000
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "interface-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "udp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-interface-overload-udp-12",
+        "success": true,
+        "observedSource": "198.51.100.1"
+      },
+      "result": {
+        "protocol": "udp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "token": "nx-interface-overload-udp-12",
+        "success": true,
+        "observed": {
+          "protocol": "udp",
+          "source": "198.51.100.1",
+          "sourcePort": 60547,
+          "destination": "198.51.100.100",
+          "destinationPort": 9000,
+          "token": "nx-interface-overload-udp-12"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9000
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "interface-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "tcp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-interface-overload-tcp-10",
+        "success": true,
+        "observedSource": "198.51.100.1"
+      },
+      "result": {
+        "protocol": "tcp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-interface-overload-tcp-10",
+        "success": true,
+        "observed": {
+          "protocol": "tcp",
+          "source": "198.51.100.1",
+          "sourcePort": 60548,
+          "destination": "198.51.100.100",
+          "destinationPort": 9001,
+          "token": "nx-interface-overload-tcp-10"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9001
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "interface-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "tcp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-interface-overload-tcp-11",
+        "success": true,
+        "observedSource": "198.51.100.1"
+      },
+      "result": {
+        "protocol": "tcp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "token": "nx-interface-overload-tcp-11",
+        "success": true,
+        "observed": {
+          "protocol": "tcp",
+          "source": "198.51.100.1",
+          "sourcePort": 60549,
+          "destination": "198.51.100.100",
+          "destinationPort": 9001,
+          "token": "nx-interface-overload-tcp-11"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9001
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "interface-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "tcp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-interface-overload-tcp-12",
+        "success": true,
+        "observedSource": "198.51.100.1"
+      },
+      "result": {
+        "protocol": "tcp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "token": "nx-interface-overload-tcp-12",
+        "success": true,
+        "observed": {
+          "protocol": "tcp",
+          "source": "198.51.100.1",
+          "sourcePort": 60550,
+          "destination": "198.51.100.100",
+          "destinationPort": 9001,
+          "token": "nx-interface-overload-tcp-12"
+        },
+        "replySource": "198.51.100.100",
+        "replySourcePort": 9001
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "interface-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "icmp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-interface-overload-icmp-10",
+        "success": true
+      },
+      "result": {
+        "protocol": "icmp",
+        "source": "192.168.20.10",
+        "destination": "198.51.100.100",
+        "token": "nx-interface-overload-icmp-10",
+        "success": true,
+        "raw": "PING 198.51.100.100 (198.51.100.100) from 192.168.20.10 : 56(84) bytes of data.\n64 bytes from 198.51.100.100: icmp_seq=1 ttl=63 time=1.79 ms\n\n--- 198.51.100.100 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 1.788/1.788/1.788/0.000 ms\n"
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "interface-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "icmp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-interface-overload-icmp-11",
+        "success": true
+      },
+      "result": {
+        "protocol": "icmp",
+        "source": "192.168.20.11",
+        "destination": "198.51.100.100",
+        "token": "nx-interface-overload-icmp-11",
+        "success": true,
+        "raw": "PING 198.51.100.100 (198.51.100.100) from 192.168.20.11 : 56(84) bytes of data.\n64 bytes from 198.51.100.100: icmp_seq=1 ttl=63 time=1.75 ms\n\n--- 198.51.100.100 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 1.745/1.745/1.745/0.000 ms\n"
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    },
+    {
+      "mode": "interface-overload",
+      "spec": {
+        "node": "I2",
+        "protocol": "icmp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "sourcePort": 44500,
+        "token": "nx-interface-overload-icmp-12",
+        "success": true
+      },
+      "result": {
+        "protocol": "icmp",
+        "source": "192.168.20.12",
+        "destination": "198.51.100.100",
+        "token": "nx-interface-overload-icmp-12",
+        "success": true,
+        "raw": "PING 198.51.100.100 (198.51.100.100) from 192.168.20.12 : 56(84) bytes of data.\n64 bytes from 198.51.100.100: icmp_seq=1 ttl=63 time=1.67 ms\n\n--- 198.51.100.100 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 1.665/1.665/1.665/0.000 ms\n"
+      },
+      "nativeAssertionPassed": true,
+      "reviewedTrafficPassed": true
+    }
+  ],
+  "nxBasicDynamicExcluded": {
+    "status": "not-validated",
+    "reason": "Address bindings and UDP forwarding are insufficient: TCP and ICMP failed. Do not expose a basic non-overloaded pool on the NX node.",
+    "probes": [
+      {
+        "spec": {
+          "node": "I2",
+          "protocol": "udp",
+          "source": "192.168.20.10",
+          "destination": "198.51.100.100",
+          "sourcePort": 44500,
+          "token": "nx-dynamic-udp-10",
+          "success": true,
+          "observedSource": "198.51.100.10"
+        },
+        "result": {
+          "protocol": "udp",
+          "source": "192.168.20.10",
+          "destination": "198.51.100.100",
+          "token": "nx-dynamic-udp-10",
+          "success": true,
+          "observed": {
+            "protocol": "udp",
+            "source": "198.51.100.10",
+            "sourcePort": 44500,
+            "destination": "198.51.100.100",
+            "destinationPort": 9000,
+            "token": "nx-dynamic-udp-10"
+          },
+          "replySource": "198.51.100.100",
+          "replySourcePort": 9000
+        },
+        "passed": true
+      },
+      {
+        "spec": {
+          "node": "I2",
+          "protocol": "udp",
+          "source": "192.168.20.11",
+          "destination": "198.51.100.100",
+          "sourcePort": 44500,
+          "token": "nx-dynamic-udp-11",
+          "success": true,
+          "observedSource": "198.51.100.11"
+        },
+        "result": {
+          "protocol": "udp",
+          "source": "192.168.20.11",
+          "destination": "198.51.100.100",
+          "token": "nx-dynamic-udp-11",
+          "success": true,
+          "observed": {
+            "protocol": "udp",
+            "source": "198.51.100.11",
+            "sourcePort": 44500,
+            "destination": "198.51.100.100",
+            "destinationPort": 9000,
+            "token": "nx-dynamic-udp-11"
+          },
+          "replySource": "198.51.100.100",
+          "replySourcePort": 9000
+        },
+        "passed": true
+      },
+      {
+        "spec": {
+          "node": "I2",
+          "protocol": "udp",
+          "source": "192.168.20.12",
+          "destination": "198.51.100.100",
+          "sourcePort": 44500,
+          "token": "nx-dynamic-udp-12",
+          "success": false
+        },
+        "result": {
+          "protocol": "udp",
+          "source": "192.168.20.12",
+          "destination": "198.51.100.100",
+          "token": "nx-dynamic-udp-12",
+          "success": false,
+          "error": "timed out"
+        },
+        "passed": true
+      },
+      {
+        "spec": {
+          "node": "I2",
+          "protocol": "tcp",
+          "source": "192.168.20.10",
+          "destination": "198.51.100.100",
+          "sourcePort": 44500,
+          "token": "nx-dynamic-tcp-10",
+          "success": true,
+          "observedSource": "198.51.100.10"
+        },
+        "result": {
+          "protocol": "tcp",
+          "source": "192.168.20.10",
+          "destination": "198.51.100.100",
+          "token": "nx-dynamic-tcp-10",
+          "success": false,
+          "error": "timed out"
+        },
+        "passed": false
+      },
+      {
+        "spec": {
+          "node": "I2",
+          "protocol": "tcp",
+          "source": "192.168.20.11",
+          "destination": "198.51.100.100",
+          "sourcePort": 44500,
+          "token": "nx-dynamic-tcp-11",
+          "success": true,
+          "observedSource": "198.51.100.11"
+        },
+        "result": {
+          "protocol": "tcp",
+          "source": "192.168.20.11",
+          "destination": "198.51.100.100",
+          "token": "nx-dynamic-tcp-11",
+          "success": false,
+          "error": "timed out"
+        },
+        "passed": false
+      },
+      {
+        "spec": {
+          "node": "I2",
+          "protocol": "tcp",
+          "source": "192.168.20.12",
+          "destination": "198.51.100.100",
+          "sourcePort": 44500,
+          "token": "nx-dynamic-tcp-12",
+          "success": false
+        },
+        "result": {
+          "protocol": "tcp",
+          "source": "192.168.20.12",
+          "destination": "198.51.100.100",
+          "token": "nx-dynamic-tcp-12",
+          "success": false,
+          "error": "timed out"
+        },
+        "passed": true
+      },
+      {
+        "spec": {
+          "node": "I2",
+          "protocol": "icmp",
+          "source": "192.168.20.10",
+          "destination": "198.51.100.100",
+          "sourcePort": 44500,
+          "token": "nx-dynamic-icmp-10",
+          "success": true
+        },
+        "result": {
+          "protocol": "icmp",
+          "source": "192.168.20.10",
+          "destination": "198.51.100.100",
+          "token": "nx-dynamic-icmp-10",
+          "success": false,
+          "raw": "PING 198.51.100.100 (198.51.100.100) from 192.168.20.10 : 56(84) bytes of data.\n\n--- 198.51.100.100 ping statistics ---\n1 packets transmitted, 0 received, 100% packet loss, time 0ms\n\n"
+        },
+        "passed": false
+      },
+      {
+        "spec": {
+          "node": "I2",
+          "protocol": "icmp",
+          "source": "192.168.20.11",
+          "destination": "198.51.100.100",
+          "sourcePort": 44500,
+          "token": "nx-dynamic-icmp-11",
+          "success": true
+        },
+        "result": {
+          "protocol": "icmp",
+          "source": "192.168.20.11",
+          "destination": "198.51.100.100",
+          "token": "nx-dynamic-icmp-11",
+          "success": false,
+          "raw": "PING 198.51.100.100 (198.51.100.100) from 192.168.20.11 : 56(84) bytes of data.\n\n--- 198.51.100.100 ping statistics ---\n1 packets transmitted, 0 received, 100% packet loss, time 0ms\n\n"
+        },
+        "passed": false
+      },
+      {
+        "spec": {
+          "node": "I2",
+          "protocol": "icmp",
+          "source": "192.168.20.12",
+          "destination": "198.51.100.100",
+          "sourcePort": 44500,
+          "token": "nx-dynamic-icmp-12",
+          "success": false
+        },
+        "result": {
+          "protocol": "icmp",
+          "source": "192.168.20.12",
+          "destination": "198.51.100.100",
+          "token": "nx-dynamic-icmp-12",
+          "success": false,
+          "raw": "PING 198.51.100.100 (198.51.100.100) from 192.168.20.12 : 56(84) bytes of data.\n\n--- 198.51.100.100 ping statistics ---\n1 packets transmitted, 0 received, 100% packet loss, time 0ms\n\n"
+        },
+        "passed": true
+      }
+    ]
+  },
+  "nxBaselineCaveat": "The first native run had a passing routed baseline. The extended warm run probed its baseline before removing retained NAT policy and failed it; that result remains in the source capture. All six subsequent static traffic probes passed. The reusable runner now explicitly resets owned NAT state before baseline probes.",
+  "nxNativeSurveys": [
+    {
+      "command": "show ip nat translations",
+      "raw": "show ip nat translations\r\r\nPro Inside global      Inside local       Outside local      Outside global\r\nany 198.51.100.10      192.168.20.10      ---                ---\r\n\rNX# ",
+      "timedOut": false,
+      "confirmation": false,
+      "passed": true
+    },
+    {
+      "command": "show ip nat translations verbose",
+      "raw": "show ip nat translations verbose\r\r\nPro Inside global      Inside local       Outside local      Outside global\r\nany 198.51.100.10      192.168.20.10      ---                ---\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:-1\r\n\rNX# ",
+      "timedOut": false,
+      "confirmation": false,
+      "passed": true
+    },
+    {
+      "command": "show ip nat statistics",
+      "raw": "show ip nat statistics\r\r\n\r\nIP NAT Statistics\r\n====================================================\r\nStats Collected since: Sat Oct 24 16:57:42 2026\r\n----------------------------------------------------\r\nTotal active translations: 1\r\nNo.Static: 1\r\nNo.Dyn:    0\r\nNo.Dyn-ICMP:   0 \r\n----------------------------------------------------\r\nTotal expired Translations: 0\r\nSYN timer expired:          0 \r\nFIN-RST timer expired:      0 \r\nInactive timer expired:     0 \r\n----------------------------------------------------\r\nTotal Hits:  30                  Total Misses:  0\r\nIn-Out Hits: 15                  In-Out Misses: 0 \r\nOut-In Hits: 15                  Out-In Misses: 0 \r\n----------------------------------------------------\r\nTotal SW Translated Packets: 30 \r\nIn-Out SW Translated: 15\r\nOut-In SW Translated: 15 \r\n----------------------------------------------------\r\nTotal SW Dropped Packets: 0 \r\nIn-Out SW Dropped: 0\r\nOut-In SW Dropped: 0 \r\n\r\nAddress alloc. failure drop:      0 \r\nPort alloc.  failure drop:        0 \r\nDyn. Translation max limit drop:  0\r\nICMP max limit drop:              0\r\nAllhost max limit drop:           0\r\n----------------------------------------------------\r\nTotal TCP session established: 0\r\nTotal TCP session closed:      0\r\n----------------------------------------------------\r\nNAT Inside Interfaces:  1 \r\nEthernet1/1 \r\n\r\nNAT Outside Interfaces: 1 \r\nEthernet1/2 \r\n----------------------------------------------------\r\n====================================================\r\n\rNX# ",
+      "timedOut": false,
+      "confirmation": false,
+      "passed": true
+    },
+    {
+      "command": "show ip nat-alias",
+      "raw": "show ip nat-alias\r\r\nAlias Information for Context: default\r\nAddress         Interface\r\n198.51.100.10    Ethernet1/2\r\n\rNX# ",
+      "timedOut": false,
+      "confirmation": false,
+      "passed": true
+    },
+    {
+      "command": "show running-config nat",
+      "raw": "show running-config nat\r\r\n\r\n!Command: show running-config nat\r\n!Running configuration last done at: Sat Oct 24 17:00:06 2026\r\n!Time: Sat Oct 24 17:00:07 2026\r\n\r\nversion 10.6(2) Bios:version  \r\nfeature nat\r\n\r\nip nat inside source static 192.168.20.10 198.51.100.10 \r\n\r\n\r\ninterface Ethernet1/1\r\n  ip nat inside \r\n\r\ninterface Ethernet1/2\r\n  ip nat outside \r\n\r\n\rNX# ",
+      "timedOut": false,
+      "confirmation": false,
+      "passed": true
+    }
+  ],
+  "nxPATSurveys": {
+    "pool-overload": [
+      {
+        "command": "show ip nat translations verbose",
+        "raw": "show ip nat translations verbose\r\r\nPro Inside global      Inside local       Outside local      Outside global\r\nicmp 198.51.100.11:60542 192.168.20.10:35 198.51.100.100:0   198.51.100.100:0\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\ntcp 198.51.100.11:60539 192.168.20.10:44500 198.51.100.100:9001 198.51.100.100:9001\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\nudp 198.51.100.11:60536 192.168.20.10:44500 198.51.100.100:9000 198.51.100.100:9000\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\nicmp 198.51.100.11:60543 192.168.20.11:36 198.51.100.100:0   198.51.100.100:0\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\ntcp 198.51.100.11:60540 192.168.20.11:44500 198.51.100.100:9001 198.51.100.100:9001\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\nudp 198.51.100.11:60537 192.168.20.11:44500 198.51.100.100:9000 198.51.100.100:9000\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\nicmp 198.51.100.11:60544 192.168.20.12:37 198.51.100.100:0   198.51.100.100:0\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\ntcp 198.51.100.11:60541 192.168.20.12:44500 198.51.100.100:9001 198.51.100.100:9001\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\nudp 198.51.100.11:60538 192.168.20.12:44500 198.51.100.100:9000 198.51.100.100:9000\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\n\rNX# ",
+        "timedOut": false,
+        "confirmation": false,
+        "passed": true
+      },
+      {
+        "command": "show ip nat statistics",
+        "raw": "show ip nat statistics\r\r\n\r\nIP NAT Statistics\r\n====================================================\r\nStats Collected since: Sat Oct 24 16:57:42 2026\r\n----------------------------------------------------\r\nTotal active translations: 9\r\nNo.Static: 0\r\nNo.Dyn:    9\r\nNo.Dyn-ICMP:   3 \r\n----------------------------------------------------\r\nTotal expired Translations: 0\r\nSYN timer expired:          0 \r\nFIN-RST timer expired:      0 \r\nInactive timer expired:     0 \r\n----------------------------------------------------\r\nTotal Hits:  76                  Total Misses:  16\r\nIn-Out Hits: 38                  In-Out Misses: 16 \r\nOut-In Hits: 38                  Out-In Misses: 0 \r\n----------------------------------------------------\r\nTotal SW Translated Packets: 79 \r\nIn-Out SW Translated: 41\r\nOut-In SW Translated: 38 \r\n----------------------------------------------------\r\nTotal SW Dropped Packets: 13 \r\nIn-Out SW Dropped: 13\r\nOut-In SW Dropped: 0 \r\n\r\nAddress alloc. failure drop:      5 \r\nPort alloc.  failure drop:        0 \r\nDyn. Translation max limit drop:  0\r\nICMP max limit drop:              0\r\nAllhost max limit drop:           0\r\n----------------------------------------------------\r\nTotal TCP session established: 0\r\nTotal TCP session closed:      0\r\n----------------------------------------------------\r\nNAT Inside Interfaces:  1 \r\nEthernet1/1 \r\n\r\nNAT Outside Interfaces: 1 \r\nEthernet1/2 \r\n----------------------------------------------------\r\nInside source list:\r\n++++++++++++++++++++\r\n\r\nAccess list: NAT-INSIDE\r\nRefCount: 9\r\nPool: PUBLIC     Overload\r\nTotal addresses: 2\r\nAllocated: 1    percentage: 50%\r\nMissed: 5\r\n\r\n\r\nOutside source list:\r\n++++++++++++++++++++\r\n----------------------------------------------------\r\n====================================================\r\n\rNX# ",
+        "timedOut": false,
+        "confirmation": false,
+        "passed": true
+      },
+      {
+        "command": "show ip nat-alias",
+        "raw": "show ip nat-alias\r\r\nAlias Information for Context: default\r\nAddress         Interface\r\n198.51.100.11    Ethernet1/2\r\n\rNX# ",
+        "timedOut": false,
+        "confirmation": false,
+        "passed": true
+      },
+      {
+        "command": "show running-config nat",
+        "raw": "show running-config nat\r\r\n\r\n!Command: show running-config nat\r\n!Running configuration last done at: Sat Oct 24 17:00:36 2026\r\n!Time: Sat Oct 24 17:00:40 2026\r\n\r\nversion 10.6(2) Bios:version  \r\nfeature nat\r\n\r\nip nat pool PUBLIC 198.51.100.10 198.51.100.11 prefix-length 24\r\nip nat inside source list NAT-INSIDE pool PUBLIC overload \r\n\r\n\r\ninterface Ethernet1/1\r\n  ip nat inside \r\n\r\ninterface Ethernet1/2\r\n  ip nat outside \r\n\r\n\rNX# ",
+        "timedOut": false,
+        "confirmation": false,
+        "passed": true
+      }
+    ],
+    "interface-overload": [
+      {
+        "command": "show ip nat translations verbose",
+        "raw": "show ip nat translations verbose\r\r\nPro Inside global      Inside local       Outside local      Outside global\r\nicmp 198.51.100.1:60551 192.168.20.10:38  198.51.100.100:0   198.51.100.100:0\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\ntcp 198.51.100.1:60548 192.168.20.10:44500 198.51.100.100:9001 198.51.100.100:9001\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\nudp 198.51.100.1:60545 192.168.20.10:44500 198.51.100.100:9000 198.51.100.100:9000\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\nicmp 198.51.100.1:60552 192.168.20.11:39  198.51.100.100:0   198.51.100.100:0\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\ntcp 198.51.100.1:60549 192.168.20.11:44500 198.51.100.100:9001 198.51.100.100:9001\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\nudp 198.51.100.1:60546 192.168.20.11:44500 198.51.100.100:9000 198.51.100.100:9000\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\nicmp 198.51.100.1:60553 192.168.20.12:40  198.51.100.100:0   198.51.100.100:0\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\ntcp 198.51.100.1:60550 192.168.20.12:44500 198.51.100.100:9001 198.51.100.100:9001\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\nudp 198.51.100.1:60547 192.168.20.12:44500 198.51.100.100:9000 198.51.100.100:9000\r\n    Vrf: default    in_stats_count:0    out_stats_count:0 Group_id:0\r\n    Format(H:M:S) Time-left :0:0:0\r\n\rNX# ",
+        "timedOut": false,
+        "confirmation": false,
+        "passed": true
+      },
+      {
+        "command": "show ip nat statistics",
+        "raw": "show ip nat statistics\r\r\n\r\nIP NAT Statistics\r\n====================================================\r\nStats Collected since: Sat Oct 24 16:57:42 2026\r\n----------------------------------------------------\r\nTotal active translations: 9\r\nNo.Static: 0\r\nNo.Dyn:    9\r\nNo.Dyn-ICMP:   3 \r\n----------------------------------------------------\r\nTotal expired Translations: 0\r\nSYN timer expired:          0 \r\nFIN-RST timer expired:      0 \r\nInactive timer expired:     0 \r\n----------------------------------------------------\r\nTotal Hits:  112                  Total Misses:  25\r\nIn-Out Hits: 53                  In-Out Misses: 25 \r\nOut-In Hits: 59                  Out-In Misses: 0 \r\n----------------------------------------------------\r\nTotal SW Translated Packets: 124 \r\nIn-Out SW Translated: 65\r\nOut-In SW Translated: 59 \r\n----------------------------------------------------\r\nTotal SW Dropped Packets: 13 \r\nIn-Out SW Dropped: 13\r\nOut-In SW Dropped: 0 \r\n\r\nAddress alloc. failure drop:      5 \r\nPort alloc.  failure drop:        0 \r\nDyn. Translation max limit drop:  0\r\nICMP max limit drop:              0\r\nAllhost max limit drop:           0\r\n----------------------------------------------------\r\nTotal TCP session established: 0\r\nTotal TCP session closed:      0\r\n----------------------------------------------------\r\nNAT Inside Interfaces:  1 \r\nEthernet1/1 \r\n\r\nNAT Outside Interfaces: 1 \r\nEthernet1/2 \r\n----------------------------------------------------\r\nInside source list:\r\n++++++++++++++++++++\r\n\r\nAccess list: NAT-INSIDE\r\nRefCount: 9\r\nInterface Overload: Ethernet1/2(UP) 198.51.100.1 \r\n\r\n\r\nOutside source list:\r\n++++++++++++++++++++\r\n----------------------------------------------------\r\n====================================================\r\n\rNX# ",
+        "timedOut": false,
+        "confirmation": false,
+        "passed": true
+      },
+      {
+        "command": "show ip nat-alias",
+        "raw": "show ip nat-alias\r\r\n\rNX# ",
+        "timedOut": false,
+        "confirmation": false,
+        "passed": true
+      },
+      {
+        "command": "show running-config nat",
+        "raw": "show running-config nat\r\r\n\r\n!Command: show running-config nat\r\n!Running configuration last done at: Sat Oct 24 17:00:42 2026\r\n!Time: Sat Oct 24 17:00:46 2026\r\n\r\nversion 10.6(2) Bios:version  \r\nfeature nat\r\n\r\nip nat pool PUBLIC 198.51.100.10 198.51.100.11 prefix-length 24\r\nip nat inside source list NAT-INSIDE interface Ethernet1/2 overload \r\n\r\n\r\ninterface Ethernet1/1\r\n  ip nat inside \r\n\r\ninterface Ethernet1/2\r\n  ip nat outside \r\n\r\n\rNX# ",
+        "timedOut": false,
+        "confirmation": false,
+        "passed": true
+      }
+    ]
+  },
+  "wireEvidence": {
+    "transport": [
+      {
+        "token": "ios-baseline",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-static-out-udp",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-static-in-udp",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-static-out-tcp",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-static-in-tcp",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-static-confirm",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-dynamic-udp",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-dynamic-tcp",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-dynamic-second",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-dynamic-fresh-in",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-pat-first-udp",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-pat-second-udp",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-pat-first-tcp",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-pat-second-tcp",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-pat-other-peer",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-timer",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "ios-missing-acl",
+        "platform": "IOS",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-static-udp-False",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-static-udp-True",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-static-tcp-False",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-static-tcp-True",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-dynamic-udp-10",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-dynamic-udp-11",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-pool-overload-udp-10",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-pool-overload-udp-11",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-pool-overload-udp-12",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-pool-overload-tcp-10",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-pool-overload-tcp-11",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-pool-overload-tcp-12",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-interface-overload-udp-10",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-interface-overload-udp-11",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-interface-overload-udp-12",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-interface-overload-tcp-10",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-interface-overload-tcp-11",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      },
+      {
+        "token": "nx-interface-overload-tcp-12",
+        "platform": "NX",
+        "requestBefore": true,
+        "requestAfter": true,
+        "replyBefore": true,
+        "replyAfter": true,
+        "passed": true
+      }
+    ],
+    "icmp": [
+      {
+        "platform": "IOS",
+        "wireOrder": "inside-outside",
+        "completeEchoes": 5,
+        "expectedSuccessfulEchoes": 5,
+        "passed": true
+      },
+      {
+        "platform": "IOS",
+        "wireOrder": "outside-inside",
+        "completeEchoes": 5,
+        "expectedSuccessfulEchoes": 5,
+        "passed": true
+      },
+      {
+        "platform": "NX",
+        "wireOrder": "inside-outside",
+        "completeEchoes": 8,
+        "expectedSuccessfulEchoes": 8,
+        "passed": true
+      },
+      {
+        "platform": "NX",
+        "wireOrder": "outside-inside",
+        "completeEchoes": 8,
+        "expectedSuccessfulEchoes": 8,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "normalization": [
+    "IOS ICMP identifiers and interface PAT global ports vary by allocator. Address/protocol/inside ports and non-PAT endpoint ports remain exact.",
+    "A pool PAT allocation may select any configured pool address. The virtual Nexus displays zero dynamic time-left; NetworkSim reports its real remaining idle deadline.",
+    "Nexus hardware per-entry counters/TCAM timing are not fabricated. Software packet counters derive from actual simulator events."
+  ]
+}

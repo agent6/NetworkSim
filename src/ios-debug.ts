@@ -45,5 +45,7 @@ export function captureDebugEvent(device:Device,event:SimEvent):void{
  };
  if(!debug.flags.some(matches))return;
  const rows=device.runtime.features.debugEntries??=[];
- rows.push({id:event.id,time:event.time,message:`${event.protocol.toUpperCase()}: ${event.label}${event.port?' on '+event.port:''}${event.packet?.source?' s='+event.packet.source:''}${event.packet?.destination?', d='+event.packet.destination:''}${event.detail?' — '+event.detail:''}`,severity:7});if(rows.length>500)rows.splice(0,rows.length-500);
+ const addresses=/^(\S+) → (\S+)$/.exec(event.detail??''),nat=debug.flags.some((f:string)=>f==='all'||f.startsWith('ip nat'))&&addresses&&/^(Source|Destination) NAT$/.test(event.label);
+ const native=nat?event.label==='Source NAT'?`NAT: s=${addresses[1]}->${addresses[2]}, d=${event.packet?.destination??''}`:`NAT: s=${event.packet?.source??''}, d=${addresses[1]}->${addresses[2]}`:undefined;
+ rows.push({id:event.id,time:event.time,message:native??`${event.protocol.toUpperCase()}: ${event.label}${event.port?' on '+event.port:''}${event.packet?.source?' s='+event.packet.source:''}${event.packet?.destination?', d='+event.packet.destination:''}${event.detail?' — '+event.detail:''}`,severity:7});if(rows.length>500)rows.splice(0,rows.length-500);
 }

@@ -1,3 +1,4 @@
+import {secureEntries} from './port-security.ts';
 import type { Simulator } from './engine.ts';
 import type { Device, InterfaceConfig, StpPortState, StpVlanState } from './model.ts';
 import { stpPortName, stpMembers } from './stp-ports.ts';
@@ -261,6 +262,7 @@ function interfacesL2(e:Simulator,d:Device,a:string[]):string[]|undefined {
   if(view==='status'){
     let errOnly=false;if(b.length){word(b.shift(),['err-disabled']);errOnly=true;}exact(b);
     const list=(port?[port]:allPorts(d)).filter(p=>physical(p.name));
+    if(errOnly&&!list.some(p=>p.features.errDisabled))return [];
     if(errOnly)return ['','Port      Name               Status       Reason               Err-disabled Vlans',...list.filter(p=>p.features.errDisabled).map(p=>`${short(p.name).padEnd(9)} ${(p.description??'').slice(0,18).padEnd(18)} ${'err-disabled'.padEnd(12)} ${String(d.runtime.features.errdisableCauses?.[p.name]??'unknown')}`)];
     return ['','Port      Name               Status       Vlan       Duplex  Speed Type ',...list.map(p=>{const [duplex,speed]=speedDuplex(e,d,p),vlan=!p.switchport?'routed':trunking(d,p)?'trunk':String(p.vlan??1);return `${short(p.name).padEnd(9)} ${(p.description??'').slice(0,18).padEnd(18)} ${linkStatus(e,d,p).padEnd(12)} ${vlan.padEnd(10)} ${duplex.padStart(6)} ${speed.padStart(6)} ${mediaType(p.name)}`;})];
   }
@@ -409,18 +411,13 @@ function storm(e:Simulator,d:Device,a:string[]):string[] {
 }
 const clean=(m:string)=>m.replace(/[^0-9a-f]/gi,'').toLowerCase();
 const ACTION:Record<string,string>={shutdown:'Shutdown',restrict:'Restrict',protect:'Protect'};
-function secureEntries(d:Device,p:InterfaceConfig):{mac:string;type:string}[] {
-  const c=p.features.portSecurity??{},configured:string[]=(c.macs??[]).map(clean),dynamic:string[]=(d.runtime.features.secureMacs?.[p.name]??[]).map(clean),seen=new Set<string>(),out:{mac:string;type:string}[]=[];
-  for(const m of configured)if(!seen.has(m)){seen.add(m);out.push({mac:m,type:c.sticky?'SecureSticky':'SecureConfigured'});}
-  for(const m of dynamic)if(!seen.has(m)){seen.add(m);out.push({mac:m,type:'SecureDynamic'});}
-  return out;
-}
 function portSecurity(e:Simulator,d:Device,a:string[]):string[] {
+  if(!['switch','l3switch','poeswitch'].includes(d.kind))bad();
   let port:InterfaceConfig|undefined,address=false;
   while(a.length){const key=word(a.shift(),port?['address']:['address','interface']);if(key==='interface'){if(address)bad();port=takePort(d,a);}else{if(address)bad();address=true;}}
   if(port&&!port.switchport)return [];
   const secured=allPorts(d).filter(p=>p.switchport&&p.features.portSecurity&&p.features.portSecurity.enabled!==false),extra=secured.reduce((n,p)=>n+Math.max(0,secureEntries(d,p).length-1),0),totals=[`Total Addresses in System (excluding one mac per port)     : ${extra}`,'Max Addresses limit in System (excluding one mac per port) : 4096'];
-  if(address){const now=e.clock.now(),rows=(port?secured.filter(p=>p===port):secured).flatMap(p=>{const c=p.features.portSecurity;return secureEntries(d,p).map(x=>{const times=d.runtime.features.secureMacTimes?.[p.name+'|'+x.mac],aging=Number(c.agingTime)>0&&times&&(x.type==='SecureDynamic'||c.agingStatic),left=aging?String(Math.max(0,Math.ceil(((c.agingType==='inactivity'?times.last:times.first)+Number(c.agingTime)*60000-now)/60000))):'-';return String(p.vlan??1).padStart(4)+'    '+dotted(x.mac).padEnd(18)+x.type.padEnd(30)+short(p.name).padEnd(13)+left;});});
+  if(address){const now=e.clock.now(),rows=(port?secured.filter(p=>p===port):secured).flatMap(p=>{const c=p.features.portSecurity;return secureEntries(d,p).map(x=>{const times=d.runtime.features.secureMacTimes?.[p.name+'|'+x.mac],aging=Number(c.agingTime)>0&&times&&(x.type==='SecureDynamic'||x.type==='SecureConfigured'&&c.agingStatic),left=aging?String(Math.max(0,Math.ceil(((c.agingType==='inactivity'?times.last:times.first)+Number(c.agingTime)*60000-now)/60000))):'-';return String(x.vlan).padStart(4)+'    '+dotted(x.mac).padEnd(18)+x.type.padEnd(30)+short(p.name).padEnd(13)+left;});});
     return ['               Secure Mac Address Table','-'.repeat(77),'Vlan    Mac Address       Type                          Ports   Remaining Age','                                                                   (mins)    ','----    -----------       ----                          -----   -------------',...rows,'-'.repeat(77),...totals];}
   if(port){const c=port.features.portSecurity??{},enabled=!!port.features.portSecurity&&c.enabled!==false,entries=secureEntries(d,port),last=d.runtime.features.portSecurityLastSource?.[port.name],label=(t:string)=>t.padEnd(27)+': ';
     return [label('Port Security')+(enabled?'Enabled':'Disabled'),label('Port Status')+(port.features.errDisabled&&d.runtime.features.errdisableCauses?.[port.name]==='psecure-violation'?'Secure-shutdown':enabled&&e.interfaceUp(d.id,port.name)?'Secure-up':'Secure-down'),label('Violation Mode')+(ACTION[c.violation??'shutdown']??'Shutdown'),label('Aging Time')+`${c.agingTime??0} mins`,label('Aging Type')+(c.agingType==='inactivity'?'Inactivity':'Absolute'),label('SecureStatic Address Aging')+(c.agingStatic?'Enabled':'Disabled'),label('Maximum MAC Addresses')+(c.maximum??1),label('Total MAC Addresses')+entries.length,label('Configured MAC Addresses')+entries.filter(x=>x.type==='SecureConfigured').length,label('Sticky MAC Addresses')+entries.filter(x=>x.type==='SecureSticky').length,label('Last Source Address:Vlan')+(last?`${dotted(last.mac)}:${last.vlan}`:'0000.0000.0000:0'),label('Security Violation Count')+(d.runtime.features.portSecurityPortViolations?.[port.name]??0)];}

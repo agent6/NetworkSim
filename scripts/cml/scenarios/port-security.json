@@ -1,0 +1,940 @@
+{
+  "schemaVersion": 1,
+  "id": "port-security",
+  "description": "IOS and NX-OS standalone access-port security with three distinct source MACs. Requires authorized forwarding before interpreting blocked third-host traffic. The Nexus path uses a transit target on a second port, and all links exist before boot. Includes native image-specific diagnostics and bounded convergence waits.",
+  "nodes": [
+    {
+      "id": "IOS",
+      "kind": "switch",
+      "hostname": "IOS",
+      "cml": {
+        "definition": "iosvl2",
+        "image": "iosvl2-2020",
+        "port": "GigabitEthernet0/1"
+      },
+      "simPort": "GigabitEthernet0/1",
+      "startup": [
+        "hostname IOS",
+        "hostname IOS",
+        "no cdp run",
+        "vlan 10",
+        "exit",
+        "interface GigabitEthernet0/1",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree portfast",
+        "switchport nonegotiate",
+        "no shutdown",
+        "interface Vlan10",
+        "ip address 10.42.0.1 255.255.255.0",
+        "no shutdown",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname IOS",
+        "no cdp run",
+        "vlan 10",
+        "exit",
+        "interface GigabitEthernet0/1",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree portfast",
+        "switchport nonegotiate",
+        "no shutdown",
+        "interface Vlan10",
+        "ip address 10.42.0.1 255.255.255.0",
+        "no shutdown",
+        "end"
+      ]
+    },
+    {
+      "id": "NX",
+      "kind": "datacenter",
+      "hostname": "NX",
+      "cml": {
+        "definition": "nxosv9000",
+        "image": "nxosv9300-10-6-2-f",
+        "port": "Ethernet1/1"
+      },
+      "simPort": "Ethernet1/1",
+      "startup": [
+        "hostname NX",
+        "no password strength-check",
+        "username admin password NetSimLab42! role network-admin",
+        "vlan 10",
+        "exit",
+        "interface Ethernet1/1",
+        "switchport",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree port type edge",
+        "shutdown",
+        "interface Ethernet1/2",
+        "switchport",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree port type edge",
+        "no shutdown",
+        "end"
+      ],
+      "simulatorSetup": [
+        "configure terminal",
+        "hostname NX",
+        "vlan 10",
+        "exit",
+        "interface Ethernet1/1",
+        "switchport",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree port type edge",
+        "shutdown",
+        "interface Ethernet1/2",
+        "switchport",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "spanning-tree port type edge",
+        "no shutdown",
+        "end"
+      ]
+    },
+    {
+      "id": "FAN",
+      "kind": "switch",
+      "hostname": "FAN",
+      "cml": {
+        "definition": "ioll2-xe",
+        "image": "ioll2-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/1",
+      "startup": [
+        "hostname FAN",
+        "no cdp run",
+        "no lldp run",
+        "vlan 10",
+        "exit",
+        "interface range Ethernet0/0 - 3",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "switchport nonegotiate",
+        "spanning-tree portfast",
+        "spanning-tree bpdufilter enable",
+        "no shutdown",
+        "exit",
+        "interface range Ethernet1/0 - 1",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "switchport nonegotiate",
+        "spanning-tree portfast",
+        "spanning-tree bpdufilter enable",
+        "no shutdown",
+        "exit",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname FAN",
+        "no cdp run",
+        "no lldp run",
+        "vlan 10",
+        "exit",
+        "interface range GigabitEthernet0/1 - 6",
+        "switchport mode access",
+        "switchport access vlan 10",
+        "switchport nonegotiate",
+        "spanning-tree portfast",
+        "spanning-tree bpdufilter enable",
+        "no shutdown",
+        "end"
+      ],
+      "portMap": {
+        "Ethernet0/0": "GigabitEthernet0/1",
+        "Ethernet0/1": "GigabitEthernet0/2",
+        "Ethernet0/2": "GigabitEthernet0/3",
+        "Ethernet0/3": "GigabitEthernet0/4",
+        "Ethernet1/0": "GigabitEthernet0/5",
+        "Ethernet1/1": "GigabitEthernet0/6"
+      }
+    },
+    {
+      "id": "H1",
+      "kind": "router",
+      "hostname": "H1",
+      "cml": {
+        "definition": "iol-xe",
+        "image": "iol-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname H1",
+        "no cdp run",
+        "interface Ethernet0/0",
+        "mac-address 0200.0000.0001",
+        "ip address 10.42.0.11 255.255.255.0",
+        "no shutdown",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname H1",
+        "no cdp run",
+        "interface GigabitEthernet0/0",
+        "mac-address 0200.0000.0001",
+        "ip address 10.42.0.11 255.255.255.0",
+        "no shutdown",
+        "end"
+      ]
+    },
+    {
+      "id": "H2",
+      "kind": "router",
+      "hostname": "H2",
+      "cml": {
+        "definition": "iol-xe",
+        "image": "iol-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname H2",
+        "no cdp run",
+        "interface Ethernet0/0",
+        "mac-address 0200.0000.0002",
+        "ip address 10.42.0.12 255.255.255.0",
+        "no shutdown",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname H2",
+        "no cdp run",
+        "interface GigabitEthernet0/0",
+        "mac-address 0200.0000.0002",
+        "ip address 10.42.0.12 255.255.255.0",
+        "no shutdown",
+        "end"
+      ]
+    },
+    {
+      "id": "H3",
+      "kind": "router",
+      "hostname": "H3",
+      "cml": {
+        "definition": "iol-xe",
+        "image": "iol-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname H3",
+        "no cdp run",
+        "interface Ethernet0/0",
+        "mac-address 0200.0000.0003",
+        "ip address 10.42.0.13 255.255.255.0",
+        "no shutdown",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname H3",
+        "no cdp run",
+        "interface GigabitEthernet0/0",
+        "mac-address 0200.0000.0003",
+        "ip address 10.42.0.13 255.255.255.0",
+        "no shutdown",
+        "end"
+      ]
+    },
+    {
+      "id": "TARGET",
+      "kind": "router",
+      "hostname": "TARGET",
+      "cml": {
+        "definition": "iol-xe",
+        "image": "iol-xe-17-18-02",
+        "port": "Ethernet0/0"
+      },
+      "simPort": "GigabitEthernet0/0",
+      "startup": [
+        "hostname TARGET",
+        "no cdp run",
+        "interface Ethernet0/0",
+        "mac-address 0200.0000.0004",
+        "ip address 10.42.0.99 255.255.255.0",
+        "no shutdown",
+        "end"
+      ],
+      "simulatorSetup": [
+        "enable",
+        "configure terminal",
+        "hostname TARGET",
+        "no cdp run",
+        "interface GigabitEthernet0/0",
+        "mac-address 0200.0000.0004",
+        "ip address 10.42.0.99 255.255.255.0",
+        "no shutdown",
+        "end"
+      ]
+    }
+  ],
+  "links": [
+    [
+      {
+        "node": "IOS",
+        "port": "GigabitEthernet0/1"
+      },
+      {
+        "node": "FAN",
+        "port": "Ethernet0/0"
+      }
+    ],
+    [
+      {
+        "node": "NX",
+        "port": "Ethernet1/1"
+      },
+      {
+        "node": "FAN",
+        "port": "Ethernet0/1"
+      }
+    ],
+    [
+      {
+        "node": "H1",
+        "port": "Ethernet0/0"
+      },
+      {
+        "node": "FAN",
+        "port": "Ethernet0/2"
+      }
+    ],
+    [
+      {
+        "node": "H2",
+        "port": "Ethernet0/0"
+      },
+      {
+        "node": "FAN",
+        "port": "Ethernet0/3"
+      }
+    ],
+    [
+      {
+        "node": "H3",
+        "port": "Ethernet0/0"
+      },
+      {
+        "node": "FAN",
+        "port": "Ethernet1/0"
+      }
+    ],
+    [
+      {
+        "node": "NX",
+        "port": "Ethernet1/2"
+      },
+      {
+        "node": "TARGET",
+        "port": "Ethernet0/0"
+      }
+    ]
+  ],
+  "steps": [
+    {
+      "id": "s001",
+      "node": "NX",
+      "command": "configure terminal"
+    },
+    {
+      "id": "s002",
+      "node": "NX",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "s003",
+      "node": "NX",
+      "command": "shutdown"
+    },
+    {
+      "id": "s004",
+      "node": "NX",
+      "command": "end"
+    },
+    {
+      "id": "s005",
+      "node": "IOS",
+      "command": "configure terminal"
+    },
+    {
+      "id": "s006",
+      "node": "IOS",
+      "command": "interface Vlan10"
+    },
+    {
+      "id": "s007",
+      "node": "IOS",
+      "command": "shutdown"
+    },
+    {
+      "id": "s008",
+      "node": "IOS",
+      "command": "no shutdown"
+    },
+    {
+      "id": "s009",
+      "node": "IOS",
+      "command": "end"
+    },
+    {
+      "id": "s010",
+      "node": "H1",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "waitSeconds": 10
+    },
+    {
+      "id": "s011",
+      "node": "IOS",
+      "command": "configure terminal"
+    },
+    {
+      "id": "s012",
+      "node": "IOS",
+      "command": "interface GigabitEthernet0/1"
+    },
+    {
+      "id": "s013",
+      "node": "IOS",
+      "command": "switchport mode access"
+    },
+    {
+      "id": "s014",
+      "node": "IOS",
+      "command": "switchport port-security"
+    },
+    {
+      "id": "s015",
+      "node": "IOS",
+      "command": "switchport port-security maximum 2"
+    },
+    {
+      "id": "s016",
+      "node": "IOS",
+      "command": "switchport port-security mac-address sticky"
+    },
+    {
+      "id": "s017",
+      "node": "IOS",
+      "command": "switchport port-security violation restrict"
+    },
+    {
+      "id": "s018",
+      "node": "IOS",
+      "command": "end"
+    },
+    {
+      "id": "s019",
+      "node": "H1",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ]
+    },
+    {
+      "id": "s020",
+      "node": "H2",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ]
+    },
+    {
+      "id": "s021",
+      "node": "IOS",
+      "command": "show port-security interface GigabitEthernet0/1",
+      "expect": [
+        "Total MAC Addresses\\s+: 2",
+        "Sticky MAC Addresses\\s+: 2"
+      ]
+    },
+    {
+      "id": "s022",
+      "node": "H3",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is 0 percent"
+      ]
+    },
+    {
+      "id": "s023",
+      "node": "IOS",
+      "command": "show port-security interface GigabitEthernet0/1",
+      "expect": [
+        "Port Status\\s+: Secure-up",
+        "Security Violation Count\\s+: [1-9]"
+      ]
+    },
+    {
+      "id": "s024",
+      "node": "IOS",
+      "command": "show logging",
+      "expect": [
+        "PORT_SECURITY-2-PSECURE_VIOLATION"
+      ]
+    },
+    {
+      "id": "s025",
+      "node": "IOS",
+      "command": "configure terminal"
+    },
+    {
+      "id": "s026",
+      "node": "IOS",
+      "command": "interface GigabitEthernet0/1"
+    },
+    {
+      "id": "s027",
+      "node": "IOS",
+      "command": "switchport port-security violation protect"
+    },
+    {
+      "id": "s028",
+      "node": "IOS",
+      "command": "end"
+    },
+    {
+      "id": "s029",
+      "node": "H3",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is 0 percent"
+      ]
+    },
+    {
+      "id": "s030",
+      "node": "H1",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ]
+    },
+    {
+      "id": "s031",
+      "node": "IOS",
+      "command": "configure terminal"
+    },
+    {
+      "id": "s032",
+      "node": "IOS",
+      "command": "interface GigabitEthernet0/1"
+    },
+    {
+      "id": "s033",
+      "node": "IOS",
+      "command": "switchport port-security violation shutdown"
+    },
+    {
+      "id": "s034",
+      "node": "IOS",
+      "command": "end"
+    },
+    {
+      "id": "s035",
+      "node": "H3",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is 0 percent"
+      ]
+    },
+    {
+      "id": "s036",
+      "node": "IOS",
+      "command": "show port-security interface GigabitEthernet0/1",
+      "expect": [
+        "Port Status\\s+: Secure-shutdown"
+      ]
+    },
+    {
+      "id": "s037",
+      "node": "IOS",
+      "command": "show interfaces status err-disabled",
+      "expect": [
+        "err-disabled\\s+psecure-violation"
+      ]
+    },
+    {
+      "id": "s038",
+      "node": "IOS",
+      "command": "configure terminal",
+      "waitSeconds": 15
+    },
+    {
+      "id": "s039",
+      "node": "IOS",
+      "command": "interface GigabitEthernet0/1"
+    },
+    {
+      "id": "s040",
+      "node": "IOS",
+      "command": "shutdown"
+    },
+    {
+      "id": "s041",
+      "node": "IOS",
+      "command": "no shutdown"
+    },
+    {
+      "id": "s042",
+      "node": "IOS",
+      "command": "end"
+    },
+    {
+      "id": "s043",
+      "node": "H1",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "waitSeconds": 35
+    },
+    {
+      "id": "s044",
+      "node": "IOS",
+      "command": "configure terminal"
+    },
+    {
+      "id": "s045",
+      "node": "IOS",
+      "command": "interface GigabitEthernet0/1"
+    },
+    {
+      "id": "s046",
+      "node": "IOS",
+      "command": "shutdown"
+    },
+    {
+      "id": "s047",
+      "node": "IOS",
+      "command": "end"
+    },
+    {
+      "id": "s048",
+      "node": "NX",
+      "command": "configure terminal"
+    },
+    {
+      "id": "s049",
+      "node": "NX",
+      "command": "feature port-security"
+    },
+    {
+      "id": "s050",
+      "node": "NX",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "s051",
+      "node": "NX",
+      "command": "no switchport port-security"
+    },
+    {
+      "id": "s052",
+      "node": "NX",
+      "command": "no switchport port-security mac-address sticky"
+    },
+    {
+      "id": "s053",
+      "node": "NX",
+      "command": "shutdown"
+    },
+    {
+      "id": "s054",
+      "node": "NX",
+      "command": "switchport mode access"
+    },
+    {
+      "id": "s055",
+      "node": "NX",
+      "command": "no shutdown"
+    },
+    {
+      "id": "s056",
+      "node": "NX",
+      "command": "end"
+    },
+    {
+      "id": "s057",
+      "node": "H1",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "waitSeconds": 10
+    },
+    {
+      "id": "s058",
+      "node": "NX",
+      "command": "configure terminal"
+    },
+    {
+      "id": "s059",
+      "node": "NX",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "s060",
+      "node": "NX",
+      "command": "switchport port-security"
+    },
+    {
+      "id": "s061",
+      "node": "NX",
+      "command": "switchport port-security maximum 2"
+    },
+    {
+      "id": "s062",
+      "node": "NX",
+      "command": "switchport port-security mac-address sticky"
+    },
+    {
+      "id": "s063",
+      "node": "NX",
+      "command": "switchport port-security violation restrict"
+    },
+    {
+      "id": "s064",
+      "node": "NX",
+      "command": "end"
+    },
+    {
+      "id": "s065",
+      "node": "H1",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "waitSeconds": 5
+    },
+    {
+      "id": "s066",
+      "node": "H2",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ]
+    },
+    {
+      "id": "s067",
+      "node": "NX",
+      "command": "show port-security interface Ethernet1/1",
+      "expect": [
+        "Total MAC Addresses\\s+: 2",
+        "Sticky MAC Addresses\\s+: 2"
+      ],
+      "waitSeconds": 5
+    },
+    {
+      "id": "s068",
+      "node": "H3",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is 0 percent"
+      ],
+      "waitSeconds": 5
+    },
+    {
+      "id": "s069",
+      "node": "NX",
+      "command": "show port-security interface Ethernet1/1",
+      "expect": [
+        "Port Status\\s+: Secure UP",
+        "Security violation count\\s+: [1-9]"
+      ],
+      "waitSeconds": 5
+    },
+    {
+      "id": "s070",
+      "node": "NX",
+      "command": "configure terminal"
+    },
+    {
+      "id": "s071",
+      "node": "NX",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "s072",
+      "node": "NX",
+      "command": "switchport port-security violation protect"
+    },
+    {
+      "id": "s073",
+      "node": "NX",
+      "command": "end"
+    },
+    {
+      "id": "s074",
+      "node": "H3",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is 0 percent"
+      ],
+      "waitSeconds": 5
+    },
+    {
+      "id": "s075",
+      "node": "H1",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ]
+    },
+    {
+      "id": "s076",
+      "node": "NX",
+      "command": "configure terminal"
+    },
+    {
+      "id": "s077",
+      "node": "NX",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "s078",
+      "node": "NX",
+      "command": "switchport port-security violation shutdown"
+    },
+    {
+      "id": "s079",
+      "node": "NX",
+      "command": "end"
+    },
+    {
+      "id": "s080",
+      "node": "H3",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is 0 percent"
+      ],
+      "waitSeconds": 5
+    },
+    {
+      "id": "s081",
+      "node": "NX",
+      "command": "show port-security interface Ethernet1/1",
+      "expect": [
+        "Port Status\\s+: Secure-shutdown"
+      ],
+      "waitSeconds": 5
+    },
+    {
+      "id": "s082",
+      "node": "NX",
+      "command": "show interface status err-disabled",
+      "expect": [
+        "secViolErrDis"
+      ]
+    },
+    {
+      "id": "s083",
+      "node": "NX",
+      "command": "configure terminal",
+      "waitSeconds": 15
+    },
+    {
+      "id": "s084",
+      "node": "NX",
+      "command": "interface Ethernet1/1"
+    },
+    {
+      "id": "s085",
+      "node": "NX",
+      "command": "shutdown"
+    },
+    {
+      "id": "s086",
+      "node": "NX",
+      "command": "no shutdown"
+    },
+    {
+      "id": "s087",
+      "node": "NX",
+      "command": "end"
+    },
+    {
+      "id": "s088",
+      "node": "H1",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "expect": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "waitSeconds": 35
+    },
+    {
+      "id": "s089",
+      "node": "IOS",
+      "command": "show port-security"
+    },
+    {
+      "id": "s090",
+      "node": "IOS",
+      "command": "show port-security interface GigabitEthernet0/1"
+    },
+    {
+      "id": "s091",
+      "node": "IOS",
+      "command": "show port-security address"
+    },
+    {
+      "id": "s092",
+      "node": "IOS",
+      "command": "show running-config interface GigabitEthernet0/1"
+    },
+    {
+      "id": "s093",
+      "node": "IOS",
+      "command": "show logging"
+    },
+    {
+      "id": "s094",
+      "node": "NX",
+      "command": "show port-security"
+    },
+    {
+      "id": "s095",
+      "node": "NX",
+      "command": "show port-security interface Ethernet1/1"
+    },
+    {
+      "id": "s096",
+      "node": "NX",
+      "command": "show port-security address"
+    },
+    {
+      "id": "s097",
+      "node": "NX",
+      "command": "show running-config interface Ethernet1/1"
+    },
+    {
+      "id": "s098",
+      "node": "NX",
+      "command": "show logging"
+    }
+  ],
+  "packetEvidence": {
+    "kind": "operational",
+    "minimum": {
+      "ARP": 1,
+      "ICMP": 1
+    }
+  }
+}

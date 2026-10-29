@@ -1,3 +1,4 @@
+import {validatePortSecurity} from './port-security.ts';
 import {validateFTPConfiguration} from './ftp-files.ts';
 import {validateNSOSConfiguration} from './datacenter.ts';
 import {validateSLAConfiguration} from './sla-config.ts';
@@ -112,6 +113,7 @@ function validateConfig(c: any) {
           )))
     )
       throw Error(`Invalid VLAN on ${name}.`);
+    validatePortSecurity(p);
     if (p.ip && (typeof p.ip !== "string" || !isIPv4(p.ip)))
       throw Error(`Invalid IPv4 address on ${name}.`);
     if (p.mask) maskToPrefix(p.mask);
@@ -247,6 +249,7 @@ function validateDocument(doc: any): LabDocument {
     position(d);
     if (!KINDS.has(d.kind) || typeof d.powered !== "boolean")
       throw Error("A device has an unknown type or power state.");
+    if(d.secureSticky!==undefined&&(!object(d.secureSticky)||Object.keys(d.secureSticky).length>300||Object.values<any>(d.secureSticky).some(macs=>!Array.isArray(macs)||macs.length>1025||macs.some((m:unknown)=>typeof m!=='string'||!/^(?:[0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(m)))))throw Error('Invalid persistent secure MAC table.');
     validateConfig(d.config);validateFTPConfiguration(d.config);validateHostOS(d.kind,d.config);validateEndpoint(d.kind,d.config);validatePhone(d.kind,d.config);validatePoE(d.kind,d.config);
     validateWireless(d.kind,d.config.features.wireless);
     if (d.startupConfig !== undefined) {validateConfig(d.startupConfig);validateFTPConfiguration(d.startupConfig);validateHostOS(d.kind,d.startupConfig);validateEndpoint(d.kind,d.startupConfig);validatePhone(d.kind,d.startupConfig);validatePoE(d.kind,d.startupConfig);validateWireless(d.kind,d.startupConfig.features.wireless);}

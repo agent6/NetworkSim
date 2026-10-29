@@ -12,7 +12,7 @@ export function learnMac(d:Device,port:string,vlan:number,mac:string,now:number)
 }
 /** Static entries reserve CAM slots before dynamic learning. */
 export function installStaticMac(d:Device):void{
- for(const[k,row]of Object.entries(d.runtime.mac))if(row.static)delete d.runtime.mac[k];
+ for(const[k,row]of Object.entries(d.runtime.mac))if(row.static&&!row.secure)delete d.runtime.mac[k];
  let failed=0,used=Object.keys(d.runtime.mac).length;for(const row of d.config.features.staticMac??[]){if(!d.config.interfaces[row.interface])continue;const key=row.vlan+'|'+row.mac.toLowerCase();if(!d.runtime.mac[key]&&used>=macCapacity(d)){const oldest=Object.entries(d.runtime.mac).filter(([,e])=>!e.static).sort((a,b)=>(a[1].lastSeen??0)-(b[1].lastSeen??0))[0];if(oldest){delete d.runtime.mac[oldest[0]];used--;}else{failed++;continue;}}if(!d.runtime.mac[key])used++;d.runtime.mac[key]={mac:row.mac.toLowerCase(),vlan:row.vlan,port:row.interface,expires:Number.MAX_SAFE_INTEGER,static:true};}
  d.runtime.features.macResources={capacity:macCapacity(d),used:Object.keys(d.runtime.mac).length,staticUninstalled:failed};
 }

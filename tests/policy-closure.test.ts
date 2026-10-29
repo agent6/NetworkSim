@@ -77,7 +77,7 @@ test('allocated basic dynamic NAT accepts fresh outside protocols and preserves 
   commands(cli, 'enable', 'configure terminal', 'ip access-list extended ALLOCATE', '10 permit icmp host 10.1.0.10 any echo', 'exit', 'ip nat pool ONE 203.0.113.100 203.0.113.100 netmask 255.255.255.0', 'ip nat inside source list ALLOCATE pool ONE', 'interface g0/0', 'ip nat inside', 'exit', 'interface g0/1', 'ip nat outside', 'end');
   s.registerUDPService(9000, d => d.id === inside.id, (_d, payload, source) => ({ payload, source }));
   const premature = s.udpRequest(outside.id, '203.0.113.100', 9000, { before: true }); s.advance(11000); assert.equal(premature.status, 'failure');
-  router.config.features.nat.timeouts = { icmp: 5 };
+  commands(cli,'configure terminal','ip nat translation timeout 5','ip nat translation icmp-timeout 5','ip nat translation udp-timeout 5','end');
   const allocate = s.ping(inside.id, '203.0.113.2', { count: 1 }); s.advance(1000); assert.equal(allocate.received, 1);
   assert.equal(router.runtime.features.natTranslations.length, 1); assert.equal(router.runtime.features.aclHits['ALLOCATE:10'], 1);
   const fresh = s.udpRequest(outside.id, '203.0.113.100', 9000, { fresh: true }, { sourcePort: 44000 }); s.advance(1000);

@@ -316,7 +316,7 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
   if (/^aaa (?:authentication login|authorization (?:exec|commands))$/.test(path)) {
     const authorization = path.includes('authorization');
     const methods = graph(true);
-    const atoms = [...['local', 'none', ...(authorization ? ['if-authenticated'] : [])].map(value => [word(value)]), [word('group'), argument('WORD', 'Server-group name', undefined, ['radius', 'tacacs+'])]];
+    const atoms = [...['local', 'none', ...(authorization ? ['if-authenticated'] : [])].map(value => [word(value)]), [word('group'), argument('WORD', 'Server-group name', value=>!path.endsWith('commands')||value!=='radius', path.endsWith('commands')?['tacacs+']:['radius', 'tacacs+'])]];
     for (const method of atoms) methods.edges.push(...chain(method, methods).edges);
     const first = { edges: methods.edges, complete: no };
     return chain([...(path.endsWith('commands') ? [number(0, 15, 'Privilege level')] : []), text('Method list name or default')], first);
@@ -335,6 +335,10 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
 
 /** Deliberately explicit: prose in legacy argument hints is not an executable grammar. */
 function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
+  if(path==='switchport port-security mac-address'){
+    const mac=argument('H.H.H','48-bit hardware address',value=>/^(?:[0-9a-f]{4}\.){2}[0-9a-f]{4}$|^(?:[0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(value));
+    return [[mac],[word('sticky')],[word('sticky'),mac]];
+  }
   if(path==='ip sla')return [[number(1,2147483647,'IP SLAs operation number')]];
   if(path==='ip sla responder'){const port=[word('port'),number(1,65535,'UDP echo port')],address=[word('ipaddress'),ip('Responder IPv4 address')];return [[],[word('udp-echo'),...port],[word('udp-echo'),...address,...port],[word('udp-echo'),...port,...address]];}
   if(path==='icmp-echo'&&context.mode==='sla'){const address=argument('A.B.C.D or X:X:X:X::X','Target IP address',value=>ipv4(value)||isIPv6(value));return [[address],[address,word('source-ip'),argument('A.B.C.D or X:X:X:X::X','Source IP address',value=>ipv4(value)||isIPv6(value))],[address,word('source-interface'),iface(context)]];}
@@ -468,7 +472,8 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   if (path === 'show ip eigrp' || path === 'show ipv6 eigrp') return [[], ...choices(['neighbors', 'topology', 'interfaces'])];
   if (path === 'show ip bgp') return [[], ...choices(['summary', 'neighbors'])];
   if (path === 'show ip dhcp') return choices(['pool', 'binding', 'conflict']);
-  if (path === 'show ip nat') return choices(['translations', 'statistics']);
+  if (path === 'show ip nat') return combine(choices(['translations']),[[],[word('verbose')],[word('tcp')],[word('udp')],[word('icmp')],[word('tcp'),word('verbose')],[word('udp'),word('verbose')],[word('icmp'),word('verbose')]]).concat(choices(['statistics']));
+  if(/^ip nat translation (?:timeout|(?:icmp|udp|tcp)-timeout)$/.test(path))return [[number(1,2147483647,'Idle timeout in seconds')]];
   if (path === 'show vlan') return [[],...choices(['brief','summary','remote-span']),[word('id'),number(1,4094,'VLAN ID')],[word('name'),text('VLAN name')]];
   if(['transport input','transport output'].includes(path))return [...choices(['ssh','telnet','all','none']),[word('ssh'),word('telnet')],[word('telnet'),word('ssh')]];
   if(path==='transport preferred')return choices(['ssh','telnet','none']);

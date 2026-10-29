@@ -1,0 +1,9 @@
+# Synthetic test identities. IOS privilege and NX-OS roles are distinct attributes.
+remote Cleartext-Password := "RemotePass42!"
+ Service-Type = NAS-Prompt-User,
+ Cisco-AVPair += "shell:priv-lvl=15",
+ Cisco-AVPair += "shell:roles=\"network-admin\""
+viewer Cleartext-Password := "Operator42!"
+ Service-Type = NAS-Prompt-User,
+ Cisco-AVPair += "shell:priv-lvl=1",
+ Cisco-AVPair += "shell:roles=\"network-operator\""

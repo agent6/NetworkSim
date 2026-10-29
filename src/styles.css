@@ -295,12 +295,12 @@
   .connection-row { gap:5px; grid-template-columns:16px minmax(0,1fr) 14px minmax(0,1fr) 25px; }
 }
 .terminal {
-  background: #142128;
-  color: #e1e9ed;
+  background: #333333;
+  color: #FFB900;
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
-  scrollbar-color: #43535e #142128;
+  scrollbar-color: #6b6b6b #333333;
   scrollbar-gutter: stable;
   cursor: text;
   padding: 15px 20px 28px;
@@ -321,13 +321,13 @@
 .terminal-input input {
   border: 0; background: transparent; border-radius: 0; color: inherit;
   flex: 1; min-width: 2ch; padding: 0; outline: none; font: inherit;
-  box-shadow: none; caret-color: #8ce6d0; line-height: inherit;
+  box-shadow: none; caret-color: #00FF00; line-height: inherit;
 }
-.terminal-input:focus-within { box-shadow: -2px 0 #58c6b3; }
-.terminal-input .prompt { color: #e1e9ed; white-space: pre; flex-shrink: 0; }
+.terminal-input:focus-within { box-shadow: -2px 0 #00FF00; }
+.terminal-input .prompt { color: inherit; white-space: pre; flex-shrink: 0; }
 .terminal-input input:focus-visible { outline: none; }
-.terminal::selection, .terminal ::selection { background: #376474; color: #fff; }
-.terminal-empty { display: flex; height: 100%; min-height: 90px; align-items: center; justify-content: center; gap: 12px; color: #91a6b1; font: 13px var(--font-sans); }
+.terminal::selection, .terminal ::selection { background: #FFB900; color: #333333; }
+.terminal-empty { display: flex; height: 100%; min-height: 90px; align-items: center; justify-content: center; gap: 12px; color: inherit; font: 13px var(--font-sans); }
 #dock { position: relative; min-height: 150px; }
 #dock-resize { height: 8px; flex-shrink: 0; cursor: row-resize; display: flex; justify-content: center; align-items: center; background: #f8fafb; border-top: 1px solid #dfe6eb; }
 #dock-resize span { width: 36px; height: 2px; border-radius: 2px; background: #c5d1d9; }
@@ -344,7 +344,7 @@
 .dock-actions { display: flex; align-items: center; border-left: 1px solid #e1e7ec; gap: 1px; padding: 0 5px; }
 .dock-actions .icon-btn { width: 29px; height: 28px; border-radius: 5px; }
 .dock-text-button { font-size: 11px; padding: 0 10px; color: #60727e; }
-.terminal-jump { position: absolute; right: 20px; bottom: 14px; padding: 5px 11px; border: 1px solid #5a7581; border-radius: 6px; background: #243d49; color: #e4f2f4; font: 11px var(--font-sans); box-shadow: 0 2px 8px #0002; }
+.terminal-jump { position: absolute; right: 20px; bottom: 14px; padding: 5px 11px; border: 1px solid #FFB900; border-radius: 6px; background: #333333; color: #FFB900; font: 11px var(--font-sans); box-shadow: 0 2px 8px #0002; }
 .terminal-shortcuts { color: #536571; font-size: 13px; line-height: 1.7; }
 .terminal-shortcuts dl { display: grid; grid-template-columns: minmax(130px,auto) 1fr; gap: 10px 20px; padding: 20px 0; }
 .terminal-shortcuts dt { font: 12px/1.7 var(--font-mono); color: #173e45; }

@@ -1,3 +1,4 @@
+import {clearNatState} from './nat-state.ts';
 import {clearInterfaceCounters} from './interface-telemetry.ts';
 import type {Simulator} from './engine.ts';
 import type {Device} from './model.ts';
@@ -15,7 +16,7 @@ export function maintenanceCommands(h:MaintenanceHost){
  for(const type of ['binding','conflict'])add('clear ip dhcp '+type,a=>{exact(a,1);if(a[0]!=='*'&&!isIPv4(a[0]))h.fail();const field=type==='binding'?'dhcpLeases':'dhcpConflicts';f[field]=(f[field]||[]).filter((row:any)=>a[0]!=='*'&&row.address!==a[0]);},'*|address');
  add('clear ip dhcp snooping',a=>{if(a[0]){keyword(a[0],['binding']);if(a.length>2||a[1]&&a[1]!=='*')h.fail();}f.dhcpBindings=[];},'[binding] [*]');
  for(const prefix of ['clear access-list counters','clear ip access-list counters'])add(prefix,a=>{if(a.length>1)h.fail();for(const key of Object.keys(f.aclHits||{}))if(!a.length||key.startsWith(a[0]+':'))delete f.aclHits[key];},'[name]');
- add('clear ip nat translation',a=>{if(!a.length)h.fail('% Incomplete command.');if(a[0]==='*'){exact(a,1);f.natTranslations=[];return;}if(a[0]==='inside'){exact(a,3);if(!isIPv4(a[1])||!isIPv4(a[2]))h.fail();f.natTranslations=(f.natTranslations||[]).filter((row:any)=>row.outside!==a[1]||row.inside!==a[2]);return;}h.fail();},'*|inside <global-address> <local-address>');
+ add('clear ip nat translation',a=>{if(!a.length)h.fail('% Incomplete command.');if(a[0]==='*'){exact(a,1);clearNatState(d,undefined,h.engine);return;}if(a[0]==='inside'){exact(a,3);if(!isIPv4(a[1])||!isIPv4(a[2]))h.fail();clearNatState(d,{global:a[1],local:a[2]},h.engine);return;}h.fail();},'*|inside <global-address> <local-address>');
  const clearMac=(a:string[])=>{let port:string|undefined,vlan:number|undefined,mac:string|undefined;for(let i=0;i<a.length;i++){const key=keyword(a[i],['dynamic','interface','vlan','address']);if(key==='dynamic')continue;const value=a[++i];if(!value)h.fail('% Incomplete command.');if(key==='interface')port=h.interfaceName(value);else if(key==='vlan'){vlan=Number(value);if(!/^\d+$/.test(value)||vlan<1||vlan>4094)h.fail();}else{const hex=value.replace(/[.:-]/g,'').toLowerCase();if(!/^[0-9a-f]{12}$/.test(hex))h.fail();mac=hex;}}
  for(const [key,row]of Object.entries(r.mac))if(!row.static&&(!port||row.port===port)&&(!vlan||row.vlan===vlan)&&(!mac||row.mac.replace(/:/g,'').toLowerCase()===mac))delete r.mac[key];};
  add('clear mac address-table',clearMac,'[dynamic] [interface name] [vlan id] [address MAC]');add('clear mac address-table dynamic',clearMac,'[interface name] [vlan id] [address MAC]');

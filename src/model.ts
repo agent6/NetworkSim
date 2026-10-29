@@ -75,7 +75,7 @@ export interface DeviceConfig {
   features: Record<string, any>;
 }
 export interface ArpEntry { ip: string; mac: string; port: string; vlan?: number; vrf?: string; expires: number; static?: boolean; reachableUntil?:number }
-export interface MacEntry { mac: string; port: string; vlan: number; expires: number; lastSeen?:number; static?: boolean }
+export interface MacEntry { mac: string; port: string; vlan: number; expires: number; lastSeen?:number; static?: boolean; secure?: boolean }
 export interface Neighbor { protocol: string; deviceId: string; interface: string; peerInterface?: string; address?: string; state: string; [key: string]: any }
 export interface PortCounters { tx: number; rx: number; drops: number; txBytes: number; rxBytes: number; txUnicast?: number; txMulticast?: number; txBroadcast?: number; rxUnicast?: number; rxMulticast?: number; rxBroadcast?: number; inputErrors?: number; crc?: number; collisions?: number; lateCollisions?: number; outputErrors?: number; lastInput?: number; lastOutput?: number; rateSamples?:{at:number;rx:number;tx:number;rxBytes:number;txBytes:number}[] }
 export interface StpPortState { state: 'forwarding' | 'blocking' | 'discarding' | 'learning' | 'listening' | 'disabled'; role?: string; rootId?: string; cost?: number; [key: string]: any }
@@ -99,6 +99,8 @@ export interface Device {
   config: DeviceConfig;
   runtime: DeviceRuntime;
   startupConfig?: DeviceConfig;
+  /** NX-OS sticky bindings persist separately from startup configuration. */
+  secureSticky?: Record<string,string[]>;
   configurationRegister?: { current: number; next: number };
 }
 export interface Endpoint { deviceId: string; port: string }

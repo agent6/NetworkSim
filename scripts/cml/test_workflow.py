@@ -159,6 +159,13 @@ class WorkflowTests(unittest.TestCase):
     def test_duplicate_nexus_acl_sequence_is_not_a_successful_configuration(self):
         self.assertFalse(step_result({'id':'a','node':'nxos','command':'10 permit ip any any'},'Duplicate sequence number\nNEXUS(config-acl)#')['passed'])
 
+    def test_port_security_rejections_and_echoes_cannot_satisfy_output_assertions(self):
+        step={'id':'a','node':'dut','command':'show interfaces status err-disabled','expect':['err-disabled']}
+        self.assertFalse(step_result(step,'show interfaces status err-disabled\r\nDUT#')['passed'])
+        self.assertTrue(step_result(step,'show interfaces status err-disabled\r\nGi0/1 err-disabled psecure-violation\r\nDUT#')['passed'])
+        for rejection in ['Maximum is less than number of currently secured mac-addresses.','Total secure mac-addresses on interface has reached maximum limit.','% Command rejected: port is a dynamic port.']:
+            self.assertFalse(step_result({'id':'a','node':'dut','command':'switchport port-security maximum 1'},rejection+'\nDUT(config-if)#')['passed'])
+
     def test_terminal_normalization_does_not_erase_meaningful_values(self):
         self.assertEqual(normalize('show x\r\n\x1b[32m  VLAN 10\x1b[0m\r\nDUT#', 'show x'), '  VLAN 10\nDUT#')
         self.assertNotEqual(normalize('10 packets', 'show x'), normalize('11 packets', 'show x'))

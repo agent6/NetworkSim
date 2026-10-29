@@ -1,0 +1,596 @@
+[
+  {
+    "kind": "config",
+    "node": "IOS",
+    "commands": [
+      "configure terminal",
+      "aaa new-model",
+      "username admin privilege 15 secret NetSimLab42!",
+      "username fallback privilege 15 secret LocalOnly42!",
+      "aaa authentication login CONSOLE local",
+      "aaa authentication login default local",
+      "aaa authorization exec default local",
+      "line console 0",
+      "login authentication CONSOLE",
+      "exit",
+      "line vty 0 4",
+      "login authentication default",
+      "transport input ssh",
+      "exit",
+      "end"
+    ]
+  },
+  {
+    "kind": "config",
+    "node": "NX",
+    "commands": [
+      "configure terminal",
+      "aaa authentication login console local",
+      "username fallback password LocalOnly42! role network-admin",
+      "aaa authentication login default local",
+      "end"
+    ]
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "fallback",
+    "password": "LocalOnly42!",
+    "commands": [
+      "show privilege",
+      "exit"
+    ],
+    "expect": [
+      "level is 15"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "fallback",
+    "password": "LocalOnly42!",
+    "commands": [
+      "show user-account fallback",
+      "exit"
+    ],
+    "expect": [
+      "roles:network-admin"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "config",
+    "node": "IOS",
+    "commands": [
+      "configure terminal",
+      "radius server RADIUS1",
+      "address ipv4 192.168.100.10",
+      "key LabShared42",
+      "timeout 2",
+      "retransmit 0",
+      "exit",
+      "aaa group server radius RAD-GROUP",
+      "server name RADIUS1",
+      "exit",
+      "aaa authentication login default group RAD-GROUP local",
+      "aaa authorization exec default group RAD-GROUP local",
+      "aaa accounting exec default start-stop group RAD-GROUP",
+      "line vty 0 4",
+      "login authentication default",
+      "accounting exec default",
+      "transport input ssh",
+      "exit",
+      "end"
+    ]
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "remote",
+    "password": "RemotePass42!",
+    "commands": [
+      "show privilege",
+      "exit"
+    ],
+    "expect": [
+      "level is 15"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "viewer",
+    "password": "Operator42!",
+    "commands": [
+      "show privilege",
+      "exit"
+    ],
+    "expect": [
+      "level is 1"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "remote",
+    "password": "wrong",
+    "commands": [],
+    "expect": [],
+    "authenticated": false
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "fallback",
+    "password": "LocalOnly42!",
+    "commands": [],
+    "expect": [],
+    "authenticated": false
+  },
+  {
+    "kind": "config",
+    "node": "IOS",
+    "commands": [
+      "configure terminal",
+      "radius server RADIUS1",
+      "key WrongKey42",
+      "exit",
+      "end"
+    ]
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "fallback",
+    "password": "LocalOnly42!",
+    "commands": [
+      "show privilege",
+      "exit"
+    ],
+    "expect": [
+      "level is 15"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "config",
+    "node": "IOS",
+    "commands": [
+      "configure terminal",
+      "radius server RADIUS1",
+      "address ipv4 192.168.100.10",
+      "key LabShared42",
+      "timeout 2",
+      "retransmit 0",
+      "exit",
+      "aaa group server radius RAD-GROUP",
+      "server name RADIUS1",
+      "exit",
+      "aaa authentication login default group RAD-GROUP local",
+      "aaa authorization exec default group RAD-GROUP local",
+      "aaa accounting exec default start-stop group RAD-GROUP",
+      "line vty 0 4",
+      "login authentication default",
+      "accounting exec default",
+      "transport input ssh",
+      "exit",
+      "end"
+    ]
+  },
+  {
+    "kind": "config",
+    "node": "NX",
+    "commands": [
+      "configure terminal",
+      "radius-server host 192.168.100.10 key 0 LabShared42",
+      "radius-server host 192.168.100.10 timeout 2",
+      "radius-server host 192.168.100.10 retransmit 0",
+      "aaa group server radius RAD-GROUP",
+      "server 192.168.100.10",
+      "use-vrf management",
+      "exit",
+      "aaa authentication login default group RAD-GROUP",
+      "aaa accounting default group RAD-GROUP",
+      "end"
+    ]
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "remote",
+    "password": "RemotePass42!",
+    "commands": [
+      "show user-account remote",
+      "configure terminal",
+      "interface mgmt0",
+      "description AAA-radius",
+      "end",
+      "exit"
+    ],
+    "expect": [
+      "roles:network-admin"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "viewer",
+    "password": "Operator42!",
+    "commands": [
+      "show user-account viewer",
+      "configure terminal",
+      "hostname MUST-NOT-CHANGE",
+      "end",
+      "exit"
+    ],
+    "expect": [
+      "roles:network-operator",
+      "Permission denied"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "remote",
+    "password": "wrong",
+    "commands": [],
+    "expect": [],
+    "authenticated": false
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "fallback",
+    "password": "LocalOnly42!",
+    "commands": [],
+    "expect": [],
+    "authenticated": false
+  },
+  {
+    "kind": "config",
+    "node": "NX",
+    "commands": [
+      "configure terminal",
+      "radius-server host 192.168.100.10 key 0 WrongKey42",
+      "end"
+    ]
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "fallback",
+    "password": "LocalOnly42!",
+    "commands": [
+      "show user-account fallback",
+      "exit"
+    ],
+    "expect": [
+      "roles:network-admin"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "config",
+    "node": "NX",
+    "commands": [
+      "configure terminal",
+      "radius-server host 192.168.100.10 key 0 LabShared42",
+      "radius-server host 192.168.100.10 timeout 2",
+      "radius-server host 192.168.100.10 retransmit 0",
+      "aaa group server radius RAD-GROUP",
+      "server 192.168.100.10",
+      "use-vrf management",
+      "exit",
+      "aaa authentication login default group RAD-GROUP",
+      "aaa accounting default group RAD-GROUP",
+      "end"
+    ]
+  },
+  {
+    "kind": "config",
+    "node": "IOS",
+    "commands": [
+      "configure terminal",
+      "tacacs server TACACS1",
+      "address ipv4 192.168.100.10",
+      "key LabShared42",
+      "timeout 2",
+      "exit",
+      "aaa group server tacacs+ TAC-GROUP",
+      "server name TACACS1",
+      "exit",
+      "aaa authentication login default group TAC-GROUP local",
+      "aaa authorization exec default group TAC-GROUP local",
+      "aaa accounting exec default start-stop group TAC-GROUP",
+      "line vty 0 4",
+      "login authentication default",
+      "accounting exec default",
+      "transport input ssh",
+      "exit",
+      "end"
+    ]
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "remote",
+    "password": "RemotePass42!",
+    "commands": [
+      "show privilege",
+      "exit"
+    ],
+    "expect": [
+      "level is 15"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "viewer",
+    "password": "Operator42!",
+    "commands": [
+      "show privilege",
+      "exit"
+    ],
+    "expect": [
+      "level is 1"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "remote",
+    "password": "wrong",
+    "commands": [],
+    "expect": [],
+    "authenticated": false
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "fallback",
+    "password": "LocalOnly42!",
+    "commands": [],
+    "expect": [],
+    "authenticated": false
+  },
+  {
+    "kind": "config",
+    "node": "IOS",
+    "commands": [
+      "configure terminal",
+      "tacacs server TACACS1",
+      "key WrongKey42",
+      "exit",
+      "end"
+    ]
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "fallback",
+    "password": "LocalOnly42!",
+    "commands": [
+      "show privilege",
+      "exit"
+    ],
+    "expect": [
+      "level is 15"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "config",
+    "node": "IOS",
+    "commands": [
+      "configure terminal",
+      "tacacs server TACACS1",
+      "address ipv4 192.168.100.10",
+      "key LabShared42",
+      "timeout 2",
+      "exit",
+      "aaa group server tacacs+ TAC-GROUP",
+      "server name TACACS1",
+      "exit",
+      "aaa authentication login default group TAC-GROUP local",
+      "aaa authorization exec default group TAC-GROUP local",
+      "aaa accounting exec default start-stop group TAC-GROUP",
+      "line vty 0 4",
+      "login authentication default",
+      "accounting exec default",
+      "transport input ssh",
+      "exit",
+      "end"
+    ]
+  },
+  {
+    "kind": "probe",
+    "node": "IOS",
+    "username": "noexec",
+    "password": "NoExec42!",
+    "commands": [],
+    "expect": [
+      "Authorization failed"
+    ],
+    "authenticated": false
+  },
+  {
+    "kind": "config",
+    "node": "NX",
+    "commands": [
+      "configure terminal",
+      "feature tacacs+",
+      "tacacs-server host 192.168.100.10 key 0 LabShared42",
+      "tacacs-server host 192.168.100.10 timeout 2",
+      "aaa group server tacacs+ TAC-GROUP",
+      "server 192.168.100.10",
+      "use-vrf management",
+      "exit",
+      "aaa authentication login default group TAC-GROUP",
+      "aaa accounting default group TAC-GROUP",
+      "end"
+    ]
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "remote",
+    "password": "RemotePass42!",
+    "commands": [
+      "show user-account remote",
+      "configure terminal",
+      "interface mgmt0",
+      "description AAA-tacacs",
+      "end",
+      "exit"
+    ],
+    "expect": [
+      "roles:network-admin"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "viewer",
+    "password": "Operator42!",
+    "commands": [
+      "show user-account viewer",
+      "configure terminal",
+      "hostname MUST-NOT-CHANGE",
+      "end",
+      "exit"
+    ],
+    "expect": [
+      "roles:network-operator",
+      "Permission denied"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "remote",
+    "password": "wrong",
+    "commands": [],
+    "expect": [],
+    "authenticated": false
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "fallback",
+    "password": "LocalOnly42!",
+    "commands": [],
+    "expect": [],
+    "authenticated": false
+  },
+  {
+    "kind": "config",
+    "node": "NX",
+    "commands": [
+      "configure terminal",
+      "tacacs-server host 192.168.100.10 key 0 WrongKey42",
+      "end"
+    ]
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "fallback",
+    "password": "LocalOnly42!",
+    "commands": [
+      "show user-account fallback",
+      "exit"
+    ],
+    "expect": [
+      "roles:network-admin"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "config",
+    "node": "NX",
+    "commands": [
+      "configure terminal",
+      "feature tacacs+",
+      "tacacs-server host 192.168.100.10 key 0 LabShared42",
+      "tacacs-server host 192.168.100.10 timeout 2",
+      "aaa group server tacacs+ TAC-GROUP",
+      "server 192.168.100.10",
+      "use-vrf management",
+      "exit",
+      "aaa authentication login default group TAC-GROUP",
+      "aaa accounting default group TAC-GROUP",
+      "end"
+    ]
+  },
+  {
+    "kind": "config",
+    "node": "NX",
+    "commands": [
+      "configure terminal",
+      "username viewer password LocalDifferent42! role network-admin",
+      "end"
+    ]
+  },
+  {
+    "kind": "probe",
+    "node": "NX",
+    "username": "viewer",
+    "password": "Operator42!",
+    "commands": [
+      "show user-account viewer",
+      "configure terminal",
+      "interface mgmt0",
+      "description AAA-local-role",
+      "end",
+      "exit"
+    ],
+    "expect": [
+      "roles:network-admin"
+    ],
+    "authenticated": true
+  },
+  {
+    "kind": "config",
+    "node": "NX",
+    "commands": [
+      "configure terminal",
+      "no username viewer",
+      "end"
+    ]
+  },
+  {
+    "kind": "survey",
+    "node": "IOS",
+    "commands": [
+      "show aaa servers",
+      "show radius statistics",
+      "show tacacs",
+      "show running-config | section aaa",
+      "show logging"
+    ]
+  },
+  {
+    "kind": "survey",
+    "node": "NX",
+    "commands": [
+      "show aaa authentication",
+      "show aaa accounting",
+      "show radius-server",
+      "show radius-server statistics 192.168.100.10",
+      "show tacacs-server",
+      "show tacacs-server statistics 192.168.100.10",
+      "show running-config | section aaa",
+      "show logging"
+    ]
+  }
+]

@@ -1,3 +1,4 @@
+import {inspectPortSecurity} from './port-security.ts';
 import { interfaceSpeed, interfaceBandwidth } from './ethernet.ts';
 import { queuePolicy, schedulingError, catalystQueueProfile, rememberQosClass } from './qos-scheduler.ts';
 import { arpBindingRuleMatches } from './arp-binding-acl.ts';
@@ -14,34 +15,7 @@ export function inspectIngress(engine: Simulator, device: Device, port: string, 
   const features = device.config.features, iface = device.config.interfaces[port], state = device.runtime.features;
   const drop = (counter: string, protocol: string, label: string, detail: string) => { state[counter] = (state[counter] ?? 0) + 1; engine.emit({ nodeId: device.id, port, protocol, label, detail, disposition: 'drop' }); return false; };
   const cleanMac = (mac: string) => mac.replace(/[^0-9a-f]/gi, '').toLowerCase();
-  const security = iface.features.portSecurity;
-  if (security && security.enabled !== false) {
-    (state.portSecurityLastSource ??= {})[port] = { mac: frame.sourceMac, vlan };
-    const countViolation = () => { if ((security.violation ?? 'shutdown') !== 'protect') (state.portSecurityPortViolations ??= {})[port] = (state.portSecurityPortViolations[port] ?? 0) + 1; };
-    const moved = Object.entries(device.config.interfaces).some(([other, c]) => other !== port && c.features.portSecurity?.enabled !== false && c.features.portSecurity && [...(c.features.portSecurity.macs ?? []), ...(state.secureMacs?.[other] ?? [])].some((mac: string) => cleanMac(mac) === cleanMac(frame.sourceMac)));
-    if (moved) { countViolation(); if ((security.violation ?? 'shutdown') === 'shutdown') disablePort(engine, device, port, 'psecure-violation'); return drop('portSecurityViolations', 'ETHERNET', 'Secure MAC move violation', 'This source MAC belongs to a different secure port.'); }
-    const entries: string[] = state.secureMacs?.[port] ?? [];
-    const configured: string[] = security.macs ?? [];
-    const known = [...new Set([...configured, ...entries].map(x => x.replace(/[^0-9a-f]/gi, '').toLowerCase()))];
-    if (!known.includes(frame.sourceMac.replace(/[^0-9a-f]/gi, '').toLowerCase())) {
-      if (known.length >= (security.maximum ?? 1)) {
-        countViolation();
-        if ((security.violation ?? 'shutdown') === 'shutdown') disablePort(engine, device, port, 'psecure-violation');
-        return drop('portSecurityViolations', 'ETHERNET', 'Port security violation', 'The secure MAC limit was exceeded on ' + port + '.');
-      }
-      (state.secureMacs ??= {})[port] = [...entries, frame.sourceMac];
-      if (security.sticky) security.macs = [...configured, frame.sourceMac];
-    }
-    if (Number(security.agingTime) > 0) {
-      const key = port + '|' + cleanMac(frame.sourceMac), times = state.secureMacTimes ??= {}, row = times[key] ??= { first: engine.clock.now(), last: engine.clock.now() }; row.last = engine.clock.now();
-      const isStatic = () => (security.macs ?? []).some((mac: string) => cleanMac(mac) === cleanMac(frame.sourceMac));
-      if (!row.scheduled && (!isStatic() || security.agingStatic)) {
-        row.scheduled = true;
-        const expire = () => { if (!(Number(security.agingTime) > 0)) { row.scheduled = false; return; } const duration = Math.max(1, security.agingTime) * 60000, due = (security.agingType === 'inactivity' ? row.last : row.first) + duration; if (due > engine.clock.now()) { engine.clock.schedule(due - engine.clock.now(), expire, { owner: device.id, label: 'Secure MAC aging' }); return; } if (isStatic() && !security.agingStatic) { row.scheduled = false; return; } if (state.secureMacs?.[port]) state.secureMacs[port] = state.secureMacs[port].filter((mac: string) => cleanMac(mac) !== cleanMac(frame.sourceMac)); if (security.agingStatic) security.macs = (security.macs ?? []).filter((mac: string) => cleanMac(mac) !== cleanMac(frame.sourceMac)); delete times[key]; engine.emit({ nodeId: device.id, port, protocol: 'ETHERNET', label: 'Secure MAC aged out', detail: frame.sourceMac, disposition: 'info' }); };
-        engine.clock.schedule(Math.max(1, security.agingTime) * 60000, expire, { owner: device.id, label: 'Secure MAC aging' });
-      }
-    }
-  }
+  if (!inspectPortSecurity(engine, device, iface, vlan, frame)) return false;
   const payload = frame.payload;
   const dhcp = 'kind' in payload ? (payload.kind === 'dhcp' ? payload : undefined) : payload.body?.kind === 'dhcp-unicast' ? payload.body.message : undefined;
   const ageBindings = () => { state.dhcpBindings = (state.dhcpBindings ?? []).filter((b: any) => b.expires > engine.clock.now()); state.ipv6Bindings = (state.ipv6Bindings ?? []).filter((b: any) => b.expires > engine.clock.now()); };
@@ -343,5 +317,5 @@ export function findDynamicNatBinding(table:any[],address:{inside?:string;outsid
 }
 /** PAT retains its remote transport tuple; basic dynamic NAT admits new outside flows to the allocated address. */
 export function findInboundNatTranslation(table:any[],packet:IPPacket,now:number):any|undefined {
-  return findDynamicNatBinding(table,{outside:packet.destination},now)??table.find(entry=>entry.overload&&(entry.expires===undefined||entry.expires>now)&&sameAddress(entry.outside,packet.destination)&&entry.outsidePort===packet.destinationPort&&entry.protocol===packet.protocol&&sameAddress(entry.remote,packet.source)&&(entry.remotePort===undefined||entry.remotePort===packet.sourcePort));
+  return findDynamicNatBinding(table,{outside:packet.destination},now)??table.find(entry=>entry.overload&&(entry.expires===undefined||entry.expires>now)&&sameAddress(entry.outside,packet.destination)&&entry.outsidePort===packet.destinationPort&&entry.protocol===packet.protocol&&sameAddress(entry.remote,packet.source)&&(packet.protocol==='icmp'||entry.remotePort===undefined||entry.remotePort===packet.sourcePort));
 }

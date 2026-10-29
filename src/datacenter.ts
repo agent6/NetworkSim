@@ -1,7 +1,7 @@
 import type {Device, DeviceConfig, InterfaceConfig} from './model.ts';
 import type {ControlPlaneHost} from './control-plane.ts';
 import type {TimerHandle,SimulationClock} from './clock.ts';
-import {isIPv4, sameAddress} from './ip.ts';
+import {isIPv4, sameAddress,ipToInt,maskToPrefix} from './ip.ts';
 import {learnMac} from './mac-table.ts';
 import {stpRegion} from './stp-ports.ts';
 
@@ -66,7 +66,7 @@ type Session = {
 };
 const sessions = new WeakMap<ControlPlaneHost,Map<string,Session>>();
 let generation = 0;
-export const NSOS_FEATURES = ['vpc','lacp','interface-vlan','ospf','lldp','vtp','ssh'] as const;
+export const NSOS_FEATURES = ['vpc','lacp','interface-vlan','ospf','lldp','vtp','ssh','port-security','tacacs+','nat'] as const;
 export function isDatacenter(d:Device):boolean {return d.kind === 'datacenter';}
 export function nsosConfig(d:Device):NSOSConfig {
   if(!isDatacenter(d))return {enabled:[]};
@@ -408,6 +408,15 @@ export function validateNSOSConfiguration(config:DeviceConfig,kind?:Device['kind
   if(!n||typeof n!=='object'||!('enabled'in n)||!Array.isArray(n.enabled)||n.enabled.some(f=>typeof f!=='string'||!NSOS_FEATURES.includes(f as typeof NSOS_FEATURES[number]))||new Set(n.enabled).size!==n.enabled.length)throw Error('Invalid NS-OS feature configuration.');
   const ns=n as NSOSConfig,c=ns.vpc;
   const integer=(v:number,min:number,max:number)=>Number.isInteger(v)&&v>=min&&v<=max;
+  const nat=config.features.nat;
+  if(nat!==undefined){
+    if(!nat||typeof nat!=='object'||!ns.enabled.includes('nat')||!Array.isArray(nat.static)||!Array.isArray(nat.rules)||!nat.pools||typeof nat.pools!=='object'||Array.isArray(nat.pools))throw Error('Invalid NS-OS NAT configuration.');
+    for(const pool of Object.values<any>(nat.pools)){if(!pool||!isIPv4(pool.start)||!isIPv4(pool.end)||!isIPv4(pool.mask))throw Error('Invalid NS-OS NAT pool.');const prefix=maskToPrefix(pool.mask);if(prefix<1||ipToInt(pool.end)<ipToInt(pool.start)||(ipToInt(pool.start)&ipToInt(pool.mask))!==(ipToInt(pool.end)&ipToInt(pool.mask)))throw Error('Invalid NS-OS NAT pool range.');}
+    for(const rule of nat.rules){const p=rule?.interface&&config.interfaces[rule.interface];if(!rule||rule.overload!==true||!Object.hasOwn(config.features.acls??{},rule.acl)||!!rule.pool===!!rule.interface||rule.pool&&!Object.hasOwn(nat.pools,rule.pool)||rule.interface&&(!p||!/^Ethernet/.test(p.name)||p.switchport||p.vrf||p.features.channelGroup))throw Error('NS-OS supports validated default-VRF inside-source PAT only.');}
+    const local=new Set<string>(),global=new Set<string>();
+    for(const row of nat.static){if(!row||!isIPv4(row.inside)||!isIPv4(row.outside)||local.has(row.inside)||global.has(row.outside))throw Error('Invalid or conflicting NS-OS static NAT mapping.');local.add(row.inside);global.add(row.outside);}
+  }
+  for(const p of Object.values(config.interfaces))if(p.features.nat!==undefined&&(!ns.enabled.includes('nat')||!['inside','outside'].includes(p.features.nat)||!/^Ethernet/.test(p.name)||p.switchport||p.vrf||p.features.channelGroup))throw Error('NS-OS NAT requires standalone routed Ethernet in the default VRF.');
   for(let port=1;port<=30;port++)if(!config.interfaces['Ethernet1/'+port])throw Error('Datacenter Switch requires Ethernet1/1 through Ethernet1/30.');
   if(!config.interfaces.mgmt0||config.interfaces.mgmt0.switchport||config.interfaces.mgmt0.vrf!=='management')throw Error('Datacenter Switch requires routed mgmt0 in the management VRF.');
   if(c!==undefined&&(!c||typeof c!=='object'))throw Error('Invalid vPC configuration.');
@@ -430,6 +439,8 @@ export function validateNSOSConfiguration(config:DeviceConfig,kind?:Device['kind
     if(p.features.stpPortType!==undefined&&!['normal','edge','edge trunk','network'].includes(p.features.stpPortType))throw Error('Invalid NS-OS spanning-tree port type.');
     if(p.features.stpGuard!==undefined&&!['root','loop','none'].includes(p.features.stpGuard))throw Error('Invalid NS-OS spanning-tree guard.');
     if(p.features.stpGuard!==undefined&&(p.features.rootGuard!==(p.features.stpGuard==='root')||p.features.loopGuard!==(p.features.stpGuard==='loop')))throw Error('Inconsistent NS-OS spanning-tree guard state.');
+    const secure=p.features.portSecurity;
+    if(secure&&(!/^Ethernet/.test(p.name)||!p.switchport||p.mode!=='access'||p.features.channelGroup||p.features.vpcId||secure.agingTime||secure.agingStatic||secure.agingType&&secure.agingType!=='absolute'))throw Error('Unsupported NS-OS port-security interface or aging configuration.');
     if(p.switchport&&p.mtu!==1500&&p.mtu!==9216)throw Error('NS-OS Layer 2 MTU must be default or system jumbo MTU.');
     if(p.switchport&&!['access','trunk'].includes(p.mode))throw Error('NS-OS does not support dynamic trunk negotiation.');
     if(['auto','desirable'].includes(p.features.channelMode))throw Error('NS-OS does not support PAgP.');

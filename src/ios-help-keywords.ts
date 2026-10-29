@@ -155,6 +155,7 @@ export const IOS_KEYWORD_HELP: Record<string, string> = {
   'ip nat inside source|list': 'Specify access list describing local addresses',
   'ip nat inside source|static': 'Specify static local->global mapping',
   'ip nat outside source|static': 'Specify static global->local mapping',
+  'ip nat translation|timeout': 'Specify idle timeout for dynamic address bindings',
   'ip nat translation|icmp-timeout': 'Specify timeout for NAT ICMP flows',
   'ip nat translation|tcp-timeout': 'Specify timeout for NAT TCP flows',
   'ip nat translation|udp-timeout': 'Specify timeout for NAT UDP flows',

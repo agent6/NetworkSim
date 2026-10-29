@@ -1,3 +1,5 @@
+import {natLive,natStats,natStatics,natRuleKey,refreshNatEntry,recordNatFlow,natTranslated,updateNatPeak} from './nat-state.ts';
+import {reconcilePortSecurity} from './port-security.ts';
 import {recordInterfaceSample} from './interface-telemetry.ts';
 import {stpPortState,stpMemberActive} from './stp-ports.ts';
 import {installFTPServices,validateFTPConfiguration} from './ftp-files.ts';
@@ -206,6 +208,7 @@ export class Simulator {
       for (const d of this.lab.devices) {
         for (const [key, row] of Object.entries(d.runtime.arp)) if (row.static) delete d.runtime.arp[key];
         installStaticMac(d);
+        reconcilePortSecurity(this,d);
         for (const row of d.config.features.staticArp ?? []) { const port = row.interface; if (d.config.interfaces[port]) d.runtime.arp[port + '|' + row.ip] = { ip: row.ip, mac: row.mac.toLowerCase(), port, vrf: row.vrf, expires: Number.MAX_SAFE_INTEGER, static: true }; }
 
         d.runtime.routes = [];
@@ -342,7 +345,7 @@ export class Simulator {
     if (['icmp', 'icmpv6'].includes(p.protocol)) {
       if (b.kind === 'echo-request' || b.kind === 'echo-reply') Object.assign(result, { icmpType: b.kind === 'echo-request' ? v6 ? 128 : 8 : v6 ? 129 : 0, icmpCode: 0, icmpIdentifier: p.sourcePort, icmpSequence: b.sequence });
       if(b.kind==='icmp-redirect')Object.assign(result,{icmpType:5,icmpCode:1});
-      if (b.kind === 'icmp-error') { const reason = String(b.error ?? ''); const type = /Time exceeded/i.test(reason) ? v6 ? 3 : 11 : /Packet too big/i.test(reason) && v6 ? 2 : v6 ? 1 : 3; const code = /Time exceeded|Packet too big/i.test(reason) ? 0 : /Fragmentation needed/i.test(reason) ? 4 : /Administratively prohibited/i.test(reason) ? v6 ? 1 : 13 : /Port unreachable/i.test(reason) ? v6 ? 4 : 3 : /host unreachable/i.test(reason) ? v6 ? 3 : 1 : 0; Object.assign(result, { icmpType: type, icmpCode: code, icmpError: reason }); }
+      if (b.kind === 'icmp-error') { const reason = String(b.error ?? ''); const type = /Time exceeded/i.test(reason) ? v6 ? 3 : 11 : /Packet too big/i.test(reason) && v6 ? 2 : v6 ? 1 : 3; const code = /Time exceeded|Packet too big/i.test(reason) ? 0 : /Fragmentation needed/i.test(reason) ? 4 : /Administratively prohibited/i.test(reason) ? v6 ? 1 : 13 : /Port unreachable/i.test(reason) ? v6 ? 4 : 3 : /host unreachable/i.test(reason) ? v6 ? 3 : 1 : 0; Object.assign(result, { icmpType: type, icmpCode: code, icmpError: reason,...b.original?{icmpQuoted:{source:b.original.source,destination:b.original.destination,protocol:b.original.protocol,sourcePort:b.original.sourcePort,destinationPort:b.original.destinationPort}}:{} }); }
     }
     if (b.kind === 'dhcp-relay' || b.kind === 'dhcp-unicast') Object.assign(result, { dhcpOperation: b.message?.operation, requestedAddress: b.message?.address, relayAddress: b.message?.relay });
     return result;
@@ -813,7 +816,7 @@ export class Simulator {
     this.ensureAging(d);
     const key = this.arpKey(d, port, arp.source), wait = this.pendingArp.get(key);
     if (wait) { this.clock.cancel(wait.timer); this.pendingArp.delete(key); for (const packet of wait.packets) this.transmit(d, port, arp.mac, packet); }
-    const natAlias = c.features.nat === 'outside' && [...(d.config.features.nat?.static ?? []), ...(d.runtime.features.natTranslations ?? [])].some((mapping: any) => mapping.outside === arp.target);
+    const natAlias = c.features.nat === 'outside' && [...(d.config.features.nat?.static ?? []), ...(d.runtime.features.natTranslations ?? []).filter((x:any)=>x.expires===undefined||x.expires>this.clock.now())].some((mapping: any) => mapping.outside === arp.target);
     const proxyRoute = arp.family === 4 && d.config.ipRouting && c.features.proxyArp !== false ? this.resolveRoute(d, arp.target, c.vrf) : undefined; const proxy = !!proxyRoute && (proxyRoute.port !== port || c.features.localProxyArp===true) && !/^Null/i.test(proxyRoute.port);
     const glbp = arp.family === 4 && arp.operation === 'request' ? virtualArpReply(this, d, port, arp.target, arp.mac) : { handled: false, mac: undefined };
     if (glbp.handled && !glbp.mac) return;
@@ -942,50 +945,47 @@ export class Simulator {
   private translateOutbound(d: Device, input: string | undefined, output: string, p: IPPacket): IPPacket | undefined {
     if (!input || d.config.interfaces[input]?.features.nat !== 'inside' || d.config.interfaces[output]?.features.nat !== 'outside' || !isIPv4(p.source)) return p;
     const nat = d.config.features.nat; if (!nat) return p;
-    const packet = clone(p), direct = nat.static?.find((x: any) => x.inside === packet.source);
-    if (direct) { (d.runtime.features.natStats ??= { hits: 0, misses: 0 }).hits++; packet.source = direct.outside; return packet; }
-    const table: any[] = d.runtime.features.natTranslations ??= [];
-    const assigned = findDynamicNatBinding(table,{inside:packet.source},this.clock.now());
-    if(assigned){(d.runtime.features.natStats ??= { hits: 0, misses: 0 }).hits++;this.refreshNat(d,assigned);packet.source=assigned.outside;this.packetEvent(d,packet,'Source NAT',p.source+' → '+packet.source,'forward',output);return packet;}
-    const rules: any[] = nat.rules ?? [];
-    for (const rule of rules) {
-      if (!this.aclAllows(d, rule.acl, packet)) continue;
-      let global = rule.interface ? d.config.interfaces[rule.interface]?.ip : nat.pools?.[rule.pool]?.start; if (!global) continue;
-      let entry = table.find(x => x.inside === packet.source && x.insidePort === packet.sourcePort && x.protocol === packet.protocol && x.remote === packet.destination && x.remotePort === packet.destinationPort);
-      if (!entry) {
-        if (!rule.overload) {
-          const assigned = table.find(x => x.inside === packet.source && !x.overload); if (assigned) global = assigned.outside;
-          else { const pool = nat.pools?.[rule.pool], end = pool?.end ?? global, first = ipToInt(global); global = undefined; for (let value = first; value <= ipToInt(end) && value - first < 65536; value++) { const candidate = intToIp(value); if (!table.some(x => x.outside === candidate) && !(nat.static ?? []).some((x: any) => x.outside === candidate)) { global = candidate; break; } } }
-        }
-        if (!global) { this.packetEvent(d, packet, 'NAT pool exhausted', 'No unused address is available for this inside host.', 'drop', output); return; }
-        let outsidePort = packet.sourcePort;
-        if (rule.overload) { outsidePort = 20000; while (outsidePort <= 59999 && table.some(x => x.outside === global && x.outsidePort === outsidePort && x.protocol === packet.protocol)) outsidePort++; if (outsidePort > 59999) return; }
-        entry = { inside: packet.source, insidePort: packet.sourcePort, outside: global, outsidePort, overload: !!rule.overload, protocol: packet.protocol, remote: packet.destination, remotePort: packet.destinationPort,         created: this.clock.now() }; table.push(entry); (d.runtime.features.natStats ??= { hits: 0, misses: 0 }).misses++; d.runtime.features.natStats.peak = Math.max(d.runtime.features.natStats.peak ?? 0, table.length);
-              } else (d.runtime.features.natStats ??= { hits: 0, misses: 0 }).hits++;
-      this.refreshNat(d, entry);
-      packet.source = entry.outside; if(entry.overload)packet.sourcePort = entry.outsidePort; this.packetEvent(d, packet, 'Source NAT', p.source + ' → ' + packet.source, 'forward', output); return packet;
+    const packet=clone(p),direct=natStatics(d,this.clock.now()).find((x:any)=>x.inside===packet.source);
+    if(packet.body?.kind==='icmp-error'&&packet.body.original){
+      const q=packet.body.original,related=(d.runtime.features.natTranslations??[]).find((x:any)=>x.overload&&x.expires>this.clock.now()&&x.inside===q.destination&&x.insidePort===q.destinationPort&&x.protocol===q.protocol&&x.remote===q.source&&(q.protocol==='icmp'||x.remotePort===q.sourcePort));
+      if(related){packet.source=related.outside;q.destination=related.outside;q.destinationPort=related.outsidePort;if(q.protocol==='icmp')q.sourcePort=related.outsidePort;refreshNatEntry(this,d,related);natTranslated(d);this.packetEvent(d,packet,'Source NAT',p.source+' → '+packet.source,'forward',output);return packet;}
+    }
+    if(direct){recordNatFlow(this,d,direct,packet);natTranslated(d);packet.source=direct.outside;if(packet.body?.kind==='icmp-error'&&packet.body.original?.destination===direct.inside)packet.body.original.destination=direct.outside;this.packetEvent(d,packet,'Source NAT',p.source+' → '+packet.source,'forward',output);return packet;}
+    const table:any[]=d.runtime.features.natTranslations??=[],assigned=findDynamicNatBinding(table,{inside:packet.source},this.clock.now());
+    if(assigned){assigned.binding=true;recordNatFlow(this,d,assigned,packet);natTranslated(d);packet.source=assigned.outside;if(packet.body?.kind==='icmp-error'&&packet.body.original?.destination===assigned.inside)packet.body.original.destination=assigned.outside;this.packetEvent(d,packet,'Source NAT',p.source+' → '+packet.source,'forward',output);return packet;}
+    for(const [index,rule]of (nat.rules??[]).entries()){
+      if(rule.acl&&!ownRecordValue(d.config.features.acls,rule.acl)||!this.aclAllows(d,rule.acl,packet))continue;
+      let global=rule.interface?d.config.interfaces[rule.interface]?.ip:nat.pools?.[rule.pool]?.start;
+      const key=natRuleKey(rule),pool=nat.pools?.[rule.pool];
+      let entry=table.find(x=>x.expires>this.clock.now()&&x.overload&&x.rule===key&&x.inside===packet.source&&x.insidePort===packet.sourcePort&&x.protocol===packet.protocol&&x.remote===packet.destination&&(packet.protocol==='icmp'||x.remotePort===packet.destinationPort));
+      if(!entry){
+        if(!rule.overload&&global){const first=ipToInt(global),end=pool?.end??global;global=undefined;for(let value=first;value<=ipToInt(end)&&value-first<65536;value++){const candidate=intToIp(value);if(!table.some(x=>x.expires>this.clock.now()&&x.outside===candidate)&&!(nat.static??[]).some((x:any)=>x.outside===candidate)){global=candidate;break;}}}
+        if(!global){const stats=natStats(d);stats.punted=(stats.punted??0)+1;stats.poolMisses??={};stats.poolMisses[rule.pool??rule.interface]=(stats.poolMisses[rule.pool??rule.interface]??0)+1;this.packetEvent(d,packet,'NAT pool exhausted','No unused address is available for this inside host.','drop',output);return;}
+        let outsidePort=packet.sourcePort;
+        if(rule.overload){outsidePort=20000;while(outsidePort<=59999&&table.some(x=>x.expires>this.clock.now()&&x.outside===global&&x.outsidePort===outsidePort&&x.protocol===packet.protocol))outsidePort++;if(outsidePort>59999){this.packetEvent(d,packet,'NAT port allocation failed','No available PAT identifier.','drop',output);return;}}
+        entry={inside:packet.source,insidePort:rule.overload?packet.sourcePort:undefined,outside:global,outsidePort:rule.overload?outsidePort:undefined,overload:!!rule.overload,extended:!!rule.overload,binding:!rule.overload,protocol:rule.overload?packet.protocol:undefined,remote:rule.overload?packet.destination:undefined,remotePort:rule.overload&&packet.protocol!=='icmp'?packet.destinationPort:undefined,rule:key,mapId:index+1,created:this.clock.now()};table.push(entry);refreshNatEntry(this,d,entry,packet);
+      }
+      recordNatFlow(this,d,entry,packet);natTranslated(d);updateNatPeak(d,this.clock.now());
+      packet.source=entry.outside;if(entry.overload){packet.sourcePort=entry.outsidePort;if(packet.protocol==='icmp')packet.destinationPort=entry.outsidePort;}
+      this.packetEvent(d,packet,'Source NAT',p.source+' → '+packet.source,'forward',output);return packet;
     }
     return packet;
-  }
-  private refreshNat(d: Device, entry: any): void {
-    const seconds = d.config.features.nat?.timeouts?.[entry.protocol] ?? (entry.protocol === 'tcp' ? 86400 : entry.protocol === 'icmp' ? 60 : 300);
-    entry.lastUsed = this.clock.now(); entry.expires = this.clock.now() + Math.max(1, Number(seconds)) * 1000;
-    if (entry.expiryScheduled) return; entry.expiryScheduled = true;
-    const expire = () => { const table: any[] = d.runtime.features.natTranslations ?? []; if (!table.includes(entry)) return; if (entry.expires > this.clock.now()) { this.clock.schedule(entry.expires - this.clock.now(), expire, { owner: d.id, label: 'NAT idle timeout' }); return; } d.runtime.features.natTranslations = table.filter(x => x !== entry); (d.runtime.features.natStats ??= { hits: 0, misses: 0 }).expired = (d.runtime.features.natStats.expired ?? 0) + 1; this.emit({ nodeId: d.id, protocol: 'NAT', label: 'Translation expired', detail: entry.inside + ' → ' + entry.outside, disposition: 'info' }); };
-    this.clock.schedule(entry.expires - this.clock.now(), expire, { owner: d.id, label: 'NAT idle timeout' });
   }
   private translateInbound(d: Device, input: string, p: IPPacket): IPPacket {
     if (d.config.interfaces[input]?.features.nat !== 'outside') return p;
     const nat = d.config.features.nat; if (!nat) return p;
     const direct = nat.static?.find((x: any) => x.outside === p.destination);
-    if (p.body?.kind === 'icmp-error') {
+    if (p.body?.kind === 'icmp-error'&&p.body.original) {
       const quoted = p.body.original;
-      const table=d.runtime.features.natTranslations??[];const mapping = findDynamicNatBinding(table,{outside:quoted.source},this.clock.now())??table.find((x:any)=>x.overload&&x.outside===quoted.source&&x.outsidePort===quoted.sourcePort&&x.protocol===quoted.protocol);
-      if (mapping) { const packet = clone(p); packet.destination = mapping.inside; packet.body.original.source = mapping.inside; if(mapping.overload)packet.body.original.sourcePort = mapping.insidePort;this.refreshNat(d,mapping);return packet; }
+      const table=d.runtime.features.natTranslations??[];const mapping=natStatics(d,this.clock.now()).find((x:any)=>x.outside===quoted.source)??findDynamicNatBinding(table,{outside:quoted.source},this.clock.now())??table.find((x:any)=>x.expires>this.clock.now()&&x.overload&&x.outside===quoted.source&&x.outsidePort===quoted.sourcePort&&x.protocol===quoted.protocol&&x.remote===quoted.destination&&(quoted.protocol==='icmp'||x.remotePort===quoted.destinationPort));
+      if (mapping) { const packet = clone(p); packet.destination = mapping.inside; packet.body.original.source = mapping.inside; if(mapping.overload)packet.body.original.sourcePort = mapping.insidePort;if(mapping.overload&&quoted.protocol==='icmp')packet.body.original.destinationPort=mapping.insidePort;if(!mapping.static)refreshNatEntry(this,d,mapping);natTranslated(d,'outIn');this.packetEvent(d,packet,'Destination NAT',p.destination+' → '+packet.destination,'forward',input);return packet; }
     }
     const entry = findInboundNatTranslation(d.runtime.features.natTranslations??[],p,this.clock.now());
     if (!direct && !entry) return p;
-    const packet = clone(p); (d.runtime.features.natStats ??= { hits: 0, misses: 0 }).hits++; packet.destination = direct?.inside ?? entry.inside; if (entry) { if(entry.overload)packet.destinationPort = entry.insidePort; this.refreshNat(d, entry); } this.packetEvent(d, packet, 'Destination NAT', p.destination + ' → ' + packet.destination, 'forward', input); return packet;
+    const packet=clone(p),mapping=direct?natStatics(d,this.clock.now()).find((x:any)=>x.inside===direct.inside&&x.outside===direct.outside):entry;
+    natTranslated(d,'outIn');recordNatFlow(this,d,mapping,p,true);packet.destination=mapping.inside;
+    if(entry?.overload){packet.destinationPort=entry.insidePort;if(packet.protocol==='icmp')packet.sourcePort=entry.insidePort;}
+    this.packetEvent(d,packet,'Destination NAT',p.destination+' → '+packet.destination,'forward',input);return packet;
   }
   releaseDHCP(deviceId:string,portName?:string):void {
     const d=this.getDevice(deviceId);if(!d)throw new Error('Unknown device');const ports=portName?[portName]:Object.keys(d.config.interfaces);
@@ -1197,7 +1197,8 @@ export class Simulator {
     const result = this.startService(d, 'tcp',options.timeout), source = this.serviceSource(d, address, options);
     if (source === undefined) { this.finishService(result.id, undefined, 'Source address is not assigned to an operational interface in the selected VRF'); return result; }
     if (!isIPv4(address) && !isIPv6(address)) { this.finishService(result.id, undefined, 'TCP requires a resolved IP address'); return result; }
-    const localPort = 49152 + this.hash(result.id) % 16000;
+    if(options.sourcePort!==undefined&&(!Number.isInteger(options.sourcePort)||options.sourcePort<1||options.sourcePort>65535)){this.finishService(result.id,undefined,'Source port must be 1–65535');return result;}
+    const localPort = options.sourcePort??49152 + this.hash(result.id) % 16000;
     const conn = { localAddress:source,remoteAddress:address,localPort,remotePort:port,state: 'SYN-SENT', sourcePort: localPort, destination: address, destinationPort: port, payload: clone(payload), segments: {} as Record<number, string>, received: 0, expected: 0, requests: 0, retransmissions: 0 };
     (d.runtime.features.tcpConnections ??= {})[result.id] = conn;
     const packet = this.makePacket(source, address, 'tcp', 60, { kind: 'tcp-syn', transaction: result.id, mss:1024 }); packet.sourcePort = localPort; packet.destinationPort = port; packet.vrf = options.vrf;

@@ -1,3 +1,6 @@
+import {nsosNATConfig} from './nsos-nat.ts';
+import {renderNSOSAAA} from './nsos-aaa.ts';
+import {renderPortSecurity} from './port-security.ts';
 import type {Device, DeviceConfig, InterfaceConfig, StaticRoute} from './model.ts';
 import {nsosACLConfig} from './nsos-acl.ts';
 import {nsosConfig} from './datacenter.ts';
@@ -16,11 +19,13 @@ function portLines(p:InterfaceConfig,c:DeviceConfig):string[] {
     if(p.nativeVlan!==1)lines.push(' switchport trunk native vlan '+p.nativeVlan);
     if(p.allowedVlans!==null)lines.push(' switchport trunk allowed vlan '+(p.allowedVlans.join(',')||'none'));
   }else if(!/^(Vlan|Loopback|mgmt)/i.test(p.name))lines.push(' no switchport');
+  lines.push(...renderPortSecurity(p,true));
   if(p.vrf)lines.push(' vrf member '+p.vrf);
   if(p.mtu!==1500)lines.push(' mtu '+p.mtu);
   if(f.speedAuto===false)lines.push(' speed '+p.speed);
   if(p.ip)lines.push(` ip address ${p.ip}/${maskToPrefix(p.mask||'255.255.255.0')}`);
   for(const address of p.ipv6)lines.push(' ipv6 address '+address);
+  if(f.nat)lines.push(' ip nat '+f.nat);
   if(f.aclOut)lines.push(' ip access-group '+f.aclOut+' out');
   if(f.channelGroup)lines.push(` channel-group ${f.channelGroup} mode ${f.channelMode||'on'}`);
   if(f.lacpRate)lines.push(' lacp rate '+(f.lacpRate==='slow'?'normal':f.lacpRate));
@@ -62,6 +67,7 @@ export function renderNSOSConfig(device:Device,c:DeviceConfig=device.config):str
   for(const field of ['contact','location'])if(c.features.snmp?.[field])lines.push(`snmp-server ${field} ${c.features.snmp[field]}`);
   for(const [name,u] of Object.entries<any>(c.features.users||{}).sort(([a],[b])=>compare(a,b)))
     lines.push(`username ${name} password ${u.secret??u.password} role ${u.role||'network-operator'}`);
+  lines.push(...renderNSOSAAA({...device,config:c}));
   if(c.features.vtp?.enabled){
     if(c.features.vtp.domain)lines.push('vtp domain '+c.features.vtp.domain);
     lines.push('vtp mode transparent','vtp version '+(c.features.vtp.version||1));
@@ -97,7 +103,7 @@ export function renderNSOSConfig(device:Device,c:DeviceConfig=device.config):str
     if(!v.gracefulConsistency)lines.push(' no graceful consistency-check');
     lines.push(' exit');
   }
-  lines.push(...nsosACLConfig({config:c}));
+  lines.push(...nsosACLConfig({config:c}),...nsosNATConfig({config:c}));
   const ports=Object.values(c.interfaces).sort((a,b)=>{
     const rank=(p:InterfaceConfig)=>/^Port-channel/.test(p.name)?0:/^Vlan/.test(p.name)?2:1;
     return rank(a)-rank(b)||compare(a.name,b.name);

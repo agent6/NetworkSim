@@ -1,3 +1,4 @@
+import {renderPortSecurity} from './port-security.ts';
 import {renderFTPClient} from './ios-ftp.ts';
 import {renderNSOSConfig} from './nsos-config.ts';
 import {slaLife,slaStartText,type SLAOperation,type SLASchedule} from './sla-config.ts';
@@ -53,8 +54,7 @@ function interfaceLines(p: InterfaceConfig, config: DeviceConfig, kind = 'router
     if (p.mode !== 'access' || p.features.switchportModeSet) a.push(` switchport mode ${p.mode.replace('dynamic-', 'dynamic ')}`);
   } else if (kind !== 'router' && !/^(Loopback|Vlan|Tunnel)/.test(p.name)) a.push(' no switchport');
   if(p.features.nonegotiate)a.push(' switchport nonegotiate');
-  const security=p.features.portSecurity;
-  if(security){if(security.maximum!==undefined&&security.maximum!==1)a.push(` switchport port-security maximum ${security.maximum}`);if(security.enabled)a.push(' switchport port-security');if(security.agingTime!==undefined)a.push(` switchport port-security aging time ${security.agingTime}`);if(security.violation&&security.violation!=='shutdown')a.push(` switchport port-security violation ${security.violation}`);if(security.agingStatic)a.push(' switchport port-security aging static');if(security.agingType)a.push(` switchport port-security aging type ${security.agingType}`);if(security.sticky)a.push(' switchport port-security mac-address sticky');for(const mac of security.macs||[])a.push(` switchport port-security mac-address ${mac}`);}
+  a.push(...renderPortSecurity(p));
   if (p.mtu !== (/^Tunnel/i.test(p.name) ? 1476 : 1500)) a.push(` mtu ${p.mtu}`);
   if (p.features.dhcp) a.push(' ip address dhcp');
   else if (p.ip) a.push(` ip address ${p.ip} ${p.mask || '255.255.255.0'}`);
@@ -506,7 +506,7 @@ export function renderConfig(device: Device, config: DeviceConfig = device.confi
   for(const r of c.features.pim?.ssmRanges||[])lines.push(`ip pim ssm range ${r.network}/${r.prefix}`);
   for(const [name,local]of Object.entries<any>(c.features.ipv6LocalPools||{}))lines.push(`ipv6 local pool ${name} ${local.prefix} ${local.length}`);
   for(const p of c.services.dhcpv6?.pools||[]){lines.push(`ipv6 dhcp pool ${p.name}`);if(p.prefix)lines.push(` address prefix ${p.prefix}${p.leaseSeconds!==undefined?` lifetime ${p.leaseSeconds} ${p.preferredLifetime??p.leaseSeconds}`:''}`);for(const address of p.dnsServers||[])lines.push(` dns-server ${address}`);if(p.domain)lines.push(` domain-name ${p.domain}`);if(p.delegatedPrefix)lines.push(` prefix-delegation ${p.pdPoolName?'pool '+p.pdPoolName:p.delegatedPrefix+' length '+(p.delegatedLength||64)}${p.pdLeaseSeconds!==undefined?` lifetime ${p.pdLeaseSeconds} ${p.pdPreferredLifetime??p.pdLeaseSeconds}`:''}`);lines.push('!');}
-  for(const [protocol,seconds]of Object.entries(c.features.nat?.timeouts||{}))lines.push(`ip nat translation ${protocol}-timeout ${seconds}`);
+  for(const [protocol,seconds]of Object.entries(c.features.nat?.timeouts||{}))lines.push(`ip nat translation ${protocol==='generic'?'timeout':protocol+'-timeout'} ${seconds}`);
   if(c.features.logging?.enabled===false)lines.push('no logging on');
   if(c.features.logging?.console!==undefined)lines.push(`${c.features.logging.console?'':'no '}logging console${c.features.logging.console?' '+(c.features.logging.consoleLevel??7):''}`);
   for(const host of c.features.logging?.hosts||[])lines.push(`logging host ${host}`);

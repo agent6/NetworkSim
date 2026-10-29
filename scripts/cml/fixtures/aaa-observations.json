@@ -1,0 +1,706 @@
+{
+  "schemaVersion": 1,
+  "source": "cml",
+  "scenario": "aaa",
+  "reviewedAt": "2026-10-24T16:04:09.469447+00:00",
+  "captureSha256": "b435818fefe77bc3fe0e14acae8de94e38373dd3154c3bf7cd14c921b4d096dd",
+  "planSha256": "8e7156234bfa028c319ba142628a83deea8153e61401578ae700a2161a242b97",
+  "system": {
+    "version": "2.10.0+build.13",
+    "ready": true,
+    "oui": "52:54:00:00:00:00",
+    "allow_ssh_pubkey_auth": false,
+    "timeout": 10,
+    "features": []
+  },
+  "images": {
+    "IOS": "IOL L2 XE 17.18.2",
+    "NX": "C9300v NX-OS 10.6(2)",
+    "RADIUS": "FreeRADIUS 3.2.7",
+    "TACACS+": "tac_plus-ng 71cff5cb0f3b7e82eaca7af7e377331e408ea858"
+  },
+  "native": {
+    "status": "differences",
+    "totalGroups": 42,
+    "passedGroups": 39,
+    "differences": [
+      {
+        "id": "aaa-015",
+        "node": "NX",
+        "passed": false,
+        "username": "viewer",
+        "authenticated": true,
+        "commands": [
+          {
+            "command": "show user-account viewer",
+            "raw": "\r\r\nuser:viewer\r\n        roles:network-operator \r\naccount created through REMOTE authentication\r\nCredentials such as ssh server key will be cached temporarily only for this user account\r\nLocal login not possible\r",
+            "closed": false,
+            "timedOut": false
+          },
+          {
+            "command": "configure terminal",
+            "raw": "\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r",
+            "closed": false,
+            "timedOut": false
+          },
+          {
+            "command": "hostname MUST-NOT-CHANGE",
+            "raw": "\r\r\n% Permission denied for the role\r",
+            "closed": false,
+            "timedOut": false
+          },
+          {
+            "command": "end",
+            "raw": "\r\r",
+            "closed": false,
+            "timedOut": false
+          },
+          {
+            "command": "exit",
+            "raw": "\r\r\n",
+            "closed": false,
+            "timedOut": true
+          }
+        ]
+      },
+      {
+        "id": "aaa-019",
+        "node": "NX",
+        "passed": false,
+        "username": "fallback",
+        "authenticated": true,
+        "commands": [
+          {
+            "command": "show user-account fallback",
+            "raw": "\r\r\nuser:fallback\r\n        this user account has no expiry date\r\n        roles:network-admin \r",
+            "closed": false,
+            "timedOut": false
+          },
+          {
+            "command": "exit",
+            "raw": "\r\r\n",
+            "closed": false,
+            "timedOut": true
+          }
+        ]
+      },
+      {
+        "id": "aaa-039",
+        "node": "NX",
+        "passed": false,
+        "username": "viewer",
+        "authenticated": true,
+        "commands": [
+          {
+            "command": "show user-account viewer",
+            "raw": "\r\r\nuser:viewer\r\n        roles:network-operator \r\naccount created through REMOTE authentication\r\nCredentials such as ssh server key will be cached temporarily only for this user account\r\nLocal login not possible\r",
+            "closed": false,
+            "timedOut": false
+          },
+          {
+            "command": "configure terminal",
+            "raw": "\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r",
+            "closed": false,
+            "timedOut": false
+          },
+          {
+            "command": "interface mgmt0",
+            "raw": "\r\r\n% Permission denied for the role\r",
+            "closed": false,
+            "timedOut": false
+          },
+          {
+            "command": "description AAA-local-role",
+            "raw": "\r\r\n              ^\r\n% Invalid command at '^' marker.\r",
+            "closed": false,
+            "timedOut": false
+          },
+          {
+            "command": "end",
+            "raw": "\r\r",
+            "closed": false,
+            "timedOut": false
+          },
+          {
+            "command": "exit",
+            "raw": "\r\r\nConnection to 192.168.100.2 closed.\r\r\n",
+            "closed": true,
+            "timedOut": false
+          }
+        ]
+      }
+    ],
+    "accountingEvidence": {
+      "192.168.100.1": true,
+      "192.168.100.2": true
+    },
+    "captures": [
+      {
+        "linkId": "0b5c5da1-f0ce-492a-a76b-ef5a125dd373",
+        "file": "0b5c5da1-f0ce-492a-a76b-ef5a125dd373.pcap",
+        "bytes": 351983,
+        "sha256": "129dc4f56e2521da6d511772be12452d6f177a32d2eed0de61ab1458c244b97e",
+        "packets": {
+          "radiusRequest": 10,
+          "radiusAccept": 4,
+          "radiusReject": 6,
+          "radiusAccountingRequest": 44,
+          "radiusAccountingResponse": 34,
+          "tacacsAuthenticateRequest": 17,
+          "tacacsAuthenticateReply": 17,
+          "tacacsAuthorizeRequest": 7,
+          "tacacsAuthorizeReply": 7,
+          "tacacsAccountingRequest": 52,
+          "tacacsAccountingReply": 52,
+          "packets": 2438
+        },
+        "passed": true
+      },
+      {
+        "linkId": "ba794456-e213-4b90-b236-d5c8655c0a8b",
+        "file": "ba794456-e213-4b90-b236-d5c8655c0a8b.pcap",
+        "bytes": 216153,
+        "sha256": "9cd0577c7de8a038fe7d0629e85475f5c2811486660b205c3be840294aa2a895",
+        "packets": {
+          "radiusRequest": 5,
+          "radiusAccept": 2,
+          "radiusReject": 3,
+          "radiusAccountingRequest": 38,
+          "radiusAccountingResponse": 30,
+          "tacacsAuthenticateRequest": 6,
+          "tacacsAuthenticateReply": 6,
+          "tacacsAuthorizeRequest": 3,
+          "tacacsAuthorizeReply": 3,
+          "tacacsAccountingRequest": 46,
+          "tacacsAccountingReply": 46,
+          "packets": 1415
+        },
+        "passed": true
+      }
+    ],
+    "ownedLabStopped": true,
+    "unrelatedLabState": "STARTED"
+  },
+  "simulator": {
+    "status": "passed",
+    "passedGroups": 42,
+    "totalGroups": 42
+  },
+  "probes": [
+    {
+      "id": "aaa-003",
+      "node": "IOS",
+      "passed": true,
+      "username": "fallback",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show privilege",
+          "raw": "\r\nCurrent privilege level is 15\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\nConnection to 192.168.100.1 closed by remote host.\r\r\nConnection to 192.168.100.1 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-004",
+      "node": "NX",
+      "passed": true,
+      "username": "fallback",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show user-account fallback",
+          "raw": "\r\r\nuser:fallback\r\n        this user account has no expiry date\r\n        roles:network-admin \r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\r\nConnection to 192.168.100.2 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-006",
+      "node": "IOS",
+      "passed": true,
+      "username": "remote",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show privilege",
+          "raw": "\r\nCurrent privilege level is 15\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\nConnection to 192.168.100.1 closed by remote host.\r\r\nConnection to 192.168.100.1 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-007",
+      "node": "IOS",
+      "passed": true,
+      "username": "viewer",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show privilege",
+          "raw": "\r\nCurrent privilege level is 1\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\nConnection to 192.168.100.1 closed by remote host.\r\r\nConnection to 192.168.100.1 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-008",
+      "node": "IOS",
+      "passed": true,
+      "username": "remote",
+      "authenticated": false,
+      "commands": []
+    },
+    {
+      "id": "aaa-009",
+      "node": "IOS",
+      "passed": true,
+      "username": "fallback",
+      "authenticated": false,
+      "commands": []
+    },
+    {
+      "id": "aaa-011",
+      "node": "IOS",
+      "passed": true,
+      "username": "fallback",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show privilege",
+          "raw": "\r\nCurrent privilege level is 15\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\nConnection to 192.168.100.1 closed by remote host.\r\r\nConnection to 192.168.100.1 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-014",
+      "node": "NX",
+      "passed": true,
+      "username": "remote",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show user-account remote",
+          "raw": "\r\r\nuser:remote\r\n        roles:network-admin \r\naccount created through REMOTE authentication\r\nCredentials such as ssh server key will be cached temporarily only for this user account\r\nLocal login not possible\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "configure terminal",
+          "raw": "\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "interface mgmt0",
+          "raw": "\r\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "description AAA-radius",
+          "raw": "\r\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "end",
+          "raw": "\r\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\r\nConnection to 192.168.100.2 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-015",
+      "node": "NX",
+      "passed": false,
+      "username": "viewer",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show user-account viewer",
+          "raw": "\r\r\nuser:viewer\r\n        roles:network-operator \r\naccount created through REMOTE authentication\r\nCredentials such as ssh server key will be cached temporarily only for this user account\r\nLocal login not possible\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "configure terminal",
+          "raw": "\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "hostname MUST-NOT-CHANGE",
+          "raw": "\r\r\n% Permission denied for the role\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "end",
+          "raw": "\r\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\r\n",
+          "closed": false,
+          "timedOut": true
+        }
+      ]
+    },
+    {
+      "id": "aaa-016",
+      "node": "NX",
+      "passed": true,
+      "username": "remote",
+      "authenticated": false,
+      "commands": []
+    },
+    {
+      "id": "aaa-017",
+      "node": "NX",
+      "passed": true,
+      "username": "fallback",
+      "authenticated": false,
+      "commands": []
+    },
+    {
+      "id": "aaa-019",
+      "node": "NX",
+      "passed": false,
+      "username": "fallback",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show user-account fallback",
+          "raw": "\r\r\nuser:fallback\r\n        this user account has no expiry date\r\n        roles:network-admin \r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\r\n",
+          "closed": false,
+          "timedOut": true
+        }
+      ]
+    },
+    {
+      "id": "aaa-022",
+      "node": "IOS",
+      "passed": true,
+      "username": "remote",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show privilege",
+          "raw": "\r\nCurrent privilege level is 15\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\nConnection to 192.168.100.1 closed by remote host.\r\r\nConnection to 192.168.100.1 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-023",
+      "node": "IOS",
+      "passed": true,
+      "username": "viewer",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show privilege",
+          "raw": "\r\nCurrent privilege level is 1\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\nConnection to 192.168.100.1 closed by remote host.\r\r\nConnection to 192.168.100.1 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-024",
+      "node": "IOS",
+      "passed": true,
+      "username": "remote",
+      "authenticated": false,
+      "commands": []
+    },
+    {
+      "id": "aaa-025",
+      "node": "IOS",
+      "passed": true,
+      "username": "fallback",
+      "authenticated": false,
+      "commands": []
+    },
+    {
+      "id": "aaa-027",
+      "node": "IOS",
+      "passed": true,
+      "username": "fallback",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show privilege",
+          "raw": "\r\nCurrent privilege level is 15\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\nConnection to 192.168.100.1 closed by remote host.\r\r\nConnection to 192.168.100.1 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-029",
+      "node": "IOS",
+      "passed": true,
+      "username": "noexec",
+      "authenticated": false,
+      "commands": []
+    },
+    {
+      "id": "aaa-031",
+      "node": "NX",
+      "passed": true,
+      "username": "remote",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show user-account remote",
+          "raw": "\r\r\nuser:remote\r\n        roles:network-admin \r\naccount created through REMOTE authentication\r\nCredentials such as ssh server key will be cached temporarily only for this user account\r\nLocal login not possible\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "configure terminal",
+          "raw": "\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "interface mgmt0",
+          "raw": "\r\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "description AAA-tacacs",
+          "raw": "\r\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "end",
+          "raw": "\r\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\r\nConnection to 192.168.100.2 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-032",
+      "node": "NX",
+      "passed": true,
+      "username": "viewer",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show user-account viewer",
+          "raw": "\r\r\nuser:viewer\r\n        roles:network-operator \r\naccount created through REMOTE authentication\r\nCredentials such as ssh server key will be cached temporarily only for this user account\r\nLocal login not possible\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "configure terminal",
+          "raw": "\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "hostname MUST-NOT-CHANGE",
+          "raw": "\r\r\n% Permission denied for the role\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "end",
+          "raw": "\r\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\r\nConnection to 192.168.100.2 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-033",
+      "node": "NX",
+      "passed": true,
+      "username": "remote",
+      "authenticated": false,
+      "commands": []
+    },
+    {
+      "id": "aaa-034",
+      "node": "NX",
+      "passed": true,
+      "username": "fallback",
+      "authenticated": false,
+      "commands": []
+    },
+    {
+      "id": "aaa-036",
+      "node": "NX",
+      "passed": true,
+      "username": "fallback",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show user-account fallback",
+          "raw": "\r\r\nuser:fallback\r\n        this user account has no expiry date\r\n        roles:network-admin \r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\r\nConnection to 192.168.100.2 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    },
+    {
+      "id": "aaa-039",
+      "node": "NX",
+      "passed": false,
+      "username": "viewer",
+      "authenticated": true,
+      "commands": [
+        {
+          "command": "show user-account viewer",
+          "raw": "\r\r\nuser:viewer\r\n        roles:network-operator \r\naccount created through REMOTE authentication\r\nCredentials such as ssh server key will be cached temporarily only for this user account\r\nLocal login not possible\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "configure terminal",
+          "raw": "\r\r\nEnter configuration commands, one per line. End with CNTL/Z.\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "interface mgmt0",
+          "raw": "\r\r\n% Permission denied for the role\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "description AAA-local-role",
+          "raw": "\r\r\n              ^\r\n% Invalid command at '^' marker.\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "end",
+          "raw": "\r\r",
+          "closed": false,
+          "timedOut": false
+        },
+        {
+          "command": "exit",
+          "raw": "\r\r\nConnection to 192.168.100.2 closed.\r\r\n",
+          "closed": true,
+          "timedOut": false
+        }
+      ]
+    }
+  ],
+  "bootstrap": {
+    "freshLinuxNode": true,
+    "passed": true,
+    "ownedLabStopped": true,
+    "natEgressDisabled": true
+  },
+  "browser": {
+    "browser": "155.0.8059.85",
+    "artifactSha256": "7cc788c2e2c96df6b69e152c4c7b3b1a6c101f2d95cdaca70dfeaf63d3609720",
+    "checks": [
+      "Offline Windows SSH to IOS uses TACACS authentication and EXEC authorization",
+      "NX-OS remote administrator role permits actual interface configuration",
+      "Remote network-operator role denies writes",
+      "Server GUI shows delivered EXEC Start/Stop and NX-OS configuration accounting without credentials",
+      "Saving the server role control changes the next real SSH session",
+      "AAA controls and receiver log persist in light and dark views"
+    ],
+    "errors": [],
+    "httpRequests": []
+  }
+}

@@ -1,0 +1,608 @@
+{
+  "schemaVersion": 1,
+  "source": "cml",
+  "scenario": "port-security",
+  "scenarioSha256": "c626509a56c86c4396454dc67a2025606f1c252ff0a676c2fde15534aea71655",
+  "referenceStatus": "installed-image-data-plane-failures",
+  "strictRunStatus": "failed",
+  "strictStepCount": 68,
+  "strictPassedSteps": 67,
+  "failedStep": {
+    "id": "s068",
+    "node": "H3",
+    "command": "ping 10.42.0.99 repeat 3 timeout 1",
+    "raw": "ping 10.42.0.99 repeat 3 timeout 1\r\nType escape sequence to abort.\r\nSending 3, 100-byte ICMP Echos to 10.42.0.99, timeout is 1 seconds:\r\n.!!\r\nSuccess rate is 66 percent (2/3), round-trip min/avg/max = 1/1/1 ms\r\nH3#",
+    "checks": [
+      {
+        "pattern": "Success rate is 0 percent",
+        "passed": false
+      }
+    ],
+    "timedOut": false,
+    "passed": false
+  },
+  "comparisonStatus": "blocked",
+  "captureSha256": "839e35499ecdc818b5b5a2a8c176a5290e12a4e9294855ca296d8562d50d80ea",
+  "supplementalCaptureSha256": "4bce97506d13339afc81365f1a921ca70f282152a40a57177f1f6dd63fe12fa1",
+  "supplementalObservationsSha256": "31d8897800f8c8836304282987e65cb438b65dbc2c189e6443bcdea5a8a85138",
+  "labStopped": true,
+  "userLabState": "STARTED",
+  "images": {
+    "IOS": {
+      "definition": "iosvl2",
+      "image": "iosvl2-2020",
+      "label": "IOSv L2 2020"
+    },
+    "NX": {
+      "definition": "nxosv9000",
+      "image": "nxosv9300-10-6-2-f",
+      "label": "NX-OS 9300v 10.6.2.F"
+    },
+    "FAN": {
+      "definition": "ioll2-xe",
+      "image": "ioll2-xe-17-18-02",
+      "label": "IOL L2 XE 17.18.02"
+    },
+    "H1": {
+      "definition": "iol-xe",
+      "image": "iol-xe-17-18-02",
+      "label": "IOL XE 17.18.02"
+    },
+    "H2": {
+      "definition": "iol-xe",
+      "image": "iol-xe-17-18-02",
+      "label": "IOL XE 17.18.02"
+    },
+    "H3": {
+      "definition": "iol-xe",
+      "image": "iol-xe-17-18-02",
+      "label": "IOL XE 17.18.02"
+    },
+    "TARGET": {
+      "definition": "iol-xe",
+      "image": "iol-xe-17-18-02",
+      "label": "IOL XE 17.18.02"
+    }
+  },
+  "contracts": [
+    {
+      "id": "strict-s010",
+      "source": "strict",
+      "node": "H1",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "observed": "Success rate is 66 percent (2/3), round-trip min/avg/max = 1/1/2 ms",
+      "observedSha256": "e66df3531e7b58eab72794109b6dc6cf74ef0bc1e7ebcfae71b4ec75369d68e9",
+      "rawSha256": "361f4554dbca5bde75cf1f47c1f9da6cc06e1f93e501cc0df0dcda39eb681dfc"
+    },
+    {
+      "id": "strict-s019",
+      "source": "strict",
+      "node": "H1",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "observed": "Success rate is 100 percent (3/3), round-trip min/avg/max = 1/1/1 ms",
+      "observedSha256": "54dfc2ff0efc95e4075712215c374af889b4b19510d255dbc8da0fd1a371860c",
+      "rawSha256": "1d8e448e82aa05d1bd4d6440a32319731743775cc57b912bd9ecbaa08238510a"
+    },
+    {
+      "id": "strict-s020",
+      "source": "strict",
+      "node": "H2",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "observed": "Success rate is 66 percent (2/3), round-trip min/avg/max = 1/1/1 ms",
+      "observedSha256": "a1c7b0f2c143ae99acb650eb4acb53176e58d03a3dee25672868f3561b451545",
+      "rawSha256": "277a93bd855eaa301b51c2f2a547d65f20e3e9448449a39a24da6eaa44b5b3bb"
+    },
+    {
+      "id": "strict-s021",
+      "source": "strict",
+      "node": "IOS",
+      "command": "show port-security interface GigabitEthernet0/1",
+      "patterns": [
+        "Total MAC Addresses\\s+: 2",
+        "Sticky MAC Addresses\\s+: 2"
+      ],
+      "observed": "Total MAC Addresses        : 2\nSticky MAC Addresses       : 2",
+      "observedSha256": "f31665c1d5a124408918f806816818251ef03c5f922887fb1e32373e122daf74",
+      "rawSha256": "37c66acbb160fff0708cfe63790d01a99830d098b5ff3177e14a1563219fe4d0"
+    },
+    {
+      "id": "strict-s022",
+      "source": "strict",
+      "node": "H3",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is 0 percent"
+      ],
+      "observed": "Success rate is 0 percent (0/3)",
+      "observedSha256": "378fe4b77e0cd2f819138ce2764c887d7c3032321f3fb68cd0a422a5d698b42b",
+      "rawSha256": "3671fe46065a41d929f3f9d23d2463b555b8da8e065907ca5cd2fe9f866c6789"
+    },
+    {
+      "id": "strict-s023",
+      "source": "strict",
+      "node": "IOS",
+      "command": "show port-security interface GigabitEthernet0/1",
+      "patterns": [
+        "Port Status\\s+: Secure-up",
+        "Security Violation Count\\s+: [1-9]"
+      ],
+      "observed": "Port Status                : Secure-up\nSecurity Violation Count   : 2",
+      "observedSha256": "265aac255c30f3c03079a1a752bd7b1dff6174e770ba1410b68c57a8200a5022",
+      "rawSha256": "3c7d99d5e3b07992401de2f7cc3b53e477ecc68b64269b45294c067d01497205"
+    },
+    {
+      "id": "strict-s024",
+      "source": "strict",
+      "node": "IOS",
+      "command": "show logging",
+      "patterns": [
+        "PORT_SECURITY-2-PSECURE_VIOLATION"
+      ],
+      "observed": "*Oct 23 04:44:59.774: %PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address 0200.0000.0003 on port GigabitEthernet0/1.",
+      "observedSha256": "2b376e2eacc650a9353a21382a06794f1a6bd38e2e0390347a7371a79ff87b3b",
+      "rawSha256": "f4835d7560c5d64c61ed87744e31ee70d5daf516fbe708e7e9ca442ccc5af131"
+    },
+    {
+      "id": "strict-s029",
+      "source": "strict",
+      "node": "H3",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is 0 percent"
+      ],
+      "observed": "Success rate is 0 percent (0/3)",
+      "observedSha256": "378fe4b77e0cd2f819138ce2764c887d7c3032321f3fb68cd0a422a5d698b42b",
+      "rawSha256": "86eb1bfa6126d60d9bb49e7ba90cd03e511dbab79fa46815848a417d43f982f2"
+    },
+    {
+      "id": "strict-s030",
+      "source": "strict",
+      "node": "H1",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "observed": "Success rate is 100 percent (3/3), round-trip min/avg/max = 1/1/1 ms",
+      "observedSha256": "54dfc2ff0efc95e4075712215c374af889b4b19510d255dbc8da0fd1a371860c",
+      "rawSha256": "1d8e448e82aa05d1bd4d6440a32319731743775cc57b912bd9ecbaa08238510a"
+    },
+    {
+      "id": "strict-s035",
+      "source": "strict",
+      "node": "H3",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is 0 percent"
+      ],
+      "observed": "Success rate is 0 percent (0/3)",
+      "observedSha256": "378fe4b77e0cd2f819138ce2764c887d7c3032321f3fb68cd0a422a5d698b42b",
+      "rawSha256": "86eb1bfa6126d60d9bb49e7ba90cd03e511dbab79fa46815848a417d43f982f2"
+    },
+    {
+      "id": "strict-s036",
+      "source": "strict",
+      "node": "IOS",
+      "command": "show port-security interface GigabitEthernet0/1",
+      "patterns": [
+        "Port Status\\s+: Secure-shutdown"
+      ],
+      "observed": "Port Status                : Secure-shutdown",
+      "observedSha256": "b7b491a6602396b5898fd4549213c8e7962e1137e107dddfc7a698bf31b3d552",
+      "rawSha256": "ec2355bddf2b128dca1108ac8c31417777d6d471081ce5e668e5f4a0dce6b796"
+    },
+    {
+      "id": "strict-s037",
+      "source": "strict",
+      "node": "IOS",
+      "command": "show interfaces status err-disabled",
+      "patterns": [
+        "err-disabled\\s+psecure-violation"
+      ],
+      "observed": "Gi0/1                        err-disabled psecure-violation",
+      "observedSha256": "760cbdd0e2c8f87cba079699c0582768b440e11e520439327208443335da7a5f",
+      "rawSha256": "ee1a903c0069c590589501b49b71a29d95c0618a1c48b8328935663b58b773a7"
+    },
+    {
+      "id": "strict-s043",
+      "source": "strict",
+      "node": "H1",
+      "command": "ping 10.42.0.1 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "observed": "Success rate is 100 percent (3/3), round-trip min/avg/max = 1/1/1 ms",
+      "observedSha256": "54dfc2ff0efc95e4075712215c374af889b4b19510d255dbc8da0fd1a371860c",
+      "rawSha256": "1d8e448e82aa05d1bd4d6440a32319731743775cc57b912bd9ecbaa08238510a"
+    },
+    {
+      "id": "strict-s057",
+      "source": "strict",
+      "node": "H1",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "observed": "Success rate is 66 percent (2/3), round-trip min/avg/max = 1/1/2 ms",
+      "observedSha256": "e66df3531e7b58eab72794109b6dc6cf74ef0bc1e7ebcfae71b4ec75369d68e9",
+      "rawSha256": "6c521df687a332fc227891fb52374b9dab83044e70fcf0d7412ee69f0dccb7b9"
+    },
+    {
+      "id": "strict-s065",
+      "source": "strict",
+      "node": "H1",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "observed": "Success rate is 100 percent (3/3), round-trip min/avg/max = 1/1/2 ms",
+      "observedSha256": "3c6a0f98dfcf8d918a7b39a48e914cf145ba979ab80dc8779e82a57a62e56cc4",
+      "rawSha256": "e0cd2299af411d564af53f797689899091dfe2c91957a5da41328182fc6e6520"
+    },
+    {
+      "id": "strict-s066",
+      "source": "strict",
+      "node": "H2",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is (?:100|[1-9][0-9]?) percent"
+      ],
+      "observed": "Success rate is 66 percent (2/3), round-trip min/avg/max = 1/1/1 ms",
+      "observedSha256": "a1c7b0f2c143ae99acb650eb4acb53176e58d03a3dee25672868f3561b451545",
+      "rawSha256": "f94239f8c47c6063689818c4598f44adb938ca6a729a954c6749bd3680fd1237"
+    },
+    {
+      "id": "strict-s067",
+      "source": "strict",
+      "node": "NX",
+      "command": "show port-security interface Ethernet1/1",
+      "patterns": [
+        "Total MAC Addresses\\s+: 2",
+        "Sticky MAC Addresses\\s+: 2"
+      ],
+      "observed": "Total MAC Addresses        : 2\nSticky MAC Addresses       : 2",
+      "observedSha256": "f31665c1d5a124408918f806816818251ef03c5f922887fb1e32373e122daf74",
+      "rawSha256": "26dc5e48abcb8bfe0e5c45fdd348177de0e1f2d8b92363fee8fd2a0ea1dc1513"
+    },
+    {
+      "id": "nx-restrict-unauthorized-still-forwards",
+      "source": "supplemental",
+      "node": "H3",
+      "command": "ping 10.42.0.99 repeat 5 timeout 1",
+      "patterns": [
+        "Success rate is 100 percent"
+      ],
+      "observed": "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms",
+      "observedSha256": "a5828915a9d63790daefff62790c47582dbbc71f5c3d0674d839d24ec58492d7",
+      "rawSha256": "80124cb7f2f82c5869c76b9d735d9d602873cead97a7417372bff53f768ac0c4"
+    },
+    {
+      "id": "nx-restrict-counter",
+      "source": "supplemental",
+      "node": "NX",
+      "command": "show port-security interface Ethernet1/1",
+      "patterns": [
+        "Security violation count\\s+: 1",
+        "Sticky MAC Addresses\\s+: 2"
+      ],
+      "observed": "Sticky MAC Addresses       : 2\nSecurity violation count   : 1",
+      "observedSha256": "f275eff0ea5b4af9bc3d1e0d352316622422f4640fb78fa264830e6b278d31e4",
+      "rawSha256": "954cf8087f232691ab7d3d16438ea2218236a96b08bb08c03a43c7f5617a79f2"
+    },
+    {
+      "id": "nx-protect-unauthorized-still-forwards",
+      "source": "supplemental",
+      "node": "H3",
+      "command": "ping 10.42.0.99 repeat 5 timeout 1",
+      "patterns": [
+        "Success rate is 100 percent"
+      ],
+      "observed": "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms",
+      "observedSha256": "06a2bd5d84174ca6eda5753dc6d1462e48d5bf8caae51495b3f63b49f0db88c7",
+      "rawSha256": "2e0c0ce3cb289d583604014b1679e8ff2e6ddb519b6e165645a5927074f6fa7d"
+    },
+    {
+      "id": "nx-protect-authorized-forwards",
+      "source": "supplemental",
+      "node": "H1",
+      "command": "ping 10.42.0.99 repeat 5 timeout 1",
+      "patterns": [
+        "Success rate is 100 percent"
+      ],
+      "observed": "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms",
+      "observedSha256": "06a2bd5d84174ca6eda5753dc6d1462e48d5bf8caae51495b3f63b49f0db88c7",
+      "rawSha256": "bfca4fd496f1921354c9aae398334209cd76062681e50a7ddac5ac4f2a2eea9e"
+    },
+    {
+      "id": "nx-shutdown-state",
+      "source": "supplemental",
+      "node": "NX",
+      "command": "show port-security interface Ethernet1/1",
+      "patterns": [
+        "Port Status\\s+: Secure-shutdown"
+      ],
+      "observed": "Port Status                : Secure-shutdown",
+      "observedSha256": "b7b491a6602396b5898fd4549213c8e7962e1137e107dddfc7a698bf31b3d552",
+      "rawSha256": "b0d792985bcdb22d151cadc2e8b3592bec3ec15fa5874169dd3cdbfbdec15c78"
+    },
+    {
+      "id": "nx-shutdown-row",
+      "source": "supplemental",
+      "node": "NX",
+      "command": "show interface status err-disabled",
+      "patterns": [
+        "secViolErrDis",
+        "Sec-violation errDisable"
+      ],
+      "observed": "Eth1/1       --                 secViolErrDis      Sec-violation errDisable",
+      "observedSha256": "5291ed3c707f66839d62429f3de971ccfadf513edf19a7f0c287dff7b5c0482c",
+      "rawSha256": "df4917d79fc6d076439972895a7aced95d935ac3415574516716f802c611e6d0"
+    },
+    {
+      "id": "nx-shutdown-blocks-authorized",
+      "source": "supplemental",
+      "node": "H1",
+      "command": "ping 10.42.0.99 repeat 3 timeout 1",
+      "patterns": [
+        "Success rate is 0 percent"
+      ],
+      "observed": "Success rate is 0 percent (0/3)",
+      "observedSha256": "378fe4b77e0cd2f819138ce2764c887d7c3032321f3fb68cd0a422a5d698b42b",
+      "rawSha256": "5ad841747932a4b179d3f4f2c73ad0f62ac4fe3dffca9618cd0a3e81aae9fabb"
+    },
+    {
+      "id": "nx-recovery-configuration",
+      "source": "supplemental",
+      "node": "NX",
+      "command": "show errdisable recovery",
+      "patterns": [
+        "psec-violation\\s+enabled",
+        "Timer interval: 30"
+      ],
+      "observed": "psec-violation                  enabled   \n        Timer interval: 30",
+      "observedSha256": "4caa40ed3fc6925f87ff440fb0003a2e817e9a45073f7219340a393491ef2d3e",
+      "rawSha256": "00d0df35d9098b1ae415393facc7833ec7e4a10112f39c39b07ad01909d75b26"
+    },
+    {
+      "id": "nx-recovered-state",
+      "source": "supplemental",
+      "node": "NX",
+      "command": "show port-security interface Ethernet1/1",
+      "patterns": [
+        "Port Status\\s+: Secure UP",
+        "Security violation count\\s+: 0",
+        "Sticky MAC Addresses\\s+: 2"
+      ],
+      "observed": "Port Status                : Secure UP\nSticky MAC Addresses       : 2\nSecurity violation count   : 0",
+      "observedSha256": "ea9ac406ddd20f9118d023533af575780ff1c517b155bde3d027ab06a7f50d79",
+      "rawSha256": "dc7445d5d5714978e5821e75bc725bc64d1b435377270459aeeface3f4f07445"
+    },
+    {
+      "id": "nx-recovered-forwarding",
+      "source": "supplemental",
+      "node": "H1",
+      "command": "ping 10.42.0.99 repeat 5 timeout 1",
+      "patterns": [
+        "Success rate is 100 percent"
+      ],
+      "observed": "Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms",
+      "observedSha256": "a5828915a9d63790daefff62790c47582dbbc71f5c3d0674d839d24ec58492d7",
+      "rawSha256": "92d58607191b20f472da16177d60adb3bea1f2f76e1cee53d34968d853bf63ab"
+    },
+    {
+      "id": "nx-disabled-interface-diagnostic",
+      "source": "supplemental",
+      "node": "NX",
+      "command": "show port-security interface Ethernet1/1",
+      "patterns": [
+        "ERROR: error: Port security is not enabled"
+      ],
+      "observed": "ERROR: error: Port security is not enabled",
+      "observedSha256": "b8f553cb49e0fd92f56fa9e6e5db53b6d52d8e94ef0d08fccdcb636523b66ea3",
+      "rawSha256": "dd3c7d184cd4b26680cb08870385c7e7092b183d94e7b2ead3d2293d7fea8be5"
+    },
+    {
+      "id": "nx-sticky-table",
+      "source": "supplemental",
+      "node": "NX",
+      "command": "show port-security address",
+      "patterns": [
+        "0200\\.0000\\.0001\\s+STICKY",
+        "0200\\.0000\\.0002\\s+STICKY"
+      ],
+      "observed": "  10   0200.0000.0002    STICKY  0          No       No     Ethernet1/1   \n  10   0200.0000.0001    STICKY  0          No       No     Ethernet1/1   ",
+      "observedSha256": "c8cce50191735c07c5315a1e465026af2b5600fffe387c6f12201540c36c71b1",
+      "rawSha256": "e77e1630e0ec8876ea0b643382322d09980159cb6e724a45de58ff8b30f718b3"
+    },
+    {
+      "id": "ios-sticky-table",
+      "source": "supplemental",
+      "node": "IOS",
+      "command": "show port-security address",
+      "patterns": [
+        "0200\\.0000\\.0001\\s+SecureSticky",
+        "0200\\.0000\\.0002\\s+SecureSticky"
+      ],
+      "observed": "  10    0200.0000.0001    SecureSticky                  Gi0/1        -\n  10    0200.0000.0002    SecureSticky                  Gi0/1        -",
+      "observedSha256": "c2abb45380cc1af83f4146eaa9a082ddfd83929a0224a62ef014b5514349f4f1",
+      "rawSha256": "fe45333d9ee65189b463d349c4a4a7469e48917bd4f60073ea6d2894cedcaa5d"
+    }
+  ],
+  "packetEvidence": [
+    {
+      "source": "strict",
+      "linkId": "3af40ad6-75ee-410f-8267-bf48842babd8",
+      "sha256": "e9f575d0b0abb79d87cc0bd604b5afb816ed5c9e66a0c128ee56add09ec4c6c9",
+      "ARP": 14,
+      "ICMP": 26,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 33,
+      "CDP": 0,
+      "LLDP": 0,
+      "packets": 73
+    },
+    {
+      "source": "strict",
+      "linkId": "dcf278e6-89f3-4dd1-840e-204972012488",
+      "sha256": "d20de655784e879a4d06ddc465961ec116d417a10f81f23bb3f62f3c69dd0fe6",
+      "ARP": 15,
+      "ICMP": 18,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 16,
+      "CDP": 3,
+      "LLDP": 0,
+      "packets": 52
+    },
+    {
+      "source": "strict",
+      "linkId": "a6159582-db62-43ea-8300-669d034da4c1",
+      "sha256": "0df0672712ae4e460c5c4004991ea52fffe634fdf9f9ac2ea6d472efed816b0e",
+      "ARP": 14,
+      "ICMP": 32,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 0,
+      "CDP": 0,
+      "LLDP": 0,
+      "packets": 58
+    },
+    {
+      "source": "strict",
+      "linkId": "1ac1a7d0-7926-4e5e-88e6-402258d387ac",
+      "sha256": "5b687733a791d77f183dfd327ddf32399317d2e9a304194b8702d64aa31c4e14",
+      "ARP": 14,
+      "ICMP": 8,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 0,
+      "CDP": 0,
+      "LLDP": 0,
+      "packets": 34
+    },
+    {
+      "source": "strict",
+      "linkId": "961a5e7a-0b2f-47e6-9aa2-f8bbe98e0402",
+      "sha256": "7899883e87372fa48f4583ad06ce7fa63c7e34206653fc63d1b85d1e95eb2e99",
+      "ARP": 13,
+      "ICMP": 4,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 0,
+      "CDP": 0,
+      "LLDP": 0,
+      "packets": 29
+    },
+    {
+      "source": "strict",
+      "linkId": "23196028-2eff-43d9-9c86-1eba58113a7b",
+      "sha256": "298764149a713b3e59f5f4dac7c3acb90cba940ce9020bd8a1ce87e2b7c45bee",
+      "ARP": 15,
+      "ICMP": 18,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 60,
+      "CDP": 2,
+      "LLDP": 0,
+      "packets": 107
+    },
+    {
+      "source": "supplemental",
+      "linkId": "3af40ad6-75ee-410f-8267-bf48842babd8",
+      "sha256": "dbf0ea2b46c31ee8a57d8d729be14889380f29753ec53627e3e0706ea49da743",
+      "ARP": 2,
+      "ICMP": 0,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 0,
+      "CDP": 0,
+      "LLDP": 0,
+      "packets": 8
+    },
+    {
+      "source": "supplemental",
+      "linkId": "dcf278e6-89f3-4dd1-840e-204972012488",
+      "sha256": "49206a5110ae1282eb49742d786d05d18b2d0a6ee5c138062899be0e658c37a5",
+      "ARP": 6,
+      "ICMP": 76,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 153,
+      "CDP": 9,
+      "LLDP": 0,
+      "packets": 250
+    },
+    {
+      "source": "supplemental",
+      "linkId": "a6159582-db62-43ea-8300-669d034da4c1",
+      "sha256": "f18b52004fd436d9b141d1993b2d8eddb5fae9e8a13a4c39e5ba094fa81a92e2",
+      "ARP": 2,
+      "ICMP": 36,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 0,
+      "CDP": 0,
+      "LLDP": 0,
+      "packets": 85
+    },
+    {
+      "source": "supplemental",
+      "linkId": "1ac1a7d0-7926-4e5e-88e6-402258d387ac",
+      "sha256": "6cfc12c9d744b164023ba73c1bed70f9db9152b633e9ced1433615b5c49050e7",
+      "ARP": 2,
+      "ICMP": 0,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 0,
+      "CDP": 0,
+      "LLDP": 0,
+      "packets": 49
+    },
+    {
+      "source": "supplemental",
+      "linkId": "961a5e7a-0b2f-47e6-9aa2-f8bbe98e0402",
+      "sha256": "5d0cb2f9e339f27208cd5eed01f4f6465f19ca9ba6751725ad7944dd63c691a1",
+      "ARP": 6,
+      "ICMP": 40,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 0,
+      "CDP": 0,
+      "LLDP": 0,
+      "packets": 55
+    },
+    {
+      "source": "supplemental",
+      "linkId": "23196028-2eff-43d9-9c86-1eba58113a7b",
+      "sha256": "0cad3dde81fbbcf02758ab6ae65cba8c2739824199d29ad2cede5874eb06567c",
+      "ARP": 6,
+      "ICMP": 76,
+      "ICMPv6": 0,
+      "OSPF": 0,
+      "STP": 205,
+      "CDP": 7,
+      "LLDP": 0,
+      "packets": 341
+    }
+  ],
+  "unauthorizedTransitProof": {
+    "linkId": "23196028-2eff-43d9-9c86-1eba58113a7b",
+    "requests": 2,
+    "replies": 2
+  },
+  "limitations": [
+    "The installed Nexus 9300v 10.6(2) accepts restrict/protect and reports a violation, but the third source continues forwarding to a separate transit target. These are failed reference checks.",
+    "Manual Nexus recovery did not restore forwarding within the supplemental ten-second wait. After enabling psecure-violation recovery at 30 seconds, the port and authorized traffic recovered, with the counter reset and sticky bindings retained.",
+    "NetworkSim implements documented ingress denial and tests it through packet delivery. This is not a claim of matching the installed virtual image's forwarding failure or complete hardware timing.",
+    "Aggregate/vPC secure-table synchronization, per-VLAN limits, port-security SNMP notifications and the security MIB remain unavailable."
+  ]
+}

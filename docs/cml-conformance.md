@@ -1,5 +1,7 @@
 # Cisco CML conformance workflow
 
+NAT/PAT capture, packet evidence, replay and offline browser checks are documented in [the NAT/PAT audit](audits/cml-nat-fidelity.md). The reusable runner is `scripts/cml/nat_workflow.py`; the portable exercise is `examples/nat-pat-ios-nxos.netsim.yaml`.
+
 This is an on-demand developer workflow for comparing NetworkSim with actual IOS, IOS XE and NX-OS images. It runs outside the application. The delivered simulator remains an offline HTML application and never contacts CML.
 
 The first scenario, `scripts/cml/scenarios/management.json`, creates five nodes with four isolated links: IOSv, IOL XE, Nexus 9000v, an IOSv probe and a modern IOL XE SSH probe. The second probe avoids an observed SSH negotiation abort between the older IOSv client and IOS XE 17.18. It is not a simulator workaround. It checks VTY admission, missing line passwords, local users, privileged login, Telnet transport filtering and SSH feature enable/disable. Each run records the exact image IDs, `show version` output, console transcripts, command results and PCAP files. It does not certify other protocols or every command on those images.
@@ -136,3 +138,54 @@ to an already printed prompt. It still rejects command echoes as prompt fences.
 Unprefixed native `Area mismatch` is a command rejection; `Already not
 configured` remains an idempotent notice. No numerical output fields are removed
 to make comparisons match.
+
+## Validate port-security with three source hosts
+
+`scripts/cml/scenarios/port-security.json` uses IOSvL2, Nexus 9300v,
+a fanout switch, three IOL source hosts and a separate transit target. All six
+links are created before any VM starts. The scenario requires successful
+forwarding before it interprets a third-host failure as enforcement. It then
+checks sticky learning, restrict, protect, shutdown, diagnostics and manual
+recovery on both platforms. Convergence waits also let pending ARP retries drain
+before recovery, so a still-transmitting offender cannot create a misleading
+recovery failure.
+
+```sh
+.cache/cml-venv/bin/python scripts/cml/capture.py \
+  --url "$CML_URL" --user admin --insecure \
+  --scenario scripts/cml/scenarios/port-security.json \
+  --known-hosts "$HOME/.ssh/known_hosts" \
+  --out .cache/cml-runs/port-security-01
+node scripts/cml/replay.ts scripts/cml/scenarios/port-security.json \
+  .cache/cml-runs/port-security-replay.json
+python3 scripts/cml/compare.py \
+  --scenario scripts/cml/scenarios/port-security.json \
+  --capture .cache/cml-runs/port-security-01/capture.json \
+  --replay .cache/cml-runs/port-security-replay.json \
+  --out .cache/cml-runs/port-security-comparison.json
+```
+
+An echoed `show interfaces status err-disabled` is not proof that a port is
+error-disabled. Assertions now ignore the command echo; the NX-OS check requires
+the native `secViolErrDis` row. Native unprefixed secure-MAC limit rejections are
+failures as well. Failed baselines remain failed captures, never reference passes.
+
+The portable [IOS example](../examples/ios-port-security.netsim.yaml) and
+[NX-OS example](../examples/nxos-port-security.netsim.yaml) open in the offline
+application. Ping the target from PC1 and PC2 first, then PC3. The example starts
+in restrict mode. NX-OS port-security currently accepts standalone physical access
+ports; aggregate/vPC synchronization, per-VLAN limits, security MIBs and
+port-security-specific SNMP notifications remain unavailable.
+
+The current reviewed run is **not a native fidelity pass**. IOS checks passed,
+but the installed Nexus 9300v 10.6(2) forwarded the third source in both restrict
+and protect modes despite reporting a violation. The strict run stopped at
+`s068`; supplemental captures confirmed the behavior after settling. Shutdown
+and timer recovery operated. See [the port-security audit](audits/cml-port-security.md)
+and the reviewed `scripts/cml/fixtures/port-security-observations.json` evidence.
+Do not remove the denial assertions to make this image pass. The simulator's
+packet tests enforce the documented security policy independently.
+
+### AAA, RADIUS and TACACS+ interoperability
+
+The dedicated [AAA workflow and audit](audits/cml-aaa-fidelity.md) uses real FreeRADIUS/tac_plus-ng daemons, paced SSH sessions, server logs and protocol-aware packet gates. It covers IOS named servers and native NX-OS hosts/groups/VRFs, local/error fallback, separate privilege/role handling and accounting. The checked-in [42-group matrix](../scripts/cml/aaa/scenario.json) replays through `scripts/cml/aaa_replay.ts`. Native results retain three unresolved Nexus differences; the simulator passes the documented semantic contracts. Import `examples/aaa-ios-nxos.netsim.yaml` for an offline exercise.

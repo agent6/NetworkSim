@@ -1,0 +1,555 @@
+{
+  "schemaVersion": 1,
+  "id": "nat",
+  "steps": [
+    {
+      "id": "nat-001",
+      "kind": "config",
+      "node": "IOS",
+      "commands": [
+        "clear ip nat translation *",
+        "configure terminal",
+        "no ip nat inside source static 192.168.10.10 203.0.113.10",
+        "no ip nat inside source list 1 pool PUBLIC",
+        "no ip nat inside source list 1 pool SHORT",
+        "no ip nat inside source list 1 interface Ethernet0/1 overload",
+        "no ip nat inside source list 99 interface Ethernet0/1 overload",
+        "no ip nat pool PUBLIC",
+        "no ip nat pool SHORT",
+        "no ip nat translation timeout",
+        "no ip nat translation udp-timeout",
+        "no ip nat translation icmp-timeout",
+        "interface Ethernet0/0",
+        "ip nat inside",
+        "exit",
+        "interface Ethernet0/1",
+        "ip nat outside",
+        "exit",
+        "access-list 1 permit 192.168.10.0 0.0.0.255",
+        "end"
+      ]
+    },
+    {
+      "id": "nat-002",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "udp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-baseline",
+      "success": true,
+      "observedSource": "192.168.10.10",
+      "sourcePort": 44080
+    },
+    {
+      "id": "nat-003",
+      "kind": "probe",
+      "node": "O1",
+      "protocol": "udp",
+      "source": "203.0.113.100",
+      "destination": "203.0.113.10",
+      "token": "ios-unallocated",
+      "success": false,
+      "observedSource": null,
+      "sourcePort": 44080
+    },
+    {
+      "id": "nat-004",
+      "kind": "config",
+      "node": "IOS",
+      "commands": [
+        "configure terminal",
+        "ip nat inside source static 192.168.10.10 203.0.113.10",
+        "end",
+        "debug ip nat"
+      ]
+    },
+    {
+      "id": "nat-005",
+      "kind": "survey",
+      "node": "IOS",
+      "commands": [
+        "show ip nat translations",
+        "show ip nat translations verbose",
+        "show ip nat statistics"
+      ]
+    },
+    {
+      "id": "nat-006",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "icmp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-static-out-icmp",
+      "success": true,
+      "observedSource": "203.0.113.10",
+      "sourcePort": 44080
+    },
+    {
+      "id": "nat-007",
+      "kind": "probe",
+      "node": "O1",
+      "protocol": "icmp",
+      "source": "203.0.113.100",
+      "destination": "203.0.113.10",
+      "token": "ios-static-in-icmp",
+      "success": true,
+      "observedSource": "203.0.113.100",
+      "sourcePort": 45080
+    },
+    {
+      "id": "nat-008",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "udp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-static-out-udp",
+      "success": true,
+      "observedSource": "203.0.113.10",
+      "sourcePort": 44080
+    },
+    {
+      "id": "nat-009",
+      "kind": "probe",
+      "node": "O1",
+      "protocol": "udp",
+      "source": "203.0.113.100",
+      "destination": "203.0.113.10",
+      "token": "ios-static-in-udp",
+      "success": true,
+      "observedSource": "203.0.113.100",
+      "sourcePort": 45080
+    },
+    {
+      "id": "nat-010",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "tcp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-static-out-tcp",
+      "success": true,
+      "observedSource": "203.0.113.10",
+      "sourcePort": 44080
+    },
+    {
+      "id": "nat-011",
+      "kind": "probe",
+      "node": "O1",
+      "protocol": "tcp",
+      "source": "203.0.113.100",
+      "destination": "203.0.113.10",
+      "token": "ios-static-in-tcp",
+      "success": true,
+      "observedSource": "203.0.113.100",
+      "sourcePort": 45080
+    },
+    {
+      "id": "nat-012",
+      "kind": "survey",
+      "node": "IOS",
+      "commands": [
+        "show ip nat translations verbose",
+        "show ip nat statistics",
+        "show running-config | include ip nat"
+      ]
+    },
+    {
+      "id": "nat-013",
+      "kind": "config",
+      "node": "IOS",
+      "commands": [
+        "clear ip nat translation *"
+      ]
+    },
+    {
+      "id": "nat-014",
+      "kind": "survey",
+      "node": "IOS",
+      "commands": [
+        "show ip nat translations"
+      ]
+    },
+    {
+      "id": "nat-015",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "udp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-static-confirm",
+      "success": true,
+      "observedSource": "203.0.113.10",
+      "sourcePort": 44081
+    },
+    {
+      "id": "nat-016",
+      "kind": "config",
+      "node": "IOS",
+      "commands": [
+        "configure terminal",
+        {
+          "command": "no ip nat inside source static 192.168.10.10 203.0.113.10",
+          "answer": ""
+        },
+        "end"
+      ]
+    },
+    {
+      "id": "nat-017",
+      "kind": "survey",
+      "node": "IOS",
+      "commands": [
+        "show ip nat translations"
+      ]
+    },
+    {
+      "id": "nat-018",
+      "kind": "config",
+      "node": "IOS",
+      "commands": [
+        "configure terminal",
+        {
+          "command": "no ip nat inside source static 192.168.10.10 203.0.113.10",
+          "answer": "yes"
+        },
+        "end"
+      ]
+    },
+    {
+      "id": "nat-019",
+      "kind": "survey",
+      "node": "IOS",
+      "commands": [
+        "show ip nat translations"
+      ]
+    },
+    {
+      "id": "nat-020",
+      "kind": "config",
+      "node": "IOS",
+      "commands": [
+        "configure terminal",
+        "ip nat pool PUBLIC 203.0.113.10 203.0.113.11 netmask 255.255.255.0",
+        "ip nat inside source list 1 pool PUBLIC",
+        "end"
+      ]
+    },
+    {
+      "id": "nat-021",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "icmp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-dynamic-icmp",
+      "success": true,
+      "observedSource": "203.0.113.10",
+      "sourcePort": 44082
+    },
+    {
+      "id": "nat-022",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "udp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-dynamic-udp",
+      "success": true,
+      "observedSource": "203.0.113.10",
+      "sourcePort": 44082
+    },
+    {
+      "id": "nat-023",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "tcp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-dynamic-tcp",
+      "success": true,
+      "observedSource": "203.0.113.10",
+      "sourcePort": 44082
+    },
+    {
+      "id": "nat-024",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "udp",
+      "source": "192.168.10.11",
+      "destination": "203.0.113.100",
+      "token": "ios-dynamic-second",
+      "success": true,
+      "observedSource": "203.0.113.11",
+      "sourcePort": 44082
+    },
+    {
+      "id": "nat-025",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "udp",
+      "source": "192.168.10.12",
+      "destination": "203.0.113.100",
+      "token": "ios-dynamic-exhausted",
+      "success": false,
+      "observedSource": null,
+      "sourcePort": 44082
+    },
+    {
+      "id": "nat-026",
+      "kind": "probe",
+      "node": "O1",
+      "protocol": "udp",
+      "source": "203.0.113.101",
+      "destination": "203.0.113.10",
+      "token": "ios-dynamic-fresh-in",
+      "success": true,
+      "observedSource": "203.0.113.101",
+      "sourcePort": 45082
+    },
+    {
+      "id": "nat-027",
+      "kind": "survey",
+      "node": "IOS",
+      "commands": [
+        "show ip nat translations verbose",
+        "show ip nat statistics"
+      ]
+    },
+    {
+      "id": "nat-028",
+      "kind": "config",
+      "node": "IOS",
+      "commands": [
+        "configure terminal",
+        {
+          "command": "no ip nat inside source list 1 pool PUBLIC",
+          "reject": true
+        },
+        {
+          "command": "no ip nat pool PUBLIC",
+          "reject": true
+        },
+        "end",
+        "clear ip nat translation *",
+        "configure terminal",
+        "no ip nat inside source list 1 pool PUBLIC",
+        "no ip nat pool PUBLIC",
+        "ip nat inside source list 1 interface Ethernet0/1 overload",
+        "end"
+      ]
+    },
+    {
+      "id": "nat-029",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "udp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-pat-first-udp",
+      "success": true,
+      "observedSource": "203.0.113.1",
+      "sourcePort": 44083
+    },
+    {
+      "id": "nat-030",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "udp",
+      "source": "192.168.10.11",
+      "destination": "203.0.113.100",
+      "token": "ios-pat-second-udp",
+      "success": true,
+      "observedSource": "203.0.113.1",
+      "sourcePort": 44083
+    },
+    {
+      "id": "nat-031",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "tcp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-pat-first-tcp",
+      "success": true,
+      "observedSource": "203.0.113.1",
+      "sourcePort": 44083
+    },
+    {
+      "id": "nat-032",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "tcp",
+      "source": "192.168.10.11",
+      "destination": "203.0.113.100",
+      "token": "ios-pat-second-tcp",
+      "success": true,
+      "observedSource": "203.0.113.1",
+      "sourcePort": 44083
+    },
+    {
+      "id": "nat-033",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "icmp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-pat-first-icmp",
+      "success": true,
+      "observedSource": "203.0.113.1",
+      "sourcePort": 44083
+    },
+    {
+      "id": "nat-034",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "icmp",
+      "source": "192.168.10.11",
+      "destination": "203.0.113.100",
+      "token": "ios-pat-second-icmp",
+      "success": true,
+      "observedSource": "203.0.113.1",
+      "sourcePort": 44083
+    },
+    {
+      "id": "nat-035",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "udp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.101",
+      "token": "ios-pat-other-peer",
+      "success": true,
+      "observedSource": "203.0.113.1",
+      "sourcePort": 44083
+    },
+    {
+      "id": "nat-036",
+      "kind": "unsolicited",
+      "node": "O1",
+      "reference": "ios-pat-first-udp",
+      "source": "203.0.113.101",
+      "destination": "203.0.113.1",
+      "sourcePort": 45083,
+      "inside": "192.168.10.10",
+      "insidePort": 44083,
+      "token": "ios-pat-unsolicited",
+      "success": false
+    },
+    {
+      "id": "nat-037",
+      "kind": "survey",
+      "node": "IOS",
+      "commands": [
+        "show ip nat translations verbose",
+        "show ip nat statistics"
+      ]
+    },
+    {
+      "id": "nat-038",
+      "kind": "config",
+      "node": "IOS",
+      "commands": [
+        "clear ip nat translation *",
+        "configure terminal",
+        "no ip nat inside source list 1 interface Ethernet0/1 overload",
+        "ip nat pool SHORT 203.0.113.20 203.0.113.21 netmask 255.255.255.0",
+        "ip nat inside source list 1 pool SHORT",
+        "ip nat translation timeout 4",
+        "ip nat translation udp-timeout 4",
+        "end"
+      ]
+    },
+    {
+      "id": "nat-039",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "udp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-timer",
+      "success": true,
+      "observedSource": "203.0.113.20",
+      "sourcePort": 44084
+    },
+    {
+      "id": "nat-040",
+      "kind": "survey",
+      "node": "IOS",
+      "commands": [
+        "show ip nat translations verbose"
+      ]
+    },
+    {
+      "id": "nat-041",
+      "kind": "wait",
+      "seconds": 6
+    },
+    {
+      "id": "nat-042",
+      "kind": "survey",
+      "node": "IOS",
+      "commands": [
+        "show ip nat translations",
+        "show ip nat statistics"
+      ]
+    },
+    {
+      "id": "nat-043",
+      "kind": "config",
+      "node": "IOS",
+      "commands": [
+        "configure terminal",
+        "no ip nat inside source list 1 pool SHORT",
+        "no ip nat pool SHORT",
+        "no ip nat translation timeout",
+        "no ip nat translation udp-timeout",
+        "ip nat inside source list 99 interface Ethernet0/1 overload",
+        "end"
+      ]
+    },
+    {
+      "id": "nat-044",
+      "kind": "probe",
+      "node": "I1",
+      "protocol": "udp",
+      "source": "192.168.10.10",
+      "destination": "203.0.113.100",
+      "token": "ios-missing-acl",
+      "success": true,
+      "observedSource": "192.168.10.10",
+      "sourcePort": 44085
+    },
+    {
+      "id": "nat-045",
+      "kind": "survey",
+      "node": "IOS",
+      "commands": [
+        "show ip nat translations"
+      ]
+    },
+    {
+      "id": "nat-046",
+      "kind": "config",
+      "node": "IOS",
+      "commands": [
+        "configure terminal",
+        "no ip nat inside source list 99 interface Ethernet0/1 overload",
+        "ip nat inside source list 1 interface Ethernet0/1 overload",
+        "end",
+        "undebug all"
+      ]
+    },
+    {
+      "id": "nat-047",
+      "kind": "survey",
+      "node": "IOS",
+      "commands": [
+        "show running-config | include ip nat",
+        "show logging"
+      ]
+    }
+  ]
+}
