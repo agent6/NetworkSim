@@ -1,5 +1,5 @@
 import {catalogLabHash,catalogLabPermalink,parseCatalogRoute} from './catalog-links.ts';
-import type {Simulator} from './engine.ts';
+import type {Simulator,ServiceResult} from './engine.ts';
 import type {LabDocument,PingResult} from './model.ts';
 import {lessonProgress,actionAvailable,type GuidedLab} from './lessons.ts';
 import {LAB_GROUPS,CCNA_SECTIONS,LAB_CATALOG,catalogGuideResources,createCatalogLab,currentRouterOnAStickGuide,type LabGroup,type CCNASection,type CatalogGuideResources,type CatalogMode,type CatalogLab} from './lab-catalog.ts';
@@ -10,7 +10,7 @@ type OpenLab=(document:LabDocument,source:string)=>void;
 let selectedGroup:LabGroup='CCNA';
 let selectedSection:CCNASection='Fundamentals';
 const addressPlan=(resources:CatalogGuideResources)=>`<div class="catalog-table-wrap"><table class="catalog-table"><caption>Addressing plan</caption><thead><tr>${resources.columns.map(column=>`<th scope="col">${esc(column)}</th>`).join('')}</tr></thead><tbody>${resources.rows.map(row=>`<tr>${row.map(cell=>`<td>${esc(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
-const reference=(resources:CatalogGuideResources)=>`<details class="catalog-reference"><summary>Reference configuration</summary><p>Use these configurations after attempting the lab. ${esc(resources.note)}</p>${Object.entries(resources.commands).map(([name,commands])=>`<h4>${esc(name)}</h4><pre>${esc(commands.join('\n'))}</pre>`).join('')}${Object.entries(resources.verification).map(([name,commands])=>`<h4>Verify on ${esc(name)}</h4><pre>${esc(commands.join('\n'))}</pre>`).join('')}</details>`;
+const reference=(resources:CatalogGuideResources)=>`<details class="catalog-reference"><summary>Reference configuration</summary><p>Use these configurations after attempting the lab. ${esc(resources.note)}</p>${(resources.setup??[]).map(section=>`<h4>${esc(section.title)}</h4><ol class="catalog-tasks">${section.instructions.map(line=>`<li>${esc(line)}</li>`).join('')}</ol>`).join('')}${Object.entries(resources.commands).map(([name,commands])=>`<h4>${esc(name)}</h4><pre>${esc(commands.join('\n'))}</pre>`).join('')}${Object.entries(resources.verification).map(([name,commands])=>`<h4>Verify on ${esc(name)}</h4><pre>${esc(commands.join('\n'))}</pre>`).join('')}</details>`;
 const decorate=(routed=false)=>{const root=document.querySelector<HTMLElement>('.dialog');root?.classList.add('lab-catalog-dialog');if(root&&routed)root.dataset.catalogRoute='';};
 function setCatalogLocation(hash:string):void{if(location.hash===hash)return;try{history.pushState(history.state,'',hash);}catch{location.hash=hash;}}
 export function clearCatalogLocation():void{if(!parseCatalogRoute(location.hash))return;try{history.replaceState(history.state,'',location.pathname+location.search);}catch{location.hash='';}}
@@ -50,11 +50,37 @@ function showCatalogDetail(id:string,dialog:Dialog,open:OpenLab,navigate=true):v
  document.querySelector<HTMLButtonElement>('[data-catalog-back]')!.onclick=()=>showLabCatalog(dialog,open);
  document.querySelectorAll<HTMLButtonElement>('[data-catalog-mode]').forEach(b=>b.onclick=()=>{try{const labDocument=createCatalogLab(id,b.dataset.catalogMode as CatalogMode);clearCatalogLocation();open(labDocument,`Lab catalog · ${entry.group}`);}catch(error){const body=document.querySelector('.dialog-body')!;let alert=body.querySelector<HTMLElement>('[data-catalog-error]');if(!alert){alert=document.createElement('p');alert.dataset.catalogError='';alert.className='notice mt-3';alert.setAttribute('role','alert');body.append(alert);}alert.textContent=error instanceof Error?error.message:String(error);}});
 }
+type GuideTest={kind:'ping';result:PingResult}|{kind:'dhcp';result:ServiceResult};
 export function showLabGuide(sim:Simulator,dialog:Dialog,isPlaying:()=>boolean):void{
- const progress=lessonProgress(sim);if(!progress)return;const catalogId=(sim.lab as CatalogLab).catalogId,resources=catalogGuideResources(catalogId),isRoas=catalogId==='router-on-a-stick',description=isRoas?currentRouterOnAStickGuide(progress.lesson.description):progress.lesson.description;
- dialog(progress.lesson.title,`<p class="catalog-instructions">${esc(description)}</p><p class="catalog-progress" data-guide-progress role="status"></p><ol class="catalog-checks">${progress.rows.map(({objective:o})=>`<li data-objective="${esc(o.id)}"><span data-objective-state role="img" aria-label="Not complete"></span><div><strong>${esc(o.title)}</strong>${o.description?`<p>${esc(o.description)}</p>`:''}${o.action?`<button class="btn" data-guide-test="${esc(o.id)}">Test connectivity</button><p class="catalog-test-status" data-test-status="${esc(o.id)}" role="status"></p>`:''}</div></li>`).join('')}</ol>${resources?addressPlan(resources)+reference(resources):''}`,'<button class="btn-primary" data-action="close-dialog">Done</button>');decorate();
- const root=document.querySelector<HTMLElement>('.catalog-checks')!,running=new Map<string,PingResult>();
- const render=()=>{const next=lessonProgress(sim);if(!next)return;const summary=document.querySelector('[data-guide-progress]')!,text=`${next.complete} of ${next.rows.length} tasks complete`;if(summary.textContent!==text)summary.textContent=text;for(const{objective,complete}of next.rows){const row=root.querySelector<HTMLElement>(`[data-objective="${CSS.escape(objective.id)}"]`)!;row.dataset.complete=String(complete);const state=row.querySelector('[data-objective-state]')!,symbol=complete?'✓':'○';if(state.textContent!==symbol){state.textContent=symbol;state.setAttribute('aria-label',complete?'Complete':'Not complete');}const result=running.get(objective.id),button=root.querySelector<HTMLButtonElement>(`[data-guide-test="${CSS.escape(objective.id)}"]`);if(button){const available=actionAvailable(sim,objective);button.disabled=result?.status==='running'||!available;button.dataset.tooltip=available?'Send three ICMP echo requests':'Power on the source device and complete the action prerequisites first.';}if(result){const status=root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`)!,message=result.status==='running'?'Checking connectivity…':result.received?`${result.received} of ${result.sent} replies received.`:'No replies. Check interface addresses, masks, link status and routing.';if(status.textContent!==message)status.textContent=message;}}};
- root.onclick=event=>{const button=(event.target as Element).closest<HTMLButtonElement>('[data-guide-test]');if(!button)return;const objective=progress.lesson.objectives.find(o=>o.id===button.dataset.guideTest);if(!objective?.action||!actionAvailable(sim,objective))return;if(!isPlaying()){root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`)!.textContent='Resume the simulation to run a connectivity check.';return;}running.set(objective.id,sim.ping(objective.action.device,objective.action.target,{count:3}));render();};
+ const progress=lessonProgress(sim);if(!progress)return;
+ const catalogId=(sim.lab as CatalogLab).catalogId,resources=catalogGuideResources(catalogId),isRoas=catalogId==='router-on-a-stick',description=isRoas?currentRouterOnAStickGuide(progress.lesson.description):progress.lesson.description;
+ dialog(progress.lesson.title,`<p class="catalog-instructions">${esc(description)}</p><p class="catalog-progress" data-guide-progress role="status"></p><ol class="catalog-checks">${progress.rows.map(({objective:o})=>`<li data-objective="${esc(o.id)}"><span data-objective-state role="img" aria-label="Not complete"></span><div><strong>${esc(o.title)}</strong>${o.description?`<p>${esc(o.description)}</p>`:''}${o.action?`<button class="btn" data-guide-test="${esc(o.id)}">${o.action.kind==='dhcp'?'Request DHCP lease':'Test connectivity'}</button><p class="catalog-test-status" data-test-status="${esc(o.id)}" role="status"></p>`:''}</div></li>`).join('')}</ol>${resources?addressPlan(resources)+reference(resources):''}`,'<button class="btn-primary" data-action="close-dialog">Done</button>');decorate();
+ const root=document.querySelector<HTMLElement>('.catalog-checks')!,running=new Map<string,GuideTest>();
+ const render=()=>{
+  const next=lessonProgress(sim);if(!next)return;
+  const summary=document.querySelector('[data-guide-progress]')!,text=`${next.complete} of ${next.rows.length} tasks complete`;
+  if(summary.textContent!==text)summary.textContent=text;
+  for(const{objective,complete}of next.rows){
+   const row=root.querySelector<HTMLElement>(`[data-objective="${CSS.escape(objective.id)}"]`)!;row.dataset.complete=String(complete);
+   const state=row.querySelector('[data-objective-state]')!,symbol=complete?'✓':'○';
+   if(state.textContent!==symbol){state.textContent=symbol;state.setAttribute('aria-label',complete?'Complete':'Not complete');}
+   const test=running.get(objective.id),button=row.querySelector<HTMLButtonElement>('[data-guide-test]');
+   if(button){const available=actionAvailable(sim,objective);button.disabled=test?.result.status==='running'||!available;button.dataset.tooltip=available?(objective.action?.kind==='dhcp'?'Request IPv4 settings from the DHCP service':'Send three ICMP echo requests'):'Power on the source device and complete the action prerequisites first.';}
+   if(test){
+    const status=row.querySelector('[data-test-status]')!;
+    const message=test.kind==='dhcp'
+     ?test.result.status==='running'?'Requesting a DHCP lease…':test.result.status==='success'?`Lease received: ${test.result.address}. Verify its settings against the addressing plan.`:complete?'A valid DHCP lease is active.':'No lease received. Check the DHCP service, client pool and relay.'
+     :test.result.status==='running'?'Checking connectivity…':test.result.received?`${test.result.received} of ${test.result.sent} replies received.`:'No replies. Check interface addresses, masks, link status and routing.';
+    if(status.textContent!==message)status.textContent=message;
+   }
+  }
+ };
+ root.onclick=event=>{
+  const button=(event.target as Element).closest<HTMLButtonElement>('[data-guide-test]');if(!button)return;
+  const objective=progress.lesson.objectives.find(o=>o.id===button.dataset.guideTest),action=objective?.action;
+  if(!objective||!action||!actionAvailable(sim,objective))return;
+  if(!isPlaying()){root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`)!.textContent=action.kind==='dhcp'?'Resume the simulation to request a DHCP lease.':'Resume the simulation to run a connectivity check.';return;}
+  running.set(objective.id,action.kind==='dhcp'?{kind:'dhcp',result:sim.requestDHCP(action.device,action.interface)}:{kind:'ping',result:sim.ping(action.device,action.target,{count:3})});render();
+ };
  render();const timer=window.setInterval(()=>{if(!root.isConnected){window.clearInterval(timer);return;}render();},250);
 }

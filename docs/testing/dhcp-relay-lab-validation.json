@@ -1,0 +1,61 @@
+{
+  "feature": "CCNA Fundamentals: DHCP server and relay",
+  "catalogId": "dhcp-server-and-relay",
+  "artifactSha256": "739a695ec546e9c4fd3a4cb672aa78bb1805993e1d4d72b8d78a8bcc2c8f1b0b",
+  "devices": 5,
+  "links": 4,
+  "tasks": 6,
+  "topology": {
+    "clientSubnet": "192.168.10.0/24",
+    "clientGateway": "192.168.10.1",
+    "serverSubnet": "192.168.100.0/24",
+    "serverAddress": "192.168.100.10",
+    "serverGateway": "192.168.100.1",
+    "relayInterface": "R1 GigabitEthernet0/0",
+    "pool": "CLIENTS",
+    "excluded": "192.168.10.1\u2013192.168.10.20",
+    "leaseSeconds": 3600
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1317,
+    "passed": 1317,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "finalDhcpFocusedTests": 6
+  },
+  "scenarioChecks": [
+    "Server enabled without a relay cannot lease addresses across the router",
+    "Published IOS helper commands and all IOS/Windows verification commands execute successfully",
+    "Clients receive distinct addresses outside the excluded range with the correct mask, gateway and DNS options",
+    "Received ACKs identify the client-facing relay address, and matching server bindings are required for lease credit",
+    "A static address cannot pass a lease task; changed options and released leases invalidate it",
+    "Wrong-interface helper, disabled DHCP, wrong pool subnet and missing server return gateway each prevent fresh leases; correction restores traffic",
+    "Routed ICMP and DNS resolution use delivered simulated traffic",
+    "Saved and completed labs reacquire leases after reload and power cycles instead of trusting imported runtime data",
+    "Imported DHCP predicates and actions reject malformed address, prefix, range, duration and executable values"
+  ],
+  "browserChecks": [
+    "light 1440px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "light 390px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "light 320px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "dark 1440px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "dark 390px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "dark 320px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "light: shared link preserves the current host, path and query, previews without replacing the workspace, and returns to Fundamentals",
+    "dark: shared link preserves the current host, path and query, previews without replacing the workspace, and returns to Fundamentals"
+  ],
+  "existingPingGuideRegression": [
+    "light 1440px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and CLI repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "light 390px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and CLI repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "light 320px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and PC IP settings repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "dark 1440px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and CLI repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "dark 390px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and CLI repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "dark 320px: Fundamentals entry, addressing plan, collapsed repair reference, failing baseline, visible IOS/Windows diagnosis and PC IP settings repairs, live 1/2/3-task progression, bidirectional replies, restored progress and safe completed-lab replacement",
+    "light: direct entry, sharing preserves current host/subfolder/query and Back returns to both Fundamentals labs without replacing the workspace",
+    "dark: direct entry, sharing preserves current host/subfolder/query and Back returns to both Fundamentals labs without replacing the workspace"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

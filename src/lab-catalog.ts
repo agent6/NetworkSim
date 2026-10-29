@@ -16,6 +16,7 @@ type CatalogEntry={id:string;title:string;description:string;devices:number;link
 export const LAB_CATALOG=[
  {id:'ipv4-interface-configuration',group:'CCNA',section:'Fundamentals',title:'IPv4 interface configuration',description:'Address two directly connected router interfaces, enable the link, and verify IPv4 connectivity in both directions.',devices:2,links:1,practice:true},
  {id:'ipv4-addressing-troubleshooting',group:'CCNA',section:'Fundamentals',title:'IPv4 addressing troubleshooting',description:'Find and repair IPv4 address, subnet mask and default gateway faults across two LANs, then restore end-to-end connectivity.',devices:3,links:2,practice:true},
+ {id:'dhcp-server-and-relay',group:'CCNA',section:'Fundamentals',title:'DHCP server and relay',description:'Configure a remote DHCP server and an IOS relay, deliver IPv4 settings to two clients, and verify routed connectivity.',devices:5,links:4,practice:true},
  {id:'router-on-a-stick',group:'CCNA',section:'Routing',title:'Router on a stick',description:'Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.',devices:4,links:3,practice:true},
  {id:'datacenter-vpc',group:'Other',title:'Datacenter Switch vPC',description:'Explore the existing NX-OS-style vPC pair and its downstream port-channel.',devices:datacenterExample.lab.devices.length,links:datacenterExample.lab.links.length,practice:false},
 ] as const satisfies readonly CatalogEntry[];
@@ -38,14 +39,18 @@ export const IPV4_TROUBLESHOOTING_COMMANDS:Readonly<Record<string,readonly strin
  PC1:['netsh interface ipv4 set address name="Ethernet" source=static address=192.168.10.10 mask=255.255.255.0 gateway=192.168.10.1'],
  PC2:['netsh interface ipv4 set address name="Ethernet" source=static address=192.168.20.10 mask=255.255.255.0 gateway=192.168.20.1'],
 };
+export const DHCP_RELAY_COMMANDS:Readonly<Record<string,readonly string[]>>={R1:['enable','configure terminal','interface GigabitEthernet0/0','ip helper-address 192.168.100.10','end','write memory']};
+export const DHCP_SERVER_SETTINGS={enabled:true,pools:[{name:'CLIENTS',network:'192.168.10.0',prefix:24,defaultRouter:'192.168.10.1',dnsServers:['192.168.100.10'],domain:'lab.example',leaseSeconds:3600}],excluded:[{start:'192.168.10.1',end:'192.168.10.20'}]};
 export interface CatalogGuideResources {
  columns:readonly string[];
  rows:readonly (readonly string[])[];
  commands:Readonly<Record<string,readonly string[]>>;
  verification:Readonly<Record<string,readonly string[]>>;
  note:string;
+ setup?:readonly {title:string;instructions:readonly string[]}[];
 }
 const GUIDE_RESOURCES:Readonly<Record<string,CatalogGuideResources>>={
+ 'dhcp-server-and-relay':{columns:['Device','Interface','IPv4 address','Subnet mask','Default gateway'],rows:[['R1','GigabitEthernet0/0','192.168.10.1','255.255.255.0','—'],['R1','GigabitEthernet0/1','192.168.100.1','255.255.255.0','—'],['SRV1','GigabitEthernet0','192.168.100.10','255.255.255.0','192.168.100.1'],['PC1','GigabitEthernet0','DHCP: 192.168.10.21–254','255.255.255.0','192.168.10.1'],['PC2','GigabitEthernet0','DHCP: 192.168.10.21–254','255.255.255.0','192.168.10.1']],commands:DHCP_RELAY_COMMANDS,verification:{R1:['show running-config interface GigabitEthernet0/0','show ip interface GigabitEthernet0/0','show ip route'],PC1:['ipconfig /renew','ipconfig /all','ping -n 3 192.168.100.10','nslookup server.lab.example'],PC2:['ipconfig /renew','ipconfig /all','ping -n 3 192.168.100.10']},note:'R1, SW1 and the server network are already addressed and enabled. The helper belongs on the client-facing interface. SRV1 serves DHCP; inspect its leases in Services → DHCP. R1 relays requests and does not maintain the server lease database. DNS on SRV1 is preconfigured for server.lab.example.',setup:[{title:'SRV1 · Services → DHCP',instructions:['Enable the DHCP server and add an address pool named CLIENTS.','Network address: 192.168.10.0. Prefix length: 24.','Default gateway: 192.168.10.1. DNS server: 192.168.100.10.','Lease duration: 3600 seconds. DNS domain: lab.example.','Excluded addresses: 192.168.10.1 - 192.168.10.20. Save changes.']}]},
  'router-on-a-stick':{columns:['Device','Interface','VLAN','IPv4 address','Default gateway'],rows:ROAS_ADDRESS_PLAN,commands:ROAS_COMMANDS,verification:{SW1:['show vlan brief','show interfaces trunk'],R1:['show ip interface brief','show ip route']},note:'The PCs are already addressed. PortFast trunk is used on the router-facing switch port.'},
  'ipv4-interface-configuration':{columns:['Device','Interface','IPv4 address','Subnet mask'],rows:[['R1','GigabitEthernet0/0','192.0.2.1','255.255.255.0'],['R2','GigabitEthernet0/0','192.0.2.2','255.255.255.0']],commands:IPV4_INTERFACE_COMMANDS,verification:{R1:['show ip interface brief','show interfaces GigabitEthernet0/0','show ip route','ping 192.0.2.2'],R2:['show ip interface brief','show interfaces GigabitEthernet0/0','show ip route','ping 192.0.2.1']},note:'Both interfaces share the 192.0.2.0/24 subnet. Directly connected routers do not need a static route or a routing protocol to reach one another.'},
  'ipv4-addressing-troubleshooting':{columns:['Device','Interface','IPv4 address','Subnet mask','Default gateway'],rows:[['R1','GigabitEthernet0/0','192.168.10.1','255.255.255.0','—'],['R1','GigabitEthernet0/1','192.168.20.1','255.255.255.0','—'],['PC1','GigabitEthernet0','192.168.10.10','255.255.255.0','192.168.10.1'],['PC2','GigabitEthernet0','192.168.20.10','255.255.255.0','192.168.20.1']],commands:IPV4_TROUBLESHOOTING_COMMANDS,verification:{R1:['show ip interface brief','show ip route'],PC1:['ipconfig /all','route print','ping -n 3 192.168.10.1','ping -n 3 192.168.20.10'],PC2:['ipconfig /all','route print','ping -n 3 192.168.20.1','ping -n 3 192.168.10.10']},note:'The practice lab starts with R1 Gi0/1 in the wrong subnet, PC1 using the wrong gateway, and PC2 using an overly broad mask. Correct the router through its IOS console. Correct each PC through its IP settings or the Windows Command prompt commands below. Proxy ARP is disabled on R1 so an incorrect PC mask cannot be hidden by proxy replies. No static routes or routing protocols are needed.'},
@@ -61,6 +66,28 @@ const ipv4InterfaceCriterion=(device:string,address:string,port='GigabitEthernet
  {kind:'interface',device,interface:port,property:'mask',value:'255.255.255.0'},
  {kind:'interface',device,interface:port,property:'adminUp',value:true},
 ]});
+export function createDHCPRelayLab(mode:CatalogMode='practice'):LabDocument{
+ const make=(id:string,kind:Device['kind'],hostname:string,x:number,y:number):Device=>({id,kind,x,y,powered:true,config:factoryDeviceConfig(kind,hostname),runtime:emptyRuntime()});
+ const r=make('device-dhcp-r1','router','R1',560,180),sw=make('device-dhcp-sw1','switch','SW1',360,360),server=make('device-dhcp-server','server','SRV1',840,180),a=make('device-dhcp-pc1','pc','PC1',200,560),b=make('device-dhcp-pc2','pc','PC2',520,560);
+ Object.assign(r.config.interfaces['GigabitEthernet0/0'],{ip:'192.168.10.1',mask:'255.255.255.0',adminUp:true,description:'CLIENT_LAN'});Object.assign(r.config.interfaces['GigabitEthernet0/1'],{ip:'192.168.100.1',mask:'255.255.255.0',adminUp:true,description:'SERVER_LAN'});
+ for(const n of [1,2,3])sw.config.interfaces[`GigabitEthernet0/${n}`].features.portfast=true;
+ Object.assign(server.config.interfaces.GigabitEthernet0,{ip:'192.168.100.10',mask:'255.255.255.0',adminUp:true});server.config.interfaces.GigabitEthernet0.features.dhcp=false;server.config.defaultGateway='192.168.100.1';server.config.dnsServers=['192.168.100.10'];server.config.services.dns={enabled:true,records:{'server.lab.example':'192.168.100.10'}};server.config.services.dhcp=mode==='completed'?structuredClone(DHCP_SERVER_SETTINGS):{enabled:false,pools:[],excluded:[]};
+ for(const d of [a,b]){const port=d.config.interfaces.GigabitEthernet0;delete port.ip;delete port.mask;port.features.dhcp=true;delete d.config.defaultGateway;d.config.dnsServers=[];}
+ for(const d of [r,sw])d.startupConfig=structuredClone(d.config);
+ const lease=(device:string):Criterion=>({kind:'dhcp-lease',device,interface:'GigabitEthernet0',server:server.id,network:'192.168.10.0',prefix:24,gateway:'192.168.10.1',dnsServer:'192.168.100.10'});
+ const lab:CatalogLab={id:'lab-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)),catalogId:'dhcp-server-and-relay',name:'DHCP server and relay'+(mode==='completed'?' · Completed':''),devices:[r,sw,server,a,b],links:[
+  {id:'link-dhcp-server',a:{deviceId:r.id,port:'GigabitEthernet0/1'},b:{deviceId:server.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0},
+  {id:'link-dhcp-uplink',a:{deviceId:r.id,port:'GigabitEthernet0/0'},b:{deviceId:sw.id,port:'GigabitEthernet0/1'},enabled:true,delay:.1,loss:0},
+  {id:'link-dhcp-pc1',a:{deviceId:sw.id,port:'GigabitEthernet0/2'},b:{deviceId:a.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0},
+  {id:'link-dhcp-pc2',a:{deviceId:sw.id,port:'GigabitEthernet0/3'},b:{deviceId:b.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0},
+ ],notes:[{id:'note-dhcp-clients',x:360,y:670,text:'Client LAN: 192.168.10.0/24\nGateway: 192.168.10.1 · DHCP clients'},{id:'note-dhcp-server',x:840,y:300,text:'Server LAN: 192.168.100.0/24\nDHCP / DNS: 192.168.100.10'}],lesson:{title:'DHCP server and relay',description:'PC1 and PC2 need IPv4 settings from SRV1 on a different subnet. R1, SW1 and SRV1 already have their required interface settings. The PCs are set to DHCP, but the server service and router relay still need configuration.\n\nOn SRV1, open Services → DHCP and create the CLIENTS pool for 192.168.10.0/24. Exclude 192.168.10.1–192.168.10.20, supply gateway 192.168.10.1 and DNS server 192.168.100.10, and use a 3600-second lease. Set the optional DNS domain to lab.example.\n\nConfigure ip helper-address on R1’s client-facing interface. Request or renew both client leases, inspect the active leases on SRV1, and verify each PC can reach the server. The clients may acquire a lease automatically once both settings are correct. Save R1 with write memory and save or export your lab.',objectives:[
+  {id:'dhcp-pool',title:'Configure and enable the CLIENTS pool on SRV1',description:'Use the client subnet, excluded range, gateway, DNS server and lease duration in the guide.',criterion:{kind:'dhcp-pool',device:server.id,name:'CLIENTS',network:'192.168.10.0',prefix:24,gateway:'192.168.10.1',dnsServer:'192.168.100.10',excludedStart:'192.168.10.1',excludedEnd:'192.168.10.20',leaseSeconds:3600}},
+  {id:'dhcp-relay',title:'Configure R1’s DHCP relay on GigabitEthernet0/0',description:'Forward client broadcasts to 192.168.100.10.',criterion:{kind:'dhcp-relay',device:r.id,interface:'GigabitEthernet0/0',serverAddress:'192.168.100.10'}},
+  ...[a,b].map(d=>({id:d===a?'pc1-lease':'pc2-lease',title:`Obtain a valid DHCP lease on ${d.config.hostname}`,description:'Verify the /24 address, gateway and DNS settings received from SRV1.',criterion:lease(d.id),action:{kind:'dhcp' as const,device:d.id,interface:'GigabitEthernet0'}})),
+  ...[a,b].map(d=>({id:d===a?'pc1-ping':'pc2-ping',title:`Verify ${d.config.hostname} can reach SRV1`,description:'Ping 192.168.100.10 across R1.',criterion:{kind:'echo' as const,device:d.id,from:'192.168.100.10'},action:{kind:'ping' as const,device:d.id,target:'192.168.100.10',when:lease(d.id)}})),
+ ]}};
+ const doc:LabDocument={format:'netsim-lab',version:1,seed:20261102,lab};return mode==='practice'?doc:completedDocument(doc,DHCP_RELAY_COMMANDS);
+}
 export function createIPv4TroubleshootingLab(mode:CatalogMode='practice'):LabDocument{
  const make=(id:string,kind:Device['kind'],hostname:string,x:number,y:number):Device=>({id,kind,x,y,powered:true,config:factoryDeviceConfig(kind,hostname),runtime:emptyRuntime()});
  const r=make('device-ipv4-ts-r1','router','R1',500,160),a=make('device-ipv4-ts-pc1','pc','PC1',260,360),b=make('device-ipv4-ts-pc2','pc','PC2',740,360);
@@ -126,6 +153,7 @@ export function createRouterOnAStickLab(mode:CatalogMode='practice'):LabDocument
  return completedDocument(doc,ROAS_COMMANDS);
 }
 export function createCatalogLab(id:string,mode:CatalogMode='practice'):LabDocument{
+ if(id==='dhcp-server-and-relay')return createDHCPRelayLab(mode);
  if(id==='ipv4-addressing-troubleshooting')return createIPv4TroubleshootingLab(mode);
  if(id==='ipv4-interface-configuration')return createIPv4InterfaceLab(mode);
  if(id==='router-on-a-stick')return createRouterOnAStickLab(mode);

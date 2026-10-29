@@ -1,6 +1,6 @@
 import type { Lab, Device } from "./model.ts";
 import type { Simulator } from "./engine.ts";
-import { isIPv4, isIPv6, maskToPrefix, sameAddress } from "./ip.ts";
+import { isIPv4, isIPv6, ipToInt, inSubnet, maskToPrefix, sameAddress } from "./ip.ts";
 
 export type Criterion =
   | { kind: "all" | "any"; criteria: Criterion[] }
@@ -8,6 +8,9 @@ export type Criterion =
   | { kind: "link"; a: string; b: string }
   | { kind: "address"; device: string; address: string }
   | { kind: "default-gateway"; device: string; address: string }
+  | { kind: "dhcp-pool"; device: string; name: string; network: string; prefix: number; gateway: string; dnsServer: string; excludedStart: string; excludedEnd: string; leaseSeconds: number }
+  | { kind: "dhcp-relay"; device: string; interface: string; serverAddress: string }
+  | { kind: "dhcp-lease"; device: string; interface: string; server: string; network: string; prefix: number; gateway: string; dnsServer: string }
   | {
       kind: "route";
       device: string;
@@ -30,7 +33,7 @@ export interface Objective {
   title: string;
   description?: string;
   criterion: Criterion;
-  action?: { kind: "ping"; device: string; target: string; when?: Criterion };
+  action?: { kind: "ping"; device: string; target: string; when?: Criterion } | { kind: "dhcp"; device: string; interface: string; when?: Criterion };
 }
 export interface Lesson {
   title: string;
@@ -68,6 +71,16 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         return address(v.address);
       case "default-gateway":
         return typeof v.address === "string" && isIPv4(v.address);
+      case "dhcp-relay":
+        return text(v.interface,128) && typeof v.serverAddress === "string" && isIPv4(v.serverAddress);
+      case "dhcp-pool":
+      case "dhcp-lease": {
+        const ip=(key:string)=>typeof v[key]==="string" && isIPv4(v[key]);
+        if (!ip("network") || !Number.isInteger(v.prefix) || v.prefix<0 || v.prefix>32 || !ip("gateway") || !ip("dnsServer")) return false;
+        return v.kind==="dhcp-lease"
+          ? text(v.interface,128) && text(v.server,128)
+          : text(v.name,128) && ip("excludedStart") && ip("excludedEnd") && ipToInt(v.excludedStart)<=ipToInt(v.excludedEnd) && Number.isInteger(v.leaseSeconds) && v.leaseSeconds>=1 && v.leaseSeconds<=4294967295;
+      }
       case "echo":
         return address(v.from);
       case "route":
@@ -145,9 +158,9 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     if (
       o.action !== undefined &&
       (!record(o.action) ||
-        o.action.kind !== "ping" ||
+        !["ping","dhcp"].includes(o.action.kind) ||
         !text(o.action.device, 128) ||
-        !address(o.action.target) ||
+        (o.action.kind === "ping" ? !address(o.action.target) : !text(o.action.interface,128)) ||
         (o.action.when !== undefined && !criterion(o.action.when)))
     )
       throw Error("A lab objective action is invalid.");
@@ -159,6 +172,7 @@ export function actionAvailable(sim: Simulator, objective: Objective): boolean {
   return (
     !!action &&
     !!device(sim, action.device)?.powered &&
+    (action.kind !== "dhcp" || sim.interfaceUp(device(sim,action.device)!.id,action.interface)) &&
     (!action.when || matches(sim, action.when))
   );
 }
@@ -197,6 +211,22 @@ export function matches(
   if (!d) return false;
   if (criterion.kind === "default-gateway")
     return d.config.defaultGateway === criterion.address;
+  if (criterion.kind === "dhcp-relay") {
+    const port=d.config.interfaces[criterion.interface];
+    return !!port?.adminUp && !!port.features.helpers?.includes(criterion.serverAddress);
+  }
+  if (criterion.kind === "dhcp-pool") {
+    const service=d.config.services.dhcp;
+    return service?.enabled===true && !!service.pools?.some((pool:any)=>pool.name===criterion.name && pool.network===criterion.network && pool.prefix===criterion.prefix && pool.defaultRouter===criterion.gateway && pool.dnsServers?.includes(criterion.dnsServer) && (pool.leaseSeconds??86400)===criterion.leaseSeconds) && !!service.excluded?.some((range:any)=>range.start===criterion.excludedStart && range.end===criterion.excludedEnd);
+  }
+  if (criterion.kind === "dhcp-lease") {
+    const port=d.config.interfaces[criterion.interface],lease=d.runtime.features.dhcpClientLeases?.[criterion.interface],server=device(sim,criterion.server),now=sim.clock.now();
+    if (!port?.features.dhcp || !isIPv4(port.ip??"") || !port.mask || !server || !lease || !["BOUND","RENEWING","REBINDING"].includes(lease.state) || lease.expires<=now || lease.serverId!==server.id || lease.address!==port.ip) return false;
+    const n=ipToInt(port.ip!);
+    try {
+      return inSubnet(port.ip!,criterion.network,criterion.prefix) && maskToPrefix(port.mask)===criterion.prefix && d.config.defaultGateway===criterion.gateway && d.config.dnsServers.includes(criterion.dnsServer) && !(server.config.services.dhcp?.excluded??[]).some((range:any)=>n>=ipToInt(range.start)&&n<=ipToInt(range.end??range.start)) && !!server.runtime.features.dhcpLeases?.some((row:any)=>row.clientId===d.id && row.address===port.ip && row.state==='BOUND' && row.expires>now);
+    } catch { return false; }
+  }
   if (criterion.kind === "device")
     return criterion.powered === undefined || d.powered === criterion.powered;
   if (criterion.kind === "address")

@@ -52065,6 +52065,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           return address(v.address);
         case "default-gateway":
           return typeof v.address === "string" && isIPv4(v.address);
+        case "dhcp-relay":
+          return text3(v.interface, 128) && typeof v.serverAddress === "string" && isIPv4(v.serverAddress);
+        case "dhcp-pool":
+        case "dhcp-lease": {
+          const ip2 = (key4) => typeof v[key4] === "string" && isIPv4(v[key4]);
+          if (!ip2("network") || !Number.isInteger(v.prefix) || v.prefix < 0 || v.prefix > 32 || !ip2("gateway") || !ip2("dnsServer")) return false;
+          return v.kind === "dhcp-lease" ? text3(v.interface, 128) && text3(v.server, 128) : text3(v.name, 128) && ip2("excludedStart") && ip2("excludedEnd") && ipToInt(v.excludedStart) <= ipToInt(v.excludedEnd) && Number.isInteger(v.leaseSeconds) && v.leaseSeconds >= 1 && v.leaseSeconds <= 4294967295;
+        }
         case "echo":
           return address(v.from);
         case "route":
@@ -52112,13 +52120,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           "A lab objective has an invalid ID, description, or condition."
         );
       ids.add(o.id);
-      if (o.action !== void 0 && (!record2(o.action) || o.action.kind !== "ping" || !text3(o.action.device, 128) || !address(o.action.target) || o.action.when !== void 0 && !criterion(o.action.when)))
+      if (o.action !== void 0 && (!record2(o.action) || !["ping", "dhcp"].includes(o.action.kind) || !text3(o.action.device, 128) || (o.action.kind === "ping" ? !address(o.action.target) : !text3(o.action.interface, 128)) || o.action.when !== void 0 && !criterion(o.action.when)))
         throw Error("A lab objective action is invalid.");
     }
   }
   function actionAvailable(sim2, objective) {
     const action = objective.action;
-    return !!action && !!device(sim2, action.device)?.powered && (!action.when || matches(sim2, action.when));
+    return !!action && !!device(sim2, action.device)?.powered && (action.kind !== "dhcp" || sim2.interfaceUp(device(sim2, action.device).id, action.interface)) && (!action.when || matches(sim2, action.when));
   }
   function matches(sim2, criterion, depth = 0) {
     if (!criterion || typeof criterion !== "object" || depth > 16) return false;
@@ -52135,6 +52143,24 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!d) return false;
     if (criterion.kind === "default-gateway")
       return d.config.defaultGateway === criterion.address;
+    if (criterion.kind === "dhcp-relay") {
+      const port3 = d.config.interfaces[criterion.interface];
+      return !!port3?.adminUp && !!port3.features.helpers?.includes(criterion.serverAddress);
+    }
+    if (criterion.kind === "dhcp-pool") {
+      const service = d.config.services.dhcp;
+      return service?.enabled === true && !!service.pools?.some((pool) => pool.name === criterion.name && pool.network === criterion.network && pool.prefix === criterion.prefix && pool.defaultRouter === criterion.gateway && pool.dnsServers?.includes(criterion.dnsServer) && (pool.leaseSeconds ?? 86400) === criterion.leaseSeconds) && !!service.excluded?.some((range) => range.start === criterion.excludedStart && range.end === criterion.excludedEnd);
+    }
+    if (criterion.kind === "dhcp-lease") {
+      const port3 = d.config.interfaces[criterion.interface], lease = d.runtime.features.dhcpClientLeases?.[criterion.interface], server = device(sim2, criterion.server), now = sim2.clock.now();
+      if (!port3?.features.dhcp || !isIPv4(port3.ip ?? "") || !port3.mask || !server || !lease || !["BOUND", "RENEWING", "REBINDING"].includes(lease.state) || lease.expires <= now || lease.serverId !== server.id || lease.address !== port3.ip) return false;
+      const n = ipToInt(port3.ip);
+      try {
+        return inSubnet(port3.ip, criterion.network, criterion.prefix) && maskToPrefix(port3.mask) === criterion.prefix && d.config.defaultGateway === criterion.gateway && d.config.dnsServers.includes(criterion.dnsServer) && !(server.config.services.dhcp?.excluded ?? []).some((range) => n >= ipToInt(range.start) && n <= ipToInt(range.end ?? range.start)) && !!server.runtime.features.dhcpLeases?.some((row5) => row5.clientId === d.id && row5.address === port3.ip && row5.state === "BOUND" && row5.expires > now);
+      } catch {
+        return false;
+      }
+    }
     if (criterion.kind === "device")
       return criterion.powered === void 0 || d.powered === criterion.powered;
     if (criterion.kind === "address")
@@ -52527,6 +52553,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   var LAB_CATALOG = [
     { id: "ipv4-interface-configuration", group: "CCNA", section: "Fundamentals", title: "IPv4 interface configuration", description: "Address two directly connected router interfaces, enable the link, and verify IPv4 connectivity in both directions.", devices: 2, links: 1, practice: true },
     { id: "ipv4-addressing-troubleshooting", group: "CCNA", section: "Fundamentals", title: "IPv4 addressing troubleshooting", description: "Find and repair IPv4 address, subnet mask and default gateway faults across two LANs, then restore end-to-end connectivity.", devices: 3, links: 2, practice: true },
+    { id: "dhcp-server-and-relay", group: "CCNA", section: "Fundamentals", title: "DHCP server and relay", description: "Configure a remote DHCP server and an IOS relay, deliver IPv4 settings to two clients, and verify routed connectivity.", devices: 5, links: 4, practice: true },
     { id: "router-on-a-stick", group: "CCNA", section: "Routing", title: "Router on a stick", description: "Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.", devices: 4, links: 3, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
@@ -52549,7 +52576,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     PC1: ['netsh interface ipv4 set address name="Ethernet" source=static address=192.168.10.10 mask=255.255.255.0 gateway=192.168.10.1'],
     PC2: ['netsh interface ipv4 set address name="Ethernet" source=static address=192.168.20.10 mask=255.255.255.0 gateway=192.168.20.1']
   };
+  var DHCP_RELAY_COMMANDS = { R1: ["enable", "configure terminal", "interface GigabitEthernet0/0", "ip helper-address 192.168.100.10", "end", "write memory"] };
+  var DHCP_SERVER_SETTINGS = { enabled: true, pools: [{ name: "CLIENTS", network: "192.168.10.0", prefix: 24, defaultRouter: "192.168.10.1", dnsServers: ["192.168.100.10"], domain: "lab.example", leaseSeconds: 3600 }], excluded: [{ start: "192.168.10.1", end: "192.168.10.20" }] };
   var GUIDE_RESOURCES = {
+    "dhcp-server-and-relay": { columns: ["Device", "Interface", "IPv4 address", "Subnet mask", "Default gateway"], rows: [["R1", "GigabitEthernet0/0", "192.168.10.1", "255.255.255.0", "\u2014"], ["R1", "GigabitEthernet0/1", "192.168.100.1", "255.255.255.0", "\u2014"], ["SRV1", "GigabitEthernet0", "192.168.100.10", "255.255.255.0", "192.168.100.1"], ["PC1", "GigabitEthernet0", "DHCP: 192.168.10.21\u2013254", "255.255.255.0", "192.168.10.1"], ["PC2", "GigabitEthernet0", "DHCP: 192.168.10.21\u2013254", "255.255.255.0", "192.168.10.1"]], commands: DHCP_RELAY_COMMANDS, verification: { R1: ["show running-config interface GigabitEthernet0/0", "show ip interface GigabitEthernet0/0", "show ip route"], PC1: ["ipconfig /renew", "ipconfig /all", "ping -n 3 192.168.100.10", "nslookup server.lab.example"], PC2: ["ipconfig /renew", "ipconfig /all", "ping -n 3 192.168.100.10"] }, note: "R1, SW1 and the server network are already addressed and enabled. The helper belongs on the client-facing interface. SRV1 serves DHCP; inspect its leases in Services \u2192 DHCP. R1 relays requests and does not maintain the server lease database. DNS on SRV1 is preconfigured for server.lab.example.", setup: [{ title: "SRV1 \xB7 Services \u2192 DHCP", instructions: ["Enable the DHCP server and add an address pool named CLIENTS.", "Network address: 192.168.10.0. Prefix length: 24.", "Default gateway: 192.168.10.1. DNS server: 192.168.100.10.", "Lease duration: 3600 seconds. DNS domain: lab.example.", "Excluded addresses: 192.168.10.1 - 192.168.10.20. Save changes."] }] },
     "router-on-a-stick": { columns: ["Device", "Interface", "VLAN", "IPv4 address", "Default gateway"], rows: ROAS_ADDRESS_PLAN, commands: ROAS_COMMANDS, verification: { SW1: ["show vlan brief", "show interfaces trunk"], R1: ["show ip interface brief", "show ip route"] }, note: "The PCs are already addressed. PortFast trunk is used on the router-facing switch port." },
     "ipv4-interface-configuration": { columns: ["Device", "Interface", "IPv4 address", "Subnet mask"], rows: [["R1", "GigabitEthernet0/0", "192.0.2.1", "255.255.255.0"], ["R2", "GigabitEthernet0/0", "192.0.2.2", "255.255.255.0"]], commands: IPV4_INTERFACE_COMMANDS, verification: { R1: ["show ip interface brief", "show interfaces GigabitEthernet0/0", "show ip route", "ping 192.0.2.2"], R2: ["show ip interface brief", "show interfaces GigabitEthernet0/0", "show ip route", "ping 192.0.2.1"] }, note: "Both interfaces share the 192.0.2.0/24 subnet. Directly connected routers do not need a static route or a routing protocol to reach one another." },
     "ipv4-addressing-troubleshooting": { columns: ["Device", "Interface", "IPv4 address", "Subnet mask", "Default gateway"], rows: [["R1", "GigabitEthernet0/0", "192.168.10.1", "255.255.255.0", "\u2014"], ["R1", "GigabitEthernet0/1", "192.168.20.1", "255.255.255.0", "\u2014"], ["PC1", "GigabitEthernet0", "192.168.10.10", "255.255.255.0", "192.168.10.1"], ["PC2", "GigabitEthernet0", "192.168.20.10", "255.255.255.0", "192.168.20.1"]], commands: IPV4_TROUBLESHOOTING_COMMANDS, verification: { R1: ["show ip interface brief", "show ip route"], PC1: ["ipconfig /all", "route print", "ping -n 3 192.168.10.1", "ping -n 3 192.168.20.10"], PC2: ["ipconfig /all", "route print", "ping -n 3 192.168.20.1", "ping -n 3 192.168.10.10"] }, note: "The practice lab starts with R1 Gi0/1 in the wrong subnet, PC1 using the wrong gateway, and PC2 using an overly broad mask. Correct the router through its IOS console. Correct each PC through its IP settings or the Windows Command prompt commands below. Proxy ARP is disabled on R1 so an incorrect PC mask cannot be hidden by proxy replies. No static routes or routing protocols are needed." }
@@ -52575,6 +52605,42 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createDHCPRelayLab(mode = "practice") {
+    const make = (id2, kind, hostname, x, y) => ({ id: id2, kind, x, y, powered: true, config: factoryDeviceConfig(kind, hostname), runtime: emptyRuntime() });
+    const r = make("device-dhcp-r1", "router", "R1", 560, 180), sw = make("device-dhcp-sw1", "switch", "SW1", 360, 360), server = make("device-dhcp-server", "server", "SRV1", 840, 180), a = make("device-dhcp-pc1", "pc", "PC1", 200, 560), b = make("device-dhcp-pc2", "pc", "PC2", 520, 560);
+    Object.assign(r.config.interfaces["GigabitEthernet0/0"], { ip: "192.168.10.1", mask: "255.255.255.0", adminUp: true, description: "CLIENT_LAN" });
+    Object.assign(r.config.interfaces["GigabitEthernet0/1"], { ip: "192.168.100.1", mask: "255.255.255.0", adminUp: true, description: "SERVER_LAN" });
+    for (const n of [1, 2, 3]) sw.config.interfaces[`GigabitEthernet0/${n}`].features.portfast = true;
+    Object.assign(server.config.interfaces.GigabitEthernet0, { ip: "192.168.100.10", mask: "255.255.255.0", adminUp: true });
+    server.config.interfaces.GigabitEthernet0.features.dhcp = false;
+    server.config.defaultGateway = "192.168.100.1";
+    server.config.dnsServers = ["192.168.100.10"];
+    server.config.services.dns = { enabled: true, records: { "server.lab.example": "192.168.100.10" } };
+    server.config.services.dhcp = mode === "completed" ? structuredClone(DHCP_SERVER_SETTINGS) : { enabled: false, pools: [], excluded: [] };
+    for (const d of [a, b]) {
+      const port3 = d.config.interfaces.GigabitEthernet0;
+      delete port3.ip;
+      delete port3.mask;
+      port3.features.dhcp = true;
+      delete d.config.defaultGateway;
+      d.config.dnsServers = [];
+    }
+    for (const d of [r, sw]) d.startupConfig = structuredClone(d.config);
+    const lease = (device2) => ({ kind: "dhcp-lease", device: device2, interface: "GigabitEthernet0", server: server.id, network: "192.168.10.0", prefix: 24, gateway: "192.168.10.1", dnsServer: "192.168.100.10" });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "dhcp-server-and-relay", name: "DHCP server and relay" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [r, sw, server, a, b], links: [
+      { id: "link-dhcp-server", a: { deviceId: r.id, port: "GigabitEthernet0/1" }, b: { deviceId: server.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 },
+      { id: "link-dhcp-uplink", a: { deviceId: r.id, port: "GigabitEthernet0/0" }, b: { deviceId: sw.id, port: "GigabitEthernet0/1" }, enabled: true, delay: 0.1, loss: 0 },
+      { id: "link-dhcp-pc1", a: { deviceId: sw.id, port: "GigabitEthernet0/2" }, b: { deviceId: a.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 },
+      { id: "link-dhcp-pc2", a: { deviceId: sw.id, port: "GigabitEthernet0/3" }, b: { deviceId: b.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 }
+    ], notes: [{ id: "note-dhcp-clients", x: 360, y: 670, text: "Client LAN: 192.168.10.0/24\nGateway: 192.168.10.1 \xB7 DHCP clients" }, { id: "note-dhcp-server", x: 840, y: 300, text: "Server LAN: 192.168.100.0/24\nDHCP / DNS: 192.168.100.10" }], lesson: { title: "DHCP server and relay", description: "PC1 and PC2 need IPv4 settings from SRV1 on a different subnet. R1, SW1 and SRV1 already have their required interface settings. The PCs are set to DHCP, but the server service and router relay still need configuration.\n\nOn SRV1, open Services \u2192 DHCP and create the CLIENTS pool for 192.168.10.0/24. Exclude 192.168.10.1\u2013192.168.10.20, supply gateway 192.168.10.1 and DNS server 192.168.100.10, and use a 3600-second lease. Set the optional DNS domain to lab.example.\n\nConfigure ip helper-address on R1\u2019s client-facing interface. Request or renew both client leases, inspect the active leases on SRV1, and verify each PC can reach the server. The clients may acquire a lease automatically once both settings are correct. Save R1 with write memory and save or export your lab.", objectives: [
+      { id: "dhcp-pool", title: "Configure and enable the CLIENTS pool on SRV1", description: "Use the client subnet, excluded range, gateway, DNS server and lease duration in the guide.", criterion: { kind: "dhcp-pool", device: server.id, name: "CLIENTS", network: "192.168.10.0", prefix: 24, gateway: "192.168.10.1", dnsServer: "192.168.100.10", excludedStart: "192.168.10.1", excludedEnd: "192.168.10.20", leaseSeconds: 3600 } },
+      { id: "dhcp-relay", title: "Configure R1\u2019s DHCP relay on GigabitEthernet0/0", description: "Forward client broadcasts to 192.168.100.10.", criterion: { kind: "dhcp-relay", device: r.id, interface: "GigabitEthernet0/0", serverAddress: "192.168.100.10" } },
+      ...[a, b].map((d) => ({ id: d === a ? "pc1-lease" : "pc2-lease", title: `Obtain a valid DHCP lease on ${d.config.hostname}`, description: "Verify the /24 address, gateway and DNS settings received from SRV1.", criterion: lease(d.id), action: { kind: "dhcp", device: d.id, interface: "GigabitEthernet0" } })),
+      ...[a, b].map((d) => ({ id: d === a ? "pc1-ping" : "pc2-ping", title: `Verify ${d.config.hostname} can reach SRV1`, description: "Ping 192.168.100.10 across R1.", criterion: { kind: "echo", device: d.id, from: "192.168.100.10" }, action: { kind: "ping", device: d.id, target: "192.168.100.10", when: lease(d.id) } }))
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261102, lab };
+    return mode === "practice" ? doc : completedDocument(doc, DHCP_RELAY_COMMANDS);
+  }
   function createIPv4TroubleshootingLab(mode = "practice") {
     const make = (id2, kind, hostname, x, y) => ({ id: id2, kind, x, y, powered: true, config: factoryDeviceConfig(kind, hostname), runtime: emptyRuntime() });
     const r = make("device-ipv4-ts-r1", "router", "R1", 500, 160), a = make("device-ipv4-ts-pc1", "pc", "PC1", 260, 360), b = make("device-ipv4-ts-pc2", "pc", "PC2", 740, 360);
@@ -52652,6 +52718,7 @@ ${output.join("\n")}`);
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "dhcp-server-and-relay") return createDHCPRelayLab(mode);
     if (id2 === "ipv4-addressing-troubleshooting") return createIPv4TroubleshootingLab(mode);
     if (id2 === "ipv4-interface-configuration") return createIPv4InterfaceLab(mode);
     if (id2 === "router-on-a-stick") return createRouterOnAStickLab(mode);
@@ -52690,7 +52757,7 @@ ${output.join("\n")}`);
   var selectedGroup = "CCNA";
   var selectedSection = "Fundamentals";
   var addressPlan = (resources) => `<div class="catalog-table-wrap"><table class="catalog-table"><caption>Addressing plan</caption><thead><tr>${resources.columns.map((column) => `<th scope="col">${escapeHTML(column)}</th>`).join("")}</tr></thead><tbody>${resources.rows.map((row5) => `<tr>${row5.map((cell) => `<td>${escapeHTML(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
-  var reference = (resources) => `<details class="catalog-reference"><summary>Reference configuration</summary><p>Use these configurations after attempting the lab. ${escapeHTML(resources.note)}</p>${Object.entries(resources.commands).map(([name2, commands]) => `<h4>${escapeHTML(name2)}</h4><pre>${escapeHTML(commands.join("\n"))}</pre>`).join("")}${Object.entries(resources.verification).map(([name2, commands]) => `<h4>Verify on ${escapeHTML(name2)}</h4><pre>${escapeHTML(commands.join("\n"))}</pre>`).join("")}</details>`;
+  var reference = (resources) => `<details class="catalog-reference"><summary>Reference configuration</summary><p>Use these configurations after attempting the lab. ${escapeHTML(resources.note)}</p>${(resources.setup ?? []).map((section2) => `<h4>${escapeHTML(section2.title)}</h4><ol class="catalog-tasks">${section2.instructions.map((line2) => `<li>${escapeHTML(line2)}</li>`).join("")}</ol>`).join("")}${Object.entries(resources.commands).map(([name2, commands]) => `<h4>${escapeHTML(name2)}</h4><pre>${escapeHTML(commands.join("\n"))}</pre>`).join("")}${Object.entries(resources.verification).map(([name2, commands]) => `<h4>Verify on ${escapeHTML(name2)}</h4><pre>${escapeHTML(commands.join("\n"))}</pre>`).join("")}</details>`;
   var decorate = (routed = false) => {
     const root = document.querySelector(".dialog");
     root?.classList.add("lab-catalog-dialog");
@@ -52820,7 +52887,7 @@ ${output.join("\n")}`);
     const progress = lessonProgress(sim2);
     if (!progress) return;
     const catalogId = sim2.lab.catalogId, resources = catalogGuideResources(catalogId), isRoas = catalogId === "router-on-a-stick", description = isRoas ? currentRouterOnAStickGuide(progress.lesson.description) : progress.lesson.description;
-    dialog2(progress.lesson.title, `<p class="catalog-instructions">${escapeHTML(description)}</p><p class="catalog-progress" data-guide-progress role="status"></p><ol class="catalog-checks">${progress.rows.map(({ objective: o }) => `<li data-objective="${escapeHTML(o.id)}"><span data-objective-state role="img" aria-label="Not complete"></span><div><strong>${escapeHTML(o.title)}</strong>${o.description ? `<p>${escapeHTML(o.description)}</p>` : ""}${o.action ? `<button class="btn" data-guide-test="${escapeHTML(o.id)}">Test connectivity</button><p class="catalog-test-status" data-test-status="${escapeHTML(o.id)}" role="status"></p>` : ""}</div></li>`).join("")}</ol>${resources ? addressPlan(resources) + reference(resources) : ""}`, '<button class="btn-primary" data-action="close-dialog">Done</button>');
+    dialog2(progress.lesson.title, `<p class="catalog-instructions">${escapeHTML(description)}</p><p class="catalog-progress" data-guide-progress role="status"></p><ol class="catalog-checks">${progress.rows.map(({ objective: o }) => `<li data-objective="${escapeHTML(o.id)}"><span data-objective-state role="img" aria-label="Not complete"></span><div><strong>${escapeHTML(o.title)}</strong>${o.description ? `<p>${escapeHTML(o.description)}</p>` : ""}${o.action ? `<button class="btn" data-guide-test="${escapeHTML(o.id)}">${o.action.kind === "dhcp" ? "Request DHCP lease" : "Test connectivity"}</button><p class="catalog-test-status" data-test-status="${escapeHTML(o.id)}" role="status"></p>` : ""}</div></li>`).join("")}</ol>${resources ? addressPlan(resources) + reference(resources) : ""}`, '<button class="btn-primary" data-action="close-dialog">Done</button>');
     decorate();
     const root = document.querySelector(".catalog-checks"), running = /* @__PURE__ */ new Map();
     const render = () => {
@@ -52836,14 +52903,15 @@ ${output.join("\n")}`);
           state4.textContent = symbol;
           state4.setAttribute("aria-label", complete2 ? "Complete" : "Not complete");
         }
-        const result = running.get(objective.id), button2 = root.querySelector(`[data-guide-test="${CSS.escape(objective.id)}"]`);
+        const test = running.get(objective.id), button2 = row5.querySelector("[data-guide-test]");
         if (button2) {
           const available = actionAvailable(sim2, objective);
-          button2.disabled = result?.status === "running" || !available;
-          button2.dataset.tooltip = available ? "Send three ICMP echo requests" : "Power on the source device and complete the action prerequisites first.";
+          button2.disabled = test?.result.status === "running" || !available;
+          button2.dataset.tooltip = available ? objective.action?.kind === "dhcp" ? "Request IPv4 settings from the DHCP service" : "Send three ICMP echo requests" : "Power on the source device and complete the action prerequisites first.";
         }
-        if (result) {
-          const status3 = root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`), message2 = result.status === "running" ? "Checking connectivity\u2026" : result.received ? `${result.received} of ${result.sent} replies received.` : "No replies. Check interface addresses, masks, link status and routing.";
+        if (test) {
+          const status3 = row5.querySelector("[data-test-status]");
+          const message2 = test.kind === "dhcp" ? test.result.status === "running" ? "Requesting a DHCP lease\u2026" : test.result.status === "success" ? `Lease received: ${test.result.address}. Verify its settings against the addressing plan.` : complete2 ? "A valid DHCP lease is active." : "No lease received. Check the DHCP service, client pool and relay." : test.result.status === "running" ? "Checking connectivity\u2026" : test.result.received ? `${test.result.received} of ${test.result.sent} replies received.` : "No replies. Check interface addresses, masks, link status and routing.";
           if (status3.textContent !== message2) status3.textContent = message2;
         }
       }
@@ -52851,13 +52919,13 @@ ${output.join("\n")}`);
     root.onclick = (event4) => {
       const button2 = event4.target.closest("[data-guide-test]");
       if (!button2) return;
-      const objective = progress.lesson.objectives.find((o) => o.id === button2.dataset.guideTest);
-      if (!objective?.action || !actionAvailable(sim2, objective)) return;
+      const objective = progress.lesson.objectives.find((o) => o.id === button2.dataset.guideTest), action = objective?.action;
+      if (!objective || !action || !actionAvailable(sim2, objective)) return;
       if (!isPlaying()) {
-        root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`).textContent = "Resume the simulation to run a connectivity check.";
+        root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`).textContent = action.kind === "dhcp" ? "Resume the simulation to request a DHCP lease." : "Resume the simulation to run a connectivity check.";
         return;
       }
-      running.set(objective.id, sim2.ping(objective.action.device, objective.action.target, { count: 3 }));
+      running.set(objective.id, action.kind === "dhcp" ? { kind: "dhcp", result: sim2.requestDHCP(action.device, action.interface) } : { kind: "ping", result: sim2.ping(action.device, action.target, { count: 3 }) });
       render();
     };
     render();
