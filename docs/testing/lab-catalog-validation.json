@@ -1,0 +1,63 @@
+{
+  "feature": "Offline grouped lab catalog and guided router-on-a-stick exercise",
+  "artifactSha256": "d03ae3c9c31ba042d2154c9973d52ca65a04c390753f0660abe3ddf675ef7c9b",
+  "groups": [
+    "CCNA",
+    "CCNP ENCOR",
+    "CCNP ENARSI",
+    "Other"
+  ],
+  "labs": [
+    {
+      "id": "router-on-a-stick",
+      "group": "CCNA",
+      "modes": [
+        "practice",
+        "completed"
+      ],
+      "devices": 4,
+      "links": 3,
+      "tasks": 6
+    },
+    {
+      "id": "datacenter-vpc",
+      "group": "Other",
+      "existingExample": true
+    }
+  ],
+  "check": {
+    "command": "npm run check",
+    "tests": 1297,
+    "passed": 1297,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed"
+  },
+  "scenarioValidation": [
+    "Practice starts without inter-VLAN connectivity",
+    "Published IOS commands configure both VLANs, access ports, trunk and 802.1Q subinterfaces",
+    "Both PCs receive replies over VLAN-tagged simulated packet paths",
+    "Removing a trunk VLAN and shutting the router parent each stop delivery; restoration repairs it",
+    "Guide, configuration and device identity survive YAML round trips and workspace reloads"
+  ],
+  "browserChecks": [
+    "light 1440px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress"
+  ],
+  "themeAndCLIRegression": [
+    "light desktop console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip and shortcuts use Mono Cobalt",
+    "light mobile console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip use Mono Cobalt",
+    "light desktop: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
+    "light mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
+    "dark desktop console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip and shortcuts use Mono Cobalt",
+    "dark mobile console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip use Mono Cobalt",
+    "dark desktop: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
+    "dark mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

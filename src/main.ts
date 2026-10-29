@@ -5,7 +5,9 @@ import {showNetworkTools} from './network-tools-ui.ts';
 import{showPoE}from'./poe-ui.ts';
 import{showSimulation}from'./simulation-ui.ts';
 import projectLogo from './assets/networksim-logo.png';
-import datacenterExample from '../examples/datacenter-vpc.netsim.json' with {type:'json'};
+import {createCatalogLab} from './lab-catalog.ts';
+import {showLabCatalog,showLabGuide} from './lab-catalog-ui.ts';
+import type {GuidedLab} from './lessons.ts';
 import{showWireless}from'./wireless-ui.ts';
 import{wirelessConfig}from'./wireless-model.ts';
 import { layoutLinks, orderedPairLinks, shortInterface, type LinkLayout, type PortLabel } from "./link-layout.ts";
@@ -211,6 +213,7 @@ app.innerHTML = `${nodeIconDefinitions()}
       </div>
       <div class="header-actions flex items-center gap-2">
         <button class="btn theme-toggle" id="theme-toggle" data-action="toggle-theme" aria-label="Switch to dark mode">${icon('moon', 15)}<span class="wide-label">Dark mode</span></button>
+        <button class="btn" data-action="lab-catalog" data-tooltip="Lab catalog" aria-label="Lab catalog">${icon("book", 15)}<span class="wide-label">Lab catalog</span></button>
         <button class="btn" data-action="files" data-tooltip="My labs" aria-label="My labs">${icon("folder", 15)}<span class="wide-label">My labs</span></button>
         <div class="lab-actions flex items-center gap-2" role="group" aria-label="Lab files">
           <button class="btn" data-action="new-lab" data-tooltip="New lab" aria-label="New lab">${icon("plus", 15)}<span class="file-action-label">New</span></button>
@@ -233,7 +236,7 @@ app.innerHTML = `${nodeIconDefinitions()}
             ${button("tool-select", "cursor", "Select and move (V)", "tool-active")}${button("tool-link", "link", "Connect devices (C)")}${button("tool-note", "note", "Add a note (N)")}
             <span class="divider"></span>${button("undo", "undo", "Undo (⌘Z)")}${button("redo", "redo", "Redo (⇧⌘Z)")}${button("delete", "trash", "Delete selection")}${button("power-lab", "power", "Power controls")}<span class="divider"></span>${button("simulation", "pulse", "Inspect packets and control simulation")}
           </div>
-          <div class="flex items-center gap-1"><div class="canvas-navigation" role="group" aria-label="Canvas navigation">${button("zoom-out", "minus", "Zoom out")}${button("zoom-in", "plus", "Zoom in")}${button("fit", "fit", "Fit topology")}<button data-action="zoom-reset" id="zoom-value" class="zoom-value" aria-label="Reset zoom to 100 percent">100%</button></div><span class="divider"></span><button class="workspace-panel-button" data-action="tab-console">${icon("terminal", 15)} Console</button><span class="divider"></span>${button("inspector", "settings", "Toggle device details")}</div>
+          <div class="flex items-center gap-1"><div class="canvas-navigation" role="group" aria-label="Canvas navigation">${button("zoom-out", "minus", "Zoom out")}${button("zoom-in", "plus", "Zoom in")}${button("fit", "fit", "Fit topology")}<button data-action="zoom-reset" id="zoom-value" class="zoom-value" aria-label="Reset zoom to 100 percent">100%</button></div><span class="divider"></span><button class="workspace-panel-button" data-action="tab-console">${icon("terminal", 15)} Console</button><button class="workspace-panel-button" id="lab-guide-button" data-action="lab-guide" hidden>${icon("book",15)} Lab guide</button><span class="divider"></span>${button("inspector", "settings", "Toggle device details")}</div>
         </div>
         <div id="diagram-workspace" class="relative flex min-h-0 flex-1">
           <div class="canvas-wrap" id="canvas-wrap"><svg id="topology" role="application" aria-label="Network topology editor" tabindex="0"><defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".8" fill="#d5dfe6"/></pattern></defs><rect id="grid-bg" width="100%" height="100%" fill="url(#grid)"/><g id="world"></g><g id="alignment-guides" pointer-events="none"></g><rect id="marquee" class="marquee" visibility="hidden"/></svg><div id="empty-hint" class="empty-hint"><div><div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200 bg-white text-teal shadow-xs">${icon("router", 32)}</div><h1 class="text-xl font-semibold tracking-tight">A clear space to learn networks.</h1><p class="mt-3 text-xs leading-6 text-slate-400">Add devices from the left, connect their ports,<br>then open a console to bring your network to life.</p></div></div><div id="connection-hint" class="connection-hint" hidden></div><section id="link-details" class="link-details" aria-label="Selected connection" hidden></section></div>
@@ -505,6 +508,7 @@ function portSocket(point: {x: number; y: number}, device: Device, port: string,
   return `<g class="wire-socket state-${status.state}" transform="translate(${point.x},${point.y})" role="img" aria-label="${esc(description)}" data-tooltip="${esc(description)}"><path class="socket-half socket-status" d="M0,-4 A4,4 0 0,0 0,4 Z"/><path class="socket-half socket-activity ${active ? 'traffic' : ''}" d="M0,-4 A4,4 0 0,1 0,4 Z"/><circle class="socket-outline" r="4"/><path class="socket-divider" d="M0,-4 V4"/></g>`;
 }
 function renderTopology() {
+  $("#lab-guide-button").hidden = !(sim.lab as GuidedLab).lesson;
   const world = document.querySelector<SVGGElement>("#world")!;
   linkActivity.retain(new Set(sim.lab.links.flatMap(link => [link.a,link.b]).map(endpoint => `${endpoint.deviceId}|${endpoint.port}`)));
   const layouts = new Map(topologyLinkLayouts().map(l => [l.id,l]));
@@ -1262,7 +1266,7 @@ function labImportError(error: unknown) {
   );
 }
 
-function requestLabReplacement(doc: LabDocument, operation: "import" | "open", source?: string) {
+function requestLabReplacement(doc: LabDocument, operation: "import" | "open", source?: string, openTitle = "Open saved lab") {
   // Exercise initialization off-screen before touching the current simulator or its history.
   new Simulator(doc.seed).load(doc);
   if (noteEdit) finishNoteEdit(true);
@@ -1272,9 +1276,9 @@ function requestLabReplacement(doc: LabDocument, operation: "import" | "open", s
   if (!hasCurrentLab) { importLab(doc); return; }
   const verb = operation;
   dialog(
-    operation === "import" ? "Import lab" : "Open saved lab",
+    operation === "import" ? "Import lab" : openTitle,
     `<p id="lab-import-description" class="text-xs leading-6 text-slate-500">Opening <strong class="break-words">${esc(doc.lab.name)}</strong> replaces <strong class="break-words">${esc(lab.name)}</strong>, including its workspace autosave. Labs are not merged.</p>
-    ${source ? `<p class="mt-2 break-words text-xs text-slate-400">File: ${esc(source)}</p>` : ""}
+    ${source ? `<p class="mt-2 break-words text-xs text-slate-400">${operation === "import" ? "File" : "Source"}: ${esc(source)}</p>` : ""}
     <p class="mt-3 text-xs text-slate-500">${doc.lab.devices.length} devices &middot; ${doc.lab.links.length} links &middot; ${doc.lab.notes.length} notes. Protocol sessions restart when opened.</p>
     <p class="mt-4 text-xs leading-6 text-slate-500"><strong>Save a copy &amp; ${verb}</strong> keeps the current lab in <strong>My labs</strong> without overwriting earlier saves. Browser copies stay in this browser and can be cleared with browsing data.</p>
     <button type="button" class="btn mt-3" id="lab-import-export">${icon("download", 15)} Export current lab first</button>
@@ -1961,7 +1965,9 @@ const actions: Record<string, () => void> = {
     dialog("Terminal keyboard shortcuts", `<div class="terminal-shortcuts"><p>Click anywhere in the terminal to type. Drag across output to select and copy it.</p><dl><dt>Tab · ?</dt><dd>Complete a command · show context help</dd><dt>↑ / ↓ · Ctrl P / N</dt><dd>Command history</dd><dt>Ctrl A / E</dt><dd>Beginning / end of the line</dd><dt>Ctrl U / K / W</dt><dd>Delete before cursor / after cursor / previous word</dd><dt>Ctrl C · Ctrl Z</dt><dd>Cancel input · return to privileged mode</dd><dt>Space / Enter / q</dt><dd>Next page / next line / stop paged output</dd><dt>Ctrl Shift 6, then X</dt><dd>Suspend a remote session</dd><dt>Shift Tab</dt><dd>Move keyboard focus out of the terminal</dd></dl><p>Each device keeps its draft, history and scroll position. Pasted lines execute at line breaks; a final line without a line break remains editable.</p></div>`, '<button class="btn-primary" data-action="close-dialog">Done</button>');
   },
   files: filesDialog,
-  "datacenter-example": () => requestLabReplacement(parseDocument(JSON.stringify(datacenterExample)), "open", "Datacenter Switch vPC example"),
+  "lab-catalog": () => showLabCatalog(dialog,(doc,source)=>requestLabReplacement(doc,"open",source,"Open catalog lab")),
+  "lab-guide": () => showLabGuide(sim,dialog,()=>playing),
+  "datacenter-example": () => requestLabReplacement(createCatalogLab("datacenter-vpc","completed"), "open", "Datacenter Switch vPC example"),
   export: exportLab,
   import: chooseLabFile,
   "save-local": saveLab,
