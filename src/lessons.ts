@@ -5,6 +5,7 @@ import { isIPv4, isIPv6, ipToInt, inSubnet, maskToPrefix, sameAddress } from "./
 export type Criterion =
   | { kind: "all" | "any"; criteria: Criterion[] }
   | { kind: "device"; device: string; powered?: boolean }
+  | { kind: "ip-routing"; device: string; enabled: boolean }
   | { kind: "link"; a: string; b: string }
   | { kind: "address"; device: string; address: string }
   | { kind: "default-gateway"; device: string; address: string }
@@ -68,6 +69,8 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     switch (v.kind) {
       case "device":
         return v.powered === undefined || typeof v.powered === "boolean";
+      case "ip-routing":
+        return typeof v.enabled === "boolean";
       case "address":
         return address(v.address);
       case "default-gateway":
@@ -215,6 +218,7 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind === "ip-routing") return d.config.ipRouting === criterion.enabled;
   if (criterion.kind === "default-gateway")
     return d.config.defaultGateway === criterion.address;
   if (criterion.kind === "dhcp-relay") {

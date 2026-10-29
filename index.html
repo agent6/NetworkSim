@@ -52061,6 +52061,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       switch (v.kind) {
         case "device":
           return v.powered === void 0 || typeof v.powered === "boolean";
+        case "ip-routing":
+          return typeof v.enabled === "boolean";
         case "address":
           return address(v.address);
         case "default-gateway":
@@ -52146,6 +52148,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!("device" in criterion)) return false;
     const d = device(sim2, criterion.device);
     if (!d) return false;
+    if (criterion.kind === "ip-routing") return d.config.ipRouting === criterion.enabled;
     if (criterion.kind === "default-gateway")
       return d.config.defaultGateway === criterion.address;
     if (criterion.kind === "dhcp-relay") {
@@ -52570,6 +52573,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "ipv4-addressing-troubleshooting", group: "CCNA", section: "Fundamentals", title: "IPv4 addressing troubleshooting", description: "Find and repair IPv4 address, subnet mask and default gateway faults across two LANs, then restore end-to-end connectivity.", devices: 3, links: 2, practice: true },
     { id: "dhcp-server-and-relay", group: "CCNA", section: "Fundamentals", title: "DHCP server and relay", description: "Configure a remote DHCP server and an IOS relay, deliver IPv4 settings to two clients, and verify routed connectivity.", devices: 5, links: 4, practice: true },
     { id: "layer-2-switching-interfaces", group: "CCNA", section: "Switching", title: "Layer 2 switching interfaces", description: "Configure access interfaces, VLAN membership and link settings, shut an unused port, and verify dynamic MAC learning and host connectivity.", devices: 3, links: 2, practice: true },
+    { id: "layer-3-routed-interfaces", group: "CCNA", section: "Switching", title: "Layer 3 routed interfaces", description: "Convert multilayer switch ports to routed interfaces, address two subnets, enable IPv4 routing, and verify end-to-end forwarding.", devices: 3, links: 2, practice: true },
     { id: "router-on-a-stick", group: "CCNA", section: "Routing", title: "Router on a stick", description: "Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.", devices: 4, links: 3, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
@@ -52623,7 +52627,26 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     "end",
     "write memory"
   ] };
+  var L3_INTERFACE_COMMANDS = { DSW1: [
+    "enable",
+    "configure terminal",
+    "interface GigabitEthernet0/1",
+    "description TO_PC1",
+    "no switchport",
+    "ip address 192.168.10.1 255.255.255.0",
+    "no shutdown",
+    "interface GigabitEthernet0/2",
+    "description TO_PC2",
+    "no switchport",
+    "ip address 192.168.20.1 255.255.255.0",
+    "no shutdown",
+    "exit",
+    "ip routing",
+    "end",
+    "write memory"
+  ] };
   var GUIDE_RESOURCES = {
+    "layer-3-routed-interfaces": { columns: ["Device", "Interface", "IPv4 address", "Subnet mask", "Default gateway"], rows: [["DSW1", "GigabitEthernet0/1", "192.168.10.1", "255.255.255.0", "\u2014"], ["DSW1", "GigabitEthernet0/2", "192.168.20.1", "255.255.255.0", "\u2014"], ["PC1", "GigabitEthernet0", "192.168.10.10", "255.255.255.0", "192.168.10.1"], ["PC2", "GigabitEthernet0", "192.168.20.10", "255.255.255.0", "192.168.20.1"]], commands: L3_INTERFACE_COMMANDS, verification: { DSW1: ["show interfaces GigabitEthernet0/1 switchport", "show interfaces GigabitEthernet0/2 switchport", "show ip interface brief", "show ip route connected", "show running-config | include ip routing", "show ip arp"], PC1: ["ipconfig", "ping -n 3 192.168.10.1", "ping -n 3 192.168.20.10"], PC2: ["ipconfig", "ping -n 3 192.168.20.1", "ping -n 3 192.168.10.10"] }, note: "The PCs already have their static addresses and default gateways. Use no switchport before assigning an IP address to each physical switch port, then enable ip routing globally. Each up/up routed interface installs its directly connected subnet. No static routes or routing protocol are required for these two connected networks. Save DSW1 with write memory." },
     "layer-2-switching-interfaces": { columns: ["Device", "Interface", "VLAN", "IPv4 address", "Default gateway"], rows: [["PC1", "GigabitEthernet0", "10", "192.168.10.10 /24", "\u2014"], ["PC2", "GigabitEthernet0", "10", "192.168.10.20 /24", "\u2014"]], commands: L2_INTERFACE_COMMANDS, verification: { SW1: ["show vlan brief", "show interfaces status", "show interfaces GigabitEthernet0/1 switchport", "show interfaces GigabitEthernet0/2 switchport", "show interfaces GigabitEthernet0/1", "show mac address-table dynamic"], PC1: ["ipconfig", "ping -n 3 192.168.10.20"], PC2: ["ipconfig", "ping -n 3 192.168.10.10"] }, note: "Both PCs already have static /24 addresses and need no default gateway to communicate within their VLAN. Keep switch data ports at Layer 2; do not assign them IP addresses. PortFast is used on these endpoint-facing access ports. Generate traffic before inspecting dynamic MAC entries. To repeat the learning exercise, use clear mac address-table dynamic and send more pings." },
     "dhcp-server-and-relay": { columns: ["Device", "Interface", "IPv4 address", "Subnet mask", "Default gateway"], rows: [["R1", "GigabitEthernet0/0", "192.168.10.1", "255.255.255.0", "\u2014"], ["R1", "GigabitEthernet0/1", "192.168.100.1", "255.255.255.0", "\u2014"], ["SRV1", "GigabitEthernet0", "192.168.100.10", "255.255.255.0", "192.168.100.1"], ["PC1", "GigabitEthernet0", "DHCP: 192.168.10.21\u2013254", "255.255.255.0", "192.168.10.1"], ["PC2", "GigabitEthernet0", "DHCP: 192.168.10.21\u2013254", "255.255.255.0", "192.168.10.1"]], commands: DHCP_RELAY_COMMANDS, verification: { R1: ["show running-config interface GigabitEthernet0/0", "show ip interface GigabitEthernet0/0", "show ip route"], PC1: ["ipconfig /renew", "ipconfig /all", "ping -n 3 192.168.100.10", "nslookup server.lab.example"], PC2: ["ipconfig /renew", "ipconfig /all", "ping -n 3 192.168.100.10"] }, note: "R1, SW1 and the server network are already addressed and enabled. The helper belongs on the client-facing interface. SRV1 serves DHCP; inspect its leases in Services \u2192 DHCP. R1 relays requests and does not maintain the server lease database. DNS on SRV1 is preconfigured for server.lab.example.", setup: [{ title: "SRV1 \xB7 Services \u2192 DHCP", instructions: ["Enable the DHCP server and add an address pool named CLIENTS.", "Network address: 192.168.10.0. Prefix length: 24.", "Default gateway: 192.168.10.1. DNS server: 192.168.100.10.", "Lease duration: 3600 seconds. DNS domain: lab.example.", "Excluded addresses: 192.168.10.1 - 192.168.10.20. Save changes."] }] },
     "router-on-a-stick": { columns: ["Device", "Interface", "VLAN", "IPv4 address", "Default gateway"], rows: ROAS_ADDRESS_PLAN, commands: ROAS_COMMANDS, verification: { SW1: ["show vlan brief", "show interfaces trunk"], R1: ["show ip interface brief", "show ip route"] }, note: "The PCs are already addressed. PortFast trunk is used on the router-facing switch port." },
@@ -52651,6 +52674,36 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createL3InterfaceLab(mode = "practice") {
+    const make = (id2, kind, hostname, x, y) => ({ id: id2, kind, x, y, powered: true, config: factoryDeviceConfig(kind, hostname), runtime: emptyRuntime() });
+    const sw = make("device-l3-dsw1", "l3switch", "DSW1", 500, 180), a = make("device-l3-pc1", "pc", "PC1", 280, 420), b = make("device-l3-pc2", "pc", "PC2", 720, 420);
+    sw.config.ipRouting = false;
+    for (const [n, d, subnet2] of [[1, a, 10], [2, b, 20]]) {
+      sw.config.interfaces[`GigabitEthernet0/${n}`].adminUp = false;
+      Object.assign(d.config.interfaces.GigabitEthernet0, { ip: `192.168.${subnet2}.10`, mask: "255.255.255.0", adminUp: true });
+      d.config.interfaces.GigabitEthernet0.features.dhcp = false;
+      d.config.defaultGateway = `192.168.${subnet2}.1`;
+    }
+    sw.startupConfig = structuredClone(sw.config);
+    const routedPort = (n, subnet2) => ({ kind: "all", criteria: [
+      { kind: "interface", device: sw.id, interface: `GigabitEthernet0/${n}`, property: "switchport", value: false },
+      { kind: "interface", device: sw.id, interface: `GigabitEthernet0/${n}`, property: "description", value: `TO_PC${n}` },
+      ipv4InterfaceCriterion(sw.id, `192.168.${subnet2}.1`, `GigabitEthernet0/${n}`)
+    ] });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "layer-3-routed-interfaces", name: "Layer 3 routed interfaces" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [sw, a, b], links: [
+      { id: "link-l3-pc1", a: { deviceId: sw.id, port: "GigabitEthernet0/1" }, b: { deviceId: a.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 },
+      { id: "link-l3-pc2", a: { deviceId: sw.id, port: "GigabitEthernet0/2" }, b: { deviceId: b.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 }
+    ], notes: [{ id: "note-l3-lan10", x: 280, y: 540, text: "192.168.10.0/24\nGateway: 192.168.10.1" }, { id: "note-l3-lan20", x: 720, y: 540, text: "192.168.20.0/24\nGateway: 192.168.20.1" }], lesson: { title: "Layer 3 routed interfaces", description: "PC1 and PC2 are connected to the multilayer switch DSW1 on different IPv4 subnets. Both PCs already have static addresses and default gateways. The connected switch ports start as Layer 2 interfaces, administratively down, with IPv4 routing disabled.\n\nOn DSW1, use no switchport to convert Gi0/1 and Gi0/2 to routed physical interfaces. Set descriptions TO_PC1 and TO_PC2, assign the /24 gateway addresses from the plan, and enable both ports. Enable ip routing globally so the switch can forward packets between the subnets.\n\nVerify that switchport mode is disabled on both ports, both routed interfaces are up/up, and the routing table contains the two directly connected /24 networks. Check each PC can reach its own gateway, then test pings between the PCs in both directions. Save DSW1 with write memory and save or export your lab.", objectives: [
+      { id: "pc1-port", title: "Configure DSW1 Gi0/1 as a routed port for PC1", description: "No switchport; description TO_PC1; 192.168.10.1/24; administratively up.", criterion: routedPort(1, 10) },
+      { id: "pc2-port", title: "Configure DSW1 Gi0/2 as a routed port for PC2", description: "No switchport; description TO_PC2; 192.168.20.1/24; administratively up.", criterion: routedPort(2, 20) },
+      { id: "ip-routing", title: "Enable IPv4 routing on DSW1", description: "Configure ip routing in global configuration mode.", criterion: { kind: "ip-routing", device: sw.id, enabled: true } },
+      { id: "connected-routes", title: "Verify both directly connected /24 routes", description: "192.168.10.0/24 and 192.168.20.0/24 must be connected networks.", criterion: { kind: "all", criteria: [{ kind: "route", device: sw.id, network: "192.168.10.0", prefix: 24, protocol: "connected" }, { kind: "route", device: sw.id, network: "192.168.20.0", prefix: 24, protocol: "connected" }] } },
+      { id: "pc1-ping", title: "Verify PC1 can ping PC2", description: "192.168.10.10 \u2192 192.168.20.10", criterion: { kind: "echo", device: a.id, from: "192.168.20.10" }, action: { kind: "ping", device: a.id, target: "192.168.20.10" } },
+      { id: "pc2-ping", title: "Verify PC2 can ping PC1", description: "192.168.20.10 \u2192 192.168.10.10", criterion: { kind: "echo", device: b.id, from: "192.168.10.10" }, action: { kind: "ping", device: b.id, target: "192.168.10.10" } }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261104, lab };
+    return mode === "practice" ? doc : completedDocument(doc, L3_INTERFACE_COMMANDS);
+  }
   function createL2InterfaceLab(mode = "practice") {
     const make = (id2, kind, hostname, x, y) => ({ id: id2, kind, x, y, powered: true, config: factoryDeviceConfig(kind, hostname), runtime: emptyRuntime() });
     const sw = make("device-l2-sw1", "switch", "SW1", 500, 180), a = make("device-l2-pc1", "pc", "PC1", 280, 420), b = make("device-l2-pc2", "pc", "PC2", 720, 420);
@@ -52799,6 +52852,7 @@ ${output.join("\n")}`);
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "layer-3-routed-interfaces") return createL3InterfaceLab(mode);
     if (id2 === "layer-2-switching-interfaces") return createL2InterfaceLab(mode);
     if (id2 === "dhcp-server-and-relay") return createDHCPRelayLab(mode);
     if (id2 === "ipv4-addressing-troubleshooting") return createIPv4TroubleshootingLab(mode);

@@ -1,0 +1,68 @@
+{
+  "feature": "CCNA Switching: Layer 3 routed interfaces",
+  "catalogId": "layer-3-routed-interfaces",
+  "artifactSha256": "e920cced531211c5601c7579dcc4c21b678a252ea1de3bdc2e01ec412b493a98",
+  "devices": 3,
+  "links": 2,
+  "tasks": 6,
+  "topology": {
+    "switch": "DSW1 (multilayer switch)",
+    "port1": "GigabitEthernet0/1: 192.168.10.1/24",
+    "port2": "GigabitEthernet0/2: 192.168.20.1/24",
+    "pc1": "192.168.10.10/24, gateway 192.168.10.1",
+    "pc2": "192.168.20.10/24, gateway 192.168.20.1",
+    "staticRoutesRequired": false
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1331,
+    "passed": 1331,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "focusedTests": 38
+  },
+  "scenarioChecks": [
+    "Practice starts with Layer 2 interfaces down and IPv4 routing disabled",
+    "Physical switch ports reject an IP address until no switchport is configured",
+    "Reference IOS commands configure routed-port descriptions, addresses, masks, administrative state and global IP routing",
+    "Local gateway replies remain possible without transit routing; cross-subnet traffic requires ip routing",
+    "Connected-route goals require actual connected protocols rather than static substitutes",
+    "Disabling routing, shutting an interface or converting it back to Layer 2 stops actual routed forwarding; repair restores both directions",
+    "Wrong interface masks fail the planned-address and connected-route goals; wrong host gateways break return traffic",
+    "All published IOS and Windows verification commands execute against working state",
+    "Configuration, earned traffic checks and stable device references survive portable saves, renamed nodes and power cycles",
+    "Imported routing predicates require boolean data and cannot evaluate imported expressions"
+  ],
+  "browserChecks": [
+    "light 1440px: both Switching labs, routed-port guide/reference, failed baseline, visible no-switchport/addressing configuration, routing-disabled failure, connected-route and switchport output, 3/3 routed pings, disable/repair, saved progress and safe completed-reference replacement",
+    "light 390px: both Switching labs, routed-port guide/reference, failed baseline, visible no-switchport/addressing configuration, routing-disabled failure, connected-route and switchport output, 3/3 routed pings, disable/repair, saved progress and safe completed-reference replacement",
+    "light 320px: both Switching labs, routed-port guide/reference, failed baseline, visible no-switchport/addressing configuration, routing-disabled failure, connected-route and switchport output, 3/3 routed pings, disable/repair, saved progress and safe completed-reference replacement",
+    "dark 1440px: both Switching labs, routed-port guide/reference, failed baseline, visible no-switchport/addressing configuration, routing-disabled failure, connected-route and switchport output, 3/3 routed pings, disable/repair, saved progress and safe completed-reference replacement",
+    "dark 390px: both Switching labs, routed-port guide/reference, failed baseline, visible no-switchport/addressing configuration, routing-disabled failure, connected-route and switchport output, 3/3 routed pings, disable/repair, saved progress and safe completed-reference replacement",
+    "dark 320px: both Switching labs, routed-port guide/reference, failed baseline, visible no-switchport/addressing configuration, routing-disabled failure, connected-route and switchport output, 3/3 routed pings, disable/repair, saved progress and safe completed-reference replacement",
+    "light: direct share link preserves current host/path/query, protects the workspace and returns to both Switching labs",
+    "dark: direct share link preserves current host/path/query, protects the workspace and returns to both Switching labs"
+  ],
+  "layer2Regression": [
+    "light 1440px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "light 390px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "light 320px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "dark 1440px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "dark 390px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "dark 320px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "light: shared link preserves current host/path/query, previews without replacing the workspace and returns to Switching",
+    "dark: shared link preserves current host/path/query, previews without replacing the workspace and returns to Switching"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}
