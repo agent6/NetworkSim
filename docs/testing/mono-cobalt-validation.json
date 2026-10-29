@@ -1,13 +1,15 @@
 {
-  "scope": "Mono Cobalt visual refresh, with the original ImageGen node artwork restored and transparent workspace icons",
+  "scope": "Mono Cobalt interface and console chrome, with original node artwork and an independently preserved CLI command pane",
   "sourceBaseCommit": "800c88e8668a1eba24c14d79da0156de60ba46b9",
   "baselineArtifactSha256": "53c8296fe88737a798a690f67d624a20ce7fd3f77036f3d1bd5557615fb55699",
-  "artifactSha256": "c3565c4f8c5c681ddf74d438b86b92a5d0a70c62a45023d3435e1c7c0bddff83",
+  "artifactSha256": "4b17020edbd4b0af174c809dce5c597307bc167b39e9160e6db7944f0fc5fcb1",
   "checks": [
-    "light: original console, fonts, controls, hover, expanded console and shortcuts match the baseline",
+    "light desktop console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip and shortcuts use Mono Cobalt",
+    "light mobile console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip use Mono Cobalt",
     "light desktop: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
     "light mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
-    "dark: original console, fonts, controls, hover, expanded console and shortcuts match the baseline",
+    "dark desktop console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip and shortcuts use Mono Cobalt",
+    "dark mobile console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip use Mono Cobalt",
     "dark desktop: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
     "dark mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs"
   ],
@@ -17,23 +19,17 @@
     "commands": [
       "npm run typecheck",
       "npm run build",
-      "node scripts/browser-mono-cobalt.mjs"
+      "node scripts/browser-mono-cobalt.mjs",
+      "node scripts/browser-console-expand.mjs",
+      "node scripts/browser-console-paging.mjs"
     ],
     "typecheck": "passed",
     "productionBuild": "passed",
-    "browserValidation": "passed in both themes on desktop and mobile"
+    "browserValidation": "passed in light and dark modes on desktop and mobile",
+    "fullWindowExpansion": "passed at five viewport sizes, with layout and command drafts restored",
+    "paging": "9 checks passed"
   },
-  "consolePixelComparison": {
-    "light": {
-      "identical": true,
-      "sha256": "8050f2dabd985b0d2ff8470671f6bed295a9d22d623f5b722170ba431b6a034a"
-    },
-    "dark": {
-      "identical": true,
-      "sha256": "1891776e3e72745530610a60a04171a602115789e117f99cfda1dff322836e72"
-    }
-  },
-  "sourceScope": "Original icon renderer restored; CSS color filters and browser validation updated. Simulation engine, networking logic and terminal styling unchanged.",
+  "sourceScope": "Console chrome uses semantic application theme tokens; only the CLI command pane keeps its original palette and monospace font. Simulation engine, networking behavior and original node artwork unchanged.",
   "fullRegressionBaseline": {
     "command": "npm run check",
     "typecheck": "passed",
@@ -50,8 +46,58 @@
     "nodeKinds": 11,
     "themeTreatment": "Original gray on light workspace; white on dark workspace and palette tiles. CSS filters preserve the original shapes and transparency."
   },
-  "previousAdditionalBrowserSuites": [
+  "cliPixelComparison": {
+    "light desktop normal": {
+      "identical": true,
+      "sha256": "2ac30789966b2eb318f1862e96f5d057564a379a154b9f762dbd186cd3b9005e"
+    },
+    "light desktop expanded": {
+      "identical": true,
+      "sha256": "b5c3d1f43ac953896c5c4c437175245a250040c4ca018e2977658040efd4797d"
+    },
+    "light mobile normal": {
+      "identical": true,
+      "sha256": "fb6081517a0f5e802dbb57a6e599435f1be24e168d0eefe78f878fa5168592bc"
+    },
+    "light mobile expanded": {
+      "identical": true,
+      "sha256": "38c71150bf09d60f22f0675beabcf44f92a9a04a48319a898a2c7b9c4870fa21"
+    },
+    "dark desktop normal": {
+      "identical": true,
+      "sha256": "2ac30789966b2eb318f1862e96f5d057564a379a154b9f762dbd186cd3b9005e"
+    },
+    "dark desktop expanded": {
+      "identical": true,
+      "sha256": "b5c3d1f43ac953896c5c4c437175245a250040c4ca018e2977658040efd4797d"
+    },
+    "dark mobile normal": {
+      "identical": true,
+      "sha256": "fb6081517a0f5e802dbb57a6e599435f1be24e168d0eefe78f878fa5168592bc"
+    },
+    "dark mobile expanded": {
+      "identical": true,
+      "sha256": "38c71150bf09d60f22f0675beabcf44f92a9a04a48319a898a2c7b9c4870fa21"
+    }
+  },
+  "additionalBrowserSuites": [
     "scripts/browser-console-expand.mjs: desktop, phone, small phone, landscape, tablet and visual viewport passed",
     "scripts/browser-console-paging.mjs: 9 checks passed"
-  ]
+  ],
+  "consoleThemeBoundary": {
+    "preserved": {
+      "background": "#333333",
+      "foreground": "#FFB900",
+      "cursor": "#00FF00",
+      "font": "Existing SFMono-Regular/Consolas/Liberation Mono stack, with original responsive font sizes and spacing"
+    },
+    "themed": [
+      "Console tabs and active selection",
+      "Copy, expand, close and shortcut controls",
+      "Resize handle",
+      "Latest-prompt button",
+      "Tooltips",
+      "Keyboard shortcuts dialog"
+    ]
+  }
 }

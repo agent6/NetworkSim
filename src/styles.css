@@ -351,76 +351,9 @@
   .connection-row { gap:5px; grid-template-columns:16px minmax(0,1fr) 14px minmax(0,1fr) 25px; }
 }
 
-/* Preserve the pre-refresh console and its auxiliary controls exactly. */
-#dock, .console-tooltip, .dialog-backdrop:has(.terminal-shortcuts) {
-  --color-ink: #172c3b;
-  --color-white: #fff;
-  --color-teal: #087f77;
-  --color-teal-50: oklch(98.4% .014 180.72);
-  --color-teal-100: oklch(95.3% .051 180.801);
-  --color-teal-200: oklch(91% .096 180.426);
-  --color-teal-300: oklch(85.5% .138 181.071);
-  --color-teal-800: oklch(43.7% .078 188.216);
-  --color-slate-50: oklch(98.4% .003 247.858);
-  --color-slate-100: oklch(96.8% .007 247.896);
-  --color-slate-200: oklch(92.9% .013 255.508);
-  --color-slate-300: oklch(86.9% .022 252.894);
-  --color-slate-400: oklch(70.4% .04 256.788);
-  --color-slate-500: oklch(55.4% .046 257.417);
-  --color-slate-600: oklch(44.6% .043 257.281);
-  --color-slate-700: oklch(37.2% .044 257.287);
-  --color-slate-800: oklch(27.9% .041 260.031);
-  --color-slate-900: oklch(20.8% .042 265.755);
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  --ui-focus: #0D9488;
-  --ui-selection-bg: #BCECE3;
-  --ui-selection-text: #122C37;
-  font-family: var(--font-sans);
-  color: var(--color-ink);
-  --ui-accent: #087F77;
-  --ui-accent-hover: var(--color-teal-800);
-  --ui-on-accent: #FFFFFF;
-  --ui-dialog-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent, 0 0 0 0 transparent, 0 0 0 0 transparent, 0 25px 50px -12px rgb(0 0 0 / .25);
-}
-[data-theme="dark"] #dock, [data-theme="dark"] .console-tooltip, [data-theme="dark"] .dialog-backdrop:has(.terminal-shortcuts) {
-  --color-ink: #e2eaf0;
-  --color-white: #172630;
-  --color-teal: #55cbb5;
-  --color-teal-50: #173d3a;
-  --color-teal-100: #23544d;
-  --color-teal-200: #33786a;
-  --color-teal-300: #53b7a2;
-  --color-teal-800: #8de3d0;
-  --color-slate-50: #111e28;
-  --color-slate-100: #1d2e3a;
-  --color-slate-200: #314451;
-  --color-slate-300: #5b707e;
-  --color-slate-400: #93a8b5;
-  --color-slate-500: #a5b8c4;
-  --color-slate-600: #becdd6;
-  --color-slate-700: #d4dfe6;
-  --color-slate-800: #e4edf2;
-  --color-slate-900: #f3f7fa;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  --ui-focus: #0D9488;
-  --ui-selection-bg: #BCECE3;
-  --ui-selection-text: #122C37;
-  font-family: var(--font-sans);
-  color: var(--color-ink);
-  --ui-accent: #55CBB5;
-  --ui-accent-hover: var(--color-teal-800);
-  --ui-on-accent: #102C29;
-  --ui-dialog-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent, 0 0 0 0 transparent, 0 0 0 0 transparent, 0 25px 50px -12px rgb(0 0 0 / .25);
-}
-.dialog-backdrop:has(.terminal-shortcuts) .dialog { border-radius: 16px; }
-.dialog-backdrop:has(.terminal-shortcuts) { background: color-mix(in oklab, var(--color-slate-900) 35%, transparent); }
-[data-theme="dark"] .dialog-backdrop:has(.terminal-shortcuts) { background: #030A11B8; }
-.app-tooltip.console-tooltip { background: #172C3B; color: #F8FAFC; box-shadow: 0 4px 16px #132E3C26; border-radius: 7px; }
-[data-theme="dark"] .app-tooltip.console-tooltip { background: #D7E7EF; color: #102531; }
-
+/* Keep only the command pane independent of the application theme. */
 .terminal {
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   background: #333333;
   color: #FFB900;
   min-height: 0;
@@ -463,25 +396,27 @@
 #app.console-expanded .dock-tabs { padding-top: env(safe-area-inset-top, 0px); height: calc(39px + env(safe-area-inset-top, 0px)); }
 #app.console-expanded .dock-actions { padding-right: max(5px, env(safe-area-inset-right, 0px)); }
 #app.console-expanded .terminal { padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); padding-bottom: max(28px, env(safe-area-inset-bottom, 0px)); }
-#dock-resize { height: 8px; flex-shrink: 0; cursor: row-resize; display: flex; justify-content: center; align-items: center; background: #f8fafb; border-top: 1px solid #dfe6eb; }
-#dock-resize span { width: 36px; height: 2px; border-radius: 2px; background: #c5d1d9; }
-#dock-resize:hover span, #dock-resize:focus-visible span { background: #087f77; }
-.dock-tabs { white-space: nowrap; height: 39px; flex-shrink: 0; display: flex; align-items: stretch; background: #f8fafb; border-bottom: 1px solid #dfe6eb; }
+#dock-resize { height: 8px; flex-shrink: 0; cursor: row-resize; display: flex; justify-content: center; align-items: center; background: var(--ui-panel); border-top: 1px solid var(--ui-border); }
+#dock-resize span { width: 36px; height: 2px; border-radius: 2px; background: var(--ui-border-strong); }
+#dock-resize:hover span, #dock-resize:focus-visible span { background: var(--ui-focus); }
+.dock-tabs { white-space: nowrap; height: 39px; flex-shrink: 0; display: flex; align-items: stretch; background: var(--ui-panel); border-bottom: 1px solid var(--ui-border); }
 .dock-tabs > .tab { font-size: 11px; padding: 0 14px; }
-.dock-tabs > .tab.active { background: #edf7f5; }
+.dock-tabs > .tab.active { color: var(--ui-accent-text); background: var(--ui-accent-soft); border-bottom-color: var(--ui-accent-text); }
 .console-device-tabs { display: flex; align-items: stretch; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
-.console-session { display: flex; flex-shrink: 0; border-bottom: 2px solid transparent; color: #6b7c89; }
-.console-session.active { color: #087f77; background: #e8f3f1; border-bottom-color: #087f77; }
+.console-session { display: flex; flex-shrink: 0; border-bottom: 2px solid transparent; color: var(--ui-muted); }
+.console-session:hover { color: var(--ui-text); background: var(--ui-surface); }
+.console-session.active { color: var(--ui-accent-text); background: var(--ui-accent-soft); border-bottom-color: var(--ui-accent-text); }
 .session-name { display: flex; align-items: center; gap: 7px; padding: 0 14px; font-size: 12px; font-weight: 600; }
-.session-dot { width: 6px; height: 6px; border-radius: 50%; background: #b0bac1; }
+.session-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ui-border-strong); }
 .session-dot.on { background: #32a38e; }
-.dock-actions { display: flex; align-items: center; border-left: 1px solid #e1e7ec; gap: 1px; padding: 0 5px; }
-.dock-actions .icon-btn { width: 29px; height: 28px; border-radius: 5px; }
-.dock-text-button { font-size: 11px; padding: 0 10px; color: #60727e; }
-.terminal-jump { position: absolute; right: 20px; bottom: 14px; padding: 5px 11px; border: 1px solid #FFB900; border-radius: 6px; background: #333333; color: #FFB900; font: 11px var(--font-sans); box-shadow: 0 2px 8px #0002; }
-.terminal-shortcuts { color: #536571; font-size: 13px; line-height: 1.7; }
+.dock-actions { display: flex; align-items: center; border-left: 1px solid var(--ui-border); gap: 1px; padding: 0 5px; }
+.dock-actions .icon-btn { width: 29px; height: 28px; border-radius: var(--ui-radius); }
+.dock-text-button { font-size: 11px; padding: 0 10px; color: var(--ui-muted); }
+.dock-text-button:hover { color: var(--ui-accent-text); }
+.terminal-jump { position: absolute; right: 20px; bottom: 14px; padding: 5px 11px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); background: var(--ui-panel); color: var(--ui-accent-text); font: 11px var(--font-sans); box-shadow: var(--ui-shadow); }
+.terminal-shortcuts { color: var(--ui-muted); font-size: 13px; line-height: 1.7; }
 .terminal-shortcuts dl { display: grid; grid-template-columns: minmax(130px,auto) 1fr; gap: 10px 20px; padding: 20px 0; }
-.terminal-shortcuts dt { font: 12px/1.7 var(--font-mono); color: #173e45; }
+.terminal-shortcuts dt { font: 12px/1.7 var(--font-mono); color: var(--ui-text); }
 .workspace-panel-button { display: flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: var(--ui-radius); color: var(--ui-muted); font-size: 11px; }
 .workspace-panel-button:hover, .workspace-panel-button.active { color: var(--ui-accent-text); background: var(--ui-accent-soft); }
 .canvas-navigation { display: flex; align-items: center; gap: 1px; }
@@ -696,17 +631,6 @@
 .wireless-controller-dialog, .simulation-dialog { max-width: 880px; }
 .wireless-device-dialog { max-width: 740px; }
 #grid circle { fill: var(--ui-grid); }
-
-/* The existing console dark palette is deliberately independent. */
-[data-theme="dark"] .dock-text-button { color: #adc3d0; }
-[data-theme="dark"] .console-session.active,
-[data-theme="dark"] .dock-tabs > .tab.active { color: #83e0c9; background: #1b3b37; }
-[data-theme="dark"] #dock-resize,
-[data-theme="dark"] .dock-tabs { background: #15232d; border-color: #314451; }
-[data-theme="dark"] #dock-resize span { background: #607c8c; }
-[data-theme="dark"] .console-session { color: #a1b8c6; }
-[data-theme="dark"] .terminal-shortcuts { color: #b1c6d1; }
-[data-theme="dark"] .terminal-shortcuts dt { color: #85d3c3; }
 
 /* Technical values share the app monospace face, never the terminal's face. */
 input:is([name="ip"], [name="mask"], [name="gateway"], [name="dns"], [name="record-address"], [name="pool-network"], [name="pool-gateway"], [name="pool-dns"]) { font-family: var(--font-mono); }

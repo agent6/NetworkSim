@@ -68,7 +68,6 @@ export function setupTooltips(): void {
     const text = description(target);
     const bounds = target.getBoundingClientRect();
     if (!text || !bounds.width || !bounds.height) return hide();
-    popup.classList.toggle("console-tooltip", !!target.closest("#dock"));
     popup.textContent = text;
     popup.hidden = false;
     const { width, height } = popup.getBoundingClientRect();
