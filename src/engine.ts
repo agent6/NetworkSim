@@ -54,7 +54,7 @@ interface DHCPMessage { kind: 'dhcp'; operation: 'discover' | 'offer' | 'request
 export interface Frame { id: string; sourceMac: string; destinationMac: string; vlan?: number; cos?:number; payload: IPPacket | ArpMessage | DHCPMessage | LinkControl; hops: number; mirrored?: boolean; remoteSpan?: { sourceDevice: string; session: string; vlan: number }; vpcSource?:{domain:number;member:number;sender:string} }
 interface Resolution { deviceId: string; port: string; target: string; packets: IPPacket[]; attempts: number; timer?: TimerHandle }
 interface TunnelResolution extends Resolution { runtime:Device['runtime'];signature:string;nhrp?:NhrpRuntime;generation?:number }
-interface ProbeWait { deviceId: string; timer: TimerHandle; sentAt: number; callback: (reply: ProbeReply) => void; expectedData?: string }
+interface ProbeWait { deviceId: string; timer: TimerHandle; sentAt: number; callback: (reply: ProbeReply) => void; expectedData?: string; udpTrace?: {target:string;port:number} }
 interface Reassembly { parts: Map<number, number>; packet: IPPacket; timer: TimerHandle }
 interface ResolvedRoute { route: Route; port: string; target: string }
 export interface ServiceOptions { source?: string; vrf?: string; sourcePort?: number; timeout?:number }
@@ -897,9 +897,10 @@ export class Simulator {
       const original = body.kind === 'icmp-error' ? body.original : body;
       const key = original.probeId + '|' + original.sequence, wait = this.probes.get(key);
       const invalidData = body.kind === 'echo-reply' && wait?.expectedData !== undefined && wait.expectedData !== body.dataHex;
-      if (wait && wait.deviceId === d.id) { this.clock.cancel(wait.timer); this.probes.delete(key); wait.callback({ sequence: original.sequence, from: packet.source, ttl: packet.ttl, time: this.clock.now() - wait.sentAt, error: body.kind === 'icmp-error' ? body.error : invalidData ? 'ICMP payload verification failed' : undefined }); }
+      const quoteMatches=!wait?.udpTrace||body.kind==='icmp-error'&&original.protocol==='udp'&&original.destination===wait.udpTrace.target&&original.destinationPort===wait.udpTrace.port,traceReached=!!wait?.udpTrace&&quoteMatches&&body.error==='Port unreachable';
+      if (wait && wait.deviceId === d.id && quoteMatches) { this.clock.cancel(wait.timer); this.probes.delete(key); wait.callback({ sequence: original.sequence, from: packet.source, ttl: packet.ttl, time: this.clock.now() - wait.sentAt, error: traceReached ? undefined : body.kind === 'icmp-error' ? body.error : invalidData ? 'ICMP payload verification failed' : undefined }); }
       if (body.kind === 'icmp-error' && original.transaction && this.serviceWait.get(original.transaction)?.deviceId === d.id) this.finishService(original.transaction, undefined, body.error);
-      this.packetEvent(d, packet, invalidData ? 'Echo data mismatch' : body.kind === 'echo-reply' ? 'Echo reply received' : 'ICMP error received', invalidData ? 'Echoed payload differs from the transmitted pattern.' : body.error ?? 'The return path completed.', body.kind === 'echo-reply' && !invalidData ? 'success' : 'warning');
+      this.packetEvent(d, packet, invalidData ? 'Echo data mismatch' : body.kind === 'echo-reply' ? 'Echo reply received' : 'ICMP error received', invalidData ? 'Echoed payload differs from the transmitted pattern.' : body.error ?? 'The return path completed.', traceReached||body.kind === 'echo-reply' && !invalidData ? 'success' : 'warning');
     } else this.deliverService(d, packet, input);
   }
   private makePacket(source: string, destination: string, protocol: string, size: number, body: any): IPPacket { return { id: this.id('packet'), source, destination, protocol, ttl: 64, size, df: false, body }; }
@@ -941,6 +942,19 @@ export class Simulator {
       }, { label: 'echo send' });
     }
     this.notify(); return result;
+  }
+  /** A real UDP traceroute datagram; only a matched destination port-unreachable completes it. */
+  udpTraceProbe(sourceId:string,target:string,options:Pick<PingOptions,'ttl'|'timeout'|'source'|'interface'|'vrf'>&{port?:number}={}):PingResult{
+    const d=this.getDevice(sourceId);if(!d)throw new Error('Unknown source device');
+    const result:PingResult={id:this.id('trace-udp'),sourceId,target,status:'running',sent:0,received:0,replies:[]},port=options.port??33434;
+    if((!isIPv4(target)&&!isIPv6(target))||!Number.isInteger(port)||port<0||port>65535){result.status='failure';result.replies.push({sequence:1,error:'Invalid traceroute destination or UDP port'});return result;}
+    this.clock.schedule(0,()=>{
+      result.sent=1;const complete=(reply:ProbeReply)=>{result.replies.push(reply);result.received=reply.error?0:1;result.status=reply.error?'failure':'success';this.notify();},key=result.id+'|1';
+      const timer=this.clock.schedule(Math.max(0,options.timeout??3000),()=>{this.probes.delete(key);complete({sequence:1,error:'Request timed out'});},{label:'UDP traceroute timeout'});
+      this.probes.set(key,{deviceId:sourceId,timer,sentAt:this.clock.now(),callback:complete,udpTrace:{target,port}});
+      const packet=this.makePacket(options.source??'',target,'udp',isIPv6(target)?60:40,{kind:'trace-probe',probeId:result.id,sequence:1});
+      packet.ttl=Math.max(1,Math.min(255,options.ttl??1));packet.vrf=options.vrf;packet.sourcePort=0x8000|(this.hash(result.id)&0x7fff);packet.destinationPort=port;this.originate(d,packet,options.interface);
+    },{label:'UDP traceroute probe'});this.notify();return result;
   }
   traceroute(sourceId: string, target: string, maxHops = 30): TraceResult {
     const d = this.getDevice(sourceId); if (!d) throw new Error('Unknown source device');
@@ -1444,6 +1458,12 @@ export class Simulator {
     if (b.kind === 'ike' || b.kind === 'esp') this.cryptoServices.receive(d, p,input);
     else if (b.kind === 'remote-span') receiveRemoteSpan(this, d, p, input ?? '');
     else if (b.kind === 'control-plane') {if(!this.wireless.receiveDatagram(d,p))receiveControlDatagram(this, d.id, p.source, p.destination, b.payload, p.ttl, input);}
+    else if(b.kind==='trace-probe'){
+      const port=p.destinationPort,services=d.config.services,ntp=d.config.features.ntp??{};
+      const open=this.udpServices.get(port!)?.accepts(d)||port===53&&services.dns?.enabled||port===123&&(services.ntp?.enabled||ntp.master!==undefined||ntp.servers?.length)||port===514&&services.syslog?.enabled||port===69&&d.kind!=='server'&&services.tftp?.enabled||port===67&&services.dhcp?.enabled||port===520&&d.config.protocols.rip||port===521&&d.config.protocols.ripng;
+      this.packetEvent(d,p,'UDP probe delivered',open?'An active UDP listener received the probe; no application reply is assumed.':'The destination UDP port is closed.','receive',input);
+      if(!open)this.icmpError(d,p,'Port unreachable',input);
+    }
     else if (b.kind === 'udp-service-response') { if (this.serviceWait.get(b.transaction)?.deviceId === d.id) this.finishService(b.transaction, b.result, b.error); }
     else if (b.kind === 'udp-service-request'||b.kind==='udp-service-notification') { const service = this.udpServices.get(p.destinationPort!); if (!service?.accepts(d)) { this.icmpError(d, p, 'Port unreachable'); return; } try { const response=service.handler(d,b.payload,p.source,p.destination);if(b.kind==='udp-service-request'&&response!==undefined)this.serviceReply(d,p,{kind:'udp-service-response',transaction:b.transaction,result:response},128); } catch (error) { if(b.kind==='udp-service-request')this.serviceReply(d, p, { kind: 'udp-service-response', transaction: b.transaction, error: String(error) }, 64); } }
     else if (b.kind === 'ipv6-service') this.ipv6Services.receiveDatagram(d, p);

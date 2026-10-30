@@ -1530,15 +1530,15 @@ export class IOSSession {
   private runTrace(args:string[]):string[]{
     let family:'ip'|'ipv6'|undefined,vrf:string|undefined;if(args[0]==='ip'||args[0]==='ipv6'){family=args[0];args=args.slice(1);}if(args[0]==='vrf'){if(args.length<3)incomplete();vrf=args[1];args=args.slice(2);}if(!args.length)incomplete();
     const found=this.lookupHost(args[0]);if(found.address===undefined)return found.lines;const target=found.address,v6=isIPv6(target);if(family&&v6!==(family==='ipv6'))fail('% Address family does not match the selected protocol.');
-    let numeric=false,probes=3,timeout=3000,minTTL=1,maxTTL=30,source:string|undefined,outputInterface:string|undefined;
+    let numeric=false,probes=3,timeout=3000,minTTL=1,maxTTL=30,port=33434,source:string|undefined,outputInterface:string|undefined;
     for(let i=1;i<args.length;i++){const k=keyword(args[i],['numeric','port','probe','source','timeout','ttl']);if(k==='numeric'){numeric=true;continue;}const v=args[++i];if(v===undefined)incomplete();
-      if(k==='port')integer(v,0,65535);else if(k==='probe')probes=integer(v,1,65535);else if(k==='timeout')timeout=integer(v,0,3600)*1000;else if(k==='source'){source=this.probeSource(v,target);if(!isIPv6(v)&&!/^\d+\./.test(v))outputInterface=this.getInterface(v);}else{minTTL=integer(v,0,255);if(args[i+1]===undefined)incomplete();maxTTL=integer(args[++i],minTTL,255);}}
+      if(k==='port')port=integer(v,0,65535);else if(k==='probe')probes=integer(v,1,65535);else if(k==='timeout')timeout=integer(v,0,3600)*1000;else if(k==='source'){source=this.probeSource(v,target);if(!isIPv6(v)&&!/^\d+\./.test(v))outputInterface=this.getInterface(v);}else{minTTL=integer(v,0,255);if(args[i+1]===undefined)incomplete();maxTTL=integer(args[++i],minTTL,255);}}
     const shown=(address:string)=>isIPv6(address)?address.toUpperCase():address,hosts=Object.entries<string>(this.device.config.services.dns?.records??{}),label=(address:string)=>{const name=numeric?undefined:hosts.find(([,value])=>value===address)?.[0];return name?`${name} (${shown(address)})`:shown(address);};
     const out=['Type escape sequence to abort.',`Tracing the route to ${isIPv4(args[0])||isIPv6(args[0])?shown(target):`${args[0]} (${shown(target)})`}`,...(v6?[]:['VRF info: (vrf in name/id, vrf out name/id)'])],limit=this.engine.clock.now()+300000;
     for(let ttl=Math.max(1,minTTL);ttl<=Math.max(1,maxTTL)&&this.engine.clock.now()<=limit;ttl++){
       let line=String(ttl).padStart(3)+' ',last:string|undefined,stop=false;
       for(let probe=0;probe<probes&&this.engine.clock.now()<=limit;probe++){
-        const sentAt=this.engine.clock.now(),run=this.engine.ping(this.deviceId,target,{count:1,ttl,timeout,source,interface:outputInterface,vrf});let n=0;
+        const sentAt=this.engine.clock.now(),run=this.engine.udpTraceProbe(this.deviceId,target,{ttl,timeout,source,interface:outputInterface,vrf,port:(port+(ttl-Math.max(1,minTTL))*probes+probe)%65536});let n=0;
         while(run.status==='running'&&n++<20000&&this.engine.clock.now()<=sentAt+timeout+1000){const before=this.engine.clock.now();this.engine.clock.advance(100);if(before===this.engine.clock.now())break;}
         const reply=run.replies[0]??{sequence:1,error:'Request timed out'},token=iosTraceToken(reply);
         if(token!=='*'&&reply.from&&reply.from!==last){if(last===undefined)line+=label(reply.from);else{out.push(line);line='    '+label(reply.from);}last=reply.from;}

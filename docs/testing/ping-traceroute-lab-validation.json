@@ -1,0 +1,101 @@
+{
+  "feature": {
+    "title": "Ping and Traceroute Troubleshooting",
+    "catalogId": "ping-and-traceroute-troubleshooting",
+    "group": "CCNP ENCOR",
+    "section": "Network Assurance",
+    "sectionLabCount": 2,
+    "groupLabCount": 24,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6,
+      "Layer 3": 9,
+      "IP Services": 4
+    },
+    "devices": 5,
+    "links": 4,
+    "tasks": 21,
+    "addressingRows": 8,
+    "notes": 3,
+    "permalink": "#/labs/ping-and-traceroute-troubleshooting",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.10.10/24 connects directly to R1 Gi0/0 192.168.10.1. R1 Gi0/1 10.0.12.1/30 faces R2 Gi0/0 10.0.12.2/30. R2 Gi0/1 10.0.23.1/30 faces R3 Gi0/0 10.0.23.2/30. R3 Gi0/1 192.168.30.1/24 faces SRV1 .10, gateway .1. R2 Gi0/1 intentionally has L3 MTU 1400. R1 has specific routes to the server LAN and R2–R3 transit; R2 has a prepared client-LAN route; R3 has a prepared R1–R2 transit route. Practice PC1 uses nonexistent gateway .254, R2 lacks its server-LAN route, R3 lacks its client-LAN return route, and TRACE-RETURN inbound on R2 Gi0/1 denies only Time Exceeded from R3 to PC1.",
+  "verificationNotes": [
+    "Adds the second Network Assurance lab and updates the accessible two-lab badge. Existing IOS Debugging remains available. ENCOR has 24 labs; other section counts remain 3/6/9/4. Share links retain the current host, path and query.",
+    "Practice starts at 0 of 21. Six goals are live configuration/save checks and fifteen are earned packet/probe observations. The completed reference supplies six healthy outcomes with empty runtime and no pre-earned traffic or fault history. Every initial fault can be recreated from the completed reference and the same 21-task workflow completed.",
+    "Local PC1-to-R1 traffic can succeed despite the wrong default gateway. The gateway-fault observation requires actual ARP attempts for .254 and unresolved-neighbor remote packets. Correcting the gateway then reveals a real network-unreachable response from R2, rather than treating all unsuccessful pings as the same fault.",
+    "After R2's specific forward route is restored, requests reach SRV1 but replies stop at R3. R1's default egress-source ping from 10.0.12.1 can succeed via the prepared transit return route, while an explicit source of 192.168.10.1 fails. The task records both comparisons while the client-LAN return route is absent. R3's specific return route restores both host directions and the same explicit R1 source.",
+    "TRACE-RETURN sequence 10 filters returning R3 ICMP Time Exceeded only. Windows tracert can show a silent third hop and still reach SRV1 at hop 4, while end-to-end echo works. Repair removes only sequence 10, retaining sequence 20 permit ip any any and the original inbound binding; detaching the ACL cannot satisfy the intended policy.",
+    "Corrected IOS traceroute to send actual UDP datagrams rather than Echo requests. Default three-probe rows use TTL 1/2/3, a 40-byte IPv4 datagram, source ports in 32768–65535 and incrementing destination ports 33434–33442. Port, probe, TTL and source options affect actual datagrams. Returned ICMP Time Exceeded identifies intermediate hops; matched quoted UDP Port Unreachable completes the destination hop without a false !P error.",
+    "The UDP completion check correlates the quoted destination, protocol and port. It accepts a legitimate ICMP error sourced from the destination router's return interface when probing a loopback address. Active UDP listeners do not invent closed-port responses; suppressing destination ICMP unreachables causes timeout while Echo can still work.",
+    "Windows tracert remains ICMP-based, using actual TTL 1–4 Echo probes, returned ICMP Time Exceeded and a final Echo Reply. Bounded local probe-run metadata distinguishes completed tracert traffic from the explicit one-hop ping task; a trace's TTL-1 response alone cannot earn that ping outcome. These runtime records contain actual sent packet IDs and are discarded on export.",
+    "The intended path MTU remains 1400. A real 1500-byte DF probe elicits ICMP type 3/code 4 from R2 and IOS M; a 1400-byte DF probe receives a parent-linked Echo Reply. Non-DF or smaller ordinary pings do not substitute. Windows -l payload 1372 and IOS size 1400 both produce a 1400-byte IPv4 datagram. Existing ICMP error rate limiting can suppress individual probe responses.",
+    "Success observations correlate current FIB egress, every linked Ethernet hop and returned parent-linked replies. Error observations require actual received ICMP quoting real sent probes, the correct origin/drop event and the complete return path. Missing events, unrelated parents, default-route shortcuts, extra host routes, detached bindings, wrong addresses, outages and changed intended MTU are rejected.",
+    "All three router configurations must be saved in a healthy state. Portable exports retain fifteen earned observations, discard transient probe history, rebuild live routing and support fresh forwarding. Save drift and IOS reload are covered.",
+    "Scope is implemented IPv4 IOS/Windows ping and trace troubleshooting with static routing. There is no new claim of live CML capture, IPv6 lab coverage, reverse-path reconstruction from a forward trace, or hardware latency equivalence. CLI styling remains unchanged.",
+    "Fifteen browser scenarios passed with no page errors or external requests. Full21 workflows ran in light1440px and dark320px. Four other theme/viewport cases earned15 with the six initial fault observations still unearned. All six cases verified real YAML export/import into an empty offline browser profile, restored achievements, fresh forwarding, actual startup saves and unchanged golden CLI styling. Two arbitrary-origin share-link cases and seven existing catalog checks also passed."
+  ],
+  "references": [
+    {
+      "title": "Cisco: Understand the Extended Ping and Extended Traceroute Commands",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/routing-information-protocol-rip/13730-ext-ping-trace.html",
+      "relevance": "Default egress-source versus explicit-source probes, bidirectional reachability, DF/datagram-size testing and UDP traceroute."
+    },
+    {
+      "title": "Cisco: Use the Traceroute Command on Operating Systems",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/ip-routed-protocols/22826-traceroute.html",
+      "relevance": "IOS UDP ports and TTL progression versus Windows ICMP, destination Port Unreachable versus Echo Reply, and ICMP rate limiting."
+    },
+    {
+      "title": "RFC1812 §4.3.2.4: ICMP Message Source Address",
+      "url": "https://www.rfc-editor.org/rfc/rfc1812#section-4.3.2.4",
+      "relevance": "A router-originated ICMP error may use its return interface address; loopback-target completion must correlate the quoted probe rather than requiring the ICMP source to equal the target."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "fullCheck": "Full native suite passed with two isolated workers, followed by npm run build; same complete test-file set used by npm run check",
+    "nativeCommand": "node --test --test-concurrency=2 tests/*.test.ts",
+    "focusedTests": 31,
+    "browserFullWorkflowCases": [
+      "light1440px",
+      "dark320px"
+    ],
+    "offlineReopen": "Actual application YAML export then normal file import into a separate empty offline browser profile; same-session autosave and all three router startup/running configurations also checked.",
+    "artifactSha256": "d43e3f4297a6690cde7c0aa6580cb942dd92ebf045124726059777116ee255dd",
+    "identicalArtifactCopies": 16,
+    "browserScenarios": 15,
+    "browserChecks": [
+      "light 320px: two Network Assurance labs and badge; five-node four-link21-task zero-credit ticket and eight-row plan; healthy reference configuration earns six live outcomes; local/source-aware/bidirectional ICMP, both complete traces, one-hop ping and actual DF MTU failure/success earn15 while six initial fault observations stay unearned; actual IOS UDP trace and Windows ICMP trace; all three router startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh forwarding; cancel/save-copy protection; completed reference has six live outcomes without pre-earned probes; fitted topology/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "dark 320px: two Network Assurance labs and badge; five-node four-link21-task zero-credit ticket and eight-row plan; all21 through real wrong-gateway ARP, returned R2 network-unreachable, delivered request/missing return, default-source success versus explicit-source failure, silent R3 hop with reached destination, retained-binding ACL repair; actual IOS UDP trace and Windows ICMP trace; all three router startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh forwarding; cancel/save-copy protection; completed reference has six live outcomes without pre-earned probes; fitted topology/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "light 1440px: two Network Assurance labs and badge; five-node four-link21-task zero-credit ticket and eight-row plan; all21 through real wrong-gateway ARP, returned R2 network-unreachable, delivered request/missing return, default-source success versus explicit-source failure, silent R3 hop with reached destination, retained-binding ACL repair; actual IOS UDP trace and Windows ICMP trace; all three router startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh forwarding; cancel/save-copy protection; completed reference has six live outcomes without pre-earned probes; fitted topology/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "dark 1440px: two Network Assurance labs and badge; five-node four-link21-task zero-credit ticket and eight-row plan; healthy reference configuration earns six live outcomes; local/source-aware/bidirectional ICMP, both complete traces, one-hop ping and actual DF MTU failure/success earn15 while six initial fault observations stay unearned; actual IOS UDP trace and Windows ICMP trace; all three router startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh forwarding; cancel/save-copy protection; completed reference has six live outcomes without pre-earned probes; fitted topology/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "light 390px: two Network Assurance labs and badge; five-node four-link21-task zero-credit ticket and eight-row plan; healthy reference configuration earns six live outcomes; local/source-aware/bidirectional ICMP, both complete traces, one-hop ping and actual DF MTU failure/success earn15 while six initial fault observations stay unearned; actual IOS UDP trace and Windows ICMP trace; all three router startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh forwarding; cancel/save-copy protection; completed reference has six live outcomes without pre-earned probes; fitted topology/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "dark 390px: two Network Assurance labs and badge; five-node four-link21-task zero-credit ticket and eight-row plan; healthy reference configuration earns six live outcomes; local/source-aware/bidirectional ICMP, both complete traces, one-hop ping and actual DF MTU failure/success earn15 while six initial fault observations stay unearned; actual IOS UDP trace and Windows ICMP trace; all three router startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh forwarding; cancel/save-copy protection; completed reference has six live outcomes without pre-earned probes; fitted topology/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "light: permalink preserves current host/path/query/workspace and returns to both Network Assurance labs; IOS Debugging remains available",
+      "dark: permalink preserves current host/path/query/workspace and returns to both Network Assurance labs; IOS Debugging remains available",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ],
+    "tests": 2480,
+    "passed": 2480,
+    "failed": 0
+  }
+}
