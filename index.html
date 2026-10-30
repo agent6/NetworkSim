@@ -14278,6 +14278,56 @@ ${end.comment}` : end.comment;
     return out;
   }
 
+  // src/ra-guard-lab.ts
+  var find = (s, id2) => s.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  function validRAGuardCriterion(c) {
+    const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128, network2 = (n, p) => typeof n === "string" && isIPv6(n) && Number.isInteger(p) && Number(p) >= 0 && Number(p) <= 128;
+    if (c.kind === "ra-policy") return name2(c.policy) && ["host", "router"].includes(c.role);
+    if (c.kind === "ra-attachment") return name2(c.policy) && ["host", "router"].includes(c.role) && Array.isArray(c.interfaces) && c.interfaces.length > 0 && c.interfaces.length <= 48 && new Set(c.interfaces).size === c.interfaces.length && c.interfaces.every(name2);
+    if (!name2(c.interface) || !network2(c.network, c.prefix)) return false;
+    if (c.kind === "ra-block") return name2(c.source) && name2(c.sourceInterface);
+    return ["ra-client", "ra-ping", "ra-protected-gateway", "ra-neighbor"].includes(c.kind) && name2(c.router) && name2(c.routerInterface) && network2(c.rogueNetwork, c.roguePrefix) && (c.kind !== "ra-ping" || name2(c.target)) && (c.kind !== "ra-protected-gateway" || name2(c.protection) && name2(c.rogue));
+  }
+  function cleanPolicy(d, name2, role) {
+    const p = d.config.features.ipv6Policies?.raGuard?.[name2];
+    return !!d.powered && p?.deviceRole === role && !p.trusted && ["sourceAcl", "prefixList", "hopLimitMin", "hopLimitMax", "managedFlag", "otherFlag", "routerPreferenceMaximum"].every((key4) => p[key4] === void 0);
+  }
+  function matchesRAGuardCriterion(s, d, c) {
+    if (c.kind === "ra-policy") return cleanPolicy(d, c.policy, c.role);
+    if (c.kind === "ra-attachment") return cleanPolicy(d, c.policy, c.role) && c.interfaces.every((port4) => s.interfaceUp(d.id, port4) && d.config.interfaces[port4]?.switchport && d.config.interfaces[port4].features.raGuardPolicy === c.policy);
+    if (c.kind === "ra-block") {
+      const source = find(s, c.source);
+      if (!source) return false;
+      return (d.runtime.features.raGuardEvents ?? []).some((r) => r.port === c.interface && r.sourceMac === s.macOf(source.id, c.sourceInterface) && sameAddress(r.source, s.linkLocalAddress(source.id, c.sourceInterface)) && r.prefixes.some((p) => p.prefix === c.prefix && sameAddress(p.network, c.network)) && s.events.some((e) => e.nodeId === d.id && e.port === c.interface && e.disposition === "drop" && e.packet?.id === r.frameId && e.packet?.messageType === "ra" && e.packet?.icmpType === 134));
+    }
+    const router = find(s, c.router), port3 = d.config.interfaces[c.interface], now = s.clock.now();
+    if (!router || !port3?.features.ipv6Autoconfig || !s.interfaceUp(d.id, c.interface) || !s.interfaceUp(router.id, c.routerInterface)) return false;
+    const gateway = d.runtime.features.ipv6DefaultRouters?.[c.interface], owned = port3.features.slaacAddresses ?? [], leases = d.runtime.features.slaacLeases ?? {}, address2 = owned.find((a) => prefixContains(c.network, c.prefix, a) && port3.ipv6.some((p) => sameAddress(p.split("/")[0], a)) && leases[c.interface + "|" + a]?.expires > now);
+    const learned = !!address2 && gateway?.expires > now && sameAddress(gateway.address, s.linkLocalAddress(router.id, c.routerInterface)) && !port3.ipv6.some((a) => prefixContains(c.rogueNetwork, c.roguePrefix, a.split("/")[0]));
+    if (!learned) return false;
+    if (c.kind === "ra-client") return s.events.some((e) => e.nodeId === d.id && e.label === "Frame received" && e.packet?.messageType === "ra" && e.packet?.sourceMac === s.macOf(router.id, c.routerInterface) && sameAddress(e.packet?.source ?? "", gateway.address));
+    if (c.kind === "ra-neighbor") {
+      const entry = d.runtime.arp[c.interface + "|" + gateway.address];
+      return !!entry && entry.expires > now && entry.mac === s.macOf(router.id, c.routerInterface) && s.events.some((e) => e.nodeId === d.id && e.label === "Frame received" && e.packet?.protocol === "NDP" && e.packet?.arpOperation === "reply" && sameAddress(e.packet?.source ?? "", gateway.address));
+    }
+    if (c.kind === "ra-protected-gateway") {
+      const sw = find(s, c.protection), rogue = find(s, c.rogue);
+      return !!sw && !!rogue && s.interfaceUp(rogue.id, "GigabitEthernet0/0") && (sw.runtime.features.raGuardEvents ?? []).some((r) => r.time >= gateway.receivedAt && sameAddress(r.source, s.linkLocalAddress(rogue.id, "GigabitEthernet0/0")) && r.sourceMac === s.macOf(rogue.id, "GigabitEthernet0/0") && s.events.some((e) => e.nodeId === sw.id && e.disposition === "drop" && e.packet?.id === r.frameId && e.packet?.messageType === "ra"));
+    }
+    const target = find(s, c.target);
+    if (!target) return false;
+    const targetAddresses = Object.values(target.config.interfaces).flatMap((p) => p.ipv6.map((v) => v.split("/")[0]));
+    return s.events.some((e) => e.nodeId === target.id && e.label === "Echo request accepted" && owned.some((a) => sameAddress(a, e.packet?.source ?? "")) && targetAddresses.some((a) => sameAddress(a, e.packet?.destination ?? "")) && s.events.some((reply) => reply.nodeId === d.id && reply.label === "Echo reply received" && reply.disposition === "success" && reply.packet?.parentId === e.packet?.id));
+  }
+  function raGuardPolicyLines(d, name2) {
+    const policies = d.config.features.ipv6Policies?.raGuard ?? {}, names3 = name2 ? [name2] : Object.keys(policies).sort();
+    if (name2 && !Object.hasOwn(policies, name2)) return ["% RA guard policy " + name2 + " does not exist."];
+    return names3.flatMap((key4) => {
+      const p = policies[key4], ports4 = Object.values(d.config.interfaces).filter((i) => i.features.raGuardPolicy === key4).sort((a, b) => a.name.localeCompare(b.name, "en", { numeric: true }));
+      return ["Policy " + key4 + " configuration:", "  device-role " + (p.deviceRole ?? "host"), ...p.trusted ? ["  trusted-port"] : [], ...Object.entries({ hopLimitMin: "hop-limit minimum", hopLimitMax: "hop-limit maximum", managedFlag: "managed-config-flag", otherFlag: "other-config-flag", routerPreferenceMaximum: "router-preference maximum", sourceAcl: "match ipv6 access-list", prefixList: "match ra prefix-list" }).flatMap(([field3, label]) => p[field3] === void 0 ? [] : ["  " + label + " " + p[field3]]), "Policy applied on the following interfaces:", ...ports4.map((i) => "  " + i.name.replace("GigabitEthernet", "Gi").padEnd(12) + " vlan all"), ...Object.entries(d.config.features.fhsVlanPolicies ?? {}).filter(([, p2]) => p2.raGuardPolicy === key4).map(([vlan]) => "  VLAN " + vlan), ""];
+    });
+  }
+
   // src/fhs-tracking.ts
   var seconds = (value, fallback) => value === "infinite" ? Infinity : Number(value ?? fallback);
   function trackingPolicy(device2, port3, vlan) {
@@ -14440,6 +14490,7 @@ ${end.comment}` : end.comment;
       }, "[interface <port>]");
       for (const [path, kind] of [["ipv6 nd raguard", "raGuard"], ["ipv6 dhcp guard", "dhcpv6Guard"], ["ipv6 nd inspection", "ndInspection"], ["ipv6 source-guard", "sourceGuard"]]) add2("show " + path + " policy", "Display IPv6 first-hop policy configuration", (a) => {
         if (a.length > 1) h.fail();
+        if (kind === "raGuard") return raGuardPolicyLines(h.device, a[0]);
         const rows2 = Object.entries(f.ipv6Policies?.[kind] || {}).filter(([name2]) => !a[0] || name2 === a[0]);
         if (a[0] && !rows2.length) return ["% Policy " + a[0] + " not found"];
         return rows2.flatMap(([name2, p]) => ["Policy " + name2 + " configuration:", ...kind === "sourceGuard" ? [] : [" device-role " + (p.deviceRole || (kind === "dhcpv6Guard" ? "client" : "host"))], ...p.trusted ? [" trusted-port"] : [], ...Object.entries(p).filter(([key4]) => !["deviceRole", "trusted"].includes(key4)).map(([key4, value]) => " " + key4.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + " " + value), ...Object.entries(h.device.config.interfaces).filter(([, port3]) => port3.features[kind + "Policy"] === name2).map(([port3]) => " Applied to " + port3), ...Object.entries(f.fhsVlanPolicies || {}).filter(([, v]) => v[kind + "Policy"] === name2).map(([v]) => " Applied to VLAN " + v)]);
@@ -33811,7 +33862,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           exactly(a, 1);
           parse2(a);
         } else exactly(a, no || !parse2 ? 0 : 1);
-        policy[name2] = no ? void 0 : parse2 ? parse2(a) : true;
+        if (no) delete policy[name2];
+        else policy[name2] = parse2 ? parse2(a) : true;
         this.change();
       }, parse2 ? "<value>" : void 0);
       const commands = [];
@@ -46540,6 +46592,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const features = device2.config.features, iface2 = device2.config.interfaces[port3], state4 = device2.runtime.features;
     const payload = frame2.payload;
     const dhcp3 = "kind" in payload ? payload.kind === "dhcp" ? payload : void 0 : payload.body?.kind === "dhcp-unicast" ? payload.body.message : void 0;
+    const control = "kind" in payload && payload.kind === "link-control" ? payload : void 0;
+    const ra = control?.protocol === "ICMPV6" && control.body.type === "ra" ? control.body : void 0;
+    const raDrop = (label, detail) => {
+      const rows2 = state4.raGuardEvents ??= [];
+      rows2.push({ time: engine.clock.now(), frameId: frame2.id, port: port3, vlan, source: ra.source, sourceMac: frame2.sourceMac, prefixes: structuredClone(ra.prefixes ?? []), policy: iface2.features.raGuardPolicy ?? features.fhsVlanPolicies?.[vlan]?.raGuardPolicy, label });
+      if (rows2.length > 1e3) rows2.shift();
+      return drop("raGuardDrops", "ICMPV6", label, detail);
+    };
     const arp2 = "kind" in payload && payload.kind === "arp" && payload.family === 4 ? payload : void 0;
     const arpDecision = (action, basis, acl, rule) => {
       if (!arp2) return;
@@ -46549,7 +46609,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     };
     const drop = (counter2, protocol, label, detail) => {
       state4[counter2] = (state4[counter2] ?? 0) + 1;
-      engine.emit({ nodeId: device2.id, port: port3, protocol, label, detail, disposition: "drop", ...arp2 ? { packet: { id: frame2.id, source: arp2.source, destination: arp2.target, protocol: "ARP", sourceMac: frame2.sourceMac, destinationMac: frame2.destinationMac, arpOperation: arp2.operation } } : dhcp3 ? { packet: { id: frame2.id, source: dhcp3.serverAddress ?? dhcp3.clientId, destination: dhcp3.clientId, protocol: "DHCP", dhcpOperation: dhcp3.operation, requestedAddress: dhcp3.address } } : !("kind" in payload) ? { packet: { id: payload.id, source: payload.source, destination: payload.destination, protocol: payload.protocol.toUpperCase(), sourceMac: frame2.sourceMac, destinationMac: frame2.destinationMac } } : {} });
+      engine.emit({ nodeId: device2.id, port: port3, protocol, label, detail, disposition: "drop", ...control ? { packet: { id: frame2.id, source: control.body.source ?? "", destination: control.body.clientId ?? "multicast", protocol: control.protocol, messageType: control.body.type, sourceMac: frame2.sourceMac, destinationMac: frame2.destinationMac, ...ra ? { icmpType: 134, raPrefixes: structuredClone(ra.prefixes ?? []) } : {} } } : arp2 ? { packet: { id: frame2.id, source: arp2.source, destination: arp2.target, protocol: "ARP", sourceMac: frame2.sourceMac, destinationMac: frame2.destinationMac, arpOperation: arp2.operation } } : dhcp3 ? { packet: { id: frame2.id, source: dhcp3.serverAddress ?? dhcp3.clientId, destination: dhcp3.clientId, protocol: "DHCP", dhcpOperation: dhcp3.operation, requestedAddress: dhcp3.address } } : !("kind" in payload) ? { packet: { id: payload.id, source: payload.source, destination: payload.destination, protocol: payload.protocol.toUpperCase(), sourceMac: frame2.sourceMac, destinationMac: frame2.destinationMac } } : {} });
       return false;
     };
     const cleanMac = (mac7) => mac7.replace(/[^0-9a-f]/gi, "").toLowerCase();
@@ -46665,7 +46725,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if ("kind" in payload && payload.kind === "link-control") {
       const b = payload.body;
       if (payload.protocol === "ICMPV6" && b.type === "ra" && !raPolicy?.trusted && raPolicy?.deviceRole !== "switch") {
-        if (!raPolicy && iface2.features.raGuard || raPolicy?.deviceRole === "host") return drop("raGuardDrops", "ICMPV6", "RA guard drop", "Router advertisements are not permitted on this host-facing port.");
+        if (!raPolicy && iface2.features.raGuard || raPolicy?.deviceRole === "host") return raDrop("RA guard drop", "Router advertisements are not permitted on this host-facing port.");
         if (raPolicy) {
           const rank2 = { low: 0, medium: 1, high: 2 }, hopLimit = Number(b.hopLimit ?? 64);
           const invalid4 = raPolicy.hopLimitMin !== void 0 && hopLimit < raPolicy.hopLimitMin || raPolicy.hopLimitMax !== void 0 && hopLimit > raPolicy.hopLimitMax || raPolicy.managedFlag !== void 0 && !!b.managed !== (raPolicy.managedFlag === "on") || raPolicy.otherFlag !== void 0 && !!b.other !== (raPolicy.otherFlag === "on") || raPolicy.routerPreferenceMaximum !== void 0 && (rank2[b.routerPreference ?? "medium"] ?? 1) > rank2[raPolicy.routerPreferenceMaximum] || raPolicy.sourceAcl && !engine.aclPermits(device2.id, raPolicy.sourceAcl, b.source, "ff02::1", "icmpv6") || (b.prefixes ?? []).some((prefix2) => !prefixAllowed(raPolicy.prefixList, prefix2.network, prefix2.prefix));
@@ -46673,7 +46733,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
             if (raPolicy.deviceRole === "monitor") {
               state4.raGuardMonitored = (state4.raGuardMonitored ?? 0) + 1;
               engine.emit({ nodeId: device2.id, port: port3, protocol: "ICMPV6", label: "RA guard monitor", detail: "The advertisement violates an attached policy constraint.", disposition: "warning" });
-            } else return drop("raGuardDrops", "ICMPV6", "RA guard policy drop", "The advertisement violates its hop-limit, flags, preference, source ACL or prefix-list policy.");
+            } else return raDrop("RA guard policy drop", "The advertisement violates its hop-limit, flags, preference, source ACL or prefix-list policy.");
           }
         }
       }
@@ -50201,6 +50261,17 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     requestIPv6(deviceId, port3) {
       return this.ipv6Services.requestIPv6(deviceId, port3);
     }
+    /** Restart an endpoint's automatic IPv6 state without removing manual addresses or routes. */
+    restartIPv6Autoconfig(deviceId, port3) {
+      const d = this.getDevice(deviceId), c = d?.config.interfaces[port3];
+      if (!d || !["pc", "server", "laptop"].includes(d.kind) || !c || c.switchport || !this.interfaceUp(deviceId, port3)) return { id: "slaac-reset-error", status: "failure", error: "An operational endpoint interface is required." };
+      const owned = [...c.features.slaacAddresses ?? [], c.features.dhcpv6Lease?.address].filter(Boolean);
+      c.ipv6 = c.ipv6.filter((value) => !owned.some((address2) => sameAddress(value.split("/")[0], address2)));
+      d.config.staticRoutes = d.config.staticRoutes.filter((r) => r.interface !== port3 || !r.autoconfig && !r.autoconfigPrefix);
+      for (const key4 of Object.keys(d.runtime.features.slaacLeases ?? {})) if (key4.startsWith(port3 + "|")) delete d.runtime.features.slaacLeases[key4];
+      this.stopAutomaticAddressing(deviceId, port3, "ipv6");
+      return this.requestIPv6(deviceId, port3);
+    }
     requestDHCPv6(deviceId, port3, delegationName) {
       return this.ipv6Services.requestDHCPv6(deviceId, port3, delegationName);
     }
@@ -52468,7 +52539,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   };
 
   // src/storm-control-lab.ts
-  var find = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find2 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   function validStormCriterion(c) {
     const name2 = (s) => typeof s === "string" && s.length > 0 && s.length <= 128;
     if (c.kind === "storm-recovery") return Number.isInteger(c.interval) && c.interval >= 30 && c.interval <= 86400;
@@ -52485,11 +52556,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
     if (c.kind === "storm-recovery") return !!d.powered && d.config.features.errdisable?.interval === c.interval && (d.config.features.errdisable.causes ?? []).some((x) => x === "storm-control" || x === "all") && d.config.features.errdisable.detect?.["storm-control"] !== false;
     if (c.kind === "storm-drop") {
-      const source2 = find(sim2, c.source);
+      const source2 = find2(sim2, c.source);
       if (!source2?.config.interfaces[c.sourceInterface]) return false;
       return (d.runtime.features.stormControlEvents ?? []).some((r) => r.port === c.interface && r.kind === c.traffic && r.source === source2.config.interfaces[c.sourceInterface].ip && r.sourceMac === sim2.macOf(source2.id, c.sourceInterface) && r.action === c.action && r.rising === 0.1 && r.falling === 0.05 && r.percent > r.rising && (c.action !== "shutdown" || r.errDisabled) && sim2.events.some((e) => e.nodeId === d.id && e.port === c.interface && e.label === "Storm control drop" && e.disposition === "drop" && e.packet?.id === r.packetId));
     }
-    const target = find(sim2, c.target), sw = find(sim2, c.protection);
+    const target = find2(sim2, c.target), sw = find2(sim2, c.protection);
     if (!target || !sw) return false;
     const source = Object.values(d.config.interfaces).find((p) => p.ip)?.ip, address2 = Object.values(target.config.interfaces).find((p) => p.ip)?.ip;
     if (!source || !address2) return false;
@@ -52508,7 +52579,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   // src/arp-inspection-lab.ts
   var mac5 = (s) => s.replace(/[^a-f0-9]/gi, "").toLowerCase();
   var exactRule = (r, address2, sourceMac) => r?.action === "permit" && !r.kind && r.ip === address2 && (!r.ipWild || r.ipWild === "0.0.0.0") && mac5(r.mac) === mac5(sourceMac) && (!r.macWild || mac5(r.macWild) === "000000000000");
-  var find2 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find3 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   function validARPInspectionCriterion(c) {
     const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
     const vlan = (v) => Number.isInteger(v) && Number(v) > 0 && Number(v) < 4095;
@@ -52525,10 +52596,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "dai-trust") return sim2.interfaceUp(d.id, c.interface) && d.config.interfaces[c.interface]?.features.arpInspectionTrust === true && Object.entries(d.config.interfaces).every(([name2, p]) => name2 === c.interface || !p.features.arpInspectionTrust);
     if (c.kind === "dai-rate") return c.interfaces.every((name2) => sim2.interfaceUp(d.id, name2) && d.config.interfaces[name2]?.features.arpInspectionRate === c.rate);
     if (c.kind === "arp-neighbor") {
-      const owner = find2(sim2, c.owner), entry = d.runtime.arp[c.interface + "|" + c.address];
+      const owner = find3(sim2, c.owner), entry = d.runtime.arp[c.interface + "|" + c.address];
       return !!owner && sim2.interfaceUp(d.id, c.interface) && sim2.interfaceUp(owner.id, c.ownerInterface) && owner.config.interfaces[c.ownerInterface]?.ip === c.address && !!entry && !entry.static && entry.expires > sim2.clock.now() && mac5(entry.mac) === mac5(sim2.macOf(owner.id, c.ownerInterface));
     }
-    const source = find2(sim2, c.source);
+    const source = find3(sim2, c.source);
     if (!source) return false;
     const sourceMac = sim2.macOf(source.id, c.sourceInterface);
     if (!source.config.interfaces[c.sourceInterface]) return false;
@@ -52538,7 +52609,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const rules = d.config.features.arpAcls?.[c.acl] ?? [];
       return source.config.interfaces[c.sourceInterface].ip === c.address && rules.length === 1 && exactRule(rules[0], c.address, sourceMac);
     }
-    const receiver = find2(sim2, c.receiver);
+    const receiver = find3(sim2, c.receiver);
     if (!receiver) return false;
     return (d.runtime.features.arpInspectionEvents ?? []).some((r) => r.port === c.interface && r.vlan === c.vlan && r.source === c.address && mac5(r.sourceMac) === mac5(sourceMac) && r.operation === "reply" && (c.decision === "deny" ? r.action === "deny" && sim2.events.some((e) => e.nodeId === d.id && e.port === c.interface && e.disposition === "drop" && e.packet?.id === r.frameId && e.packet?.source === c.address && e.packet?.arpOperation === "reply") : r.action === "permit" && r.basis === "acl" && exactRule(r.rule, c.address, sourceMac) && sim2.events.some((e) => e.nodeId === receiver.id && e.label === "Frame received" && e.packet?.id === r.frameId && e.packet?.source === c.address) && Object.values(receiver.runtime.arp).some((entry) => entry.ip === c.address && entry.expires > sim2.clock.now() && mac5(entry.mac) === mac5(sourceMac))));
   }
@@ -52554,10 +52625,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "snooping-rogue-drop") return true;
     return name2(c.clientInterface) && isIPv4(c.network) && Number.isInteger(c.prefix) && c.prefix >= 0 && c.prefix <= 32 && isIPv4(c.gateway) && isIPv4(c.dnsServer) && (c.kind !== "snooping-ping" || name2(c.target));
   }
-  var find3 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find4 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   var mac6 = (value) => value.replace(/[^a-f0-9]/gi, "").toLowerCase();
   function bindingProof(sim2, d, c) {
-    const source = find3(sim2, c.source), server = find3(sim2, c.server), port3 = d.config.interfaces[c.interface], settings = d.config.features.dhcpSnooping, now = sim2.clock.now();
+    const source = find4(sim2, c.source), server = find4(sim2, c.server), port3 = d.config.interfaces[c.interface], settings = d.config.features.dhcpSnooping, now = sim2.clock.now();
     if (!source || !server || !settings?.enabled || !settings.vlans?.includes(c.vlan) || !port3?.switchport || port3.vlan !== c.vlan || port3.features.dhcpSnoopingTrust || !sim2.interfaceUp(d.id, c.interface) || !sim2.interfaceUp(source.id, c.clientInterface)) return;
     const client = source.config.interfaces[c.clientInterface], lease = source.runtime.features.dhcpClientLeases?.[c.clientInterface];
     if (!client?.features.dhcp || !isIPv4(client.ip ?? "") || !client.mask || !lease || !["BOUND", "RENEWING", "REBINDING"].includes(lease.state) || lease.expires <= now || lease.serverId !== server.id || lease.address !== client.ip || source.config.defaultGateway !== c.gateway || !source.config.dnsServers.includes(c.dnsServer)) return;
@@ -52578,7 +52649,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "snooping-trust") return sim2.interfaceUp(d.id, c.interface) && d.config.interfaces[c.interface]?.features.dhcpSnoopingTrust === true && (!c.exclusive || Object.entries(d.config.interfaces).every(([name2, p]) => name2 === c.interface || !p.features.dhcpSnoopingTrust));
     if (c.kind === "snooping-rate") return c.interfaces.every((name2) => sim2.interfaceUp(d.id, name2) && d.config.interfaces[name2]?.features.dhcpSnoopingRate === c.rate);
     if (c.kind === "snooping-rogue-drop") {
-      const source = find3(sim2, c.source), server = find3(sim2, c.server);
+      const source = find4(sim2, c.source), server = find4(sim2, c.server);
       if (!source || !server) return false;
       return (d.runtime.features.dhcpSnoopingEvents ?? []).some((r) => r.reason === "untrusted-server" && r.clientId === source.id && r.serverId === server.id && r.port === c.interface && r.vlan === c.vlan && ["offer", "ack", "nak"].includes(r.operation) && sim2.events.some((e) => e.nodeId === d.id && e.port === c.interface && e.label === "DHCP snooping drop" && e.disposition === "drop" && e.packet?.id === r.frameId && e.packet?.dhcpOperation === r.operation));
     }
@@ -52589,7 +52660,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const expected = { circuitId: c.vlan + ":" + c.interface, remoteId: d.id };
       return d.config.features.dhcpSnooping.option82 === true && [proof.lease.option82, proof.serverLease.option82].every((v) => v?.circuitId === expected.circuitId && v.remoteId === expected.remoteId);
     }
-    const target = find3(sim2, c.target);
+    const target = find4(sim2, c.target);
     if (!target) return false;
     const address2 = Object.values(target.config.interfaces).find((p) => p.ip)?.ip;
     if (!address2) return false;
@@ -52614,7 +52685,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "acl-dns") return c.action === "permit" && typeof c.query === "string" && c.query.length > 0 && c.query.length <= 253 && c.query.split(".").every((part) => part.length > 0 && part.length <= 63 && /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(part)) && isIPv4(c.answer);
     return c.kind !== "acl-http" || (c.content === void 0 || typeof c.content === "string" && c.content.length > 0 && c.content.length <= 1e3) && (c.action === "deny" || typeof c.content === "string");
   }
-  var find4 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find5 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   var address = (d) => Object.values(d.config.interfaces).find((p) => !!p.ip)?.ip;
   function matchesACLLabCriterion(sim2, d, c) {
     if (c.kind === "standard-acl" || c.kind === "extended-acl") {
@@ -52628,7 +52699,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const field3 = c.direction === "in" ? "aclIn" : "aclOut";
       return d.config.interfaces[c.interface]?.features[field3] === c.name && sim2.interfaceUp(d.id, c.interface) && (!c.exclusive || Object.entries(d.config.interfaces).every(([port3, p]) => ["aclIn", "aclOut"].every((key4) => !p.features[key4] || port3 === c.interface && key4 === field3 && p.features[key4] === c.name)));
     }
-    const source = find4(sim2, c.source), target = find4(sim2, c.target);
+    const source = find5(sim2, c.source), target = find5(sim2, c.target);
     if (!source || !target) return false;
     const src = address(source), dst = address(target);
     if (!src || !dst) return false;
@@ -52668,11 +52739,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "nat-static") return true;
     return name2(c.inside) && name2(c.outside) && isIPv4(c.outsideAddress) && (c.kind === "nat-ping" ? ["inside-out", "outside-in"].includes(c.direction) : ["nat-http", "nat-outbound-http"].includes(c.kind) && typeof c.content === "string" && c.content.length > 0 && c.content.length <= 1e3);
   }
-  var find5 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find6 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   var natEvent = (d, e, label) => e.nodeId === d.id && e.label === label && e.disposition === "forward";
   var overloadRule = (d, c) => (d.config.features.nat?.rules ?? []).find((r) => r.acl === c.acl && r.interface === c.interface && r.overload === true && !r.pool);
   function deliveredPing(sim2, d, c, direction, identifiers) {
-    const inside = find5(sim2, c.inside), outside = find5(sim2, c.outside);
+    const inside = find6(sim2, c.inside), outside = find6(sim2, c.outside);
     if (!inside || !outside) return false;
     const events = sim2.events, outbound = direction === "inside-out", sender = outbound ? inside : outside, receiver = outbound ? outside : inside;
     const translated = (label, packet) => !!packet && events.some((e) => natEvent(d, e, label) && e.packet?.id === packet.id && e.packet.source === packet.source && e.packet.destination === packet.destination && e.packet.icmpIdentifier === packet.icmpIdentifier);
@@ -52696,14 +52767,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (!rule) return false;
       const rows2 = d.runtime.features.natTranslations ?? [], key4 = natRuleKey(rule);
       const choices2 = c.inside.map((name2) => {
-        const host2 = find5(sim2, name2);
+        const host2 = find6(sim2, name2);
         return rows2.filter((row5) => host2 && Object.values(host2.config.interfaces).some((p) => p.ip === row5.inside) && row5.overload === true && row5.rule === key4 && row5.protocol === "icmp" && row5.outside === c.insideGlobal && row5.remote === c.outsideAddress && row5.expires > sim2.clock.now() && deliveredPing(sim2, d, { device: d.id, inside: host2.id, outside: c.outside, insideLocal: row5.inside, insideGlobal: c.insideGlobal, outsideAddress: c.outsideAddress }, "inside-out", { inside: row5.insidePort, outside: row5.outsidePort }));
       });
       const distinct = (index, used) => index === choices2.length || choices2[index].some((row5) => !used.has(row5.outsidePort) && distinct(index + 1, /* @__PURE__ */ new Set([...used, row5.outsidePort])));
       return distinct(0, /* @__PURE__ */ new Set());
     }
     if (c.kind === "nat-ping") return deliveredPing(sim2, d, c, c.direction);
-    const inside = find5(sim2, c.inside), outside = find5(sim2, c.outside);
+    const inside = find6(sim2, c.inside), outside = find6(sim2, c.outside);
     if (!inside || !outside) return false;
     const outbound = c.kind === "nat-outbound-http", client = outbound ? inside : outside, server = outbound ? outside : inside;
     const target = outbound ? c.outsideAddress : c.insideGlobal, serverLocal = outbound ? c.outsideAddress : c.insideLocal, remoteSource = outbound ? c.insideGlobal : c.outsideAddress;
@@ -52777,11 +52848,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   }
   var ownsAddress = (d, address2) => typeof address2 === "string" && !!d && Object.values(d.config.interfaces).some((p) => !!p.ip && sameAddress(p.ip, address2));
-  var find6 = (sim2, name2) => sim2.lab.devices.find((d) => d.id === name2 || d.config.hostname === name2);
+  var find7 = (sim2, name2) => sim2.lab.devices.find((d) => d.id === name2 || d.config.hostname === name2);
   function matchesAAAClientCriterion(sim2, d, c) {
     const aaa2 = d.config.features.aaa ?? {};
     if (c.kind === "tacacs-server" || c.kind === "radius-server") {
-      const protocol = c.kind === "radius-server" ? "radius" : "tacacs", server = find6(sim2, c.server), service = server?.config.services[protocol], entry = ownRecordValue(aaa2.servers, c.name);
+      const protocol = c.kind === "radius-server" ? "radius" : "tacacs", server = find7(sim2, c.server), service = server?.config.services[protocol], entry = ownRecordValue(aaa2.servers, c.name);
       return !!entry && entry.protocol === protocol && (protocol === "radius" ? (entry.port ?? 1812) === 1812 && (entry.accountingPort ?? 1813) === 1813 : (entry.port ?? 49) === 49) && ownsAddress(server, entry.address) && typeof entry.key === "string" && entry.key.length > 0 && entry.key === service?.secret && service.enabled === true && service.accountingEnabled !== false;
     }
     if (c.kind === "aaa-group") {
@@ -52804,7 +52875,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }));
     }
     if (c.kind === "tacacs-session" || c.kind === "radius-session") {
-      const protocol = c.kind === "radius-session" ? "radius" : "tacacs", server = find6(sim2, c.server), source = find6(sim2, c.source);
+      const protocol = c.kind === "radius-session" ? "radius" : "tacacs", server = find7(sim2, c.server), source = find7(sim2, c.source);
       if (!server || !source) return false;
       const requests = server.runtime.features.aaaRequests ?? [], received = server.runtime.features.aaaAccountingReceived ?? [], deliveries = d.runtime.features.aaaAccountingEvents ?? [];
       const rows2 = received.filter((row5) => row5.protocol === protocol && row5.kind === "exec" && row5.username === c.username && row5.privilege === c.privilege && /^vty /.test(row5.line) && ownsAddress(d, row5.source) && ownsAddress(source, row5.remoteSource));
@@ -52828,6 +52899,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (v.kind === "link") return text3(v.a, 128) && text3(v.b, 128);
       if (!text3(v.device, 128)) return false;
       switch (v.kind) {
+        case "ra-policy":
+        case "ra-attachment":
+        case "ra-block":
+        case "ra-client":
+        case "ra-ping":
+        case "ra-protected-gateway":
+        case "ra-neighbor":
+          return validRAGuardCriterion(v);
         case "storm-policy":
         case "storm-recovery":
         case "storm-drop":
@@ -52991,7 +53070,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           "A lab objective has an invalid ID, description, or condition."
         );
       ids.add(o.id);
-      if (o.action !== void 0 && (!record2(o.action) || !["ping", "dhcp", "arp", "traffic"].includes(o.action.kind) || !text3(o.action.device, 128) || (o.action.kind === "ping" ? !address2(o.action.target) : !text3(o.action.interface, 128) || o.action.kind === "arp" && !isIPv4(o.action.address) || o.action.kind === "traffic" && !["broadcast", "multicast", "unicast"].includes(o.action.traffic)) || o.action.when !== void 0 && !criterion(o.action.when)))
+      if (o.action !== void 0 && (!record2(o.action) || !["ping", "dhcp", "arp", "traffic", "slaac"].includes(o.action.kind) || !text3(o.action.device, 128) || (o.action.kind === "ping" ? !address2(o.action.target) : !text3(o.action.interface, 128) || o.action.kind === "arp" && !isIPv4(o.action.address) || o.action.kind === "traffic" && !["broadcast", "multicast", "unicast"].includes(o.action.traffic)) || o.action.when !== void 0 && !criterion(o.action.when)))
         throw Error("A lab objective action is invalid.");
     }
   }
@@ -53012,6 +53091,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!("device" in criterion)) return false;
     const d = device(sim2, criterion.device);
     if (!d) return false;
+    if (["ra-policy", "ra-attachment", "ra-block", "ra-client", "ra-ping", "ra-protected-gateway", "ra-neighbor"].includes(criterion.kind)) return matchesRAGuardCriterion(sim2, d, criterion);
     if (["storm-policy", "storm-recovery", "storm-drop", "storm-ping"].includes(criterion.kind)) return matchesStormCriterion(sim2, d, criterion);
     if (["dai-vlan", "dai-trust", "dai-rate", "dai-static-acl", "dai-frame", "arp-neighbor"].includes(criterion.kind)) return matchesARPInspectionCriterion(sim2, d, criterion);
     if (["tacacs-server", "radius-server", "aaa-group", "aaa-method", "aaa-line", "tacacs-session", "radius-session"].includes(criterion.kind)) return matchesAAAClientCriterion(sim2, d, criterion);
@@ -53185,14 +53265,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return results.length > 0 && (c.kind === "all" ? results.every(Boolean) : results.some(Boolean));
       }
       const result = matches(sim2, c);
-      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping") return result;
+      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping" && c.kind !== "ra-block" && c.kind !== "ra-ping") return result;
       validKeys.add(key4);
       if (result) observations.add(key4);
       return result || observations.has(key4);
     };
     const rows2 = lesson2.objectives.map((objective) => {
       const observed = observe(objective.criterion, JSON.stringify(objective.id));
-      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping";
+      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping" || objective.criterion.kind === "ra-block" || objective.criterion.kind === "ra-ping";
       if (historical && observed)
         completed.add(objective.id);
       return {
@@ -53580,8 +53660,29 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "dhcp-snooping", group: "CCNA", section: "Services & Security", title: "DHCP Snooping", description: "Protect a client VLAN from a live rogue DHCP server. Configure trusted ingress and rate limits, verify delivered leases and dynamic bindings, inspect Option 82 and troubleshoot failed or unsafe discovery.", devices: 6, links: 5, practice: true },
     { id: "dynamic-arp-inspection", group: "CCNA", section: "Services & Security", title: "Dynamic ARP Inspection", description: "Validate ARP against DHCP snooping bindings, trust the gateway uplink, permit a static server with an ARP ACL, and test forged gateway claims and recovery.", devices: 7, links: 6, practice: true },
     { id: "storm-control", group: "CCNA", section: "Services & Security", title: "Storm Control", description: "Suppress broadcast, multicast and unknown-unicast bursts with rising/falling thresholds. Compare filtering with shutdown, verify unaffected traffic, and test automatic recovery.", devices: 5, links: 4, practice: true },
+    { id: "ipv6-ra-guard", group: "CCNA", section: "Services & Security", title: "IPv6 RA Guard", description: "Protect SLAAC clients from a live rogue IPv6 advertiser. Apply host/router policies, verify legitimate prefixes and default routers, preserve Neighbor Discovery and prove routed connectivity.", devices: 6, links: 5, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
+  var IPV6_RA_GUARD_COMMANDS = { SW1: [
+    "enable",
+    "configure terminal",
+    "ipv6 nd raguard policy HOST-PORTS",
+    "device-role host",
+    "no trusted-port",
+    "exit",
+    "ipv6 nd raguard policy ROUTER-PORT",
+    "device-role router",
+    "no trusted-port",
+    "exit",
+    "interface range GigabitEthernet0/1-2",
+    "ipv6 nd raguard attach-policy HOST-PORTS",
+    "interface GigabitEthernet0/4",
+    "ipv6 nd raguard attach-policy HOST-PORTS",
+    "interface GigabitEthernet0/3",
+    "ipv6 nd raguard attach-policy ROUTER-PORT",
+    "end",
+    "write memory"
+  ] };
   var STORM_CONTROL_COMMANDS = { SW1: [
     "enable",
     "configure terminal",
@@ -54141,6 +54242,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
   };
   var GUIDE_RESOURCES = {
+    "ipv6-ra-guard": { columns: ["Device", "Interface", "IPv6 address / prefix", "Role"], rows: [["PC1", "Gi0", "SLAAC: 2001:db8:10::/64", "SW1 Gi0/1; default router fe80::1"], ["PC2", "Gi0", "SLAAC: 2001:db8:10::/64", "SW1 Gi0/2; default router fe80::1"], ["R1", "Gi0/0", "2001:db8:10::1 /64; fe80::1", "Legitimate advertiser; SW1 Gi0/3"], ["R1", "Gi0/1", "2001:db8:20::1 /64; fe80::20", "Remote server gateway"], ["ROGUE", "Gi0/0", "2001:db8:bad::1 /64; fe80::bad", "Unwanted advertiser; SW1 Gi0/4"], ["SRV1", "Gi0", "2001:db8:20::10 /64", "Default router fe80::20; remote HTTP/ping"]], commands: IPV6_RA_GUARD_COMMANDS, verification: { SW1: ["show ipv6 nd raguard policy", "show ipv6 nd raguard policy HOST-PORTS", "show ipv6 nd raguard policy ROUTER-PORT", "show running-config | section ipv6 nd raguard", "show running-config | include attach-policy", "show interfaces status"], R1: ["show ipv6 interface brief", "show ipv6 route", "show ipv6 neighbors"], PC1: ["ipconfig /all", "netsh interface ipv6 show addresses", "netsh interface ipv6 show route", "netsh interface ipv6 show neighbors", "ping -6 -n 3 2001:db8:20::10"], PC2: ["ipconfig /all", "ping -6 -n 3 2001:db8:20::10"] }, setup: [
+      { title: "Identify the router boundary", instructions: ["VLAN 10, access ports, PortFast, IPv6 forwarding and SRV1\u2019s return path are prepared. PC1 and PC2 use SLAAC. R1 advertises the legitimate 2001:db8:10::/64 prefix with link-local gateway fe80::1. ROGUE advertises 2001:db8:bad::/64 from fe80::bad. Keep both routers powered and connected.", "Practice is unprotected. Clients can already contain rogue addresses or an unwanted default router. A learned IPv6 address alone does not prove that the legitimate RA was admitted. Configure SW1 only."] },
+      { title: "Apply named host and router policies", instructions: ["Create ipv6 nd raguard policy HOST-PORTS with device-role host, then ROUTER-PORT with device-role router. Keep both policies untrusted with no trusted-port. This basic role lab does not require additional prefix, source ACL or RA-attribute restrictions.", "Attach HOST-PORTS to Gi0/1 and Gi0/2 toward the clients and Gi0/4 toward ROGUE. Attach ROUTER-PORT only to Gi0/3 toward R1. Host-facing roles reject incoming RAs; the router-facing role allows R1\u2019s advertisements.", "A policy definition without its interface attachment cannot protect ingress. A router role or trusted-port bypass on Gi0/4 permits the rogue advertiser. Applying a host role to Gi0/3 blocks the legitimate advertiser too."] },
+      { title: "Rebuild automatic IPv6 state and inspect the packets", instructions: ["After the switch is correct, use Reset and request IPv6 for each PC. This NetworkSim adapter control clears that adapter\u2019s automatically learned IPv6 addresses and routes, then sends a fresh Router Solicitation. Manual addresses and manual routes are preserved. It is not a Windows command.", "Each PC must have a live SLAAC address in 2001:db8:10::/64, a valid advertised default router of fe80::1 and no address in the rogue prefix. Check IP configuration, ipconfig /all and netsh interface ipv6 show route.", "The rogue-block task requires an actual RA arriving on Gi0/4 and dropped by RA Guard, with its fe80::bad source and rogue prefix in the packet trace. A generic counter, disconnected router or failed ping is insufficient. ROGUE continues advertising once per second.", "Run both remote-server ping tasks. They require actual requests and replies from the current SLAAC client addresses. Verify that Neighbor Discovery resolves R1\u2019s link-local address to its real MAC. RA Guard is not an instruction to block all ICMPv6. The protected-gateway task checks the current legitimate gateway after a later blocked rogue RA."] },
+      { title: "Troubleshoot and recover", instructions: ["Temporarily remove Gi0/4\u2019s host policy, attach the router policy there, or enable trusted-port on the host policy. Unwanted advertisements can now reach clients. Restore the intended policies and use Reset and request IPv6 on both PCs. Protection does not automatically erase previously learned addresses or routes.", "Apply HOST-PORTS to Gi0/3 and reset a client: R1\u2019s RAs are blocked too, so fresh SLAAC fails. Restore ROUTER-PORT, reset the client and retry. Correcting one port must preserve the host policy on Gi0/4.", "If the basic policy accidentally contains a prefix filter, source ACL or flag check, remove that restriction before retrying. A router role permits valid RAs subject to its configured checks; trusted-port bypasses those checks and is not needed here.", "Save SW1 with write memory, then save the lab. Live SLAAC, gateway and neighbor tasks rebuild from real traffic after reopening. Achieved rogue-drop and valid routed-ping observations are retained. The completed reference contains five policy tasks and must still observe real RAs and host traffic after load."] }
+    ], note: "This lab covers named RA Guard host/router roles on Layer 2 access ports and ordinary, non-tunneled IPv6 advertisements. The delivered packet trace is the evidence for dropped RAs; unimplemented debug or hardware-counter commands are not required. Both routers and the remote server remain active throughout." },
     "storm-control": { columns: ["Device", "Interface", "IPv4 address", "Role"], rows: [["PC1", "Gi0", "192.168.10.10 /24", "Filter test source; SW1 Gi0/1"], ["PC2", "Gi0", "192.168.10.20 /24", "Unaffected client; SW1 Gi0/2"], ["SRV1", "Gi0", "192.168.10.100 /24", "Ping/HTTP server; SW1 Gi0/3"], ["PC3", "Gi0", "192.168.10.30 /24", "Shutdown test source; SW1 Gi0/4"]], commands: STORM_CONTROL_COMMANDS, verification: { SW1: ["show storm-control", "show storm-control multicast", "show storm-control unicast", "show storm-control GigabitEthernet0/1 broadcast", "show storm-control GigabitEthernet0/4 broadcast", "show interfaces status", "show interfaces status err-disabled", "show errdisable recovery", "show running-config | include storm-control", "show logging"], PC1: ["ipconfig /all", "ping -n 3 192.168.10.100"], PC2: ["ping -n 3 192.168.10.100"], PC3: ["ping -n 3 192.168.10.100"] }, setup: [
       { title: "Configure suppression on PC1\u2019s ingress", instructions: ["All hosts use static /24 addresses in VLAN 10. Access VLANs, PortFast and SRV1\u2019s HTTP service are ready; no router is needed. Configure SW1 only.", "On Gi0/1 set storm-control broadcast level 0.10 0.05, storm-control multicast level 0.10 0.05 and storm-control unicast level 0.10 0.05. Keep the default filtering action. If an action was added, remove it with no storm-control action shutdown or no storm-control action trap.", "The first value is the rising threshold and the second the falling threshold, as percentages of the operational port speed. These deliberately low test thresholds make a finite burst easy to observe; they are not production sizing recommendations. Unicast suppression here applies to unknown destinations, not learned unicast."] },
       { title: "Send three finite test bursts", instructions: ["Use each Start traffic test button for PC1. Each instrument schedules at most 256 real 1500-byte UDP/IP packets in Ethernet frames, two milliseconds apart, through the actual cable and switch ingress. It is not an IOS or Windows command and does not change counters directly. Run one test at a time.", "Broadcast uses ff:ff:ff:ff:ff:ff; multicast uses 239.1.1.1 / 01:00:5e:01:01:01; unknown unicast uses an unlearned test MAC 02:fe:00:00:00:fe and documentation destination 192.0.2.254. The latter is a Layer 2 test, not a routed service.", "Inspect the corresponding show storm-control view and packet trace. Some frames pass before the threshold, then that traffic class is filtered while Gi0/1 stays up. After the burst stops and an idle interval passes, normal forwarding resumes. The completed tasks retain real drop observations even when the display returns to Forwarding. Then test PC1\u2019s ping to SRV1."] },
@@ -54255,6 +54362,60 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createIPv6RAGuardLab(mode = "practice") {
+    const make = (name2, kind, x, y) => ({ id: "device-ra-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const pc1 = make("PC1", "pc", 140, 130), pc2 = make("PC2", "pc", 140, 420), sw = make("SW1", "switch", 440, 280), r1 = make("R1", "router", 740, 120), rogue = make("ROGUE", "router", 740, 440), srv = make("SRV1", "server", 1030, 120), p = "GigabitEthernet0", rp = "GigabitEthernet0/0";
+    for (const d of [pc1, pc2]) {
+      const c = d.config.interfaces[p];
+      delete c.ip;
+      delete c.mask;
+      c.ipv6 = [];
+      c.adminUp = true;
+      c.features.dhcp = false;
+      c.features.ipv6Enabled = true;
+      c.features.ipv6Autoconfig = true;
+    }
+    for (const [d, port3, address2, ll] of [[r1, rp, "2001:db8:10::1/64", "fe80::1"], [r1, "GigabitEthernet0/1", "2001:db8:20::1/64", "fe80::20"], [rogue, rp, "2001:db8:bad::1/64", "fe80::bad"], [srv, p, "2001:db8:20::10/64", "fe80::100"]]) {
+      const c = d.config.interfaces[port3];
+      delete c.ip;
+      delete c.mask;
+      c.ipv6 = [address2];
+      c.adminUp = true;
+      Object.assign(c.features, { dhcp: false, ipv6Enabled: true, ipv6LinkLocal: ll });
+    }
+    r1.config.ipv6Routing = rogue.config.ipv6Routing = true;
+    r1.config.interfaces[rp].features.ipv6Nd = { intervalMs: 3e3, raLifetime: 60 };
+    rogue.config.interfaces[rp].features.ipv6Nd = { intervalMs: 1e3, raLifetime: 60 };
+    srv.config.staticRoutes = [{ network: "::", prefix: 0, nextHop: "fe80::20", interface: p, ad: 1, metric: 0 }];
+    srv.config.services.http = { enabled: true, port: 80, authentication: "none", content: '<!doctype html><html lang="en"><meta charset="utf-8"><title>IPv6 RA Guard</title><h1>SRV1: protected IPv6 forwarding works</h1></html>' };
+    sw.config.vlans[10] = { id: 10, name: "USERS", active: true };
+    for (const n of [1, 2, 3, 4]) {
+      const c = sw.config.interfaces["GigabitEthernet0/" + n];
+      Object.assign(c, { mode: "access", vlan: 10, adminUp: true });
+      c.features.portfast = true;
+    }
+    const devices = [pc1, pc2, sw, r1, rogue, srv];
+    for (const d of devices) d.startupConfig = structuredClone(d.config);
+    const host2 = { kind: "ra-policy", device: sw.id, policy: "HOST-PORTS", role: "host" }, router = { kind: "ra-policy", device: sw.id, policy: "ROUTER-PORT", role: "router" }, clients = { kind: "ra-attachment", device: sw.id, policy: "HOST-PORTS", role: "host", interfaces: ["GigabitEthernet0/1", "GigabitEthernet0/2"] }, edge = { kind: "ra-attachment", device: sw.id, policy: "HOST-PORTS", role: "host", interfaces: ["GigabitEthernet0/4"] }, uplink = { kind: "ra-attachment", device: sw.id, policy: "ROUTER-PORT", role: "router", interfaces: ["GigabitEthernet0/3"] }, ready = { kind: "all", criteria: [host2, router, clients, edge, uplink] };
+    const client = (pc) => ({ device: pc.id, interface: p, router: r1.id, routerInterface: rp, network: "2001:db8:10::", prefix: 64, rogueNetwork: "2001:db8:bad::", roguePrefix: 64 });
+    const blocked = { kind: "ra-block", device: sw.id, interface: "GigabitEthernet0/4", source: rogue.id, sourceInterface: rp, network: "2001:db8:bad::", prefix: 64 };
+    const resources = GUIDE_RESOURCES["ipv6-ra-guard"];
+    const wire = (name2, d, n, delay = 0.1) => ({ id: "link-ra-" + name2, a: { deviceId: d.id, port: d.kind === "router" ? rp : p }, b: { deviceId: sw.id, port: "GigabitEthernet0/" + n }, enabled: true, delay, loss: 0 });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "ipv6-ra-guard", name: "IPv6 RA Guard" + (mode === "completed" ? " \xB7 Completed" : ""), devices, links: [wire("pc1", pc1, 1), wire("pc2", pc2, 2), wire("legitimate", r1, 3), wire("rogue", rogue, 4, 5), { id: "link-ra-remote", a: { deviceId: r1.id, port: "GigabitEthernet0/1" }, b: { deviceId: srv.id, port: p }, enabled: true, delay: 0.1, loss: 0 }], notes: [{ id: "note-ra", x: 550, y: 580, text: "VLAN 10 \xB7 Legitimate prefix 2001:db8:10::/64\nGi0/3: router role \xB7 Gi0/1, Gi0/2, Gi0/4: host role\nKeep both advertisers connected" }], lesson: { title: "IPv6 RA Guard", description: "Protect automatic IPv6 configuration while preserving Neighbor Discovery and routed traffic. Configure SW1 only; both routers and SRV1 are ready.\n\n" + resources.setup.map((s) => s.title + "\n" + s.instructions.join("\n")).join("\n\n"), objectives: [
+      { id: "host-policy", title: "Create HOST-PORTS with an untrusted host role", criterion: host2 },
+      { id: "router-policy", title: "Create ROUTER-PORT with an untrusted router role", criterion: router },
+      { id: "client-ports", title: "Protect both client ports with HOST-PORTS", criterion: clients },
+      { id: "rogue-port", title: "Protect Gi0/4 toward ROGUE with HOST-PORTS", criterion: edge },
+      { id: "router-port", title: "Allow R1 on Gi0/3 through ROUTER-PORT", criterion: uplink },
+      ...[pc1, pc2].map((pc, i) => ({ id: "pc" + (i + 1) + "-slaac", title: "Learn only the legitimate SLAAC prefix and default router on " + pc.config.hostname, description: "Reset automatic IPv6 state after applying or repairing the policy.", criterion: { kind: "ra-client", ...client(pc) }, action: { kind: "slaac", device: pc.id, interface: p } })),
+      { id: "rogue-drop", title: "Observe a real rogue RA dropped on Gi0/4", criterion: blocked },
+      ...[pc1, pc2].map((pc, i) => ({ id: "pc" + (i + 1) + "-ping", title: "Verify " + pc.config.hostname + " reaches remote IPv6 SRV1", criterion: { kind: "all", criteria: [ready, { kind: "ra-ping", ...client(pc), target: srv.id }] }, action: { kind: "ping", device: pc.id, target: "2001:db8:20::10", when: { kind: "all", criteria: [ready, { kind: "ra-client", ...client(pc) }] } } })),
+      { id: "protected-gateway", title: "Keep PC1\u2019s legitimate gateway after a later blocked rogue RA", criterion: { kind: "all", criteria: [ready, { kind: "ra-protected-gateway", ...client(pc1), protection: sw.id, rogue: rogue.id }] } },
+      { id: "neighbor-discovery", title: "Resolve R1\u2019s real link-local MAC through Neighbor Discovery", criterion: { kind: "all", criteria: [pc1, pc2].map((pc) => ({ kind: "ra-neighbor", ...client(pc) })) } }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, IPV6_RA_GUARD_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createStormControlLab(mode = "practice") {
     const make = (name2, kind, x, y) => ({ id: "device-storm-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
     const pc1 = make("PC1", "pc", 150, 130), pc2 = make("PC2", "pc", 150, 410), sw = make("SW1", "switch", 450, 270), srv = make("SRV1", "server", 820, 130), pc3 = make("PC3", "pc", 820, 440), p = "GigabitEthernet0";
@@ -55949,6 +56110,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "ipv6-ra-guard") return createIPv6RAGuardLab(mode);
     if (id2 === "storm-control") return createStormControlLab(mode);
     if (id2 === "dynamic-arp-inspection") return createDynamicARPInspectionLab(mode);
     if (id2 === "dhcp-snooping") return createDHCPSnoopingLab(mode);
@@ -56159,7 +56321,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     const progress = lessonProgress(sim2);
     if (!progress) return;
     const catalogId = sim2.lab.catalogId, resources = catalogGuideResources(catalogId), isRoas = catalogId === "router-on-a-stick", description = isRoas ? currentRouterOnAStickGuide(progress.lesson.description) : progress.lesson.description;
-    dialog2(progress.lesson.title, `<p class="catalog-instructions">${escapeHTML(description)}</p><div class="catalog-completion" data-guide-completion hidden><span aria-hidden="true">\u2713</span><div><strong>Lab complete!</strong><p>All tasks are complete.</p></div></div><p class="catalog-progress" data-guide-progress role="status"></p><ol class="catalog-checks">${progress.rows.map(({ objective: o }) => `<li data-objective="${escapeHTML(o.id)}"><span data-objective-state role="img" aria-label="Not complete"></span><div><strong>${escapeHTML(o.title)}</strong>${o.description ? `<p>${escapeHTML(o.description)}</p>` : ""}${o.action ? `<button class="btn" data-guide-test="${escapeHTML(o.id)}">${o.action.kind === "dhcp" ? "Request DHCP lease" : o.action.kind === "arp" ? "Send ARP test" : o.action.kind === "traffic" ? "Start traffic test" : "Test connectivity"}</button><p class="catalog-test-status" data-test-status="${escapeHTML(o.id)}" role="status"></p>` : ""}</div></li>`).join("")}</ol>${resources ? addressPlan(resources) + reference(resources) : ""}`, '<button class="btn-primary" data-action="close-dialog">Done</button>');
+    dialog2(progress.lesson.title, `<p class="catalog-instructions">${escapeHTML(description)}</p><div class="catalog-completion" data-guide-completion hidden><span aria-hidden="true">\u2713</span><div><strong>Lab complete!</strong><p>All tasks are complete.</p></div></div><p class="catalog-progress" data-guide-progress role="status"></p><ol class="catalog-checks">${progress.rows.map(({ objective: o }) => `<li data-objective="${escapeHTML(o.id)}"><span data-objective-state role="img" aria-label="Not complete"></span><div><strong>${escapeHTML(o.title)}</strong>${o.description ? `<p>${escapeHTML(o.description)}</p>` : ""}${o.action ? `<button class="btn" data-guide-test="${escapeHTML(o.id)}">${o.action.kind === "dhcp" ? "Request DHCP lease" : o.action.kind === "arp" ? "Send ARP test" : o.action.kind === "traffic" ? "Start traffic test" : o.action.kind === "slaac" ? "Reset and request IPv6" : "Test connectivity"}</button><p class="catalog-test-status" data-test-status="${escapeHTML(o.id)}" role="status"></p>` : ""}</div></li>`).join("")}</ol>${resources ? addressPlan(resources) + reference(resources) : ""}`, '<button class="btn-primary" data-action="close-dialog">Done</button>');
     decorate();
     const root = document.querySelector(".catalog-checks"), running = /* @__PURE__ */ new Map();
     const render = () => {
@@ -56180,11 +56342,11 @@ Inspect show power inline and the per-port detail and priority views. The full 3
         if (button2) {
           const available = actionAvailable(sim2, objective);
           button2.disabled = test?.result.status === "running" || !available;
-          button2.dataset.tooltip = available ? objective.action?.kind === "dhcp" ? "Request IPv4 settings from the DHCP service" : objective.action?.kind === "arp" ? "Send the test host\u2019s gratuitous ARP claim" : objective.action?.kind === "traffic" ? "Send up to 256 Ethernet test frames; this is a finite burst" : "Send three ICMP echo requests" : "Power on the source device and complete the action prerequisites first.";
+          button2.dataset.tooltip = available ? objective.action?.kind === "dhcp" ? "Request IPv4 settings from the DHCP service" : objective.action?.kind === "arp" ? "Send the test host\u2019s gratuitous ARP claim" : objective.action?.kind === "traffic" ? "Send up to 256 Ethernet test frames; this is a finite burst" : objective.action?.kind === "slaac" ? "Clear this adapter\u2019s automatic IPv6 state and request fresh router advertisements" : "Send three ICMP echo requests" : "Power on the source device and complete the action prerequisites first.";
         }
         if (test) {
           const status3 = row5.querySelector("[data-test-status]");
-          const message2 = test.kind === "traffic" ? test.result.status === "running" ? `Sending traffic: ${test.result.framesSent} of ${test.result.frames} frames\u2026` : test.result.status === "success" ? `Traffic sent: ${test.result.framesSent} frames. Inspect storm-control and task results.` : `Traffic stopped after ${test.result.framesSent} frames. ${test.result.error ?? ""}` : test.kind === "arp" ? "ARP test sent. Inspect the packet trace and task result." : test.kind === "dhcp" ? test.result.status === "running" ? "Requesting a DHCP lease\u2026" : test.result.status === "success" ? `Lease received: ${test.result.address}. Verify its settings against the addressing plan.` : complete2 ? "A valid DHCP lease is active." : "No lease received. Check the DHCP service, client pool and relay." : test.result.status === "running" ? "Checking connectivity\u2026" : test.result.received ? `${test.result.received} of ${test.result.sent} replies received.` : "No replies. Check interface addresses, masks, link status and routing.";
+          const message2 = test.kind === "slaac" ? test.result.status === "running" ? "Requesting IPv6 configuration\u2026" : test.result.status === "success" ? `IPv6 received: ${test.result.address ?? "router advertisement"}. Verify the prefix and default router.` : "No usable IPv6 configuration. Check RA policies and router link." : test.kind === "traffic" ? test.result.status === "running" ? `Sending traffic: ${test.result.framesSent} of ${test.result.frames} frames\u2026` : test.result.status === "success" ? `Traffic sent: ${test.result.framesSent} frames. Inspect storm-control and task results.` : `Traffic stopped after ${test.result.framesSent} frames. ${test.result.error ?? ""}` : test.kind === "arp" ? "ARP test sent. Inspect the packet trace and task result." : test.kind === "dhcp" ? test.result.status === "running" ? "Requesting a DHCP lease\u2026" : test.result.status === "success" ? `Lease received: ${test.result.address}. Verify its settings against the addressing plan.` : complete2 ? "A valid DHCP lease is active." : "No lease received. Check the DHCP service, client pool and relay." : test.result.status === "running" ? "Checking connectivity\u2026" : test.result.received ? `${test.result.received} of ${test.result.sent} replies received.` : "No replies. Check interface addresses, masks, link status and routing.";
           if (status3.textContent !== message2) status3.textContent = message2;
         }
       }
@@ -56195,7 +56357,12 @@ Inspect show power inline and the per-port detail and priority views. The full 3
       const objective = progress.lesson.objectives.find((o) => o.id === button2.dataset.guideTest), action = objective?.action;
       if (!objective || !action || !actionAvailable(sim2, objective)) return;
       if (!isPlaying()) {
-        root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`).textContent = action.kind === "dhcp" ? "Resume the simulation to request a DHCP lease." : action.kind === "arp" ? "Resume the simulation to send an ARP test." : action.kind === "traffic" ? "Resume the simulation to send test traffic." : "Resume the simulation to run a connectivity check.";
+        root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`).textContent = action.kind === "dhcp" ? "Resume the simulation to request a DHCP lease." : action.kind === "arp" ? "Resume the simulation to send an ARP test." : action.kind === "traffic" ? "Resume the simulation to send test traffic." : action.kind === "slaac" ? "Resume the simulation to request IPv6 configuration." : "Resume the simulation to run a connectivity check.";
+        return;
+      }
+      if (action.kind === "slaac") {
+        running.set(objective.id, { kind: "slaac", result: sim2.restartIPv6Autoconfig(action.device, action.interface) });
+        render();
         return;
       }
       if (action.kind === "traffic") {

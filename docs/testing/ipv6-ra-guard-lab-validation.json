@@ -1,0 +1,90 @@
+{
+  "feature": {
+    "title": "IPv6 RA Guard",
+    "catalogId": "ipv6-ra-guard",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 13,
+    "devices": 6,
+    "links": 5,
+    "tasks": 12,
+    "addressingRows": 6,
+    "permalink": "#/labs/ipv6-ra-guard",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "VLAN 10 has two SLAAC PCs on SW1 Gi0/1–2, legitimate advertiser R1 2001:db8:10::1/64 and fe80::1 on Gi0/3, and live ROGUE 2001:db8:bad::1/64 and fe80::bad on Gi0/4. R1 Gi0/1 connects to remote HTTP/ping SRV1 2001:db8:20::10/64 with a prepared return route. ROGUE keeps advertising while the lab is protected.",
+  "verificationNotes": [
+    "Practice begins with zero credit despite actual automatically learned legitimate and rogue addresses and an unwanted gateway. Published IOS commands earn five policy tasks. Real delivered RA/DAD traffic earns live client, gateway and neighbor goals; two actual remote IPv6 pings complete all twelve tasks.",
+    "HOST-PORTS uses device-role host on the two client ports and rogue ingress. ROUTER-PORT uses device-role router only toward R1. Neither policy is trusted and no extra source/prefix/flag restrictions are required. Definitions without attachments, router role on rogue ingress and trusted-port bypass are tested as failures.",
+    "Dropped RA proof correlates actual ingress, rogue link-local address/MAC, prefix, packet ID and ICMPv6 type 134. Bounded 1000-row telemetry and packet metadata expose the advertisement to the existing packet inspector. Counters, unrelated drops and disconnected sources cannot fabricate the observation.",
+    "Reset and request IPv6 is an explicit NetworkSim adapter control, not Windows CLI syntax. It removes only owned automatic IPv6 addresses/routes and pending DAD/configuration, then sends a real RS. Manual IPv6/IPv4 addresses and manual routes remain. Repeated resets, invalid interfaces and poisoned-state recovery are tested.",
+    "Blocking new RAs does not erase earlier learned prefixes. Removing the rogue host attachment admits real unwanted RAs and poisons clients; restoring the policy plus resetting automatic state repairs them. Host role on the legitimate uplink blocks fresh SLAAC until corrected; restrictive prefix checks and trusted bypass are also exercised.",
+    "Client proof requires a current owned SLAAC address/lease, valid legitimate advertised default router and absence of the rogue prefix. Neighbor goals require the actual link-local MAC and received NDP reply. Routed-ping goals correlate requests and replies from those real client addresses. RA lifetime expiry invalidates live gateway proof even while an address remains.",
+    "The existing RA policy show path now uses Cisco-style configuration and attachment lines, retaining actual VLAN attachment inventory. Removing a guard policy field deletes its configuration instead of storing undefined values, so saved and running policy objects round-trip consistently.",
+    "Saved observations retain achieved rogue-drop and routed-ping tasks. Live SLAAC, gateway and neighbor state rebuild through actual traffic after reopening. The completed reference includes only five configuration goals before the engine observes traffic; no runtime evidence is fabricated."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco IPv6 Configuration Guide: IPv6 RA Guard",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipv6/configuration/15-2mt/ip6-15-2mt-book/ip6-ra-guard.html"
+    },
+    {
+      "title": "Cisco IPv6 Command Reference: show ipv6 nd raguard policy",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipv6/command/ipv6-cr-book/ipv6-s4.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 18,
+    "focusedAndCompatibilityTests": 34,
+    "focusedPassed": 34,
+    "typecheck": "passed",
+    "fullSuite": {
+      "command": "npm run check",
+      "tests": 1914,
+      "passed": 1914,
+      "failed": 0
+    },
+    "build": "passed; root and dist single-file artifacts match",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: thirteen Services & Security labs, twelve tasks/six addressing rows, zero-credit practice with real rogue SLAAC prefix and gateway, five IOS policy goals, adapter reset and legitimate SLAAC/ND, two routed IPv6 pings, dropped RA packet inspector showing type134/source/prefix, actual poisoning when rogue protection is detached and repair plus reset, legitimate-uplink host-policy fault causing fresh SLAAC timeout and recovery, remote IPv6 HTTP, saved observations and rebuilt live state, completed reference/cancel/save-copy protection, fit-visible node navigation and non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light 390px: thirteen Services & Security labs, twelve tasks/six addressing rows, zero-credit practice with real rogue SLAAC prefix and gateway, five IOS policy goals, adapter reset and legitimate SLAAC/ND, two routed IPv6 pings, dropped RA packet inspector showing type134/source/prefix, actual poisoning when rogue protection is detached and repair plus reset, remote IPv6 HTTP, saved observations and rebuilt live state, completed reference/cancel/save-copy protection, fit-visible node navigation and non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light 320px: thirteen Services & Security labs, twelve tasks/six addressing rows, zero-credit practice with real rogue SLAAC prefix and gateway, five IOS policy goals, adapter reset and legitimate SLAAC/ND, two routed IPv6 pings, dropped RA packet inspector showing type134/source/prefix, actual poisoning when rogue protection is detached and repair plus reset, remote IPv6 HTTP, saved observations and rebuilt live state, completed reference/cancel/save-copy protection, fit-visible node navigation and non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 1440px: thirteen Services & Security labs, twelve tasks/six addressing rows, zero-credit practice with real rogue SLAAC prefix and gateway, five IOS policy goals, adapter reset and legitimate SLAAC/ND, two routed IPv6 pings, dropped RA packet inspector showing type134/source/prefix, actual poisoning when rogue protection is detached and repair plus reset, remote IPv6 HTTP, saved observations and rebuilt live state, completed reference/cancel/save-copy protection, fit-visible node navigation and non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 390px: thirteen Services & Security labs, twelve tasks/six addressing rows, zero-credit practice with real rogue SLAAC prefix and gateway, five IOS policy goals, adapter reset and legitimate SLAAC/ND, two routed IPv6 pings, dropped RA packet inspector showing type134/source/prefix, actual poisoning when rogue protection is detached and repair plus reset, remote IPv6 HTTP, saved observations and rebuilt live state, completed reference/cancel/save-copy protection, fit-visible node navigation and non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 320px: thirteen Services & Security labs, twelve tasks/six addressing rows, zero-credit practice with real rogue SLAAC prefix and gateway, five IOS policy goals, adapter reset and legitimate SLAAC/ND, two routed IPv6 pings, dropped RA packet inspector showing type134/source/prefix, actual poisoning when rogue protection is detached and repair plus reset, remote IPv6 HTTP, saved observations and rebuilt live state, completed reference/cancel/save-copy protection, fit-visible node navigation and non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light: permalink preserves current host/path/query and returns to thirteen Services & Security labs without replacing the workspace",
+        "dark: permalink preserves current host/path/query and returns to thirteen Services & Security labs without replacing the workspace"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches the existing desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology",
+        "light 320px topology",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "canvasFit": "each navigated node center remains inside the workspace; annotation does not overlap node labels",
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "9f83263de43828f8763d5164fc605fdfb0731e471d5a3df8e17e5b5f28797bb6"
+  }
+}

@@ -548,6 +548,16 @@ export class Simulator {
     }
   }
   requestIPv6(deviceId: string, port?: string): ServiceResult { return this.ipv6Services.requestIPv6(deviceId, port); }
+  /** Restart an endpoint's automatic IPv6 state without removing manual addresses or routes. */
+  restartIPv6Autoconfig(deviceId:string,port:string):ServiceResult {
+    const d=this.getDevice(deviceId),c=d?.config.interfaces[port];
+    if(!d||!['pc','server','laptop'].includes(d.kind)||!c||c.switchport||!this.interfaceUp(deviceId,port))return {id:'slaac-reset-error',status:'failure',error:'An operational endpoint interface is required.'};
+    const owned=[...(c.features.slaacAddresses??[]),c.features.dhcpv6Lease?.address].filter(Boolean);
+    c.ipv6=c.ipv6.filter(value=>!owned.some(address=>sameAddress(value.split('/')[0],address)));
+    d.config.staticRoutes=d.config.staticRoutes.filter(r=>r.interface!==port||!(r as any).autoconfig&&!(r as any).autoconfigPrefix);
+    for(const key of Object.keys(d.runtime.features.slaacLeases??{}))if(key.startsWith(port+'|'))delete d.runtime.features.slaacLeases[key];
+    this.stopAutomaticAddressing(deviceId,port,'ipv6');return this.requestIPv6(deviceId,port);
+  }
   requestDHCPv6(deviceId: string, port?: string, delegationName?: string): ServiceResult { return this.ipv6Services.requestDHCPv6(deviceId, port, delegationName); }
   releaseDHCPv6(deviceId:string,port:string):ServiceResult { return this.ipv6Services.releaseDHCPv6(deviceId,port); }
   stopAutomaticAddressing(deviceId: string, port: string, family: 'ipv4' | 'ipv6' | 'all' = 'all'): void {
