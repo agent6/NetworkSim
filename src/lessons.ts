@@ -31,6 +31,10 @@ export type Criterion =
   | { kind: "vlan"; device: string; id: number }
   | { kind: "lacp-bundle"; device: string; group: number; peer: string; members: string[] }
   | { kind: "stp-forwarding"; device: string; interface: string; vlans: number[] }
+  | { kind: "stp-mode"; device: string; mode: "pvst" | "rapid-pvst" | "mst" }
+  | { kind: "stp-priority"; device: string; vlan: number; priority: number }
+  | { kind: "stp-root"; device: string; vlan: number; root: string }
+  | { kind: "stp-port"; device: string; vlan: number; interface: string; role: "root" | "designated" | "alternate"; state: "forwarding" | "blocking"; rapid?: boolean }
   | { kind: "trunk-allowed"; device: string; interface: string; vlans: number[] }
   | { kind: "poe-interface"; device: string; interface: string; mode: "auto" | "never"; max: number; priority: "high" | "low" }
   | { kind: "poe-supply"; device: string; switch: string; interface: string; watts: number; standard: "802.3af" | "802.3at"; class: 3 | 4; spatialStreams?: 2 | 4; usb?: boolean }
@@ -125,6 +129,14 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         return Number.isInteger(v.id) && v.id >= 1 && v.id <= 4094;
       case "lacp-bundle":
         return Number.isInteger(v.group) && v.group>=1 && v.group<=4096 && text(v.peer,128) && Array.isArray(v.members) && v.members.length>0 && v.members.length<=32 && v.members.every((p:unknown)=>text(p,128) && p!=="") && new Set(v.members).size===v.members.length;
+      case "stp-mode":
+        return ["pvst","rapid-pvst","mst"].includes(v.mode);
+      case "stp-priority":
+        return Number.isInteger(v.vlan) && v.vlan>=1 && v.vlan<=4094 && Number.isInteger(v.priority) && v.priority>=0 && v.priority<=61440 && v.priority%4096===0;
+      case "stp-root":
+        return Number.isInteger(v.vlan) && v.vlan>=1 && v.vlan<=4094 && text(v.root,128) && v.root!=="";
+      case "stp-port":
+        return Number.isInteger(v.vlan) && v.vlan>=1 && v.vlan<=4094 && text(v.interface,128) && v.interface!=="" && ["root","designated","alternate"].includes(v.role) && ["forwarding","blocking"].includes(v.state) && (v.rapid===undefined || typeof v.rapid==="boolean");
       case "stp-forwarding":
       case "trunk-allowed":
         return text(v.interface,128) && Array.isArray(v.vlans) && v.vlans.length>0 && v.vlans.length<=4094 && v.vlans.every((n:unknown)=>Number.isInteger(n) && Number(n)>=1 && Number(n)<=4094) && new Set(v.vlans).size===v.vlans.length;
@@ -255,6 +267,16 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind === "stp-mode") return ["switch","poeswitch","l3switch","datacenter"].includes(d.kind) && (d.config.features.stp?.mode??"rapid-pvst")===criterion.mode;
+  if (criterion.kind === "stp-priority") return ["switch","poeswitch","l3switch","datacenter"].includes(d.kind) && (d.config.features.stp?.vlanPriorities?.[criterion.vlan]??d.config.features.stp?.priority??32768)===criterion.priority;
+  if (criterion.kind === "stp-root") {
+    const root=device(sim,criterion.root);
+    return !!root && d.powered && d.runtime.stp[String(criterion.vlan)]?.rootId===root.id;
+  }
+  if (criterion.kind === "stp-port") {
+    const tree=d.runtime.stp[String(criterion.vlan)],port=tree?.ports[criterion.interface];
+    return sim.interfaceUp(d.id,criterion.interface) && port?.role===criterion.role && port.state===criterion.state && (criterion.rapid===undefined || (tree.mode==="rapid-pvst" && !d.runtime.features.stpLegacy?.[criterion.interface] && port.linkType==="point-to-point")===criterion.rapid);
+  }
   if (criterion.kind === "discovery-settings") {
     const cdp=criterion.protocol==="CDP",settings=d.config.features.discovery?.[cdp?"cdp":"lldp"]??{},enabled=cdp?d.config.features.cdp!==false:!!d.config.features.lldp;
     return enabled===criterion.enabled && (criterion.interval===undefined || (settings.interval??(cdp?60:30))===criterion.interval) && (criterion.holdtime===undefined || (settings.holdtime??(cdp?180:120))===criterion.holdtime);

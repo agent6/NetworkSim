@@ -1,0 +1,73 @@
+{
+  "feature": "CCNA Switching: Rapid PVST+",
+  "catalogId": "rapid-pvst",
+  "artifactSha256": "37c6c704d0643476a5ddb071168f6a3278b476800527615459b744a736a5955c",
+  "devices": 7,
+  "links": 7,
+  "tasks": 10,
+  "topology": {
+    "SW1": "VLAN 10 primary/base priority 24576; VLAN 20 secondary/base priority 28672; Gi0/24 to SW2; Gi0/23 to SW3; Gi0/1 to PC4",
+    "SW2": "VLAN 20 primary/base priority 24576; VLAN 10 secondary/base priority 28672; Gi0/24 to SW1; Gi0/23 to SW3; Gi0/1 to PC2",
+    "SW3": "Default VLAN priorities; Gi0/23 to SW1; Gi0/24 to SW2; Gi0/1 PC1 VLAN 10; Gi0/2 PC3 VLAN 20",
+    "Trunks": "Native VLAN 99; allowed VLANs 10,20,99; no PortFast; default STP timers and gigabit point-to-point costs",
+    "PC1/PC2": "192.168.10.11/24 and 192.168.10.12/24; no gateway",
+    "PC3/PC4": "192.168.20.11/24 and 192.168.20.12/24; no gateway"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1459,
+    "passed": 1459,
+    "failed": 0,
+    "focusedTests": 48,
+    "newLabTests": 14,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "checks": [
+    "Independent portable practice attempts start with classic PVST, shut inter-switch trunks, no PC PortFast, ready VLAN/host settings and zero credit",
+    "Published IOS commands select Rapid PVST before enabling each switch trunk, set complementary primary/secondary priorities, save all startup configurations and avoid creating legacy-peer migration state",
+    "Eight live configuration/election/port-role tasks precede actual traffic; observed replies from both same-VLAN pairs complete all ten tasks, reverse traffic works and cross-VLAN traffic stays isolated",
+    "Actual BPDU vectors elect SW1 for VLAN 10 and SW2 for VLAN 20 on every switch; dropping all STP advertisements prevents root and rapid-role credit despite accepted configuration",
+    "SW3 VLAN 10 uses Gi0/23 Root FWD and Gi0/24 Altn BLK; VLAN 20 uses the opposite roles. Tagged ICMP frames leave only the forwarding uplink, preserve IP TTL and never transmit user traffic through the alternate port",
+    "Either SW3 uplink can fail while both VLAN pairs reconverge over the remaining link; restoring it returns the original complementary roots and alternate roles",
+    "Both SW3 uplinks down isolate the sources; core-link failure instead preserves an alternate loop-free path through SW3 with both VLAN pairs working",
+    "SW2 takes over VLAN 10 when SW1 fails; SW1 takes over VLAN 20 when SW2 fails. The surviving same-VLAN endpoints remain reachable, and saved primary priorities reclaim their roots after recovery",
+    "Classic PVST can forward after its delays but cannot satisfy Rapid PVST mode or point-to-point rapid-port checks",
+    "A mixed classic peer creates real legacy detection; after all peers use Rapid PVST, the documented clear spanning-tree detected-protocols command restores rapid operation",
+    "Root macros set configured priorities once: a later superior bridge can win the election without the original root dynamically defending its priority",
+    "A per-VLAN path-cost override changes the affected preferred uplink and role credit while the other VLAN stays correctly rooted; automatic cost restoration recovers the intended path",
+    "Portable saves retain priorities, stable device IDs and earned echo observations while live root and port states rebuild from fresh BPDUs; startup power cycles preserve the saved configuration",
+    "Every published show/ping command works; output exposes protocol rstp, primary root priorities 24586/24596 including the VLAN system ID, P2p Edge only at endpoints, Root FWD and Altn BLK roles, blocked segments and learned MACs",
+    "Imported mode, priority, root and port criteria validate bounded VLANs, multiples of 4096, supported states/roles and booleans, and cannot match unknown roots, inactive interfaces or nonswitch default settings"
+  ],
+  "scope": "Uses the existing BPDU, STP, Ethernet and packet engines. Adds the lab and declarative guide criteria; no new protocol commands, simulation-engine changes or server dependencies. Failover exercises use existing CLI and traffic controls; restore both uplinks for full live role credit. No guarantee of zero packet loss during convergence, and no CML validation is claimed for this catalog addition.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr2-fwd/stp/stp-configuration-guide/m-stp.html",
+    "https://www.cisco.com/c/en/us/support/docs/lan-switching/spanning-tree-protocol/10586-65.html"
+  ],
+  "browserChecks": [
+    "light 1440px: twelve Switching entries, ten-task Rapid PVST+ guide and reference, zero-credit baseline, all three IOS configurations, both VLAN pairs receive 3/3 replies, RSTP with opposite Root FWD/Altn BLK uplinks and correct root priorities, PC-only PortFast, fresh elections after saved reload, safe reference replacement and unchanged CLI colors, plus failed baseline, live uplink failure, VLAN 10 reconvergence over the remaining port while VLAN 20 continues, and repaired original roles with actual packet checks",
+    "light 390px: twelve Switching entries, ten-task Rapid PVST+ guide and reference, zero-credit baseline, all three IOS configurations, both VLAN pairs receive 3/3 replies, RSTP with opposite Root FWD/Altn BLK uplinks and correct root priorities, PC-only PortFast, fresh elections after saved reload, safe reference replacement and unchanged CLI colors",
+    "light 320px: twelve Switching entries, ten-task Rapid PVST+ guide and reference, zero-credit baseline, all three IOS configurations, both VLAN pairs receive 3/3 replies, RSTP with opposite Root FWD/Altn BLK uplinks and correct root priorities, PC-only PortFast, fresh elections after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 1440px: twelve Switching entries, ten-task Rapid PVST+ guide and reference, zero-credit baseline, all three IOS configurations, both VLAN pairs receive 3/3 replies, RSTP with opposite Root FWD/Altn BLK uplinks and correct root priorities, PC-only PortFast, fresh elections after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 390px: twelve Switching entries, ten-task Rapid PVST+ guide and reference, zero-credit baseline, all three IOS configurations, both VLAN pairs receive 3/3 replies, RSTP with opposite Root FWD/Altn BLK uplinks and correct root priorities, PC-only PortFast, fresh elections after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 320px: twelve Switching entries, ten-task Rapid PVST+ guide and reference, zero-credit baseline, all three IOS configurations, both VLAN pairs receive 3/3 replies, RSTP with opposite Root FWD/Altn BLK uplinks and correct root priorities, PC-only PortFast, fresh elections after saved reload, safe reference replacement and unchanged CLI colors",
+    "light: share link preserves current host/path/query and returns to twelve Switching labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to twelve Switching labs without replacing the workspace"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "verificationNotes": [
+    "The new-lab browser script freezes a byte-identical offline artifact before testing; the final rebuilt index.html, dist/index.html and tested snapshot match exactly. The standard catalog regression ran after the final build completed."
+  ],
+  "errors": [],
+  "externalRequests": []
+}
