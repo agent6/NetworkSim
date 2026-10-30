@@ -1,0 +1,86 @@
+{
+  "feature": {
+    "title": "eBGP Directly Connected Neighbors",
+    "catalogId": "ebgp-directly-connected-neighbors",
+    "group": "CCNP ENCOR",
+    "section": "Layer 3",
+    "sectionLabCount": 8,
+    "groupLabCount": 17,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6
+    },
+    "devices": 4,
+    "links": 3,
+    "tasks": 12,
+    "addressingRows": 3,
+    "notes": 3,
+    "permalink": "#/labs/ebgp-directly-connected-neighbors",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "R1 AS65001/RID1.1.1.1 and R2 AS65002/RID2.2.2.2 peer over Gi0/1 10.0.12.1/30 and10.0.12.2/30. R1 Gi0/0 192.168.10.1/24 connects PC1 .10; R2 Gi0/0 192.168.20.1/24 connects SRV1 .10. Host gateways .1. Static host addressing and router IP interfaces are prepared; BGP and static/IGP routes are absent from practice.",
+  "verificationNotes": [
+    "Independent practice starts at0/12. Two actual IOS reference configurations earn ten live goals after real BGP convergence. Actual PC1-to-SRV1 and SRV1-to-PC1 pings complete twelve. Completed documents contain saved configuration and empty runtime without fabricated route/session/traffic achievements.",
+    "Uses existing TCP/BGP protocol engine unchanged: delivered TCP179 OPEN and KEEPALIVE, negotiated IPv4 capability and hold180; default single-hop eBGP, no multihop/update-source. Both local origins require the exact connected /24 route. Local weight32768/empty AS path/nextHop0.0.0.0; received eBGP path has singleton peer AS, origin i, peer transit next hop, weight0/localpref100/MED0. Actual outbound UPDATE snapshots contain the local AS prepended.",
+    "Distinct checks verify reciprocal intended peers, real established transport, originated networks, received best paths, actual advertised prefixes, installed B routes at AD20/metric0 and healthy saved startup. Forwarding credit correlates source send, both routers' actual forwarding, received frames and parent-linked reply identities.",
+    "Network withdrawal sends actual UPDATE and preserves the same TCP channel and establishment time while R1 loses the server route; both host tests fail due missing forward/return reachability. Restoring network recovers advertisements and forwarding. Wrong remote-AS, missing reciprocal peer, TCP179 blocking and shutdown prevent usable BGP; repair reconnects.",
+    "Exact-match /25 negative origination and disabled default IPv4 activation plus explicit address-family activation work. Static shortcuts, changed external administrative distance, missing/mismatched packet evidence and unsaved edits cannot satisfy their requested goals.",
+    "Offline reopening rebuilds fresh transport and learned routes while retaining earned traffic observations. IOS reload restores saved neighbors. Current configuration/control-plane/route/save goals remain live.",
+    "All guide IOS and Windows verification commands were executed, including numeric State/PfxRcd summary, Established detail, BGP prefix and advertised-route views, B RIB routes, running/startup configuration, actual pings and traceroute.",
+    "Checked against Cisco primary documentation. This change does not claim a new live CML capture, platform-wide parity, multihop, iBGP, IPv6 BGP or routing-policy coverage.",
+    "Existing terminal appearance and layout preserved. Catalog counts and browser assertions updated to eight Layer3 labs and seventeen ENCOR labs. Existing AAA invalid-import test uses a bounded record view to avoid TypeScript union-expression expansion as the lesson criterion union grows; its runtime assertions are unchanged."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE17: Configuring a Basic BGP Network",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_irg-basic-net-0.html"
+    },
+    {
+      "title": "Cisco IOS BGP Command Reference: M through N",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_bgp/command/irg-cr-book/bgp-m1.html"
+    },
+    {
+      "title": "Cisco IOS BGP show commands",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_bgp/command/irg-cr-book/bgp-s1.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "passed",
+    "fullCheck": "npm run check passed, including deterministic offline build",
+    "tests": 2294,
+    "passed": 2294,
+    "failed": 0,
+    "focusedTests": 22,
+    "browserScenarios": 15,
+    "browserChecks": [
+      "light 320px: eight ENCOR Layer3 labs; four-node three-link twelve-task zero-credit practice, three-row addressing plan and two actual IOS configurations; established TCP179 peers and received prefixes, external AS paths, next hops and B routes at20/0; two actual traffic tests and Windows trace; live route withdrawal with established session and failed traffic then repair; saved offline reload rebuilds transport while retaining traffic achievements; configuration-only reference, cancel/save-copy protection, fitted topology/guide and unchanged golden terminal styles",
+      "dark 390px: eight ENCOR Layer3 labs; four-node three-link twelve-task zero-credit practice, three-row addressing plan and two actual IOS configurations; established TCP179 peers and received prefixes, external AS paths, next hops and B routes at20/0; two actual traffic tests and Windows trace; live route withdrawal with established session and failed traffic then repair; saved offline reload rebuilds transport while retaining traffic achievements; configuration-only reference, cancel/save-copy protection, fitted topology/guide and unchanged golden terminal styles",
+      "light 390px: eight ENCOR Layer3 labs; four-node three-link twelve-task zero-credit practice, three-row addressing plan and two actual IOS configurations; established TCP179 peers and received prefixes, external AS paths, next hops and B routes at20/0; two actual traffic tests and Windows trace; live route withdrawal with established session and failed traffic then repair; saved offline reload rebuilds transport while retaining traffic achievements; configuration-only reference, cancel/save-copy protection, fitted topology/guide and unchanged golden terminal styles",
+      "dark 320px: eight ENCOR Layer3 labs; four-node three-link twelve-task zero-credit practice, three-row addressing plan and two actual IOS configurations; established TCP179 peers and received prefixes, external AS paths, next hops and B routes at20/0; two actual traffic tests and Windows trace; live route withdrawal with established session and failed traffic then repair; saved offline reload rebuilds transport while retaining traffic achievements; configuration-only reference, cancel/save-copy protection, fitted topology/guide and unchanged golden terminal styles",
+      "dark 1440px: eight ENCOR Layer3 labs; four-node three-link twelve-task zero-credit practice, three-row addressing plan and two actual IOS configurations; established TCP179 peers and received prefixes, external AS paths, next hops and B routes at20/0; two actual traffic tests and Windows trace; live route withdrawal with established session and failed traffic then repair; saved offline reload rebuilds transport while retaining traffic achievements; configuration-only reference, cancel/save-copy protection, fitted topology/guide and unchanged golden terminal styles",
+      "light 1440px: eight ENCOR Layer3 labs; four-node three-link twelve-task zero-credit practice, three-row addressing plan and two actual IOS configurations; established TCP179 peers and received prefixes, external AS paths, next hops and B routes at20/0; two actual traffic tests and Windows trace; live route withdrawal with established session and failed traffic then repair; saved offline reload rebuilds transport while retaining traffic achievements; configuration-only reference, cancel/save-copy protection, fitted topology/guide and unchanged golden terminal styles",
+      "light: share link preserves current host/path/query and workspace, returns to the correct section with eight labs and preserves independent section choices",
+      "dark: share link preserves current host/path/query and workspace, returns to the correct section with eight labs and preserves independent section choices",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "c131ad0be443bbd8ccd5182c1d5b86187ef6568d1e2ed94824a3f271c3e827d4",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px topology and guide",
+      "dark320px guide"
+    ]
+  }
+}
