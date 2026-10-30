@@ -13,11 +13,11 @@ import { inspectTracking, trackingPolicy, setBindingLifetime } from './fhs-track
 /** Stateful ingress controls operate on frames that actually reached a port. */
 export function inspectIngress(engine: Simulator, device: Device, port: string, vlan: number, frame: Frame): boolean {
   const features = device.config.features, iface = device.config.interfaces[port], state = device.runtime.features;
-  const drop = (counter: string, protocol: string, label: string, detail: string) => { state[counter] = (state[counter] ?? 0) + 1; engine.emit({ nodeId: device.id, port, protocol, label, detail, disposition: 'drop' }); return false; };
-  const cleanMac = (mac: string) => mac.replace(/[^0-9a-f]/gi, '').toLowerCase();
-  if (!inspectPortSecurity(engine, device, iface, vlan, frame)) return false;
   const payload = frame.payload;
   const dhcp = 'kind' in payload ? (payload.kind === 'dhcp' ? payload : undefined) : payload.body?.kind === 'dhcp-unicast' ? payload.body.message : undefined;
+  const drop = (counter: string, protocol: string, label: string, detail: string) => { state[counter] = (state[counter] ?? 0) + 1; engine.emit({ nodeId: device.id, port, protocol, label, detail, disposition: 'drop',...dhcp?{packet:{id:frame.id,source:dhcp.serverAddress??dhcp.clientId,destination:dhcp.clientId,protocol:'DHCP',dhcpOperation:dhcp.operation,requestedAddress:dhcp.address}}:{} }); return false; };
+  const cleanMac = (mac: string) => mac.replace(/[^0-9a-f]/gi, '').toLowerCase();
+  if (!inspectPortSecurity(engine, device, iface, vlan, frame)) return false;
   const ageBindings = () => { state.dhcpBindings = (state.dhcpBindings ?? []).filter((b: any) => b.expires > engine.clock.now()); state.ipv6Bindings = (state.ipv6Bindings ?? []).filter((b: any) => b.expires > engine.clock.now()); };
   if ((dhcp?.operation === 'ack') || ('kind' in payload && payload.kind === 'link-control' && payload.body.type === 'reply')) { const seconds = dhcp ? dhcp.lease ?? 86400 : (payload as any).body.lifetime ?? 86400; engine.clock.schedule(Math.max(1, seconds) * 1000, ageBindings, { owner: device.id, label: 'Snooping binding expiry' }); }
   const snooping = features.dhcpSnooping;
@@ -28,7 +28,10 @@ export function inspectIngress(engine: Simulator, device: Device, port: string, 
   if ('kind' in payload && payload.kind === 'arp' && payload.family === 4 && (features.arpInspection?.vlans ?? []).includes(vlan) && !rate('ARP', iface.features.arpInspectionRate)) return false;
   if (dhcp && inspectVlan) {
     const server = dhcp.operation === 'offer' || dhcp.operation === 'ack' || dhcp.operation === 'nak';
-    if (server && !iface.features.dhcpSnoopingTrust) return drop('dhcpSnoopingDrops', 'DHCP', 'DHCP snooping drop', 'A server reply arrived on an untrusted port.');
+    if (server && !iface.features.dhcpSnoopingTrust) {
+      const rows=state.dhcpSnoopingEvents??=[];rows.push({time:engine.clock.now(),frameId:frame.id,port,vlan,operation:dhcp.operation,clientId:dhcp.clientId,serverId:dhcp.serverId,transaction:dhcp.transaction,reason:'untrusted-server'});if(rows.length>1000)rows.shift();
+      return drop('dhcpSnoopingDrops', 'DHCP', 'DHCP snooping drop', 'A server reply arrived on an untrusted port.');
+    }
     if (!server) {
       if (dhcp.operation === 'release') {
         const client = state.dhcpClients?.[dhcp.clientId];
@@ -37,12 +40,12 @@ export function inspectIngress(engine: Simulator, device: Device, port: string, 
         if (!releasedBinding) return drop('dhcpSnoopingDrops', 'DHCP', 'DHCP release validation drop', 'The releasing client does not own this IP/MAC/port binding.');
       }
       if (snooping.option82 && dhcp.option82 && !iface.features.dhcpSnoopingTrust && !snooping.allowUntrustedOption82) return drop('dhcpSnoopingDrops', 'DHCP', 'DHCP Option82 drop', 'Relay information arrived from an untrusted client port.');
-      if (snooping.option82 && !dhcp.option82) dhcp.option82 = { circuitId: vlan + ':' + port, remoteId: device.id };
-      if (dhcp.operation !== 'release') (state.dhcpClients ??= {})[dhcp.clientId] = { port, vlan, mac: frame.sourceMac };
+      if (snooping.option82 && !dhcp.option82 && !iface.features.dhcpSnoopingTrust) dhcp.option82 = { circuitId: vlan + ':' + port, remoteId: device.id };
+      if (dhcp.operation !== 'release') { if(!iface.features.dhcpSnoopingTrust)(state.dhcpClients ??= {})[dhcp.clientId] = { port, vlan, mac: frame.sourceMac };else delete state.dhcpClients?.[dhcp.clientId]; }
     }
     if (dhcp.operation === 'ack' && dhcp.address) {
       const client = state.dhcpClients?.[dhcp.clientId];
-      if (client) { const bindings: any[] = state.dhcpBindings ??= []; const old = bindings.findIndex(x => x.mac === client.mac && x.vlan === client.vlan); if (old >= 0) bindings.splice(old, 1); bindings.push({ ...client, ip: dhcp.address, expires: engine.clock.now() + (dhcp.lease ?? 86400) * 1000 }); }
+      if (client && !device.config.interfaces[client.port]?.features.dhcpSnoopingTrust) { const bindings: any[] = state.dhcpBindings ??= []; const old = bindings.findIndex(x => x.mac === client.mac && x.vlan === client.vlan); if (old >= 0) bindings.splice(old, 1); bindings.push({ ...client, ip: dhcp.address, serverId:dhcp.serverId,transaction:dhcp.transaction,expires: engine.clock.now() + (dhcp.lease ?? 86400) * 1000 }); }
     }
     if (dhcp.operation === 'nak' || dhcp.operation === 'decline') { const client = state.dhcpClients?.[dhcp.clientId]; if (client) state.dhcpBindings = (state.dhcpBindings ?? []).filter((binding: any) => !(binding.port === client.port && binding.vlan === client.vlan && (!dhcp.address || binding.ip === dhcp.address))); }
   }

@@ -72,7 +72,7 @@ function dhcpLeaseView(d: Device, sim: Simulator, filter = ""): string {
   }).filter(row => [row.lease.address, row.client, row.lease.clientId, row.mac, row.lease.pool].some(value => String(value ?? "").toLowerCase().includes(query)))
     .sort((a, b) => ipToInt(a.lease.address) - ipToInt(b.lease.address));
   return `<div class="flex items-center justify-between gap-3"><span class="section-label">Active leases</span><span class="text-xs text-slate-500" data-dhcp-lease-count>${query ? `${rows.length} of ${leases.length}` : leases.length} ${leases.length === 1 ? "lease" : "leases"}</span></div>
-    ${rows.length ? `<div class="wireless-table-wrap"><table class="wireless-table" aria-label="DHCP leases"><thead><tr><th scope="col">IP address</th><th scope="col">Client</th><th scope="col">Pool</th><th scope="col">Remaining</th></tr></thead><tbody>${rows.map(({lease,client,mac}) => `<tr data-dhcp-lease="${esc(lease.address)}"><td class="font-mono whitespace-nowrap">${esc(lease.address)}</td><td>${esc(client)}<small class="font-mono">${esc(mac || lease.clientId)}</small></td><td>${esc(lease.pool)}</td><td class="whitespace-nowrap" data-lease-remaining>${leaseDuration(lease.expires - now)}</td></tr>`).join("")}</tbody></table></div>` : `<p class="rounded-xl border border-slate-200 p-4 text-xs text-slate-500" data-dhcp-lease-empty>${query ? "No leases match your search." : "No active leases. Clients will appear here after this server allocates an address."}</p>`}`;
+    ${rows.length ? `<div class="wireless-table-wrap"><table class="wireless-table" aria-label="DHCP leases"><thead><tr><th scope="col">IP address</th><th scope="col">Client</th><th scope="col">Pool</th><th scope="col">Remaining</th></tr></thead><tbody>${rows.map(({lease,client,mac}) => `<tr data-dhcp-lease="${esc(lease.address)}"><td class="font-mono whitespace-nowrap">${esc(lease.address)}</td><td>${esc(client)}<small class="font-mono">${esc(mac || lease.clientId)}</small>${lease.option82 ? `<details class="mt-1 text-xs" data-dhcp-option82><summary>Option 82</summary><dl class="mt-1 space-y-1"><dt>Circuit ID</dt><dd class="font-mono break-all">${esc(lease.option82.circuitId)}</dd><dt>Remote ID</dt><dd class="font-mono break-all">${esc(lease.option82.remoteId)}</dd></dl></details>` : ""}</td><td>${esc(lease.pool)}</td><td class="whitespace-nowrap" data-lease-remaining>${leaseDuration(lease.expires - now)}</td></tr>`).join("")}</tbody></table></div>` : `<p class="rounded-xl border border-slate-200 p-4 text-xs text-slate-500" data-dhcp-lease-empty>${query ? "No leases match your search." : "No active leases. Clients will appear here after this server allocates an address."}</p>`}`;
 }
 
 export function showServices(
@@ -306,11 +306,22 @@ export function showServices(
       tab.setAttribute("aria-controls", section.id);
     }
   });
+  let lastLeaseMarkup: string | undefined;
   const refreshLeases = () => {
     const output = root.querySelector<HTMLElement>("[data-dhcp-leases]");
     if (!output) return;
     const markup = dhcpLeaseView(d, sim, root.querySelector<HTMLInputElement>("[data-dhcp-lease-search]")?.value);
-    if (output.innerHTML !== markup) output.innerHTML = markup;
+    if (lastLeaseMarkup === markup) return;
+    const expanded = new Set([...output.querySelectorAll<HTMLDetailsElement>("[data-dhcp-option82][open]")].map(details => details.closest<HTMLElement>("[data-dhcp-lease]")?.dataset.dhcpLease));
+    const active = output.ownerDocument.activeElement;
+    const focused = active && output.contains(active) ? active.closest<HTMLElement>("[data-dhcp-lease]")?.dataset.dhcpLease : undefined;
+    output.innerHTML = markup;
+    lastLeaseMarkup = markup;
+    for (const row of output.querySelectorAll<HTMLElement>("[data-dhcp-lease]")) {
+      const details = row.querySelector<HTMLDetailsElement>("[data-dhcp-option82]");
+      if (details && expanded.has(row.dataset.dhcpLease)) details.open = true;
+      if (details && focused === row.dataset.dhcpLease) details.querySelector<HTMLElement>("summary")?.focus({preventScroll:true});
+    }
   };
   const refreshAccounting=()=>{const output=root.querySelector<HTMLElement>('[data-aaa-accounting]');if(output){const markup=accountingView(d);if(output.innerHTML!==markup)output.innerHTML=markup;}};
   const refreshDNS=()=>{const output=root.querySelector<HTMLElement>('[data-dhcp-dns]');if(output){const markup=dhcpDNSView(d,sim);if(output.innerHTML!==markup)output.innerHTML=markup;}};

@@ -1,0 +1,99 @@
+{
+  "feature": {
+    "title": "DHCP Snooping",
+    "catalogId": "dhcp-snooping",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 10,
+    "devices": 6,
+    "links": 5,
+    "tasks": 10,
+    "addressingRows": 5,
+    "permalink": "#/labs/dhcp-snooping",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "VLAN 10 has two DHCP PCs on SW1 Gi0/1\u20132, legitimate DHCP/DNS/HTTP SRV1 192.168.10.10 on Gi0/3, live rogue DHCP SRV2 192.168.10.20 on Gi0/4, and gateway R1 192.168.10.1 on Gi0/5. SRV1 offers .100\u2013149 with correct gateway/DNS; faster SRV2 offers .200\u2013249 with incorrect .254 gateway and 203.0.113.53 DNS. All five switch interfaces are prepared access/PortFast ports.",
+  "verificationNotes": [
+    "Practice starts genuinely unprotected and accepts faster rogue leases without earning credit. Published switch commands earn three configuration goals; fresh client renewals then earn real legitimate leases, bindings, Option82 and individually blocked rogue replies. Two successful server ping checks complete ten tasks.",
+    "The completed reference contains no saved runtime evidence. Real automatic DORA after load earns live lease, Option82 and rogue-block credit. Dynamic binding and Option82 goals rebuild after load, while achieved blocked-reply and valid-source ping observations survive portable saves.",
+    "Only Gi0/3 is trusted. Client ports have 10pps limits and remain untrusted, as do rogue ingress and the router-facing gateway port. VLAN 10 and global snooping plus Option82 must be enabled. Both DHCP services remain live; disabling the rogue does not count as a blocked offer.",
+    "Learned binding proof correlates client DHCP state, legitimate server identity, actual IP/MAC/VLAN/untrusted port, server lease and admitted ACK transaction. Bad options, static addressing, a wrong MAC/port/transaction, a rogue server lease or a fabricated counter cannot satisfy it.",
+    "Bounded untrusted-server drop records and event packet IDs identify actual rogue frames for the intended client, ingress and VLAN. Generic drops or a failed request are insufficient. Existing protocol filtering decisions and rate limits remain packet-driven.",
+    "Trusted client interfaces no longer generate new dynamic snooping bindings or have Option82 inserted. This fixes a real trust-semantics gap without changing the normal untrusted-client path. Binding records now also retain their ACK server/transaction identity.",
+    "Option82 circuit/remote fields are echoed in actual client and server leases and checked for both access ports. The server DHCP lease table now exposes these values through expandable, escaped details instead of describing evidence that users cannot inspect.",
+    "Missing legitimate trust blocks both servers and fresh acquisition fails, eventually permitting eligible Windows APIPA rather than DHCP credit. Trusting rogue ingress, disabling global snooping or removing VLAN 10 from scope admits the faster bad offer. Correcting protection and renewing restores legitimate options.",
+    "A 1pps limit can err-disable its client port during actual Discover/Request traffic. The documented 10pps restoration, shutdown/no shutdown and renewed DORA recover it without interrupting the other client. Binding clears and valid releases remove live proof and renewals rebuild it.",
+    "All published IOS/Windows verification commands, real DNS and HTTP are tested. CLI styling and the offline, browser-local application are preserved. No new live CML validation is claimed."
+  ],
+  "sources": [
+    {
+      "title": "Cisco: Operate and Troubleshoot DHCP Snooping on Catalyst 9000 Switches",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/dynamic-host-configuration-protocol-dhcp-dhcpv6/217055-operate-and-troubleshoot-dhcp-snooping.html"
+    },
+    {
+      "title": "Cisco Catalyst 4500: Configuring DHCP Snooping",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst4500/XE3-10-0E/configuration/guide/xe-310-cg/dhcp.html"
+    }
+  ],
+  "validation": {
+    "targetedTests": 132,
+    "targetedPassed": 132,
+    "typecheck": "passed",
+    "fullSuite": {
+      "tests": 1865,
+      "passed": 1865,
+      "failed": 0,
+      "command": "npm run check"
+    },
+    "build": "passed; generated root and dist HTML are identical",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: ten Services & Security labs, ten-task guide/five-row plan, zero-credit practice with actual rogue leases, three switch configuration tasks and four gated actions, legitimate renewal and IP/MAC/VLAN/port bindings, two individually observed live rogue drops, Option82 circuit/remote values inspected in server DHCP UI, both positive pings and DNS/HTTP, IOS show and Windows DHCP commands, current options exclude rogue gateway/DNS, clear binding table invalidates live state and renewal rebuilds it, removing legitimate trust causes fresh DHCP failure, trusting rogue ingress yields real bad settings and repair restores legitimate leases, saved observations plus real re-acquisition after reload, completed reference earns traffic only through live DORA, save/cancel protection, all navigated nodes inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "light 390px: ten Services & Security labs, ten-task guide/five-row plan, zero-credit practice with actual rogue leases, three switch configuration tasks and four gated actions, legitimate renewal and IP/MAC/VLAN/port bindings, two individually observed live rogue drops, Option82 circuit/remote values inspected in server DHCP UI, both positive pings and DNS/HTTP, IOS show and Windows DHCP commands, current options exclude rogue gateway/DNS, clear binding table invalidates live state and renewal rebuilds it, removing legitimate trust causes fresh DHCP failure, trusting rogue ingress yields real bad settings and repair restores legitimate leases, saved observations plus real re-acquisition after reload, completed reference earns traffic only through live DORA, save/cancel protection, all navigated nodes inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "light 320px: ten Services & Security labs, ten-task guide/five-row plan, zero-credit practice with actual rogue leases, three switch configuration tasks and four gated actions, legitimate renewal and IP/MAC/VLAN/port bindings, two individually observed live rogue drops, Option82 circuit/remote values inspected in server DHCP UI, both positive pings and DNS/HTTP, IOS show and Windows DHCP commands, current options exclude rogue gateway/DNS, clear binding table invalidates live state and renewal rebuilds it, removing legitimate trust causes fresh DHCP failure, trusting rogue ingress yields real bad settings and repair restores legitimate leases, saved observations plus real re-acquisition after reload, completed reference earns traffic only through live DORA, save/cancel protection, all navigated nodes inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "dark 1440px: ten Services & Security labs, ten-task guide/five-row plan, zero-credit practice with actual rogue leases, three switch configuration tasks and four gated actions, legitimate renewal and IP/MAC/VLAN/port bindings, two individually observed live rogue drops, Option82 circuit/remote values inspected in server DHCP UI, both positive pings and DNS/HTTP, IOS show and Windows DHCP commands, current options exclude rogue gateway/DNS, clear binding table invalidates live state and renewal rebuilds it, removing legitimate trust causes fresh DHCP failure, trusting rogue ingress yields real bad settings and repair restores legitimate leases, saved observations plus real re-acquisition after reload, completed reference earns traffic only through live DORA, save/cancel protection, all navigated nodes inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "dark 390px: ten Services & Security labs, ten-task guide/five-row plan, zero-credit practice with actual rogue leases, three switch configuration tasks and four gated actions, legitimate renewal and IP/MAC/VLAN/port bindings, two individually observed live rogue drops, Option82 circuit/remote values inspected in server DHCP UI, both positive pings and DNS/HTTP, IOS show and Windows DHCP commands, current options exclude rogue gateway/DNS, clear binding table invalidates live state and renewal rebuilds it, removing legitimate trust causes fresh DHCP failure, trusting rogue ingress yields real bad settings and repair restores legitimate leases, saved observations plus real re-acquisition after reload, completed reference earns traffic only through live DORA, save/cancel protection, all navigated nodes inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "dark 320px: ten Services & Security labs, ten-task guide/five-row plan, zero-credit practice with actual rogue leases, three switch configuration tasks and four gated actions, legitimate renewal and IP/MAC/VLAN/port bindings, two individually observed live rogue drops, Option82 circuit/remote values inspected in server DHCP UI, both positive pings and DNS/HTTP, IOS show and Windows DHCP commands, current options exclude rogue gateway/DNS, clear binding table invalidates live state and renewal rebuilds it, removing legitimate trust causes fresh DHCP failure, trusting rogue ingress yields real bad settings and repair restores legitimate leases, saved observations plus real re-acquisition after reload, completed reference earns traffic only through live DORA, save/cancel protection, all navigated nodes inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "light: permalink preserves current host/path/query and returns to ten Services & Security labs without replacing the workspace",
+        "dark: permalink preserves current host/path/query and returns to ten Services & Security labs without replacing the workspace"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches the existing desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology and expanded server Option82 lease details",
+        "light 320px expanded server lease details",
+        "dark desktop topology",
+        "dark 320px guide and expanded server lease details"
+      ],
+      "canvasFit": "target node centers remain inside the workspace in every navigation step, including 320px",
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "7dfce6261c62b908d0a549b878873b8f96a8c379b4f7a689fb2f49038529ee91",
+    "postSuiteValidation": {
+      "change": "Preserve expanded Option82 details and keyboard focus while live lease countdown markup refreshes.",
+      "typecheck": "passed",
+      "serverUITests": 9,
+      "serverUIPassed": 9,
+      "build": "passed",
+      "browser": "all 15 checks below ran against the final rebuilt artifact"
+    }
+  }
+}

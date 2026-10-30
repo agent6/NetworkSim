@@ -1,0 +1,76 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {Simulator} from '../src/engine.ts';
+import {IOSSession} from '../src/cli.ts';
+import {iosRejected} from '../src/ios-help.ts';
+import {createCatalogLab,DHCP_SNOOPING_COMMANDS as COMMANDS,catalogGuideResources,LAB_CATALOG} from '../src/lab-catalog.ts';
+import {lessonProgress,matches,validateLesson,actionAvailable} from '../src/lessons.ts';
+import {parseLabFile,serializeLabFile} from '../src/persistence.ts';
+const id=(name:string)=>'device-snooping-'+name.toLowerCase(),g=(n:number)=>'GigabitEthernet0/'+n,p='GigabitEthernet0';
+function load(mode:'practice'|'completed'='completed'){const sim=new Simulator();sim.load(parseLabFile(serializeLabFile(createCatalogLab('dhcp-snooping',mode))));sim.advance(1500);return sim;}
+const d=(sim:Simulator,name:string)=>sim.getDevice(id(name))!;
+function cli(sim:Simulator,name='SW1'){const c=new IOSSession(sim,id(name));if(!c.windowsMode)c.execute('enable');return c;}
+function run(c:IOSSession,...lines:string[]){for(const line of lines){const out=c.execute(line);assert.ok(!out.some(iosRejected),line+'\n'+out.join('\n'));}}
+function change(sim:Simulator,...lines:string[]){const c=cli(sim);run(c,'configure terminal',...lines,'end');return c;}
+const row=(sim:Simulator,name:string)=>lessonProgress(sim)!.rows.find(r=>r.objective.id===name)!;
+const goal=(sim:Simulator,name:string)=>row(sim,name).complete;
+const bindings=(sim:Simulator):any[]=>d(sim,'SW1').runtime.features.dhcpBindings??[];
+function renew(sim:Simulator,name='PC1'){const r=sim.requestDHCP(id(name),p);sim.advance(1500);lessonProgress(sim);return r;}
+function release(sim:Simulator,name='PC1'){sim.releaseDHCP(id(name),p);sim.advance(100);lessonProgress(sim);}
+function ping(sim:Simulator,name='PC1'){const r=sim.ping(id(name),'192.168.10.10',{count:3});sim.advance(5000);lessonProgress(sim);return r.received;}
+function finish(sim:Simulator){for(const name of ['PC1','PC2']){assert.equal(renew(sim,name).status,'success');assert.equal(ping(sim,name),3);}assert.equal(lessonProgress(sim)!.complete,10);}
+
+test('DHCP Snooping catalog has six nodes, five links, ten tasks, five addressing rows and a genuinely unprotected practice',()=>{
+ const e=LAB_CATALOG.find(e=>e.id==='dhcp-snooping')!;assert.equal(e.group,'CCNA');assert.equal(e.section,'Services & Security');assert.equal(e.devices,6);assert.equal(e.links,5);const a=createCatalogLab('dhcp-snooping'),b=createCatalogLab('dhcp-snooping');assert.notEqual(a.lab.id,b.lab.id);validateLesson((a.lab as any).lesson);for(const node of a.lab.devices)assert.deepEqual(node.startupConfig,node.config);const sim=load('practice');assert.equal(lessonProgress(sim)!.complete,0);assert.equal(lessonProgress(sim)!.rows.length,10);assert.equal(catalogGuideResources('dhcp-snooping')!.rows.length,5);assert.equal(lessonProgress(sim)!.rows.filter(r=>r.objective.action).length,4);assert.ok(lessonProgress(sim)!.rows.filter(r=>r.objective.action).every(r=>!actionAvailable(sim,r.objective)));for(const name of ['PC1','PC2']){assert.match(d(sim,name).config.interfaces[p].ip!,/^192\.168\.10\.20[01]$/);assert.equal(d(sim,name).config.defaultGateway,'192.168.10.254');}assert.equal(bindings(sim).length,0);
+});
+test('published configuration earns three live switch goals without retroactively legitimizing rogue leases',()=>{
+ const sim=load('practice');run(new IOSSession(sim,id('SW1')),...COMMANDS.SW1);assert.equal(lessonProgress(sim)!.complete,3);assert.ok(!goal(sim,'pc1-lease'));assert.equal(renew(sim,'PC1').address,'192.168.10.100');assert.equal(lessonProgress(sim)!.complete,5);assert.equal(renew(sim,'PC2').address,'192.168.10.101');assert.equal(lessonProgress(sim)!.complete,8);assert.ok(goal(sim,'option82'));assert.equal(ping(sim,'PC1'),3);assert.equal(ping(sim,'PC2'),3);assert.equal(lessonProgress(sim)!.complete,10);
+});
+test('completed reference carries no runtime proof; real automatic DORA after load earns leases, Option82 and rogue-drop observations',()=>{
+ const doc=createCatalogLab('dhcp-snooping','completed');for(const node of doc.lab.devices){assert.deepEqual(node.runtime.features,{});assert.deepEqual(node.startupConfig,node.config);}const sim=new Simulator();sim.load(doc);assert.equal(lessonProgress(sim)!.complete,3);sim.advance(1500);assert.equal(lessonProgress(sim)!.complete,8);finish(sim);
+});
+test('legitimate ACKs create distinct live bindings with actual IP/MAC/VLAN/port/server/transaction identity',()=>{
+ const sim=load();assert.equal(bindings(sim).length,2);for(const [i,name]of ['PC1','PC2'].entries()){const node=d(sim,name),lease=node.runtime.features.dhcpClientLeases[p],b=bindings(sim).find(b=>b.port===g(i+1));assert.equal(b.ip,node.config.interfaces[p].ip);assert.equal(b.mac,sim.macOf(node.id,p));assert.equal(b.vlan,10);assert.equal(b.serverId,id('SRV1'));assert.equal(b.transaction,lease.transaction);assert.ok(b.expires>sim.clock.now());assert.equal(node.config.defaultGateway,'192.168.10.1');assert.deepEqual(node.config.dnsServers,['192.168.10.10']);}
+});
+test('both clients retain individually correlated rogue-drop proof while the rogue server remains powered, connected and responding',()=>{
+ const sim=load(),sw=d(sim,'SW1'),rogue=d(sim,'SRV2');assert.equal(rogue.powered,true);assert.equal(rogue.config.services.dhcp.enabled,true);assert.ok(rogue.runtime.features.dhcpServerStats.sent.offer>=2);for(const name of ['PC1','PC2']){assert.equal(goal(sim,name.toLowerCase()+'-rogue'),true);assert.ok(sw.runtime.features.dhcpSnoopingEvents.some((r:any)=>r.clientId===id(name)&&r.serverId===rogue.id&&r.port===g(4)&&r.vlan===10));}assert.ok(sim.events.some(e=>e.label==='DHCP snooping drop'&&e.packet?.dhcpOperation==='offer'));
+});
+test('Option82 is inserted on each untrusted client path and echoed by the prepared legitimate server',()=>{
+ const sim=load();for(const [i,name]of ['PC1','PC2'].entries()){const client=d(sim,name),server=d(sim,'SRV1'),expected={circuitId:'10:'+g(i+1),remoteId:id('SW1')};assert.deepEqual(client.runtime.features.dhcpClientLeases[p].option82,expected);assert.deepEqual(server.runtime.features.dhcpLeases.find((l:any)=>l.clientId===client.id&&l.state==='BOUND').option82,expected);}assert.equal(goal(sim,'option82'),true);change(sim,'no ip dhcp snooping information option');assert.equal(goal(sim,'snooping-scope'),false);assert.equal(goal(sim,'option82'),false);
+});
+test('removing legitimate trust blocks both servers, cannot deliver a new lease and eventually allows only APIPA until repaired',()=>{
+ const sim=load();release(sim);change(sim,'interface '+g(3),'no ip dhcp snooping trust');const r=sim.requestDHCP(id('PC1'),p);sim.advance(16000);assert.equal(r.status,'failure');assert.equal(goal(sim,'pc1-lease'),false);assert.equal(goal(sim,'trusted-server'),false);assert.match(d(sim,'PC1').config.interfaces[p].ip!,/^169\.254\./);assert.ok(sim.events.some(e=>e.label==='DHCP snooping drop'&&e.port===g(3)));change(sim,'interface '+g(3),'ip dhcp snooping trust');assert.equal(renew(sim).status,'success');assert.equal(goal(sim,'pc1-lease'),true);assert.equal(ping(sim),3);
+});
+test('trusting the live rogue ingress permits its faster bad lease, despite an otherwise valid-looking dynamic binding',()=>{
+ const sim=load();release(sim);change(sim,'interface '+g(4),'ip dhcp snooping trust');assert.equal(renew(sim).status,'success');assert.match(d(sim,'PC1').config.interfaces[p].ip!,/^192\.168\.10\.20/);assert.equal(d(sim,'PC1').config.defaultGateway,'192.168.10.254');assert.equal(bindings(sim).find(b=>b.port===g(1)).serverId,id('SRV2'));assert.equal(goal(sim,'trusted-server'),false);assert.equal(goal(sim,'pc1-lease'),false);change(sim,'interface '+g(4),'no ip dhcp snooping trust');assert.equal(renew(sim).address,'192.168.10.100');assert.equal(goal(sim,'pc1-lease'),true);
+});
+test('global disable or wrong VLAN scope leaves the client LAN unprotected and a repair plus renewal restores legitimate settings',()=>{
+ for(const fault of ['global','vlan']){const sim=load();release(sim);if(fault==='global')change(sim,'no ip dhcp snooping');else change(sim,'no ip dhcp snooping vlan 10','ip dhcp snooping vlan 20');assert.equal(renew(sim).status,'success');assert.equal(d(sim,'PC1').config.defaultGateway,'192.168.10.254');assert.equal(goal(sim,'snooping-scope'),false);assert.equal(goal(sim,'pc1-lease'),false);change(sim,'ip dhcp snooping','ip dhcp snooping vlan 10');assert.equal(renew(sim).address,'192.168.10.100');assert.equal(goal(sim,'pc1-lease'),true);}
+});
+test('a trusted client port does not learn a new dynamic binding or add its own Option82 circuit identifier',()=>{
+ const sim=load();release(sim);change(sim,'interface '+g(1),'ip dhcp snooping trust');assert.equal(renew(sim).status,'success');assert.ok(!bindings(sim).some(b=>b.port===g(1)));assert.equal(d(sim,'PC1').runtime.features.dhcpClientLeases[p].option82,undefined);assert.equal(goal(sim,'pc1-lease'),false);assert.equal(goal(sim,'trusted-server'),false);change(sim,'interface '+g(1),'no ip dhcp snooping trust');renew(sim);assert.equal(goal(sim,'pc1-lease'),true);assert.equal(goal(sim,'option82'),true);
+});
+test('clearing dynamic bindings preserves policy and addresses but live binding/Option82 goals require fresh admitted ACKs',()=>{
+ const sim=load();finish(sim);run(cli(sim),'clear ip dhcp snooping binding *');assert.equal(bindings(sim).length,0);assert.equal(lessonProgress(sim)!.complete,7);assert.equal(goal(sim,'option82'),false);assert.equal(goal(sim,'snooping-scope'),true);assert.equal(goal(sim,'trusted-server'),true);assert.equal(goal(sim,'client-rate'),true);assert.equal(d(sim,'PC1').config.interfaces[p].ip,'192.168.10.100');renew(sim,'PC1');renew(sim,'PC2');assert.equal(lessonProgress(sim)!.complete,10);
+});
+test('real DHCP release removes that client binding and lease without damaging its peer, and renewal rebuilds both',()=>{
+ const sim=load();release(sim);assert.ok(!bindings(sim).some(b=>b.port===g(1)));assert.ok(bindings(sim).some(b=>b.port===g(2)));assert.equal(goal(sim,'pc1-lease'),false);assert.equal(goal(sim,'pc2-lease'),true);assert.ok(!d(sim,'SRV1').runtime.features.dhcpLeases.some((l:any)=>l.clientId===id('PC1')&&l.state==='BOUND'));renew(sim);assert.equal(goal(sim,'pc1-lease'),true);
+});
+test('an insufficient DHCP rate limit err-disables only its client port; restore 10pps and shutdown/no shutdown to recover',()=>{
+ const sim=load();release(sim);change(sim,'interface '+g(1),'ip dhcp snooping limit rate 1');const r=sim.requestDHCP(id('PC1'),p);sim.advance(5000);assert.equal(r.status,'failure');assert.equal(d(sim,'SW1').config.interfaces[g(1)].features.errDisabled,true);assert.equal(sim.interfaceUp(id('SW1'),g(2)),true);assert.equal(goal(sim,'client-rate'),false);assert.match(cli(sim).execute('show interfaces status err-disabled').join('\n'),/dhcp-rate-limit/);change(sim,'interface '+g(1),'ip dhcp snooping limit rate 10','shutdown','no shutdown');assert.equal(renew(sim).status,'success');assert.equal(goal(sim,'pc1-lease'),true);assert.equal(goal(sim,'client-rate'),true);
+});
+test('stopped rogue service, unrelated drops and fabricated counters cannot produce a missing blocked-offer observation',()=>{
+ const sim=load('practice');d(sim,'SRV2').config.services.dhcp.enabled=false;run(new IOSSession(sim,id('SW1')),...COMMANDS.SW1);renew(sim,'PC1');renew(sim,'PC2');d(sim,'SW1').runtime.features.dhcpSnoopingDrops=999;assert.equal(goal(sim,'pc1-rogue'),false);assert.equal(goal(sim,'pc2-rogue'),false);assert.equal(goal(sim,'pc1-lease'),true);assert.equal(goal(sim,'pc2-lease'),true);sim.emit({nodeId:id('SW1'),port:g(4),protocol:'DHCP',label:'DHCP snooping drop',detail:'unrelated',disposition:'drop'});assert.equal(goal(sim,'pc1-rogue'),false);
+});
+test('a generic ping, static settings, wrong DNS, wrong MAC/port, wrong ACK transaction or absent packet cannot fabricate live proof',()=>{
+ const sim=load('practice');assert.equal(ping(sim),3);assert.equal(goal(sim,'pc1-ping'),false);run(new IOSSession(sim,id('SW1')),...COMMANDS.SW1);renew(sim);const c=row(sim,'pc1-lease').objective.criterion;assert.equal(matches(sim,c),true);const node=d(sim,'PC1'),b=bindings(sim).find(b=>b.port===g(1));node.config.dnsServers=[];assert.equal(matches(sim,c),false);node.config.dnsServers=['192.168.10.10'];node.config.interfaces[p].features.dhcp=false;assert.equal(matches(sim,c),false);node.config.interfaces[p].features.dhcp=true;const original={...b};for(const patch of [{mac:'00:00:00:00:00:00'},{port:g(2)},{transaction:'wrong'},{serverId:id('SRV2')}]){Object.assign(b,patch);assert.equal(matches(sim,c),false);Object.assign(b,original);}const blocked=row(sim,'pc1-rogue').objective.criterion;assert.equal(matches(sim,blocked),true);for(const r of d(sim,'SW1').runtime.features.dhcpSnoopingEvents)r.frameId='unrelated';assert.equal(matches(sim,blocked),false);
+});
+test('portable reopening rebuilds live bindings and Option82 from traffic while retaining learned drop/ping achievements and saved switch policy',()=>{
+ const sim=load();finish(sim);const restored=new Simulator();restored.load(parseLabFile(serializeLabFile(sim.serialize())));assert.equal(lessonProgress(restored)!.complete,7);assert.deepEqual(bindings(restored),[]);restored.advance(2000);assert.equal(lessonProgress(restored)!.complete,10);change(restored,'interface '+g(3),'no ip dhcp snooping trust');assert.equal(goal(restored,'trusted-server'),false);restored.power(id('SW1'),false);restored.power(id('SW1'),true);restored.advance(12000);assert.equal(goal(restored,'trusted-server'),true);renew(restored,'PC1');renew(restored,'PC2');assert.equal(lessonProgress(restored)!.complete,10);
+});
+test('published IOS/Windows commands, server DNS and HTTP all report actual working state after protection',()=>{
+ const sim=load();finish(sim);for(const[name,commands]of Object.entries(catalogGuideResources('dhcp-snooping')!.verification)){const c=cli(sim,name);for(const command of commands){const out=c.execute(command);assert.ok(!out.some(iosRejected),name+': '+command+'\n'+out.join('\n'));assert.doesNotMatch(out.join('\n'),/not implemented|not recognized/i);}}const table=cli(sim).execute('show ip dhcp snooping binding').join('\n');assert.match(table,/Total number of bindings: 2/);assert.match(table,/dhcp-snooping/);const result=sim.httpRequest(id('PC1'),'http://server.snoop.lab/');sim.advance(12000);assert.equal(result.statusCode,200);assert.match(result.body,/legitimate DHCP service reached/);
+});
+test('snooping criteria reject unbounded ports, impossible rates, invalid networks and malformed imported data',()=>{
+ const sim=load(),criteria=lessonProgress(sim)!.rows.map(r=>r.objective.criterion);for(const c of criteria)validateLesson({title:'DHCP',description:'',objectives:[{id:'one',title:'One',criterion:c}]});const rate=row(sim,'client-rate').objective.criterion as any,binding=row(sim,'pc1-lease').objective.criterion as any;for(const c of [{...rate,interfaces:[]},{...rate,interfaces:Array(49).fill(g(1))},{...rate,rate:0},{...rate,rate:2049},{...binding,network:'bad'},{...binding,vlan:4095},{...binding,prefix:33},{...binding,interface:()=>true},{...criteria[0],option82:'yes'}])assert.throws(()=>validateLesson({title:'DHCP',description:'',objectives:[{id:'one',title:'One',criterion:c}]}));
+});

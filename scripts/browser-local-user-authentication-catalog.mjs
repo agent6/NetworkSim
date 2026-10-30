@@ -27,8 +27,8 @@ async function openNode(page,name){
 async function detail(page){
   await page.locator('.header-actions [data-action=lab-catalog]').click();
   const section=page.locator('[data-catalog-section="Services & Security"]');
-  assert.equal(await section.getAttribute('aria-label'),'Services & Security, 9 labs');
-  assert.equal(await section.locator('.catalog-count').textContent(),'9');
+  assert.equal(await section.getAttribute('aria-label'),'Services & Security, 10 labs');
+  assert.equal(await section.locator('.catalog-count').textContent(),'10');
   await section.click();await page.locator(`[data-catalog-lab="${id}"]`).click();
 }
 async function guide(page,n){await page.locator('#lab-guide-button').click();await progress(page,n);}
@@ -131,7 +131,7 @@ try{
     await page.addInitScript(t=>{localStorage.setItem('network-sim.theme.v1',t);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copiedLabURL=text;}}});},theme);
     await page.goto(base+hash);await page.getByRole('heading',{name:title,exact:true}).waitFor();assert.equal(await page.locator('#world .device').count(),0);
     await page.locator('[data-catalog-copy]').click();await page.waitForFunction(expected=>window.copiedLabURL===expected,base+hash);await page.locator('[data-catalog-back]').click();
-    const section=page.locator('[data-catalog-section="Services & Security"]');assert.equal(await section.getAttribute('aria-pressed'),'true');assert.equal(await section.locator('.catalog-count').textContent(),'9');assert.equal(await page.locator(`[data-catalog-lab="${id}"]`).getAttribute('href'),base+hash);
+    const section=page.locator('[data-catalog-section="Services & Security"]');assert.equal(await section.getAttribute('aria-pressed'),'true');assert.equal(await section.locator('.catalog-count').textContent(),'10');assert.equal(await page.locator(`[data-catalog-lab="${id}"]`).getAttribute('href'),base+hash);
     checks.push(`${theme}: permalink preserves current host/path/query, previews without replacing workspace, and returns to Services & Security with three labs`);process.stdout.write(`PASS ${theme} permalink\n`);await page.close();
   }
   assert.deepEqual(errors,[]);assert.deepEqual(externalRequests,[]);
