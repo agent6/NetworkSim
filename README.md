@@ -41,6 +41,8 @@ PC, laptop and server desktops also provide **Network tools** for typed DNS, SNM
 
 The Windows **Command prompt** supports interactive SSH to configured network nodes: `ssh admin@192.0.2.1` or `ssh -l admin -p 22 switch.lab`. IPv4/IPv6 selection, password retries, remote IOS help/completion and returning to CMD with `exit` are supported. See the [Windows SSH client guide](docs/features/windows-ssh.md).
 
+**DHCP fallback:** supported Windows and macOS hosts self-assign an IPv4 link-local address when a lease is unavailable, check for conflicts with real ARP packets, and keep trying DHCP. Linux and infrastructure profiles do not gain implicit APIPA. See the [DHCP fallback guide](docs/features/apipa.md).
+
 When **DHCP and DNS are enabled on the same Server**, acknowledged leases automatically publish A records in **Services → DNS → DHCP A records**. A DHCP pool's optional **DNS domain** also publishes the qualified hostname. Renewals maintain the records; release and expiry remove them. Manual A and CNAME records take precedence. See the [DHCP DNS guide](docs/features/dhcp-dns.md).
 
 **STP treats EtherChannels as one logical Port-channel**: logical cost, priority and guards govern every active member, and console views and cable indicators reflect that shared state. See the [STP and EtherChannel guide](docs/features/stp-etherchannel.md).

@@ -1,0 +1,227 @@
+{
+  "feature": "DHCP fallback to APIPA / IPv4 link-local on supported hosts",
+  "artifactSha256": "1283d86b6cf5558ab3e66b953c7318841466097582ba5c014825e656c0c1825b",
+  "supported": [
+    "Windows PC",
+    "Windows laptop",
+    "Windows Server when explicitly set to DHCP",
+    "macOS PC",
+    "macOS laptop"
+  ],
+  "excluded": [
+    "Linux default profile",
+    "Static/manual addresses",
+    "Unexpired DHCP leases",
+    "Media-disconnected interfaces",
+    "Router",
+    "L2/L3/PoE/DC switch",
+    "WLC",
+    "AP",
+    "VoIP phone",
+    "Printer and IoT endpoint profiles"
+  ],
+  "validation": {
+    "command": "npm run check",
+    "tests": 1360,
+    "passed": 1360,
+    "failed": 0,
+    "focusedIntegrationTests": 153,
+    "newFallbackTests": 17,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 28
+  },
+  "protocolChecks": [
+    "Three transmitted zero-source ARP probes, reserved-range exclusions, /16 assignment and two announcements",
+    "Received ARP conflicts trigger selection/defense on the actual VLAN instead of a global address scan",
+    "Wired and associated wireless Windows/macOS clients can use fallback; same-link peers exchange delivered ICMP",
+    "DHCP ACK replaces fallback with a real lease and its DNS/router options; no synthetic lease credit or DDNS records",
+    "Unexpired leases survive server loss; expired options are cleared and fallback survives save/load correctly",
+    "Manual renew can retransmit an unanswered discovery after repair without background timers extending failed requests forever",
+    "DHCP snooping, DAI, source guard and relay remain enforced; repairing the network restores the lease and routed packets",
+    "Release suppresses wired/wireless retries; static configuration and link loss cancel pending/active claims",
+    "Link-local traffic cannot route or be proxy-ARPed across links",
+    "Windows labels autoconfiguration correctly; Wi-Fi reports local-link-only self-assignment and IP forms refresh without overwriting manual edits"
+  ],
+  "sources": [
+    "https://learn.microsoft.com/en-us/windows-server/troubleshoot/how-to-use-automatic-tcpip-addressing-without-a-dh",
+    "https://datatracker.ietf.org/doc/html/rfc3927",
+    "https://www.networkmanager.dev/docs/api/latest/settings-ipv4.html"
+  ],
+  "fallbackBrowserChecks": [
+    "windows light 1440px: live read-only DHCP form changes to self-assigned /16 with no gateway/DNS, honest CLI status, real same-link ping, preserved terminal theme, manual edits are not overwritten and static configuration survives reload",
+    "windows light 390px: live read-only DHCP form changes to self-assigned /16 with no gateway/DNS, honest CLI status, real same-link ping, preserved terminal theme, manual edits are not overwritten and static configuration survives reload",
+    "windows dark 1440px: live read-only DHCP form changes to self-assigned /16 with no gateway/DNS, honest CLI status, real same-link ping, preserved terminal theme, manual edits are not overwritten and static configuration survives reload",
+    "windows dark 390px: live read-only DHCP form changes to self-assigned /16 with no gateway/DNS, honest CLI status, real same-link ping, preserved terminal theme, manual edits are not overwritten and static configuration survives reload",
+    "macos dark 1440px: live read-only DHCP form changes to self-assigned /16 with no gateway/DNS, honest CLI status, real same-link ping, preserved terminal theme, manual edits are not overwritten and static configuration survives reload",
+    "linux dark 390px: default DHCP profile remains unaddressed without a server; no unsupported APIPA fallback"
+  ],
+  "consoleRegression": [
+    {
+      "theme": "light",
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "mobileTwoStates": false,
+      "desktopResizeAndRestore": true,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": false,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "narrow-window",
+      "width": 650,
+      "height": 844,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": false,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "phone",
+      "width": 390,
+      "height": 844,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "small-phone",
+      "width": 320,
+      "height": 568,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "phone-landscape",
+      "width": 844,
+      "height": 390,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "tablet",
+      "width": 768,
+      "height": 1024,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "tablet-landscape",
+      "width": 1180,
+      "height": 820,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "mobileTwoStates": false,
+      "desktopResizeAndRestore": true,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": false,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "narrow-window",
+      "width": 650,
+      "height": 844,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": false,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "phone",
+      "width": 390,
+      "height": 844,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "small-phone",
+      "width": 320,
+      "height": 568,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "phone-landscape",
+      "width": 844,
+      "height": 390,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "tablet",
+      "width": 768,
+      "height": 1024,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "tablet-landscape",
+      "width": 1180,
+      "height": 820,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    }
+  ],
+  "dhcpRelayRegression": [
+    "light 1440px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "light 390px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "light 320px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "dark 1440px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "dark 390px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "dark 320px: Fundamentals entry, addressing/GUI/CLI reference, failed initial lease request, server pool configured through Services, helper configured through IOS, two delivered leases with options, server lease table, routed 3/3 pings, workspace reload and safe completed-reference replacement",
+    "light: shared link preserves the current host, path and query, previews without replacing the workspace, and returns to Fundamentals",
+    "dark: shared link preserves the current host, path and query, previews without replacing the workspace, and returns to Fundamentals"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

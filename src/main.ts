@@ -1,3 +1,4 @@
+import {hasIPv4LinkLocalAddress} from './ipv4-link-local.ts';
 import {showPhone} from './phone-ui.ts';
 import {endpointUsesPoE,validateEndpoint} from './endpoint.ts';
 import {linkMediumFields,readLinkMedium} from './link-medium.ts';
@@ -1500,6 +1501,7 @@ function hostConfig(d: Device) {
       ["manual", "Manual"],
       ["dhcp", "DHCP"],
     ])}
+    <p class="text-xs leading-5 text-slate-500" data-ipv4-fallback hidden role="status">No DHCP lease. Using a self-assigned IPv4 address for local-link communication while DHCP retries continue.</p>
     <div class="grid grid-cols-2 gap-4">${textField("IPv4 address", "ip", p.ip || "", "192.168.10.10")}${textField("Subnet mask", "mask", p.mask || "", "255.255.255.0")}${textField("Default gateway", "gateway", d.config.defaultGateway || "")}${textField("DNS servers (comma-separated)", "dns", d.config.dnsServers.join(", "))}</div>
     <div class="flex flex-wrap items-center justify-between gap-2 pt-3"><span class="section-label">IPv6</span><div class="flex gap-2"><button type="button" class="btn" id="request-slaac">Auto (SLAAC)</button><button type="button" class="btn" id="request-dhcpv6">DHCPv6</button></div></div>
     ${modeSelect("mode6", mode6, [
@@ -1601,6 +1603,22 @@ function hostConfig(d: Device) {
   $('[name="mode4"]').addEventListener("change", updateEditable);
   $('[name="mode6"]').addEventListener("change", updateEditable);
   updateEditable();
+  const form = $("#dialog-form");
+  const refreshAutomatic4 = () => {
+    const automatic = form.querySelector<HTMLSelectElement>('[name="mode4"]')!.value === "dhcp" && p.features.dhcp;
+    form.querySelector<HTMLElement>('[data-ipv4-fallback]')!.hidden = !automatic || !hasIPv4LinkLocalAddress(d, p.name);
+    if (!automatic) return;
+    for (const [name, value] of Object.entries({ip: p.ip ?? "", mask: p.mask ?? "", gateway: d.config.defaultGateway ?? "", dns: d.config.dnsServers.join(", ")})) {
+      const input = form.querySelector<HTMLInputElement>(`[name="${name}"]`)!;
+      if (input.value !== value) input.value = value;
+    }
+  };
+  form.querySelector('[name="mode4"]')!.addEventListener("change", refreshAutomatic4);
+  refreshAutomatic4();
+  const addressRefresh = window.setInterval(() => {
+    if (!form.isConnected) { window.clearInterval(addressRefresh); return; }
+    refreshAutomatic4();
+  }, 500);
   const request6 = (dhcp: boolean) => {
     checkpoint();
     try {

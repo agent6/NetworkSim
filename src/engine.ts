@@ -8,6 +8,7 @@ import { SLAController } from './sla.ts';
 import {iosBooting,iosBootStages,type IOSBootState,IOS_BOOT_DURATION} from './ios-boot.ts';
 import {phoneIngress,validatePhone} from './phone.ts';
 import {validateHostOS} from './host-os.ts';
+import {IPv4LinkLocal, isIPv4LinkLocal} from './ipv4-link-local.ts';
 import {endpointUsesPoE,endpointProfile,endpointNetworkPort,endpointEgressVlan,endpointIngressAllowed,endpointVoicePolicy,switchVoiceVlan,validateEndpoint} from './endpoint.ts';
 import {learnMac,installStaticMac} from './mac-table.ts';
 import {ownRecordValue,setRecordValue} from './record-map.ts';
@@ -81,6 +82,8 @@ export class Simulator {
   private dhcpWait = new Map<string, ServiceResult>();
   private cryptoServices = new CryptoServices(this);
   private ipv6Services = new IPv6Services(this);
+  private ipv4LinkLocal = new IPv4LinkLocal(this, (d, port, source, target) => this.transmit(d, port, BROADCAST,
+    {kind: 'arp', operation: 'request', source, target, mac: this.macOf(d.id, port), family: 4}));
   private tcpChannels = new PersistentTCPChannels(this);
   private sla: SLAController;
   private httpAuthenticator?: (deviceId: string, list: string, username: string, password: string) => ReturnType<HTTPAuthenticator>;
@@ -206,6 +209,7 @@ export class Simulator {
       this.egressQueues.sync();
       this.ipv6Services.syncStaticDAD();
       for (const d of this.lab.devices) {
+        this.ipv4LinkLocal.sync(d);
         for (const [key, row] of Object.entries(d.runtime.arp)) if (row.static) delete d.runtime.arp[key];
         installStaticMac(d);
         reconcilePortSecurity(this,d);
@@ -549,6 +553,7 @@ export class Simulator {
   stopAutomaticAddressing(deviceId: string, port: string, family: 'ipv4' | 'ipv6' | 'all' = 'all'): void {
     const d = this.getDevice(deviceId), c = d?.config.interfaces[port]; if (!d || !c) throw new Error('Unknown device or interface');
     if (family === 'ipv4' || family === 'all') {
+      this.ipv4LinkLocal.clear(d, port);
       delete c.features.dhcp; delete c.features.dhcpLease; delete c.features.leaseExpires; delete d.runtime.features.dhcpClientLeases?.[port]; delete d.runtime.features.dhcpAddressChecks?.[port];
       for (const [id, result] of this.dhcpWait) if (result.deviceId === d.id && result.port === port) { result.status = 'failure'; result.error = 'Automatic IPv4 configuration stopped'; this.dhcpWait.delete(id); }
     }
@@ -646,6 +651,13 @@ export class Simulator {
     if (!d.powered) { this.failLocal(d.id, packet, 'Device is powered off'); return; }
     if(isIPv6(packet.source)){const rows=Object.entries<any>(d.runtime.features.staticIPv6Dad??{}).filter(([port])=>!scopedInterface||port===scopedInterface).map(([,entries])=>entries[bigIntToIPv6(ipv6ToBigInt(packet.source))]).filter(Boolean);if(rows.length&&rows.every(row=>row.state!=='preferred')){this.failLocal(d.id,packet,'IPv6 source address is tentative or duplicate');return;}}
     if (this.localInterface(d, packet.destination, packet.vrf)) { packet.source ||= packet.destination; this.clock.schedule(0, () => this.deliverIP(d, packet), { owner: d.id, label: 'local delivery' }); return; }
+    if (isIPv4LinkLocal(packet.destination)) {
+      const candidates = Object.entries(d.config.interfaces).filter(([port, c]) => this.interfaceUp(d.id, port) && c.ip && (c.vrf ?? '') === (packet.vrf ?? '') && (scopedInterface ? port === scopedInterface : !packet.source || packet.source === c.ip));
+      if (candidates.length === 1) {
+        const [port, c] = candidates[0]; packet.source ||= c.ip!;
+        this.forwardIP(d, {port, target: packet.destination, route: {network: '169.254.0.0', prefix: 16, interface: port, protocol: 'connected', ad: 0, metric: 0}}, packet); return;
+      }
+    }
     if (isIPv6(packet.destination) && prefixContains('fe80::', 10, packet.destination)) {
       const candidates = Object.entries(d.config.interfaces).filter(([port, c]) => this.interfaceUp(d.id, port) && (c.ipv6.length || c.features.ipv6Enabled) && (c.vrf ?? '') === (packet.vrf ?? '') && (scopedInterface ? port === scopedInterface : !packet.source || sameAddress(packet.source, this.linkLocalAddress(d.id, port)) || c.ipv6.some(address => sameAddress(address.split('/')[0], packet.source))));
       if (candidates.length !== 1) { this.failLocal(d.id, packet, 'Link-local destination requires one unambiguous IPv6 source interface'); return; }
@@ -674,6 +686,7 @@ export class Simulator {
       if(isDatacenter(d)&&typeof localDestination==='string'&&/^Loopback/.test(localDestination)&&localDestination!==input)this.count(d,localDestination,'rx',packet.size,this.macOf(d.id,localDestination));
       this.deliverIP(d, packet, input);return;
     }
+    if (isIPv4LinkLocal(packet.source) || isIPv4LinkLocal(packet.destination)) { this.packetEvent(d, packet, 'IPv4 link-local scope', 'Link-local traffic cannot be routed to another interface.', 'drop', input); return; }
     if (linkLocalDestination || (isIPv6(packet.source) && prefixContains('fe80::', 10, packet.source))) { this.packetEvent(d, packet, 'IPv6 link-local scope', 'Link-local traffic cannot be routed to another interface.', 'drop', input); return; }
     if(isDatacenter(d)&&input==='mgmt0'){this.packetEvent(d,packet,'Management-plane isolation','mgmt0 does not forward transit traffic.','drop',input);return;}
     if (this.isMulticast(packet.destination)) { this.receiveMulticast(d, input, packet); return; }
@@ -695,6 +708,10 @@ export class Simulator {
 
   private forwardIP(d: Device, route: ResolvedRoute, original: IPPacket, input?: string): void {
     let packet = original;
+    if ((isIPv4LinkLocal(packet.source) || isIPv4LinkLocal(packet.destination)) && route.target !== packet.destination) {
+      this.packetEvent(d, packet, 'IPv4 link-local scope', 'Link-local packets must be sent directly on the local link.', 'drop', route.port);
+      if (!input) this.failLocal(d.id, packet, 'Destination network unreachable'); return;
+    }
     if (/^Null/i.test(route.port)) { this.packetEvent(d, packet, 'Null route', 'The selected route discards the packet.', 'drop', route.port); if (input) this.icmpError(d, packet, 'Destination unreachable', input); else this.failLocal(d.id, packet, 'Destination unreachable'); return; }
     const c = d.config.interfaces[route.port]; if (!c) return;
     if(input&&isDatacenter(d)&&route.port==='mgmt0'){this.packetEvent(d,packet,'Management-plane isolation','Data traffic cannot transit the out-of-band management port.','drop',input);return;}
@@ -806,6 +823,7 @@ export class Simulator {
   }
   private receiveArp(d: Device, port: string, arp: ArpMessage): void {
     const c = d.config.interfaces[port]; if (!c) return;
+    this.ipv4LinkLocal.observe(d, port, arp);
     if (arp.family === 6) this.ipv6Services.observeNeighbor(d, port, arp);
     const checking = d.runtime.features.dhcpAddressChecks?.[port];
     if (arp.family === 4 && checking && arp.mac !== this.macOf(d.id, port) && (arp.source === checking.address || (arp.source === '0.0.0.0' && arp.target === checking.address))) checking.conflict = arp.mac;
@@ -817,7 +835,7 @@ export class Simulator {
     const key = this.arpKey(d, port, arp.source), wait = this.pendingArp.get(key);
     if (wait) { this.clock.cancel(wait.timer); this.pendingArp.delete(key); for (const packet of wait.packets) this.transmit(d, port, arp.mac, packet); }
     const natAlias = c.features.nat === 'outside' && [...(d.config.features.nat?.static ?? []), ...(d.runtime.features.natTranslations ?? []).filter((x:any)=>x.expires===undefined||x.expires>this.clock.now())].some((mapping: any) => mapping.outside === arp.target);
-    const proxyRoute = arp.family === 4 && d.config.ipRouting && c.features.proxyArp !== false ? this.resolveRoute(d, arp.target, c.vrf) : undefined; const proxy = !!proxyRoute && (proxyRoute.port !== port || c.features.localProxyArp===true) && !/^Null/i.test(proxyRoute.port);
+    const proxyRoute = arp.family === 4 && !isIPv4LinkLocal(arp.target) && d.config.ipRouting && c.features.proxyArp !== false ? this.resolveRoute(d, arp.target, c.vrf) : undefined; const proxy = !!proxyRoute && (proxyRoute.port !== port || c.features.localProxyArp===true) && !/^Null/i.test(proxyRoute.port);
     const glbp = arp.family === 4 && arp.operation === 'request' ? virtualArpReply(this, d, port, arp.target, arp.mac) : { handled: false, mac: undefined };
     if (glbp.handled && !glbp.mac) return;
     const localTarget = arp.family === 6 && prefixContains('fe80::', 10, arp.target) ? (c.ipv6.length || c.features.ipv6Enabled) && this.ipv6AddressUsable(d.id,port,this.linkLocalAddress(d.id,port)) && sameAddress(this.linkLocalAddress(d.id, port), arp.target) : this.localInterface(d, arp.target, c.vrf) === port;
@@ -989,25 +1007,41 @@ export class Simulator {
   }
   releaseDHCP(deviceId:string,portName?:string):void {
     const d=this.getDevice(deviceId);if(!d)throw new Error('Unknown device');const ports=portName?[portName]:Object.keys(d.config.interfaces);
-    for(const port of ports){const c=d.config.interfaces[port];if(!c)continue;const lease=d.runtime.features.dhcpClientLeases?.[port];if(lease?.address&&this.interfaceUp(d.id,port)){const message:DHCPMessage={kind:'dhcp',operation:'release',clientId:d.id,transaction:this.id('dhcp-release'),address:lease.address,serverId:lease.serverId};if(lease.serverAddress){message.unicast=lease.address;const packet=this.makePacket(lease.address,lease.serverAddress,'udp',328,{kind:'dhcp-unicast',message});packet.sourcePort=68;packet.destinationPort=67;this.originate(d,packet);}else this.transmit(d,port,BROADCAST,message);}
+    for(const port of ports){const c=d.config.interfaces[port];if(!c)continue;this.ipv4LinkLocal.clear(d,port);(d.runtime.features.dhcpReleased??={})[port]=true;const lease=d.runtime.features.dhcpClientLeases?.[port];if(lease?.address&&this.interfaceUp(d.id,port)){const message:DHCPMessage={kind:'dhcp',operation:'release',clientId:d.id,transaction:this.id('dhcp-release'),address:lease.address,serverId:lease.serverId};if(lease.serverAddress){message.unicast=lease.address;const packet=this.makePacket(lease.address,lease.serverAddress,'udp',328,{kind:'dhcp-unicast',message});packet.sourcePort=68;packet.destinationPort=67;this.originate(d,packet);}else this.transmit(d,port,BROADCAST,message);}
       if(lease&&c.ip===lease.address){delete c.ip;delete c.mask;}if(lease&&d.config.defaultGateway===lease.gateway)delete d.config.defaultGateway;if(c.features.windowsDNSMode!=='static'&&lease&&JSON.stringify(d.config.dnsServers)===JSON.stringify(lease.dns||[]))d.config.dnsServers=[];delete c.features.dhcpLease;delete c.features.leaseExpires;delete d.runtime.features.dhcpClientLeases?.[port];delete d.runtime.features.dhcpAddressChecks?.[port];for(const[id,result]of this.dhcpWait)if(result.deviceId===d.id&&result.port===port){result.status='failure';result.error='Lease released by client';this.dhcpWait.delete(id);}
     }this.changed();
   }
-  requestDHCP(sourceId: string, portName?: string): ServiceResult {
+  requestDHCP(sourceId: string, portName?: string, retryDiscovery = true): ServiceResult {
     const d = this.getDevice(sourceId); if (!d) throw new Error('Unknown device');
     const port = portName ? (this.interfaceUp(d.id, portName) ? portName : undefined) : Object.keys(d.config.interfaces).find(p => this.interfaceUp(d.id, p));
     const pending = [...this.dhcpWait.values()].find(request => request.deviceId === d.id && request.port === port && request.status === 'running');
-    if (pending) return pending;
+    if (pending) {
+      // Reuse the transaction, but let an unanswered discovery be retried after
+      // a network repair instead of attaching the caller to a silent old send.
+      if (retryDiscovery && !pending.selectedAddress && this.clock.now() - pending.lastDiscover >= 500) {
+        pending.lastDiscover = this.clock.now(); pending.discoveryDeadline = this.clock.now() + 4000;
+        this.transmit(d, port!, BROADCAST, {kind: 'dhcp', operation: 'discover', clientId: d.id, transaction: pending.id, hostname: d.config.hostname});
+      }
+      return pending;
+    }
     const result: ServiceResult = { id: this.id('dhcp'), status: 'running' };
     if (!port) { result.status = 'failure'; result.error = 'No operational interface'; return result; }
     result.deviceId = d.id; result.port = port; d.config.interfaces[port].features.dhcp = true;
+    delete d.runtime.features.dhcpReleased?.[port];
+    result.lastDiscover = this.clock.now(); result.discoveryDeadline = this.clock.now() + 4000;
     this.dhcpWait.set(result.id, result);
     this.transmit(d, port, BROADCAST, { kind: 'dhcp', operation: 'discover', clientId: d.id, transaction: result.id, hostname: d.config.hostname });
-    this.clock.schedule(4000, () => { if (result.status === 'running') { result.status = 'failure'; result.error = 'No DHCP server answered on this broadcast domain'; this.dhcpWait.delete(result.id); this.notify(); } }, { owner:d.id,label: 'DHCP timeout' });
+    const timeout = () => {
+      if (result.status !== 'running') return;
+      if (result.discoveryDeadline > this.clock.now()) { this.clock.schedule(result.discoveryDeadline - this.clock.now(), timeout, {owner: d.id, label: 'DHCP retry timeout'}); return; }
+      result.status = 'failure'; result.error = 'No DHCP server answered on this broadcast domain'; this.dhcpWait.delete(result.id); this.ipv4LinkLocal.start(d, port); this.notify();
+    };
+    this.clock.schedule(4000, timeout, {owner: d.id, label: 'DHCP timeout'});
     return result;
   }
   private installDHCPLease(d: Device, port: string, message: DHCPMessage): void {
     const c = d.config.interfaces[port], duration = Math.max(1, message.lease ?? 86400) * 1000;
+    this.ipv4LinkLocal.clear(d, port);
     c.ip = message.address; c.mask = intToIp(message.prefix ? (0xffffffff << (32 - message.prefix)) >>> 0 : 0); c.features.dhcp = true; c.features.dhcpLease = { address: message.address, gateway: message.gateway, dns: message.dns ?? [], domain: message.domain, bootfile: message.bootfile, nextServer: message.nextServer, options: message.options ?? {}, routers: message.routers ?? [] };if(message.domain)d.config.features.domainName=message.domain; c.features.leaseExpires = this.clock.now() + duration; d.config.defaultGateway = message.gateway; if(c.features.windowsDNSMode!=='static')d.config.dnsServers = message.dns ?? [];
     const table = d.runtime.features.dhcpClientLeases ??= {}, lease = { ...message, state: 'BOUND', expires: c.features.leaseExpires, transactions: [] as string[] }; table[port] = lease;
     if(message.lease===4294967295)return;
@@ -1024,8 +1058,8 @@ export class Simulator {
     this.clock.schedule(duration / 2, () => renew(false), { owner: d.id, label: 'DHCP T1' }); this.clock.schedule(duration * 0.875, () => renew(true), { owner: d.id, label: 'DHCP T2' });
     this.clock.schedule(duration, () => {
       if (!current()) return; lease.state = 'EXPIRED'; delete c.ip; delete c.mask; delete c.features.leaseExpires; if (d.config.defaultGateway === lease.gateway) delete d.config.defaultGateway; if (c.features.windowsDNSMode!=='static'&&JSON.stringify(d.config.dnsServers) === JSON.stringify(lease.dns ?? [])) d.config.dnsServers = [];
-      for (const id of lease.transactions) this.dhcpWait.delete(id); this.emit({ nodeId: d.id, port, protocol: 'DHCP', label: 'Lease expired', detail: 'The leased address was removed after T1/T2 failed.', disposition: 'warning' }); this.changed();
-      const retry = () => { if (!d.powered || !c.features.dhcp || d.runtime.features.dhcpClientLeases?.[port] !== lease) return; this.requestDHCP(d.id, port); this.clock.schedule(5000, retry, { owner: d.id, label: 'DHCP reacquisition retry' }); }; this.clock.schedule(1000, retry, { owner: d.id, label: 'DHCP reacquisition' });
+      for (const id of lease.transactions) this.dhcpWait.delete(id); this.emit({ nodeId: d.id, port, protocol: 'DHCP', label: 'Lease expired', detail: 'The leased address was removed after T1/T2 failed.', disposition: 'warning' }); this.ipv4LinkLocal.start(d, port); this.changed();
+      const retry = () => { if (!d.powered || !c.features.dhcp || d.runtime.features.dhcpClientLeases?.[port] !== lease) return; this.requestDHCP(d.id, port, false); this.clock.schedule(5000, retry, { owner: d.id, label: 'DHCP reacquisition retry' }); }; this.clock.schedule(1000, retry, { owner: d.id, label: 'DHCP reacquisition' });
     }, { owner: d.id, label: 'DHCP lease expiry' });
   }
   private checkDHCPAddress(d: Device, port: string, message: DHCPMessage, result: ServiceResult): void {
@@ -1063,8 +1097,8 @@ export class Simulator {
       if (result.port && result.port !== logical || result.selectedServer && result.selectedServer !== message.serverId) return;
       if (message.operation === 'nak') {
         const c = d.config.interfaces[logical], lease = d.runtime.features.dhcpClientLeases?.[logical]; if (lease) { lease.state = 'NAK'; if (c.ip === lease.address) { delete c.ip; delete c.mask; delete c.features.leaseExpires; delete c.features.dhcpLease; } if (d.config.defaultGateway === lease.gateway) delete d.config.defaultGateway; if (c.features.windowsDNSMode!=='static'&&JSON.stringify(d.config.dnsServers) === JSON.stringify(lease.dns ?? [])) d.config.dnsServers = []; }
-        delete d.runtime.features.dhcpAddressChecks?.[logical]; result.status = 'failure'; result.error = message.reason ?? 'DHCP server rejected the requested address'; this.dhcpWait.delete(message.transaction); this.emit({ nodeId: d.id, port: logical, protocol: 'DHCP', label: 'DHCP NAK received', detail: result.error!, disposition: 'warning' }); this.changed();
-        this.clock.schedule(1000, () => { if (d.powered && c.features.dhcp && !c.ip) this.requestDHCP(d.id, logical); }, { owner: d.id, label: 'DHCP discovery after NAK' }); return;
+        delete d.runtime.features.dhcpAddressChecks?.[logical]; result.status = 'failure'; result.error = message.reason ?? 'DHCP server rejected the requested address'; this.dhcpWait.delete(message.transaction); this.emit({ nodeId: d.id, port: logical, protocol: 'DHCP', label: 'DHCP NAK received', detail: result.error!, disposition: 'warning' }); this.ipv4LinkLocal.start(d, logical); this.changed();
+        this.clock.schedule(1000, () => { if (d.powered && c.features.dhcp && !c.ip) this.requestDHCP(d.id, logical, false); }, { owner: d.id, label: 'DHCP discovery after NAK' }); return;
       }
       if (!message.address || !isIPv4(message.address) || message.prefix === undefined || message.prefix < 0 || message.prefix > 32) return;
       if (message.operation === 'offer') { if (result.selectedServer) return; result.selectedServer = message.serverId; result.selectedAddress = message.address; const request: DHCPMessage = { ...message, operation: 'request', hostname: d.config.hostname }; delete request.relay; delete request.relayPort; delete request.option82; this.transmit(d, logical, BROADCAST, request); }
@@ -1475,10 +1509,11 @@ export class Simulator {
       let dhcpRequest: ServiceResult | undefined;
       const retry = () => {
         if (!d.powered||d.runtime!==runtime||runtime.features.automaticClientGeneration!==generation) return;
-        if (c.features.dhcp && !c.ip && dhcpRequest?.status !== 'success' && !d.runtime.features.dhcpClientLeases?.[port] && this.interfaceUp(d.id, port)) dhcpRequest = this.requestDHCP(d.id, port);
+        if (runtime.features.dhcpReleased?.[port] && !c.features.dhcpv6Client?.stateful && !c.features.ipv6Autoconfig) return;
+        if (c.features.dhcp && !runtime.features.dhcpReleased?.[port] && !c.ip && dhcpRequest?.status !== 'success' && !d.runtime.features.dhcpClientLeases?.[port] && this.interfaceUp(d.id, port)) dhcpRequest = this.requestDHCP(d.id, port, false);
         if (c.features.dhcpv6Client?.stateful && !d.runtime.features.dhcpv6Leases?.[port] && this.interfaceUp(d.id, port)) this.requestDHCPv6(d.id, port, c.features.dhcpv6Client.prefixDelegationName);
         if (c.features.ipv6Autoconfig && !c.features.slaacAddresses?.length && this.interfaceUp(d.id, port)) this.requestIPv6(d.id, port);
-        if ((c.features.dhcp && !c.ip && dhcpRequest?.status !== 'success' && !d.runtime.features.dhcpClientLeases?.[port]) || (c.features.dhcpv6Client?.stateful && !d.runtime.features.dhcpv6Leases?.[port]) || (c.features.ipv6Autoconfig && !c.features.slaacAddresses?.length)) this.clock.schedule(5000, retry, { owner: d.id, label: 'Automatic host configuration retry' });
+        if ((c.features.dhcp && !runtime.features.dhcpReleased?.[port] && !c.ip && dhcpRequest?.status !== 'success' && !d.runtime.features.dhcpClientLeases?.[port]) || (c.features.dhcpv6Client?.stateful && !d.runtime.features.dhcpv6Leases?.[port]) || (c.features.ipv6Autoconfig && !c.features.slaacAddresses?.length)) this.clock.schedule(5000, retry, { owner: d.id, label: 'Automatic host configuration retry' });
       };
       if (c.features.dhcp || c.features.dhcpv6Client?.stateful || c.features.ipv6Autoconfig) this.clock.schedule(1, retry, { owner: d.id, label: 'Automatic host configuration after boot' });
     }
