@@ -468,7 +468,12 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   if(path==='reload reason')return [[tail('Reason for reload')]];
   if(path==='reload in')return combine([[argument('MINUTES|HH:MM','Delay before reload',value=>{const m=/^(\d+)(?::([0-5]\d))?$/.exec(value);if(!m)return false;const n=Number(m[1])*(m[2]===undefined?1:60)+Number(m[2]??0);return n>=1&&n<=43200;})]],optional(tail('Reason for reload')));
   if (path === 'show clock') return [[], [word('detail', 'Show time source')]];
-  if (path === 'show ip ospf' || path === 'show ipv6 ospf') return [[], ...choices(['neighbor', 'interface', 'database', 'virtual-links'])];
+  if (path === 'show ipv6 ospf') {
+    const filter:Form[]=[[],[word('self-originate','Self-originated LSAs')],[word('adv-router','Advertising router'),ip('Advertising router ID')]];
+    const ipv6Prefix=argument('X:X:X:X::X/<0-128>','IPv6 prefix',value=>{try{return parseCidr(value).family===6;}catch{return false;}});
+    return [[],...choices(['neighbor','interface','database','virtual-links']),...combine([[word('database'),word('inter-area','Inter-area information'),word('prefix','Inter-area prefix LSAs')]],combine([[],[ipv6Prefix]],filter))];
+  }
+  if (path === 'show ip ospf') return [[], ...choices(['neighbor', 'interface', 'database', 'virtual-links'])];
   if (path === 'show ip eigrp' || path === 'show ipv6 eigrp') return [[], ...choices(['neighbors', 'topology', 'interfaces'])];
   if (path === 'show ip bgp') return [[], ...choices(['summary', 'neighbors'])];
   if (path === 'show ip dhcp') return choices(['pool', 'binding', 'conflict']);

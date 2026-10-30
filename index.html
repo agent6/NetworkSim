@@ -27418,7 +27418,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         const add2 = (linkId, mask3, metric) => {
           if (!result.some((r) => r.type === 3 && r.area === area && r.linkId === linkId && r.mask === mask3 && r.adv === abr.routerId)) result.push({ type: 3, area, linkId, adv: abr.routerId, age: abr.age, seq: abr.sequence, checksum: checksum(3, area, linkId, mask3, abr.routerId, abr.sequence), mask: mask3, metric });
         };
-        if (kind !== "normal") add2("0.0.0.0", 0, Number(areaConfig(abrConfig, area)?.defaultCost ?? 1));
+        if (kind !== "normal") add2(v.protocol === "ospfv3" ? "::" : "0.0.0.0", 0, Number(areaConfig(abrConfig, area)?.defaultCost ?? 1));
         if (kind !== "normal" && (cfgArea?.noSummary || areaConfig(abrConfig, area)?.noSummary)) continue;
         for (const source of [...new Set(lsas.flatMap((l) => [...areasOf(l)]))].filter((x) => x !== area && (area !== "0" || mineAreas.has(x)))) {
           if (area !== "0" && source !== "0" && !mineAreas.has(source) && !mineAreas.has("0")) continue;
@@ -27464,7 +27464,29 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const a = [...args];
     const types = { router: 1, network: 2, summary: 3, "asbr-summary": 4, external: 5, "nssa-external": 7 };
     let type, linkId, adv, self = false;
-    if (a.length && !["self-originate", "adv-router"].some((k) => k.startsWith(a[0].toLowerCase()))) {
+    let prefixFilter;
+    if (v.v3 && a[0] && "inter-area".startsWith(a[0].toLowerCase())) {
+      a.shift();
+      word2(a.shift(), ["prefix"]);
+      type = 3;
+      if (a[0]?.includes(":")) {
+        const raw = a.shift();
+        if (!raw.includes("/")) {
+          if (!isIPv6(raw)) return invalid2();
+          prefixFilter = { network: raw };
+        } else {
+          let parsed;
+          try {
+            parsed = parseCidr(raw);
+          } catch {
+            return invalid2();
+          }
+          if (parsed.family !== 6) return invalid2();
+          prefixFilter = { network: parsed.network, prefix: parsed.prefix };
+        }
+      }
+    }
+    if (type === void 0 && a.length && !["self-originate", "adv-router"].some((k) => k.startsWith(a[0].toLowerCase()))) {
       type = types[word2(a.shift(), Object.keys(types))];
       if (a[0] && isIPv4(a[0])) linkId = a.shift();
     }
@@ -27478,7 +27500,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }
     }
     if (a.length) return invalid2();
-    if (v.v3) return ospfv3Database(v, type, adv ?? (self ? v.rid : void 0));
+    if (v.v3) return ospfv3Database(v, type, adv ?? (self ? v.rid : void 0), prefixFilter);
     const all = ospfDatabaseEntries(v).filter((r) => (type === void 0 || r.type === type) && (!linkId || r.linkId === linkId) && (!adv || r.adv === adv) && (!self || r.adv === v.rid));
     const lines2 = ["", ospfTitle(v), ""];
     const areas = [...new Set(all.filter((r) => r.area !== void 0).map((r) => r.area))].sort((x, y) => Number(x) - Number(y));
@@ -27534,10 +27556,16 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     lines2.push(`  Network Mask: /${r.mask}`, `	Metric Type: ${r.metricType} (${r.metricType === 1 ? "Comparable directly to link state metric" : "Larger than any link state path"})`, "	MTID: 0 ", `	Metric: ${r.metric} `, `	Forward Address: ${r.forward ?? "0.0.0.0"}`, `	External Route Tag: ${r.tag ?? 0}`, "");
     return lines2;
   }
-  function ospfv3Database(v, type, adv) {
+  function ospfv3Database(v, type, adv, prefixFilter) {
     const lsas = (v.live?.lsas ?? []).filter((l) => !adv || l.routerId === adv), lines2 = ["", ospfTitle(v), ""];
     const areas = [...new Set(v.ports.filter((p) => p.up).map((p) => p.area))].sort((x, y) => Number(x) - Number(y));
     const row5 = (adv2, age4, seq2, rest) => `${pad3(adv2, 17)}${pad3(Math.min(3600, age4), 12)}${pad3(seqHex(seq2), 12)}${rest}`;
+    const ids = /* @__PURE__ */ new Map();
+    const summaries = ospfDatabaseEntries(v).filter((r) => r.type === 3).sort((a, b) => natural3(a.area, b.area) || byIp(a.adv, b.adv) || natural3(a.linkId, b.linkId) || a.mask - b.mask).map((r) => {
+      const key4 = r.area + "|" + r.adv, id2 = ids.get(key4) ?? 0;
+      ids.set(key4, id2 + 1);
+      return { ...r, prefixId: id2 };
+    }).filter((r) => (!adv || r.adv === adv) && (!prefixFilter || sameAddress(r.linkId, prefixFilter.network) && (prefixFilter.prefix === void 0 || r.mask === prefixFilter.prefix)));
     for (const area of areas) {
       const members2 = lsas.filter((l) => l.links.some((k) => areaKey(k.area) === area) || l.prefixes.some((x) => x.kind === "prefix" && areaKey(x.endpoint.area) === area)).sort((x, y) => byIp(x.routerId, y.routerId));
       if (type === void 0 || type === 1) {
@@ -27557,6 +27585,17 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
             const device2 = n.l.links[0]?.from.deviceId ?? "";
             lines2.push(row5(n.l.routerId, n.l.age, n.l.sequence, `${pad3(interfaceId(v.e, device2, n.name), 11)}${n.count}`));
           }
+          lines2.push("");
+        }
+      }
+      if (type === void 0 || type === 3) {
+        const prefixes = summaries.filter((r) => r.area === area);
+        if (prefixes.length) {
+          lines2.push(`		Inter Area Prefix Link States (Area ${areaLabel(v, area)})`, "");
+          if (type === void 0) {
+            lines2.push("ADV Router       Age         Seq#        Prefix ID   Prefix");
+            for (const r of prefixes) lines2.push(row5(r.adv, r.age, r.seq, `${pad3(r.prefixId, 12)}${r.linkId.toUpperCase()}/${r.mask}`));
+          } else for (const r of prefixes) lines2.push(`  LS age: ${r.age}`, "  LS Type: Inter Area Prefix Links", `  Link State ID: ${r.prefixId}`, `  Advertising Router: ${r.adv}`, `  LS Seq Number: ${seqHex(r.seq).slice(2)}`, `  Checksum: 0x${hex(r.checksum, 4)}`, `  Length: ${28 + 4 * Math.ceil(r.mask / 32)}`, `  Metric: ${r.metric}`, `  Prefix Address: ${r.linkId.toUpperCase()}`, `  Prefix Length: ${r.mask}, Options: None`, "");
           lines2.push("");
         }
       }
@@ -30816,7 +30855,18 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       return n >= 1 && n <= 43200;
     })]], optional(tail("Reason for reload")));
     if (path === "show clock") return [[], [word5("detail", "Show time source")]];
-    if (path === "show ip ospf" || path === "show ipv6 ospf") return [[], ...choices(["neighbor", "interface", "database", "virtual-links"])];
+    if (path === "show ipv6 ospf") {
+      const filter = [[], [word5("self-originate", "Self-originated LSAs")], [word5("adv-router", "Advertising router"), ip("Advertising router ID")]];
+      const ipv6Prefix = argument("X:X:X:X::X/<0-128>", "IPv6 prefix", (value) => {
+        try {
+          return parseCidr(value).family === 6;
+        } catch {
+          return false;
+        }
+      });
+      return [[], ...choices(["neighbor", "interface", "database", "virtual-links"]), ...combine([[word5("database"), word5("inter-area", "Inter-area information"), word5("prefix", "Inter-area prefix LSAs")]], combine([[], [ipv6Prefix]], filter))];
+    }
+    if (path === "show ip ospf") return [[], ...choices(["neighbor", "interface", "database", "virtual-links"])];
     if (path === "show ip eigrp" || path === "show ipv6 eigrp") return [[], ...choices(["neighbors", "topology", "interfaces"])];
     if (path === "show ip bgp") return [[], ...choices(["summary", "neighbors"])];
     if (path === "show ip dhcp") return choices(["pool", "binding", "conflict"]);
@@ -52610,40 +52660,46 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   var name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
   var list = (v, max, test) => Array.isArray(v) && v.length > 0 && v.length <= max && v.every(test) && new Set(v).size === v.length;
   function validMultiAreaOSPFCriterion(c) {
-    if (!c || !name2(c.device)) return false;
+    if (!c || !name2(c.device) || c.protocol !== void 0 && !["ospf", "ospfv3"].includes(c.protocol)) return false;
+    const address2 = c.protocol === "ospfv3" ? isIPv6 : isIPv4;
     if (c.kind === "mao-domain" || c.kind === "mao-abr") return list(c.areas, 8, (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295) && (c.kind !== "mao-abr" || c.areas.length > 1 && c.areas.includes(0));
     if (c.kind === "mao-saved") return list(c.interfaces, 8, name2);
-    if (c.kind === "mao-outage") return name2(c.interface) && name2(c.peer) && c.peer !== c.device && [c.network, c.localNetwork].every((v) => typeof v === "string" && isIPv4(v)) && c.network !== c.localNetwork;
-    return c.kind === "mao-echo" && name2(c.target) && c.target !== c.device && typeof c.address === "string" && isIPv4(c.address) && list(c.path, 6, name2) && c.path.length >= 2 && !c.path.includes(c.device) && !c.path.includes(c.target);
+    if (c.kind === "mao-outage") return name2(c.interface) && name2(c.peer) && c.peer !== c.device && [c.network, c.localNetwork].every((v) => typeof v === "string" && address2(v)) && c.network !== c.localNetwork;
+    return c.kind === "mao-echo" && name2(c.target) && c.target !== c.device && typeof c.address === "string" && address2(c.address) && list(c.path, 6, name2) && c.path.length >= 2 && !c.path.includes(c.device) && !c.path.includes(c.target);
   }
-  function saved(c, ports4) {
+  function saved(c, ports4, protocol) {
     if (ports4.some((p) => !c.interfaces[p])) return;
-    return JSON.stringify([c.ipRouting, c.protocols.ospf, c.staticRoutes, ports4.map((p) => {
+    return JSON.stringify([protocol === "ospfv3" ? c.ipv6Routing : c.ipRouting, c.protocols[protocol], c.staticRoutes, ports4.map((p) => {
       const i = c.interfaces[p];
-      return [i.adminUp, i.ip, i.mask, i.switchport, i.vrf ?? "", i.features.ospf];
+      return [i.adminUp, ...protocol === "ospfv3" ? [i.ipv6, i.features.ipv6LinkLocal, i.features.ipv6Nd] : [i.ip, i.mask], i.switchport, i.vrf ?? "", i.features[protocol]];
     })]);
   }
   function matchesMultiAreaOSPFCriterion(s, d, c) {
+    const protocol = c.protocol ?? "ospf", v6 = protocol === "ospfv3";
     if (c.kind === "mao-saved") {
-      const current2 = saved(d.config, c.interfaces);
-      return current2 !== void 0 && !!d.startupConfig && current2 === saved(d.startupConfig, c.interfaces);
+      const current2 = saved(d.config, c.interfaces, protocol);
+      return current2 !== void 0 && !!d.startupConfig && current2 === saved(d.startupConfig, c.interfaces, protocol);
     }
     if (c.kind === "mao-domain" || c.kind === "mao-abr") {
-      const live2 = ospfLiveDetail(s, d.id, "ospf"), cfg = d.config.protocols.ospf;
+      const live2 = ospfLiveDetail(s, d.id, protocol), cfg = d.config.protocols[protocol];
       if (!s.devicePowered(d.id) || !cfg || !live2) return false;
       const active4 = live2.interfaces.filter((p) => s.interfaceUp(d.id, p.name)), areas = [...new Set(active4.map((p) => Number(p.area)))].sort((a, b) => a - b);
       if (JSON.stringify(areas) !== JSON.stringify([...c.areas].sort((a, b) => a - b))) return false;
       if (c.kind === "mao-abr") return c.areas.every((area) => live2.neighbors.some((n) => n.state === "FULL" && active4.some((p) => p.name === n.interface && Number(p.area) === area)));
-      return d.config.ipRouting && d.config.staticRoutes.length === 0 && Object.keys(d.config.protocols).every((p) => p === "ospf") && !(cfg.redistribute ?? []).length && !cfg.defaultOriginate && Object.values(cfg.areas ?? {}).every((a) => (!a.type || a.type === "normal") && !a.noSummary && !(a.ranges ?? []).length);
+      return (v6 ? d.config.ipv6Routing && !Object.values(d.config.interfaces).some((p) => p.ip) : d.config.ipRouting) && d.config.staticRoutes.length === 0 && Object.keys(d.config.protocols).every((p) => p === protocol) && !(cfg.redistribute ?? []).length && !cfg.defaultOriginate && Object.values(cfg.areas ?? {}).every((a) => (!a.type || a.type === "normal") && !a.noSummary && !(a.ranges ?? []).length);
     }
     if (c.kind === "mao-outage") {
-      if (d.config.interfaces[c.interface]?.adminUp !== false || !s.getDevice(c.peer) || d.runtime.routes.some((r) => r.network === c.network && r.prefix === 24) || !d.runtime.routes.some((r) => r.network === c.localNetwork && r.prefix === 24 && r.protocol === "O")) return false;
+      if (d.config.interfaces[c.interface]?.adminUp !== false || !s.getDevice(c.peer) || d.runtime.routes.some((r) => sameAddress(r.network, c.network) && r.prefix === (v6 ? 64 : 24)) || !d.runtime.routes.some((r) => sameAddress(r.network, c.localNetwork) && r.prefix === (v6 ? 64 : 24) && r.protocol === "O")) return false;
       const floor = (d.runtime.features.logEntries ?? []).reduce((time2, e) => e.message === `%LINK-3-UPDOWN: Interface ${c.interface}, changed state to down` ? Math.max(time2, e.time) : time2, -1);
       const relation = (e) => e.nodeId === d.id && e.peerId === c.peer || e.nodeId === c.peer && e.peerId === d.id;
-      return floor >= 0 && s.events.some((e) => relation(e) && e.label === "OSPF neighbor DOWN" && e.time >= floor && e.detail.includes(": FULL \u2192 DOWN."));
+      return floor >= 0 && s.events.some((e) => relation(e) && e.protocol === protocol.toUpperCase() && e.label === "OSPF neighbor DOWN" && e.time >= floor && e.detail.includes(": FULL \u2192 DOWN."));
     }
-    const target = s.getDevice(c.target), source = d.config.interfaces.GigabitEthernet0?.ip;
-    if (!target || !source || target.config.interfaces.GigabitEthernet0?.ip !== c.address || !s.devicePowered(d.id) || !s.devicePowered(target.id)) return false;
+    const hostAddress = (node) => {
+      const p = node.config.interfaces.GigabitEthernet0;
+      return v6 ? p?.ipv6.map((cidr) => cidr.split("/")[0]).find((ip2) => isIPv6(ip2) && !prefixContains("fe80::", 10, ip2)) : p?.ip;
+    };
+    const target = s.getDevice(c.target), source = hostAddress(d), packetProtocol = v6 ? "ICMPV6" : "ICMP";
+    if (!target || !source || !sameAddress(hostAddress(target) ?? "", c.address) || !s.devicePowered(d.id) || !s.devicePowered(target.id)) return false;
     const routers2 = c.path.map((id2) => s.getDevice(id2));
     if (routers2.some((r) => !r || r.kind !== "router" || !s.devicePowered(r.id))) return false;
     const leg = (packetId, address2, path, requireInterArea = false) => {
@@ -52652,15 +52708,15 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         const router = path[i], route2 = s.cefLookup(router.id, address2);
         if (!route2 || !["connected", "O", "O IA"].includes(route2.route.protocol)) return false;
         interArea ||= route2.route.protocol === "O IA";
-        const next = i + 1 < path.length ? path[i + 1] : address2 === c.address ? target : d, link = s.linkAt(router.id, route2.port);
+        const next = i + 1 < path.length ? path[i + 1] : sameAddress(address2, c.address) ? target : d, link = s.linkAt(router.id, route2.port);
         if (!link?.enabled || ![link.a.deviceId, link.b.deviceId].includes(next.id)) return false;
-        const sent = s.events.find((e) => e.time >= at && e.nodeId === router.id && e.port === route2.port && e.label === "Frame sent" && e.packet?.id === packetId && e.packet.protocol === "ICMP" && e.packet.destination === address2);
+        const sent = s.events.find((e) => e.time >= at && e.nodeId === router.id && e.port === route2.port && e.label === "Frame sent" && e.packet?.id === packetId && e.packet.protocol === packetProtocol && e.packet.ipVersion === (v6 ? 6 : 4) && sameAddress(e.packet.destination, address2));
         if (!sent || !s.events.some((e) => e.time >= sent.time && e.nodeId === next.id && e.label === "Frame received" && e.packet?.id === packetId)) return false;
         at = sent.time;
       }
       return !requireInterArea || interArea;
     };
-    return s.events.some((req) => req.nodeId === target.id && req.label === "Echo request accepted" && req.packet?.source === source && req.packet.destination === c.address && req.packet.protocol === "ICMP" && leg(req.packet.id, c.address, routers2, true) && s.events.some((reply) => reply.nodeId === d.id && reply.label === "Echo reply received" && reply.disposition === "success" && reply.packet?.parentId === req.packet.id && reply.packet.source === c.address && reply.packet.destination === source && leg(reply.packet.id, source, [...routers2].reverse())));
+    return s.events.some((req) => req.nodeId === target.id && req.label === "Echo request accepted" && !!req.packet?.source && sameAddress(req.packet.source, source) && sameAddress(req.packet.destination, c.address) && req.packet.protocol === packetProtocol && req.packet.ipVersion === (v6 ? 6 : 4) && leg(req.packet.id, c.address, routers2, true) && s.events.some((reply) => reply.nodeId === d.id && reply.label === "Echo reply received" && reply.disposition === "success" && reply.packet?.parentId === req.packet.id && sameAddress(reply.packet.source, c.address) && sameAddress(reply.packet.destination, source) && leg(reply.packet.id, source, [...routers2].reverse())));
   }
 
   // src/bpdu-guard-lab.ts
@@ -54239,6 +54295,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "stp-root-guard", group: "CCNP ENCOR", section: "Layer 2", title: "STP Root Guard", description: "Protect a designated STP boundary, reject superior BPDUs independently in two VLANs and recover automatically. Verify trusted roots, unaffected VLAN traffic, live MAC learning and saved protection.", devices: 7, links: 6, practice: true },
     { id: "stp-bpdu-guard", group: "CCNP ENCOR", section: "Layer 2", title: "STP BPDU Guard", description: "Compare inherited edge-port protection with explicit interface BPDU Guard. Receive real inferior BPDUs, inspect err-disable and logs, keep legitimate traffic working and recover safely without weakening protection.", devices: 6, links: 6, practice: true },
     { id: "multi-area-ospfv2", group: "CCNP ENCOR", section: "Layer 3", title: "Multi-Area OSPFv2", description: "Connect Areas 10 and 20 through an Area 0 backbone. Configure two ABRs, verify intra-area and inter-area routes and metrics, inspect database views and prove traffic and backbone recovery.", devices: 7, links: 6, practice: true },
+    { id: "multi-area-ospfv3", group: "CCNP ENCOR", section: "Layer 3", title: "Multi-Area OSPFv3", description: "Build IPv6 Areas 10,0,20 with two ABRs. Use interface-based OSPFv3 activation, link-local neighbors and next hops, verify O/OI routes and inter-area prefixes, and recover from a backbone outage.", devices: 7, links: 6, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
   var GRE_IPSEC_PSK = "ENCOR-Lab-PSK";
@@ -55020,7 +55077,17 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const transits = i === 1 || i === 2 ? [1, 2] : [1];
     return [name6, ["enable", "configure terminal", "router ospf 10", `router-id ${i + 1}.${i + 1}.${i + 1}.${i + 1}`, "passive-interface default", ...transits.map((n) => "no passive-interface GigabitEthernet0/" + n), ...networks.map((n) => "network " + n), "exit", ...i !== 2 ? ["interface GigabitEthernet0/0", "ip ospf cost 1", "no shutdown"] : [], ...transits.flatMap((n) => ["interface GigabitEthernet0/" + n, "ip ospf network point-to-point", "ip ospf cost 10", "no shutdown"]), "end", "write memory"]];
   }));
+  var MULTI_AREA_OSPFV3_COMMANDS = Object.fromEntries(["R1", "R2", "R3", "R4"].map((name6, i) => {
+    const ports4 = [[0, 1], [0, 1, 2], [1, 2], [0, 1]][i], areas = [[10, 10], [0, 10, 0], [0, 20], [20, 20]][i];
+    return [name6, ["enable", "configure terminal", "ipv6 unicast-routing", "ipv6 router ospf 10", `router-id ${i + 1}.${i + 1}.${i + 1}.${i + 1}`, "passive-interface default", ...ports4.filter((n) => n !== 0).map((n) => "no passive-interface GigabitEthernet0/" + n), ...ports4.flatMap((n, j) => ["interface GigabitEthernet0/" + n, `ipv6 ospf 10 area ${areas[j]}`, ...n !== 0 ? ["ipv6 ospf network point-to-point"] : [], "ipv6 ospf cost " + (n === 0 ? 1 : 10), "no shutdown"]), "end", "write memory"]];
+  }));
   var GUIDE_RESOURCES = {
+    "multi-area-ospfv3": { planTitle: "IPv6 areas and addressing plan", columns: ["Area", "Interface / link", "Global IPv6 /64", "Link-local / gateway", "Purpose"], rows: [["10", "R1 Gi0/0 \xB7 PC1", "2001:db8:10::1 \xB7 ::10", "R1 FE80::1 \xB7 PC1 gateway FE80::1", "Passive LAN"], ["10", "R1 Gi0/1 \u2194 R2 Gi0/1", "2001:db8:12::1 \u2194 ::2", "FE80::1 \u2194 FE80::2", "Point-to-point \xB7 cost 10"], ["0", "R2 Gi0/0 \xB7 PC2", "2001:db8:20::1 \xB7 ::10", "R2 FE80::2 \xB7 PC2 gateway FE80::2", "Passive backbone LAN"], ["0", "R2 Gi0/2 \u2194 R3 Gi0/1", "2001:db8:23::2 \u2194 ::3", "FE80::2 \u2194 FE80::3", "Backbone \xB7 cost 10"], ["20", "R3 Gi0/2 \u2194 R4 Gi0/1", "2001:db8:34::3 \u2194 ::4", "FE80::3 \u2194 FE80::4", "Point-to-point \xB7 cost 10"], ["20", "R4 Gi0/0 \xB7 SRV1", "2001:db8:30::1 \xB7 ::10", "R4 FE80::4 \xB7 SRV1 gateway FE80::4", "Passive LAN"]], commands: MULTI_AREA_OSPFV3_COMMANDS, verification: { R1: ["show ipv6 ospf neighbor", "show ipv6 ospf interface brief", "show ipv6 ospf interface GigabitEthernet0/0", "show ipv6 ospf database", "show ipv6 ospf database inter-area prefix", "show ipv6 route ospf", "show ipv6 route 2001:db8:30::10", "show ipv6 protocols", "show startup-config"], R2: ["show ipv6 ospf", "show ipv6 ospf neighbor", "show ipv6 ospf database inter-area prefix self-originate", "show ipv6 ospf database inter-area prefix 2001:db8:30::/64 adv-router 2.2.2.2", "show ipv6 route ospf", "show startup-config"], R3: ["show ipv6 ospf", "show ipv6 ospf neighbor", "show ipv6 ospf database inter-area prefix 2001:db8:10::/64 adv-router 3.3.3.3", "show ipv6 route ospf", "show startup-config"], R4: ["show ipv6 ospf neighbor", "show ipv6 ospf database", "show ipv6 route ospf", "show startup-config"], PC1: ["ipconfig", "ping -n 3 2001:db8:20::10", "ping -n 3 2001:db8:30::10", "tracert -d 2001:db8:30::10"], PC2: ["ping -n 3 2001:db8:30::10"], SRV1: ["ping -n 3 2001:db8:10::10"] }, setup: [
+      { title: "Activate OSPFv3 on IPv6 interfaces", instructions: ["IPv6 global/link-local addresses and interface-scoped host gateways are prepared. Practice starts without IPv6 forwarding or routing protocols. Enable ipv6 unicast-routing on all four routers.", "Use the classic IOS IPv6 syntax: ipv6 router ospf 10, router-id 1.1.1.1 through 4.4.4.4, then ipv6 ospf 10 area <area> under each participating interface. OSPFv3 does not use IPv4 network/wildcard statements. Router IDs remain 32-bit identifiers; the routers need no IPv4 addresses.", "R1 is internal to Area 10; R2 joins Areas 10 and 0; R3 joins Areas 0 and 20; R4 is internal to Area 20. The R2\u2013R3 link is the backbone. Use passive-interface default, activate only the router transits, and keep each LAN passive but advertised.", "Configure point-to-point transits at cost 10 and LAN cost 1. Leave default Hello/Dead timers at 10/40 seconds. The PCs and server use static IPv6 addresses and link-local default gateways scoped to GigabitEthernet0; router advertisements are suppressed in this lab. Do not add router static/default routes, redistribution, stub/NSSA settings or manual summaries."] },
+      { title: "Verify link-local peers, ABRs and O/OI routes", instructions: ["Wait for six directed Full/- neighbor relationships: one peer on R1/R4, two on R2/R3. Point-to-point transits have no DR/BDR election. Inspect link-local neighbor addresses and both ABRs with show ipv6 ospf. R2/R3 must have received Full adjacencies in their backbone and non-backbone areas.", "In show ipv6 route, O identifies intra-area routes and OI identifies inter-area routes. All required learned routes use AD 110 and link-local next hops with outgoing interface scope. The edge-to-edge LAN metric is 31; R2/R3 to the opposite non-backbone LAN is 21; the three intra-area LAN checks are 11.", "Inspect show ipv6 ospf database. OSPFv3 separates Router and Link LSAs from prefix information; Intra Area Prefix and Inter Area Prefix views carry IPv6 reachability. Inter-area-prefix LSAs have opaque numeric IDs, rather than using an IPv6 network as the link-state ID.", "On R2, inspect show ipv6 ospf database inter-area prefix 2001:db8:30::/64 adv-router 2.2.2.2: its Area 10 advertisement has metric 21. On R3, the Area 20 advertisement for 2001:db8:10::/64 also has metric 21. These costs include the backbone path to the other ABR.", "Run all four guide pings and trace PC1 to SRV1. The actual path must cross R1 \u2192 R2 \u2192 R3 \u2192 R4 with a working IPv6 return path. A working ping alone cannot prove the correct areas, next-hop scope or route classification."] },
+      { title: "Break and restore the IPv6 backbone", instructions: ["After all neighbors are Full and normal traffic works, shut only R2 Gi0/2. Open the guide while the link is down to record the genuine Full-to-Down transition and remote /64 withdrawal.", "R2 loses the server LAN route but retains its intra-area route to the R1 LAN. PC1\u2194PC2 remains reachable in the left component; PC1\u2194SRV1 and PC2\u2192SRV1 fail across the backbone split.", "Restore R2 Gi0/2 with no shutdown. Wait for the Area 0 adjacency and inter-area prefixes to rebuild, then repeat all four pings. The recovery task requires a real observed outage and the fully restored normal topology."] },
+      { title: "Troubleshoot and save the restored domain", instructions: ["Optionally change one transit area, make it passive or remove one LAN\u2019s ipv6 ospf 10 area command. Observe which adjacency or route disappears, then restore it. Disabling ipv6 unicast-routing must stop transit forwarding. A static route is not proof of OSPFv3 learning.", "Save all four routers with write memory after recovery, then save or export the lab. Reopening retains earned traffic and the observed backbone exercise while fresh OSPFv3 packets rebuild live neighbors and routes.", "This is a regular-area IPv6 OSPFv3 lab. OSPFv3 IPv4 address families, stub/NSSA, virtual links, redistribution and manual summarization are outside this exercise."] }
+    ], note: "The completed reference configures and saves the four routers without pre-earned traffic or outage evidence. After convergence it has eleven live setup/neighbor/route/save tasks. The separate OSPFv2 and CCNA single-area labs remain available." },
     "multi-area-ospfv2": { planTitle: "Areas and addressing plan", columns: ["Area", "Link / LAN", "IPv4 addresses / prefix", "Purpose"], rows: [["10", "R1 Gi0/0 \xB7 PC1", "192.168.10.1 /24 \xB7 .10, gateway .1", "Passive LAN"], ["10", "R1 Gi0/1 \u2194 R2 Gi0/1", "10.0.12.1 \u2194 10.0.12.2 /30", "Point-to-point \xB7 cost 10"], ["0", "R2 Gi0/0 \xB7 PC2", "192.168.20.1 /24 \xB7 .10, gateway .1", "Passive backbone LAN"], ["0", "R2 Gi0/2 \u2194 R3 Gi0/1", "10.0.23.1 \u2194 10.0.23.2 /30", "Backbone \xB7 cost 10"], ["20", "R3 Gi0/2 \u2194 R4 Gi0/1", "10.0.34.1 \u2194 10.0.34.2 /30", "Point-to-point \xB7 cost 10"], ["20", "R4 Gi0/0 \xB7 SRV1", "192.168.30.1 /24 \xB7 .10, gateway .1", "Passive LAN"]], commands: MULTI_AREA_OSPFV2_COMMANDS, verification: { R1: ["show ip ospf neighbor", "show ip ospf interface brief", "show ip ospf interface GigabitEthernet0/0", "show ip ospf database router", "show ip ospf database summary", "show ip ospf border-routers", "show ip route ospf", "show ip route 192.168.30.10", "show ip protocols", "show startup-config"], R2: ["show ip ospf", "show ip ospf neighbor", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database summary", "show ip route ospf", "show startup-config"], R3: ["show ip ospf", "show ip ospf neighbor", "show ip ospf database summary", "show ip route ospf", "show startup-config"], R4: ["show ip ospf neighbor", "show ip ospf database router", "show ip ospf database summary", "show ip route ospf", "show startup-config"], PC1: ["ipconfig", "ping -n 3 192.168.20.10", "ping -n 3 192.168.30.10", "tracert -d 192.168.30.10"], PC2: ["ping -n 3 192.168.30.10"], SRV1: ["ping -n 3 192.168.10.10"] }, setup: [
       { title: "Build three normal areas through the backbone", instructions: ["All interface addresses and host gateways are prepared. Practice starts without routing protocols or static routes. Configure OSPFv2 process 10 on all four routers with router IDs 1.1.1.1 through 4.4.4.4. Process IDs are local; area IDs must agree on each link.", "R1 is internal to Area 10; R2 connects Areas 10 and 0; R3 connects Areas 0 and 20; R4 is internal to Area 20. The R2\u2013R3 link is the Area 0 backbone. Use the diagram and addressing plan for interface assignments.", "Use passive-interface default and enable Hellos only on the router transits. Each LAN remains passive and advertised. Configure every transit as point-to-point at cost 10, with LAN cost 1. Leave Hello/Dead timers at 10/40 seconds. Do not add static/default routes, redistribution, stub areas or summarization to hide a routing fault."] },
       { title: "Verify received adjacencies, ABRs and route types", instructions: ["Expect Full/- neighbors without DR/BDR election: R1 has R2; R2 has R1 and R3; R3 has R2 and R4; R4 has R3. R2 and R3 must have live Full adjacencies in both their backbone and non-backbone areas.", "On R2 and R3, show ip ospf identifies an area border router. Inspect the local area sections in show ip ospf database router and summary. Router LSAs describe an area; Type 3 network-summary views describe prefixes reached through an ABR. A Type 3 summary LSA does not require manual address aggregation.", "Compare show ip route ospf: R2 learns the R1 LAN as intra-area O at metric 11; R3 learns the R2 and R4 LANs as O at metric 11. R1 and R4 learn the opposite edge LAN as O IA at metric 31. R2 and R3 learn the opposite non-backbone LAN as O IA at metric 21. All these routes use AD 110.", "Run all four guide pings and trace PC1 to SRV1. The path must traverse R1 \u2192 R2 \u2192 R3 \u2192 R4 with a working return path. A ping alone does not prove correct area assignment, ABR operation or O versus O IA classification."] },
@@ -55831,6 +55898,64 @@ ${output.join("\n")}`);
     ] } };
     const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
     return mode === "completed" ? completedDocument(doc, LOCAL_USER_AUTHENTICATION_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
+  function createMultiAreaOSPFv3Lab(mode = "practice") {
+    const doc = parseDocument2(JSON.stringify(createMultiAreaOSPFv2Lab()).replaceAll("device-mao-", "device-ma3-").replaceAll("link-mao-", "link-ma3-").replaceAll("note-mao", "note-ma3"));
+    const lab = doc.lab, routers2 = lab.devices.filter((d) => d.kind === "router"), [r1, r2, r3, r4] = routers2, hosts = lab.devices.filter((d) => d.kind !== "router"), g = (n) => "GigabitEthernet0/" + n;
+    lab.catalogId = "multi-area-ospfv3";
+    lab.name = "Multi-Area OSPFv3" + (mode === "completed" ? " \xB7 Completed" : "");
+    for (const d of lab.devices) {
+      delete d.config.defaultGateway;
+      for (const p of Object.values(d.config.interfaces)) {
+        delete p.ip;
+        delete p.mask;
+        p.ipv6 = [];
+      }
+      d.config.staticRoutes = [];
+      if (d.kind === "router") d.config.ipv6Routing = false;
+    }
+    const address2 = (d, n, ip2, ll) => {
+      const p = d.config.interfaces[g(n)];
+      p.ipv6 = [ip2 + "/64"];
+      Object.assign(p.features, { ipv6LinkLocal: ll, ipv6Nd: { suppressRa: true } });
+    };
+    for (const [i, r] of [r1, r2, r4].entries()) {
+      const ordinal = i === 2 ? 4 : i + 1;
+      address2(r, 0, `2001:db8:${(i + 1) * 10}::1`, `fe80::${ordinal}`);
+      const host2 = hosts[i], p = host2.config.interfaces.GigabitEthernet0;
+      p.ipv6 = [`2001:db8:${(i + 1) * 10}::10/64`];
+      Object.assign(p.features, { dhcp: false, ipv6Autoconfig: false, ipv6LinkLocal: `fe80::10${ordinal}` });
+      host2.config.staticRoutes = [{ network: "::", prefix: 0, nextHop: `fe80::${ordinal}`, interface: "GigabitEthernet0", ad: 1 }];
+    }
+    address2(r1, 1, "2001:db8:12::1", "fe80::1");
+    address2(r2, 1, "2001:db8:12::2", "fe80::2");
+    address2(r2, 2, "2001:db8:23::2", "fe80::2");
+    address2(r3, 1, "2001:db8:23::3", "fe80::3");
+    address2(r3, 2, "2001:db8:34::3", "fe80::3");
+    address2(r4, 1, "2001:db8:34::4", "fe80::4");
+    const mapped = (ip2) => ({ "192.168.10.0": "2001:db8:10::", "192.168.20.0": "2001:db8:20::", "192.168.30.0": "2001:db8:30::", "192.168.10.10": "2001:db8:10::10", "192.168.20.10": "2001:db8:20::10", "192.168.30.10": "2001:db8:30::10" })[ip2] ?? ip2;
+    const convert = (c) => {
+      if (c.kind === "all" || c.kind === "any") return { ...c, criteria: c.criteria.map(convert) };
+      if (c.kind === "ospf-interface") return { ...c, protocol: "ospfv3" };
+      if (c.kind === "neighbor") return { ...c, protocol: "OSPFV3" };
+      if (c.kind === "route") return { ...c, network: mapped(c.network), prefix: 64, nextHop: { "10.0.12.1": "fe80::1", "10.0.12.2": "fe80::2", "10.0.23.1": "fe80::2", "10.0.23.2": "fe80::3", "10.0.34.1": "fe80::3", "10.0.34.2": "fe80::4" }[c.nextHop] };
+      if (c.kind === "mao-outage") return { ...c, protocol: "ospfv3", network: mapped(c.network), localNetwork: mapped(c.localNetwork) };
+      if (c.kind === "mao-echo") return { ...c, protocol: "ospfv3", address: mapped(c.address) };
+      if (c.kind === "mao-domain" || c.kind === "mao-abr" || c.kind === "mao-saved") return { ...c, protocol: "ospfv3" };
+      return c;
+    };
+    const resource = GUIDE_RESOURCES["multi-area-ospfv3"];
+    lab.lesson.title = "Multi-Area OSPFv3";
+    lab.lesson.description = "Build a three-area IPv6 OSPFv3 domain with link-local peers and two backbone-connected ABRs.\n\n" + resource.setup.map((s) => s.title + "\n" + s.instructions.join("\n")).join("\n\n");
+    for (const o of lab.lesson.objectives) {
+      o.criterion = convert(o.criterion);
+      if (o.action?.kind === "ping") o.action.target = mapped(o.action.target);
+      o.title = o.title.replaceAll("O IA", "OI").replace("OSPF routing", "IPv6 OSPFv3 routing").replace("OSPF policy", "OSPFv3 policy");
+      if (o.description) o.description = o.description.replace("No static/default router routes", "Enable IPv6 forwarding. No IPv4 addresses or static/default router routes");
+    }
+    for (const note of lab.notes) if (note.id === "note-ma3") note.text = "OSPFv3 \xB7 Area 10 \u2190 R2 ABR \u2192 Area 0 \u2190 R3 ABR \u2192 Area 20\nP2P cost 10 \xB7 passive LAN cost 1 \xB7 link-local next hops\nO: intra-area \xB7 OI: inter-area \xB7 AD 110";
+    for (const d of lab.devices) d.startupConfig = structuredClone(d.config);
+    return mode === "completed" ? completedDocument(doc, MULTI_AREA_OSPFV3_COMMANDS) : parseDocument2(JSON.stringify(doc));
   }
   function createMultiAreaOSPFv2Lab(mode = "practice") {
     const make = (name6, kind, x, y) => ({ id: "device-mao-" + name6.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name6), runtime: emptyRuntime() });
@@ -57490,6 +57615,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "multi-area-ospfv3") return createMultiAreaOSPFv3Lab(mode);
     if (id2 === "multi-area-ospfv2") return createMultiAreaOSPFv2Lab(mode);
     if (id2 === "stp-bpdu-guard") return createSTPBPDUGuardLab(mode);
     if (id2 === "stp-root-guard") return createSTPRootGuardLab(mode);

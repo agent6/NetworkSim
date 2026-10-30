@@ -370,7 +370,7 @@ function ospfDatabaseEntries(v: OspfView): DbLsa[] {
     for (const abr of lsas.filter(l => areasOf(l).size > 1 && areasOf(l).has(area))) {
       const abrDevice = v.e.getDevice(deviceOf(abr) ?? ''), abrConfig = abrDevice ? routingConfig(abrDevice, v.protocol) : undefined, mineAreas = areasOf(abr);
       const add = (linkId: string, mask: number, metric: number) => { if (!result.some(r => r.type === 3 && r.area === area && r.linkId === linkId && r.mask === mask && r.adv === abr.routerId)) result.push({ type: 3, area, linkId, adv: abr.routerId, age: abr.age, seq: abr.sequence, checksum: checksum(3, area, linkId, mask, abr.routerId, abr.sequence), mask, metric }); };
-      if (kind !== 'normal') add('0.0.0.0', 0, Number(areaConfig(abrConfig, area)?.defaultCost ?? 1));
+      if (kind !== 'normal') add(v.protocol === 'ospfv3' ? '::' : '0.0.0.0', 0, Number(areaConfig(abrConfig, area)?.defaultCost ?? 1));
       if (kind !== 'normal' && (cfgArea?.noSummary || areaConfig(abrConfig, area)?.noSummary)) continue;
       for (const source of [...new Set(lsas.flatMap(l => [...areasOf(l)]))].filter(x => x !== area && (area !== '0' || mineAreas.has(x)))) {
         if (area !== '0' && source !== '0' && !mineAreas.has(source) && !mineAreas.has('0')) continue;
@@ -409,7 +409,16 @@ function ospfDatabase(v: OspfView, args: string[]): string[] {
   const a = [...args];
   const types: Record<string, number> = { router: 1, network: 2, summary: 3, 'asbr-summary': 4, external: 5, 'nssa-external': 7 };
   let type: number | undefined, linkId: string | undefined, adv: string | undefined, self = false;
-  if (a.length && !['self-originate', 'adv-router'].some(k => k.startsWith(a[0].toLowerCase()))) {
+  let prefixFilter: {network:string;prefix?:number} | undefined;
+  if (v.v3 && a[0] && 'inter-area'.startsWith(a[0].toLowerCase())) {
+    a.shift(); word(a.shift(), ['prefix']); type = 3;
+    if (a[0]?.includes(':')) {
+      const raw = a.shift()!;
+      if (!raw.includes('/')) { if (!isIPv6(raw)) return invalid(); prefixFilter = {network:raw}; }
+      else { let parsed; try { parsed = parseCidr(raw); } catch { return invalid(); } if(parsed.family!==6)return invalid(); prefixFilter = {network:parsed.network,prefix:parsed.prefix}; }
+    }
+  }
+  if (type === undefined && a.length && !['self-originate', 'adv-router'].some(k => k.startsWith(a[0].toLowerCase()))) {
     type = types[word(a.shift(), Object.keys(types))];
     if (a[0] && isIPv4(a[0])) linkId = a.shift();
   }
@@ -419,7 +428,7 @@ function ospfDatabase(v: OspfView, args: string[]): string[] {
     else { adv = a.shift(); if (!adv) return incomplete(); if (!isIPv4(adv)) return invalid(); }
   }
   if (a.length) return invalid();
-  if (v.v3) return ospfv3Database(v, type, adv ?? (self ? v.rid : undefined));
+  if (v.v3) return ospfv3Database(v, type, adv ?? (self ? v.rid : undefined), prefixFilter);
   const all = ospfDatabaseEntries(v).filter(r => (type === undefined || r.type === type) && (!linkId || r.linkId === linkId) && (!adv || r.adv === adv) && (!self || r.adv === v.rid));
   const lines = ['', ospfTitle(v), ''];
   const areas = [...new Set(all.filter(r => r.area !== undefined).map(r => r.area!))].sort((x, y) => Number(x) - Number(y));
@@ -465,10 +474,14 @@ function ospfLsaDetail(v: OspfView, r: DbLsa): string[] {
   lines.push(`  Network Mask: /${r.mask}`, `\tMetric Type: ${r.metricType} (${r.metricType === 1 ? 'Comparable directly to link state metric' : 'Larger than any link state path'})`, '\tMTID: 0 ', `\tMetric: ${r.metric} `, `\tForward Address: ${r.forward ?? '0.0.0.0'}`, `\tExternal Route Tag: ${r.tag ?? 0}`, '');
   return lines;
 }
-function ospfv3Database(v: OspfView, type: number | undefined, adv: string | undefined): string[] {
+function ospfv3Database(v: OspfView, type: number | undefined, adv: string | undefined, prefixFilter?:{network:string;prefix?:number}): string[] {
   const lsas = (v.live?.lsas ?? []).filter(l => !adv || l.routerId === adv), lines = ['', ospfTitle(v), ''];
   const areas = [...new Set(v.ports.filter(p => p.up).map(p => p.area))].sort((x, y) => Number(x) - Number(y));
   const row = (adv: string, age: number, seq: number, rest: string) => `${pad(adv, 17)}${pad(Math.min(3600, age), 12)}${pad(seqHex(seq), 12)}${rest}`;
+  // Prefix LSIDs are opaque per-advertiser IDs, assigned before display filters.
+  // The received logical database supplies reachability and ABR metrics; these are not wire-encoded LSAs.
+  const ids = new Map<string,number>();
+  const summaries = ospfDatabaseEntries(v).filter(r=>r.type===3).sort((a,b)=>natural(a.area!,b.area!)||byIp(a.adv,b.adv)||natural(a.linkId,b.linkId)||a.mask!-b.mask!).map(r=>{const key=r.area+'|'+r.adv,id=ids.get(key)??0;ids.set(key,id+1);return {...r,prefixId:id};}).filter(r=>(!adv||r.adv===adv)&&(!prefixFilter||sameAddress(r.linkId,prefixFilter.network)&&(prefixFilter.prefix===undefined||r.mask===prefixFilter.prefix)));
   for (const area of areas) {
     const members = lsas.filter(l => l.links.some(k => areaKey(k.area) === area) || l.prefixes.some(x => x.kind === 'prefix' && areaKey(x.endpoint.area) === area)).sort((x, y) => byIp(x.routerId, y.routerId));
     if (type === undefined || type === 1) {
@@ -479,6 +492,17 @@ function ospfv3Database(v: OspfView, type: number | undefined, adv: string | und
     if (type === undefined || type === 2) {
       const nets = members.flatMap(l => [...new Set(l.links.filter(k => areaKey(k.area) === area && v.e.getDevice(k.from.deviceId)?.runtime.features[v.protocol + 'Interfaces']?.[k.from.name]?.role === 'DR').map(k => k.from.name))].map(name => ({ l, name, count: 1 + l.links.filter(k => k.from.name === name).length })));
       if (nets.length) { lines.push(`\t\tNet Link States (Area ${areaLabel(v, area)})`, '', 'ADV Router       Age         Seq#        Link ID    Rtr count'); for (const n of nets) { const device = n.l.links[0]?.from.deviceId ?? ''; lines.push(row(n.l.routerId, n.l.age, n.l.sequence, `${pad(interfaceId(v.e, device, n.name), 11)}${n.count}`)); } lines.push(''); }
+    }
+    if (type === undefined || type === 3) {
+      const prefixes = summaries.filter(r=>r.area===area);
+      if (prefixes.length) {
+        lines.push(`\t\tInter Area Prefix Link States (Area ${areaLabel(v,area)})`,'');
+        if(type===undefined){
+          lines.push('ADV Router       Age         Seq#        Prefix ID   Prefix');
+          for(const r of prefixes)lines.push(row(r.adv,r.age,r.seq,`${pad(r.prefixId,12)}${r.linkId.toUpperCase()}/${r.mask}`));
+        }else for(const r of prefixes)lines.push(`  LS age: ${r.age}`,'  LS Type: Inter Area Prefix Links',`  Link State ID: ${r.prefixId}`,`  Advertising Router: ${r.adv}`,`  LS Seq Number: ${seqHex(r.seq).slice(2)}`,`  Checksum: 0x${hex(r.checksum,4)}`,`  Length: ${28+4*Math.ceil(r.mask!/32)}`,`  Metric: ${r.metric}`,`  Prefix Address: ${r.linkId.toUpperCase()}`,`  Prefix Length: ${r.mask}, Options: None`,'');
+        lines.push('');
+      }
     }
     if (type === undefined) {
       const local = v.ports.filter(p => p.area === area && p.up && !p.loopback);
