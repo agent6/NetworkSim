@@ -10656,7 +10656,7 @@ ${end.comment}` : end.comment;
 
   // src/ios-help.ts
   var IOS_UNRECOGNIZED = "% Unrecognized command";
-  var iosInformational = (line2) => /^% OSPF: Reload or use "clear ip ospf process" command, for this to take effect$/.test(line2) || /^%[A-Z][A-Z0-9_]*-\d-[A-Z0-9_]+:/.test(line2) || /^% (?:The key modulus size is|Generating \d+ bit RSA keys|You already have RSA keys defined|They will be replaced|All keys will be removed|All router certs issued)/.test(line2);
+  var iosInformational = (line2) => /^%No SSHv[12] server connections running\.$/.test(line2) || /^% OSPF: Reload or use "clear ip ospf process" command, for this to take effect$/.test(line2) || /^%[A-Z][A-Z0-9_]*-\d-[A-Z0-9_]+:/.test(line2) || /^% (?:The key modulus size is|Generating \d+ bit RSA keys|You already have RSA keys defined|They will be replaced|All keys will be removed|All router certs issued)/.test(line2);
   var iosRejected = (line2) => line2.startsWith("%") && !iosInformational(line2) || line2.trim() === "Area mismatch" || /^\s*ERROR:/i.test(line2);
   var iosAmbiguous = (input5) => `% Ambiguous command:  "${input5.trim()}"`;
   function iosHelpScope(mode, protocol) {
@@ -24902,6 +24902,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
 
   // src/management.ts
   var controllers = /* @__PURE__ */ new WeakMap();
+  function localSSHLoginSnapshot(engine, deviceId) {
+    return controllers.get(engine)?.localSSHLoginSnapshot(deviceId) ?? [];
+  }
   function managementSessionSnapshot(engine, deviceId) {
     return controllers.get(engine)?.sessionSnapshot(deviceId) ?? [];
   }
@@ -24915,12 +24918,17 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
   var ManagementController = class {
     sessions = /* @__PURE__ */ new Map();
+    localSSHLogins = [];
     sequence = 0;
     engine;
     factory;
     accounting;
     automationRuns = /* @__PURE__ */ new Map();
     clientVRFs = /* @__PURE__ */ new Map();
+    localSSHLoginSnapshot(deviceId) {
+      const runtime = this.engine.getDevice(deviceId)?.runtime;
+      return this.localSSHLogins.filter((row5) => row5.deviceId === deviceId && row5.runtime === runtime).map(({ username, source, privilege, line: line2, time: time2 }) => ({ username, source, privilege, line: line2, time: time2 }));
+    }
     sessionSnapshot(deviceId) {
       return [...this.sessions.values()].filter((s) => s.deviceId === deviceId && this.alive(s)).map(({ id: id2, source, port: port3, line: line2, phase, username, expires, lastActivity, lineNumber }) => ({ id: id2, source, port: port3, line: line2, phase, username, expires, lastActivity, lineNumber }));
     }
@@ -25134,6 +25142,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         session.cli.setPrivilege(authorization.privilege);
         session.cli.setIdentity(session.username, true, session.line, session.method === "aaa" ? remote?.role ?? "network-operator" : user?.role);
         this.beginAccounting(session, device2, authorization.privilege);
+        if (session.port === 22 && session.method === "local" && !device2.config.features.aaa?.enabled && line2.login === "local" && session.username) {
+          this.localSSHLogins.push({ deviceId: device2.id, runtime: device2.runtime, username: session.username, source: session.source, privilege: authorization.privilege, line: session.line, time: this.engine.clock.now() });
+          if (this.localSSHLogins.length > 1e3) this.localSSHLogins.splice(0, this.localSSHLogins.length - 1e3);
+        }
         this.engine.log(device2.id, `User ${session.username || "line"} logged in from ${session.source} on ${session.line}`, 6);
         return this.reply(session, device2.config.features.banners?.exec ? [device2.config.features.banners.exec] : []);
       }
@@ -52352,6 +52364,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       switch (v.kind) {
         case "device":
           return v.powered === void 0 || typeof v.powered === "boolean";
+        case "local-user":
+        case "local-ssh-login":
+          return text3(v.username, 128) && v.username !== "" && Number.isInteger(v.privilege) && v.privilege >= 0 && v.privilege <= 15 && (v.kind !== "local-ssh-login" || text3(v.source, 128) && v.source !== "");
+        case "local-management":
+          return ["enable-secret", "console-login", "ssh-server", "vty-login"].includes(v.setting);
         case "interface-up":
           return text3(v.interface, 128);
         case "bpdu-guard-trip":
@@ -52480,6 +52497,28 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!("device" in criterion)) return false;
     const d = device(sim2, criterion.device);
     if (!d) return false;
+    if (criterion.kind === "local-user") {
+      const user = ownRecordValue(d.config.features.users, criterion.username);
+      return !!user && typeof user.secret === "string" && user.secret.length > 0 && (user.privilege ?? 1) === criterion.privilege;
+    }
+    if (criterion.kind === "local-management") {
+      const f = d.config.features;
+      if (criterion.setting === "enable-secret") return typeof f.enableSecret === "string" && f.enableSecret.length > 0;
+      if (criterion.setting === "ssh-server") return typeof f.domainName === "string" && !!f.domainName.trim() && f.ssh?.version === 2 && Number(f.ssh?.keys?.modulus) >= 2048;
+      if (f.aaa?.enabled) return false;
+      if (criterion.setting === "console-login") return f.lines?.["console 0"]?.login === "local";
+      const lines2 = Object.entries(f.lines ?? {}).filter(([name2]) => /^vty \d+(?: \d+)?$/.test(name2));
+      const enabled4 = lines2.filter(([, line2]) => line2.exec !== false && !["none", ""].includes(String(line2.transport ?? "")));
+      const safe = (line2) => line2.login === "local" && line2.transport === "ssh";
+      return enabled4.every(([, line2]) => safe(line2)) && [0, 1, 2, 3, 4].every((n) => enabled4.some(([name2, line2]) => {
+        const [, start, end] = name2.split(" ").map(Number);
+        return safe(line2) && start <= n && n <= (end ?? start);
+      }));
+    }
+    if (criterion.kind === "local-ssh-login") {
+      const source = device(sim2, criterion.source);
+      return !!source && localSSHLoginSnapshot(sim2, d.id).some((row5) => row5.username === criterion.username && row5.privilege === criterion.privilege && Object.values(source.config.interfaces).some((p) => !!p.ip && sameAddress(p.ip, row5.source)));
+    }
     if (criterion.kind === "stp-mode") return ["switch", "poeswitch", "l3switch", "datacenter"].includes(d.kind) && (d.config.features.stp?.mode ?? "rapid-pvst") === criterion.mode;
     if (criterion.kind === "stp-priority") return ["switch", "poeswitch", "l3switch", "datacenter"].includes(d.kind) && (d.config.features.stp?.vlanPriorities?.[criterion.vlan] ?? d.config.features.stp?.priority ?? 32768) === criterion.priority;
     if (criterion.kind === "stp-root") {
@@ -52624,14 +52663,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return results.length > 0 && (c.kind === "all" ? results.every(Boolean) : results.some(Boolean));
       }
       const result = matches(sim2, c);
-      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block") return result;
+      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login") return result;
       validKeys.add(key4);
       if (result) observations.add(key4);
       return result || observations.has(key4);
     };
     const rows2 = lesson2.objectives.map((objective) => {
       const observed = observe(objective.criterion, JSON.stringify(objective.id));
-      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block";
+      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login";
       if (historical && observed)
         completed.add(objective.id);
       return {
@@ -53007,8 +53046,28 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "ospf-point-to-point", group: "CCNA", section: "Routing", title: "OSPF Point-to-Point", description: "Configure a two-router OSPFv2 Ethernet transit as point-to-point. Verify Full adjacency without DR/BDR election, passive LANs, learned routes and recovery from adjacency faults.", devices: 4, links: 3, practice: true },
     { id: "ospf-dr-bdr-election", group: "CCNA", section: "Routing", title: "OSPF DR/BDR Election", description: "Elect a DR and BDR on shared Ethernet using interface priorities and router IDs. Inspect Full and 2WAY peers, test non-preemption and BDR promotion, and verify routed traffic between DROTHER LANs.", devices: 7, links: 6, practice: true },
     { id: "ospf-router-id", group: "CCNA", section: "Routing", title: "OSPF Router ID", description: "Compare manual router IDs, highest active loopback selection and highest up/up physical address selection. Verify operational IDs, restart pending changes, troubleshoot duplicates and prove routed traffic.", devices: 6, links: 5, practice: true },
+    { id: "local-user-authentication", group: "CCNA", section: "Services & Security", title: "Local User Authentication", description: "Create local users with distinct privilege levels, protect privileged EXEC, secure console and SSH access, and verify real password-checked logins from a PC.", devices: 2, links: 1, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
+  var LOCAL_USER_AUTHENTICATION_COMMANDS = { R1: [
+    "enable",
+    "configure terminal",
+    "username admin privilege 15 secret AdminLab123",
+    "username operator privilege 1 secret OperatorLab123",
+    "enable secret EnableLab123",
+    "ip domain-name lab.example",
+    "crypto key generate rsa modulus 2048",
+    "ip ssh version 2",
+    "line console 0",
+    "login local",
+    "exec-timeout 10 0",
+    "line vty 0 4",
+    "login local",
+    "transport input ssh",
+    "exec-timeout 10 0",
+    "end",
+    "write memory"
+  ] };
   var ROAS_ADDRESS_PLAN = [
     ["R1", "GigabitEthernet0/0.10", "10", "192.168.10.1 /24", "\u2014"],
     ["R1", "GigabitEthernet0/0.20", "20", "192.168.20.1 /24", "\u2014"],
@@ -53340,6 +53399,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
   };
   var GUIDE_RESOURCES = {
+    "local-user-authentication": { columns: ["Device", "Interface", "IPv4 address", "Purpose"], rows: [["R1", "Gi0/0", "192.0.2.1 /24", "Local console and SSH target"], ["PC1", "Gi0", "192.0.2.10 /24", "Windows SSH client"]], commands: LOCAL_USER_AUTHENTICATION_COMMANDS, verification: { R1: ["show running-config | include ^username", "show running-config | include ^enable secret", "show running-config | section line", "show ip ssh", "show users", "show ssh", "show privilege", "show startup-config | include ^username"], PC1: ["ipconfig", "ping -n 3 192.0.2.1"] }, setup: [{ title: "PC1 \xB7 Command prompt \xB7 operator login", instructions: ["Run ssh -l operator 192.0.2.1. Enter an incorrect password once and confirm rejection, then enter OperatorLab123 at the Password prompt. Password input is hidden.", "Expect R1> and show privilege reporting level 1. configure terminal must be denied.", "Run enable. OperatorLab123 must not unlock privileged EXEC; enter EnableLab123 to reach R1# and verify show privilege reports level 15.", "Run show users and show ssh to inspect the real session. Run exit to return to the Windows C:\\> prompt."] }, { title: "PC1 \xB7 Command prompt \xB7 administrator login", instructions: ["Run ssh -l admin 192.0.2.1 and enter AdminLab123. Expect R1# and privilege level 15 immediately.", "Inspect show users and show ssh, then exit back to Windows. Successful operator and admin logins are recorded only after real local SSH authentication; configuration or a pending password prompt is not sufficient."] }, { title: "R1 \xB7 Fresh console session", instructions: ["Save the lab and reload NetworkSim to create a fresh console session, then open R1. Expect Username: followed by a hidden Password: prompt.", "Log in as operator with OperatorLab123. Verify level 1, use enable with EnableLab123, and verify level 15.", "The initial console remains usable while you configure login local. Configuring the line alone does not log out that existing session."] }], note: "Addressing and the Ethernet link are ready. Configure R1 only; no routing protocol or server is needed. Use local users without aaa new-model. The reference supplies admin/privilege 15, operator/privilege 1 and a separate enable secret. SSH requires a hostname, domain name, RSA keys, SSH version 2 and VTY login local with transport input ssh; a line password does not replace the local user database. The console and VTY use separate line configurations. Test actual PC logins for both users and a real ping. Login and echo achievements survive closing sessions and saving the lab; account and access settings remain live requirements. Passwords in the reference are lab examples, and you may use your own matching values. Save R1 with write memory and save or export the lab." },
     "ospf-router-id": { columns: ["Device", "Interface", "IPv4 address", "Purpose / selection"], rows: [["R1", "Gi0/0", "192.168.10.1 /24", "PC1 gateway"], ["R1", "Gi0/1", "10.0.12.1 /30", "Transit to R2"], ["R1", "Loopback0", "198.51.100.11 /32", "Up candidate; manual 1.1.1.1 wins"], ["R2", "Gi0/0", "192.168.20.1 /24", "SRV1 gateway; higher than loopbacks"], ["R2", "Gi0/1 \xB7 Gi0/2", "10.0.12.2 /30 \xB7 10.0.23.2 /30", "Router transits"], ["R2", "Loopback0 \xB7 Loopback1", "172.16.2.1 /32 \xB7 172.16.2.2 /32", "Up candidates; highest loopback wins"], ["R2", "Loopback99", "203.0.113.254 /32", "Administratively down; ineligible"], ["R3", "Gi0/0 \xB7 Gi0/1", "192.168.30.1 /24 \xB7 10.0.23.3 /30", "Up/up physical candidates"], ["R3", "Gi0/2", "203.0.113.254 /32", "No link; down despite no shutdown"], ["PC1", "Gi0", "192.168.10.10 /24", "Gateway 192.168.10.1"], ["SRV1", "Gi0", "192.168.20.10 /24", "Gateway 192.168.20.1"], ["PC2", "Gi0", "192.168.30.10 /24", "Gateway 192.168.30.1"]], commands: OSPF_ROUTER_ID_COMMANDS, verification: { "R1": ["show ip interface brief", "show ip ospf", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf database router", "show ip protocols", "show ip route ospf", "show running-config | section router ospf"], "R2": ["show ip interface brief", "show ip ospf", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf database router", "show ip protocols", "show ip route ospf", "show running-config | section router ospf"], "R3": ["show ip interface brief", "show ip ospf", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf database router", "show ip protocols", "show ip route ospf", "show running-config | section router ospf"], "PC1": ["ipconfig", "ping -n 3 192.168.30.10", "ping -n 3 192.168.20.10", "tracert -d 192.168.30.10"], "PC2": ["ping -n 3 192.168.10.10"], "SRV1": ["ping -n 3 192.168.30.10"] }, note: "All IPv4 addresses, candidate loopbacks and host gateways are ready; no OSPF or static routes are configured. R1 must use manual ID 1.1.1.1. R2 must have no manual override and select its highest up/up loopback 172.16.2.2, excluding shut Loopback99. R3 must have no manual override or loopbacks and select up/up physical address 192.168.30.1, excluding unconnected Gi0/2. Router IDs identify OSPF processes; they are not network statements or automatic destination routes. Configure Area 0, passive LANs, active point-to-point transits and cost 10. Verify active IDs in local process/interface output, peer tables and router LSAs; compare them with running-config. A manual ID changed after neighbors form is pending until clear ip ospf 10 process, confirmed with yes, or device reload. The default confirmation answer is no. A newly added higher-priority loopback also waits for process restart before replacing the selected automatic ID. Complete the pending-ID, automatic-ID and duplicate-ID exercises in the guide, restore intended IDs and remove the temporary R3 loopback. Verify all Full relationships, six AD 110 routes at metric 11 or 21 and all four real traffic checks. Save every router and save or export the lab." },
     "ospf-dr-bdr-election": { columns: ["Device", "Interface", "IPv4 address", "Identity / gateway", "Role / priority"], rows: [["R1", "Gi0/1", "10.0.123.1 /24", "RID 1.1.1.1", "DR \xB7 100"], ["R2", "Gi0/1", "10.0.123.2 /24", "RID 2.2.2.2", "BDR \xB7 50"], ["R3", "Gi0/1", "10.0.123.3 /24", "RID 3.3.3.3", "DROTHER \xB7 0"], ["R4", "Gi0/1", "10.0.123.4 /24", "RID 4.4.4.4", "DROTHER \xB7 0"], ["R3", "Gi0/0", "192.168.30.1 /24", "PC1 gateway", "Passive LAN"], ["R4", "Gi0/0", "192.168.40.1 /24", "PC2 gateway", "Passive LAN"], ["PC1", "Gi0", "192.168.30.10 /24", "Gateway 192.168.30.1", "Client behind R3"], ["PC2", "Gi0", "192.168.40.10 /24", "Gateway 192.168.40.1", "Client behind R4"]], commands: OSPF_DR_BDR_COMMANDS, verification: { "R1": ["show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip route ospf", "show running-config interface GigabitEthernet0/1"], "R2": ["show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip route ospf", "show running-config interface GigabitEthernet0/1"], "R3": ["show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip route ospf", "show running-config interface GigabitEthernet0/1", "show ip ospf interface GigabitEthernet0/0", "show ip route 192.168.40.10"], "R4": ["show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip route ospf", "show running-config interface GigabitEthernet0/1", "show ip ospf interface GigabitEthernet0/0", "show ip route 192.168.30.10"], "SW1": ["show interfaces status", "show vlan brief"], "PC1": ["ipconfig", "ping -n 3 192.168.40.10", "tracert -d 192.168.40.10"], "PC2": ["ping -n 3 192.168.30.10", "tracert -d 192.168.30.10"] }, note: "The switch, shared /24 transit and both PC LANs are addressed and enabled; routers start without OSPF or static routes. Use the R1\u2192R2\u2192R3\u2192R4 reference order. Configure all Gi0/1 ends in Area 0 as active broadcast interfaces, cost 10, with priorities 100/50/0/0 and unique router IDs. Keep R3/R4 Gi0/0 passive and advertised. The normal roles are R1 DR, R2 BDR and R3/R4 DROTHER. Each DR/BDR peer relationship is Full; the two DROTHERs normally remain 2WAY with each other. Show output suffixes describe peer roles. The DR originates the shared Network LSA; it need not forward PC data traffic. Verify all learned remote LAN routes at AD 110 and metric 11 and both real PC directions. Raising R2 priority to 200 must not preempt R1; restore 50. Shut R1 Gi0/1 to promote R2 to DR while PC traffic between R3/R4 continues. Returning R1 becomes BDR rather than reclaiming DR. For a controlled reset, shut every Gi0/1, enable R1 first and verify DR, then enable R2/R3/R4. A fresh saved-lab restart with equal R1/R2 priorities at 100 demonstrates R2 winning the router-ID tie; restore 100/50 and the intended roles before completing. This lab uses IPv4 OSPFv2 broadcast Ethernet, not point-to-point or NBMA. Save all routers and save or export the lab." },
     "ospf-point-to-point": { columns: ["Device", "Interface", "IPv4 address", "Purpose / gateway"], rows: [["R1", "Gi0/0", "192.168.10.1 /24", "PC1 gateway \xB7 passive"], ["R1", "Gi0/1", "10.0.12.1 /30", "R2 \xB7 point-to-point \xB7 cost 10"], ["R2", "Gi0/0", "192.168.20.1 /24", "PC2 gateway \xB7 passive"], ["R2", "Gi0/1", "10.0.12.2 /30", "R1 \xB7 point-to-point \xB7 cost 10"], ["PC1", "Gi0", "192.168.10.10 /24", "Gateway 192.168.10.1"], ["PC2", "Gi0", "192.168.20.10 /24", "Gateway 192.168.20.1"]], commands: OSPF_POINT_TO_POINT_COMMANDS, verification: { "R1": ["show ip interface brief", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface GigabitEthernet0/0", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip protocols", "show ip route ospf", "show ip route 192.168.20.10", "show running-config | section router ospf", "show running-config interface GigabitEthernet0/1"], "R2": ["show ip interface brief", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface GigabitEthernet0/0", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip protocols", "show ip route ospf", "show ip route 192.168.10.10", "show running-config | section router ospf", "show running-config interface GigabitEthernet0/1"], "PC1": ["ipconfig", "ping -n 3 192.168.20.10", "tracert -d 192.168.20.10"], "PC2": ["ping -n 3 192.168.10.10", "tracert -d 192.168.10.10"] }, note: "Addressing and local gateways are ready; routers start without static routes or OSPF. Use interface-based OSPFv2 activation in Area 0, unique router IDs and passive LANs. Configure both Gi0/1 ends as point-to-point with cost 10. Expect one FULL/- peer per router, POINT_TO_POINT interface state and no DR/BDR election. Both remote /24 routes must be O with AD 110 and metric 11. Inspect the actual outgoing interface, next hop, router LSAs and both PC directions. A Full neighbor does not guarantee LAN advertisements or return routing. Shut R1 Gi0/1 to withdraw adjacency and routes; both remote PC tests should fail while local gateways remain reachable. Restore it and repeat both tests after convergence. For the optional comparison, set both transit priorities to 0: point-to-point still forms Full, but changing both ends to broadcast leaves 2WAY/DROTHER with no eligible DR/BDR. Restore point-to-point on both ends and no ip ospf priority. Test one fault at a time and repair it before moving on. Keep default 10/40 Hello/Dead timers and save both routers with write memory, then save or export the lab." },
@@ -53400,6 +53460,29 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createLocalUserAuthenticationLab(mode = "practice") {
+    const r1 = { id: "device-local-auth-r1", kind: "router", x: 380, y: 260, powered: true, config: factoryDeviceConfig("router", "R1"), runtime: emptyRuntime() }, pc1 = { id: "device-local-auth-pc1", kind: "pc", x: 740, y: 260, powered: true, config: factoryDeviceConfig("pc", "PC1"), runtime: emptyRuntime() };
+    Object.assign(r1.config.interfaces["GigabitEthernet0/0"], { adminUp: true, ip: "192.0.2.1", mask: "255.255.255.0", description: "LOCAL_MANAGEMENT" });
+    r1.config.interfaces["GigabitEthernet0/0"].features.proxyArp = false;
+    Object.assign(pc1.config.interfaces.GigabitEthernet0, { ip: "192.0.2.10", mask: "255.255.255.0" });
+    pc1.config.interfaces.GigabitEthernet0.features.dhcp = false;
+    pc1.config.defaultGateway = "192.0.2.1";
+    for (const d of [r1, pc1]) d.startupConfig = structuredClone(d.config);
+    const setting = (value) => ({ kind: "local-management", device: r1.id, setting: value });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "local-user-authentication", name: "Local User Authentication" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [r1, pc1], links: [{ id: "link-local-auth", a: { deviceId: r1.id, port: "GigabitEthernet0/0" }, b: { deviceId: pc1.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 }], notes: [{ id: "note-local-auth", x: 440, y: 430, text: "Local IOS authentication\nadmin \u2192 privilege 15\noperator \u2192 privilege 1\nPC1 \u2192 SSH \u2192 R1" }], lesson: { title: "Local User Authentication", description: "R1 and PC1 are already addressed on 192.0.2.0/24. Configure R1 through its initial console, then use the Windows Command prompt on PC1 for genuine SSH sessions. No routing protocol, AAA server or Internet connection is needed.\n\nCreate admin with privilege 15 and operator with privilege 1, using username ... secret. Configure a separate enable secret for elevation from user EXEC to privileged EXEC. The reference passwords are AdminLab123, OperatorLab123 and EnableLab123; you may substitute your own and use the corresponding values during login. Usernames and passwords are case-sensitive.\n\nSet login local under line console 0. Configure the SSH prerequisites: hostname R1 is already set; add ip domain-name lab.example, generate 2048-bit RSA keys and select ip ssh version 2. Under line vty 0 4, set login local and transport input ssh. Keep aaa new-model disabled for this non-AAA lab. A console line setting does not configure the VTY lines, and a shared line password does not replace a local user secret.\n\nFrom PC1, ping R1 and run ssh -l operator 192.0.2.1. Enter one wrong password first to verify rejection, then authenticate with OperatorLab123. Expect R1> and show privilege level 1; configure terminal must be rejected. Run enable, verify the user password does not grant elevation, then use EnableLab123 to reach R1# and verify level 15. Inspect show users and show ssh. Exit to the Windows prompt.\n\nRun ssh -l admin 192.0.2.1 and authenticate with AdminLab123. Expect R1# and level 15 without enable. Inspect the actual session and exit. Both login goals require successful local SSH authentication from PC1 at the intended initial privilege; a configuration, open TCP connection or password prompt cannot earn them. Successful login and echo observations remain earned after exit and save/reopen; configuration goals stay live.\n\nConsole test: write memory, save the lab and reload NetworkSim, then open R1 to create a fresh console session. Expect Username: and a hidden Password: prompt. Log in as operator, verify level 1 and elevate with the enable secret. Applying login local does not interrupt the existing initial console session.\n\nOptional troubleshooting: temporarily change VTY transport to none and verify a new SSH connection is refused, then restore ssh. Change login local to login with a shared line password and see why that is not the required per-user authentication; restore login local. An enable secret takes precedence if a legacy enable password is also configured; remove the legacy password after testing. Do not enable Telnet in the finished lab. Save R1 with write memory and save or export your final lab.", objectives: [
+      { id: "admin-user", title: "Create admin with a local secret and privilege 15", criterion: { kind: "local-user", device: r1.id, username: "admin", privilege: 15 } },
+      { id: "operator-user", title: "Create operator with a local secret and privilege 1", criterion: { kind: "local-user", device: r1.id, username: "operator", privilege: 1 } },
+      { id: "enable-secret", title: "Protect privileged EXEC with a separate enable secret", criterion: setting("enable-secret") },
+      { id: "console-local", title: "Require the local user database on console 0", criterion: setting("console-login") },
+      { id: "ssh-server", title: "Enable SSH version 2 with a domain and RSA keys of at least 2048 bits", criterion: setting("ssh-server") },
+      { id: "vty-local", title: "Require local users and permit only SSH on VTY lines 0\u20134", criterion: setting("vty-login") },
+      { id: "pc1-r1", title: "Verify PC1 can reach R1", criterion: { kind: "echo", device: pc1.id, from: "192.0.2.1" }, action: { kind: "ping", device: pc1.id, target: "192.0.2.1" } },
+      { id: "operator-ssh", title: "Authenticate from PC1 over SSH as operator at privilege 1", description: "Use PC1\u2019s Command prompt. A successful login is recorded; a failed password or open password prompt does not count.", criterion: { kind: "local-ssh-login", device: r1.id, source: pc1.id, username: "operator", privilege: 1 } },
+      { id: "admin-ssh", title: "Authenticate from PC1 over SSH as admin at privilege 15", description: "Use PC1\u2019s Command prompt and verify show privilege. This is a real local login, not an automatic guide action.", criterion: { kind: "local-ssh-login", device: r1.id, source: pc1.id, username: "admin", privilege: 15 } }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, LOCAL_USER_AUTHENTICATION_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createOSPFRouterIdLab(mode = "practice") {
     const g = (n) => `GigabitEthernet0/${n}`;
     const make = (name2, kind, x, y) => ({ id: "device-ospf-rid-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
@@ -54682,6 +54765,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "local-user-authentication") return createLocalUserAuthenticationLab(mode);
     if (id2 === "ospf-router-id") return createOSPFRouterIdLab(mode);
     if (id2 === "ospf-dr-bdr-election") return createOSPFDRBDRElectionLab(mode);
     if (id2 === "ospf-point-to-point") return createOSPFPointToPointLab(mode);

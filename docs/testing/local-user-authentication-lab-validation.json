@@ -1,0 +1,126 @@
+{
+  "feature": {
+    "title": "Local User Authentication",
+    "catalogId": "local-user-authentication",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 1,
+    "devices": 2,
+    "links": 1,
+    "tasks": 9,
+    "addressingRows": 2,
+    "permalink": "#/labs/local-user-authentication",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "R1 Gi0/0 192.0.2.1/24 directly connected to PC1 Gi0 192.0.2.10/24; PC gateway 192.0.2.1. Addressing and startup baselines are provided. No routing protocol or authentication server is needed.",
+  "verificationNotes": [
+    "Practice starts at zero credit with no users, enable secret, console login policy or SSH service. The reference configures admin privilege 15 and operator privilege 1 with local secrets, a separate enable secret, console login local, domain name, 2048-bit RSA keys, SSH version 2 and local/SSH-only VTY 0\u20134.",
+    "Six live configuration goals are separate from one genuine echo goal and two successful local SSH login achievements. The completed reference earns only the six configuration goals; it does not prepopulate login, session or traffic evidence.",
+    "PC1 uses the existing Windows SSH client through the packet engine. Incorrect and case-mismatched passwords fail; a password prompt or TCP connection is not sufficient for login credit. The initial authenticated privilege must match the planned account.",
+    "The operator begins at R1> and level 1, cannot enter configuration mode, and needs the independent enable secret to reach R1# and level 15. Its own user password and a configured legacy enable password cannot substitute for the enable secret. The administrator begins directly at level 15.",
+    "Fresh console sessions require Username and hidden Password prompts. Wrong credentials return to authentication. The original provisioning console remains usable while login local is applied; saving and reloading the workspace provides a fresh console test without changing the topology.",
+    "Readonly local SSH evidence is recorded only after accepted non-AAA login local authentication, with target runtime, source address, username, assigned initial privilege, line and time. It is bounded to 1000 records and exposes copied records without passwords. Closing a connection retains evidence; replacing the runtime invalidates that transient evidence.",
+    "Lesson achievements retain successful login/echo observations across session exit and saved-lab reopening, using the existing bounded observations format. Local user and access settings stay live: deleting an account or disabling the required VTY transport removes configuration credit even when login achievements were previously earned.",
+    "Local user grading requires an explicitly named account with a nonempty secret and the intended privilege. Shared password fields and inherited account names do not substitute. VTY grading checks coverage of 0\u20134, accepts a safe 0\u201315 range, and rejects bypasses or extra enabled Telnet listeners. AAA configuration is outside this non-AAA lab.",
+    "Negative tests include missing keys, disabled transport, Telnet refusal, lost links, wrong privileges, shared-line authentication, AAA method lists and fake runtime/log entries. These cannot fabricate the required local login evidence.",
+    "All published IOS and Windows verification commands are exercised. The existing show ssh notice for no SSHv1/SSHv2 connections is classified as informational, rather than a parser failure. Authentication decisions and networking behavior are otherwise unchanged.",
+    "Startup reboot uses saved credentials and discards transient login/session records. Portable reload preserves earned guide observations but reconstructs fresh console/SSH sessions, rather than serializing ready sessions. Credentials remain ordinary simulated configuration data; no new cryptographic implementation is claimed.",
+    "Browser scenarios run serially in isolated persistent profiles against identical local HTML. Both themes at 1440, 390 and 320 pixels cover provisioning, wrong passwords, privilege denial/elevation, hidden input, actual show users/ssh, ping, transport refusal/recovery, saved reload, console reauthentication and completed-reference save/cancel flows.",
+    "Host/path/query-preserving permalink tests return to Services & Security with an accessible singular count of one lab. Generic catalog checks cover group/section counts, existing routing labs, offline operation, save/cancel protection and guide prerequisites.",
+    "Desktop topology and light/dark mobile guides were visually reviewed. The generated stylesheet is byte-for-byte unchanged, preserving the existing UI and console appearance. No live CML validation or external AAA feature expansion is claimed."
+  ],
+  "unitChecks": [
+    "local-auth practice is independent, zero-credit and has two addressed nodes without users or SSH",
+    "published IOS configuration and completed reference earn six live goals and require two real logins plus a ping",
+    "fresh console prompts for a username and hidden password, rejects unknown/bad credentials and applies local privileges",
+    "SSH rejects a bad password without login credit and only accepts the matching case-sensitive local user secret",
+    "privilege-1 SSH cannot configure until the independent enable secret is supplied, and disable returns to user EXEC",
+    "an enable secret takes precedence over a configured legacy enable password",
+    "removing login local or allowing Telnet loses live VTY credit and cannot create local-SSH login evidence",
+    "missing RSA keys or disabled VTY transport prevents real SSH even with valid user configuration",
+    "the SSH-only configuration refuses Telnet and a lost link prevents new SSH without undoing earned login credit",
+    "login evidence is scoped to target, source, username and initial privilege; fake runtime/log entries cannot earn credit",
+    "local accounts with a shared password field or inherited names cannot earn the required secret-based user goal",
+    "wrong privilege cannot earn the planned account or login goal, even when SSH successfully authenticates",
+    "AAA method-list authentication does not substitute for the non-AAA line configuration or local-SSH evidence",
+    "accepted login evidence is read-only, excludes passwords and is not serialized as a ready session",
+    "saved-lab reload keeps achieved logins and ping while live config remains required and a fresh console authenticates again",
+    "startup reboot reconstructs authentication from saved settings and discards transient login evidence",
+    "VTY coverage accepts a safe 0\u201315 range but rejects missing lines, bypasses and extra Telnet listeners",
+    "imported local-auth criteria are bounded declarative data and reject invalid privileges, settings or identifiers",
+    "all published show and Windows verification commands report working local access and actual sessions"
+  ],
+  "validation": {
+    "newLocalAuthenticationTests": 19,
+    "focusedTests": 68,
+    "npmRunCheck": {
+      "typecheck": "passed",
+      "tests": 1696,
+      "passed": 1696,
+      "failed": 0,
+      "build": "passed"
+    },
+    "browserChecks": 15,
+    "newLabBrowserChecks": 8,
+    "catalogBrowserChecks": 7,
+    "artifactSha256": "24c4488beb7b18cf43e5f32fb618de606eac80dee576b8517298f4f76e9c88de",
+    "stylesheetUnchanged": true,
+    "stylesheetSha256": "bbf8a3ad99c8e30bf65894fc7950b66920fa7a15433c21bfdd9cffe484eaab9d",
+    "byteIdenticalArtifactPaths": [
+      "index.html",
+      "dist/index.html",
+      ".cache/local-user-authentication-catalog-browser/index-light-390.html",
+      ".cache/local-user-authentication-catalog-browser/index-dark-1440.html",
+      ".cache/local-user-authentication-catalog-browser/index.html",
+      ".cache/local-user-authentication-catalog-browser/index-light-1440.html",
+      ".cache/local-user-authentication-catalog-browser/index-dark-320.html",
+      ".cache/local-user-authentication-catalog-browser/index-light-320.html",
+      ".cache/local-user-authentication-catalog-browser/index-dark-390.html",
+      ".cache/lab-catalog/index-light-1440.html",
+      ".cache/lab-catalog/index-light-390.html",
+      ".cache/lab-catalog/index-light-320.html",
+      ".cache/lab-catalog/index-dark-1440.html",
+      ".cache/lab-catalog/index-dark-390.html",
+      ".cache/lab-catalog/index-dark-320.html",
+      ".cache/lab-catalog/index-prerequisites.html"
+    ]
+  },
+  "browser": {
+    "localAuthentication": [
+      "light 1440px: first Services & Security lab and singular accessible count, nine-task guide and two-row plan, zero-credit practice, published IOS configuration and six live goals, real ping and two locally authenticated SSH users with distinct initial privileges, wrong-password rejection and hidden inputs, privilege-1 command denial and independent enable-secret elevation, actual show users/ssh, blocked transport and recovery with live grading, saved achievements and fresh console authentication after reload, completed reference with no fabricated logins, cancel/save-copy protection, responsive layout and unchanged CLI colors",
+      "light 390px: first Services & Security lab and singular accessible count, nine-task guide and two-row plan, zero-credit practice, published IOS configuration and six live goals, real ping and two locally authenticated SSH users with distinct initial privileges, wrong-password rejection and hidden inputs, privilege-1 command denial and independent enable-secret elevation, actual show users/ssh, blocked transport and recovery with live grading, saved achievements and fresh console authentication after reload, completed reference with no fabricated logins, cancel/save-copy protection, responsive layout and unchanged CLI colors",
+      "light 320px: first Services & Security lab and singular accessible count, nine-task guide and two-row plan, zero-credit practice, published IOS configuration and six live goals, real ping and two locally authenticated SSH users with distinct initial privileges, wrong-password rejection and hidden inputs, privilege-1 command denial and independent enable-secret elevation, actual show users/ssh, blocked transport and recovery with live grading, saved achievements and fresh console authentication after reload, completed reference with no fabricated logins, cancel/save-copy protection, responsive layout and unchanged CLI colors",
+      "dark 1440px: first Services & Security lab and singular accessible count, nine-task guide and two-row plan, zero-credit practice, published IOS configuration and six live goals, real ping and two locally authenticated SSH users with distinct initial privileges, wrong-password rejection and hidden inputs, privilege-1 command denial and independent enable-secret elevation, actual show users/ssh, blocked transport and recovery with live grading, saved achievements and fresh console authentication after reload, completed reference with no fabricated logins, cancel/save-copy protection, responsive layout and unchanged CLI colors",
+      "dark 390px: first Services & Security lab and singular accessible count, nine-task guide and two-row plan, zero-credit practice, published IOS configuration and six live goals, real ping and two locally authenticated SSH users with distinct initial privileges, wrong-password rejection and hidden inputs, privilege-1 command denial and independent enable-secret elevation, actual show users/ssh, blocked transport and recovery with live grading, saved achievements and fresh console authentication after reload, completed reference with no fabricated logins, cancel/save-copy protection, responsive layout and unchanged CLI colors",
+      "dark 320px: first Services & Security lab and singular accessible count, nine-task guide and two-row plan, zero-credit practice, published IOS configuration and six live goals, real ping and two locally authenticated SSH users with distinct initial privileges, wrong-password rejection and hidden inputs, privilege-1 command denial and independent enable-secret elevation, actual show users/ssh, blocked transport and recovery with live grading, saved achievements and fresh console authentication after reload, completed reference with no fabricated logins, cancel/save-copy protection, responsive layout and unchanged CLI colors",
+      "light: permalink preserves current host/path/query, previews without replacing workspace, and returns to Services & Security with one lab",
+      "dark: permalink preserves current host/path/query, previews without replacing workspace, and returns to Services & Security with one lab"
+    ],
+    "catalog": [
+      "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ]
+  },
+  "browserErrors": [],
+  "externalRequests": [],
+  "references": [
+    {
+      "title": "Cisco IOS 15MT: Configuring Security with Passwords, Privileges, and Logins",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/sec_usr_cfg/configuration/15-mt/sec-usr-cfg-15-mt-book/sec-cfg-sec-4cli.html",
+      "scope": "Non-AAA local username/secret configuration, console and VTY login, user/privileged EXEC, privilege levels and enable secret."
+    },
+    {
+      "title": "Cisco: Configure SSH on Routers",
+      "url": "https://www.cisco.com/c/en/us/support/docs/security-vpn/secure-shell-ssh/4145-ssh.html",
+      "scope": "Hostname/domain/RSA-based SSH setup, local VTY authentication, SSH-only transport and operational verification."
+    }
+  ]
+}

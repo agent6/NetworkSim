@@ -3,7 +3,7 @@ import { IOS_ARGUMENT_ROWS, IOS_KEYWORD_HELP } from './ios-help-keywords.ts';
 
 export const IOS_UNRECOGNIZED = '% Unrecognized command';
 /** IOS prints some successful-command notices with a leading `%`; callers that treat `%` as failure must skip these. */
-export const iosInformational = (line: string): boolean => /^% OSPF: Reload or use "clear ip ospf process" command, for this to take effect$/.test(line) || /^%[A-Z][A-Z0-9_]*-\d-[A-Z0-9_]+:/.test(line) || /^% (?:The key modulus size is|Generating \d+ bit RSA keys|You already have RSA keys defined|They will be replaced|All keys will be removed|All router certs issued)/.test(line);
+export const iosInformational = (line: string): boolean => /^%No SSHv[12] server connections running\.$/.test(line) || /^% OSPF: Reload or use "clear ip ospf process" command, for this to take effect$/.test(line) || /^%[A-Z][A-Z0-9_]*-\d-[A-Z0-9_]+:/.test(line) || /^% (?:The key modulus size is|Generating \d+ bit RSA keys|You already have RSA keys defined|They will be replaced|All keys will be removed|All router certs issued)/.test(line);
 export const iosRejected = (line: string): boolean => line.startsWith('%') && !iosInformational(line) || line.trim()==='Area mismatch' || /^\s*ERROR:/i.test(line);
 export const iosAmbiguous = (input: string): string => `% Ambiguous command:  "${input.trim()}"`;
 

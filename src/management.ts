@@ -54,6 +54,12 @@ interface RemoteSession {
   expiryTimer?:TimerHandle;
 }
 const controllers = new WeakMap<Simulator, ManagementController>();
+export interface LocalSSHLogin {username:string;source:string;privilege:number;line:string;time:number}
+
+/** Accepted local SSH logins, without credentials; closing the connection retains evidence. */
+export function localSSHLoginSnapshot(engine:Simulator,deviceId:string):LocalSSHLogin[]{
+  return controllers.get(engine)?.localSSHLoginSnapshot(deviceId)??[];
+}
 
 /** Read-only management telemetry. Looking at a session never extends or closes it. */
 export function managementSessionSnapshot(engine:Simulator,deviceId:string):{id:string;source:string;port:number;line:string;phase:string;username?:string;expires:number;lastActivity:number;lineNumber:number}[]{
@@ -69,12 +75,17 @@ export function managementFor(engine: Simulator, factory: Factory): ManagementCo
 /** Simulated management services. Every remote operation crosses the packet engine. */
 export class ManagementController {
   private sessions = new Map<string, RemoteSession>();
+  private localSSHLogins: (LocalSSHLogin & {deviceId:string;runtime:Device['runtime']})[] = [];
   private sequence = 0;
   readonly engine: Simulator;
   private readonly factory: Factory;
   private accounting:AAAAccountingClient;
   private automationRuns = new Map<string, number>();
   private clientVRFs=new Map<string,string>();
+  localSSHLoginSnapshot(deviceId:string):LocalSSHLogin[]{
+    const runtime=this.engine.getDevice(deviceId)?.runtime;
+    return this.localSSHLogins.filter(row=>row.deviceId===deviceId&&row.runtime===runtime).map(({username,source,privilege,line,time})=>({username,source,privilege,line,time}));
+  }
   sessionSnapshot(deviceId:string):{id:string;source:string;port:number;line:string;phase:string;username?:string;expires:number;lastActivity:number;lineNumber:number}[]{
     return [...this.sessions.values()].filter(s=>s.deviceId===deviceId&&this.alive(s)).map(({id,source,port,line,phase,username,expires,lastActivity,lineNumber})=>({id,source,port,line,phase,username,expires,lastActivity,lineNumber}));
   }
@@ -201,6 +212,7 @@ export class ManagementController {
     const valid = remote?remote.accepted:session.method === 'local' ? expected!==undefined && expected === text : typeof line.password==='string' && line.password.length>0 && line.password === text;
     if (valid) {
       const authorization=this.execPrivilege(device.id,session.line,session.username,true,remote?.privilege??user?.privilege??line.privilege??1,remote);if(!authorization.accepted){this.close(session);return {closed:true,output:['% EXEC authorization failed.']};}session.phase = 'ready';session.cli.setPrivilege(authorization.privilege);session.cli.setIdentity(session.username,true,session.line,session.method==='aaa'?remote?.role??'network-operator':user?.role);this.beginAccounting(session,device,authorization.privilege);
+      if(session.port===22&&session.method==='local'&&!device.config.features.aaa?.enabled&&line.login==='local'&&session.username){this.localSSHLogins.push({deviceId:device.id,runtime:device.runtime,username:session.username,source:session.source,privilege:authorization.privilege,line:session.line,time:this.engine.clock.now()});if(this.localSSHLogins.length>1000)this.localSSHLogins.splice(0,this.localSSHLogins.length-1000);}
       this.engine.log(device.id, `User ${session.username || 'line'} logged in from ${session.source} on ${session.line}`, 6);
       return this.reply(session, device.config.features.banners?.exec ? [device.config.features.banners.exec] : []);
     }

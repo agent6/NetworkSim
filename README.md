@@ -66,6 +66,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **OSPF Router ID** under Routing compares a manual ID, the highest active loopback, and the highest up/up physical address across three routers. Distinguish configured and active IDs, confirm a process restart for pending changes, test duplicate-ID failure and restore routed traffic. The ten-task guide includes a twelve-row selection/address plan, completed reference and `#/labs/ospf-router-id`.
 
+**Local User Authentication** under Services & Security secures an IOS router with local admin/operator accounts, an enable secret, console login and SSH-only VTY access. Its nine tasks require actual privilege-checked SSH logins from PC1 and a real ping, alongside live configuration checks. Includes a completed reference and `#/labs/local-user-authentication`.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.

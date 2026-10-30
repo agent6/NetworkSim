@@ -19,7 +19,7 @@ try{
   const page=await browser.newPage({viewport:{width,height:width<600?844:1000},isMobile:width<600,hasTouch:width<600});page.setDefaultTimeout(12000);
   page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(/^https?:/.test(r.url()))requests.push(r.url());});await page.route(/^https?:\/\//,r=>r.abort());
   await page.addInitScript(t=>localStorage.setItem('network-sim.theme.v1',t),theme);await page.goto(pathToFileURL(process.cwd()+'/index.html').href);
-  await page.locator('.header-actions [data-action=lab-catalog]').click();assert.deepEqual(await page.locator('[data-catalog-section]').allTextContents(),['Fundamentals','Switching','Routing','Services & Security']);
+  await page.locator('.header-actions [data-action=lab-catalog]').click();assert.deepEqual(await page.locator('[data-catalog-section] > span:first-child').allTextContents(),['Fundamentals','Switching','Routing','Services & Security']);
   assert.equal(await page.locator('[data-catalog-section=Fundamentals]').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('[data-catalog-lab=router-on-a-stick]').count(),0);assert.ok(await fit(page));
   await page.locator('[data-catalog-section=Switching]').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('[data-catalog-lab=layer-2-switching-interfaces]').count(),1);assert.equal(await page.locator('[data-catalog-section=Switching]').evaluate(e=>document.activeElement===e),true);
   await page.locator('[data-catalog-section=Fundamentals]').click();await page.screenshot({path:`${folder}/fundamentals-${theme}-${width}.png`,animations:'disabled'});

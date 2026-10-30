@@ -5,9 +5,14 @@ import {switchingPeer} from './switching-messages.ts';
 import {poeSettings,poePort} from './poe.ts';
 import {endpointVoicePolicy, endpointNetworkPort} from './endpoint.ts';
 import {ospfLiveDetail} from './ospf-packets.ts';
+import {localSSHLoginSnapshot} from './management.ts';
+import {ownRecordValue} from './record-map.ts';
 
 export type Criterion =
   | { kind: "all" | "any"; criteria: Criterion[] }
+  | { kind: "local-user"; device: string; username: string; privilege: number }
+  | { kind: "local-management"; device: string; setting: "enable-secret" | "console-login" | "ssh-server" | "vty-login" }
+  | { kind: "local-ssh-login"; device: string; source: string; username: string; privilege: number }
   | { kind: "device"; device: string; powered?: boolean }
   | { kind: "interface-up"; device: string; interface: string }
   | { kind: "ip-routing"; device: string; enabled: boolean }
@@ -99,6 +104,11 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     switch (v.kind) {
       case "device":
         return v.powered === undefined || typeof v.powered === "boolean";
+      case "local-user":
+      case "local-ssh-login":
+        return text(v.username,128) && v.username!=="" && Number.isInteger(v.privilege) && v.privilege>=0 && v.privilege<=15 && (v.kind!=="local-ssh-login" || text(v.source,128) && v.source!=="");
+      case "local-management":
+        return ["enable-secret","console-login","ssh-server","vty-login"].includes(v.setting);
       case "interface-up":
         return text(v.interface,128);
       case "bpdu-guard-trip":
@@ -304,6 +314,25 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind === "local-user") {
+    const user=ownRecordValue(d.config.features.users,criterion.username);
+    return !!user && typeof user.secret==='string' && user.secret.length>0 && (user.privilege??1)===criterion.privilege;
+  }
+  if (criterion.kind === "local-management") {
+    const f=d.config.features;
+    if(criterion.setting==='enable-secret')return typeof f.enableSecret==='string' && f.enableSecret.length>0;
+    if(criterion.setting==='ssh-server')return typeof f.domainName==='string' && !!f.domainName.trim() && f.ssh?.version===2 && Number(f.ssh?.keys?.modulus)>=2048;
+    if(f.aaa?.enabled)return false;
+    if(criterion.setting==='console-login')return f.lines?.['console 0']?.login==='local';
+    const lines=Object.entries<any>(f.lines??{}).filter(([name])=>/^vty \d+(?: \d+)?$/.test(name));
+    const enabled=lines.filter(([,line])=>line.exec!==false && !['none',''].includes(String(line.transport??'')));
+    const safe=(line:any)=>line.login==='local' && line.transport==='ssh';
+    return enabled.every(([,line])=>safe(line)) && [0,1,2,3,4].every(n=>enabled.some(([name,line])=>{const [,start,end]=name.split(' ').map(Number);return safe(line) && start<=n && n<=(end??start);}));
+  }
+  if (criterion.kind === "local-ssh-login") {
+    const source=device(sim,criterion.source);
+    return !!source && localSSHLoginSnapshot(sim,d.id).some(row=>row.username===criterion.username && row.privilege===criterion.privilege && Object.values(source.config.interfaces).some(p=>!!p.ip && sameAddress(p.ip,row.source)));
+  }
   if (criterion.kind === "stp-mode") return ["switch","poeswitch","l3switch","datacenter"].includes(d.kind) && (d.config.features.stp?.mode??"rapid-pvst")===criterion.mode;
   if (criterion.kind === "stp-priority") return ["switch","poeswitch","l3switch","datacenter"].includes(d.kind) && (d.config.features.stp?.vlanPriorities?.[criterion.vlan]??d.config.features.stp?.priority??32768)===criterion.priority;
   if (criterion.kind === "stp-root") {
@@ -488,7 +517,7 @@ export function lessonProgress(sim: Simulator):
       );
     }
     const result = matches(sim, c);
-    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block") return result;
+    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login") return result;
     validKeys.add(key);
     if (result) observations.add(key);
     return result || observations.has(key);
@@ -496,7 +525,7 @@ export function lessonProgress(sim: Simulator):
   const rows = lesson.objectives.map((objective) => {
     const observed = observe(objective.criterion, JSON.stringify(objective.id));
     // Traffic and fault observations record accomplishments; configuration stays live.
-    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block";
+    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login";
     if (historical && observed)
       completed.add(objective.id);
     return {
