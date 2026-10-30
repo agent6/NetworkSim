@@ -25,6 +25,8 @@ export type Criterion =
       nextHop?: string;
     }
   | { kind: "neighbor"; device: string; protocol: string; state?: string }
+  | { kind: "discovery-settings"; device: string; protocol: "CDP" | "LLDP"; enabled: boolean; interval?: number; holdtime?: number }
+  | { kind: "discovery-neighbor"; device: string; protocol: "CDP" | "LLDP"; interface: string; peer: string; peerInterface: string }
   | { kind: "echo"; device: string; from: string }
   | { kind: "vlan"; device: string; id: number }
   | { kind: "lacp-bundle"; device: string; group: number; peer: string; members: string[] }
@@ -38,7 +40,7 @@ export type Criterion =
       kind: "interface";
       device: string;
       interface: string;
-      property: "adminUp" | "vlan" | "voiceVlan" | "nativeVlan" | "nonegotiate" | "channelGroup" | "channelMode" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "ipv4Addressed" | "duplex" | "portfast" | "speedAuto";
+      property: "adminUp" | "vlan" | "voiceVlan" | "nativeVlan" | "nonegotiate" | "channelGroup" | "channelMode" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "ipv4Addressed" | "duplex" | "portfast" | "speedAuto" | "cdp" | "lldpTransmit" | "lldpReceive";
       value: string | number | boolean;
     };
 export interface Objective {
@@ -115,6 +117,10 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         return (
           text(v.protocol, 40) && (v.state === undefined || text(v.state, 40))
         );
+      case "discovery-settings":
+        return ["CDP","LLDP"].includes(v.protocol) && typeof v.enabled==="boolean" && (v.interval===undefined || Number.isInteger(v.interval) && v.interval>=5 && v.interval<=(v.protocol==="CDP"?255:65535)) && (v.holdtime===undefined || Number.isInteger(v.holdtime) && v.holdtime>=1 && v.holdtime<=(v.protocol==="CDP"?255:65535));
+      case "discovery-neighbor":
+        return ["CDP","LLDP"].includes(v.protocol) && [v.interface,v.peer,v.peerInterface].every(s=>text(s,128) && s!=="");
       case "vlan":
         return Number.isInteger(v.id) && v.id >= 1 && v.id <= 4094;
       case "lacp-bundle":
@@ -132,7 +138,7 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         return text(v.interface,128) && text(v.source,128) && text(v.sourceInterface,128) && Number.isInteger(v.vlan) && v.vlan>=1 && v.vlan<=4094;
       case "interface":
         if (!text(v.interface, 128)) return false;
-        if (["switchport","ipv4Addressed","portfast","speedAuto","nonegotiate"].includes(v.property)) return typeof v.value === "boolean";
+        if (["switchport","ipv4Addressed","portfast","speedAuto","nonegotiate","cdp","lldpTransmit","lldpReceive"].includes(v.property)) return typeof v.value === "boolean";
         if (v.property === "description") return text(v.value,240);
         if (v.property === "channelGroup") return Number.isInteger(v.value) && v.value>=1 && v.value<=4096;
         if (v.property === "channelMode") return ["active","passive","on","desirable","auto"].includes(v.value);
@@ -249,6 +255,14 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind === "discovery-settings") {
+    const cdp=criterion.protocol==="CDP",settings=d.config.features.discovery?.[cdp?"cdp":"lldp"]??{},enabled=cdp?d.config.features.cdp!==false:!!d.config.features.lldp;
+    return enabled===criterion.enabled && (criterion.interval===undefined || (settings.interval??(cdp?60:30))===criterion.interval) && (criterion.holdtime===undefined || (settings.holdtime??(cdp?180:120))===criterion.holdtime);
+  }
+  if (criterion.kind === "discovery-neighbor") {
+    const peer=device(sim,criterion.peer),now=sim.clock.now();
+    return !!peer?.config.interfaces[criterion.peerInterface] && sim.interfaceUp(d.id,criterion.interface) && Object.values<any>(d.runtime.features.discoveryNeighbors??{}).some(row=>row.protocol===criterion.protocol && row.interface===criterion.interface && row.deviceId===peer.id && row.peerInterface===criterion.peerInterface && row.state==="UP" && Number.isFinite(row.expires) && row.expires>now && Number.isFinite(row.lastReceived) && row.lastReceived<=now);
+  }
   if (criterion.kind === "lacp-bundle") {
     const channel=d.runtime.features.portChannels?.[criterion.group],peer=device(sim,criterion.peer);
     return !!peer && channel?.protocol==="lacp" && channel.state==="up" && channel.peerDeviceId===peer.id && sim.interfaceUp(d.id,`Port-channel${criterion.group}`) && channel.activeMembers.length===criterion.members.length && criterion.members.every(name=>{
@@ -336,7 +350,7 @@ export function matches(
   }
   if (criterion.kind === "interface") {
     const port=d.config.interfaces[criterion.interface];if(!port)return false;
-    const value=criterion.property==="ipv4Addressed"?!!(port.ip||port.features.secondaryIps?.length||port.features.dhcp):criterion.property==="channelGroup"?port.features.channelGroup:criterion.property==="channelMode"?port.features.channelMode:criterion.property==="nonegotiate"?port.features.nonegotiate===true:criterion.property==="portfast"?port.features.portfast===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
+    const value=(criterion.property==="cdp"||criterion.property==="lldpTransmit"||criterion.property==="lldpReceive")?port.features[criterion.property]!==false:criterion.property==="ipv4Addressed"?!!(port.ip||port.features.secondaryIps?.length||port.features.dhcp):criterion.property==="channelGroup"?port.features.channelGroup:criterion.property==="channelMode"?port.features.channelMode:criterion.property==="nonegotiate"?port.features.nonegotiate===true:criterion.property==="portfast"?port.features.portfast===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
     return value===criterion.value;
   }
   return false;

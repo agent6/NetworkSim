@@ -1,0 +1,68 @@
+{
+  "feature": "CCNA Switching: CDP and LLDP",
+  "catalogId": "cdp-and-lldp",
+  "artifactSha256": "7ee50ac7cff0a86934b5ec65bc69e703b71889c98da786a1f60b02d9aca3f3df",
+  "devices": 5,
+  "links": 4,
+  "tasks": 8,
+  "topology": {
+    "R1": "Gi0/0 192.168.10.254/24 connects to SW1 Gi0/1",
+    "SW1": "Vlan10 management 192.168.10.1/24; Gi0/24 trunk to SW2; Gi0/2 access to PC1",
+    "SW2": "Vlan10 management 192.168.10.2/24; Gi0/24 trunk to SW1; Gi0/2 access to PC2",
+    "PC1": "192.168.10.11/24; static, no gateway required",
+    "PC2": "192.168.10.12/24; static, no gateway required",
+    "Discovery": "Network-facing ports use CDP and bidirectional LLDP; both protocols suppressed on PC-facing Gi0/2 ports; 5-second advertisements and 15-second holdtimes for the exercise"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1432,
+    "passed": 1432,
+    "failed": 0,
+    "focusedTests": 31,
+    "newLabTests": 11,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "checks": [
+    "Independent portable practice attempts begin with zero credit, ready VLAN/IP data paths, and explicitly disabled global and network-facing discovery; the fixture does not misrepresent factory defaults",
+    "Published IOS commands enable and save global CDP/LLDP, timers, network-facing controls and PC-facing suppression on all three network nodes",
+    "Six configuration/live-neighbor tasks pass before observed traffic; both actual PC directions receive replies and complete the eight-task guide",
+    "Delivered physical advertisements are required for neighbor credit; accepted configuration alone and synthetic display rows cannot satisfy the received-neighbor criteria",
+    "Each protocol has four correct local/remote port relationships: SW1 learns R1 and SW2, while R1 and SW2 learn only SW1; ordinary PCs do not advertise or appear as invented neighbors",
+    "LLDP transmit suppression ages only the remote observer after the last advertised 15-second holdtime, while local receive, CDP and real PC traffic remain available; restoration relearns the partner",
+    "LLDP receive suppression removes the local view while remote reception continues; no cdp enable disables both CDP directions on that port; repair restores received state",
+    "Protocol-specific lost advertisements retain the last received hostname, description and management address until expiry; fresh advertisements replace the snapshot with updated TLVs",
+    "Discovery stays local to physical links and works without IP addresses; existing management SVIs are advertised when present, and discovery is independent of normal data forwarding",
+    "Endpoint suppression requires CDP disabled, LLDP transmit disabled and LLDP receive disabled on a working data port; shutting down a PC port cannot substitute for suppression",
+    "Every published show/ping command works, including global status/timers, interface controls, traffic counters, summary and detailed neighbors with learned capabilities, management addresses and port IDs",
+    "Portable saves, renamed devices and startup power cycles preserve configuration and earned echo observations, but live neighbor goals require fresh advertisements after reload",
+    "Imported discovery criteria accept bounded protocol/timer/port data and IOS defaults; reject wrong peers, wrong interfaces, expired evidence, malformed protocols, unsupported ranges and nonboolean controls"
+  ],
+  "scope": "Uses existing CDP, LLDP, STP and Ethernet/IPv4 packet simulation. Adds the catalog lab and declarative guide criteria; no simulation engine changes, new networking commands or server dependency. Aging is a guided exercise using existing CLI and traffic controls; restore both LLDP directions for full live credit. No CML validation is claimed for this catalog addition.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/cdp/configuration/15-mt/cdp-15-mt-book/nm-cdp-discover.html",
+    "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr2-fwd/cdp-lldp-mac-udld/cdp-lldp-mac-udld-configuration-guide/c-configure-lldp.html"
+  ],
+  "browserChecks": [
+    "light 1440px: ten Switching entries, eight-task guide and reference, zero-credit baseline, all three IOS node configurations, both PC directions receive 3/3 replies with edge discovery suppressed, received CDP/LLDP neighbor details and timers, fresh discovery after saved reload, safe reference replacement and unchanged CLI colors, plus LLDP transmit suppression, remote holdtime aging with local receive and CDP retained, real PC traffic during suppression and fresh-neighbor repair",
+    "light 390px: ten Switching entries, eight-task guide and reference, zero-credit baseline, all three IOS node configurations, both PC directions receive 3/3 replies with edge discovery suppressed, received CDP/LLDP neighbor details and timers, fresh discovery after saved reload, safe reference replacement and unchanged CLI colors",
+    "light 320px: ten Switching entries, eight-task guide and reference, zero-credit baseline, all three IOS node configurations, both PC directions receive 3/3 replies with edge discovery suppressed, received CDP/LLDP neighbor details and timers, fresh discovery after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 1440px: ten Switching entries, eight-task guide and reference, zero-credit baseline, all three IOS node configurations, both PC directions receive 3/3 replies with edge discovery suppressed, received CDP/LLDP neighbor details and timers, fresh discovery after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 390px: ten Switching entries, eight-task guide and reference, zero-credit baseline, all three IOS node configurations, both PC directions receive 3/3 replies with edge discovery suppressed, received CDP/LLDP neighbor details and timers, fresh discovery after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 320px: ten Switching entries, eight-task guide and reference, zero-credit baseline, all three IOS node configurations, both PC directions receive 3/3 replies with edge discovery suppressed, received CDP/LLDP neighbor details and timers, fresh discovery after saved reload, safe reference replacement and unchanged CLI colors",
+    "light: share link preserves current host/path/query and returns to ten Switching labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to ten Switching labs without replacing the workspace"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}
