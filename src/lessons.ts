@@ -24,6 +24,7 @@ export type Criterion =
   | { kind: "neighbor"; device: string; protocol: string; state?: string }
   | { kind: "echo"; device: string; from: string }
   | { kind: "vlan"; device: string; id: number }
+  | { kind: "trunk-allowed"; device: string; interface: string; vlans: number[] }
   | { kind: "poe-interface"; device: string; interface: string; mode: "auto" | "never"; max: number; priority: "high" | "low" }
   | { kind: "poe-supply"; device: string; switch: string; interface: string; watts: number; standard: "802.3af" | "802.3at"; class: 3 | 4; spatialStreams?: 2 | 4; usb?: boolean }
   | { kind: "voice-policy"; device: string; vlan: number }
@@ -32,7 +33,7 @@ export type Criterion =
       kind: "interface";
       device: string;
       interface: string;
-      property: "adminUp" | "vlan" | "voiceVlan" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "duplex" | "portfast" | "speedAuto";
+      property: "adminUp" | "vlan" | "voiceVlan" | "nativeVlan" | "nonegotiate" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "duplex" | "portfast" | "speedAuto";
       value: string | number | boolean;
     };
 export interface Objective {
@@ -108,6 +109,8 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         );
       case "vlan":
         return Number.isInteger(v.id) && v.id >= 1 && v.id <= 4094;
+      case "trunk-allowed":
+        return text(v.interface,128) && Array.isArray(v.vlans) && v.vlans.length>0 && v.vlans.length<=4094 && v.vlans.every((n:unknown)=>Number.isInteger(n) && Number(n)>=1 && Number(n)<=4094) && new Set(v.vlans).size===v.vlans.length;
       case "poe-interface":
         return text(v.interface,128) && ["auto","never"].includes(v.mode) && Number.isInteger(v.max) && v.max>=4000 && v.max<=30000 && ["high","low"].includes(v.priority);
       case "poe-supply":
@@ -118,7 +121,7 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         return text(v.interface,128) && text(v.source,128) && text(v.sourceInterface,128) && Number.isInteger(v.vlan) && v.vlan>=1 && v.vlan<=4094;
       case "interface":
         if (!text(v.interface, 128)) return false;
-        if (["switchport","portfast","speedAuto"].includes(v.property)) return typeof v.value === "boolean";
+        if (["switchport","portfast","speedAuto","nonegotiate"].includes(v.property)) return typeof v.value === "boolean";
         if (v.property === "description") return text(v.value,240);
         if (v.property === "duplex") return ["auto","full","half"].includes(v.value);
         if (v.property === "ip") return typeof v.value === "string" && isIPv4(v.value);
@@ -134,7 +137,7 @@ export function validateLesson(value: unknown): asserts value is Lesson {
             "dynamic-auto",
             "dynamic-desirable",
           ].includes(v.value);
-        if (v.property === "vlan" || v.property === "voiceVlan")
+        if (v.property === "vlan" || v.property === "voiceVlan" || v.property === "nativeVlan")
           return Number.isInteger(v.value) && v.value >= 1 && v.value <= 4094;
         return (
           v.property === "mtu" &&
@@ -233,6 +236,10 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind === "trunk-allowed") {
+    const port=d.config.interfaces[criterion.interface],allowed=port?.allowedVlans;
+    return !!port?.switchport && port.mode==="trunk" && Array.isArray(allowed) && allowed.length===criterion.vlans.length && criterion.vlans.every(v=>allowed.includes(v));
+  }
   if (criterion.kind === "poe-interface") {
     const port=d.config.interfaces[criterion.interface];
     if (d.kind!=="poeswitch" || !port || !poePort(criterion.interface)) return false;
@@ -306,7 +313,7 @@ export function matches(
   }
   if (criterion.kind === "interface") {
     const port=d.config.interfaces[criterion.interface];if(!port)return false;
-    const value=criterion.property==="portfast"?port.features.portfast===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
+    const value=criterion.property==="nonegotiate"?port.features.nonegotiate===true:criterion.property==="portfast"?port.features.portfast===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
     return value===criterion.value;
   }
   return false;

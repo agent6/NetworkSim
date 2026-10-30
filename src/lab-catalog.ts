@@ -22,6 +22,7 @@ export const LAB_CATALOG=[
  {id:'vlan-and-access-ports',group:'CCNA',section:'Switching',title:'VLAN and access ports',description:'Create two VLANs, assign four access ports, and verify same-VLAN connectivity, VLAN isolation and dynamic MAC learning.',devices:5,links:4,practice:true},
  {id:'voice-vlan',group:'CCNA',section:'Switching',title:'Voice VLAN',description:'Provision PoE phones and PC passthrough on shared access ports. Separate voice and data VLANs, learn phone policy, obtain voice DHCP leases, and verify real traffic.',devices:7,links:6,practice:true},
  {id:'poe-interface',group:'CCNA',section:'Switching',title:'PoE Interface',description:'Restore power to an AP and phone, configure per-port limits and priorities within a constrained power budget, and verify real delivery and phone PC passthrough.',devices:5,links:4,practice:true},
+ {id:'802-1q-trunking',group:'CCNA',section:'Switching',title:'802.1Q Trunking',description:'Build a static trunk between two switches, match native and allowed VLANs, and verify tagged and untagged traffic with VLAN-scoped MAC learning.',devices:8,links:7,practice:true},
  {id:'router-on-a-stick',group:'CCNA',section:'Routing',title:'Router on a stick',description:'Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.',devices:4,links:3,practice:true},
  {id:'datacenter-vpc',group:'Other',title:'Datacenter Switch vPC',description:'Explore the existing NX-OS-style vPC pair and its downstream port-channel.',devices:datacenterExample.lab.devices.length,links:datacenterExample.lab.links.length,practice:false},
 ] as const satisfies readonly CatalogEntry[];
@@ -74,6 +75,11 @@ export const POE_INTERFACE_COMMANDS:Readonly<Record<string,readonly string[]>>={
  'interface GigabitEthernet0/1','power inline auto max 15400','power inline port priority low',
  'interface GigabitEthernet0/4','power inline never','no shutdown','end','write memory',
 ]};
+export const DOT1Q_TRUNK_COMMANDS:Readonly<Record<string,readonly string[]>>=Object.fromEntries(['SW1','SW2'].map(name=>[name,[
+ 'enable','configure terminal','vlan 99','name NATIVE','exit','interface GigabitEthernet0/24',
+ `description TRUNK_TO_${name==='SW1'?'SW2':'SW1'}`,'switchport mode trunk','switchport nonegotiate',
+ 'switchport trunk native vlan 99','switchport trunk allowed vlan 10,20,99','no shutdown','end','write memory',
+]]));
 export interface CatalogGuideResources {
  columns:readonly string[];
  rows:readonly (readonly string[])[];
@@ -83,6 +89,7 @@ export interface CatalogGuideResources {
  setup?:readonly {title:string;instructions:readonly string[]}[];
 }
 const GUIDE_RESOURCES:Readonly<Record<string,CatalogGuideResources>>={
+ '802-1q-trunking':{columns:['Device','Access port','VLAN','IPv4 address','Subnet mask'],rows:[['PC1 / PC2','SW1 / SW2 Gi0/1','10 · USERS','192.168.10.11 / 192.168.10.12','255.255.255.0'],['PC3 / PC4','SW1 / SW2 Gi0/2','20 · GUESTS','192.168.20.11 / 192.168.20.12','255.255.255.0'],['PC5 / PC6','SW1 / SW2 Gi0/3','99 · NATIVE','192.168.99.11 / 192.168.99.12','255.255.255.0']],commands:DOT1Q_TRUNK_COMMANDS,verification:{SW1:['show vlan brief','show interfaces trunk','show interfaces GigabitEthernet0/24 switchport','show spanning-tree vlan 10','show spanning-tree vlan 20','show spanning-tree vlan 99','show mac address-table dynamic'],SW2:['show interfaces trunk','show interfaces GigabitEthernet0/24 switchport','show mac address-table dynamic'],PC1:['ipconfig','ping -n 3 192.168.10.12','ping -n 3 192.168.20.12'],PC3:['ping -n 3 192.168.20.12'],PC5:['ping -n 3 192.168.99.12']},note:'Only the inter-switch Gi0/24 link and VLAN 99 need configuration. VLANs 10 and 20, the six access ports and PC IPv4 settings are preconfigured. Both trunks must use native VLAN 99 and allow exactly 10,20,99. Set static trunk mode before switchport nonegotiate. VLAN 10 and 20 frames cross the trunk tagged; native VLAN 99 frames cross untagged. VLAN 99 endpoints are included here to demonstrate native-VLAN forwarding. Keep normal spanning tree on the inter-switch link; do not configure PortFast there. Each PC pair shares one subnet and needs no default gateway. Cross-VLAN pings receive zero replies because no router is present. Generate traffic in all three VLANs before inspecting remote MAC addresses on Gi0/24. To explore pruning, remove VLAN 20 from one trunk and verify that only the VLAN 20 pair fails, then add it back. To explore a native-VLAN fault, change one end to native VLAN 1, inspect the trunk and spanning-tree output, then restore 99 on both ends. Save both switches with write memory.'},
  'poe-interface':{columns:['Device','Interface','IPv4 address','Subnet mask'],rows:[['AP1','GigabitEthernet0','192.168.10.21','255.255.255.0'],['PHONE1','Network','192.168.10.20','255.255.255.0'],['PC1','GigabitEthernet0','192.168.10.11','255.255.255.0'],['SRV1','GigabitEthernet0','192.168.10.10','255.255.255.0']],commands:POE_INTERFACE_COMMANDS,verification:{PSW1:['show power inline','show power inline GigabitEthernet0/1 detail','show power inline GigabitEthernet0/2 detail','show power inline priority','show interfaces status','show running-config interface GigabitEthernet0/1','show running-config interface GigabitEthernet0/2'],PC1:['ipconfig','ping -n 3 192.168.10.10']},note:'PSW1 has a preconfigured 40 W budget. Limits use milliwatts: 15400 mW = 15.4 W. The simulator’s full AP profile allocates 30 W; its reduced 802.3af profile allocates 15.4 W with 2×2 radios and USB off. The phone allocates 15.4 W. Both reduced allocations total 30.8 W, leaving 9.2 W. Keep the phone at high priority and the AP at low priority. To explore budget denial after completing the lab, temporarily raise Gi0/1 to 30000 mW: PHONE1 retains power, AP1 is denied. Restore 15400 mW afterward. Inspect the live budget and port reasons by opening PSW1. Gi0/4 remains enabled for data with inline power disabled. All IP addresses and VLAN 10 access ports are preconfigured; no default gateway is needed within this subnet. The AP exercise checks electrical power and its reduced profile; controller joining and wireless clients are outside this lab. The phone uses the untagged access VLAN, with no call registration. Save PSW1 with write memory.'},
  'voice-vlan':{columns:['Device','Interface','VLAN','IPv4 address','Default gateway'],rows:[
   ['R1','GigabitEthernet0/0.10','10 · DATA','192.168.10.1 /24','—'],['R1','GigabitEthernet0/0.20','20 · VOICE','192.168.20.1 /24','—'],['R1','GigabitEthernet0/0.100','100 · SERVICES','192.168.100.1 /24','—'],
@@ -107,6 +114,33 @@ const ipv4InterfaceCriterion=(device:string,address:string,port='GigabitEthernet
  {kind:'interface',device,interface:port,property:'mask',value:'255.255.255.0'},
  {kind:'interface',device,interface:port,property:'adminUp',value:true},
 ]});
+export function createDot1QTrunkingLab(mode:CatalogMode='practice'):LabDocument{
+ const make=(name:string,kind:Device['kind'],x:number,y:number):Device=>({id:'device-dot1q-'+name.toLowerCase(),kind,x,y,powered:true,config:factoryDeviceConfig(kind,name),runtime:emptyRuntime()});
+ const switches=[make('SW1','switch',260,160),make('SW2','switch',780,160)];
+ const pcs=[1,2,3,4,5,6].map(n=>{const side=(n-1)%2,pair=Math.floor((n-1)/2),vlan=[10,20,99][pair],pc=make(`PC${n}`,'pc',100+side*520+pair*160,430);Object.assign(pc.config.interfaces.GigabitEthernet0,{ip:`192.168.${vlan}.${11+side}`,mask:'255.255.255.0'});pc.config.interfaces.GigabitEthernet0.features.dhcp=false;delete pc.config.defaultGateway;return pc;});
+ for(const sw of switches){for(const[id,name]of [[10,'USERS'],[20,'GUESTS']] as const)sw.config.vlans[id]={id,name,active:true};for(const[n,vlan]of [[1,10],[2,20],[3,99]]){const port=sw.config.interfaces[`GigabitEthernet0/${n}`];Object.assign(port,{mode:'access',vlan});port.features.portfast=true;}sw.config.interfaces['GigabitEthernet0/24'].adminUp=false;}
+ for(const d of [...switches,...pcs])d.startupConfig=structuredClone(d.config);
+ const trunk=(sw:Device):Criterion=>({kind:'all',criteria:[
+  {kind:'interface',device:sw.id,interface:'GigabitEthernet0/24',property:'switchport',value:true},
+  {kind:'interface',device:sw.id,interface:'GigabitEthernet0/24',property:'mode',value:'trunk'},
+  {kind:'interface',device:sw.id,interface:'GigabitEthernet0/24',property:'nonegotiate',value:true},
+  {kind:'interface',device:sw.id,interface:'GigabitEthernet0/24',property:'portfast',value:false},
+  {kind:'interface',device:sw.id,interface:'GigabitEthernet0/24',property:'adminUp',value:true},
+ ]});
+ const lab:CatalogLab={id:'lab-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)),catalogId:'802-1q-trunking',name:'802.1Q Trunking'+(mode==='completed'?' · Completed':''),devices:[...switches,...pcs],links:[
+  {id:'link-dot1q-trunk',a:{deviceId:switches[0].id,port:'GigabitEthernet0/24'},b:{deviceId:switches[1].id,port:'GigabitEthernet0/24'},enabled:true,delay:.1,loss:0},
+  ...pcs.map((pc,i)=>({id:`link-dot1q-pc${i+1}`,a:{deviceId:switches[i%2].id,port:`GigabitEthernet0/${Math.floor(i/2)+1}`},b:{deviceId:pc.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0})),
+ ],notes:[{id:'note-dot1q-vlans',x:520,y:620,text:'VLAN 10 · PC1 ↔ PC2 · tagged\nVLAN 20 · PC3 ↔ PC4 · tagged\nNative VLAN 99 · PC5 ↔ PC6 · untagged on the trunk'}],lesson:{title:'802.1Q Trunking',description:'SW1 and SW2 each have a PC in VLAN 10, VLAN 20 and native VLAN 99. All PC addresses and access ports are preconfigured. The inter-switch Gi0/24 ports begin shut down in access mode, and VLAN 99 is missing on both switches.\n\nCreate VLAN 99 on both switches. Configure both Gi0/24 interfaces as static 802.1Q trunks with DTP negotiation disabled, matching native VLAN 99 and an allowed list of exactly 10,20,99, then enable the interfaces. Preserve normal spanning tree on the inter-switch link.\n\nUse show interfaces trunk and show interfaces GigabitEthernet0/24 switchport to inspect both ends. Run the three PC-pair tests below: VLANs 10 and 20 must cross tagged, and native VLAN 99 must cross untagged. Inspect remote MAC entries on Gi0/24 in each VLAN. No router or default gateway is required for these same-VLAN tests. Save both switches with write memory, then save or export the lab.',objectives:[
+  {id:'native-vlan',title:'Create VLAN 99 on both switches',description:'Name the native VLAN NATIVE. VLANs 10 and 20 already exist.',criterion:{kind:'all',criteria:switches.map(sw=>({kind:'vlan',device:sw.id,id:99}))}},
+  ...switches.map(sw=>({id:sw.config.hostname.toLowerCase()+'-trunk',title:`Configure and enable ${sw.config.hostname} Gi0/24 as a static trunk`,description:'Use switchport mode trunk and switchport nonegotiate, then no shutdown. Keep PortFast disabled.',criterion:trunk(sw)})),
+  {id:'native-match',title:'Set native VLAN 99 on both trunk interfaces',description:'Match the untagged VLAN at both ends.',criterion:{kind:'all',criteria:switches.map(sw=>({kind:'interface',device:sw.id,interface:'GigabitEthernet0/24',property:'nativeVlan',value:99}))}},
+  {id:'allowed',title:'Allow exactly VLANs 10, 20 and 99 on both trunks',description:'Verify the allowed and active VLAN lists with show interfaces trunk.',criterion:{kind:'all',criteria:switches.map(sw=>({kind:'trunk-allowed',device:sw.id,interface:'GigabitEthernet0/24',vlans:[10,20,99]}))}},
+  ...[10,20,99].map((vlan,i)=>({id:`vlan${vlan}-ping`,title:`Verify PC${2*i+1} reaches PC${2*i+2} across VLAN ${vlan}`,description:`192.168.${vlan}.11 → 192.168.${vlan}.12. ${vlan===99?'Native traffic crosses the trunk untagged.':'Traffic crosses the trunk with an 802.1Q tag.'}`,criterion:{kind:'echo' as const,device:pcs[2*i].id,from:`192.168.${vlan}.12`},action:{kind:'ping' as const,device:pcs[2*i].id,target:`192.168.${vlan}.12`}})),
+  {id:'remote-macs',title:'Verify remote MAC learning on each switch’s trunk',description:'Each switch must learn the three PCs on the other switch through Gi0/24, in their own VLANs.',criterion:{kind:'all',criteria:switches.flatMap((sw,side)=>[0,1,2].map(pair=>({kind:'mac-learned',device:sw.id,interface:'GigabitEthernet0/24',source:pcs[2*pair+1-side].id,sourceInterface:'GigabitEthernet0',vlan:[10,20,99][pair]})))}},
+ ]}};
+ const doc:LabDocument={format:'netsim-lab',version:1,seed:20261029,lab};
+ return mode==='completed'?completedDocument(doc,DOT1Q_TRUNK_COMMANDS):parseDocument(JSON.stringify(doc));
+}
 export function createPoEInterfaceLab(mode:CatalogMode='practice'):LabDocument{
  const make=(name:string,kind:Device['kind'],x:number,y:number):Device=>({id:'device-poe-'+name.toLowerCase(),kind,x,y,powered:true,config:factoryDeviceConfig(kind,name),runtime:emptyRuntime()});
  const sw=make('PSW1','poeswitch',500,180),ap=make('AP1','ap',200,420),phone=make('PHONE1','phone',500,420),pc=make('PC1','pc',500,650),server=make('SRV1','server',800,420);
@@ -334,6 +368,7 @@ export function createRouterOnAStickLab(mode:CatalogMode='practice'):LabDocument
  return completedDocument(doc,ROAS_COMMANDS);
 }
 export function createCatalogLab(id:string,mode:CatalogMode='practice'):LabDocument{
+ if(id==='802-1q-trunking')return createDot1QTrunkingLab(mode);
  if(id==='poe-interface')return createPoEInterfaceLab(mode);
  if(id==='voice-vlan')return createVoiceVLANLab(mode);
  if(id==='vlan-and-access-ports')return createVLANAccessLab(mode);

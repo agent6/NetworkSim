@@ -1,0 +1,61 @@
+{
+  "feature": "CCNA Switching: 802.1Q Trunking",
+  "catalogId": "802-1q-trunking",
+  "artifactSha256": "9af5c5dc9beaa96595d532025e0aaaa6bab2fbc47e8cd55c52691183430ffb43",
+  "devices": 8,
+  "links": 7,
+  "tasks": 9,
+  "topology": {
+    "SW1/SW2": "Gi0/24 static inter-switch trunk; native VLAN 99; allowed VLANs 10,20,99; DTP disabled; normal STP",
+    "PC1/PC2": "VLAN 10, 192.168.10.11/24 and .12/24 on SW1/SW2 Gi0/1",
+    "PC3/PC4": "VLAN 20, 192.168.20.11/24 and .12/24 on SW1/SW2 Gi0/2",
+    "PC5/PC6": "Native VLAN 99, 192.168.99.11/24 and .12/24 on SW1/SW2 Gi0/3"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1388,
+    "passed": 1388,
+    "failed": 0,
+    "focusedTests": 50,
+    "newLabTests": 10,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "checks": [
+    "Independent practice attempts start with no task credit, both trunk ports shut in access mode and VLAN 99 absent; PC addressing and access ports are preconfigured",
+    "Published IOS commands configure matching static trunks, DTP suppression, native VLAN 99, exact allowed lists and saved startup configurations",
+    "All three PC pairs exchange actual replies in both directions; switch ports use normal STP forwarding without PortFast",
+    "Observed ICMP frames carry VLAN 10/20 tags on the trunk, native VLAN 99 crosses untagged, access delivery is untagged and switches preserve IP TTL",
+    "Removing VLAN 20 from one trunk breaks only the VLAN 20 pair; adding it back restores actual traffic",
+    "A native-VLAN mismatch breaks the native pair while tagged traffic continues; matching native VLANs restore connectivity",
+    "Missing VLANs, shutdown and disabled cable break actual forwarding; corrective configuration recovers it",
+    "Both switches must learn all three remote PC MAC addresses dynamically on Gi0/24 in their correct VLANs; clear and reload require fresh learning",
+    "Published switch and PC verification commands work; cross-VLAN pings fail without a router",
+    "Portable saves and switch power cycles retain configuration; stable device IDs preserve objectives after host rename and earned echo observations survive reload",
+    "Imported allowed lists reject duplicates, empty or invalid VLANs and oversize arrays; native VLAN and negotiation values validate as bounded data"
+  ],
+  "scope": "Uses the existing switching, packet, STP, DTP and MAC-learning engines. No simulation-engine changes, server backend or unimplemented configurations added. Native-VLAN endpoints demonstrate untagged forwarding within this lab.",
+  "source": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-13/configuration_guide/vlan/b_1713_vlan_9300_cg/configuring_vlan_trunks.html",
+  "browserChecks": [
+    "light 1440px: six Switching entries, nine-task guide and reference, unconfigured baseline, both visible IOS trunk configurations, three VLAN pairs receive 3/3 replies, remote MAC clear/relearn, saved reload, completed-reference protection and unchanged CLI colors, plus failed baseline, allowed-VLAN pruning and native-VLAN mismatch with real traffic failure/repair",
+    "light 390px: six Switching entries, nine-task guide and reference, unconfigured baseline, both visible IOS trunk configurations, three VLAN pairs receive 3/3 replies, remote MAC clear/relearn, saved reload, completed-reference protection and unchanged CLI colors",
+    "light 320px: six Switching entries, nine-task guide and reference, unconfigured baseline, both visible IOS trunk configurations, three VLAN pairs receive 3/3 replies, remote MAC clear/relearn, saved reload, completed-reference protection and unchanged CLI colors",
+    "dark 1440px: six Switching entries, nine-task guide and reference, unconfigured baseline, both visible IOS trunk configurations, three VLAN pairs receive 3/3 replies, remote MAC clear/relearn, saved reload, completed-reference protection and unchanged CLI colors, plus failed baseline, allowed-VLAN pruning and native-VLAN mismatch with real traffic failure/repair",
+    "dark 390px: six Switching entries, nine-task guide and reference, unconfigured baseline, both visible IOS trunk configurations, three VLAN pairs receive 3/3 replies, remote MAC clear/relearn, saved reload, completed-reference protection and unchanged CLI colors",
+    "dark 320px: six Switching entries, nine-task guide and reference, unconfigured baseline, both visible IOS trunk configurations, three VLAN pairs receive 3/3 replies, remote MAC clear/relearn, saved reload, completed-reference protection and unchanged CLI colors",
+    "light: share link preserves current host/path/query and returns to six Switching labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to six Switching labs without replacing the workspace"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}
