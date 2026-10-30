@@ -1,0 +1,80 @@
+{
+  "feature": "CCNA Routing: IPv6 Static Routing",
+  "catalogId": "ipv6-static-routing",
+  "artifactSha256": "cd8a9cc09b55ab8ac045380bc3496801ab92fc803502168a0c0dce30bb4c0557",
+  "devices": 6,
+  "links": 6,
+  "tasks": 11,
+  "topology": {
+    "R1": "LAN 2001:db8:10::/64; transit 2001:db8:12::1/64 to R2; primary 2001:db8:13::1/64 to R3; fe80::1 on each local interface",
+    "R2": "LAN 2001:db8:20::/64; 2001:db8:12::2/64 to R1; 2001:db8:23::2/64 to R3; fe80::2 on each local interface",
+    "R3": "LAN 2001:db8:30::/64; 2001:db8:23::3/64 to R2; primary 2001:db8:13::3/64 to R1; link-local fe80::2 on the primary link and fe80::3 on its other links; Loopback0 2001:db8:100::33/128 and Loopback1 2001:db8:200::3/128",
+    "PC1": "2001:db8:10::10/64; manual interface-scoped gateway fe80::1",
+    "PC2": "2001:db8:20::10/64; manual interface-scoped gateway fe80::2",
+    "SRV1": "2001:db8:30::10/64; manual interface-scoped gateway fe80::3"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1544,
+    "focusedTests": 53,
+    "newLabTests": 16,
+    "browserChecks": 15,
+    "passed": 1544,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed"
+  },
+  "checks": [
+    "IPv6 static practice has independent valid attempts, disabled forwarding, manual endpoint gateways and zero tasks",
+    "published commands enable forwarding and install all required routes, with real traffic needed for all eleven tasks",
+    "IPv6 forwarding is a real prerequisite: disabling transit routing breaks the affected path without breaking the direct server path",
+    "the same fe80::2 on two R1 uplinks resolves to different neighbors and does not confuse the selected next-hop interface",
+    "floating IPv6 routes remain configured but inactive while the same-prefix AD 1 primary is installed",
+    "a primary-link shutdown installs scoped AD 10 backups in both directions and actual server traffic uses R2 before the AD 1 routes reclaim the path",
+    "unscoped link-local IPv6 next hops are rejected atomically across the fe80::/10 range, while global next hops remain valid",
+    "a /128 at AD 200 uses the direct scoped next hop while the destination covered only by AD 1 defaults traverses R2",
+    "removing a host route still permits default forwarding but revokes host-route credit; removing the default breaks only destinations that depend on it",
+    "a missing R3 return route breaks PC2-to-server echo despite the correct forward route, and repair restores both directions",
+    "unknown IPv6 destinations stop at R3 instead of circulating through defaults",
+    "a reachable destination cannot earn the required interface or floating-distance goal through the wrong link-local scope or distance",
+    "published IPv6 verification commands expose S defaults, scoped next hops, real neighbors and primary/host administrative distances",
+    "portable reloads and startup power cycles retain manual IPv6 addressing and earned echoes while DAD, neighbors and routes rebuild",
+    "a wrong manual IPv6 gateway prevents real Neighbor Discovery and remote echo despite a fully configured router plan",
+    "IPv6 and prior IPv4 static criteria remain bounded and reject mixed-family or oversized imported route data"
+  ],
+  "cliFix": "Reject an IPv6 static route with a next hop in fe80::/10 when no exit interface is specified, before modifying configuration. Scoped link-local and global next-hop forms remain supported.",
+  "scope": "Adds the IPv6 static-routing catalog lab, an IPv6-forwarding lesson predicate, address-family-aware configured-static-route validation and the unscoped link-local CLI rejection. Uses existing Neighbor Discovery, IPv6 route installation and packet forwarding. All addressing is ready, router forwarding starts disabled, host gateways are manual and RA is suppressed for this exercise. No dependency, backend or live CML validation is claimed.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_pi/configuration/15-mt/iri-15-mt-book/ip6-route-static.html",
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipv6/configuration/12-2sr/ipv6-12-2sr-book/ip6-stat-routes.html",
+    "https://ptgmedia.pearsoncmg.com/images/9781587133237/samplepages/1587133237.pdf"
+  ],
+  "verificationNotes": [
+    "R1 has distinct neighbors both using fe80::2: R2 on Gi0/1 and R3 on Gi0/2. Actual neighbor output, distinct peer MACs, chosen packet egress and working failover verify interface scope.",
+    "Unscoped link-local positive and negated commands are rejected atomically for lowercase, uppercase and other addresses within fe80::/10. Global next-hop forms remain valid.",
+    "Both /64 floating backups use AD 10 and scoped link-local next hops; loss of the primary link withdraws the AD 1 routes and selects backups in both directions. This does not claim remote-failure detection on an otherwise up local interface.",
+    "The /128 host route at AD 200 wins by prefix length over the AD 1 default. A successful echo alone cannot earn a mismatched interface or distance goal. IPv6 defaults display S ::/0, without the IPv4 S* convention.",
+    "All eight new-lab browser checks and seven general catalog checks passed in both themes at 1440, 390 and 320 pixels, including deployment-relative permalinks. Mobile terminal assertions normalize display wrapping. The frozen offline artifact matches final index.html and dist/index.html byte for byte; general catalog checks ran after the final build. No page errors or external requests were observed."
+  ],
+  "browserChecks": [
+    "light 320px: three Routing labs, eleven-task IPv6 static-routing guide and addressing plan, zero-credit practice, all three published IOS IPv6 configurations and enabled forwarding, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S ::/0 default output, interface-scoped repeated fe80::2 neighbors and rejection of an unscoped link-local next hop, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "light 1440px: three Routing labs, eleven-task IPv6 static-routing guide and addressing plan, zero-credit practice, all three published IOS IPv6 configurations and enabled forwarding, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S ::/0 default output, interface-scoped repeated fe80::2 neighbors and rejection of an unscoped link-local next hop, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "light 390px: three Routing labs, eleven-task IPv6 static-routing guide and addressing plan, zero-credit practice, all three published IOS IPv6 configurations and enabled forwarding, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S ::/0 default output, interface-scoped repeated fe80::2 neighbors and rejection of an unscoped link-local next hop, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 320px: three Routing labs, eleven-task IPv6 static-routing guide and addressing plan, zero-credit practice, all three published IOS IPv6 configurations and enabled forwarding, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S ::/0 default output, interface-scoped repeated fe80::2 neighbors and rejection of an unscoped link-local next hop, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 390px: three Routing labs, eleven-task IPv6 static-routing guide and addressing plan, zero-credit practice, all three published IOS IPv6 configurations and enabled forwarding, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S ::/0 default output, interface-scoped repeated fe80::2 neighbors and rejection of an unscoped link-local next hop, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 1440px: three Routing labs, eleven-task IPv6 static-routing guide and addressing plan, zero-credit practice, all three published IOS IPv6 configurations and enabled forwarding, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S ::/0 default output, interface-scoped repeated fe80::2 neighbors and rejection of an unscoped link-local next hop, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "light: share link preserves current host/path/query and returns to the three Routing labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to the three Routing labs without replacing the workspace"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

@@ -10,6 +10,7 @@ export type Criterion =
   | { kind: "device"; device: string; powered?: boolean }
   | { kind: "interface-up"; device: string; interface: string }
   | { kind: "ip-routing"; device: string; enabled: boolean }
+  | { kind: "ipv6-routing"; device: string; enabled: boolean }
   | { kind: "link"; a: string; b: string }
   | { kind: "address"; device: string; address: string }
   | { kind: "default-gateway"; device: string; address: string }
@@ -105,6 +106,7 @@ export function validateLesson(value: unknown): asserts value is Lesson {
       case "link-loss":
         return text(v.interface,128) && v.interface!=="" && [v.receive,v.transmit].every(n=>Number.isFinite(n) && n>=0 && n<=1);
       case "ip-routing":
+      case "ipv6-routing":
         return typeof v.enabled === "boolean";
       case "address":
         return address(v.address);
@@ -134,7 +136,7 @@ export function validateLesson(value: unknown): asserts value is Lesson {
           (v.ad === undefined || Number.isInteger(v.ad) && v.ad>=0 && v.ad<=255)
         );
       case "static-route":
-        return typeof v.network==="string" && isIPv4(v.network) && Number.isInteger(v.prefix) && v.prefix>=0 && v.prefix<=32 && typeof v.nextHop==="string" && isIPv4(v.nextHop) && text(v.interface,128) && v.interface!=="" && Number.isInteger(v.ad) && v.ad>=1 && v.ad<=255;
+        return address(v.network) && Number.isInteger(v.prefix) && v.prefix>=0 && v.prefix<=(v.network.includes(':')?128:32) && address(v.nextHop) && v.network.includes(':')===v.nextHop.includes(':') && text(v.interface,128) && v.interface!=="" && Number.isInteger(v.ad) && v.ad>=1 && v.ad<=255;
       case "neighbor":
         return (
           text(v.protocol, 40) && (v.state === undefined || text(v.state, 40))
@@ -328,6 +330,7 @@ export function matches(
     return !!sw && sw.kind==="poeswitch" && sim.devicePowered(d.id) && supply?.available===true && supply.source==="poe" && supply.switchId===sw.id && supply.port===criterion.interface && supply.watts===criterion.watts && supply.standard===criterion.standard && supply.class===criterion.class && row?.deviceId===d.id && row.state==="on" && row.watts===criterion.watts && (criterion.spatialStreams===undefined || supply.spatialStreams===criterion.spatialStreams) && (criterion.usb===undefined || supply.usb===criterion.usb);
   }
   if (criterion.kind === "ip-routing") return d.config.ipRouting === criterion.enabled;
+  if (criterion.kind === "ipv6-routing") return d.config.ipv6Routing === criterion.enabled;
   if (criterion.kind === "default-gateway")
     return d.config.defaultGateway === criterion.address;
   if (criterion.kind === "dhcp-relay") {
