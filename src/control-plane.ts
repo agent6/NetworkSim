@@ -958,6 +958,25 @@ function installEigrpSummaries(engine:Simulator,endpoints:RoutedPort[],protocol:
     }
   }
 }
+export type OSPFFilterCrossing={device:Device;source:string;destination:string;summarize:boolean};
+function ospfAreaSettings(d:Device,protocol:string,area:string):any {return Object.entries<any>(config(d,protocol)?.areas??{}).find(([id])=>areaId(id)===areaId(area))?.[1]??{};}
+/** Type-3 policy is evaluated at each ABR boundary, from the origin toward the observer. */
+export function ospfFilterCrossings(protocol:string,crossings:OSPFFilterCrossing[],prefix:Pick<Route,'network'|'prefix'>,components:(d:Device,area:string,range:any)=>Pick<Route,'network'|'prefix'>[]):boolean {
+ if(!crossings.some(c=>ospfAreaSettings(c.device,protocol,c.source).filterOut||ospfAreaSettings(c.device,protocol,c.destination).filterIn))return true;
+ let current={...prefix};
+ const permits=(d:Device,name:string|undefined,routes:Pick<Route,'network'|'prefix'>[])=>{if(!name)return true;const raw=d.config.features.prefixLists?.[name],entries=(Array.isArray(raw)?raw:raw?.entries??[]).filter((e:any)=>isIPv6(e.network??'')===isIPv6(prefix.network));return !entries.length||routes.some(r=>prefixListPermits(d,name,r));};
+ for(const crossing of crossings){const out=ospfAreaSettings(crossing.device,protocol,crossing.source),incoming=ospfAreaSettings(crossing.device,protocol,crossing.destination),range=crossing.summarize?[...out.ranges??[]].filter(r=>r.prefix<=current.prefix&&contains(r.network,r.prefix,current.network)).sort((a,b)=>b.prefix-a.prefix)[0]:undefined;
+  if(range?.notAdvertise||!permits(crossing.device,out.filterOut,range?components(crossing.device,crossing.source,range):[current]))return false;
+  if(range)current={network:subnet(range.network,range.prefix),prefix:range.prefix};
+  if(!permits(crossing.device,incoming.filterIn,[current]))return false;
+ }
+ return true;
+}
+function ospfPathFiltered(path:Path,target:RoutedPort,protocol:string,endpoints:RoutedPort[],edges:Adj[]):boolean {
+ const source=areaId(networkMatch(target,protocol)?.area),crossings:OSPFFilterCrossing[]=[];
+ for(let i=path.edges.length-1;i>=0;i--){const edge=path.edges[i],from=path.edges[i+1]?.area??source,to=edge.area!;if(from!==to)crossings.push({device:edge.to.device,source:from!,destination:to,summarize:from===source});}
+ return !ospfFilterCrossings(protocol,crossings,{network:subnet(target.ip,target.prefix),prefix:target.prefix},(d,area,range)=>{const node=endpoints.find(p=>p.device.id===d.id)?.node;if(!node)return[];const reachable=pathsFrom(node,edges.filter(e=>e.area===area),protocol);return endpoints.filter(p=>areaId(networkMatch(p,protocol)?.area)===area&&p.prefix>=range.prefix&&contains(range.network,range.prefix,p.ip)&&reachable.has(p.node)).map(p=>({network:subnet(p.ip,p.prefix),prefix:p.prefix}));});
+}
 function ospfSummary(path:Path,target:RoutedPort,protocol:string,endpoints:RoutedPort[],edges:Adj[]):{network:string;prefix:number;metric:number}|null {
   const area=areaId(networkMatch(target,protocol)?.area),network=subnet(target.ip,target.prefix);
   for(let i=path.edges.length-1;i>=0;i--){
@@ -1089,6 +1108,7 @@ function installIgp(engine:Simulator,endpoints:RoutedPort[],edges:Adj[],protocol
         const first=path.edges[0];if(!first)continue;
         const interArea=ospfProtocol(protocol)&&path.areas.some(a=>a!==areaId(statement.area));
         if(interArea&&areasFor(node).size===1&&engine.lab.devices.some(d=>config(d,protocol)?.areas?.[first.area!]?.noSummary))continue;
+        if(ospfProtocol(protocol)&&interArea&&ospfPathFiltered(path,target,protocol,endpoints,edges))continue;
         const summary=ospfProtocol(protocol)&&interArea?ospfSummary(path,target,protocol,endpoints,edges):undefined;if(summary===null)continue;
         const prefix=eigrpProtocol(protocol)?summarizeAlong(path,subnet(target.ip,target.prefix),target.prefix,protocol):summary??{network:subnet(target.ip,target.prefix),prefix:target.prefix};
         if(eigrpProtocol(protocol)&&stub&&Array.isArray(stub)&&!stub.includes('connected')&&!(stub.includes('summary')&&prefix.prefix<target.prefix))continue;
@@ -1365,7 +1385,7 @@ function bgp(engine:Simulator,endpoints:RoutedPort[],_peers:Map<string,RoutedPor
 
 function ospfEndpoint(p:RoutedPort,protocol:OSPFProtocol):OSPFEndpoint {
   const statement=networkMatch(p,protocol),c=config(p.device,protocol);
-  return{deviceId:p.device.id,name:p.name,node:p.node,address:p.ip,...(protocol==='ospfv3ipv4'?{transportAddress:p.device.runtime.features.linkLocalAddresses?.[p.name]}:{}),prefix:p.prefix,family:p.family,routerId:routerId(p.device,protocol),area:areaId(statement?.area),vrf:p.iface.vrf,snapshot:{deviceConfig:{ipRouting:p.device.config.ipRouting,ipv6Routing:p.device.config.ipv6Routing,protocols:{[protocol]:{...structuredClone(c??{}),referenceBandwidth:c?.referenceBandwidth??(p.device.kind==='datacenter'?40000:100),routerId:routerId(p.device,protocol)}},features:{},interfaces:{}},interfaceConfig:{...structuredClone(p.iface),features:{...structuredClone(p.iface.features),bandwidth:interfaceBandwidth(p.device,p.iface)}}}};
+  return{deviceId:p.device.id,name:p.name,node:p.node,address:p.ip,...(protocol==='ospfv3ipv4'?{transportAddress:p.device.runtime.features.linkLocalAddresses?.[p.name]}:{}),prefix:p.prefix,family:p.family,routerId:routerId(p.device,protocol),area:areaId(statement?.area),vrf:p.iface.vrf,snapshot:{deviceConfig:{ipRouting:p.device.config.ipRouting,ipv6Routing:p.device.config.ipv6Routing,protocols:{[protocol]:{...structuredClone(c??{}),referenceBandwidth:c?.referenceBandwidth??(p.device.kind==='datacenter'?40000:100),routerId:routerId(p.device,protocol)}},features:{prefixLists:Object.fromEntries([...new Set(Object.values<any>(c?.areas??{}).flatMap(a=>[a.filterIn,a.filterOut]).filter(v=>typeof v==='string'))].filter(name=>Object.hasOwn(p.device.config.features.prefixLists??{},name)).map(name=>[name,structuredClone(p.device.config.features.prefixLists[name])]))},interfaces:{}},interfaceConfig:{...structuredClone(p.iface),features:{...structuredClone(p.iface.features),bandwidth:interfaceBandwidth(p.device,p.iface)}}}};
 }
 function ospfPacketSnapshot(engine:Simulator,endpoints:RoutedPort[],edges:Adj[],protocol:OSPFProtocol):OSPFSnapshot {
   const active=endpoints.filter(p=>networkMatch(p,protocol)),interfaces=active.filter((p,i,all)=>all.findIndex(q=>q.device.id===p.device.id&&q.name===p.name)===i).map(p=>({...ospfEndpoint(p,protocol),helloInterval:ospfTimers(p,protocol).hello,deadInterval:ospfTimers(p,protocol).dead,networkType:p.iface.features[protocol]?.networkType,passive:passive(p,protocol)||/^loopback/i.test(p.name),mtu:p.iface.mtu,mtuIgnore:!!p.iface.features[protocol]?.mtuIgnore,instanceId:p.iface.features[protocol]?.instanceId??(protocol==='ospfv3ipv4'?64:0),authentication:protocolAuthentication(engine,p,protocol),role:p.device.runtime.features[`${protocol}Interfaces`]?.[p.name]?.role}));

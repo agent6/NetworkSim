@@ -290,6 +290,7 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
   if (path === 'area' && context.protocol === 'ospf') {
     return chain([area], union(
       chain([word('authentication')], union(done, chain([word('message-digest')],done))),
+      chain([word('filter-list','Filter Type-3 advertisements between areas'), word('prefix'), text('IP prefix-list name')], union(chain([word('in')],done),chain([word('out')],done))),
       chain([word('stub')], optionGraph([[word('no-summary')]])),
       chain([word('nssa')], optionGraph(choices(['no-summary', 'default-information-originate', 'no-redistribution']))),
       chain([word('range'), ip('IP address to match'), ip('IP mask for address')], optionGraph([[word('not-advertise')], [word('cost'), number(0, 16777215, 'Advertised metric for this range')]])),

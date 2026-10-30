@@ -1,0 +1,97 @@
+{
+  "feature": {
+    "title": "OSPF Route Filtering",
+    "catalogId": "ospf-route-filtering",
+    "group": "CCNP ENCOR",
+    "section": "Layer 3",
+    "sectionLabCount": 7,
+    "groupLabCount": 16,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6
+    },
+    "devices": 8,
+    "links": 7,
+    "tasks": 20,
+    "addressingRows": 7,
+    "notes": 4,
+    "permalink": "#/labs/ospf-route-filtering",
+    "modes": [
+      "practice",
+      "completed"
+    ],
+    "preservedLabs": [
+      "multi-area-ospfv2",
+      "multi-area-ospfv3",
+      "ospf-route-summarization",
+      "ospf-passive-interface"
+    ]
+  },
+  "topology": "R1\u2013R2\u2013R3\u2013R4 chain on10.0.12.0/30,10.0.23.0/30 and10.0.34.0/30, lower-numbered endpoint .1 and upper .2. R1 internal Area10; R2 ABR10/0; R3 ABR0/20; R4 internal Area20. R1 Gi0/0 LAN172.16.0.1/24 hosts PC1 .10; R1 Gi0/2 LAN172.16.1.1/24 hosts PC2 .10. R3 Gi0/0 LAN192.168.20.1/24 hosts PC3 .10; R4 Gi0/0 LAN192.168.30.1/24 hosts SRV1 .10. Host gateways .1. Passive LAN costs1 except R1 Gi0/2 cost5; active P2P transits cost10/default10/40. Process10/manual RIDs1.1.1.1 through4.4.4.4. R2 AREA10-OUT seq5 denies172.16.1.0/24, seq10 permits0.0.0.0/0 le32; area10 filter-list prefix AREA10-OUT out. Both source-area O routes remain11/15; remote permitted O IA metrics21/31; denied LAN absent in Areas0/20.",
+  "verificationNotes": [
+    "Adds the seventh ENCOR Layer3 lab with independent practice and completed documents. Practice prepares addressing and gateways without router OSPF/static routes and starts at zero of twenty tasks with seven ping actions. Four actual IOS reference configurations save startup state, including the referenced R2 prefix list, and serialize empty runtime. The configuration-only reference earns thirteen live goals after fresh control traffic; four real successful tests and three proved expected failures bring twenty.",
+    "Implements operational IOSv OSPF area filter-list prefix NAME in/out, exact/no forms and decimal/dotted area-ID equivalence, contextual question-mark/Tab syntax, running/startup rendering, validated imported references and show ip ospf Area-filter NAME in/out output matching the cited Cisco example. Prefix-list contents used by filters travel in existing logical OSPF policy snapshots and participate in reliable update propagation. Only referenced lists are copied; unrelated routing policies do not enlarge OSPF state.",
+    "SPF evaluates Type3 policy at each area boundary from the prefix origin toward the observer. Out filters source-area exports, in filters advertisements entering the destination area, and same-area routes do not cross either gate. Internal prefixes, connected routes and Full adjacencies remain. Sequence/length/ge/le matching uses the existing prefix-policy evaluator. A defined nonempty list has implicit deny; a missing or empty referenced list does not provide filtering protection. No global change to other protocols\u2019 prefix-list defaults is made.",
+    "CLI Type3 views reconstruct constrained paths from each observer\u2019s received router records and evaluate the same boundary gates, including upstream filtering before a downstream ABR re-advertises into Area20. They do not use absence from the installed RIB as a substitute for LSA visibility. Area-range interaction follows the cited IOS rule: an outbound source-area aggregate can advertise if any reachable component matches the permit policy, while an inbound destination-area list evaluates the resulting aggregate prefix. Type5 external advertisements remain outside Type3 filtering.",
+    "Twenty tasks verify four router activations and intended addresses/areas/RIDs; normal OSPF-only areas, passive LANs and P2P costs; six Full relationships; both backbone-connected ABRs; the exact sole R2 source-area out binding and ordered deny/permit list; retained detailed source routes; permitted remote metrics; missing denied reachability backed by received policy; preserved return routes; saved configuration and referenced list; three permitted inter-area paths; internal PC2-to-PC1 traffic; two genuine filtered request failures; and an accepted request whose reply fails on the return path.",
+    "Bounded declarative ofl-policy inspects exact binding/entry state and rejects local distribute-list substitutes. ofl-remote requires a Full observer, the intended O IA allowed route atAD110, no covering denied route and a received R2 policy/list snapshot that permits the allowed and denies the blocked prefix. An unconfigured network or bare route absence cannot earn credit. Packet criteria retain accomplishments historically while combined recovery/current-state checks remain live.",
+    "For PC3/SRV1-to-PC2, ofl-drop correlates a real source transmission, same-packet reception and No route drop at R3/R4, and an actual returned ICMP3/0 with matching parent and quoted addresses. For PC2-to-SRV1 it additionally requires an accepted request at SRV1, the request\u2019s sends/receives along all four routers, a generated parent-linked echo reply and that reply\u2019s real no-route drop at R4 plus delivered quoted error back to SRV1. A timeout, disconnected transit, wrong parent/quote, missing source frame or missing intermediate request send cannot fabricate the result.",
+    "Tests compare unbound versus bound policy, wrong area/direction, Area20 in versus Area10 out scope, implicit deny, missing list, exact prefix lengths, sequence overrides, ge/le, source-area aggregate component selection, inbound aggregate matching, external Type5 independence, static workarounds and blocked protocol89. Prefix-list edits preserve neighbor uptime; remote RIB/CLI visibility waits for delivered updated policy snapshots instead of immediately reading new global configuration. Existing summarization and multi-area tests remain compatible.",
+    "Browser testing caught a diagram wider than the minimum zoom could fit at320px; the lab layout was compacted while retaining all nodes/notes. A separate reproduction found that failed pre-configuration probes could otherwise be credited retroactively after policy convergence. The failure matcher now requires source sends, requests and drops after the rejecting observer\u2019s installed SPF state; a regression sends failed probes before configuration and verifies thirteen live tasks without invented failure credit afterward.",
+    "The shared saved-OSPF criterion now includes contents of lists referenced by area filters, preventing a changed unsaved list from appearing saved merely because its binding is unchanged. IOS write memory/reload and portable reopen restore binding/list state; actual traffic observations survive while fresh received neighbors/policy/routes rebuild live completion. Stable IDs tolerate hostname changes. Import validation rejects malformed filter-reference types, empty/oversized names and embedded whitespace, and lesson criteria have bounded identities/areas/networks/paths and fail closed for missing endpoints.",
+    "Final offline Chrome QA covers light/dark at1440/390/320px: zero-credit eight-node practice; all four actual baseline console configurations; initially visible denied /24s at25/35; applying the out binding; Full neighbors/source specifics retained; permitted21/31 routes and denied RIB/Type3 absence in both remote areas; show prefix-list/binding output; actual allowed/internal pings and four-router Windows trace; two failed requests and one proved return-path failure; twenty tasks; saved list and binding through offline reload; configuration-only reference and cancel/save-copy protection; fitted topology/responsive guide and unchanged terminal golden styles. Both share-link checks preserve current host/path/query/workspace and return to ENCOR Layer3 with seven labs. Generic QA adds seven checks. All sixteen HTML copies match the final build; both desktop diagrams and320px guides were visually inspected. Owned localhost preview returned HTTP200.",
+    "The lab is IPv4 OSPF inter-area ABR prefix filtering in normal areas. Existing logical router records carry policy for SPF and CLI LSA projections; this change is not a complete scoped binary Type3 flooding implementation or a new live CML capture. OSPFv3, NX-OS route-map command syntax and external-route filtering are outside the lab\u2019s advertised scope."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco IOS15E: OSPF ABR Type3 LSA Filtering, scope, commands and Area-filter display",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_ospf/configuration/15-e/iro-15-e-book/iro-abr-type-3.html"
+    },
+    {
+      "title": "Cisco IOS OSPF Command Reference: area filter-list and area range interaction",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_ospf/command/iro-cr-book/m_ospf-a1.html"
+    },
+    {
+      "title": "Cisco Catalyst3750-X/3560-X IOS15.0: prefix-list matching and empty-list behavior",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3750x_3560x/software/release/15-0_1_se/configuration/guide/3750xcg/swiprout.html"
+    }
+  ],
+  "validation": {
+    "focusedLabAndEngineTests": 28,
+    "existingSummaryAndMultiAreaTests": 44,
+    "focusedPassed": 72,
+    "fullCheck": "npm run check",
+    "typecheck": "passed",
+    "fullTests": 2272,
+    "fullPassed": 2272,
+    "fullFailed": 0,
+    "build": "passed",
+    "browserChecks": [
+      "light 320px: ENCOR Layer3 with seven labs; eight-node/seven-link/20-task zero-credit practice and seven-row plan; four actual baseline IOS configurations with unbound prefix list; denied LAN initially visible in Areas0/20 at25/35; binding the source-area Type3 out filter preserves six Full relationships and intra-area component routes11/15 while removing denied /24 routes and LSA projections in both remote areas; permitted metrics21/31 and received-policy displays; four actual successful traffic tasks including internal connectivity and four-router Windows trace; two correlated failed remote requests and an accepted request with its actual reply failing on the return path; twenty tasks, saved prefix-list and binding, offline reload rebuilds live received state and retains packet evidence; configuration-only reference, cancel/save-copy protection, responsive topology/guide and unchanged terminal golden styles",
+      "dark 390px: ENCOR Layer3 with seven labs; eight-node/seven-link/20-task zero-credit practice and seven-row plan; four actual baseline IOS configurations with unbound prefix list; denied LAN initially visible in Areas0/20 at25/35; binding the source-area Type3 out filter preserves six Full relationships and intra-area component routes11/15 while removing denied /24 routes and LSA projections in both remote areas; permitted metrics21/31 and received-policy displays; four actual successful traffic tasks including internal connectivity and four-router Windows trace; two correlated failed remote requests and an accepted request with its actual reply failing on the return path; twenty tasks, saved prefix-list and binding, offline reload rebuilds live received state and retains packet evidence; configuration-only reference, cancel/save-copy protection, responsive topology/guide and unchanged terminal golden styles",
+      "light 390px: ENCOR Layer3 with seven labs; eight-node/seven-link/20-task zero-credit practice and seven-row plan; four actual baseline IOS configurations with unbound prefix list; denied LAN initially visible in Areas0/20 at25/35; binding the source-area Type3 out filter preserves six Full relationships and intra-area component routes11/15 while removing denied /24 routes and LSA projections in both remote areas; permitted metrics21/31 and received-policy displays; four actual successful traffic tasks including internal connectivity and four-router Windows trace; two correlated failed remote requests and an accepted request with its actual reply failing on the return path; twenty tasks, saved prefix-list and binding, offline reload rebuilds live received state and retains packet evidence; configuration-only reference, cancel/save-copy protection, responsive topology/guide and unchanged terminal golden styles",
+      "dark 320px: ENCOR Layer3 with seven labs; eight-node/seven-link/20-task zero-credit practice and seven-row plan; four actual baseline IOS configurations with unbound prefix list; denied LAN initially visible in Areas0/20 at25/35; binding the source-area Type3 out filter preserves six Full relationships and intra-area component routes11/15 while removing denied /24 routes and LSA projections in both remote areas; permitted metrics21/31 and received-policy displays; four actual successful traffic tasks including internal connectivity and four-router Windows trace; two correlated failed remote requests and an accepted request with its actual reply failing on the return path; twenty tasks, saved prefix-list and binding, offline reload rebuilds live received state and retains packet evidence; configuration-only reference, cancel/save-copy protection, responsive topology/guide and unchanged terminal golden styles",
+      "dark 1440px: ENCOR Layer3 with seven labs; eight-node/seven-link/20-task zero-credit practice and seven-row plan; four actual baseline IOS configurations with unbound prefix list; denied LAN initially visible in Areas0/20 at25/35; binding the source-area Type3 out filter preserves six Full relationships and intra-area component routes11/15 while removing denied /24 routes and LSA projections in both remote areas; permitted metrics21/31 and received-policy displays; four actual successful traffic tasks including internal connectivity and four-router Windows trace; two correlated failed remote requests and an accepted request with its actual reply failing on the return path; twenty tasks, saved prefix-list and binding, offline reload rebuilds live received state and retains packet evidence; configuration-only reference, cancel/save-copy protection, responsive topology/guide and unchanged terminal golden styles",
+      "light 1440px: ENCOR Layer3 with seven labs; eight-node/seven-link/20-task zero-credit practice and seven-row plan; four actual baseline IOS configurations with unbound prefix list; denied LAN initially visible in Areas0/20 at25/35; binding the source-area Type3 out filter preserves six Full relationships and intra-area component routes11/15 while removing denied /24 routes and LSA projections in both remote areas; permitted metrics21/31 and received-policy displays; four actual successful traffic tasks including internal connectivity and four-router Windows trace; two correlated failed remote requests and an accepted request with its actual reply failing on the return path; twenty tasks, saved prefix-list and binding, offline reload rebuilds live received state and retains packet evidence; configuration-only reference, cancel/save-copy protection, responsive topology/guide and unchanged terminal golden styles",
+      "light: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with seven labs, other sections remain independent and CCNA single-area OSPF remains separate",
+      "dark: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with seven labs, other sections remain independent and CCNA single-area OSPF remains separate",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "4f0df4ef8e49b63cc0ea9576b949e5f525a2884622aea13a2687dfabb27cd130",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}

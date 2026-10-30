@@ -20,7 +20,8 @@ export function validMultiAreaOSPFCriterion(c:any):boolean{
 }
 function saved(c:DeviceConfig,ports:string[],protocol:'ospf'|'ospfv3'):string|undefined{
  if(ports.some(p=>!c.interfaces[p]))return;
- return JSON.stringify([protocol==='ospfv3'?c.ipv6Routing:c.ipRouting,c.protocols[protocol],c.staticRoutes,ports.map(p=>{const i=c.interfaces[p];return[i.adminUp,...(protocol==='ospfv3'?[i.ipv6,i.features.ipv6LinkLocal,i.features.ipv6Nd]:[i.ip,i.mask]),i.switchport,i.vrf??'',i.features[protocol]];})]);
+ const names=[...new Set(Object.values<any>(c.protocols[protocol]?.areas??{}).flatMap(a=>[a.filterIn,a.filterOut]).filter(v=>typeof v==='string'))].sort();
+ return JSON.stringify([names.map(n=>[n,c.features.prefixLists?.[n]??null]),protocol==='ospfv3'?c.ipv6Routing:c.ipRouting,c.protocols[protocol],c.staticRoutes,ports.map(p=>{const i=c.interfaces[p];return[i.adminUp,...(protocol==='ospfv3'?[i.ipv6,i.features.ipv6LinkLocal,i.features.ipv6Nd]:[i.ip,i.mask]),i.switchport,i.vrf??'',i.features[protocol]];})]);
 }
 export function matchesMultiAreaOSPFCriterion(s:Simulator,d:Device,c:MultiAreaOSPFCriterion):boolean{
  const protocol=c.protocol??'ospf',v6=protocol==='ospfv3';

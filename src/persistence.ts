@@ -138,6 +138,7 @@ function validateConfig(c: any) {
   }
   for (const p of Object.values(c.protocols) as any[]) {
     if (!object(p)) throw Error("A protocol configuration is invalid.");
+    if(p.areas!==undefined){if(!object(p.areas))throw Error('Protocol areas must be an object.');for(const a of Object.values(p.areas) as any[]){if(!object(a))throw Error('An area configuration is invalid.');for(const key of ['filterIn','filterOut'])if(a[key]!==undefined&&(typeof a[key]!=='string'||!a[key].length||a[key].length>128||/\s/.test(a[key])))throw Error('An OSPF area filter reference is invalid.');}}
     for (const key of [
       "networks",
       "neighbors",
