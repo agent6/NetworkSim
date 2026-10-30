@@ -1,0 +1,91 @@
+{
+  "feature": {
+    "title": "Extended IPv4 ACL",
+    "catalogId": "extended-ipv4-acl",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 8,
+    "devices": 6,
+    "links": 5,
+    "tasks": 10,
+    "addressingRows": 7,
+    "permalink": "#/labs/extended-ipv4-acl",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.10.10/24 and PC2 192.168.10.20/24 connect through SW1 to R1 Gi0/0 192.168.10.1/24. R1 Gi0/1 192.168.20.1/24 connects to HTTP SRV1 192.168.20.10/24; Gi0/2 192.168.30.1/24 connects to DNS/HTTP SRV2 192.168.30.10/24. Gateways and connected routing are ready. Both PCs use SRV2 DNS.",
+  "verificationNotes": [
+    "Practice begins at zero credit. The completed reference configures only R1 and earns two live configuration goals, with no packet evidence. Eight ICMP, HTTP and DNS traffic achievements must be earned.",
+    "Named extended LAN-FILTER permits TCP from PC1 to SRV1 destination port 80 at sequence 10, UDP from the client /24 to SRV2 destination port 53 at 20, and ICMP echo from that LAN to SRV2 at 30. Sequence 40 explicitly denies other IP traffic from the LAN to SRV1. Other traffic is implicitly denied.",
+    "The policy is applied only inbound on R1 Gi0/0 near the clients. Return traffic is outbound on this interface and does not traverse its inbound ACL. This is stateless filtering, not stateful inspection. Source/destination address, protocol, port, ICMP type, exact sequence and operational exclusive placement remain live requirements.",
+    "PC1 HTTP succeeds while PC1 ICMP to the same server fails. PC2 HTTP and ICMP to SRV1 are explicitly denied. Both fresh explicit DNS queries return SRV1\u2019s A address over UDP 53. PC1 echoes SRV2, while PC2 HTTP to SRV2 hits the implicit deny despite the working HTTP service.",
+    "Existing bounded interface ACL decisions correlate actual packet IDs, directions, sequences, implicit decisions and transactions. DNS server query logs now also retain bounded packet/transaction identifiers and the returned A/AAAA address; this adds trace evidence without changing DNS answers or wire behavior.",
+    "DNS goals require the expected query, source, answer and actual UDP reply delivered to the same client for the permitted query. A cached name, another client query, advisory ACL result, raised counter, NXDOMAIN, wrong answer or dropped return cannot satisfy them.",
+    "Denied traffic needs the matching explicit or implicit ACL drop, not a generic service failure. HTTP permits require a complete expected 200 response; ICMP permits require the matching delivered request and return. Counter clears preserve policy and achievements.",
+    "Missing permits, an earlier broad deny, wrong source-port placement, wrong HTTP destination port, TCP instead of UDP for DNS, wrong DNS destination and port, unbound ACLs and reversed direction have meaningful traffic consequences and tested repairs.",
+    "Fault testing found failLocal removed failed service requests without invoking their callbacks. It now uses the existing finishService path, allowing HTTP and DNS-backed browser wrappers to settle on an unresolved neighbor. A regression verifies stable failure and successful recovery for numeric and named URLs.",
+    "Portable saves retain earned traffic with fresh counters, DNS logs and decision evidence on reopening. All published IOS and Windows verification commands are tested. This lab adds no claim of fresh live CML validation."
+  ],
+  "sources": [
+    {
+      "title": "Cisco: Configure IP Access Lists",
+      "url": "https://www.cisco.com/c/en/us/support/docs/security/ios-firewall/23602-confaccesslists.html"
+    },
+    {
+      "title": "Cisco IOS XE 17: Access Control Lists",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/security/acls/acls-configuration-guide/access-control-lists.html"
+    }
+  ],
+  "validation": {
+    "targetedTests": 67,
+    "targetedPassed": 67,
+    "typecheck": "passed",
+    "fullSuite": {
+      "tests": 1829,
+      "passed": 1829,
+      "failed": 0,
+      "command": "npm run check"
+    },
+    "build": "passed; generated root and dist HTML are identical",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: eight Services & Security labs, ten-task guide and seven-row plan, zero-credit practice and gated tests, exact ordered TCP/UDP/ICMP extended policy with exclusive inbound binding, permitted HTTP and DNS delivery, actual explicit and implicit denies, TCP80 permission does not permit echo, DNS53 permission does not permit HTTP, ICMP echo permit and return path, Windows nslookup and ping, separate ACE counters and invisible implicit deny, clear counters, wrong HTTP port and wrong DNS protocol cause failures and recover after repair, unbound list restores both websites and rebinding filters again, saved achievements with fresh counters after reopen, completed reference requires fresh traffic, save/cancel protection, node centers inside Fit at every navigation, responsive guide/topology and unchanged CLI golden styles",
+        "light 390px: eight Services & Security labs, ten-task guide and seven-row plan, zero-credit practice and gated tests, exact ordered TCP/UDP/ICMP extended policy with exclusive inbound binding, permitted HTTP and DNS delivery, actual explicit and implicit denies, TCP80 permission does not permit echo, DNS53 permission does not permit HTTP, ICMP echo permit and return path, Windows nslookup and ping, separate ACE counters and invisible implicit deny, clear counters, wrong HTTP port and wrong DNS protocol cause failures and recover after repair, unbound list restores both websites and rebinding filters again, saved achievements with fresh counters after reopen, completed reference requires fresh traffic, save/cancel protection, node centers inside Fit at every navigation, responsive guide/topology and unchanged CLI golden styles",
+        "light 320px: eight Services & Security labs, ten-task guide and seven-row plan, zero-credit practice and gated tests, exact ordered TCP/UDP/ICMP extended policy with exclusive inbound binding, permitted HTTP and DNS delivery, actual explicit and implicit denies, TCP80 permission does not permit echo, DNS53 permission does not permit HTTP, ICMP echo permit and return path, Windows nslookup and ping, separate ACE counters and invisible implicit deny, clear counters, wrong HTTP port and wrong DNS protocol cause failures and recover after repair, unbound list restores both websites and rebinding filters again, saved achievements with fresh counters after reopen, completed reference requires fresh traffic, save/cancel protection, node centers inside Fit at every navigation, responsive guide/topology and unchanged CLI golden styles",
+        "dark 1440px: eight Services & Security labs, ten-task guide and seven-row plan, zero-credit practice and gated tests, exact ordered TCP/UDP/ICMP extended policy with exclusive inbound binding, permitted HTTP and DNS delivery, actual explicit and implicit denies, TCP80 permission does not permit echo, DNS53 permission does not permit HTTP, ICMP echo permit and return path, Windows nslookup and ping, separate ACE counters and invisible implicit deny, clear counters, wrong HTTP port and wrong DNS protocol cause failures and recover after repair, unbound list restores both websites and rebinding filters again, saved achievements with fresh counters after reopen, completed reference requires fresh traffic, save/cancel protection, node centers inside Fit at every navigation, responsive guide/topology and unchanged CLI golden styles",
+        "dark 390px: eight Services & Security labs, ten-task guide and seven-row plan, zero-credit practice and gated tests, exact ordered TCP/UDP/ICMP extended policy with exclusive inbound binding, permitted HTTP and DNS delivery, actual explicit and implicit denies, TCP80 permission does not permit echo, DNS53 permission does not permit HTTP, ICMP echo permit and return path, Windows nslookup and ping, separate ACE counters and invisible implicit deny, clear counters, wrong HTTP port and wrong DNS protocol cause failures and recover after repair, unbound list restores both websites and rebinding filters again, saved achievements with fresh counters after reopen, completed reference requires fresh traffic, save/cancel protection, node centers inside Fit at every navigation, responsive guide/topology and unchanged CLI golden styles",
+        "dark 320px: eight Services & Security labs, ten-task guide and seven-row plan, zero-credit practice and gated tests, exact ordered TCP/UDP/ICMP extended policy with exclusive inbound binding, permitted HTTP and DNS delivery, actual explicit and implicit denies, TCP80 permission does not permit echo, DNS53 permission does not permit HTTP, ICMP echo permit and return path, Windows nslookup and ping, separate ACE counters and invisible implicit deny, clear counters, wrong HTTP port and wrong DNS protocol cause failures and recover after repair, unbound list restores both websites and rebinding filters again, saved achievements with fresh counters after reopen, completed reference requires fresh traffic, save/cancel protection, node centers inside Fit at every navigation, responsive guide/topology and unchanged CLI golden styles",
+        "light: permalink preserves current host/path/query and returns to eight Services & Security labs without replacing the workspace",
+        "dark: permalink preserves current host/path/query and returns to eight Services & Security labs without replacing the workspace"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches the existing desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology and guide",
+        "light 320px topology",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "canvasFit": "target node centers remain inside the workspace in every navigation step, including 320px",
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "0237fe0b0ce897f26b26e2c6069b87089b117088fcc5a5a73b57af9181607f87"
+  }
+}

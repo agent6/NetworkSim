@@ -139,6 +139,35 @@ test("HTTP authentication requests and protected content traverse real TCP links
   sim.advance(15000);
   assert.equal(failed.status, "failure");
 });
+test("unresolved neighbors complete HTTP and DNS-backed browser failures instead of leaving the wrapper running", () => {
+  for (const host of ["192.0.2.20", "web.lab"]) {
+    const {sim, device} = server(), pc = sim.addDevice("pc"), sw = sim.addDevice("switch");
+    for (const [node, ip] of [[pc, "192.0.2.10"], [device, "192.0.2.20"]] as const) {
+      Object.assign(node.config.interfaces.GigabitEthernet0, {ip, mask: "255.255.255.0", adminUp: true});
+      node.config.interfaces.GigabitEthernet0.features.dhcp = false;
+    }
+    pc.config.dnsServers = ["192.0.2.20"];
+    device.config.services.dns = {enabled: true, records: {"web.lab": "192.0.2.20"}};
+    for (const [node, port] of [[pc, "GigabitEthernet0/1"], [device, "GigabitEthernet0/2"]] as const) {
+      sw.config.interfaces[port].features.portfast = true;
+      sim.connect({deviceId: node.id, port: "GigabitEthernet0"}, {deviceId: sw.id, port});
+    }
+    sim.advance(1000);
+    sim.power(device.id, false);
+    const failed = sim.httpRequest(pc.id, `http://${host}/`);
+    sim.advance(12000);
+    assert.equal(failed.status, "failure", host);
+    assert.match(failed.error ?? "", /unreachable/i);
+    const settled = structuredClone(failed);
+    sim.advance(12000);
+    assert.deepEqual(failed, settled, "a later timeout must not overwrite the completed failure");
+    sim.power(device.id, true);
+    sim.advance(1000);
+    const recovered = sim.httpRequest(pc.id, `http://${host}/`);
+    sim.advance(12000);
+    assert.equal(recovered.statusCode, 200);
+  }
+});
 test("HTTP authentication and flash path CLI settings survive rendered startup config", () => {
   const sim = new Simulator(),
     router = sim.addDevice("router", 0, 0),

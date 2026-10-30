@@ -886,7 +886,7 @@ export class Simulator {
   private failLocal(deviceId: string, packet: IPPacket, error: string): void {
     const key = packet.body?.probeId + '|' + packet.body?.sequence, wait = this.probes.get(key);
     if (wait && wait.deviceId === deviceId) { this.clock.cancel(wait.timer); this.probes.delete(key); wait.callback({ sequence: packet.body.sequence, error }); }
-    const service = this.serviceWait.get(packet.body?.transaction); if (service && service.deviceId === deviceId) { service.result.status = 'failure'; service.result.error = error; this.clock.cancel(service.timer); this.serviceWait.delete(packet.body.transaction); }
+    const service = this.serviceWait.get(packet.body?.transaction); if (service && service.deviceId === deviceId) this.finishService(packet.body.transaction,undefined,error);
   }
   ping(sourceId: string, target: string, options: PingOptions = {}): PingResult {
     const d = this.getDevice(sourceId); if (!d) throw new Error('Unknown source device');
@@ -1449,7 +1449,7 @@ export class Simulator {
     else if (b.kind === 'dns-query') {
       const dns=d.config.services.dns;if(!dns?.enabled||p.destinationPort!==53){this.icmpError(d,p,'Port unreachable');return;}
       let answer;try{answer=answerDNS(dns,b.hostname,b.type??'A',automaticDHCPDNSRecords(d,this.clock.now()));}catch{answer={hostname:dnsName(b.hostname),type:b.type??'A',records:[],ttl:0,rcode:'SERVFAIL',error:'SERVFAIL'};}
-      const requests=d.runtime.features.dnsQueries??=[];requests.push({time:this.clock.now(),source:p.source,name:b.hostname,type:b.type??'A',rcode:answer.rcode});if(requests.length>1000)requests.shift();
+      const requests=d.runtime.features.dnsQueries??=[];requests.push({time:this.clock.now(),source:p.source,name:b.hostname,type:b.type??'A',rcode:answer.rcode,packetId:p.id,transaction:b.transaction,address:answer.address});if(requests.length>1000)requests.shift();
       this.serviceReply(d,p,{kind:'dns-response',transaction:b.transaction,...answer},80+JSON.stringify(answer.records).length);
     }
     else if (b.kind === 'dns-response') {

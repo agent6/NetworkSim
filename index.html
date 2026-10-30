@@ -50854,12 +50854,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         wait.callback({ sequence: packet.body.sequence, error });
       }
       const service = this.serviceWait.get(packet.body?.transaction);
-      if (service && service.deviceId === deviceId) {
-        service.result.status = "failure";
-        service.result.error = error;
-        this.clock.cancel(service.timer);
-        this.serviceWait.delete(packet.body.transaction);
-      }
+      if (service && service.deviceId === deviceId) this.finishService(packet.body.transaction, void 0, error);
     }
     ping(sourceId, target, options3 = {}) {
       const d = this.getDevice(sourceId);
@@ -52204,7 +52199,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           answer = { hostname: dnsName(b.hostname), type: b.type ?? "A", records: [], ttl: 0, rcode: "SERVFAIL", error: "SERVFAIL" };
         }
         const requests = d.runtime.features.dnsQueries ??= [];
-        requests.push({ time: this.clock.now(), source: p.source, name: b.hostname, type: b.type ?? "A", rcode: answer.rcode });
+        requests.push({ time: this.clock.now(), source: p.source, name: b.hostname, type: b.type ?? "A", rcode: answer.rcode, packetId: p.id, transaction: b.transaction, address: answer.address });
         if (requests.length > 1e3) requests.shift();
         this.serviceReply(d, p, { kind: "dns-response", transaction: b.transaction, ...answer }, 80 + JSON.stringify(answer.records).length);
       } else if (b.kind === "dns-response") {
@@ -52392,21 +52387,27 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
     const sequence = (v) => Number.isInteger(v) && Number(v) > 0 && Number(v) <= 2147483647;
     if (!name2(c.name)) return false;
-    if (c.kind === "standard-acl") return Array.isArray(c.entries) && c.entries.length > 0 && c.entries.length <= 64 && new Set(c.entries.map((e) => e?.sequence)).size === c.entries.length && c.entries.every((e) => e && sequence(e.sequence) && ["permit", "deny"].includes(e.action) && isIPv4(e.source) && isIPv4(e.wildcard));
+    if (c.kind === "standard-acl" || c.kind === "extended-acl") return Array.isArray(c.entries) && c.entries.length > 0 && c.entries.length <= 64 && new Set(c.entries.map((e) => e?.sequence)).size === c.entries.length && c.entries.every((e) => {
+      if (!e || !sequence(e.sequence) || !["permit", "deny"].includes(e.action) || !isIPv4(e.source) || !isIPv4(e.wildcard)) return false;
+      if (c.kind === "standard-acl") return true;
+      const port3 = (v) => v === void 0 || Number.isInteger(v) && Number(v) >= 0 && Number(v) <= 65535;
+      return ["ip", "tcp", "udp", "icmp"].includes(e.protocol) && isIPv4(e.destination) && isIPv4(e.destinationWildcard) && port3(e.sourcePort) && port3(e.destinationPort) && (["tcp", "udp"].includes(e.protocol) || e.sourcePort === void 0 && e.destinationPort === void 0) && (e.icmpType === void 0 || e.protocol === "icmp" && ["echo", "echo-reply"].includes(e.icmpType));
+    });
     if (!name2(c.interface) || !["in", "out"].includes(c.direction)) return false;
     if (c.kind === "acl-binding") return c.exclusive === void 0 || typeof c.exclusive === "boolean";
-    if (!["acl-ping", "acl-http"].includes(c.kind) || !name2(c.source) || !name2(c.target) || !["permit", "deny"].includes(c.action)) return false;
+    if (!["acl-ping", "acl-http", "acl-dns"].includes(c.kind) || !name2(c.source) || !name2(c.target) || !["permit", "deny"].includes(c.action)) return false;
     if (c.implicit !== void 0 && typeof c.implicit !== "boolean" || c.sequence !== void 0 && !sequence(c.sequence) || c.implicit === true && (c.sequence !== void 0 || c.action !== "deny")) return false;
+    if (c.kind === "acl-dns") return c.action === "permit" && typeof c.query === "string" && c.query.length > 0 && c.query.length <= 253 && c.query.split(".").every((part) => part.length > 0 && part.length <= 63 && /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(part)) && isIPv4(c.answer);
     return c.kind !== "acl-http" || (c.content === void 0 || typeof c.content === "string" && c.content.length > 0 && c.content.length <= 1e3) && (c.action === "deny" || typeof c.content === "string");
   }
   var find = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   var address = (d) => Object.values(d.config.interfaces).find((p) => !!p.ip)?.ip;
   function matchesACLLabCriterion(sim2, d, c) {
-    if (c.kind === "standard-acl") {
+    if (c.kind === "standard-acl" || c.kind === "extended-acl") {
       const acl = ownRecordValue(d.config.features.acls, c.name), entries4 = (acl?.entries ?? []).filter((e) => e.action !== "remark" && e.remark === void 0).sort((a, b) => a.sequence - b.sequence);
-      return acl?.type === "standard" && entries4.length === c.entries.length && c.entries.every((expected, i) => {
+      return acl?.type === (c.kind === "standard-acl" ? "standard" : "extended") && entries4.length === c.entries.length && c.entries.every((expected, i) => {
         const actual = entries4[i];
-        return actual.sequence === expected.sequence && actual.action === expected.action && actual.source === expected.source && actual.wildcard === expected.wildcard && !actual.timeRange && !actual.sourcePort && !actual.destinationPort;
+        return actual.sequence === expected.sequence && actual.action === expected.action && actual.source === expected.source && actual.wildcard === expected.wildcard && !actual.timeRange && (c.kind === "standard-acl" ? !actual.sourcePort && !actual.destinationPort : ["protocol", "destination", "destinationWildcard", "sourcePort", "destinationPort", "icmpType", "icmpCode"].every((key4) => actual[key4] === expected[key4]));
       });
     }
     if (c.kind === "acl-binding") {
@@ -52420,6 +52421,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const decisions = (d.runtime.features.aclDecisions ?? []).filter((row5) => row5.name === c.name && row5.port === c.interface && row5.direction === c.direction && row5.source === src && row5.destination === dst && row5.action === c.action && (c.implicit === true ? row5.implicit === true : row5.implicit === false && (c.sequence === void 0 || row5.sequence === c.sequence)));
     const dropped = (row5) => sim2.events.some((e) => e.nodeId === d.id && e.port === c.interface && e.label === (c.direction === "in" ? "Ingress ACL denied" : "Egress ACL denied") && e.disposition === "drop" && e.packet?.id === row5.packetId);
     if (c.kind === "acl-ping") return decisions.some((row5) => row5.protocol === "icmp" && row5.kind === "echo-request" && (c.action === "deny" ? dropped(row5) : sim2.events.some((e) => e.nodeId === target.id && e.label === "Echo request accepted" && e.packet?.id === row5.packetId) && sim2.events.some((e) => e.nodeId === source.id && e.label === "Echo reply received" && e.disposition === "success" && e.packet?.parentId === row5.packetId && e.packet?.source === dst && e.packet.destination === src)));
+    if (c.kind === "acl-dns") return decisions.some((row5) => row5.protocol === "udp" && row5.kind === "dns-query" && row5.destinationPort === 53 && (target.runtime.features.dnsQueries ?? []).some((query2) => query2.packetId === row5.packetId && query2.transaction === row5.transaction && query2.source === src && query2.name === c.query.toLowerCase() && query2.type === "A" && query2.rcode === "NOERROR" && query2.address === c.answer) && sim2.events.some((e) => e.nodeId === source.id && e.disposition === "receive" && e.packet?.messageType === "dns-response" && e.packet.parentId === row5.packetId && e.packet.source === dst && e.packet.destination === src && e.packet.sourcePort === 53 && e.packet.destinationPort === row5.sourcePort));
     for (const [transaction2, conn] of Object.entries(source.runtime.features.tcpConnections ?? {})) {
       if (conn.remoteAddress !== dst || conn.remotePort !== 80 || conn.payload?.application !== "http" || (conn.payload.method ?? "GET") !== "GET" || conn.payload.path !== "/") continue;
       const applied = decisions.filter((row5) => row5.protocol === "tcp" && row5.transaction === transaction2 && row5.sourcePort === conn.localPort && row5.destinationPort === 80);
@@ -52613,9 +52615,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (!text3(v.device, 128)) return false;
       switch (v.kind) {
         case "standard-acl":
+        case "extended-acl":
         case "acl-binding":
         case "acl-ping":
         case "acl-http":
+        case "acl-dns":
           return validACLLabCriterion(v);
         case "nat-interface":
         case "nat-static":
@@ -52775,7 +52779,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const d = device(sim2, criterion.device);
     if (!d) return false;
     if (["tacacs-server", "radius-server", "aaa-group", "aaa-method", "aaa-line", "tacacs-session", "radius-session"].includes(criterion.kind)) return matchesAAAClientCriterion(sim2, d, criterion);
-    if (["standard-acl", "acl-binding", "acl-ping", "acl-http"].includes(criterion.kind)) return matchesACLLabCriterion(sim2, d, criterion);
+    if (["standard-acl", "extended-acl", "acl-binding", "acl-ping", "acl-http", "acl-dns"].includes(criterion.kind)) return matchesACLLabCriterion(sim2, d, criterion);
     if (["nat-interface", "nat-static", "nat-ping", "nat-http", "nat-outbound-http", "pat-acl", "pat-rule", "pat-sharing"].includes(criterion.kind)) return matchesNATCriterion(sim2, d, criterion);
     if (["scp-server", "ssh-file-client", "file-transfer", "file-copy"].includes(criterion.kind)) return matchesFileTransferCriterion(sim2, d, criterion);
     if (criterion.kind === "local-user") {
@@ -52944,14 +52948,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return results.length > 0 && (c.kind === "all" ? results.every(Boolean) : results.some(Boolean));
       }
       const result = matches(sim2, c);
-      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http") return result;
+      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns") return result;
       validKeys.add(key4);
       if (result) observations.add(key4);
       return result || observations.has(key4);
     };
     const rows2 = lesson2.objectives.map((objective) => {
       const observed = observe(objective.criterion, JSON.stringify(objective.id));
-      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http";
+      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns";
       if (historical && observed)
         completed.add(objective.id);
       return {
@@ -53334,8 +53338,30 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "static-nat", group: "CCNA", section: "Services & Security", title: "Static NAT", description: "Publish an inside server through a permanent one-to-one IPv4 mapping. Configure NAT roles and an upstream default route, prove bidirectional translations and access the server\u2019s website from outside.", devices: 4, links: 3, practice: true },
     { id: "pat", group: "CCNA", section: "Services & Security", title: "PAT", description: "Share one outside IPv4 address between two inside PCs using NAT overload. Configure a scoped source ACL, prove distinct translated identifiers, test web access from both clients and troubleshoot missing translations.", devices: 6, links: 5, practice: true },
     { id: "standard-ipv4-acl", group: "CCNA", section: "Services & Security", title: "Standard IPv4 ACL", description: "Protect one server with a named source-only ACL while leaving another server reachable. Verify host and wildcard rules, correct outbound placement, explicit and implicit deny, counters and HTTP behavior.", devices: 7, links: 6, practice: true },
+    { id: "extended-ipv4-acl", group: "CCNA", section: "Services & Security", title: "Extended IPv4 ACL", description: "Filter by source, destination, protocol and destination port. Allow selected HTTP, DNS and ICMP flows, verify explicit and implicit denies, and troubleshoot an inbound policy near the source.", devices: 6, links: 5, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
+  var EXTENDED_IPV4_ACL_COMMANDS = { R1: [
+    "enable",
+    "configure terminal",
+    "ip access-list extended LAN-FILTER",
+    "10 permit tcp host 192.168.10.10 host 192.168.20.10 eq 80",
+    "20 permit udp 192.168.10.0 0.0.0.255 host 192.168.30.10 eq 53",
+    "30 permit icmp 192.168.10.0 0.0.0.255 host 192.168.30.10 echo",
+    "40 deny ip 192.168.10.0 0.0.0.255 host 192.168.20.10",
+    "exit",
+    "interface GigabitEthernet0/0",
+    "ip access-group LAN-FILTER in",
+    "end",
+    "write memory"
+  ] };
+  var EXTENDED_IPV4_ACL_RULES = [
+    { sequence: 10, action: "permit", protocol: "tcp", source: "192.168.10.10", wildcard: "0.0.0.0", destination: "192.168.20.10", destinationWildcard: "0.0.0.0", destinationPort: 80 },
+    { sequence: 20, action: "permit", protocol: "udp", source: "192.168.10.0", wildcard: "0.0.0.255", destination: "192.168.30.10", destinationWildcard: "0.0.0.0", destinationPort: 53 },
+    { sequence: 30, action: "permit", protocol: "icmp", source: "192.168.10.0", wildcard: "0.0.0.255", destination: "192.168.30.10", destinationWildcard: "0.0.0.0", icmpType: "echo" },
+    { sequence: 40, action: "deny", protocol: "ip", source: "192.168.10.0", wildcard: "0.0.0.255", destination: "192.168.20.10", destinationWildcard: "0.0.0.0" }
+  ];
+  var EXTENDED_IPV4_ACL_PAGE = '<!doctype html><html lang="en"><meta charset="utf-8"><title>Extended ACL web server</title><body><h1>SRV1: HTTP allowed from PC1</h1><p>TCP destination port 80 passed LAN-FILTER sequence 10.</p></body></html>';
   var STANDARD_IPV4_ACL_COMMANDS = { R1: [
     "enable",
     "configure terminal",
@@ -53808,6 +53834,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
   };
   var GUIDE_RESOURCES = {
+    "extended-ipv4-acl": { columns: ["Device", "Interface", "IPv4 address", "Purpose / gateway"], rows: [["PC1", "Gi0", "192.168.10.10 /24", "HTTP and DNS client; gateway 192.168.10.1"], ["PC2", "Gi0", "192.168.10.20 /24", "DNS client; gateway 192.168.10.1"], ["R1", "Gi0/0", "192.168.10.1 /24", "Client LAN; apply LAN-FILTER in"], ["R1", "Gi0/1", "192.168.20.1 /24", "SRV1 gateway"], ["R1", "Gi0/2", "192.168.30.1 /24", "SRV2 gateway"], ["SRV1", "Gi0", "192.168.20.10 /24", "HTTP server; gateway 192.168.20.1"], ["SRV2", "Gi0", "192.168.30.10 /24", "DNS server; gateway 192.168.30.1"]], commands: EXTENDED_IPV4_ACL_COMMANDS, verification: { R1: ["show ip interface brief", "show ip interface GigabitEthernet0/0", "show ip route", "show access-lists LAN-FILTER", "show ip access-lists LAN-FILTER", "show running-config | section ip access-list", "show running-config | section interface"], PC1: ["ipconfig", "nslookup web.acl.lab 192.168.30.10", "ping -n 3 192.168.20.10", "ping -n 3 192.168.30.10"], PC2: ["ipconfig", "nslookup web.acl.lab 192.168.30.10", "ping -n 3 192.168.20.10"] }, setup: [
+      { title: "Match protocol and destination port", instructions: ["Sequence 10 permits only PC1 to SRV1 over TCP destination port 80. The eq 80 follows the destination address; placing it after the source would match a source port instead.", "Sequence 20 permits both clients to query SRV2 over UDP destination port 53. Sequence 30 separately permits ICMP echo requests to SRV2. UDP DNS permission does not permit TCP web traffic.", "Sequence 40 explicitly denies other client-LAN traffic to SRV1. Keep the specific HTTP permit before this broader IP deny. Traffic matching none of the four entries is implicitly denied."] },
+      { title: "Place the policy near its source", instructions: ["Apply LAN-FILTER inbound on R1 Gi0/0, where the two clients enter the router. Leave the server-facing interfaces unfiltered. An ACL definition without an interface binding does not filter transit traffic.", "Return traffic leaves Gi0/0 and is not checked by this inbound list. This is a stateless interface ACL, not a stateful firewall. Changing the direction changes which packet addresses and ports are inspected."] },
+      { title: "Test web access and DNS", instructions: ["PC1 \u2192 Desktop \u2192 Web browser \u2192 http://192.168.20.10/ must return 200 OK with SRV1: HTTP allowed from PC1. PC2 must be denied at the same URL by sequence 40.", "On each PC, open Command prompt and run nslookup web.acl.lab 192.168.30.10. Expect an A answer of 192.168.20.10 from SRV2. An explicit nslookup sends a fresh UDP query; a cached name or a successful ping alone does not prove DNS permission.", "From PC2, browse to http://192.168.30.10/. SRV2 has a working HTTP service, but this request must hit the implicit deny. Its DNS permission is limited to UDP port 53."] },
+      { title: "Counters and troubleshooting", instructions: ["Both pings to SRV1 must be denied by sequence 40, including PC1 whose HTTP is allowed. PC1 must still ping SRV2 through sequence 30. No replies is the expected outcome for a blocked-access task.", "Use clear access-list counters LAN-FILTER, generate one kind of traffic and inspect show access-lists LAN-FILTER. Expect HTTP permit hits at 10, DNS hits at 20, ICMP echo hits at 30 and explicit denials at 40. The implicit deny has no visible ACE or separate explicit-rule counter.", "Remove sequence 10 or change its destination port to 443 and observe that PC1 HTTP fails. Restore the TCP 80 permit at sequence 10. Change UDP 53 to TCP 53 and DNS fails; restore UDP.", "Remove the interface binding and observe that PC2 can use both web servers. Restore the inbound binding and repeat tests. A stopped service, disconnected client or generic timeout does not prove an intended ACL denial. Save R1 and the lab."] }
+    ], note: "Addressing, host gateways, SW1, DNS records and both HTTP services are ready. Configure only R1. Practice begins at zero tasks; the completed reference provides only the two configuration tasks. Run the three guide ping tests, two explicit nslookup commands and three web tests. Traffic achievements survive reopening; the exact ordered policy and exclusive, operational inbound binding remain live." },
     "standard-ipv4-acl": { columns: ["Device", "Interface", "IPv4 address", "Purpose / gateway"], rows: [["PC1", "Gi0", "192.168.10.10 /24", "Permitted source; gateway 192.168.10.1"], ["PC2", "Gi0", "192.168.10.20 /24", "Explicit deny source; gateway 192.168.10.1"], ["PC3", "Gi0", "192.168.40.10 /24", "Implicit deny source; gateway 192.168.40.1"], ["R1", "Gi0/0", "192.168.10.1 /24", "PC1/PC2 LAN through SW1"], ["R1", "Gi0/1", "192.168.20.1 /24", "Protected LAN; apply SERVER-ACCESS out"], ["R1", "Gi0/2", "192.168.30.1 /24", "Control LAN; leave unfiltered"], ["R1", "Gi0/3", "192.168.40.1 /24", "PC3 LAN"], ["SRV1", "Gi0", "192.168.20.10 /24", "Protected HTTP; gateway 192.168.20.1"], ["SRV2", "Gi0", "192.168.30.10 /24", "Control HTTP; gateway 192.168.30.1"]], commands: STANDARD_IPV4_ACL_COMMANDS, verification: { R1: ["show ip interface brief", "show ip interface GigabitEthernet0/1", "show ip route", "show access-lists SERVER-ACCESS", "show ip access-lists SERVER-ACCESS", "show running-config | section ip access-list", "show running-config | section interface"], PC1: ["ipconfig", "ping -n 3 192.168.20.10"], PC2: ["ipconfig", "ping -n 3 192.168.20.10", "ping -n 3 192.168.30.10"], PC3: ["ipconfig", "ping -n 3 192.168.20.10", "ping -n 3 192.168.30.10"] }, setup: [
       { title: "Read the source-only policy", instructions: ["Sequence 10 permits host 192.168.10.10; host is equivalent to wildcard 0.0.0.0. Sequence 20 denies 192.168.10.0 0.0.0.255, which includes PC2. The final implicit deny blocks PC3 from the unmatched 192.168.40.0/24 subnet.", "The ACL contains no destination addresses or transport ports. Its outbound binding to Gi0/1 restricts only traffic leaving toward SRV1, keeping PC2 and PC3 able to use SRV2.", "The specific host permit precedes the subnet deny. Keep these two sequences in the intended order and do not add permit any. Remarks are allowed."] },
       { title: "Interpret the connectivity tasks", instructions: ["PC1 \u2192 SRV1 must receive replies. PC2 \u2192 SRV1 and PC3 \u2192 SRV1 must receive no replies; their tasks complete only when an actual ACL drop is observed, with the intended explicit or implicit decision.", "A powered-off server, broken cable or missing route cannot complete a blocked-access task. An unbound ACL or a router-originated ping cannot prove the interface policy.", "PC2 and PC3 must still receive replies from SRV2. These positive control checks distinguish selective filtering from a general routing or interface failure."] },
@@ -53892,6 +53924,44 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createExtendedIPv4ACLLab(mode = "practice") {
+    const make = (name2, kind, x, y) => ({ id: "device-extended-acl-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const pc1 = make("PC1", "pc", 150, 150), pc2 = make("PC2", "pc", 150, 400), sw = make("SW1", "switch", 380, 275), r1 = make("R1", "router", 600, 275), srv1 = make("SRV1", "server", 850, 150), srv2 = make("SRV2", "server", 850, 400);
+    for (const [d, port3, ip2] of [[pc1, "GigabitEthernet0", "192.168.10.10"], [pc2, "GigabitEthernet0", "192.168.10.20"], [r1, "GigabitEthernet0/0", "192.168.10.1"], [r1, "GigabitEthernet0/1", "192.168.20.1"], [r1, "GigabitEthernet0/2", "192.168.30.1"], [srv1, "GigabitEthernet0", "192.168.20.10"], [srv2, "GigabitEthernet0", "192.168.30.10"]]) {
+      Object.assign(d.config.interfaces[port3], { adminUp: true, ip: ip2, mask: "255.255.255.0" });
+      d.config.interfaces[port3].features.dhcp = false;
+      d.config.interfaces[port3].features.proxyArp = false;
+    }
+    pc1.config.defaultGateway = pc2.config.defaultGateway = "192.168.10.1";
+    pc1.config.dnsServers = pc2.config.dnsServers = ["192.168.30.10"];
+    srv1.config.defaultGateway = "192.168.20.1";
+    srv2.config.defaultGateway = "192.168.30.1";
+    srv1.config.services.http = { enabled: true, port: 80, authentication: "none", content: EXTENDED_IPV4_ACL_PAGE };
+    srv2.config.services.http = { enabled: true, port: 80, authentication: "none", content: '<!doctype html><html lang="en"><meta charset="utf-8"><title>DNS server web page</title><body><h1>SRV2: web service is running</h1><p>The extended ACL should block this HTTP service while allowing DNS and selected ICMP.</p></body></html>' };
+    srv2.config.services.dns = { enabled: true, resourceRecords: [{ name: "web.acl.lab", type: "A", value: "192.168.20.10", ttl: 300 }] };
+    for (const port3 of ["GigabitEthernet0/1", "GigabitEthernet0/2", "GigabitEthernet0/3"]) {
+      sw.config.interfaces[port3].mode = "access";
+      sw.config.interfaces[port3].features.portfast = true;
+    }
+    for (const d of [pc1, pc2, sw, r1, srv1, srv2]) d.startupConfig = structuredClone(d.config);
+    const definition = { kind: "extended-acl", device: r1.id, name: "LAN-FILTER", entries: EXTENDED_IPV4_ACL_RULES.map((e) => ({ ...e })) };
+    const binding = { kind: "acl-binding", device: r1.id, name: "LAN-FILTER", interface: "GigabitEthernet0/0", direction: "in", exclusive: true };
+    const ready = { kind: "all", criteria: [definition, binding] };
+    const policy = (source, target, action, sequence) => ({ device: r1.id, name: "LAN-FILTER", interface: "GigabitEthernet0/0", direction: "in", source: source.id, target: target.id, action, ...sequence === void 0 ? { implicit: true } : { sequence } });
+    const link = (id2, a, ap, b, bp) => ({ id: "link-extended-acl-" + id2, a: { deviceId: a.id, port: ap }, b: { deviceId: b.id, port: bp }, enabled: true, delay: 0.1, loss: 0 });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "extended-ipv4-acl", name: "Extended IPv4 ACL" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [pc1, pc2, sw, r1, srv1, srv2], links: [link("pc1", pc1, "GigabitEthernet0", sw, "GigabitEthernet0/1"), link("pc2", pc2, "GigabitEthernet0", sw, "GigabitEthernet0/2"), link("lan", sw, "GigabitEthernet0/3", r1, "GigabitEthernet0/0"), link("web", r1, "GigabitEthernet0/1", srv1, "GigabitEthernet0"), link("dns", r1, "GigabitEthernet0/2", srv2, "GigabitEthernet0")], notes: [{ id: "note-extended-acl", x: 600, y: 600, text: "LAN-FILTER \xB7 R1 Gi0/0 inbound\nPC1 HTTP \u2192 SRV1 \xB7 DNS + ping \u2192 SRV2\nPC2 \u2192 SRV1 denied \xB7 SRV2 HTTP denied" }], lesson: { title: "Extended IPv4 ACL", description: "All six nodes are connected and addressed. PC1 and PC2 use the 192.168.10.0/24 LAN. SRV1 on 192.168.20.10 runs HTTP; SRV2 on 192.168.30.10 runs DNS and HTTP. The DNS record web.acl.lab points to SRV1. Host gateways, SW1 and connected routing are ready. Configure R1 only.\n\nCreate ip access-list extended LAN-FILTER. Sequence 10 permits TCP from host 192.168.10.10 to host 192.168.20.10 eq 80. Sequence 20 permits UDP from 192.168.10.0 0.0.0.255 to host 192.168.30.10 eq 53. Sequence 30 permits ICMP from that LAN to SRV2 with type echo. Sequence 40 denies other IP traffic from that LAN to SRV1. The specific HTTP permit must precede the broader deny. Unmatched traffic reaches the implicit deny.\n\nApply ip access-group LAN-FILTER in on R1 GigabitEthernet0/0, near the clients. Source and destination describe the packet as it enters this interface. The port after the destination is a destination port; do not accidentally match the client\u2019s source port. Return traffic exits this interface and is not checked by its inbound ACL. Leave the server-facing interfaces unfiltered.\n\nIn PC1\u2019s Desktop \u2192 Web browser, open http://192.168.20.10/ and expect 200 OK with SRV1: HTTP allowed from PC1. PC2 must be denied at the same URL by sequence 40. Neither PC may ping SRV1: a TCP 80 permit does not permit ICMP. Run both blocked ping tasks; No replies is the expected result, and an actual matching ACL drop completes each task.\n\nOn both PCs, open Command prompt and run nslookup web.acl.lab 192.168.30.10. Expect an A answer of 192.168.20.10 from SRV2, delivered through the UDP 53 rule. These explicit queries send fresh traffic. PC1 must also ping SRV2 through the ICMP echo permit. From PC2, browse to http://192.168.30.10/: its prepared HTTP service must be blocked by the implicit deny, demonstrating that DNS permission does not allow TCP 80.\n\nVerify show ip interface GigabitEthernet0/0 and show access-lists LAN-FILTER. Clear counters with clear access-list counters LAN-FILTER and generate each flow separately. HTTP from PC1 matches 10, DNS matches 20, the allowed echo matches 30, and denied SRV1 traffic matches 40. The implicit deny is not a visible fifth ACE and does not increment sequence 40 for traffic to SRV2.\n\nTroubleshoot a missing HTTP permit, a wrong destination port, TCP in place of UDP for DNS, and an unbound or reversed interface ACL. Removing the binding permits both web servers; removing sequence 10 blocks PC1 HTTP. Restore the intended rules and inbound placement, repeat tests, and save R1 and the lab. Service outages and cached names do not prove the required ACL behavior.\n\nPractice begins with zero tasks. The completed reference provides the two configuration tasks and no preloaded traffic credit. Earn the eight traffic tasks yourself. Traffic achievements survive reopening; the ordered policy and exclusive, operational inbound binding remain live requirements.", objectives: [
+      { id: "source-policy", title: "Create the ordered extended policy LAN-FILTER", criterion: definition },
+      { id: "lan-binding", title: "Apply LAN-FILTER only inbound on R1 Gi0/0", criterion: binding },
+      { id: "pc1-http", title: "Permit PC1 HTTP to SRV1 through TCP 80", description: "PC1 \u2192 Web browser \u2192 http://192.168.20.10/ \xB7 expect 200 OK.", criterion: { kind: "acl-http", ...policy(pc1, srv1, "permit", 10), content: "SRV1: HTTP allowed from PC1" } },
+      { id: "pc2-http", title: "Deny PC2 HTTP to SRV1 explicitly", description: "PC2 \u2192 Web browser \u2192 http://192.168.20.10/ \xB7 expect sequence 40 to deny it.", criterion: { kind: "acl-http", ...policy(pc2, srv1, "deny", 40) } },
+      ...[pc1, pc2].map((pc, i) => ({ id: "pc" + (i + 1) + "-protected", title: "Deny " + pc.config.hostname + " ping to SRV1", criterion: { kind: "acl-ping", ...policy(pc, srv1, "deny", 40) }, action: { kind: "ping", device: pc.id, target: "192.168.20.10", when: ready } })),
+      ...[pc1, pc2].map((pc, i) => ({ id: "pc" + (i + 1) + "-dns", title: "Permit " + pc.config.hostname + " DNS through UDP 53", description: "Command prompt: nslookup web.acl.lab 192.168.30.10 \xB7 expect 192.168.20.10.", criterion: { kind: "acl-dns", ...policy(pc, srv2, "permit", 20), query: "web.acl.lab", answer: "192.168.20.10" } })),
+      { id: "pc1-dns-ping", title: "Permit PC1 ping to SRV2 through the ICMP echo rule", criterion: { kind: "acl-ping", ...policy(pc1, srv2, "permit", 30) }, action: { kind: "ping", device: pc1.id, target: "192.168.30.10", when: ready } },
+      { id: "pc2-dns-http", title: "Deny PC2 HTTP to SRV2 implicitly", description: "PC2 \u2192 Web browser \u2192 http://192.168.30.10/ \xB7 DNS permission must not allow this web page.", criterion: { kind: "acl-http", ...policy(pc2, srv2, "deny") } }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, EXTENDED_IPV4_ACL_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createStandardIPv4ACLLab(mode = "practice") {
     const make = (name2, kind, x, y) => ({ id: "device-standard-acl-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
     const pc1 = make("PC1", "pc", 150, 140), pc2 = make("PC2", "pc", 150, 360), pc3 = make("PC3", "pc", 380, 500), sw = make("SW1", "switch", 380, 250), r1 = make("R1", "router", 600, 250), srv1 = make("SRV1", "server", 850, 140), srv2 = make("SRV2", "server", 850, 360);
@@ -55376,6 +55446,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "extended-ipv4-acl") return createExtendedIPv4ACLLab(mode);
     if (id2 === "standard-ipv4-acl") return createStandardIPv4ACLLab(mode);
     if (id2 === "pat") return createPATLab(mode);
     if (id2 === "static-nat") return createStaticNATLab(mode);
