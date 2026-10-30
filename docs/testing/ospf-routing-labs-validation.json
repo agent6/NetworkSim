@@ -1,0 +1,135 @@
+{
+  "features": [
+    {
+      "title": "OSPF Point-to-Point",
+      "catalogId": "ospf-point-to-point",
+      "group": "CCNA",
+      "section": "Routing",
+      "devices": 4,
+      "links": 3,
+      "tasks": 8,
+      "topology": "PC1 192.168.10.10/24 → R1 Gi0/0 192.168.10.1; R1 Gi0/1 10.0.12.1/30 ↔ R2 Gi0/1 10.0.12.2/30; R2 Gi0/0 192.168.20.1 → PC2 192.168.20.10/24. Router IDs 1.1.1.1 and 2.2.2.2.",
+      "checks": [
+        "point-to-point practice is independent, IPv4-only and zero-credit, with local gateways but no OSPF or static routes",
+        "published IOS commands and completed reference earn six live goals and require two genuine echo tests to finish eight tasks",
+        "point-to-point adjacency uses received Hello/database packets, two router LSAs and no transit Network LSA or DR/BDR",
+        "passive LAN prefixes are advertised without sending OSPF Hellos to either PC",
+        "process IDs are local to routers while the guide enforces its planned process ID independently of successful routing",
+        "priority-zero peers still form Full point-to-point adjacency, but both broadcast peers remain 2WAY/DROTHER without an eligible DR",
+        "a functioning broadcast adjacency and successful traffic cannot substitute for the required point-to-point network type",
+        "physical transit shutdown withdraws neighbors and routes, preserves local gateways and retained echo observations, then recovers",
+        "a passive transit prevents adjacency and traffic while retaining the separately advertised passive LAN",
+        "a one-sided Area 1 membership blocks the intended Area 0 adjacency until restored",
+        "mismatched Hello/Dead timers lose adjacency while the Ethernet link remains up, and restoring 10/40 recovers it",
+        "loss on a physically up transit waits for received Dead-timer expiry to withdraw its installed OSPF routes",
+        "an outbound cost change alters the real route metric in only that direction and cannot earn planned-route credit",
+        "withdrawing only the R2 LAN keeps the transit Full but removes the learned destination and prevents both traffic directions",
+        "all published show, ping and traceroute commands report the actual point-to-point topology and routes",
+        "saved reload and startup reboot reconstruct OSPF packets and preserve guide progress without fabricated neighbor or echo state",
+        "removing OSPF membership preserves independent interface settings through save/reload, and an otherwise empty feature is cleaned up"
+      ]
+    },
+    {
+      "title": "OSPF DR/BDR Election",
+      "catalogId": "ospf-dr-bdr-election",
+      "group": "CCNA",
+      "section": "Routing",
+      "devices": 7,
+      "links": 6,
+      "tasks": 10,
+      "topology": "R1–R4 share 10.0.123.0/24 through SW1. Each Gi0/1 is 10.0.123.<router number>, broadcast, cost 10. Router IDs 1.1.1.1 through 4.4.4.4. Priorities 100/50/0/0 elect R1 DR and R2 BDR; R3/R4 remain DROTHER. PC1 is 192.168.30.10/24 behind R3 Gi0/0 192.168.30.1; PC2 is 192.168.40.10/24 behind R4 Gi0/0 192.168.40.1.",
+      "checks": [
+        "election practice is an independent seven-node shared segment with no OSPF/static routes or completion credit",
+        "published IOS configurations and completed reference earn eight live goals and require two real echo checks for ten tasks",
+        "four router LSAs and actual OSPF exchanges produce ten Full directed peers and two normal DROTHER 2WAY relationships",
+        "DROTHER LANs stay passive and advertise their prefixes without sending Hellos toward either PC",
+        "raising BDR or DROTHER priority does not preempt an established DR, and planned-priority goals remain live",
+        "DR failure promotes the BDR, keeps DROTHER LAN traffic working and makes the returning higher-priority router BDR",
+        "BDR failure leaves the incumbent DR and both zero-priority DROTHERs operational without an eligible replacement BDR",
+        "loss of both eligible routers leaves priority-zero DROTHERs 2WAY without remote routes until a DR returns",
+        "a fresh equal-priority election uses the higher router ID while the existing election remains non-preemptive",
+        "fresh default-priority election selects the highest router IDs but cannot earn the prescribed roles and priorities",
+        "a later higher-priority R1 does not displace R2 configured first, and the controlled shared-segment reset restores intended roles",
+        "a passive DROTHER transit loses its intended peers and remote traffic while the other election remains usable",
+        "withdrawing only R4 LAN membership leaves all twelve neighbor states intact but breaks both PC traffic directions",
+        "one-sided transit area mismatch withdraws that LAN without destroying the independent DR/BDR roles",
+        "an asymmetric outbound cost changes the real metric despite a healthy election and successful traffic",
+        "published verification commands expose peer roles, Network LSA ownership and routed data that bypasses the DR",
+        "saved shared startup rebuilds elections and earned traffic while a returning individual router does not preempt",
+        "election role and configured-priority criteria are bounded and preserve older OSPFv2/OSPFv3 guide compatibility"
+      ]
+    }
+  ],
+  "verificationNotes": [
+    "Both original practice labs start with addressed interfaces, reachable host gateways and no router static routes or OSPF process. Their completion score is zero. All published commands execute through IOSSession; no neighbor, route, LSA or echo observations are fabricated.",
+    "Point-to-point: interface-based OSPFv2 Area 0, passive LANs, active point-to-point Ethernet transit and explicit cost 10. Received Hello/database packets produce FULL/- peers with no DR/BDR or transit Network LSA. Remote /24 routes require O, AD 110, metric 11, correct next hop and outgoing interface. Two real echo tests follow six live goals.",
+    "Point-to-point negative cases cover transit shutdown and recovery, received Dead-timer expiry on a physically up lossy link, passive transit, area/timer mismatch, withdrawn LAN membership and wrong cost. Local gateways stay reachable during transit failure; no alternate path exists.",
+    "Priority-zero point-to-point peers still form Full. Both priority-zero broadcast peers remain 2WAY/DROTHER without remote routes or replies. Normal-priority broadcast can carry traffic but cannot earn point-to-point network-type credit. Different local process IDs can interoperate but do not earn the planned process-10 goal.",
+    "DR/BDR: four broadcast routers, with client LANs behind the two DROTHERs. Ten directed Full relationships and two normal 2WAY/DROTHER relationships are checked against exact peers/interfaces. Each router receives all four router LSAs; the shared Network LSA is originated by the DR and lists all four attached routers.",
+    "DR/BDR priorities 100/50/0/0 and observed interface roles are separate live requirements. Raising BDR priority to 200 or DROTHER priority to 255 does not preempt the incumbent DR. A newly eligible or returning higher-priority router also does not preempt. Fresh equal-priority and default-priority saved-lab elections use router-ID tie breaking.",
+    "DR failure promotes BDR; with both remaining DROTHERs at priority zero, there is no eligible replacement BDR. Actual PC traffic continues after convergence. Returning R1 becomes BDR while R2 remains DR; a controlled shared-segment shutdown and R1-first restart restores intended roles.",
+    "If both eligible routers disappear, the priority-zero DROTHERs stay 2WAY. Received Dead-timer expiry is allowed before asserting withdrawal of retained remote routes. Local gateways remain reachable, and restoring an eligible DR recovers routing.",
+    "DR/BDR negative cases include passive transit, one-sided area mismatch, withdrawn LAN advertisement, wrong cost, incorrect priority/roles and a different startup order. Successful traffic cannot substitute for the intended election or route metrics.",
+    "DROTHER-to-DROTHER data forwarding uses the installed next hop across the shared switch and bypasses DR/BDR. Packet-event assertions and bidirectional traceroute verify that the DR is not a mandatory data-plane next hop.",
+    "Fixed IOS OSPF membership removal: no ip ospf <process> area <area> removes membership bindings while retaining independent network type, cost, timers, priority and authentication. An empty feature object is cleaned up. Area-change recovery and portable persistence regressions verify the repair.",
+    "Bounded optional configuredPriority and role fields extend the existing OSPF-interface lesson predicate. Priority is 0–255 and role is a known enum. Legacy OSPFv2 and OSPFv3 criteria still work; malformed imported values are rejected.",
+    "Both completed references earn only configuration/operational goals after real convergence. Two genuine traffic tests finish each guide. Saved reload, failure-state reload and individual startup reboot reconstruct protocol state; fresh traffic verifies current forwarding.",
+    "Each new lab passed six offline file:// browser scenarios: light/dark at 1440, 390 and 320 pixels, sequentially in isolated persistent Chrome profiles. Point-to-point cases include broadcast/priority-zero comparison and transit-failure reload/recovery. Election cases include non-preemption, BDR promotion, live traffic during DR failure, failed-DR reload, returning R1 as BDR, and controlled shared-segment recovery.",
+    "Four permalink cases preserve the current host/path/query without replacing an open workspace. Seven generic catalog regression checks pass, including accurate ten-lab Routing counts, save-copy/cancel protection and completed-reference reload. Final browser scripts run serially with isolated profiles and frozen per-viewport HTML after intermittent reload failures were observed with concurrent file browsers. Startup workspace/toast diagnostics are retained on failure; no application persistence change was made.",
+    "Final root index.html, dist/index.html, frozen browser inputs and all per-viewport copies match byte for byte. Desktop topologies and light/dark mobile guides were visually reviewed. The complete generated stylesheet is byte-identical to the prior app, and CLI colors are checked in all twelve new-lab viewport cases."
+  ],
+  "scope": "Adds two IPv4 OSPFv2 catalog labs and their guides, completed references, command resources, documentation and validation. Repairs IOS interface-membership removal and extends bounded lesson predicates for configured priority and elected role. Existing packet-driven OSPF and forwarding engines remain unchanged. No theme, terminal styling, backend or dependency changes. No new OSPFv3, NBMA, multi-area or live CML validation claim; no new claim of wire-level Hello election or Wait-timer fidelity beyond the existing election model.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_ospf/command/iro-cr-book/ospf-i1.html",
+    "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13689-17.html",
+    "https://www.cisco.com/c/en/us/td/docs/ios/12_2sb/12_2sba/feature/guide/ospfarea.html",
+    "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13683-11.html",
+    "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13688-16.html"
+  ],
+  "artifactSha256": "f839da393b89311a897ded96b6666bd8a7f191c1c73769ad6dd0e6f2daf126b2",
+  "stylesheetSha256": "bbf8a3ad99c8e30bf65894fc7950b66920fa7a15433c21bfdd9cffe484eaab9d",
+  "validation": {
+    "command": "npm run check",
+    "tests": 1652,
+    "newLabTests": 35,
+    "focusedTests": 55,
+    "passed": 1652,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 23
+  },
+  "browser": {
+    "pointToPoint": [
+      "light 1440px: ten Routing labs, eight-task guide and six-row addressing plan, zero-credit practice, both published IOS configurations, Full point-to-point peers without DR/BDR or a Network LSA, passive LANs, AD 110/metric 11 routes, two real 3/3 traffic checks and bidirectional traceroute, transit failure with route withdrawal and failed echoes, failure-state saved reload, link recovery, priority-zero Full/P2P versus 2WAY/DROTHER broadcast with no routes or replies, restored configuration and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "light 390px: ten Routing labs, eight-task guide and six-row addressing plan, zero-credit practice, both published IOS configurations, Full point-to-point peers without DR/BDR or a Network LSA, passive LANs, AD 110/metric 11 routes, two real 3/3 traffic checks and bidirectional traceroute, transit failure with route withdrawal and failed echoes, failure-state saved reload, link recovery, priority-zero Full/P2P versus 2WAY/DROTHER broadcast with no routes or replies, restored configuration and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "light 320px: ten Routing labs, eight-task guide and six-row addressing plan, zero-credit practice, both published IOS configurations, Full point-to-point peers without DR/BDR or a Network LSA, passive LANs, AD 110/metric 11 routes, two real 3/3 traffic checks and bidirectional traceroute, transit failure with route withdrawal and failed echoes, failure-state saved reload, link recovery, priority-zero Full/P2P versus 2WAY/DROTHER broadcast with no routes or replies, restored configuration and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "dark 1440px: ten Routing labs, eight-task guide and six-row addressing plan, zero-credit practice, both published IOS configurations, Full point-to-point peers without DR/BDR or a Network LSA, passive LANs, AD 110/metric 11 routes, two real 3/3 traffic checks and bidirectional traceroute, transit failure with route withdrawal and failed echoes, failure-state saved reload, link recovery, priority-zero Full/P2P versus 2WAY/DROTHER broadcast with no routes or replies, restored configuration and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "dark 390px: ten Routing labs, eight-task guide and six-row addressing plan, zero-credit practice, both published IOS configurations, Full point-to-point peers without DR/BDR or a Network LSA, passive LANs, AD 110/metric 11 routes, two real 3/3 traffic checks and bidirectional traceroute, transit failure with route withdrawal and failed echoes, failure-state saved reload, link recovery, priority-zero Full/P2P versus 2WAY/DROTHER broadcast with no routes or replies, restored configuration and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "dark 320px: ten Routing labs, eight-task guide and six-row addressing plan, zero-credit practice, both published IOS configurations, Full point-to-point peers without DR/BDR or a Network LSA, passive LANs, AD 110/metric 11 routes, two real 3/3 traffic checks and bidirectional traceroute, transit failure with route withdrawal and failed echoes, failure-state saved reload, link recovery, priority-zero Full/P2P versus 2WAY/DROTHER broadcast with no routes or replies, restored configuration and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "light: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to ten Routing labs",
+      "dark: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to ten Routing labs"
+    ],
+    "drBdr": [
+      "light 1440px: ten Routing labs, ten-task DR/BDR guide and eight-row plan, zero-credit practice, all four IOS configurations, prescribed broadcast roles and twelve Full/2WAY relationships, DR Network LSA and four router LSAs, learned routes, real 3/3 traffic and traceroutes between DROTHER LANs bypassing DR/BDR, non-preemption after priority 200, BDR promotion with no eligible backup, failed-DR saved reload with live traffic, returning R1 as BDR, controlled shared-segment reset, restored roles/routes and healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "light 390px: ten Routing labs, ten-task DR/BDR guide and eight-row plan, zero-credit practice, all four IOS configurations, prescribed broadcast roles and twelve Full/2WAY relationships, DR Network LSA and four router LSAs, learned routes, real 3/3 traffic and traceroutes between DROTHER LANs bypassing DR/BDR, non-preemption after priority 200, BDR promotion with no eligible backup, failed-DR saved reload with live traffic, returning R1 as BDR, controlled shared-segment reset, restored roles/routes and healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "light 320px: ten Routing labs, ten-task DR/BDR guide and eight-row plan, zero-credit practice, all four IOS configurations, prescribed broadcast roles and twelve Full/2WAY relationships, DR Network LSA and four router LSAs, learned routes, real 3/3 traffic and traceroutes between DROTHER LANs bypassing DR/BDR, non-preemption after priority 200, BDR promotion with no eligible backup, failed-DR saved reload with live traffic, returning R1 as BDR, controlled shared-segment reset, restored roles/routes and healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "dark 1440px: ten Routing labs, ten-task DR/BDR guide and eight-row plan, zero-credit practice, all four IOS configurations, prescribed broadcast roles and twelve Full/2WAY relationships, DR Network LSA and four router LSAs, learned routes, real 3/3 traffic and traceroutes between DROTHER LANs bypassing DR/BDR, non-preemption after priority 200, BDR promotion with no eligible backup, failed-DR saved reload with live traffic, returning R1 as BDR, controlled shared-segment reset, restored roles/routes and healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "dark 390px: ten Routing labs, ten-task DR/BDR guide and eight-row plan, zero-credit practice, all four IOS configurations, prescribed broadcast roles and twelve Full/2WAY relationships, DR Network LSA and four router LSAs, learned routes, real 3/3 traffic and traceroutes between DROTHER LANs bypassing DR/BDR, non-preemption after priority 200, BDR promotion with no eligible backup, failed-DR saved reload with live traffic, returning R1 as BDR, controlled shared-segment reset, restored roles/routes and healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "dark 320px: ten Routing labs, ten-task DR/BDR guide and eight-row plan, zero-credit practice, all four IOS configurations, prescribed broadcast roles and twelve Full/2WAY relationships, DR Network LSA and four router LSAs, learned routes, real 3/3 traffic and traceroutes between DROTHER LANs bypassing DR/BDR, non-preemption after priority 200, BDR promotion with no eligible backup, failed-DR saved reload with live traffic, returning R1 as BDR, controlled shared-segment reset, restored roles/routes and healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "light: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to ten Routing labs",
+      "dark: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to ten Routing labs"
+    ],
+    "catalog": [
+      "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ]
+  },
+  "browserErrors": [],
+  "externalRequests": []
+}

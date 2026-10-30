@@ -31,7 +31,7 @@ export type Criterion =
     }
   | { kind: "static-route"; device: string; network: string; prefix: number; nextHop: string; interface: string; ad: number }
   | { kind: "neighbor"; device: string; protocol: string; state?: string; peer?: string; interface?: string }
-  | { kind: "ospf-interface"; device: string; interface: string; protocol?: "ospf" | "ospfv3"; processId?: number; routerId?: string; area?: number; passive?: boolean; networkType?: "broadcast" | "point-to-point"; configuredCost?: number }
+  | { kind: "ospf-interface"; device: string; interface: string; protocol?: "ospf" | "ospfv3"; processId?: number; routerId?: string; area?: number; passive?: boolean; networkType?: "broadcast" | "point-to-point"; configuredCost?: number; configuredPriority?: number; role?: "DR" | "BDR" | "DROTHER" | "POINT-TO-POINT" }
   | { kind: "discovery-settings"; device: string; protocol: "CDP" | "LLDP"; enabled: boolean; interval?: number; holdtime?: number }
   | { kind: "discovery-neighbor"; device: string; protocol: "CDP" | "LLDP"; interface: string; peer: string; peerInterface: string }
   | { kind: "echo"; device: string; from: string }
@@ -154,7 +154,9 @@ export function validateLesson(value: unknown): asserts value is Lesson {
           (v.area===undefined || Number.isInteger(v.area) && v.area>=0 && v.area<=4294967295) &&
           (v.passive===undefined || typeof v.passive==='boolean') &&
           (v.networkType===undefined || ['broadcast','point-to-point'].includes(v.networkType)) &&
-          (v.configuredCost===undefined || Number.isInteger(v.configuredCost) && v.configuredCost>=1 && v.configuredCost<=65535);
+          (v.configuredCost===undefined || Number.isInteger(v.configuredCost) && v.configuredCost>=1 && v.configuredCost<=65535) &&
+          (v.configuredPriority===undefined || Number.isInteger(v.configuredPriority) && v.configuredPriority>=0 && v.configuredPriority<=255) &&
+          (v.role===undefined || ["DR","BDR","DROTHER","POINT-TO-POINT"].includes(v.role));
       case "discovery-settings":
         return ["CDP","LLDP"].includes(v.protocol) && typeof v.enabled==="boolean" && (v.interval===undefined || Number.isInteger(v.interval) && v.interval>=5 && v.interval<=(v.protocol==="CDP"?255:65535)) && (v.holdtime===undefined || Number.isInteger(v.holdtime) && v.holdtime>=1 && v.holdtime<=(v.protocol==="CDP"?255:65535));
       case "discovery-neighbor":
@@ -395,7 +397,9 @@ export function matches(
       (criterion.area===undefined || Number(row.area)===criterion.area) &&
       (criterion.passive===undefined || !!row.passive===criterion.passive) &&
       (criterion.networkType===undefined || (row.networkType??'broadcast')===criterion.networkType) &&
-      (criterion.configuredCost===undefined || d.config.interfaces[criterion.interface]?.features[protocol]?.cost===criterion.configuredCost);
+      (criterion.configuredCost===undefined || d.config.interfaces[criterion.interface]?.features[protocol]?.cost===criterion.configuredCost) &&
+      (criterion.configuredPriority===undefined || d.config.interfaces[criterion.interface]?.features[protocol]?.priority===criterion.configuredPriority) &&
+      (criterion.role===undefined || row.role===criterion.role);
   }
   if (criterion.kind === "neighbor")
     return d.runtime.neighbors.some(

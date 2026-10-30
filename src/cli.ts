@@ -1218,7 +1218,7 @@ export class IOSSession {
   }
   private interfaceOSPF(a:string[],no:boolean):void {
     if(!a.length)incomplete();
-    if(/^\d/.test(a[0])){exactly(a,3);const processId=integer(a[0],1,65535);keyword(a[1],['area']);const area=this.area(a[2]);this.eachPort(p=>{if(no)delete p.features.ospf;else p.features.ospf={...p.features.ospf,processId,area};});if(!no)this.device.config.protocols.ospf??={processId,networks:[],passiveInterfaces:[]};return;}
+    if(/^\d/.test(a[0])){exactly(a,3);const processId=integer(a[0],1,65535);keyword(a[1],['area']);const area=this.area(a[2]);this.eachPort(p=>{if(no){if(p.features.ospf){delete p.features.ospf.area;delete p.features.ospf.processId;if(!Object.keys(p.features.ospf).length)delete p.features.ospf;}}else p.features.ospf={...p.features.ospf,processId,area};});if(!no)this.device.config.protocols.ospf??={processId,networks:[],passiveInterfaces:[]};return;}
     if(a[0]==='authentication'&&a[1]==='key-chain'){exactly(a,3);this.eachPort(p=>{p.features.ospf??={};p.features.ospf.authentication=no?undefined:'message-digest';p.features.ospf.authenticationKeyChain=no?undefined:a[2];});return;}
     if(['bfd','mtu-ignore','authentication'].includes(a[0])){const key=a[0],field=key==='mtu-ignore'?'mtuIgnore':key;let value:any=!no;if(key==='authentication'){if(a.length>2)fail();value=no?undefined:a[1]?keyword(a[1],['message-digest','null']):'simple';}else exactly(a,1);this.eachPort(p=>{p.features.ospf??={};p.features.ospf[field]=value;if(key==='authentication')delete p.features.ospf.authenticationKeyChain;});return;}
     const key=keyword(a[0],['cost','priority','hello-interval','dead-interval','network']);exactly(a,no?1:2);
