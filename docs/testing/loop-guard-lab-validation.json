@@ -1,0 +1,76 @@
+{
+  "feature": "CCNA Switching: Loop Guard",
+  "catalogId": "loop-guard",
+  "artifactSha256": "8b8804058c51b88b8233e2f4923cbfe9c338ebe48edfe49a52c59c914b9a232e",
+  "devices": 5,
+  "links": 5,
+  "tasks": 8,
+  "topology": {
+    "SW1": "Trusted VLAN 10/99 root, base priority 8192; Gi0/23 to SW3 and Gi0/24 to SW2",
+    "SW2": "Base priority 16384; Gi0/24 to SW1 and Gi0/23 to SW3",
+    "SW3": "Gi0/23 normal root port; Gi0/24 normal alternate; both start shut without Loop Guard",
+    "PC1": "192.168.10.10/24 on SW3 Gi0/1, no gateway",
+    "PC2": "192.168.10.20/24 on SW1 Gi0/1, no gateway",
+    "Trunks": "VLANs 10,99, native 99; one-way faults are applied via the existing directional loss editor after normal BPDU reception"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1514,
+    "focusedTests": 122,
+    "newLabTests": 14,
+    "browserChecks": 15,
+    "passed": 1514,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed"
+  },
+  "checks": [
+    "Loop Guard practice starts safely disconnected with zero tasks and independent pre-addressed portable attempts",
+    "published setup protects both non-designated uplinks and establishes real root and alternate roles in VLANs 10 and 99",
+    "root-port one-way loss waits for BPDU expiry then blocks both carried VLANs while the former alternate becomes the forwarding root path",
+    "alternate-port BPDU loss stays loop-inconsistent without interrupting the healthy direct root path or either PC direction",
+    "sequential repairs restore reception and normal roles automatically while preserving both earned incident observations",
+    "without Loop Guard a formerly alternate port can become designated instead of loop-inconsistent after BPDU loss",
+    "a link that never received BPDUs cannot fabricate Loop Guard protection or incident credit",
+    "an administratively shut link does not impersonate a physically up one-way failure",
+    "restored STP reception cannot earn repair credit while the opposite traffic direction still has loss",
+    "simultaneous one-way faults isolate the access switch until one path is repaired, without false normal-topology credit",
+    "Root Guard and Loop Guard are mutually exclusive and removing protection cannot satisfy recovery goals",
+    "published IOS verification shows LOOP_Inc and a physically connected non-errdisabled interface, then clean inconsistency output after repair",
+    "completed references and saved reloads retain actually observed incidents, rebuild STP and keep protection through startup power cycles",
+    "imported Loop Guard observations and directional-loss goals accept only bounded plain networking values"
+  ],
+  "protocolFix": "STP retains the last valid local root/alternate/backup eligibility until each received-vector expiry is processed. Expiry on another port can no longer erase eligibility and incorrectly promote a simultaneously expired alternate port into designated forwarding. The tracking is private runtime state and resets with the heartbeat attachment/runtime.",
+  "scope": "Adds the catalog lab, bounded loss/protection and observed-incident lesson criteria, and the STP expiry-race correction. No new CLI syntax or dependencies. Completed references exercise actual delivered BPDUs, loss, expiration and recovery; incident and traffic credit are not fabricated. One-way loss affects all frames in that direction, not just BPDUs. No live CML validation is claimed.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/support/docs/lan-switching/spanning-tree-protocol-stp-8021d/218321-configure-stp-with-loop-guard-and-bpdu-s.html",
+    "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst6500/ios/15-4SY/config_guide/sup6T/15_3_sy_swcg_6T/spanning_tree_features.html"
+  ],
+  "verificationNotes": [
+    "Both root and alternate failures are staged only after receiving normal BPDUs. The guide explains that Loop Guard cannot detect a link that never received BPDUs and that an interface shutdown is different from a physically up one-way failure.",
+    "The simultaneous-loss regression tests the real protocol fix; cold-start and designated-port cases protect against false loop-inconsistent states.",
+    "The frozen offline browser artifact matches final index.html and dist/index.html byte for byte. All eight Loop Guard browser checks and seven general catalog checks passed; the general catalog checks ran after the final production build.",
+    "An initial general-catalog file reload timed out waiting for its guide. The harness now asserts that the completed workspace is saved before reload and captures storage/screenshot diagnostics on failure. The complete rerun passed in both themes at all three sizes without reproducing the failure. No application restore change was made."
+  ],
+  "browserChecks": [
+    "light 1440px: sixteen Switching entries, eight-task guide and fault instructions, zero-credit practice, visible IOS Loop Guard configuration, real one-way loss through the Ethernet link editor on both root and alternate paths, observed LOOP_Inc with a surviving Root FWD path and 3/3 replies in both PC directions, automatic recovery through GUI link repair, retained incidents after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "light 390px: sixteen Switching entries, eight-task guide and fault instructions, zero-credit practice, visible IOS Loop Guard configuration, real one-way loss through the Ethernet link editor on both root and alternate paths, observed LOOP_Inc with a surviving Root FWD path and 3/3 replies in both PC directions, automatic recovery through GUI link repair, retained incidents after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "light 320px: sixteen Switching entries, eight-task guide and fault instructions, zero-credit practice, visible IOS Loop Guard configuration, real one-way loss through the Ethernet link editor on both root and alternate paths, observed LOOP_Inc with a surviving Root FWD path and 3/3 replies in both PC directions, automatic recovery through GUI link repair, retained incidents after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 1440px: sixteen Switching entries, eight-task guide and fault instructions, zero-credit practice, visible IOS Loop Guard configuration, real one-way loss through the Ethernet link editor on both root and alternate paths, observed LOOP_Inc with a surviving Root FWD path and 3/3 replies in both PC directions, automatic recovery through GUI link repair, retained incidents after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 390px: sixteen Switching entries, eight-task guide and fault instructions, zero-credit practice, visible IOS Loop Guard configuration, real one-way loss through the Ethernet link editor on both root and alternate paths, observed LOOP_Inc with a surviving Root FWD path and 3/3 replies in both PC directions, automatic recovery through GUI link repair, retained incidents after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 320px: sixteen Switching entries, eight-task guide and fault instructions, zero-credit practice, visible IOS Loop Guard configuration, real one-way loss through the Ethernet link editor on both root and alternate paths, observed LOOP_Inc with a surviving Root FWD path and 3/3 replies in both PC directions, automatic recovery through GUI link repair, retained incidents after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "light: share link preserves current host/path/query and returns to sixteen Switching labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to sixteen Switching labs without replacing the workspace"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

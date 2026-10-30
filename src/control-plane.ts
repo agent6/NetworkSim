@@ -99,7 +99,7 @@ const multicastFlows=new WeakMap<Simulator,Map<string,{source:string;group:strin
 type UdldSession={deviceId:string;port:string;mode:string;messageTime:number;state:string;neighborDeviceId?:string;neighborPort?:string;lastReceived?:number;retries:number;tx?:any;expiry?:any;retry?:any;runtime:Device['runtime']};
 const udldSessions=new WeakMap<Simulator,Map<string,UdldSession>>();
 type StpBPDU={vlan:string;rootId:string;rootBridgeId:string;bridgeId:string;cost:number;portId:string;mode:string;region:string;age:number;maxAge:number;helloTime:number;forwardTime:number;received:number;role:string;proposal?:boolean;agreement?:string;tc?:string;hops?:number;bridgeAssurance?:boolean};
-type StpHeartbeat={deviceId:string;port:string;attachment:string;member?:string;runtime:Device['runtime'];created:number;received:Map<string,StpBPDU>;blocked:Set<string>;lastSent:Map<string,number>;sent:Map<string,string>;agreements:Map<string,string>;accepted:Map<string,string>;lost:Set<string>;window?:number;sentCount?:number;triggerSignature?:string;trigger?:any;tx?:any;expiry?:any};
+type StpHeartbeat={deviceId:string;port:string;attachment:string;member?:string;runtime:Device['runtime'];created:number;received:Map<string,StpBPDU>;blocked:Set<string>;lastSent:Map<string,number>;sent:Map<string,string>;agreements:Map<string,string>;accepted:Map<string,string>;lost:Set<string>;nonDesignated?:Set<string>;window?:number;sentCount?:number;triggerSignature?:string;trigger?:any;tx?:any;expiry?:any};
 const stpHeartbeats=new WeakMap<Simulator,Map<string,StpHeartbeat>>();
 
 type EigrpHelloPort={endpoint:RoutedPort;protocol:string;runtime:Device['runtime'];signature:string;timer:any;send?:()=>void};
@@ -571,6 +571,9 @@ function spanningTree(engine: Simulator): number | undefined {
         let status:StpPortState['state']=blocked?(up?'blocking':'disabled'):edge?'forwarding':classic?(elapsed<tree.forwardTime?'listening':elapsed<2*tree.forwardTime?'learning':'forwarding'):readyRapid?'forwarding':elapsed<2*tree.forwardTime?'discarding':'forwarding';
         if(rootChanged&&role==='designated'&&!edge&&!classic&&!agreed)status='discarding';
         if(bpduGuard){status='disabled';role='bpdu-inconsistent';}else if(rootGuard){status='blocking';role='root-inconsistent';}else if(loopGuard){status='blocking';role='loop-inconsistent';}else if(bridgeAssurance&&up){status='blocking';role='bridge-assurance-inconsistent';}
+        // Remember eligibility while the received vector is valid. Another port's
+        // expiry can recompute this port as designated before its own timer fires.
+        if(heartbeat&&rx){const eligible=heartbeat.nonDesignated??=new Set<string>();if(['root','alternate','backup'].includes(role))eligible.add(String(vlan));else eligible.delete(String(vlan));}
         if(!blocked&&!edge&&status!=='forwarding'){const ready=transition.start+(classic?(elapsed<tree.forwardTime?tree.forwardTime:2*tree.forwardTime):!rx?1000:2*tree.forwardTime);if(ready>now)next=next===undefined?ready:Math.min(next,ready);}
         tree.ports[name]={state:status,role,rootId,cost:portCost(p,vlan),edge,bpduGuard,proposal:!classic&&role==='designated'&&!agreed,agreement:proposed?JSON.stringify([rx!.rootBridgeId,rx!.cost,rx!.bridgeId,rx!.portId]):undefined,portPriority:portPriority(p,vlan),portNumber:stpPortNumber(d,name),linkType:shared?'shared':'point-to-point',members:/^Port-channel/i.test(name)?stpMembers(d,name).slice():undefined};
         portChanges.push({name,previous,classic});
@@ -594,7 +597,7 @@ function stpLifetime(rx:StpBPDU):number{return Math.max(0,Math.min(rx.maxAge-rx.
 function stpExpiry(engine:Simulator,s:StpHeartbeat):void{
   engine.clock.cancel(s.expiry);s.expiry=undefined;const d=engine.getDevice(s.deviceId),iface=d?.config.interfaces[s.port];if(!d||!iface)return;
   const now=engine.clock.now();let next=Infinity,changed=false;
-  for(const[vlan,rx]of s.received){const at=rx.received+stpLifetime(rx);if(at<=now){const previous=d.runtime.stp[vlan]?.ports[s.port];if(['root','alternate','loop-inconsistent'].includes(previous?.role??''))s.lost.add(vlan);if(loopguardEnabled(d,iface)&&s.lost.has(vlan)&&!iface.features.bpdufilter)s.blocked.add(vlan);s.received.delete(vlan);s.agreements.delete(vlan);s.accepted.delete(vlan);changed=true;}else next=Math.min(next,at);}
+  for(const[vlan,rx]of s.received){const at=rx.received+stpLifetime(rx);if(at<=now){const previous=d.runtime.stp[vlan]?.ports[s.port];if(['root','alternate','backup','loop-inconsistent'].includes(previous?.role??'')||s.nonDesignated?.has(vlan))s.lost.add(vlan);s.nonDesignated?.delete(vlan);if(loopguardEnabled(d,iface)&&s.lost.has(vlan)&&!iface.features.bpdufilter)s.blocked.add(vlan);s.received.delete(vlan);s.agreements.delete(vlan);s.accepted.delete(vlan);changed=true;}else next=Math.min(next,at);}
   if(Number.isFinite(next))s.expiry=engine.clock.schedule(next-now,()=>stpExpiry(engine,s),{owner:d.id,label:'STP received BPDU expiry'});
   if(changed){event(engine,d,'STP',s.blocked.size?`${s.port} loop-inconsistent`:`${s.port} BPDU expired`,'Received spanning-tree information aged out.',!!s.blocked.size);engine.recompute();engine.notify();}
 }

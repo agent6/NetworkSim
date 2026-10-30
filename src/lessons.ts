@@ -30,6 +30,8 @@ export type Criterion =
   | { kind: "echo"; device: string; from: string }
   | { kind: "bpdu-guard-trip"; device: string; interface: string }
   | { kind: "root-guard-block"; device: string; interface: string; vlan: number }
+  | { kind: "loop-guard-block"; device: string; interface: string; vlan: number }
+  | { kind: "link-loss"; device: string; interface: string; receive: number; transmit: number }
   | { kind: "vlan"; device: string; id: number }
   | { kind: "lacp-bundle"; device: string; group: number; peer: string; members: string[] }
   | { kind: "stp-forwarding"; device: string; interface: string; vlans: number[] }
@@ -46,7 +48,7 @@ export type Criterion =
       kind: "interface";
       device: string;
       interface: string;
-      property: "adminUp" | "vlan" | "voiceVlan" | "nativeVlan" | "nonegotiate" | "channelGroup" | "channelMode" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "ipv4Addressed" | "duplex" | "portfast" | "bpduguard" | "rootGuard" | "errDisabled" | "speedAuto" | "cdp" | "lldpTransmit" | "lldpReceive";
+      property: "adminUp" | "vlan" | "voiceVlan" | "nativeVlan" | "nonegotiate" | "channelGroup" | "channelMode" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "ipv4Addressed" | "duplex" | "portfast" | "bpduguard" | "rootGuard" | "loopGuard" | "errDisabled" | "speedAuto" | "cdp" | "lldpTransmit" | "lldpReceive";
       value: string | number | boolean;
     };
 export interface Objective {
@@ -95,7 +97,10 @@ export function validateLesson(value: unknown): asserts value is Lesson {
       case "bpdu-guard-trip":
         return text(v.interface,128) && v.interface!=="";
       case "root-guard-block":
+      case "loop-guard-block":
         return text(v.interface,128) && v.interface!=="" && Number.isInteger(v.vlan) && v.vlan>=1 && v.vlan<=4094;
+      case "link-loss":
+        return text(v.interface,128) && v.interface!=="" && [v.receive,v.transmit].every(n=>Number.isFinite(n) && n>=0 && n<=1);
       case "ip-routing":
         return typeof v.enabled === "boolean";
       case "address":
@@ -156,7 +161,7 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         return text(v.interface,128) && text(v.source,128) && text(v.sourceInterface,128) && Number.isInteger(v.vlan) && v.vlan>=1 && v.vlan<=4094;
       case "interface":
         if (!text(v.interface, 128)) return false;
-        if (["switchport","ipv4Addressed","portfast","bpduguard","rootGuard","errDisabled","speedAuto","nonegotiate","cdp","lldpTransmit","lldpReceive"].includes(v.property)) return typeof v.value === "boolean";
+        if (["switchport","ipv4Addressed","portfast","bpduguard","rootGuard","loopGuard","errDisabled","speedAuto","nonegotiate","cdp","lldpTransmit","lldpReceive"].includes(v.property)) return typeof v.value === "boolean";
         if (v.property === "description") return text(v.value,240);
         if (v.property === "channelGroup") return Number.isInteger(v.value) && v.value>=1 && v.value<=4096;
         if (v.property === "channelMode") return ["active","passive","on","desirable","auto"].includes(v.value);
@@ -358,6 +363,15 @@ export function matches(
         (!criterion.state ||
           n.state.toLowerCase() === criterion.state.toLowerCase()),
     );
+  if (criterion.kind === "link-loss") {
+    const link=sim.linkAt(d.id,criterion.interface);if(!link?.enabled)return false;
+    const a=link.a.deviceId===d.id && link.a.port===criterion.interface;
+    return ((a?link.lossBA:link.lossAB)??link.loss)===criterion.receive && ((a?link.lossAB:link.lossBA)??link.loss)===criterion.transmit;
+  }
+  if (criterion.kind === "loop-guard-block") {
+    const port=d.runtime.stp[String(criterion.vlan)]?.ports[criterion.interface];
+    return sim.interfaceUp(d.id,criterion.interface) && d.config.interfaces[criterion.interface]?.features.loopGuard===true && port?.role==='loop-inconsistent' && port.state==='blocking' && d.runtime.features.stpCounters?.[criterion.interface]?.received>0;
+  }
   if (criterion.kind === "root-guard-block") {
     const port=d.runtime.stp[String(criterion.vlan)]?.ports[criterion.interface];
     return sim.interfaceUp(d.id,criterion.interface) && d.config.interfaces[criterion.interface]?.features.rootGuard===true && port?.role==='root-inconsistent' && port.state==='blocking' && d.runtime.features.stpCounters?.[criterion.interface]?.received>0;
@@ -384,7 +398,7 @@ export function matches(
   }
   if (criterion.kind === "interface") {
     const port=d.config.interfaces[criterion.interface];if(!port)return false;
-    const value=(criterion.property==="cdp"||criterion.property==="lldpTransmit"||criterion.property==="lldpReceive")?port.features[criterion.property]!==false:criterion.property==="ipv4Addressed"?!!(port.ip||port.features.secondaryIps?.length||port.features.dhcp):criterion.property==="channelGroup"?port.features.channelGroup:criterion.property==="channelMode"?port.features.channelMode:criterion.property==="nonegotiate"?port.features.nonegotiate===true:criterion.property==="portfast"?port.features.portfast===true:criterion.property==="bpduguard"?port.features.bpduguard===true:criterion.property==="rootGuard"?port.features.rootGuard===true:criterion.property==="errDisabled"?port.features.errDisabled===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
+    const value=(criterion.property==="cdp"||criterion.property==="lldpTransmit"||criterion.property==="lldpReceive")?port.features[criterion.property]!==false:criterion.property==="ipv4Addressed"?!!(port.ip||port.features.secondaryIps?.length||port.features.dhcp):criterion.property==="channelGroup"?port.features.channelGroup:criterion.property==="channelMode"?port.features.channelMode:criterion.property==="nonegotiate"?port.features.nonegotiate===true:criterion.property==="portfast"?port.features.portfast===true:criterion.property==="bpduguard"?port.features.bpduguard===true:criterion.property==="rootGuard"?port.features.rootGuard===true:criterion.property==="loopGuard"?port.features.loopGuard===true:criterion.property==="errDisabled"?port.features.errDisabled===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
     return value===criterion.value;
   }
   return false;
@@ -425,7 +439,7 @@ export function lessonProgress(sim: Simulator):
       );
     }
     const result = matches(sim, c);
-    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block") return result;
+    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block") return result;
     validKeys.add(key);
     if (result) observations.add(key);
     return result || observations.has(key);
@@ -433,7 +447,7 @@ export function lessonProgress(sim: Simulator):
   const rows = lesson.objectives.map((objective) => {
     const observed = observe(objective.criterion, JSON.stringify(objective.id));
     // Traffic and fault observations record accomplishments; configuration stays live.
-    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block";
+    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block";
     if (historical && observed)
       completed.add(objective.id);
     return {
