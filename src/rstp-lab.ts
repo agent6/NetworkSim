@@ -20,7 +20,7 @@ export function validRSTPCriterion(c:any):boolean{
 }
 function projection(c:DeviceConfig,interfaces:string[],vlans:number[]):string|undefined{
  if(interfaces.some(p=>!Object.hasOwn(c.interfaces,p))||vlans.some(v=>!Object.hasOwn(c.vlans,v)))return;
- return JSON.stringify([c.features.stp,interfaces.map(p=>{const i=c.interfaces[p];return[i.adminUp,i.switchport,i.mode,i.vlan,i.nativeVlan,i.allowedVlans===null?null:[...i.allowedVlans].sort((a,b)=>a-b),i.speed,i.duplex,i.features.speedAuto,!!i.features.portfast,!!i.features.nonegotiate,!!i.features.rootGuard,!!i.features.loopGuard,!!i.features.bpduguard,i.features.bpdufilter,i.features.stpLinkType];}),vlans.map(v=>c.vlans[v].active)]);
+ return JSON.stringify([c.features.stp,c.features.errdisable?.detect?.bpduguard!==false,(c.features.errdisable?.causes??[]).some((cause:string)=>cause==='all'||cause==='bpduguard'),c.features.errdisable?.interval??300,interfaces.map(p=>{const i=c.interfaces[p];return[i.adminUp,i.switchport,i.mode,i.vlan,i.nativeVlan,i.allowedVlans===null?null:[...i.allowedVlans].sort((a,b)=>a-b),i.speed,i.duplex,i.features.speedAuto,!!i.features.portfast,!!i.features.nonegotiate,!!i.features.rootGuard,!!i.features.loopGuard,i.features.bpduguard??null,i.features.bpdufilter,i.features.stpLinkType];}),vlans.map(v=>c.vlans[v].active)]);
 }
 export function matchesRSTPCriterion(s:Simulator,d:Device,c:RSTPCriterion):boolean{
  const protocol='protocol' in c?c.protocol??'rapid-pvst':'rapid-pvst';

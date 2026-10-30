@@ -52581,6 +52581,18 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   };
 
+  // src/bpdu-guard-lab.ts
+  function validBPDUGuardCriterion(c) {
+    return !!c && typeof c === "object" && c.kind === "bpdu-guard-policy" && typeof c.device === "string" && c.device.length > 0 && c.device.length <= 128 && typeof c.enabled === "boolean" && typeof c.manualRecovery === "boolean" && Array.isArray(c.interfaces) && c.interfaces.length > 0 && c.interfaces.length <= 32 && c.interfaces.every((p) => p && typeof p.name === "string" && p.name.length > 0 && p.name.length <= 128 && ["inherit", "enable", "disable"].includes(p.override)) && new Set(c.interfaces.map((p) => p.name)).size === c.interfaces.length;
+  }
+  function matchesBPDUGuardCriterion(d, c) {
+    const stp = d.config.features.stp ?? {}, causes = d.config.features.errdisable?.causes ?? [];
+    return ["switch", "poeswitch", "l3switch"].includes(d.kind) && !!stp.bpduguardDefault === c.enabled && stp.bpdufilterDefault !== true && errdisableDetectionEnabled(d, "bpduguard") && (!c.manualRecovery || !causes.includes("all") && !causes.includes("bpduguard")) && c.interfaces.every((row5) => {
+      const p = d.config.interfaces[row5.name];
+      return !!p && p.features.bpdufilter !== true && p.features.bpduguard === (row5.override === "inherit" ? void 0 : row5.override === "enable");
+    });
+  }
+
   // src/mst-lab.ts
   var text3 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
   var integer5 = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
@@ -52624,9 +52636,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
   function projection(c, interfaces2, vlans6) {
     if (interfaces2.some((p) => !Object.hasOwn(c.interfaces, p)) || vlans6.some((v) => !Object.hasOwn(c.vlans, v))) return;
-    return JSON.stringify([c.features.stp, interfaces2.map((p) => {
+    return JSON.stringify([c.features.stp, c.features.errdisable?.detect?.bpduguard !== false, (c.features.errdisable?.causes ?? []).some((cause) => cause === "all" || cause === "bpduguard"), c.features.errdisable?.interval ?? 300, interfaces2.map((p) => {
       const i = c.interfaces[p];
-      return [i.adminUp, i.switchport, i.mode, i.vlan, i.nativeVlan, i.allowedVlans === null ? null : [...i.allowedVlans].sort((a, b) => a - b), i.speed, i.duplex, i.features.speedAuto, !!i.features.portfast, !!i.features.nonegotiate, !!i.features.rootGuard, !!i.features.loopGuard, !!i.features.bpduguard, i.features.bpdufilter, i.features.stpLinkType];
+      return [i.adminUp, i.switchport, i.mode, i.vlan, i.nativeVlan, i.allowedVlans === null ? null : [...i.allowedVlans].sort((a, b) => a - b), i.speed, i.duplex, i.features.speedAuto, !!i.features.portfast, !!i.features.nonegotiate, !!i.features.rootGuard, !!i.features.loopGuard, i.features.bpduguard ?? null, i.features.bpdufilter, i.features.stpLinkType];
     }), vlans6.map((v) => c.vlans[v].active)]);
   }
   function matchesRSTPCriterion(s, d, c) {
@@ -53309,6 +53321,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (v.kind === "link") return text4(v.a, 128) && text4(v.b, 128);
       if (!text4(v.device, 128)) return false;
       switch (v.kind) {
+        case "bpdu-guard-policy":
+          return validBPDUGuardCriterion(v);
         case "mst-region":
         case "mst-priority":
         case "mst-tree":
@@ -53544,6 +53558,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!("device" in criterion)) return false;
     const d = device(sim2, criterion.device);
     if (!d) return false;
+    if (criterion.kind === "bpdu-guard-policy") return matchesBPDUGuardCriterion(d, criterion);
     if (criterion.kind === "mst-region" || criterion.kind === "mst-priority" || criterion.kind === "mst-tree") return matchesMSTCriterion(sim2, d, criterion);
     if (criterion.kind === "rstp-saved" || criterion.kind === "rstp-edge" || criterion.kind === "rstp-echo") return matchesRSTPCriterion(sim2, d, criterion);
     if (criterion.kind === "ec-saved" || criterion.kind === "ec-stp" || criterion.kind === "ec-echo") return matchesEtherChannelTroubleshootingCriterion(sim2, d, criterion);
@@ -54133,6 +54148,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "rapid-spanning-tree-protocol", group: "CCNP ENCOR", section: "Layer 2", title: "Rapid Spanning Tree Protocol (RSTP)", description: "Configure Cisco Rapid PVST+, elect per-VLAN roots and verify rapid point-to-point and edge behavior. Inspect proposal/agreement BPDUs, prove alternate-port recovery and restore both forwarding trees.", devices: 7, links: 7, practice: true },
     { id: "multiple-spanning-tree", group: "CCNP ENCOR", section: "Layer 2", title: "Multiple Spanning Tree (MST)", description: "Build one MST region with two VLANs sharing MST1 and a separate MST2 tree. Verify MST0, committed region settings, per-instance roots and roles, actual VLAN traffic and alternate-path recovery.", devices: 9, links: 9, practice: true },
     { id: "stp-root-guard", group: "CCNP ENCOR", section: "Layer 2", title: "STP Root Guard", description: "Protect a designated STP boundary, reject superior BPDUs independently in two VLANs and recover automatically. Verify trusted roots, unaffected VLAN traffic, live MAC learning and saved protection.", devices: 7, links: 6, practice: true },
+    { id: "stp-bpdu-guard", group: "CCNP ENCOR", section: "Layer 2", title: "STP BPDU Guard", description: "Compare inherited edge-port protection with explicit interface BPDU Guard. Receive real inferior BPDUs, inspect err-disable and logs, keep legitimate traffic working and recover safely without weakening protection.", devices: 6, links: 6, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
   var GRE_IPSEC_PSK = "ENCOR-Lab-PSK";
@@ -54898,7 +54914,23 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     trigger: { EDGE1: ["enable", "configure terminal", `spanning-tree vlan ${vlan4} priority 4096`, "end"] },
     recovery: { EDGE1: ["enable", "configure terminal", `spanning-tree vlan ${vlan4} priority 32768`, "end"] }
   }));
+  var ENCOR_BPDU_GUARD_COMMANDS = {
+    DSW1: ["enable", "configure terminal", "spanning-tree mode rapid-pvst", "spanning-tree vlan 10,99 priority 8192", "interface GigabitEthernet0/24", "shutdown", "switchport mode trunk", "switchport trunk native vlan 99", "switchport trunk allowed vlan 10,99", "switchport nonegotiate", "no spanning-tree portfast", "spanning-tree bpduguard disable", "no spanning-tree guard", "no shutdown", "interface GigabitEthernet0/1", "spanning-tree portfast", "no shutdown", "end", "write memory"],
+    ASW1: ["enable", "configure terminal", "spanning-tree mode rapid-pvst", "spanning-tree vlan 10,99 priority 32768", "spanning-tree portfast bpduguard default", "errdisable detect cause bpduguard", "no errdisable recovery cause bpduguard", "interface GigabitEthernet0/24", "shutdown", "switchport mode trunk", "switchport trunk native vlan 99", "switchport trunk allowed vlan 10,99", "switchport nonegotiate", "no spanning-tree portfast", "spanning-tree bpduguard disable", "no spanning-tree guard", "no shutdown", "interface range GigabitEthernet0/1 , GigabitEthernet0/3", "switchport mode access", "switchport access vlan 10", "spanning-tree portfast", "no spanning-tree bpduguard", "no spanning-tree guard", "no shutdown", "interface GigabitEthernet0/4", "switchport mode access", "switchport access vlan 10", "no spanning-tree portfast", "spanning-tree bpduguard enable", "no spanning-tree guard", "no shutdown", "end", "write memory"],
+    ROGUE: ["enable", "configure terminal", "spanning-tree mode rapid-pvst", "spanning-tree vlan 10,99 priority 61440", "interface range GigabitEthernet0/1 , GigabitEthernet0/3", "shutdown", "switchport mode access", "switchport access vlan 10", "no spanning-tree portfast", "spanning-tree bpduguard disable", "interface GigabitEthernet0/2", "spanning-tree portfast", "no shutdown", "end", "write memory"]
+  };
+  var ENCOR_BPDU_GUARD_TESTS = [{ name: "global", port: 3, peerPort: 1 }, { name: "interface", port: 4, peerPort: 3 }].map((t) => ({
+    ...t,
+    trigger: { ROGUE: ["enable", "configure terminal", `interface GigabitEthernet0/${t.peerPort}`, "no shutdown", "end"] },
+    isolate: { ROGUE: ["enable", "configure terminal", `interface GigabitEthernet0/${t.peerPort}`, "shutdown", "end"] },
+    reset: { ASW1: ["enable", "configure terminal", `interface GigabitEthernet0/${t.port}`, "shutdown", "no shutdown", "end"] }
+  }));
   var GUIDE_RESOURCES = {
+    "stp-bpdu-guard": { planTitle: "Protection and addressing plan", columns: ["Port / device", "Protection / purpose", "IPv4 address /24"], rows: [["ASW1 Gi0/1 \xB7 PC1", "PortFast; inherit global BPDU Guard", "192.168.10.10"], ["ASW1 Gi0/3 \u2190 ROGUE Gi0/1", "PortFast; inherit global BPDU Guard", "No switch IP needed"], ["ASW1 Gi0/4 \u2190 ROGUE Gi0/3", "Explicit BPDU Guard; no PortFast", "No switch IP needed"], ["DSW1 Gi0/1 \xB7 PC2", "Legitimate host across the trusted trunk", "192.168.10.20"], ["ROGUE Gi0/2 \xB7 PC3", "Isolated host behind the test BPDU source", "192.168.10.30"]], commands: { ...ENCOR_BPDU_GUARD_COMMANDS, ...Object.fromEntries(ENCOR_BPDU_GUARD_TESTS.flatMap((t) => [[`${t.name} test \xB7 ROGUE \u2014 Enable BPDU source`, t.trigger.ROGUE], [`${t.name} recovery \xB7 ROGUE \u2014 Isolate source`, t.isolate.ROGUE], [`${t.name} recovery \xB7 ASW1 \u2014 Reset protected port`, t.reset.ASW1]])) }, verification: { ASW1: ["show spanning-tree summary", "show spanning-tree vlan 10", "show spanning-tree root", "show spanning-tree interface GigabitEthernet0/1 detail", "show spanning-tree interface GigabitEthernet0/3 detail", "show spanning-tree interface GigabitEthernet0/4 detail", "show interfaces status err-disabled", "show errdisable recovery", "show logging", "show interfaces trunk", "show running-config interface GigabitEthernet0/3", "show running-config interface GigabitEthernet0/4", "show mac address-table dynamic", "show startup-config"], DSW1: ["show spanning-tree root", "show interfaces trunk", "show startup-config"], ROGUE: ["show interfaces status", "show spanning-tree vlan 10", "show startup-config"], PC1: ["ipconfig", "ping -n 3 192.168.10.20"], PC2: ["ping -n 3 192.168.10.10"], PC3: ["ping -n 3 192.168.10.20"] }, setup: [
+      { title: "Configure edge protection without guarding the trusted trunk", instructions: ["VLANs 10 and 99 and the PC addresses are ready. Practice starts in PVST, with the trusted trunk and PC1 port shut, protection disabled and both test-source interfaces shut. Apply the DSW1, ASW1 and ROGUE configuration sections before running either test.", "Use Rapid PVST. DSW1 is the trusted root at base priority 8192 for VLANs 10 and 99. ASW1 uses 32768; ROGUE uses 61440, so its BPDUs are inferior. BPDU Guard does not require a superior BPDU. Both trunks carry VLANs 10,99 with native 99 and DTP disabled.", "On ASW1, enable spanning-tree portfast bpduguard default globally. Gi0/1 and Gi0/3 use PortFast and no spanning-tree bpduguard to inherit that default. An explicit spanning-tree bpduguard disable would override inheritance.", "On ASW1 Gi0/4, enable spanning-tree bpduguard enable explicitly and leave PortFast disabled. Interface BPDU Guard applies to any received BPDU even without PortFast. Keep the legitimate Gi0/24 trunk non-edge, with BPDU Guard explicitly disabled. Do not enable BPDU Filtering, Root Guard or Loop Guard on these test ports.", "Leave automatic BPDU Guard recovery disabled and detection enabled. Save all three healthy configurations. Wait for BPDUs, verify DSW1 is root in the trusted component and run both legitimate PC tests. No router or default gateway is needed."] },
+      ...ENCOR_BPDU_GUARD_TESTS.map((t) => ({ title: `Test ${t.name} protection \xB7 ASW1 Gi0/${t.port}`, instructions: [`First keep the other ROGUE test interface shut. Enable ROGUE Gi0/${t.peerPort} and wait for an actual received BPDU to err-disable ASW1 Gi0/${t.port}. ${t.name === "global" ? "This is an inherited PortFast edge-port guard." : "This explicit interface guard must trip even though the interface is not PortFast."}`, "Inspect show interfaces status err-disabled and show logging. Expect reason bpduguard and %SPANTREE-2-BLOCK_BPDUGUARD / %PM-4-ERR_DISABLE messages. The affected interface is disabled as a whole, rather than entering Root Guard\u2019s per-VLAN root-inconsistent state.", "Run both legitimate guide pings during the incident: PC1 and PC2 must still communicate across the trusted trunk. From PC3\u2019s Windows CLI, ping 192.168.10.20; it must fail behind the disabled boundary. DSW1 remains the trusted root.", `Shut ROGUE Gi0/${t.peerPort} to remove the cause. Removing the source alone does not clear err-disable. Then reset ASW1 Gi0/${t.port} with shutdown followed by no shutdown. Keep the original guard configuration. Link-down is expected while the source is shut; err-disabled is not. Resetting while the BPDU source is still enabled causes another trip.`, "Finish this recovery before testing the other port. Do not enable both ROGUE test interfaces together. Repeat both legitimate pings after each recovery."] })),
+      { title: "Verify recovery, saved policy and live learning", instructions: ["Both genuine BPDU incidents remain earned after recovery. Finish with both ROGUE source interfaces shut, both ASW1 test interfaces administratively up and not err-disabled, inherited protection on Gi0/3 and explicit protection on Gi0/4. The trusted trunk and host ports must remain healthy.", "Run both legitimate pings to learn current access and trunk MAC entries. Save ASW1, DSW1 and ROGUE with write memory, then save or export the lab. Reopening preserves incidents and successful traffic, but requires new BPDUs and MAC learning.", "Optional timer experiment: errdisable recovery cause bpduguard and errdisable recovery interval 30 enable a real timed retry. A continuing BPDU source retrips the port; after isolation the next retry recovers it. Before finishing, return to manual recovery with no errdisable recovery cause bpduguard and save the healthy configuration."] }
+    ], note: "The completed reference applies configuration only. After convergence it starts with seven live policy/tree/save tasks, no pre-earned incidents, no ping results and no dynamic MAC entries. The separate CCNA PortFast and BPDU Guard lab remains available. This lab uses the existing received-BPDU and err-disable mechanisms." },
     "stp-root-guard": { planTitle: "VLAN and addressing plan", columns: ["VLAN", "Hosts / access ports", "IPv4 addresses /24", "Trusted root / boundary"], rows: [["10", "PC1: SW1 Gi0/1 \xB7 PC2: EDGE1 Gi0/1", "192.168.10.10 \u2194 192.168.10.20", "CORE1 \xB7 guard SW1 Gi0/23"], ["20", "PC3: SW1 Gi0/2 \xB7 PC4: EDGE1 Gi0/2", "192.168.20.10 \u2194 192.168.20.20", "CORE1 \xB7 same guarded trunk"], ["99", "Native on both trunks", "No host addressing required", "CORE1 \xB7 priority 8192"]], commands: { ...ENCOR_ROOT_GUARD_COMMANDS, ...Object.fromEntries(ENCOR_ROOT_GUARD_TESTS.flatMap((t) => [[`Test VLAN ${t.vlan} \xB7 EDGE1 \u2014 Trigger superior BPDUs`, t.trigger.EDGE1], [`Recover VLAN ${t.vlan} \xB7 EDGE1 \u2014 Restore priority`, t.recovery.EDGE1]])) }, verification: { CORE1: ["show spanning-tree root", "show startup-config"], SW1: ["show spanning-tree summary", "show spanning-tree vlan 10", "show spanning-tree vlan 20", "show spanning-tree vlan 99", "show spanning-tree inconsistentports", "show spanning-tree blockedports", "show spanning-tree interface GigabitEthernet0/23 detail", "show interfaces trunk", "show interfaces status err-disabled", "show running-config interface GigabitEthernet0/23", "show mac address-table dynamic", "show logging", "show startup-config"], EDGE1: ["show spanning-tree vlan 10", "show spanning-tree vlan 20", "show startup-config"], PC1: ["ipconfig", "ping -n 3 192.168.10.20"], PC2: ["ping -n 3 192.168.10.10"], PC3: ["ping -n 3 192.168.20.20"], PC4: ["ping -n 3 192.168.20.10"] }, setup: [
       { title: "Configure a safe root boundary", instructions: ["VLANs and static PC addresses are ready. Practice starts in PVST with all four trunk endpoints shut down. Configure all three switches using the CORE1, SW1 and EDGE1 reference sections before running either incident.", "Use Rapid PVST+. Set VLANs 10, 20 and 99 to base priorities CORE1 8192, SW1 16384 and EDGE1 32768. Native VLAN99 and exactly allowed VLANs 10, 20 and 99 must match on both trunks. Disable DTP, inter-switch PortFast and BPDU Guard.", "Enable spanning-tree guard root only on SW1 Gi0/23 toward EDGE1. Leave SW1 Gi0/24 toward CORE1 unguarded. Enable PortFast only on the four PC access ports. Save the normal configuration on all three switches."] },
       { title: "Verify the healthy STP domain", instructions: ["Wait for received BPDUs. All three switches must agree on CORE1 for VLANs 10, 20 and 99. SW1 Gi0/24 is Root FWD, SW1 Gi0/23 is Desg FWD, and EDGE1 Gi0/24 is Root FWD. Full-duplex trunks are point-to-point and are not edge ports.", "Run all four guide pings. Both VLAN pairs must work in both directions. Inspect dynamic MACs: SW1 learns PC2 and PC4 through Gi0/23, and EDGE1 learns PC1 and PC3 through Gi0/24. No router or default gateway is needed. Root Guard permits ordinary inferior BPDUs."] },
@@ -56361,6 +56393,69 @@ ${out.join("\n")}`);
     const doc = { format: "netsim-lab", version: 1, seed: 20261029, lab };
     return mode === "completed" ? completedDocument(doc, STP_ROOT_COMMANDS) : parseDocument2(JSON.stringify(doc));
   }
+  function createSTPBPDUGuardLab(mode = "practice") {
+    const doc = parseDocument2(JSON.stringify(createPortFastBPDUGuardLab()).replaceAll("device-portfast-", "device-encor-bpdu-guard-").replaceAll("link-portfast-", "link-encor-bpdu-guard-"));
+    const lab = doc.lab, [asw, dsw, rogue] = lab.devices.filter((d) => d.kind === "switch"), pcs = lab.devices.filter((d) => d.kind === "pc"), switches = [asw, dsw, rogue], g = (n) => "GigabitEthernet0/" + n;
+    lab.catalogId = "stp-bpdu-guard";
+    lab.name = "STP BPDU Guard" + (mode === "completed" ? " \xB7 Completed" : "");
+    doc.seed = 20261030;
+    for (const d of switches) {
+      d.config.features.stp = { mode: "pvst", vlanPriorities: { 10: 32768, 99: 32768 } };
+      for (const p of Object.values(d.config.interfaces)) p.features.portfast = false;
+    }
+    for (const d of [asw, dsw]) d.config.interfaces[g(24)].adminUp = false;
+    for (const [d, n] of [[asw, 4], [rogue, 3]]) {
+      const p = d.config.interfaces[g(n)];
+      Object.assign(p, { mode: "access", vlan: 10, adminUp: d === asw });
+      Object.assign(p.features, { portfast: false, bpduguard: false });
+    }
+    rogue.config.interfaces[g(3)].description = "EXPLICIT_GUARD_TEST_SOURCE";
+    lab.links.push({ id: "link-encor-bpdu-guard-explicit", a: { deviceId: asw.id, port: g(4) }, b: { deviceId: rogue.id, port: g(3) }, enabled: true, delay: 0.1, loss: 0 });
+    asw.x = 420;
+    asw.y = 240;
+    dsw.x = 960;
+    dsw.y = 240;
+    rogue.x = 420;
+    rogue.y = 610;
+    pcs[0].x = 160;
+    pcs[0].y = 240;
+    pcs[1].x = 1220;
+    pcs[1].y = 240;
+    pcs[2].x = 820;
+    pcs[2].y = 610;
+    lab.notes = [{ id: "note-encor-bpdu-guard", x: 690, y: 820, text: "DSW1: trusted root \xB7 VLANs 10,99\nGi0/3: inherited guard \xB7 Gi0/4: explicit guard\nEnable one test source \u2192 inspect \u2192 isolate \u2192 reset" }];
+    for (const d of lab.devices) d.startupConfig = structuredClone(d.config);
+    const all = (criteria) => ({ kind: "all", criteria }), setting = (d, n, property, value) => ({ kind: "interface", device: d.id, interface: g(n), property, value });
+    const policy2 = { kind: "bpdu-guard-policy", device: asw.id, enabled: true, manualRecovery: true, interfaces: [{ name: g(1), override: "inherit" }, { name: g(3), override: "inherit" }, { name: g(4), override: "enable" }, { name: g(24), override: "disable" }] };
+    const rapid = all(switches.map((d) => ({ kind: "stp-mode", device: d.id, mode: "rapid-pvst" })));
+    const priorities = all(switches.flatMap((d) => [10, 99].map((vlan4) => ({ kind: "stp-priority", device: d.id, vlan: vlan4, priority: d === dsw ? 8192 : d === rogue ? 61440 : 32768 }))));
+    const trunks = all([asw, dsw].flatMap((d) => [{ kind: "trunk-allowed", device: d.id, interface: g(24), vlans: [10, 99] }, setting(d, 24, "nativeVlan", 99), setting(d, 24, "portfast", false), setting(d, 24, "bpduguard", false), setting(d, 24, "rootGuard", false), setting(d, 24, "loopGuard", false), setting(d, 24, "nonegotiate", true), { kind: "interface-up", device: d.id, interface: g(24) }]));
+    const access = all([1, 3, 4].flatMap((n) => [setting(asw, n, "mode", "access"), setting(asw, n, "vlan", 10), setting(asw, n, "adminUp", true), setting(asw, n, "portfast", n !== 4), setting(asw, n, "rootGuard", false), setting(asw, n, "loopGuard", false)]));
+    const roots = all([10, 99].flatMap((vlan4) => [...[asw, dsw].map((d) => ({ kind: "stp-root", device: d.id, vlan: vlan4, root: dsw.id })), ...[asw, dsw].map((d) => ({ kind: "stp-port", device: d.id, interface: g(24), vlan: vlan4, role: d === asw ? "root" : "designated", state: "forwarding", rapid: true }))]));
+    const edges = all([asw, dsw].map((d) => ({ kind: "rstp-edge", device: d.id, interface: g(1), vlan: 10 })));
+    const ready = all([policy2, rapid, priorities, trunks, access, roots, edges]);
+    const trip = (n) => ({ kind: "bpdu-guard-trip", device: asw.id, interface: g(n) });
+    const isolated = all([setting(rogue, 1, "adminUp", false), setting(rogue, 3, "adminUp", false)]);
+    const healthy = all([ready, isolated, setting(asw, 3, "errDisabled", false), setting(asw, 4, "errDisabled", false)]);
+    const resources = GUIDE_RESOURCES["stp-bpdu-guard"];
+    lab.lesson = { title: "STP BPDU Guard", description: "Compare inherited and explicit BPDU Guard, contain unexpected BPDUs and recover safely while legitimate traffic keeps working.\n\n" + resources.setup.map((s) => s.title + "\n" + s.instructions.join("\n")).join("\n\n"), objectives: [
+      { id: "rapid-priorities", title: "Configure Rapid PVST and intentional bridge priorities", description: "DSW1 8192, ASW1 32768, ROGUE 61440 in VLANs 10 and 99.", criterion: all([rapid, priorities]) },
+      { id: "safe-trunk", title: "Enable the trusted non-edge, unguarded trunk", description: "Both Gi0/24 ends: native 99, allowed 10,99 and DTP disabled.", criterion: trunks },
+      { id: "guard-policy", title: "Configure global inheritance and explicit interface protection", description: "ASW1 Gi0/1,3 inherit; Gi0/4 explicitly enables BPDU Guard; Gi0/24 explicitly disables it. Keep detection enabled and recovery manual.", criterion: policy2 },
+      { id: "access-ports", title: "Configure the three test-side access ports correctly", description: "ASW1 Gi0/1,3: VLAN 10 with PortFast. Gi0/4: VLAN 10 without PortFast. No Root Guard or Loop Guard.", criterion: access },
+      { id: "trusted-root", title: "Verify the received DSW1 root and trusted forwarding roles", criterion: roots },
+      { id: "host-edges", title: "Verify operational PortFast on both legitimate host ports", criterion: edges },
+      ...ENCOR_BPDU_GUARD_TESTS.map((t) => ({ id: "incident-" + t.name, title: `Observe ${t.name} BPDU Guard err-disabling Gi0/${t.port}`, description: `Enable ROGUE Gi0/${t.peerPort}; an actual received inferior BPDU must trip the protected interface.`, criterion: trip(t.port) })),
+      ...ENCOR_BPDU_GUARD_TESTS.map((t) => ({ id: "recover-" + t.name, title: `Isolate and manually recover the ${t.name} test`, description: `Shut ROGUE Gi0/${t.peerPort}, then reset ASW1 Gi0/${t.port}. Retain the intended guard policy; link-down is expected.`, criterion: all([trip(t.port), ready, setting(rogue, t.peerPort, "adminUp", false), setting(asw, t.port, "errDisabled", false)]) })),
+      { id: "saved", title: "Save the healthy policy on all three switches", description: "Keep both test sources shut and both guarded ports recovered. Use write memory on ASW1, DSW1 and ROGUE.", criterion: all([healthy, ...switches.map((d) => ({ kind: "rstp-saved", device: d.id, interfaces: d === asw ? [g(1), g(3), g(4), g(24)] : d === dsw ? [g(1), g(24)] : [g(1), g(2), g(3)], vlans: [10, 99] }))]) },
+      { id: "mac-learning", title: "Verify fresh legitimate host and trunk MAC learning", description: "PC1 and PC2 at their access ports, plus each remote host via Gi0/24. Repeat both pings after recovery.", criterion: all([healthy, ...[asw, dsw].flatMap((d, i) => [{ kind: "mac-learned", device: d.id, interface: g(1), source: pcs[i].id, sourceInterface: "GigabitEthernet0", vlan: 10 }, { kind: "mac-learned", device: d.id, interface: g(24), source: pcs[1 - i].id, sourceInterface: "GigabitEthernet0", vlan: 10 }])]) },
+      ...pcs.slice(0, 2).map((pc, i) => {
+        const peer = pcs[1 - i], address2 = peer.config.interfaces.GigabitEthernet0.ip;
+        return { id: "pc" + (i + 1) + "-ping", title: `Verify ${pc.config.hostname} reaches ${peer.config.hostname}`, description: "Repeat before, during and after both incidents. The legitimate path must keep working.", criterion: { kind: "rstp-echo", device: pc.id, target: peer.id, address: address2, vlan: 10, root: dsw.id, bridges: [asw.id, dsw.id], path: [{ aDevice: i === 0 ? asw.id : dsw.id, aPort: g(24), bDevice: i === 0 ? dsw.id : asw.id, bPort: g(24) }] }, action: { kind: "ping", device: pc.id, target: address2 } };
+      })
+    ] };
+    return mode === "completed" ? completedDocument(doc, ENCOR_BPDU_GUARD_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createSTPRootGuardLab(mode = "practice") {
     const doc = parseDocument2(JSON.stringify(createRootGuardLab()).replaceAll("device-root-guard-", "device-encor-root-guard-").replaceAll("link-root-guard-", "link-encor-root-guard-"));
     const lab = doc.lab, [core, sw, edge] = lab.devices.filter((d) => d.kind === "switch"), pcs = lab.devices.filter((d) => d.kind === "pc"), switches = [core, sw, edge], g = (n) => "GigabitEthernet0/" + n;
@@ -57241,6 +57336,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "stp-bpdu-guard") return createSTPBPDUGuardLab(mode);
     if (id2 === "stp-root-guard") return createSTPRootGuardLab(mode);
     if (id2 === "multiple-spanning-tree") return createMSTLab(mode);
     if (id2 === "rapid-spanning-tree-protocol") return createRSTPLab(mode);

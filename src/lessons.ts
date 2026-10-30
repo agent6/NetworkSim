@@ -1,3 +1,4 @@
+import {validBPDUGuardCriterion,matchesBPDUGuardCriterion,type BPDUGuardCriterion} from './bpdu-guard-lab.ts';
 import {validMSTCriterion,matchesMSTCriterion,type MSTCriterion} from './mst-lab.ts';
 import {validRSTPCriterion,matchesRSTPCriterion,type RSTPCriterion} from './rstp-lab.ts';
 import {validEtherChannelTroubleshootingCriterion,matchesEtherChannelTroubleshootingCriterion,type EtherChannelTroubleshootingCriterion} from './etherchannel-troubleshooting-lab.ts';
@@ -36,6 +37,7 @@ export type Criterion =
   | PortSecurityCriterion
   | VRFCriterion
   | GRECriterion
+  | BPDUGuardCriterion
   | MSTCriterion
   | RSTPCriterion
   | EtherChannelTroubleshootingCriterion
@@ -134,6 +136,8 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     if (v.kind === "link") return text(v.a, 128) && text(v.b, 128);
     if (!text(v.device, 128)) return false;
     switch (v.kind) {
+      case "bpdu-guard-policy":
+        return validBPDUGuardCriterion(v);
       case "mst-region":
       case "mst-priority":
       case "mst-tree":
@@ -448,6 +452,7 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind==='bpdu-guard-policy')return matchesBPDUGuardCriterion(d,criterion);
   if (criterion.kind==='mst-region'||criterion.kind==='mst-priority'||criterion.kind==='mst-tree')return matchesMSTCriterion(sim,d,criterion);
   if (criterion.kind==='rstp-saved'||criterion.kind==='rstp-edge'||criterion.kind==='rstp-echo')return matchesRSTPCriterion(sim,d,criterion);
   if (criterion.kind==='ec-saved'||criterion.kind==='ec-stp'||criterion.kind==='ec-echo')return matchesEtherChannelTroubleshootingCriterion(sim,d,criterion);

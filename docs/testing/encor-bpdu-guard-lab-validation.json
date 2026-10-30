@@ -1,0 +1,84 @@
+{
+  "feature": {
+    "title": "STP BPDU Guard",
+    "catalogId": "stp-bpdu-guard",
+    "group": "CCNP ENCOR",
+    "section": "Layer 2",
+    "sectionLabCount": 6,
+    "devices": 6,
+    "links": 6,
+    "tasks": 14,
+    "addressingRows": 5,
+    "permalink": "#/labs/stp-bpdu-guard",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "ASW1 Gi0/24 \u2194 DSW1 Gi0/24 is the trusted trunk, VLANs10,99/native99. PC1 192.168.10.10/24 and PC2 .20/24 connect to each switch Gi0/1. ROGUE Gi0/1 \u2194 ASW1 Gi0/3 tests inherited global guard on a PortFast access port. ROGUE Gi0/3 \u2194 ASW1 Gi0/4 tests explicit guard without PortFast. PC3 .30/24 is behind ROGUE Gi0/2. Both test sources start and finish shut; only one is enabled at a time. No gateways or routing.",
+  "verificationNotes": [
+    "The separate CCNA eight-task PortFast/BPDU Guard lab is preserved. ENCOR shares its independent base topology factory, adds a second test cable and fourteen tasks, and starts practice at zero in PVST with the trusted trunk and PC1 port shut. Published commands configure all three switches. The reference is configuration only: seven live policy/tree/save goals after fresh convergence and no fabricated incidents, traffic or MAC entries.",
+    "DSW1 has base priority8192 for VLANs10,99, ASW1 32768 and ROGUE61440. Received BPDUs establish the trusted root. The test source advertises inferior BPDUs deliberately; tests also use4096 to confirm superior BPDUs trip protection too. Global spanning-tree portfast bpduguard default protects ASW1 Gi0/1,3 with interface override unset. Explicit spanning-tree bpduguard enable protects Gi0/4 without PortFast. Gi0/24 is non-edge with guard explicitly disabled.",
+    "The new bounded bpdu-guard-policy lesson criterion distinguishes inherit/enable/disable settings, requires the intended global default, enabled detection, no BPDU Filtering and manual recovery policy. Imported interface lists are bounded, unique and validated. Explicit disable overrides global guard; removing the global default or PortFast prevents the inherited test but does not disable the explicit guard. Turning off err-disable detection fails policy.",
+    "Each required incident uses an actual received BPDU and the existing BPDU guard err-disable event for the matching ASW1 interface. Configured settings alone, dropped BPDUs and another err-disable cause cannot earn credit. Verification shows the whole interface err-disabled with reason bpduguard and real %SPANTREE-2-BLOCK_BPDUGUARD / %PM-4-ERR_DISABLE messages. This is distinct from per-VLAN Root Guard blocking.",
+    "PC1 and PC2 continue to exchange actual tagged request/reply traffic over the trusted trunk during both incidents while PC3 cannot reach the protected domain. DSW1 remains root. Normal traffic criteria require matching packet parent IDs, tags, path hops and preceding received version2 Rapid PVST BPDUs. Wrong tags, identities or classic-version summaries cannot qualify.",
+    "Removing a BPDU source leaves err-disable latched. With automatic recovery disabled, it stays latched past301 simulated seconds. Shutdown/no shutdown after isolation restores the protected interface administratively up, with link-down expected while its source is shut. Resetting with an active source retrips. Both incidents persist historically; recovery, healthy policy and forwarding remain live requirements. The optional real30-second recovery timer retries, retrips with an active source and recovers after isolation; the intended final policy returns to manual recovery.",
+    "The shared rstp-saved projection now preserves the three distinct BPDU Guard override states and includes effective BPDU Guard detection, recovery enablement and timer interval. An unsaved inherited-to-disabled change or startup detection/recovery mismatch cannot earn saved-policy credit. IOS reload restores the saved inherited override. No networking parser, protocol/forwarding mechanism or terminal style was changed.",
+    "Four live dynamic MAC checks cover both legitimate host access entries and their remote entries through Gi0/24. Clearing or expiry demands fresh learning. Portable reopening retains thirteen goals after BPDUs rebuild and requires fresh pings for the fourteenth MAC task. Stable-ID goals survive renaming; both test sources must finish isolated and both guarded ports recovered. Save all three configurations.",
+    "Final Chrome file-origin QA covers both themes at1440,390,320px: real CLI configuration, both guard modes, reason/log inspection, source isolation without automatic clearing, safe manual resets, legitimate and isolated Windows pings, fourteen tasks, save/reload, clear/relearn, configuration-only reference and cancel/save-copy protection. Host/path/query-safe permalinks return to six ENCOR Layer2 entries, preserve workspace and retain the independent CCNA lab. Terminal golden styles, fitted topology/note and responsive guides are checked. Local preview returned HTTP200.",
+    "Initial generic and BPDU browser matrices each observed an intermittent light320px file-origin reload storage loss: a valid saved workspace existed immediately before reload, then workspace and saved-lab keys were absent with only theme remaining and no page error. The source has no storage-removal path for these keys. Both complete matrices were repeated on the identical frozen artifact with no application or persistence edits or injected workspace state. The final BPDU runner executes light320px first in isolation, then the other five cases concurrently; all six and both permalink checks passed. The final report uses the passing reruns. Initial logs and before/after diagnostics remain under ignored .cache.",
+    "Cisco primary references inform global PortFast inheritance, explicit non-PortFast interface protection, any-BPDU err-disable and safe recovery. This task claims no new live CML capture. It adds no server backend, dependency, simulation algorithm, global UI or console styling."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco: Understand Spanning Tree PortFast and BPDU Guard Features",
+      "url": "https://www.cisco.com/c/en/us/support/docs/lan-switching/spanning-tree-protocol/10586-65.html"
+    },
+    {
+      "title": "Cisco Catalyst3850: Configuring Optional Spanning-Tree Features",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3850/software/release/3se/layer2/configuration_guide/b_lay2_3se_3850_cg/b_lay2_3se_3850_cg_chapter_0100.html"
+    },
+    {
+      "title": "Cisco: Recover Errdisable Port State on Cisco IOS Platforms",
+      "url": "https://www.cisco.com/c/en/us/support/docs/lan-switching/spanning-tree-protocol/69980-errdisable-recovery.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 18,
+    "focusedPassed": 18,
+    "fullCheck": "npm run check",
+    "typecheck": "passed",
+    "fullTests": 2104,
+    "fullPassed": 2104,
+    "fullFailed": 0,
+    "build": "passed",
+    "browserChecks": [
+      "light 320px: six Layer2 labs; six-node/14-task zero-credit practice; full three-switch IOS setup; inherited global edge guard and explicit non-PortFast guard each err-disable after inferior BPDUs; bpduguard reason and actual syslog; legitimate pings continue both ways while PC3 fails; source isolation leaves err-disable latched, manual reset recovers with protection retained; fourteen tasks, live MAC clear/relearn, Windows pings, portable reload retains thirteen goals until fresh MAC learning, configuration-only reference, cancel/save-copy protection, fitted topology and guide, non-overlapping note and unchanged terminal golden styles",
+      "dark 320px: six Layer2 labs; six-node/14-task zero-credit practice; full three-switch IOS setup; inherited global edge guard and explicit non-PortFast guard each err-disable after inferior BPDUs; bpduguard reason and actual syslog; legitimate pings continue both ways while PC3 fails; source isolation leaves err-disable latched, manual reset recovers with protection retained; fourteen tasks, live MAC clear/relearn, Windows pings, portable reload retains thirteen goals until fresh MAC learning, configuration-only reference, cancel/save-copy protection, fitted topology and guide, non-overlapping note and unchanged terminal golden styles",
+      "light 390px: six Layer2 labs; six-node/14-task zero-credit practice; full three-switch IOS setup; inherited global edge guard and explicit non-PortFast guard each err-disable after inferior BPDUs; bpduguard reason and actual syslog; legitimate pings continue both ways while PC3 fails; source isolation leaves err-disable latched, manual reset recovers with protection retained; fourteen tasks, live MAC clear/relearn, Windows pings, portable reload retains thirteen goals until fresh MAC learning, configuration-only reference, cancel/save-copy protection, fitted topology and guide, non-overlapping note and unchanged terminal golden styles",
+      "dark 390px: six Layer2 labs; six-node/14-task zero-credit practice; full three-switch IOS setup; inherited global edge guard and explicit non-PortFast guard each err-disable after inferior BPDUs; bpduguard reason and actual syslog; legitimate pings continue both ways while PC3 fails; source isolation leaves err-disable latched, manual reset recovers with protection retained; fourteen tasks, live MAC clear/relearn, Windows pings, portable reload retains thirteen goals until fresh MAC learning, configuration-only reference, cancel/save-copy protection, fitted topology and guide, non-overlapping note and unchanged terminal golden styles",
+      "dark 1440px: six Layer2 labs; six-node/14-task zero-credit practice; full three-switch IOS setup; inherited global edge guard and explicit non-PortFast guard each err-disable after inferior BPDUs; bpduguard reason and actual syslog; legitimate pings continue both ways while PC3 fails; source isolation leaves err-disable latched, manual reset recovers with protection retained; fourteen tasks, live MAC clear/relearn, Windows pings, portable reload retains thirteen goals until fresh MAC learning, configuration-only reference, cancel/save-copy protection, fitted topology and guide, non-overlapping note and unchanged terminal golden styles",
+      "light 1440px: six Layer2 labs; six-node/14-task zero-credit practice; full three-switch IOS setup; inherited global edge guard and explicit non-PortFast guard each err-disable after inferior BPDUs; bpduguard reason and actual syslog; legitimate pings continue both ways while PC3 fails; source isolation leaves err-disable latched, manual reset recovers with protection retained; fourteen tasks, live MAC clear/relearn, Windows pings, portable reload retains thirteen goals until fresh MAC learning, configuration-only reference, cancel/save-copy protection, fitted topology and guide, non-overlapping note and unchanged terminal golden styles",
+      "light: permalink preserves host/path/query and workspace; returns to ENCOR Layer2 with six labs; CCNA PortFast/BPDU Guard remains separate; section choices stay independent",
+      "dark: permalink preserves host/path/query and workspace; returns to ENCOR Layer2 with six labs; CCNA PortFast/BPDU Guard remains separate; section choices stay independent",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "034535e0c5f3f01f6f7213982ed23badc8573cca72d23a91c7dd83b06bfd4877",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide",
+      "global and explicit incident consoles"
+    ]
+  }
+}
