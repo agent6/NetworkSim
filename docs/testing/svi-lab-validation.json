@@ -1,0 +1,66 @@
+{
+  "feature": "CCNA Switching: Switch Virtual Interface (SVI)",
+  "catalogId": "switch-virtual-interface",
+  "artifactSha256": "d41921b9ad48113c611f1895a2ac1e2364af0bb760d7417a365c7fb8da0421aa",
+  "devices": 5,
+  "links": 4,
+  "tasks": 11,
+  "topology": {
+    "DSW1": "Multilayer switch; Vlan10 192.168.10.1/24, Vlan20 192.168.20.1/24, Vlan99 192.168.99.1/24; IP routing enabled",
+    "SW1": "Layer 2 switch; Vlan99 192.168.99.2/24; management default gateway 192.168.99.1; preconfigured Gi0/24 trunk to DSW1",
+    "PC1": "192.168.10.10/24, gateway 192.168.10.1, SW1 Gi0/1 access VLAN 10",
+    "PC2": "192.168.20.10/24, gateway 192.168.20.1, SW1 Gi0/2 access VLAN 20",
+    "ADMIN1": "192.168.99.10/24, gateway 192.168.99.1, SW1 Gi0/3 access VLAN 99"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1398,
+    "passed": 1398,
+    "failed": 0,
+    "focusedTests": 37,
+    "newLabTests": 10,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "checks": [
+    "Independent practice attempts start with no task credit or SVI addresses; VLANs, Layer 2 ports, trunk and hosts are preconfigured",
+    "Published supported IOS commands create and save the three DSW1 gateway SVIs, global routing, SW1 management SVI and management default gateway",
+    "Operational task checks actual interface state for all four SVIs and real connected /24 routes on DSW1",
+    "Four packet checks validate local management, inter-VLAN traffic in both directions and SW1-originated traffic through its gateway; completed reference requires fresh replies",
+    "Disabling DSW1 IP routing preserves local gateway and management access but stops transit forwarding; restoring routing repairs user traffic",
+    "Removing or misconfiguring SW1 default gateway stops its remote traffic while local management and user routing continue; restoring it repairs the remote management check",
+    "Shutting the only DSW1 trunk member withdraws all three connected VLAN routes and drops SVI line protocol despite enabled addressed SVIs; SW1 Vlan99 remains up through ADMIN1",
+    "Pruning a VLAN, suspending it or shutting its SVI withdraws that gateway; corrective settings recover actual packets",
+    "SVI configuration goals require correct IP, exact mask and no shutdown; physical switchports retain Layer 2 operation and no IP addressing",
+    "Observed real routing receives VLAN 10 frames and transmits VLAN 20 frames with one IP TTL decrement",
+    "Every reference show/ping command works; portable reload and switch power cycles retain startup settings, stable-ID objectives, operational state and earned echo observations",
+    "Imported interface-up criteria are bounded data, reject invalid interface values and cannot pass for missing, unpowered or down interfaces"
+  ],
+  "scope": "Uses the existing SVI, host-mode default-gateway, routing, VLAN, STP and packet engines. No simulation-engine changes, server backend or unimplemented CLI configurations added.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3850/software/release/3se/int_hw_components/configuration_guide/b_int_3se_3850_cg/b_int_3se_3850_cg_chapter_010.html",
+    "https://www.cisco.com/c/en/us/support/docs/switches/catalyst-6500-series-switches/10594-8.html"
+  ],
+  "browserChecks": [
+    "light 1440px: seven Switching entries, eleven-task guide and reference, zero-credit baseline, visible IOS SVI configuration and up/up output, four 3/3 connectivity checks, saved operational/progress reload, completed-reference protection and unchanged CLI colors, plus failed baseline, missing default gateway and SVI autostate loss with real packet failure and recovery",
+    "light 390px: seven Switching entries, eleven-task guide and reference, zero-credit baseline, visible IOS SVI configuration and up/up output, four 3/3 connectivity checks, saved operational/progress reload, completed-reference protection and unchanged CLI colors",
+    "light 320px: seven Switching entries, eleven-task guide and reference, zero-credit baseline, visible IOS SVI configuration and up/up output, four 3/3 connectivity checks, saved operational/progress reload, completed-reference protection and unchanged CLI colors",
+    "dark 1440px: seven Switching entries, eleven-task guide and reference, zero-credit baseline, visible IOS SVI configuration and up/up output, four 3/3 connectivity checks, saved operational/progress reload, completed-reference protection and unchanged CLI colors",
+    "dark 390px: seven Switching entries, eleven-task guide and reference, zero-credit baseline, visible IOS SVI configuration and up/up output, four 3/3 connectivity checks, saved operational/progress reload, completed-reference protection and unchanged CLI colors",
+    "dark 320px: seven Switching entries, eleven-task guide and reference, zero-credit baseline, visible IOS SVI configuration and up/up output, four 3/3 connectivity checks, saved operational/progress reload, completed-reference protection and unchanged CLI colors",
+    "light: share link preserves current host/path/query and returns to seven Switching labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to seven Switching labs without replacing the workspace"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

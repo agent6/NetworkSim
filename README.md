@@ -26,6 +26,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **802.1Q Trunking** under Switching connects two switches with three PC pairs. Configure static trunks, disable DTP, match native VLAN 99 and limit the allowed list to VLANs 10, 20 and 99. The guide checks tagged and native-VLAN connectivity and remote MAC learning across the trunk; PC addressing and access ports are preconfigured.
 
+**Switch Virtual Interface (SVI)** under Switching covers both Layer 2 management and multilayer inter-VLAN routing. Configure DSW1’s VLAN 10/20/99 gateways, enable IP routing, and address SW1’s management SVI and default gateway. The guide requires operational SVIs, connected routes, local management access and real routed traffic. VLANs, the trunk, access ports and PC settings are preconfigured.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.

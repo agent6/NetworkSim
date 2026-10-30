@@ -7,6 +7,7 @@ import {endpointVoicePolicy, endpointNetworkPort} from './endpoint.ts';
 export type Criterion =
   | { kind: "all" | "any"; criteria: Criterion[] }
   | { kind: "device"; device: string; powered?: boolean }
+  | { kind: "interface-up"; device: string; interface: string }
   | { kind: "ip-routing"; device: string; enabled: boolean }
   | { kind: "link"; a: string; b: string }
   | { kind: "address"; device: string; address: string }
@@ -77,6 +78,8 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     switch (v.kind) {
       case "device":
         return v.powered === undefined || typeof v.powered === "boolean";
+      case "interface-up":
+        return text(v.interface,128);
       case "ip-routing":
         return typeof v.enabled === "boolean";
       case "address":
@@ -236,6 +239,7 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind === "interface-up") return sim.interfaceUp(d.id,criterion.interface);
   if (criterion.kind === "trunk-allowed") {
     const port=d.config.interfaces[criterion.interface],allowed=port?.allowedVlans;
     return !!port?.switchport && port.mode==="trunk" && Array.isArray(allowed) && allowed.length===criterion.vlans.length && criterion.vlans.every(v=>allowed.includes(v));
