@@ -22,6 +22,7 @@ export type Criterion =
       network: string;
       prefix: number;
       protocol?: string;
+      nextHop?: string;
     }
   | { kind: "neighbor"; device: string; protocol: string; state?: string }
   | { kind: "echo"; device: string; from: string }
@@ -37,7 +38,7 @@ export type Criterion =
       kind: "interface";
       device: string;
       interface: string;
-      property: "adminUp" | "vlan" | "voiceVlan" | "nativeVlan" | "nonegotiate" | "channelGroup" | "channelMode" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "duplex" | "portfast" | "speedAuto";
+      property: "adminUp" | "vlan" | "voiceVlan" | "nativeVlan" | "nonegotiate" | "channelGroup" | "channelMode" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "ipv4Addressed" | "duplex" | "portfast" | "speedAuto";
       value: string | number | boolean;
     };
 export interface Objective {
@@ -107,7 +108,8 @@ export function validateLesson(value: unknown): asserts value is Lesson {
           Number.isInteger(v.prefix) &&
           v.prefix >= 0 &&
           v.prefix <= (v.network.includes(":") ? 128 : 32) &&
-          (v.protocol === undefined || text(v.protocol, 40))
+          (v.protocol === undefined || text(v.protocol, 40)) &&
+          (v.nextHop === undefined || address(v.nextHop))
         );
       case "neighbor":
         return (
@@ -130,7 +132,7 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         return text(v.interface,128) && text(v.source,128) && text(v.sourceInterface,128) && Number.isInteger(v.vlan) && v.vlan>=1 && v.vlan<=4094;
       case "interface":
         if (!text(v.interface, 128)) return false;
-        if (["switchport","portfast","speedAuto","nonegotiate"].includes(v.property)) return typeof v.value === "boolean";
+        if (["switchport","ipv4Addressed","portfast","speedAuto","nonegotiate"].includes(v.property)) return typeof v.value === "boolean";
         if (v.property === "description") return text(v.value,240);
         if (v.property === "channelGroup") return Number.isInteger(v.value) && v.value>=1 && v.value<=4096;
         if (v.property === "channelMode") return ["active","passive","on","desirable","auto"].includes(v.value);
@@ -304,7 +306,8 @@ export function matches(
         sameAddress(r.network, criterion.network) &&
         r.prefix === criterion.prefix &&
         (!criterion.protocol ||
-          r.protocol.toLowerCase() === criterion.protocol.toLowerCase()),
+          r.protocol.toLowerCase() === criterion.protocol.toLowerCase()) &&
+        (criterion.nextHop === undefined || !!r.nextHop && sameAddress(r.nextHop,criterion.nextHop)),
     );
   if (criterion.kind === "neighbor")
     return d.runtime.neighbors.some(
@@ -333,7 +336,7 @@ export function matches(
   }
   if (criterion.kind === "interface") {
     const port=d.config.interfaces[criterion.interface];if(!port)return false;
-    const value=criterion.property==="channelGroup"?port.features.channelGroup:criterion.property==="channelMode"?port.features.channelMode:criterion.property==="nonegotiate"?port.features.nonegotiate===true:criterion.property==="portfast"?port.features.portfast===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
+    const value=criterion.property==="ipv4Addressed"?!!(port.ip||port.features.secondaryIps?.length||port.features.dhcp):criterion.property==="channelGroup"?port.features.channelGroup:criterion.property==="channelMode"?port.features.channelMode:criterion.property==="nonegotiate"?port.features.nonegotiate===true:criterion.property==="portfast"?port.features.portfast===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
     return value===criterion.value;
   }
   return false;

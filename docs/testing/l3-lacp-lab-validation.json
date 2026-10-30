@@ -1,0 +1,70 @@
+{
+  "feature": "CCNA Switching: Layer 3 LACP EtherChannel",
+  "catalogId": "layer-3-lacp-etherchannel",
+  "artifactSha256": "102a519134ad23b9e098d5909be308911b5f0f86ee3046df5ee990f31bda9470",
+  "devices": 4,
+  "links": 4,
+  "tasks": 10,
+  "topology": {
+    "DSW1": "Gi0/23\u201324 routed, unaddressed group 1 active members; Po1 192.0.2.1/30; Gi0/1 LAN gateway 192.168.10.1/24",
+    "DSW2": "Gi0/23\u201324 routed, unaddressed group 1 passive members; Po1 192.0.2.2/30; Gi0/1 LAN gateway 192.168.20.1/24",
+    "PC1": "192.168.10.10/24 via 192.168.10.1",
+    "PC2": "192.168.20.10/24 via 192.168.20.1",
+    "Static routes": "DSW1 remote 192.168.20.0/24 via 192.0.2.2; DSW2 remote 192.168.10.0/24 via 192.0.2.1"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1421,
+    "passed": 1421,
+    "failed": 0,
+    "focusedTests": 45,
+    "newLabTests": 11,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "checks": [
+    "Practice begins with zero task credit, shut Layer 2 inter-switch ports, no port-channel, IP routing disabled, and ready static PC/LAN gateway configurations",
+    "All published IOS commands configure and save routed active/passive LACP, Po-only /30 transit addressing, IPv4 routing and reciprocal static routes",
+    "Eight live configuration/state tasks pass before observed traffic; actual two-way PC replies earn the remaining two tasks",
+    "Bundle credit requires delivered synchronized partner PDUs, both intended active members and actual usable logical interfaces; missing PDUs cannot produce a connected transit or PC delivery",
+    "Passive/passive fails; active/passive and active/active work; static mode on can forward but cannot earn LACP credit",
+    "Either physical member can fail while Po1, the connected transit and PC traffic remain operational on the other member; bandwidth follows 2000/1000 Mbps active membership",
+    "Both members down or logical Po1 shutdown withdraw the connected transit and stop traffic; repair restores negotiation and routing",
+    "Missing return routes, wrong next hops and Null0 routes fail route goals and real PC delivery; a working peer transit ping alone cannot prove end-to-end routing",
+    "Disabling ip routing preserves local gateway and peer addressing but prevents PC transit; wrong transit masks fail the planned-address and connected-route tasks",
+    "Actual routed frames are untagged and decrement IP TTL once at each multilayer switch; routed Po1 and physical members have no STP port rows",
+    "Every published show and ping verification works; summary shows Po1(RU), LACP and Gi0/23(P) Gi0/24(P); switchport output is Disabled",
+    "Portable saves retain stable IDs and earned traffic observations; fresh load and power cycles rebuild actual LACP partner state and routes from saved configuration",
+    "Imported optional route next-hop and unaddressed-member predicates validate bounded data, preserve existing route checks, and reject wrong next hops, primary/secondary member addresses and DHCP addressing"
+  ],
+  "scope": "Uses the existing routed EtherChannel, LACP, ARP, IPv4 routing and packet engines. Adds the catalog lab and declarative guide criteria only; no new protocol or backend dependency. The failover exercise reuses traffic test buttons; restore both members for full live negotiation credit. No CML validation is claimed for this lab.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr2-fwd/etherchannel/etherchannel-configuration-guide/etherchannels.html",
+    "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr2-fwd/etherchannel/etherchannel-configuration-guide/m_ethernetchannel.html"
+  ],
+  "browserChecks": [
+    "light 1440px: nine Switching entries, ten-task guide and reference, zero-credit baseline, visible active/passive LACP configuration, both routed PC directions receive 3/3 replies, two-member Po1(RU) output, connected transit and static LAN routes, fresh negotiation after saved reload, safe reference replacement and unchanged CLI colors, plus failed baseline, single-member failover with live Po1, and missing return-route failure and repair",
+    "light 390px: nine Switching entries, ten-task guide and reference, zero-credit baseline, visible active/passive LACP configuration, both routed PC directions receive 3/3 replies, two-member Po1(RU) output, connected transit and static LAN routes, fresh negotiation after saved reload, safe reference replacement and unchanged CLI colors",
+    "light 320px: nine Switching entries, ten-task guide and reference, zero-credit baseline, visible active/passive LACP configuration, both routed PC directions receive 3/3 replies, two-member Po1(RU) output, connected transit and static LAN routes, fresh negotiation after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 1440px: nine Switching entries, ten-task guide and reference, zero-credit baseline, visible active/passive LACP configuration, both routed PC directions receive 3/3 replies, two-member Po1(RU) output, connected transit and static LAN routes, fresh negotiation after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 390px: nine Switching entries, ten-task guide and reference, zero-credit baseline, visible active/passive LACP configuration, both routed PC directions receive 3/3 replies, two-member Po1(RU) output, connected transit and static LAN routes, fresh negotiation after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 320px: nine Switching entries, ten-task guide and reference, zero-credit baseline, visible active/passive LACP configuration, both routed PC directions receive 3/3 replies, two-member Po1(RU) output, connected transit and static LAN routes, fresh negotiation after saved reload, safe reference replacement and unchanged CLI colors",
+    "light: share link preserves current host/path/query and returns to nine Switching labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to nine Switching labs without replacing the workspace"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "verificationNotes": [
+    "The first concurrent generic catalog run timed out waiting for the guide after a mobile reload. A complete isolated rerun passed all seven catalog checks; all six new-lab saved reload checks also passed."
+  ],
+  "errors": [],
+  "externalRequests": []
+}

@@ -30,6 +30,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **Layer 2 LACP EtherChannel** under Switching bundles two switch links using active/passive LACP. Configure compatible member trunks and Port-channel1, verify actual LACP partners and logical STP forwarding, and test both VLAN pairs during a member-link failure. Restore both members before finishing. VLANs, access ports and PC settings are preconfigured.
 
+**Layer 3 LACP EtherChannel** under Switching uses two multilayer switches and two pre-addressed PC subnets. Convert the members to routed ports, put /30 transit addresses on Port-channel1, enable IP routing and configure static routes through the peer. The guide checks real LACP negotiation, connected and static routes with the correct next hops, routed traffic in both directions, and a single-member failover exercise.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.
