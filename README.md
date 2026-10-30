@@ -52,6 +52,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **Default Route** under Routing focuses on dual-stack branch forwarding through one upstream router. Configure IPv4 and interface-scoped IPv6 defaults, install explicit upstream return routes, and verify two remote networks in both families. Troubleshoot removed defaults, missing return routes and uplink failure while connected gateway access continues; the guide has ten tasks and a completed reference.
 
+**Host Route** under Routing uses IPv4 /32 and IPv6 /128 routes to send one server directly to R3 while its neighbor on the same subnet follows a broader network route through R2. Compare AD 200 host entries with AD 1 network entries, verify actual paths, remove host routes to observe fallback, and troubleshoot return routing. The guide includes ten tasks and a completed reference.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.

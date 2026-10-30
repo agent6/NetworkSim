@@ -1,0 +1,79 @@
+{
+  "feature": "CCNA Routing: Host Route",
+  "catalogId": "host-route",
+  "devices": 7,
+  "links": 7,
+  "tasks": 10,
+  "topology": {
+    "R1": "Branch LAN 192.168.10.0/24 and 2001:db8:10::/64. Gi0/1 to R2: 10.0.12.1/30, 2001:db8:12::1/64. Gi0/2 direct to R3: 10.0.13.1/30, 2001:db8:13::1/64. fe80::1.",
+    "R2": "Preconfigured transit/return routes. Gi0/1 to R1: 10.0.12.2/30, 2001:db8:12::2/64. Gi0/2 to R3: 10.0.23.1/30, 2001:db8:23::2/64. fe80::2.",
+    "R3": "Server LAN 203.0.113.0/24 and 2001:db8:30::/64. Gi0/1 to R2: 10.0.23.2/30, 2001:db8:23::3/64. Gi0/2 direct to R1: 10.0.13.2/30, 2001:db8:13::3/64. fe80::3.",
+    "SW1": "Preconfigured VLAN 30 and three access ports with PortFast connect R3, SRV1 and SRV2.",
+    "PC1": "192.168.10.10/24 and 2001:db8:10::10/64; manual gateways 192.168.10.1 and interface-scoped fe80::1.",
+    "SRV1": "203.0.113.10/24 and 2001:db8:30::10/64; manual gateways 203.0.113.1 and interface-scoped fe80::3.",
+    "SRV2": "203.0.113.20/24 and 2001:db8:30::20/64; same server subnet and gateways as SRV1."
+  },
+  "checks": [
+    "host-route practice is independent, zero-credit, dual-stack and ready for local branch and same-VLAN server traffic",
+    "published commands and completed reference earn four configuration goals and require six genuine echo tests for all ten tasks",
+    "AD 200 /32 and /128 routes actually use the direct link while adjacent servers use AD 1 broader routes through R2",
+    "removing only the /32 retains IPv4 replies through the network route, revokes host credit and leaves IPv6 direct",
+    "removing only the /128 retains IPv6 replies through R2 without changing the IPv4 host path or neighboring server",
+    "a working broader network route and echoes cannot stand in for configured remote host routes",
+    "each missing R3 return route prevents replies despite the correctly installed direct host route",
+    "a wrong prefix or host administrative distance cannot earn a host-routing task even with successful replies",
+    "an incorrectly scoped link-local host next hop fails delivery and host credit rather than silently using the broader route",
+    "R2 IPv6 forwarding controls only the indirect IPv6 path while both direct hosts and IPv4 transit remain usable",
+    "failure of the broader-network uplink withdraws only that path while direct host routes keep forwarding in both families",
+    "every published verification command works, distinguishing AD 200 host lookups from AD 1 network lookups and real traceroutes",
+    "portable reloads and startup power cycles preserve route intent, addressing and earned traffic while tables rebuild"
+  ],
+  "verificationNotes": [
+    "All interfaces, endpoint gateways, server VLAN and router IPv6 forwarding are ready. Only R2 starts with remote routes. R1 and R3 need the published commands.",
+    "SRV1 host entries (/32 and /128) at AD 200 are installed alongside broader server-network entries (/24 and /64) at AD 1. Packet events verify R1 Gi0/2 for SRV1 and Gi0/1 through R2 for adjacent SRV2. AD does not override longest-prefix matching.",
+    "R3 return routes use the direct link to R1, so SRV2 request/reply paths are asymmetric. Traceroute reply source addresses may identify that return-facing R3 interface.",
+    "Removing each host route preserves replies through the broader route but revokes the corresponding configuration task. No new default or floating route is involved.",
+    "The completed reference has four configuration goals and no fabricated echo credit; six real traffic checks are needed for all ten tasks.",
+    "The browser workflow opens PC1 Desktop \u2192 Command prompt for traceroute and verifies actual R2 presence or absence for both servers in both address families.",
+    "One concurrent 320px offline reload opened an empty workspace during an earlier run. The isolated repeat\u2019s 35,885-byte saved state validated and restored all ten tasks in the simulator; that browser run also passed. The complete instrumented light/dark matrix then passed with no restore errors. Diagnostic capture remains in the browser test; the app artifact was unchanged.",
+    "All eight new-lab browser checks and seven general catalog checks passed. The final rebuilt index.html and dist/index.html match the frozen offline browser input byte for byte. Light desktop topology and light/dark 320px guides were visually reviewed."
+  ],
+  "scope": "Adds the Host Route catalog lab, guide resources, completed reference, documentation and automated lab/browser coverage. Uses existing IPv4/IPv6 forwarding, Neighbor Discovery, VLANs and lesson criteria. No simulation engine, terminal, theme, backend or dependency changes. No live CML validation is claimed.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/support/docs/ip/border-gateway-protocol-bgp/15986-admin-distance.html",
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_pi/configuration/15-mt/iri-15-mt-book/ip6-route-static.html"
+  ],
+  "artifactSha256": "283a3ed6814fe3227be7875f7c328fecd5661bb7801561c313d152b26520e7f4",
+  "validation": {
+    "command": "npm run check",
+    "tests": 1570,
+    "newLabTests": 13,
+    "focusedTests": 28,
+    "passed": 1570,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "browserChecks": [
+    "light 320px: five Routing labs, ten-task host-route guide and eleven-row address plan, zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, AD 200 host versus AD 1 network lookups and four real traceroutes proving different neighboring-server paths, per-family host-route removal with working broader-route fallback and revoked host credit, missing return route and repair, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "light 390px: five Routing labs, ten-task host-route guide and eleven-row address plan, zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, AD 200 host versus AD 1 network lookups and four real traceroutes proving different neighboring-server paths, per-family host-route removal with working broader-route fallback and revoked host credit, missing return route and repair, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "light 1440px: five Routing labs, ten-task host-route guide and eleven-row address plan, zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, AD 200 host versus AD 1 network lookups and four real traceroutes proving different neighboring-server paths, per-family host-route removal with working broader-route fallback and revoked host credit, missing return route and repair, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "dark 1440px: five Routing labs, ten-task host-route guide and eleven-row address plan, zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, AD 200 host versus AD 1 network lookups and four real traceroutes proving different neighboring-server paths, per-family host-route removal with working broader-route fallback and revoked host credit, missing return route and repair, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "dark 390px: five Routing labs, ten-task host-route guide and eleven-row address plan, zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, AD 200 host versus AD 1 network lookups and four real traceroutes proving different neighboring-server paths, per-family host-route removal with working broader-route fallback and revoked host credit, missing return route and repair, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "dark 320px: five Routing labs, ten-task host-route guide and eleven-row address plan, zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, AD 200 host versus AD 1 network lookups and four real traceroutes proving different neighboring-server paths, per-family host-route removal with working broader-route fallback and revoked host credit, missing return route and repair, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "light: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to five Routing labs",
+    "dark: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to five Routing labs"
+  ],
+  "errors": [],
+  "externalRequests": []
+}
