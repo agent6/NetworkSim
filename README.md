@@ -42,6 +42,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **PortFast and BPDU Guard** under Switching protects two access ports and uses a staged rogue switch to trigger a real received-BPDU err-disable. Inspect the reason and logs, verify legitimate traffic continues while the rogue client is isolated, remove the cause and manually recover the protected port. The guide remembers the observed incident after recovery and saved reload; a completed reference exercises the same sequence.
 
+**Root Guard** under Switching protects a downstream switch trunk while allowing normal inferior BPDUs. Advertise a superior root only in VLAN 10, verify root-inconsistent blocking and failed traffic there while VLAN 20 still forwards, then restore the downstream priority for automatic recovery. The guide retains the observed incident and includes a completed reference with real packet checks.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.
