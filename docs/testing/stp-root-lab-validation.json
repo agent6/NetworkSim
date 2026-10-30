@@ -1,0 +1,72 @@
+{
+  "feature": "CCNA Switching: STP Root Bridge Selection",
+  "catalogId": "stp-root-bridge-selection",
+  "artifactSha256": "97154ea535528a123cd4ce89bf5605fb03ca361075496c815ab430414eac5b25",
+  "devices": 5,
+  "links": 5,
+  "tasks": 8,
+  "topology": {
+    "SW1": "Bridge MAC 0200.0000.0030; target VLAN 10 primary/base priority 24576; Gi0/24 to SW2 and Gi0/23 to SW3",
+    "SW2": "Bridge MAC 0200.0000.0020; target VLAN 10 secondary/base priority 28672; Gi0/24 to SW1, Gi0/23 to SW3, Gi0/1 to PC1",
+    "SW3": "Bridge MAC 0200.0000.0010; VLAN 10 default/base priority 32768; Gi0/23 to SW1, Gi0/24 to SW2, Gi0/1 to PC2",
+    "Initial election": "All priorities are 32768; SW3 wins because it has the lowest bridge MAC",
+    "PC1": "192.168.10.10/24 on SW2 VLAN 10; no gateway",
+    "PC2": "192.168.10.20/24 on SW3 VLAN 10; no gateway"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1472,
+    "passed": 1472,
+    "failed": 0,
+    "focusedTests": 42,
+    "newLabTests": 13,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "checks": [
+    "Independent portable attempts begin with zero credit, fixed bridge identities, equal VLAN 10 priorities, a real lowest-MAC SW3 election and already-working same-VLAN traffic; connectivity alone earns only traffic/learning observations",
+    "Published IOS reference commands select higher-MAC SW1 through lower priority, configure SW2 secondary, retain SW3 default and save all three startup configurations",
+    "Five configured/elected port-role tasks pass before actual traffic; dynamic MAC learning and two observed PC directions complete all eight tasks",
+    "Equal bridge priorities at 0, 24576 and 32768 select the lowest bridge MAC; the guide tie experiment restores all-default priorities and demonstrates SW3 taking the root again",
+    "Bridge priority is compared before MAC; changing a port MAC or hostname does not replace the fixed bridge identity",
+    "Actual delivered BPDUs are required for root agreement and expected non-root port-role credit; accepted priorities alone cannot impersonate a complete election",
+    "Secondary SW2 takes over when primary SW1 powers off while both surviving PCs stay reachable; saved lower primary priority reclaims the root after recovery",
+    "Isolating a powered SW1 creates separate components: SW1 remains its own root while SW2/SW3 elect SW2; reconnecting the trunks reunites the intended election",
+    "A root-uplink failure changes the path through SW3 while preserving SW1 as root and retaining both PC directions",
+    "A per-interface VLAN cost override changes SW3 root port to Gi0/24 without changing its elected root bridge; removing the override restores the intended role goal",
+    "A later superior priority can win because root macros are one-time settings; restoring that bridge default recovers the intended primary without dynamic root-defense behavior",
+    "Actual tagged Layer 2 ICMP frames use the elected tree without TTL loss; the alternate port does not transmit user packets. Dynamic MAC clear removes learning credit until new ingress traffic arrives",
+    "All published show/ping commands work; Root ID and Bridge ID expose actual MACs, displayed priorities 24586/28682/32778 including VLAN 10 system ID, and the intended Root FWD/Desg FWD/Altn BLK roles",
+    "Portable saves, renamed nodes and startup power cycles retain fixed identities, priorities and earned echoes while elections and dynamic MAC state rebuild",
+    "The guide includes an escaped custom comparison-table caption; existing labs retain the default Addressing plan caption and all original catalog workflows"
+  ],
+  "scope": "Adds the catalog lab and an optional resource-table caption using existing CLI, STP criteria, BPDU and Layer 2 packet engines. No simulation-engine or networking-command changes, backend dependency or CML validation is claimed. The reference root macros are used with default-priority peers. Restore the target priorities/topology and remove exploratory path-cost overrides before finishing.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr2-fwd/stp/stp-configuration-guide/m-stp.html"
+  ],
+  "browserChecks": [
+    "light 1440px: thirteen Switching entries, eight-task root-selection guide and bridge-identity comparison table, equal-priority zero-credit baseline, three IOS priority configurations, both PC directions receive 3/3 replies, higher-MAC SW1 elected by lower priority, live root/alternate roles and dynamic MAC learning, fresh elections/learning after saved reload, safe reference replacement and unchanged CLI colors, plus visible lowest-MAC baseline, secondary-root takeover after primary isolation with live PC replies, and primary recovery with restored forwarding roles",
+    "light 390px: thirteen Switching entries, eight-task root-selection guide and bridge-identity comparison table, equal-priority zero-credit baseline, three IOS priority configurations, both PC directions receive 3/3 replies, higher-MAC SW1 elected by lower priority, live root/alternate roles and dynamic MAC learning, fresh elections/learning after saved reload, safe reference replacement and unchanged CLI colors",
+    "light 320px: thirteen Switching entries, eight-task root-selection guide and bridge-identity comparison table, equal-priority zero-credit baseline, three IOS priority configurations, both PC directions receive 3/3 replies, higher-MAC SW1 elected by lower priority, live root/alternate roles and dynamic MAC learning, fresh elections/learning after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 1440px: thirteen Switching entries, eight-task root-selection guide and bridge-identity comparison table, equal-priority zero-credit baseline, three IOS priority configurations, both PC directions receive 3/3 replies, higher-MAC SW1 elected by lower priority, live root/alternate roles and dynamic MAC learning, fresh elections/learning after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 390px: thirteen Switching entries, eight-task root-selection guide and bridge-identity comparison table, equal-priority zero-credit baseline, three IOS priority configurations, both PC directions receive 3/3 replies, higher-MAC SW1 elected by lower priority, live root/alternate roles and dynamic MAC learning, fresh elections/learning after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 320px: thirteen Switching entries, eight-task root-selection guide and bridge-identity comparison table, equal-priority zero-credit baseline, three IOS priority configurations, both PC directions receive 3/3 replies, higher-MAC SW1 elected by lower priority, live root/alternate roles and dynamic MAC learning, fresh elections/learning after saved reload, safe reference replacement and unchanged CLI colors",
+    "light: share link preserves current host/path/query and returns to thirteen Switching labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to thirteen Switching labs without replacing the workspace"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "verificationNotes": [
+    "The new-lab browser tests use a frozen offline artifact; the tested snapshot and final rebuilt index.html/dist/index.html match byte for byte. The standard catalog regression ran after the final build completed."
+  ],
+  "errors": [],
+  "externalRequests": []
+}
