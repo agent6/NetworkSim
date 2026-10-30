@@ -13,7 +13,7 @@ import { schedulingError, catalystQueueProfile } from './qos-scheduler.ts';
 import {wredConfiguration,type WredConfig} from './qos-congestion.ts';
 import { speedIsAuto, ethernetSpeeds, interfaceBandwidth } from './ethernet.ts';
 import {configureSNMP} from './ios-snmp.ts';
-import {transferSSHFile} from './ssh-files.ts';
+import {transferSSHFile,recordSSHFileCopy} from './ssh-files.ts';
 import {IOSFTPClient,configureFTPClient} from './ios-ftp.ts';
 import {WindowsSession,type WindowsRemoteOptions} from './windows-cli.ts';
 import {UnixSession} from './unix-cli.ts';
@@ -614,6 +614,7 @@ export class IOSSession {
   private managementCommands():Command[]{const f=this.device.config.features;return [
     ...this.automationCommands(),...this.aaaServerCommands(),...this.aaaAuthorizationCommands(),
     ...(['username','password','source-interface','passive'] as const).map(key=>this.c('ip ftp '+key,'Configure IOS passive FTP client defaults',(a,no)=>configureFTPClient({device:this.device,fail,interfaceName:name=>this.getInterface(name),changed:()=>this.change()},key,a,no),key==='password'?'[0|7] <password>':key==='username'?'<username>':key==='source-interface'?'<interface>':undefined)),
+    this.c('ip ssh source-interface','Select an operational source interface for SSH and SSH file clients',(a,no)=>{exactly(a,no?0:1);f.ssh??={};f.ssh.sourceInterface=no?undefined:this.getInterface(a[0]);this.change();},'<interface>'),
     this.c('ip ssh version','Set simulated SSH version',(a,no)=>{if(a.length>1||!no&&!a.length)fail();if(a.length&&a[0]!=='2')this.unsupported('SSH version 1');f.ssh??={};f.ssh.version=no?undefined:2;this.change();},'2'),
     this.c('crypto key generate rsa','Generate RSA keys',(a,no)=>{if(no)this.unsupported('Use crypto key zeroize rsa');if(!f.domainName)fail('% Please define a domain-name first.');let modulus:number|undefined;if(a.length&&a[0]==='general-keys')a.shift();if(a.length){exactly(a,2);keyword(a[0],['modulus']);modulus=integer(a[1],512,4096);}
       const name=`${this.device.config.hostname}.${f.domainName}`,existing=!!f.ssh?.keys;
@@ -730,8 +731,9 @@ export class IOSSession {
   private runSSHCopy(request:{source:string;destination:string;url:URL;reading:boolean},password:string):string[]{
     try{const address=this.resolveTarget(request.url.hostname.replace(/^\[|\]$/g,'')),result=transferSSHFile(this.engine,this.deviceId,address,{protocol:request.url.protocol==='scp:'?'scp':'sftp',operation:request.reading?'read':'write',username:decodeURIComponent(request.url.username),password,path:decodeURIComponent(request.url.pathname),...request.reading?{}:{content:this.readFile(request.source)}});
       let n=0;while(result.status==='running'&&n++<400)this.engine.advance(100);if(result.status!=='success')return ['% File transfer failed: '+(result.error??'No response')];
-      if(request.reading){const out=this.applyText(result.content,request.destination,Math.min(n,400)*100);this.engine.changed();return out;}
-      return [bytesCopied(result.bytes,Math.min(n,400)*100)];
+      const record=()=>recordSSHFileCopy(this.engine,this.deviceId,address,{protocol:request.url.protocol==='scp:'?'scp':'sftp',operation:request.reading?'read':'write',username:decodeURIComponent(request.url.username),path:decodeURIComponent(request.url.pathname),localPath:request.reading?request.destination:request.source},result);
+      if(request.reading){const out=this.applyText(result.content,request.destination,Math.min(n,400)*100);record();this.engine.changed();return out;}
+      record();this.engine.changed();return [bytesCopied(result.bytes,Math.min(n,400)*100)];
     }catch(error){return ['% File transfer failed: '+(error instanceof Error?error.message:String(error))];}
   }
   private copyName(name:string):string {if(name==='system:running-config')return 'running-config';if(name==='nvram:startup-config')return 'startup-config';if(name.startsWith('flash:')&&name.length>6)return name;return keyword(name,['running-config','startup-config','tftp:']);}

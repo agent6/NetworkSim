@@ -1149,25 +1149,25 @@ THIS SOFTWARE.
     const results = [];
     const oid = normalizeOID(notification), category = { "1.3.6.1.6.3.1.1.5.1": "coldstart", "1.3.6.1.6.3.1.1.5.2": "warmstart", "1.3.6.1.6.3.1.1.5.3": "linkdown", "1.3.6.1.6.3.1.1.5.4": "linkup", "1.3.6.1.6.3.1.1.5.5": "authentication" }, allows = (list) => !list?.length || list.length === 1 && list[0] === "snmp" || list.includes(category[oid]);
     if (!allows(config4.trapCategories)) return [];
-    for (const host of config4.hosts ?? []) {
-      const options3 = host.options ?? [], at = options3.indexOf("version"), version2 = options3[at + 1], isInform = options3.includes("informs");
+    for (const host2 of config4.hosts ?? []) {
+      const options3 = host2.options ?? [], at = options3.indexOf("version"), version2 = options3[at + 1], isInform = options3.includes("informs");
       if (at < 0 || !["2c", "3"].includes(version2)) continue;
       const identity3 = version2 === "2c" ? { community: options3[at + 2] } : v3NotificationIdentity(device2, options3[at + 3], options3[at + 2], oid);
       if (!identity3 || !allows(options3.slice(at + (version2 === "3" ? 4 : 3)))) continue;
       const source = config4["trap-source"] ?? config4["source-interface"], variables2 = [{ oid: "1.3.6.1.2.1.1.3.0", type: "TimeTicks", value: Math.floor(Math.max(0, engine.clock.now() - (device2.runtime.features.bootTime ?? 0)) / 10) }, { oid: "1.3.6.1.6.3.1.1.4.1.0", type: "ObjectIdentifier", value: oid }, ...varbinds], state4 = informs(engine), notificationId = `${device2.id}:${++state4.sequence}`, payload = { application: "snmp-notification", version: version2, kind: isInform ? "inform" : "trap", notificationId, ...identity3, varbinds: variables2 };
       if (!isInform) {
-        const result2 = engine.udpNotify(deviceId, host.address, 162, payload, { source, timeout: 1e3 });
+        const result2 = engine.udpNotify(deviceId, host2.address, 162, payload, { source, timeout: 1e3 });
         results.push(result2);
         if (result2.status === "success") snmpStatistics(device2).trapsSent++;
         continue;
       }
-      const result = { id: "snmp-inform-" + notificationId, status: "running", host: host.address, attempts: 0 }, pending = [...state4.jobs.values()].filter((j) => j.deviceId === device2.id).length, limit = Number(config4.informs?.pending ?? 25);
+      const result = { id: "snmp-inform-" + notificationId, status: "running", host: host2.address, attempts: 0 }, pending = [...state4.jobs.values()].filter((j) => j.deviceId === device2.id).length, limit = Number(config4.informs?.pending ?? 25);
       results.push(result);
       if (pending >= limit) {
         const oldest = [...state4.jobs.values()].find((j) => j.deviceId === device2.id);
         if (oldest) finishInform(engine, oldest, "SNMP inform pending limit discarded the oldest request");
       }
-      const job = { deviceId, runtime: device2.runtime, host: host.address, result, attempts: 0, deadline: 0, payload, source, retries: Number(config4.informs?.retries ?? 3), timeout: 1e3 * Number(config4.informs?.timeout ?? 30) };
+      const job = { deviceId, runtime: device2.runtime, host: host2.address, result, attempts: 0, deadline: 0, payload, source, retries: Number(config4.informs?.retries ?? 3), timeout: 1e3 * Number(config4.informs?.timeout ?? 30) };
       state4.jobs.set(result.id, job);
       pollInform(engine, job);
     }
@@ -8951,7 +8951,7 @@ ${end.comment}` : end.comment;
       if (!isIPv4(address) && !isIPv6(address)) fail7("% Expected an IPv4 or IPv6 notification host address.");
       if (no) {
         count(a, 1);
-        next.hosts = next.hosts.filter((host) => host.address !== address);
+        next.hosts = next.hosts.filter((host2) => host2.address !== address);
       } else {
         let i = 1;
         const kind = a[i] && ["traps", "informs"].some((x) => x.startsWith(a[i].toLowerCase())) ? keyword2(a[i++], ["traps", "informs"]) : "traps";
@@ -8963,7 +8963,7 @@ ${end.comment}` : end.comment;
         const categories = a.slice(i);
         if (categories.some((x) => !["snmp", "linkdown", "linkup", "coldstart", "warmstart", "authentication"].includes(x.toLowerCase()))) fail7("% This SNMP notification category is not implemented.");
         const options3 = [...kind === "informs" ? ["informs"] : [], "version", version2, ...level ? [level] : [], identity3, ...categories.map((x) => x.toLowerCase())];
-        next.hosts = next.hosts.filter((host) => host.address !== address);
+        next.hosts = next.hosts.filter((host2) => host2.address !== address);
         next.hosts.push({ address, options: options3 });
         if (version2 === "3") notice = [];
       }
@@ -9043,7 +9043,7 @@ ${end.comment}` : end.comment;
       for (const rule of rules) lines2.push(`snmp-server view ${name2} ${rule.subtree} ${rule.included ? "included" : "excluded"}`);
     }
     for (const kind of ["group", "user"]) for (const [name2, options3] of Object.entries(config4[kind + "s"] ?? {})) lines2.push(`snmp-server ${kind} ${name2} ${options3.join(" ")}`);
-    for (const host of config4.hosts ?? []) lines2.push(`snmp-server host ${host.address} ${host.options.join(" ")}`);
+    for (const host2 of config4.hosts ?? []) lines2.push(`snmp-server host ${host2.address} ${host2.options.join(" ")}`);
     if (config4.informs && Object.keys(config4.informs).length) lines2.push("snmp-server informs " + Object.entries(config4.informs).map(([k, v]) => k + " " + v).join(" "));
     if (config4.traps) lines2.push("snmp-server enable traps" + (config4.trapCategories?.length ? " " + config4.trapCategories.join(" ") : ""));
     for (const key4 of ["trap-source", "source-interface", "chassis-id", "ifindex", "packetsize", "queue-length"]) if (config4[key4]) lines2.push(`snmp-server ${key4} ${config4[key4]}`);
@@ -12586,7 +12586,7 @@ ${end.comment}` : end.comment;
   var identifier = (value) => /^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}$/.test(value) ? value : fail2("Invalid server-group name.");
   function nsosAAACommands(d, enter) {
     const f = d.config.features, aaa2 = () => f.aaa ??= { enabled: true }, cmd = (syntax, run, no) => ({ syntax, description: "Configure operational AAA", run, no, write: true });
-    const host = (protocol, a, no) => {
+    const host2 = (protocol, a, no) => {
       if (protocol === "tacacs" && !nsosFeature(d, "tacacs+")) fail2("Enable feature tacacs+ first.");
       if (!isIPv4(a[0])) fail2("Only IPv4 AAA hosts are implemented.");
       const key4 = protocol + ":" + a[0], servers = aaa2().servers ??= {}, prior = ownRecordValue(servers, key4);
@@ -12612,11 +12612,11 @@ ${end.comment}` : end.comment;
     };
     return [
       ...["radius", "tacacs"].flatMap((protocol) => [
-        cmd(`${protocol}-server host <address>`, (a, no) => host(protocol, a, no), `${protocol}-server host <address>`),
+        cmd(`${protocol}-server host <address>`, (a, no) => host2(protocol, a, no), `${protocol}-server host <address>`),
         ...["key <key>", "key 0 <key>", "timeout <seconds>", ...protocol === "radius" ? ["auth-port <port>", "acct-port <port>", "retransmit <count>"] : ["port <port>"]].map((option) => cmd(`${protocol}-server host <address> ${option}`, (a, no) => {
           const words = option.split(" ");
           let i = 1;
-          host(protocol, [a[0], ...words.map((w) => w.startsWith("<") ? a[i++] : w)], no);
+          host2(protocol, [a[0], ...words.map((w) => w.startsWith("<") ? a[i++] : w)], no);
         }))
       ]),
       ...["radius", "tacacs+"].map((protocol) => cmd(`aaa group server ${protocol} <group>`, (a, no) => {
@@ -12725,9 +12725,9 @@ ${end.comment}` : end.comment;
       const token = words[index++];
       if (token?.toLowerCase() === "any") return "any";
       if (token?.toLowerCase() === "host") {
-        const host = words[index++];
-        if (!isIPv4(host)) throw Error("Invalid IPv4 host.");
-        return host + "/32";
+        const host2 = words[index++];
+        if (!isIPv4(host2)) throw Error("Invalid IPv4 host.");
+        return host2 + "/32";
       }
       if (!token?.includes("/")) throw Error("Use any, host IPv4-address, or an IPv4 prefix.");
       const prefix2 = parseCidr(token);
@@ -22864,7 +22864,7 @@ ${end.comment}` : end.comment;
     for (const [protocol, seconds4] of Object.entries(c.features.nat?.timeouts || {})) lines2.push(`ip nat translation ${protocol === "generic" ? "timeout" : protocol + "-timeout"} ${seconds4}`);
     if (c.features.logging?.enabled === false) lines2.push("no logging on");
     if (c.features.logging?.console !== void 0) lines2.push(`${c.features.logging.console ? "" : "no "}logging console${c.features.logging.console ? " " + (c.features.logging.consoleLevel ?? 7) : ""}`);
-    for (const host of c.features.logging?.hosts || []) lines2.push(`logging host ${host}`);
+    for (const host2 of c.features.logging?.hosts || []) lines2.push(`logging host ${host2}`);
     if (c.features.logging?.trapEnabled === false) lines2.push("no logging trap");
     else if (c.features.logging?.trap !== void 0) lines2.push(`logging trap ${c.features.logging.trap}`);
     if (c.features.logging?.source) lines2.push(`logging source-interface ${c.features.logging.source}`);
@@ -22873,6 +22873,7 @@ ${end.comment}` : end.comment;
     else if (c.features.logging?.monitorLevel !== void 0) lines2.push(`logging monitor ${c.features.logging.monitorLevel}`);
     if (c.features.logging?.buffered !== void 0) lines2.push(`${c.features.logging.buffered ? "" : "no "}logging buffered${c.features.logging.buffered ? `${c.features.logging.bufferSize ? ` ${c.features.logging.bufferSize}` : ""}${c.features.logging.bufferedLevel !== void 0 ? ` ${c.features.logging.bufferedLevel}` : ""}` : ""}`);
     lines2.push(...renderFTPClient(c.features));
+    if (c.features.ssh?.sourceInterface) lines2.push(`ip ssh source-interface ${c.features.ssh.sourceInterface}`);
     if (c.features.ssh?.version) lines2.push("ip ssh version 2");
     if (c.features.ssh?.keys) lines2.push(`crypto key generate rsa modulus ${c.features.ssh.keys.modulus || 2048}`);
     if (c.features.archive) {
@@ -22959,29 +22960,29 @@ ${end.comment}` : end.comment;
     return d.kind === "server" ? false : ["pc", "laptop"].includes(d.kind) ? !!d.config.services.sshFiles?.enabled : ["router", "switch", "l3switch", "poeswitch", "wlc"].includes(d.kind) && !!d.config.features.managementSettings?.scp && !!d.config.features.ssh?.keys;
   }
   function handleSSHFile(engine, d, r, source, destination2, authenticate2) {
-    const host = ["pc", "laptop", "server"].includes(d.kind), service = d.config.services.sshFiles ?? {};
+    const host2 = ["pc", "laptop", "server"].includes(d.kind), service = d.config.services.sshFiles ?? {};
     const failure = (error) => ({ error, protocol: r.protocol });
     if (!sshFileEnabled(d)) return failure("SSH file service is disabled");
-    if (!["scp", "sftp"].includes(r.protocol) || !host && r.protocol === "sftp") return failure("This IOS XE reference is an SCP server; SFTP server mode is unsupported");
+    if (!["scp", "sftp"].includes(r.protocol) || !host2 && r.protocol === "sftp") return failure("This IOS XE reference is an SCP server; SFTP server mode is unsupported");
     if (!["read", "write"].includes(r.operation)) return failure("Invalid file operation");
     const vty = Object.entries(d.config.features.lines ?? {}).find(([name3, line2]) => name3.startsWith("vty ") && (line2.transport === "all" || String(line2.transport).split(" ").includes("ssh")));
-    if (!host && !vty) return failure("SSH VTY transport is disabled");
+    if (!host2 && !vty) return failure("SSH VTY transport is disabled");
     const acl = vty?.[1]?.[source.includes(":") ? "ipv6AccessClassIn" : "accessClassIn"];
     if (acl && !engine.aclPermits(d.id, acl, source, destination2, "tcp", { destinationPort: 22 })) return failure("VTY access-class denied file transfer");
     const local = Object.hasOwn(d.config.features.users ?? {}, r.username) ? d.config.features.users[r.username] : void 0, expected = local?.secret ?? local?.password, auth = authenticate2?.(r.username, r.password) ?? { accepted: typeof expected === "string" && expected.length > 0 && expected === r.password, privilege: local?.privilege ?? 1 };
     if (!auth.accepted) return failure("Authentication failed");
-    if (!host && (auth.privilege ?? 1) < 15) return failure("SCP requires privilege level 15");
+    if (!host2 && (auth.privilege ?? 1) < 15) return failure("SCP requires privilege level 15");
     const name2 = String(r.path ?? "").replace(/^\/+|^flash:/g, "");
     if (!name2 || name2.length > 200 || name2.split("/").some((p) => p === ".." || p === ".") || /[\x00-\x1f\\]/.test(name2)) return failure("Invalid simulated file path");
     let content;
     if (r.operation === "read") {
-      const files = host ? service.files : d.config.features.files;
-      content = !host && name2 === "running-config" ? renderConfig(d).join("\n") : !host && name2 === "startup-config" ? d.startupConfig ? renderConfig(d, d.startupConfig).join("\n") : void 0 : files && Object.hasOwn(files, name2) ? files[name2] : void 0;
+      const files = host2 ? service.files : d.config.features.files;
+      content = !host2 && name2 === "running-config" ? renderConfig(d).join("\n") : !host2 && name2 === "startup-config" ? d.startupConfig ? renderConfig(d, d.startupConfig).join("\n") : void 0 : files && Object.hasOwn(files, name2) ? files[name2] : void 0;
     } else {
       if (service.readOnly) return failure("File service is read-only");
       content = r.content;
       if (typeof content !== "string" || new TextEncoder().encode(content).length > 1048576) return failure("File must contain at most 1 MiB of text");
-      if (host) d.config.services.sshFiles.files = { ...service.files ?? {}, [name2]: content };
+      if (host2) d.config.services.sshFiles.files = { ...service.files ?? {}, [name2]: content };
       else {
         try {
           writeFlashFile(d, name2, content);
@@ -22994,16 +22995,25 @@ ${end.comment}` : end.comment;
     if (typeof content !== "string") return failure("File not found");
     const bytes3 = new TextEncoder().encode(content).length;
     const transfers = d.runtime.features.sshFileTransfers ??= [];
-    transfers.push({ time: engine.clock.now(), source, protocol: r.protocol, operation: r.operation, path: name2, bytes: bytes3, username: r.username });
+    transfers.push({ time: engine.clock.now(), source, protocol: r.protocol, operation: r.operation, path: name2, bytes: bytes3, username: r.username, transferId: r.transferId });
     if (transfers.length > 500) transfers.shift();
     engine.emit({ nodeId: d.id, protocol: r.protocol.toUpperCase(), label: r.operation === "read" ? "File read" : "File written", detail: name2 + " \xB7 " + bytes3 + " bytes", disposition: "success" });
-    return { protocol: r.protocol, bytes: bytes3, ...r.operation === "read" ? { content } : {} };
+    return { protocol: r.protocol, bytes: bytes3, transferId: r.transferId, ...r.operation === "read" ? { content } : {} };
   }
   function installSSHFileService(engine) {
     engine.registerTCPService(22, sshFileEnabled, (d, payload, source, destination2) => payload?.application === "ssh-file" ? handleSSHFile(engine, d, payload, source, destination2) : { error: "This listener provides the modeled SSH file service only" });
   }
+  var transferSequence = 0;
   function transferSSHFile(engine, sourceId, address, request2) {
-    return engine.tcpRequest(sourceId, address, 22, { ...request2, application: "ssh-file" });
+    return engine.tcpRequest(sourceId, address, 22, { ...request2, application: "ssh-file", transferId: "ssh-file-" + ++transferSequence }, { source: engine.getDevice(sourceId)?.config.features.ssh?.sourceInterface });
+  }
+  function recordSSHFileCopy(engine, sourceId, address, request2, result) {
+    if (result.status !== "success" || typeof result.transferId !== "string") return;
+    const d = engine.getDevice(sourceId);
+    if (!d) return;
+    const copies = d.runtime.features.sshFileCopies ??= [];
+    copies.push({ ...request2, path: request2.path.replace(/^\/+|^flash:/g, ""), address, transferId: result.transferId, bytes: result.bytes, time: engine.clock.now() });
+    if (copies.length > 500) copies.shift();
   }
 
   // src/windows-cli.ts
@@ -25246,23 +25256,23 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       return this.reply(session, output);
     }
     open(sourceId, address, port3, username, transport, columns, vrf2) {
-      const result = this.engine.tcpRequest(sourceId, address, port3, { operation: "open", username, transport, columns }, { vrf: vrf2 });
+      const result = this.engine.tcpRequest(sourceId, address, port3, { operation: "open", username, transport, columns }, { vrf: vrf2, source: port3 === 22 ? this.engine.getDevice(sourceId)?.config.features.ssh?.sourceInterface : void 0 });
       this.wait(result);
       if (vrf2 && result.status === "success" && !result.closed && typeof result.sessionId === "string") this.clientVRFs.set(sourceId + "|" + result.sessionId, vrf2);
       return result;
     }
     send(sourceId, address, port3, sessionId, line2, columns) {
-      const result = this.engine.tcpRequest(sourceId, address, port3, { operation: "line", sessionId, line: line2, columns }, { vrf: this.clientVRFs.get(sourceId + "|" + sessionId) });
+      const result = this.engine.tcpRequest(sourceId, address, port3, { operation: "line", sessionId, line: line2, columns }, { vrf: this.clientVRFs.get(sourceId + "|" + sessionId), source: port3 === 22 ? this.engine.getDevice(sourceId)?.config.features.ssh?.sourceInterface : void 0 });
       this.wait(result);
       return result;
     }
     query(sourceId, address, port3, sessionId, operation, line2, columns) {
-      const result = this.engine.tcpRequest(sourceId, address, port3, { operation, sessionId, line: line2, columns }, { vrf: this.clientVRFs.get(sourceId + "|" + sessionId) });
+      const result = this.engine.tcpRequest(sourceId, address, port3, { operation, sessionId, line: line2, columns }, { vrf: this.clientVRFs.get(sourceId + "|" + sessionId), source: port3 === 22 ? this.engine.getDevice(sourceId)?.config.features.ssh?.sourceInterface : void 0 });
       this.wait(result);
       return result;
     }
     disconnect(sourceId, address, port3, sessionId) {
-      const result = this.engine.tcpRequest(sourceId, address, port3, { operation: "close", sessionId }, { vrf: this.clientVRFs.get(sourceId + "|" + sessionId) });
+      const result = this.engine.tcpRequest(sourceId, address, port3, { operation: "close", sessionId }, { vrf: this.clientVRFs.get(sourceId + "|" + sessionId), source: port3 === 22 ? this.engine.getDevice(sourceId)?.config.features.ssh?.sourceInterface : void 0 });
       this.wait(result);
       return result;
     }
@@ -30325,10 +30335,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const ipv6 = type === "ipv6";
     const endpoint = (next, role) => {
       const side = role === "destination" ? "destination" : "source", Side = role === "destination" ? "Destination" : "Source";
-      const address = role === "standard" ? "Address to match" : `${Side} address`, host = role === "standard" ? "Host address" : address;
+      const address = role === "standard" ? "Address to match" : `${Side} address`, host2 = role === "standard" ? "Host address" : address;
       return union(
         chain([word5("any", ipv6 ? `Any ${side} prefix` : `Any ${side} host`)], next),
-        chain([word5("host", role === "standard" ? "A single host address" : `A single ${side} host`), ipv6 ? argument("X:X:X:X::X", host, (value) => value.includes(":")) : ip(host)], next),
+        chain([word5("host", role === "standard" ? "A single host address" : `A single ${side} host`), ipv6 ? argument("X:X:X:X::X", host2, (value) => value.includes(":")) : ip(host2)], next),
         ipv6 ? chain([argument("X:X:X:X::X/<0-128>", `IPv6 ${side} prefix x:x::y/<z>`, (value) => value.includes(":") && value.includes("/"))], next) : chain([ip(address)], role === "standard" ? union(next, chain([ip("Wildcard bits")], next)) : chain([ip(`${Side} wildcard bits`)], next))
       );
     };
@@ -32863,6 +32873,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         ...this.aaaServerCommands(),
         ...this.aaaAuthorizationCommands(),
         ...["username", "password", "source-interface", "passive"].map((key4) => this.c("ip ftp " + key4, "Configure IOS passive FTP client defaults", (a, no) => configureFTPClient({ device: this.device, fail: fail5, interfaceName: (name2) => this.getInterface(name2), changed: () => this.change() }, key4, a, no), key4 === "password" ? "[0|7] <password>" : key4 === "username" ? "<username>" : key4 === "source-interface" ? "<interface>" : void 0)),
+        this.c("ip ssh source-interface", "Select an operational source interface for SSH and SSH file clients", (a, no) => {
+          exactly(a, no ? 0 : 1);
+          f.ssh ??= {};
+          f.ssh.sourceInterface = no ? void 0 : this.getInterface(a[0]);
+          this.change();
+        }, "<interface>"),
         this.c("ip ssh version", "Set simulated SSH version", (a, no) => {
           if (a.length > 1 || !no && !a.length) fail5();
           if (a.length && a[0] !== "2") this.unsupported("SSH version 1");
@@ -33582,11 +33598,15 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         let n = 0;
         while (result.status === "running" && n++ < 400) this.engine.advance(100);
         if (result.status !== "success") return ["% File transfer failed: " + (result.error ?? "No response")];
+        const record2 = () => recordSSHFileCopy(this.engine, this.deviceId, address, { protocol: request2.url.protocol === "scp:" ? "scp" : "sftp", operation: request2.reading ? "read" : "write", username: decodeURIComponent(request2.url.username), path: decodeURIComponent(request2.url.pathname), localPath: request2.reading ? request2.destination : request2.source }, result);
         if (request2.reading) {
           const out = this.applyText(result.content, request2.destination, Math.min(n, 400) * 100);
+          record2();
           this.engine.changed();
           return out;
         }
+        record2();
+        this.engine.changed();
         return [bytesCopied(result.bytes, Math.min(n, 400) * 100)];
       } catch (error) {
         return ["% File transfer failed: " + (error instanceof Error ? error.message : String(error))];
@@ -38399,13 +38419,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (isIPv6(source) !== isIPv6(target)) fail5("% Source and target address families must match.");
       return source;
     }
-    runPing(args, host = false) {
+    runPing(args, host2 = false) {
       if (!args.length) {
-        if (host) incomplete4();
+        if (host2) incomplete4();
         return this.beginPing();
       }
       let selectedFamily;
-      if (!host && ["ip", "ipv6"].includes(args[0])) {
+      if (!host2 && ["ip", "ipv6"].includes(args[0])) {
         const family = args[0];
         selectedFamily = family;
         if (args.length === 1) return this.beginPing(family);
@@ -38418,7 +38438,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         args = args.slice(2);
       }
       let lookup2 = [], target;
-      if (host) target = this.resolveTarget(args[0]);
+      if (host2) target = this.resolveTarget(args[0]);
       else {
         const found = this.lookupHost(args[0]);
         if (found.address === void 0) return found.lines;
@@ -38426,9 +38446,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         target = found.address;
       }
       if (selectedFamily && isIPv6(target) !== (selectedFamily === "ipv6")) fail5("% Address family does not match the selected protocol.");
-      let count = host ? 4 : 5, source, outputInterface, ttl = 64, size = host ? 32 : 100, timeout = 2e3, df = false, tos = 0, validateData = false, dataPattern = "abcd";
+      let count = host2 ? 4 : 5, source, outputInterface, ttl = 64, size = host2 ? 32 : 100, timeout = 2e3, df = false, tos = 0, validateData = false, dataPattern = "abcd";
       for (let i = 1; i < args.length; i++) {
-        const k = keyword(args[i], host ? ["-n", "-l", "-i", "-w", "-f"] : ["repeat", "source", "size", "timeout", "ttl", "df-bit", "tos", "data-pattern", "validate"]);
+        const k = keyword(args[i], host2 ? ["-n", "-l", "-i", "-w", "-f"] : ["repeat", "source", "size", "timeout", "ttl", "df-bit", "tos", "data-pattern", "validate"]);
         if (k === "df-bit" || k === "-f") {
           df = true;
           continue;
@@ -38451,11 +38471,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           const pattern = v.replace(/^0x/i, "");
           if (!/^[0-9a-f]{1,4}$/i.test(pattern)) fail5("% Expected 0x0000 through 0xFFFF.");
           dataPattern = pattern.padStart(4, "0").toLowerCase();
-        } else timeout = integer2(v, 1, host ? 6e4 : 60) * (host ? 1 : 1e3);
+        } else timeout = integer2(v, 1, host2 ? 6e4 : 60) * (host2 ? 1 : 1e3);
       }
-      return [...lookup2, ...this.executeProbe(target, { count, source, interface: outputInterface, size, ttl, timeout, df, vrf: vrf2, tos, validateData, dataPattern }, host)];
+      return [...lookup2, ...this.executeProbe(target, { count, source, interface: outputInterface, size, ttl, timeout, df, vrf: vrf2, tos, validateData, dataPattern }, host2)];
     }
-    executeProbe(target, options3, host = false, sweep) {
+    executeProbe(target, options3, host2 = false, sweep) {
       const { count, size, timeout } = options3, runs = (sweep?.sizes ?? [size]).map((probeSize) => {
         const run = this.engine.ping(this.deviceId, target, { ...options3, size: probeSize, interval: 200 });
         let n = 0;
@@ -38467,7 +38487,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         }
         return run;
       }), result = runs[0];
-      if (host) return [`Pinging ${target} with ${size} bytes of data:`, ...result.replies.map((r) => r.error ? `Request failed: ${r.error}` : `Reply from ${r.from}: bytes=${size} time=${(r.time || 0).toFixed(1)}ms TTL=${r.ttl}`), `Packets: Sent = ${result.sent}, Received = ${result.received}, Lost = ${result.sent - result.received}`];
+      if (host2) return [`Pinging ${target} with ${size} bytes of data:`, ...result.replies.map((r) => r.error ? `Request failed: ${r.error}` : `Reply from ${r.from}: bytes=${size} time=${(r.time || 0).toFixed(1)}ms TTL=${r.ttl}`), `Packets: Sent = ${result.sent}, Received = ${result.received}, Lost = ${result.sent - result.received}`];
       const v6 = isIPv6(target), shown2 = (address) => v6 ? address.toUpperCase() : address, replies = runs.length === 1 ? result.replies : Array.from({ length: count }, (_, i) => runs.flatMap((run) => run.replies[i] ? [run.replies[i]] : [])).flat();
       return ["Type escape sequence to abort.", `Sending ${count * runs.length}, ${sweep ? sweep.label : size}-byte ICMP Echos to ${shown2(target)}, timeout is ${timeout / 1e3} seconds:`, ...options3.source ? [`Packet sent with a source address of ${shown2(options3.source)} `] : [], ...options3.df ? ["Packet sent with the DF bit set"] : [], ...options3.dataPattern !== "abcd" ? [`Packet has data pattern 0x${options3.dataPattern.toUpperCase()}`] : [], ...options3.validateData ? ["Reply data will be validated"] : [], ...iosPingSummary(replies, runs.reduce((total2, run) => total2 + run.sent, 0), v6), ...runs.some((run) => run.status === "running") ? ["% Probe execution budget reached; remaining events stay in the simulation queue."] : []];
     }
@@ -39906,9 +39926,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       return input5.replace(/^(?:bootflash:|flash:)/, "");
     }
     readFile(input5) {
-      const file = ownRecordValue(this.device.config.features.files, this.fileName(input5));
-      if (typeof file !== "string") fail6("File not found.");
-      return file;
+      const file2 = ownRecordValue(this.device.config.features.files, this.fileName(input5));
+      if (typeof file2 !== "string") fail6("File not found.");
+      return file2;
     }
     applyText(text3) {
       const old = this.context, before = clone2(this.device.config);
@@ -40506,10 +40526,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         for (const condition of waitFor) if (!/^result\[\d+\] (?:contains|not contains) .+$/.test(condition)) throw Error("wait_for supports result[N] contains / not contains literal text only.");
         return { name: t.name === void 0 ? "Task " + (i + 1) : text2(t.name, "Task name"), module, dialect, commands, parents, match: module === "ios_config" ? match : "line", condition: module === "ios_command" ? match : "all", save, noLog: bool(t.no_log, "no_log"), waitFor, retries: integer4(o.retries, 1, 20, "retries", 1), interval: integer4(o.interval, 0, 30, "interval", 1) };
       });
-      for (const host of selectedHosts) for (const task of tasks) {
-        const os = host.vars.ansible_network_os;
-        if (os !== void 0 && (String(os).includes("nxos") ? "nxos" : "ios") !== task.dialect) throw Error("Module dialect does not match ansible_network_os for " + host.name + ".");
-        if (task.dialect === "nxos" && (host.vars.ansible_become === true || host.vars.ansible_become_method !== void 0)) throw Error("NS-OS uses named roles, not enable/become.");
+      for (const host2 of selectedHosts) for (const task of tasks) {
+        const os = host2.vars.ansible_network_os;
+        if (os !== void 0 && (String(os).includes("nxos") ? "nxos" : "ios") !== task.dialect) throw Error("Module dialect does not match ansible_network_os for " + host2.name + ".");
+        if (task.dialect === "nxos" && (host2.vars.ansible_become === true || host2.vars.ansible_become_method !== void 0)) throw Error("NS-OS uses named roles, not enable/become.");
       }
       total2 += tasks.reduce((n, t) => n + t.commands.length * (t.module === "ios_command" ? t.retries : 1) + t.parents.length + 6, 0) * selectedHosts.length;
       if (total2 > 1e3) throw Error("Run exceeds the 1,000-command teaching limit.");
@@ -40532,7 +40552,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
   function validateAutomation(inventory, playbook) {
     const plays = compile2(inventory, playbook);
-    return { valid: true, plays: plays.length, hosts: [...new Set(plays.flatMap((play) => play.hosts.map((host) => host.name)))], tasks: plays.reduce((count, play) => count + play.tasks.length, 0) };
+    return { valid: true, plays: plays.length, hosts: [...new Set(plays.flatMap((play) => play.hosts.map((host2) => host2.name)))], tasks: plays.reduce((count, play) => count + play.tasks.length, 0) };
   }
   function automationDocumentJSON(source) {
     return JSON.stringify(document2(source), null, 2);
@@ -40542,8 +40562,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!source || !engine.devicePowered(sourceId)) throw Error("The automation client is absent or powered off.");
     if (!["pc", "server", "laptop"].includes(source.kind)) throw Error("Run automation from a PC, Laptop or Server.");
     const controller = managementFor(engine, (id2) => createCLISession(engine, id2, { skipConsoleLogin: true })), results = [], recap = /* @__PURE__ */ Object.create(null), started = engine.clock.now();
-    for (const play of plays) for (const host of play.hosts) {
-      const stats = recap[host.name] ??= { ok: 0, changed: 0, failed: 0, skipped: 0 }, secrets = [host.vars.ansible_password ?? host.vars.ansible_ssh_pass, host.vars.ansible_become_password].filter((v) => typeof v === "string" && v.length > 0), redact = (v) => secrets.reduce((s, key4) => s.replaceAll(key4, "<redacted>"), v);
+    for (const play of plays) for (const host2 of play.hosts) {
+      const stats = recap[host2.name] ??= { ok: 0, changed: 0, failed: 0, skipped: 0 }, secrets = [host2.vars.ansible_password ?? host2.vars.ansible_ssh_pass, host2.vars.ansible_become_password].filter((v) => typeof v === "string" && v.length > 0), redact = (v) => secrets.reduce((s, key4) => s.replaceAll(key4, "<redacted>"), v);
       let sessionId, failed = false, prompt = "";
       const request2 = (r, allowPassword = false) => {
         if (r.status !== "success") throw Error("SSH transport failed: " + (r.error ?? r.status));
@@ -40553,17 +40573,17 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         if (r.passwordInput && !allowPassword) throw Error("Unexpected interactive password prompt.");
         return r;
       };
-      const send6 = (line2, allowPassword = false) => request2(controller.send(sourceId, host.address, 22, sessionId, line2), allowPassword);
+      const send6 = (line2, allowPassword = false) => request2(controller.send(sourceId, host2.address, 22, sessionId, line2), allowPassword);
       try {
-        const opened = request2(controller.open(sourceId, host.address, 22, String(host.vars.ansible_user)), true);
+        const opened = request2(controller.open(sourceId, host2.address, 22, String(host2.vars.ansible_user)), true);
         sessionId = opened.sessionId;
         if (!sessionId) throw Error("SSH returned no session identifier.");
-        if (opened.passwordInput) send6(String(host.vars.ansible_password ?? host.vars.ansible_ssh_pass));
+        if (opened.passwordInput) send6(String(host2.vars.ansible_password ?? host2.vars.ansible_ssh_pass));
         if (/(?:Username|Password):$/i.test(prompt)) throw Error("Authentication did not complete.");
-        if (host.vars.ansible_become === true && !prompt.endsWith("#")) {
+        if (host2.vars.ansible_become === true && !prompt.endsWith("#")) {
           const enabled4 = send6("enable", true);
           if (enabled4.passwordInput) {
-            const password = host.vars.ansible_become_password;
+            const password = host2.vars.ansible_become_password;
             if (typeof password !== "string" || !password) throw Error("Enable password is required.");
             send6(password);
           }
@@ -40575,10 +40595,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         for (const task of play.tasks) {
           if (failed) {
             stats.skipped++;
-            results.push({ host: host.name, play: play.name, task: task.name, module: task.dialect === "nxos" ? task.module.replace("ios_", "nxos_") : task.module, status: "skipped", stdout: [], commands: [], error: "An earlier task failed on this host." });
+            results.push({ host: host2.name, play: play.name, task: task.name, module: task.dialect === "nxos" ? task.module.replace("ios_", "nxos_") : task.module, status: "skipped", stdout: [], commands: [], error: "An earlier task failed on this host." });
             continue;
           }
-          const result = { host: host.name, play: play.name, task: task.name, module: task.dialect === "nxos" ? task.module.replace("ios_", "nxos_") : task.module, status: "ok", changed: false, stdout: [], commands: [] };
+          const result = { host: host2.name, play: play.name, task: task.name, module: task.dialect === "nxos" ? task.module.replace("ios_", "nxos_") : task.module, status: "ok", changed: false, stdout: [], commands: [] };
           let before, configEntered = false;
           const command = (line2) => {
             result.commands.push(secretCommand(line2) ? "<secret-bearing command redacted>" : redact(line2));
@@ -40646,17 +40666,17 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       } catch (error) {
         failed = true;
         stats.failed++;
-        results.push({ host: host.name, play: play.name, task: "SSH connection", module: "network_cli", status: "failed", changed: false, stdout: [], commands: [], error: redact(error.message) });
+        results.push({ host: host2.name, play: play.name, task: "SSH connection", module: "network_cli", status: "failed", changed: false, stdout: [], commands: [], error: redact(error.message) });
         for (const task of play.tasks) {
           stats.skipped++;
-          results.push({ host: host.name, play: play.name, task: task.name, module: task.dialect === "nxos" ? task.module.replace("ios_", "nxos_") : task.module, status: "skipped", stdout: [], commands: [], error: "SSH authentication or setup failed." });
+          results.push({ host: host2.name, play: play.name, task: task.name, module: task.dialect === "nxos" ? task.module.replace("ios_", "nxos_") : task.module, status: "skipped", stdout: [], commands: [], error: "SSH authentication or setup failed." });
         }
       } finally {
         if (sessionId) {
-          const closed = controller.disconnect(sourceId, host.address, 22, sessionId);
+          const closed = controller.disconnect(sourceId, host2.address, 22, sessionId);
           if (closed.status !== "success") {
             stats.failed++;
-            results.push({ host: host.name, play: play.name, task: "SSH disconnect", module: "network_cli", status: "failed", stdout: [], commands: [], error: "Session close could not be delivered; remote idle timeout applies." });
+            results.push({ host: host2.name, play: play.name, task: "SSH disconnect", module: "network_cli", status: "failed", stdout: [], commands: [], error: "Session close could not be delivered; remote idle timeout applies." });
           }
         }
       }
@@ -40760,7 +40780,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           output.textContent = JSON.stringify(lastAutomation, null, 2);
           const summary = root.querySelector("[data-automation-summary]");
           summary.classList.remove("hidden");
-          summary.textContent = (lastAutomation.status === "success" ? "Run succeeded. " : "Run failed. ") + Object.entries(lastAutomation.recap).map(([host, row5]) => `${host}: ${row5.ok} ok, ${row5.changed} changed, ${row5.failed} failed, ${row5.skipped} skipped`).join(" \xB7 ");
+          summary.textContent = (lastAutomation.status === "success" ? "Run succeeded. " : "Run failed. ") + Object.entries(lastAutomation.recap).map(([host2, row5]) => `${host2}: ${row5.ok} ok, ${row5.changed} changed, ${row5.failed} failed, ${row5.skipped} skipped`).join(" \xB7 ");
           root.querySelector("[data-automation-export]").disabled = false;
           sim2.notify();
           return;
@@ -48414,7 +48434,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         }
         let attempted = false;
         for (const prefix2 of autonomous) {
-          const host = ipv6ToBigInt(this.engine.linkLocalAddress(d.id, port3)) & (1n << 64n) - 1n, address = bigIntToIPv6(ipv6ToBigInt(prefix2.network) | host);
+          const host2 = ipv6ToBigInt(this.engine.linkLocalAddress(d.id, port3)) & (1n << 64n) - 1n, address = bigIntToIPv6(ipv6ToBigInt(prefix2.network) | host2);
           if (prefix2.validLifetime === 0 && !c.features.slaacAddresses?.some((a) => sameAddress(a, address))) continue;
           attempted = true;
           const install = () => {
@@ -52348,6 +52368,34 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   };
 
+  // src/file-transfer-lab.ts
+  function validFileTransferCriterion(v) {
+    const name2 = (s) => typeof s === "string" && s.length > 0 && s.length <= 128;
+    const path = (s) => typeof s === "string" && s.length > 0 && s.length <= 200 && !/[\x00-\x1f\\]/.test(s) && !s.split("/").some((p) => p === ".." || p === ".");
+    if (v.kind === "scp-server") return true;
+    if (v.kind === "ssh-file-client") return name2(v.interface);
+    return ["file-transfer", "file-copy"].includes(v.kind) && name2(v.server) && name2(v.username) && ["scp", "sftp"].includes(v.protocol) && ["read", "write"].includes(v.operation) && path(v.localPath) && path(v.remotePath);
+  }
+  var host = (d) => ["pc", "laptop"].includes(d.kind);
+  var file = (d, path) => {
+    if (!host(d) && path === "running-config") return renderConfig(d).join("\n");
+    if (!host(d) && path === "startup-config") return d.startupConfig ? renderConfig(d, d.startupConfig).join("\n") : void 0;
+    return ownRecordValue(host(d) ? d.config.services.sshFiles?.files : d.config.features.files, path.replace(/^flash:/, ""));
+  };
+  var owns = (d, address) => typeof address === "string" && Object.values(d.config.interfaces).some((p) => !!p.ip && sameAddress(p.ip, address));
+  function matchesFileTransferCriterion(sim2, d, c) {
+    if (c.kind === "scp-server") return d.config.features.managementSettings?.scp === true;
+    if (c.kind === "ssh-file-client") return d.config.features.ssh?.sourceInterface === c.interface && sim2.interfaceUp(d.id, c.interface);
+    const server = sim2.lab.devices.find((s) => s.id === c.server || s.config.hostname === c.server);
+    if (!server) return false;
+    if (c.kind === "file-copy") {
+      const local = file(d, c.localPath), remote = file(server, c.remotePath);
+      return typeof local === "string" && local.length > 0 && local === remote;
+    }
+    const copies = d.runtime.features.sshFileCopies ?? [], received = server.runtime.features.sshFileTransfers ?? [];
+    return copies.some((copy4) => copy4.protocol === c.protocol && copy4.operation === c.operation && copy4.username === c.username && copy4.path === c.remotePath && copy4.localPath === c.localPath && owns(server, copy4.address) && typeof copy4.transferId === "string" && received.some((row5) => row5.transferId === copy4.transferId && row5.protocol === copy4.protocol && row5.operation === copy4.operation && row5.path === copy4.path && row5.username === copy4.username && row5.bytes === copy4.bytes && owns(d, row5.source) && row5.time <= copy4.time));
+  }
+
   // src/aaa-lab.ts
   function validAAAClientCriterion(v) {
     const name2 = (value) => typeof value === "string" && value.length > 0 && value.length <= 128;
@@ -52420,6 +52468,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (v.kind === "link") return text3(v.a, 128) && text3(v.b, 128);
       if (!text3(v.device, 128)) return false;
       switch (v.kind) {
+        case "scp-server":
+        case "ssh-file-client":
+        case "file-transfer":
+        case "file-copy":
+          return validFileTransferCriterion(v);
         case "device":
           return v.powered === void 0 || typeof v.powered === "boolean";
         case "tacacs-server":
@@ -52564,6 +52617,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const d = device(sim2, criterion.device);
     if (!d) return false;
     if (["tacacs-server", "radius-server", "aaa-group", "aaa-method", "aaa-line", "tacacs-session", "radius-session"].includes(criterion.kind)) return matchesAAAClientCriterion(sim2, d, criterion);
+    if (["scp-server", "ssh-file-client", "file-transfer", "file-copy"].includes(criterion.kind)) return matchesFileTransferCriterion(sim2, d, criterion);
     if (criterion.kind === "local-user") {
       const user = ownRecordValue(d.config.features.users, criterion.username);
       return !!user && typeof user.secret === "string" && user.secret.length > 0 && (user.privilege ?? 1) === criterion.privilege;
@@ -52730,14 +52784,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return results.length > 0 && (c.kind === "all" ? results.every(Boolean) : results.some(Boolean));
       }
       const result = matches(sim2, c);
-      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session") return result;
+      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer") return result;
       validKeys.add(key4);
       if (result) observations.add(key4);
       return result || observations.has(key4);
     };
     const rows2 = lesson2.objectives.map((objective) => {
       const observed = observe(objective.criterion, JSON.stringify(objective.id));
-      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session";
+      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer";
       if (historical && observed)
         completed.add(objective.id);
       return {
@@ -52859,10 +52913,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (problem) throw Error(`Invalid YAML: ${problem.message}`);
     return validateDocument(yaml.toJS({ maxAliasCount: 100 }));
   }
-  async function readLabFile(file) {
-    if (file.size > MAX_LAB_FILE_BYTES)
+  async function readLabFile(file2) {
+    if (file2.size > MAX_LAB_FILE_BYTES)
       throw Error("This lab exceeds the 10 MB file limit.");
-    return parseLabFile(await file.text());
+    return parseLabFile(await file2.text());
   }
   function serializeLabFile(doc) {
     const portable = validateDocument(JSON.parse(JSON.stringify(doc)));
@@ -53116,7 +53170,18 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "local-user-authentication", group: "CCNA", section: "Services & Security", title: "Local User Authentication", description: "Create local users with distinct privilege levels, protect privileged EXEC, secure console and SSH access, and verify real password-checked logins from a PC.", devices: 2, links: 1, practice: true },
     { id: "tacacs-aaa-client", group: "CCNA", section: "Services & Security", title: "TACACS+ AAA Client", description: "Configure an IOS TACACS+ client with named AAA lists, SSH, local recovery and acknowledged EXEC accounting. Test remote authorization, explicit rejection and server-unavailable fallback.", devices: 3, links: 2, practice: true },
     { id: "radius-aaa-client", group: "CCNA", section: "Services & Security", title: "RADIUS AAA Client", description: "Configure an IOS RADIUS client with named AAA lists, SSH, Access-Accept EXEC attributes and acknowledged session accounting. Verify rejection, UDP retry behavior and local recovery.", devices: 3, links: 2, practice: true },
+    { id: "scp-sftp-file-transfer", group: "CCNA", section: "Services & Security", title: "SCP/SFTP File Transfer", description: "Configure an IOS SCP server and an SSH file client. Download reference files, back up startup configurations with SCP and SFTP, verify content and diagnose rejected or interrupted transfers.", devices: 3, links: 2, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
+  ];
+  var SCP_SFTP_FILE_TRANSFER_COMMANDS = {
+    R1: ["enable", "configure terminal", "ip domain-name lab.example", "crypto key generate rsa modulus 2048", "ip ssh version 2", "ip ssh source-interface GigabitEthernet0/0", "end", "write memory"],
+    R2: ["enable", "configure terminal", "username backup privilege 15 secret ScpLab123", "enable secret EnableLab123", "aaa new-model", "aaa authentication login default local", "aaa authorization exec default local", "line console 0", "login authentication default", "exit", "ip domain-name lab.example", "crypto key generate rsa modulus 2048", "ip ssh version 2", "line vty 0 4", "login authentication default", "authorization exec default", "transport input ssh", "exit", "ip scp server enable", "end", "write memory"]
+  };
+  var SCP_SFTP_TRANSFER_STEPS = [
+    { id: "scp-download", server: "r2", protocol: "scp", operation: "read", username: "backup", localPath: "flash:scp-readme.txt", remotePath: "scp-readme.txt", command: "copy scp://backup@192.0.2.2/scp-readme.txt flash:scp-readme.txt", password: "ScpLab123", title: "Download and inspect R2\u2019s reference file with SCP" },
+    { id: "scp-backup", server: "r2", protocol: "scp", operation: "write", username: "backup", localPath: "startup-config", remotePath: "r1-startup.cfg", command: "copy startup-config scp://backup@192.0.2.2/r1-startup.cfg", password: "ScpLab123", title: "Back up R1\u2019s saved startup configuration to R2 with SCP" },
+    { id: "sftp-download", server: "pc1", protocol: "sftp", operation: "read", username: "archive", localPath: "flash:sftp-readme.txt", remotePath: "sftp-readme.txt", command: "copy sftp://archive@192.168.100.10/sftp-readme.txt flash:sftp-readme.txt", password: "SftpLab123", title: "Download and inspect PC1\u2019s reference file with SFTP" },
+    { id: "sftp-backup", server: "pc1", protocol: "sftp", operation: "write", username: "archive", localPath: "startup-config", remotePath: "r1-startup.cfg", command: "copy startup-config sftp://archive@192.168.100.10/r1-startup.cfg", password: "SftpLab123", title: "Back up R1\u2019s saved startup configuration to PC1 with SFTP" }
   ];
   var RADIUS_AAA_CLIENT_COMMANDS = { R1: [
     "enable",
@@ -53535,6 +53600,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
   };
   var GUIDE_RESOURCES = {
+    "scp-sftp-file-transfer": { columns: ["Device", "Interface", "IPv4 address", "Role / gateway"], rows: [["R1", "Gi0/0", "192.0.2.1 /24", "SSH client source toward R2"], ["R1", "Gi0/1", "192.168.100.1 /24", "PC1 gateway"], ["R2", "Gi0/0", "192.0.2.2 /24", "Configure IOS SCP server"], ["PC1", "Gi0", "192.168.100.10 /24", "Prepared SFTP host; gateway 192.168.100.1"]], commands: SCP_SFTP_FILE_TRANSFER_COMMANDS, verification: { R1: ["show ip interface brief", "show ip ssh", "show running-config | include ip ssh", "show startup-config", "dir flash:", "more flash:scp-readme.txt", "more flash:sftp-readme.txt"], R2: ["show ip ssh", "show running-config | section aaa", "show running-config | section line", "show running-config | include ip scp", "dir flash:", "more flash:r1-startup.cfg"] }, setup: [
+      { title: "R1 \xB7 privileged EXEC \xB7 perform all four transfers", instructions: SCP_SFTP_TRANSFER_STEPS.map((step) => step.command + " \u2014 enter " + step.password + " only at the Password: prompt.") },
+      { title: "Verify backups by reading them back", instructions: ["On R2, inspect dir flash: and more flash:r1-startup.cfg. Compare its hostname and interface/SSH settings with R1 show startup-config.", "On R1, run copy sftp://archive@192.168.100.10/r1-startup.cfg flash:sftp-backup-check.cfg, enter SftpLab123, then more flash:sftp-backup-check.cfg. Downloading to flash inspects the backup without applying configuration.", "PC1 is a prepared workstation file endpoint, not an IOS SFTP server. It starts with archive / SftpLab123 and sftp-readme.txt; no Server service administration page is needed."] },
+      { title: "Failure and recovery exercises", instructions: ["Try a wrong password and a missing filename before the successful copies. Neither failure should create a local file or complete a transfer task.", "On R2, no ip scp server enable must stop new SCP transfers; restore ip scp server enable. A privilege-1 account must not copy files from the IOS SCP server.", "SFTP to R2 is unsupported even when SCP works. Use PC1 for SFTP. Disconnecting a link or blocking TCP 22 prevents successful completion; restore connectivity and repeat.", "Keep the published source interface up. Save R1 before uploading startup-config. If you change the saved source or a destination file, repeat the backup to repair the live content check."] }
+    ], note: "Addressing, R2\u2019s scp-readme.txt and PC1\u2019s SFTP endpoint are ready. Configure R1\u2019s SSH client source and R2\u2019s local AAA, SSH-only VTY and SCP service. The completed reference applies configuration only: run the pings and transfers yourself. File tasks require a correlated successful client/server transfer plus matching current file contents. Passwords are entered separately and hidden. This offline model transports text files (up to 1 MiB) over simulated TCP 22; SSH encryption, host-key trust and binary image installation are outside this lab." },
     "radius-aaa-client": { columns: ["Device", "Interface", "IPv4 address", "Purpose / gateway"], rows: [["R1", "Gi0/0", "192.0.2.1 /24", "PC1 gateway and SSH target"], ["R1", "Gi0/1", "192.168.100.1 /24", "RADIUS source toward SRV1"], ["PC1", "Gi0", "192.0.2.10 /24", "Gateway 192.0.2.1"], ["SRV1", "Gi0", "192.168.100.10 /24", "Gateway 192.168.100.1"]], commands: RADIUS_AAA_CLIENT_COMMANDS, verification: { R1: ["show ip interface brief", "show running-config | section aaa", "show running-config | section radius", "show running-config | section line", "show aaa servers", "show radius statistics", "show ip ssh", "show users", "show accounting", "show logging"], PC1: ["ipconfig", "ping -n 3 192.168.100.10"] }, setup: [{ title: "SRV1 \xB7 Services \u2192 AAA \xB7 preconfigured RADIUS", instructions: ["The RADIUS service is enabled on UDP 1812 for authentication and UDP 1813 for accounting. Shared secret: RadiusLabKey.", "Remote account: netadmin, password RadiusAdmin123, IOS privilege 15 and EXEC authorization Allow shell. The local rescue account is absent from SRV1.", "The Access-Accept carries the EXEC permission and privilege used by R1. The accounting receiver log starts empty and must receive Start/Stop records for the same session."] }, { title: "PC1 \xB7 Command prompt \xB7 verify remote access", instructions: ["Run ssh -l netadmin 192.0.2.1. Try one wrong password, then RadiusAdmin123. Expect R1# and show privilege level 15.", "Inspect show radius statistics, show users and show accounting. Exit to Windows, then inspect SRV1 Services \u2192 AAA for acknowledged EXEC start and stop records.", "The records must identify NAS source 192.168.100.1, remote PC 192.0.2.10, netadmin, privilege 15 and a matching session ID. A password prompt or successful test aaa command alone cannot finish the session task."] }, { title: "Rejection, fallback and EXEC attribute exercises", instructions: ["While RADIUS is available, SSH as rescue with RescueLab123 must be rejected. An Access-Reject stops the method list even though the local rescue account is valid.", "Disable only the RADIUS service, keeping the server powered on. Ping remains usable. A new rescue SSH login should use local authentication and local EXEC authorization after the remote method is unavailable.", "Unavailable accounting stays pending or fails according to the configured UDP timeout/retry policy; it cannot create received records. Exit and restore the service before another netadmin login and logout.", "Separately set netadmin EXEC authorization to Deny shell on SRV1. Authentication can be accepted while its EXEC permission prevents opening a shell, with no accounting Start. Restore Allow shell."] }, { title: "R1 \xB7 local console recovery", instructions: ["Save the lab and reload NetworkSim to open a fresh console. Authenticate as rescue with RescueLab123 through the independent CONSOLE list.", "Console EXEC authorization is disabled in this lab; verify R1> and use enable with EnableLab123 for privilege 15.", "The VTY uses the named remote-first VTY-AUTH and VTY-EXEC lists with local fallback, plus VTY-ACCT Start/Stop accounting."] }], note: "Network addressing and SRV1 settings are ready; configure the AAA client on R1. Define RADIUS1 explicitly with auth-port 1812 and acct-port 1813, matching key, timeout 2 and retransmit 1. Add it to RAD-GROUP and apply VTY-AUTH, VTY-EXEC and VTY-ACCT to SSH-only VTY 0\u20134. RADIUS authentication supplies the attributes used for EXEC authorization. Session accounting uses separate UDP 1813 requests and acknowledgments. Keep the console on its local CONSOLE list, restore all server settings after fault exercises, then save R1 and the lab." },
     "tacacs-aaa-client": { columns: ["Device", "Interface", "IPv4 address", "Purpose / gateway"], rows: [["R1", "Gi0/0", "192.0.2.1 /24", "PC1 gateway and SSH target"], ["R1", "Gi0/1", "192.168.100.1 /24", "TACACS+ source toward SRV1"], ["PC1", "Gi0", "192.0.2.10 /24", "Gateway 192.0.2.1"], ["SRV1", "Gi0", "192.168.100.10 /24", "Gateway 192.168.100.1"]], commands: TACACS_AAA_CLIENT_COMMANDS, verification: { R1: ["show ip interface brief", "show running-config | section aaa", "show running-config | section tacacs", "show running-config | section line", "show aaa servers", "show tacacs", "show ip ssh", "show users", "show accounting", "show logging"], PC1: ["ipconfig", "ping -n 3 192.168.100.10"] }, setup: [{ title: "SRV1 \xB7 Services \u2192 AAA \xB7 preconfigured TACACS+", instructions: ["The TACACS+ service is already enabled on TCP 49. Shared secret: TacacsLabKey.", "Remote account: netadmin, password TacacsAdmin123, IOS privilege 15 and EXEC authorization Allow shell. The local rescue account deliberately does not exist on SRV1.", "The receiver accounting log starts empty. It must receive an EXEC start and stop for the same session, with client source 192.168.100.1 and remote PC source 192.0.2.10."] }, { title: "PC1 \xB7 Command prompt \xB7 remote AAA test", instructions: ["Run ssh -l netadmin 192.0.2.1. Try one incorrect password, then enter TacacsAdmin123. Expect R1# and show privilege level 15.", "Run show users and show accounting, then exit to Windows. Reopen SRV1 Services \u2192 AAA and inspect the received EXEC start/stop records. Client show accounting must report acknowledged delivery.", "A password prompt, successful test aaa authentication alone, a local console login or an unacknowledged accounting request cannot complete the session task."] }, { title: "Fallback and authorization exercises", instructions: ["While SRV1 is available, try SSH as rescue with RescueLab123. TACACS+ must reject that unknown remote account; a rejection must not continue to local authentication. Three rejected attempts close the connection.", "Disable only the TACACS+ service on SRV1, keeping the server powered on. Ping still works. A new SSH login as rescue should use local authentication and local EXEC authorization after the remote server is unavailable.", "Check that unavailable accounting is reported as failed, with no fabricated receiver records. Exit, re-enable TACACS+ and verify a new netadmin session and acknowledged accounting.", "For a separate test, change netadmin EXEC authorization to Deny shell on SRV1. Its password can authenticate, but EXEC must be denied and no session Start may be fabricated. Restore Allow shell."] }, { title: "R1 \xB7 local console recovery", instructions: ["Save the lab and reload NetworkSim to open a fresh console. Authenticate as rescue with RescueLab123 through the named local CONSOLE list.", "Console EXEC authorization is not enabled in this lab, so the fresh console begins at R1>. Use enable with EnableLab123 to reach R1#.", "The VTY lists remain separate: remote-first authentication, remote-first EXEC authorization with local fallback, and server-backed EXEC Start/Stop accounting."] }], note: "Network addressing, routes for the two connected networks and SRV1 TACACS+ settings are ready. Configure R1 only. Use the named TACACS1 server and TAC-GROUP, then bind VTY-AUTH, VTY-EXEC and VTY-ACCT explicitly to VTY 0\u20134 with SSH-only transport. Keep the console on its independent local CONSOLE list. This lab verifies authentication, EXEC authorization and VTY EXEC accounting through simulated TCP 49 exchanges. Only an unavailable/error result permits moving to the next authentication or authorization method; a server rejection stops the list. Restore all server settings after troubleshooting. Save R1 with write memory and save or export the lab." },
     "local-user-authentication": { columns: ["Device", "Interface", "IPv4 address", "Purpose"], rows: [["R1", "Gi0/0", "192.0.2.1 /24", "Local console and SSH target"], ["PC1", "Gi0", "192.0.2.10 /24", "Windows SSH client"]], commands: LOCAL_USER_AUTHENTICATION_COMMANDS, verification: { R1: ["show running-config | include ^username", "show running-config | include ^enable secret", "show running-config | section line", "show ip ssh", "show users", "show ssh", "show privilege", "show startup-config | include ^username"], PC1: ["ipconfig", "ping -n 3 192.0.2.1"] }, setup: [{ title: "PC1 \xB7 Command prompt \xB7 operator login", instructions: ["Run ssh -l operator 192.0.2.1. Enter an incorrect password once and confirm rejection, then enter OperatorLab123 at the Password prompt. Password input is hidden.", "Expect R1> and show privilege reporting level 1. configure terminal must be denied.", "Run enable. OperatorLab123 must not unlock privileged EXEC; enter EnableLab123 to reach R1# and verify show privilege reports level 15.", "Run show users and show ssh to inspect the real session. Run exit to return to the Windows C:\\> prompt."] }, { title: "PC1 \xB7 Command prompt \xB7 administrator login", instructions: ["Run ssh -l admin 192.0.2.1 and enter AdminLab123. Expect R1# and privilege level 15 immediately.", "Inspect show users and show ssh, then exit back to Windows. Successful operator and admin logins are recorded only after real local SSH authentication; configuration or a pending password prompt is not sufficient."] }, { title: "R1 \xB7 Fresh console session", instructions: ["Save the lab and reload NetworkSim to create a fresh console session, then open R1. Expect Username: followed by a hidden Password: prompt.", "Log in as operator with OperatorLab123. Verify level 1, use enable with EnableLab123, and verify level 15.", "The initial console remains usable while you configure login local. Configuring the line alone does not log out that existing session."] }], note: "Addressing and the Ethernet link are ready. Configure R1 only; no routing protocol or server is needed. Use local users without aaa new-model. The reference supplies admin/privilege 15, operator/privilege 1 and a separate enable secret. SSH requires a hostname, domain name, RSA keys, SSH version 2 and VTY login local with transport input ssh; a line password does not replace the local user database. The console and VTY use separate line configurations. Test actual PC logins for both users and a real ping. Login and echo achievements survive closing sessions and saving the lab; account and access settings remain live requirements. Passwords in the reference are lab examples, and you may use your own matching values. Save R1 with write memory and save or export the lab." },
@@ -53598,6 +53668,35 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createSCPSFTPFileTransferLab(mode = "practice") {
+    const make = (name2, kind, x) => ({ id: "device-scp-sftp-" + name2.toLowerCase(), kind, x, y: 260, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const r1 = make("R1", "router", 600), r2 = make("R2", "router", 250), lap = make("PC1", "pc", 950);
+    for (const [d, port3, ip2] of [[r1, "GigabitEthernet0/0", "192.0.2.1"], [r1, "GigabitEthernet0/1", "192.168.100.1"], [r2, "GigabitEthernet0/0", "192.0.2.2"], [lap, "GigabitEthernet0", "192.168.100.10"]]) {
+      Object.assign(d.config.interfaces[port3], { adminUp: true, ip: ip2, mask: "255.255.255.0" });
+      d.config.interfaces[port3].features.dhcp = false;
+      d.config.interfaces[port3].features.proxyArp = false;
+    }
+    lap.config.defaultGateway = "192.168.100.1";
+    lap.config.features.users = { archive: { secret: "SftpLab123", privilege: 1 } };
+    lap.config.services.sshFiles = { enabled: true, readOnly: false, files: { "sftp-readme.txt": "NetworkSim SFTP reference file.\nText backup endpoint: PC1.\n" } };
+    r2.config.features.files = { "scp-readme.txt": "NetworkSim SCP reference file.\nIOS SCP endpoint: R2.\n" };
+    for (const d of [r1, r2, lap]) d.startupConfig = structuredClone(d.config);
+    const objectives = [
+      { id: "ssh-client", title: "Configure R1 for SSHv2 with Gi0/0 as its client source", criterion: { kind: "all", criteria: [{ kind: "local-management", device: r1.id, setting: "ssh-server" }, { kind: "ssh-file-client", device: r1.id, interface: "GigabitEthernet0/0" }] } },
+      { id: "scp-user", title: "Create R2\u2019s privilege-15 backup account with a secret", criterion: { kind: "local-user", device: r2.id, username: "backup", privilege: 15 } },
+      { id: "scp-ssh-aaa", title: "Secure R2 with SSHv2, local AAA authentication and EXEC authorization", criterion: { kind: "all", criteria: [{ kind: "local-management", device: r2.id, setting: "ssh-server" }, { kind: "aaa-method", device: r2.id, service: "login", name: "default", methods: ["local"] }, { kind: "aaa-method", device: r2.id, service: "exec", name: "default", methods: ["local"] }, { kind: "aaa-line", device: r2.id, line: "vty 0 4", authentication: "default", authorization: "default" }] } },
+      { id: "scp-service", title: "Enable R2\u2019s IOS SCP server", criterion: { kind: "scp-server", device: r2.id } },
+      { id: "reach-r2", title: "Verify R1 can reach R2", criterion: { kind: "echo", device: r1.id, from: "192.0.2.2" }, action: { kind: "ping", device: r1.id, target: "192.0.2.2" } },
+      { id: "reach-sftp", title: "Verify R1 can reach PC1", criterion: { kind: "echo", device: r1.id, from: "192.168.100.10" }, action: { kind: "ping", device: r1.id, target: "192.168.100.10" } },
+      ...SCP_SFTP_TRANSFER_STEPS.map((step) => {
+        const fields = { device: r1.id, server: step.server === "r2" ? r2.id : lap.id, protocol: step.protocol, operation: step.operation, username: step.username, localPath: step.localPath, remotePath: step.remotePath };
+        return { id: step.id, title: step.title, description: step.command + " \xB7 use the hidden password prompt; verify with dir / more.", criterion: { kind: "all", criteria: [{ kind: "file-transfer", ...fields }, { kind: "file-copy", ...fields }] } };
+      })
+    ];
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "scp-sftp-file-transfer", name: "SCP/SFTP File Transfer" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [r1, r2, lap], links: [{ id: "link-scp-sftp-r2", a: { deviceId: r1.id, port: "GigabitEthernet0/0" }, b: { deviceId: r2.id, port: "GigabitEthernet0/0" }, enabled: true, delay: 0.1, loss: 0 }, { id: "link-scp-sftp-pc1", a: { deviceId: r1.id, port: "GigabitEthernet0/1" }, b: { deviceId: lap.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 }], notes: [{ id: "note-scp-sftp", x: 600, y: 470, text: "SCP \u2192 R2 \xB7 backup / ScpLab123\nSFTP \u2192 PC1 \xB7 archive / SftpLab123\nBoth use TCP 22 \xB7 save before backing up startup-config" }], lesson: { title: "SCP/SFTP File Transfer", description: "All three nodes are addressed and connected. Configure R1 as the SSH file client and R2 as an IOS SCP server. PC1 is a prepared SFTP host with account archive / SftpLab123. R2 starts with scp-readme.txt, and PC1 starts with sftp-readme.txt. No transfers or test results are preloaded.\n\nOn R1, set the domain lab.example, generate 2048-bit RSA keys, enable SSH version 2 and select GigabitEthernet0/0 with ip ssh source-interface. Keep that interface up. Save with write memory before copying startup-config. The chosen source also applies when connecting to PC1 through R1\u2019s other interface.\n\nOn R2, create username backup privilege 15 secret ScpLab123 and enable secret EnableLab123. Enable aaa new-model, aaa authentication login default local and aaa authorization exec default local. Set the domain, generate 2048-bit RSA keys and enable SSHv2. Under VTY 0\u20134 apply login authentication default, authorization exec default and transport input ssh. Enable ip scp server enable and save. R2 provides SCP, not an SFTP server.\n\nTest reachability to R2 and PC1. From R1\u2019s privileged EXEC prompt, use the four copy commands in the task list. Enter ScpLab123 for R2 and SftpLab123 for PC1 only at the hidden Password: prompt. Download each reference file into R1 flash, then upload R1\u2019s saved startup-config to r1-startup.cfg on each endpoint. Each task needs a successful completed transfer and matching current file contents. Opening a password prompt, manually planting a file or receiving a server write without its client response is insufficient.\n\nInspect downloads with dir flash: and more flash:scp-readme.txt / more flash:sftp-readme.txt. On R2, inspect more flash:r1-startup.cfg and compare with R1 show startup-config. To inspect the SFTP backup, copy it back to flash:sftp-backup-check.cfg and use more. Copying a configuration into flash does not apply it to running-config.\n\nTry a wrong password, missing file and SFTP URL aimed at R2. Observe failures without fabricated files or task credit. Disable and restore R2\u2019s SCP service, and test a link outage or TCP 22 ACL block. Restore the working settings and repeat failed copies. If you later change a saved source or destination file, repeat its backup to restore matching content.\n\nSave the lab to preserve files and achieved transfer evidence. Configuration and content requirements stay live after reopening. A fresh R2 console uses backup / ScpLab123, then enable with EnableLab123. The completed reference configures both routers but still requires your actual pings and transfers. This is a text-file teaching simulation; cryptographic SSH negotiation and binary IOS installation are outside its scope.", objectives } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, SCP_SFTP_FILE_TRANSFER_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createRADIUSAAAClientLab(mode = "practice") {
     const make = (name2, kind, x) => ({ id: "device-radius-aaa-" + name2.toLowerCase(), kind, x, y: 260, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
     const r1 = make("R1", "router", 600), pc1 = make("PC1", "pc", 250), server = make("SRV1", "server", 950);
@@ -54500,9 +54599,9 @@ ${out.join("\n")}`);
       Object.assign(p, { switchport: false, ip: `192.168.${subnet2}.1`, mask: "255.255.255.0", description: "TO_PC" + (i + 1) });
       sw.config.ipRouting = false;
       for (const n of [23, 24]) sw.config.interfaces[`GigabitEthernet0/${n}`].adminUp = false;
-      const host = pcs[i].config.interfaces.GigabitEthernet0;
-      Object.assign(host, { ip: `192.168.${subnet2}.10`, mask: "255.255.255.0" });
-      host.features.dhcp = false;
+      const host2 = pcs[i].config.interfaces.GigabitEthernet0;
+      Object.assign(host2, { ip: `192.168.${subnet2}.10`, mask: "255.255.255.0" });
+      host2.features.dhcp = false;
       pcs[i].config.defaultGateway = `192.168.${subnet2}.1`;
     }
     for (const d of [...switches, ...pcs]) d.startupConfig = structuredClone(d.config);
@@ -54595,13 +54694,13 @@ ${out.join("\n")}`);
       trunk.features.nonegotiate = true;
       sw.config.ipRouting = false;
     }
-    for (const [i, host] of hosts.entries()) {
+    for (const [i, host2] of hosts.entries()) {
       const vlan = [10, 20, 99][i], port3 = access.config.interfaces[`GigabitEthernet0/${i + 1}`];
-      Object.assign(port3, { mode: "access", vlan, description: "TO_" + host.config.hostname });
+      Object.assign(port3, { mode: "access", vlan, description: "TO_" + host2.config.hostname });
       port3.features.portfast = true;
-      Object.assign(host.config.interfaces.GigabitEthernet0, { ip: `192.168.${vlan}.10`, mask: "255.255.255.0" });
-      host.config.interfaces.GigabitEthernet0.features.dhcp = false;
-      host.config.defaultGateway = `192.168.${vlan}.1`;
+      Object.assign(host2.config.interfaces.GigabitEthernet0, { ip: `192.168.${vlan}.10`, mask: "255.255.255.0" });
+      host2.config.interfaces.GigabitEthernet0.features.dhcp = false;
+      host2.config.defaultGateway = `192.168.${vlan}.1`;
     }
     for (const d of [distribution, access, ...hosts]) d.startupConfig = structuredClone(d.config);
     const svi = (sw, vlan, last2) => ({ kind: "all", criteria: [
@@ -54612,7 +54711,7 @@ ${out.join("\n")}`);
     const operational = { kind: "all", criteria: [...[10, 20, 99].map((vlan) => ({ kind: "interface-up", device: distribution.id, interface: `Vlan${vlan}` })), { kind: "interface-up", device: access.id, interface: "Vlan99" }, ...[10, 20, 99].map((vlan) => ({ kind: "route", device: distribution.id, network: `192.168.${vlan}.0`, prefix: 24, protocol: "connected" }))] };
     const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "switch-virtual-interface", name: "Switch Virtual Interface (SVI)" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [distribution, access, ...hosts], links: [
       { id: "link-svi-trunk", a: { deviceId: distribution.id, port: "GigabitEthernet0/24" }, b: { deviceId: access.id, port: "GigabitEthernet0/24" }, enabled: true, delay: 0.1, loss: 0 },
-      ...hosts.map((host, i) => ({ id: "link-svi-" + host.config.hostname.toLowerCase(), a: { deviceId: access.id, port: `GigabitEthernet0/${i + 1}` }, b: { deviceId: host.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 }))
+      ...hosts.map((host2, i) => ({ id: "link-svi-" + host2.config.hostname.toLowerCase(), a: { deviceId: access.id, port: `GigabitEthernet0/${i + 1}` }, b: { deviceId: host2.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 }))
     ], notes: [{ id: "note-svi-networks", x: 500, y: 780, text: "VLAN 10 \xB7 USERS \xB7 192.168.10.0/24\nVLAN 20 \xB7 GUESTS \xB7 192.168.20.0/24\nVLAN 99 \xB7 MANAGEMENT \xB7 192.168.99.0/24" }], lesson: { title: "Switch Virtual Interface (SVI)", description: "DSW1 is a multilayer switch connected to Layer 2 switch SW1 through a preconfigured trunk. PC1 uses VLAN 10, PC2 uses VLAN 20, and ADMIN1 uses management VLAN 99. All VLANs, access ports and PC settings are ready; the switches have no configured SVI addresses and IP routing is disabled.\n\nOn DSW1, configure Vlan10, Vlan20 and Vlan99 with the .1/24 gateway address in each subnet, enable the SVIs, and enable ip routing. On SW1, configure management Vlan99 as 192.168.99.2/24 with no shutdown and set ip default-gateway 192.168.99.1. SW1 remains a Layer 2 device. Keep physical switch ports at Layer 2.\n\nCheck show ip interface brief for up/up state and verify DSW1\u2019s connected routes. An SVI also needs an active VLAN and a forwarding Layer 2 port in that VLAN. Run the checks below to reach SW1 locally, route between user VLANs, and test SW1\u2019s gateway for traffic to another subnet. Save both switches with write memory, then save or export the lab.", objectives: [
       ...[10, 20, 99].map((vlan) => ({ id: `dsw1-vlan${vlan}`, title: `Configure and enable DSW1 Vlan${vlan}`, description: `192.168.${vlan}.1 with subnet mask 255.255.255.0.`, criterion: svi(distribution, vlan, 1) })),
       { id: "ip-routing", title: "Enable IPv4 routing on DSW1", description: "Use ip routing so the multilayer switch forwards between VLANs.", criterion: { kind: "ip-routing", device: distribution.id, enabled: true } },
@@ -54963,6 +55062,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "scp-sftp-file-transfer") return createSCPSFTPFileTransferLab(mode);
     if (id2 === "radius-aaa-client") return createRADIUSAAAClientLab(mode);
     if (id2 === "tacacs-aaa-client") return createTACACSAAAClientLab(mode);
     if (id2 === "local-user-authentication") return createLocalUserAuthenticationLab(mode);
@@ -55450,8 +55550,8 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     exec(at("admin-ntp-source") ? "ntp source " + at("admin-ntp-source") : "no ntp source");
     exec("ntp poll-interval " + at("admin-ntp-poll"));
     const collectors = csv("admin-log-hosts");
-    for (const host of [...f.logging?.hosts ?? []]) if (!collectors.includes(host)) exec("no logging host " + host);
-    for (const host of collectors) exec("logging host " + host);
+    for (const host2 of [...f.logging?.hosts ?? []]) if (!collectors.includes(host2)) exec("no logging host " + host2);
+    for (const host2 of collectors) exec("logging host " + host2);
     exec(at("admin-log-source") ? "logging source-interface " + at("admin-log-source") : "no logging source-interface");
     if (has("admin-log-enabled")) exec("logging on");
     exec(has("admin-log-enabled") ? "logging trap " + at("admin-log-level") : "no logging trap");
@@ -55466,7 +55566,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
       exec("snmp-server community " + quoted(key4) + (view ? " view " + quoted(view) : "") + " " + access + (acl ? " " + quoted(acl) : ""));
     });
     const trapAddresses = form.getAll("admin-trap-address").map(String);
-    for (const host of [...f.snmp?.hosts ?? []]) if (host.options?.includes("2c") && !host.options?.includes("informs") && !trapAddresses.includes(host.address)) exec("no snmp-server host " + host.address);
+    for (const host2 of [...f.snmp?.hosts ?? []]) if (host2.options?.includes("2c") && !host2.options?.includes("informs") && !trapAddresses.includes(host2.address)) exec("no snmp-server host " + host2.address);
     if (new Set(trapAddresses).size !== trapAddresses.length) throw Error("Duplicate SNMP notification destination.");
     trapAddresses.forEach((address, i) => exec("snmp-server host " + address + " version 2c " + quoted(raw("admin-trap-community", i))));
     exec(has("admin-snmp-traps") ? "snmp-server enable traps" : "no snmp-server enable traps");
@@ -56595,10 +56695,10 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
       (data) => {
         const records = /* @__PURE__ */ Object.create(null), names3 = data.getAll("record-name"), addresses = data.getAll("record-address");
         const resourceRecords = validateDNSRecords(names3.flatMap((name2, i) => {
-          const host = String(name2).trim(), value = String(addresses[i] ?? "").trim();
-          if (!host && !value) return [];
+          const host2 = String(name2).trim(), value = String(addresses[i] ?? "").trim();
+          if (!host2 && !value) return [];
           const type = String(data.getAll("record-type")[i] ?? (isIPv6(value) ? "AAAA" : "A"));
-          return [{ name: host, type, value, ttl: Number(data.getAll("record-ttl")[i] ?? 300), ...type === "MX" ? { preference: Number(data.getAll("record-preference")[i] ?? 10) } : {} }];
+          return [{ name: host2, type, value, ttl: Number(data.getAll("record-ttl")[i] ?? 300), ...type === "MX" ? { preference: Number(data.getAll("record-preference")[i] ?? 10) } : {} }];
         }));
         for (const r of resourceRecords) if ((r.type === "A" || r.type === "AAAA") && !Object.hasOwn(records, r.name)) setRecordValue(records, r.name, r.value);
         const namesPool = data.getAll("pool-name");
@@ -58922,18 +59022,18 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
     if (noteEdit && !noteEdit.element.contains(e.target)) finishNoteEdit(true);
   }, true);
   $("#import-input").addEventListener("change", async (e) => {
-    const input5 = e.target, file = input5.files?.[0];
+    const input5 = e.target, file2 = input5.files?.[0];
     input5.value = "";
-    if (!file) return;
+    if (!file2) return;
     const version2 = ++importReadVersion;
     const returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setImportReading(true);
     try {
-      const doc = await readLabFile(file);
+      const doc = await readLabFile(file2);
       if (version2 === importReadVersion) {
         setImportReading(false);
         if (returnFocus?.isConnected) returnFocus.focus();
-        requestLabReplacement(doc, "import", file.name);
+        requestLabReplacement(doc, "import", file2.name);
       }
     } catch (err) {
       if (version2 === importReadVersion) {

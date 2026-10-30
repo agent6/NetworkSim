@@ -516,6 +516,7 @@ export function renderConfig(device: Device, config: DeviceConfig = device.confi
   if(c.features.logging?.monitor===false)lines.push('no logging monitor');else if(c.features.logging?.monitorLevel!==undefined)lines.push(`logging monitor ${c.features.logging.monitorLevel}`);
   if(c.features.logging?.buffered!==undefined)lines.push(`${c.features.logging.buffered?'':'no '}logging buffered${c.features.logging.buffered?`${c.features.logging.bufferSize?` ${c.features.logging.bufferSize}`:''}${c.features.logging.bufferedLevel!==undefined?` ${c.features.logging.bufferedLevel}`:''}`:''}`);
   lines.push(...renderFTPClient(c.features));
+  if(c.features.ssh?.sourceInterface)lines.push(`ip ssh source-interface ${c.features.ssh.sourceInterface}`);
   if(c.features.ssh?.version)lines.push('ip ssh version 2');
   if(c.features.ssh?.keys)lines.push(`crypto key generate rsa modulus ${c.features.ssh.keys.modulus||2048}`);
   if(c.features.archive){const a=c.features.archive;lines.push('archive',` path ${a.path||'flash:archive'}`,` maximum ${a.maximum||10}`);if(a.writeMemory)lines.push(' write-memory');if(a.timePeriod)lines.push(` time-period ${a.timePeriod}`);lines.push('!');}

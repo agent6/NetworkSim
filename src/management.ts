@@ -280,16 +280,16 @@ export class ManagementController {
     return this.reply(session, output);
   }
   open(sourceId: string, address: string, port: number, username?: string,transport?:'ssh'|'telnet',columns?:number,vrf?:string): ServiceResult {
-    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'open', username,transport,columns },{vrf});
+    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'open', username,transport,columns },{vrf,source:port===22?this.engine.getDevice(sourceId)?.config.features.ssh?.sourceInterface:undefined});
     this.wait(result);if(vrf&&result.status==='success'&&!result.closed&&typeof result.sessionId==='string')this.clientVRFs.set(sourceId+'|'+result.sessionId,vrf);return result;
   }
   send(sourceId: string, address: string, port: number, sessionId: string, line: string,columns?:number): ServiceResult {
-    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'line', sessionId, line,columns },{vrf:this.clientVRFs.get(sourceId+'|'+sessionId)});
+    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'line', sessionId, line,columns },{vrf:this.clientVRFs.get(sourceId+'|'+sessionId),source:port===22?this.engine.getDevice(sourceId)?.config.features.ssh?.sourceInterface:undefined});
     this.wait(result);return result;
   }
-  query(sourceId:string,address:string,port:number,sessionId:string,operation:string,line:string,columns?:number):ServiceResult{const result=this.engine.tcpRequest(sourceId,address,port,{operation,sessionId,line,columns},{vrf:this.clientVRFs.get(sourceId+'|'+sessionId)});this.wait(result);return result;}
+  query(sourceId:string,address:string,port:number,sessionId:string,operation:string,line:string,columns?:number):ServiceResult{const result=this.engine.tcpRequest(sourceId,address,port,{operation,sessionId,line,columns},{vrf:this.clientVRFs.get(sourceId+'|'+sessionId),source:port===22?this.engine.getDevice(sourceId)?.config.features.ssh?.sourceInterface:undefined});this.wait(result);return result;}
   disconnect(sourceId: string, address: string, port: number, sessionId: string): ServiceResult {
-    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'close', sessionId },{vrf:this.clientVRFs.get(sourceId+'|'+sessionId)});
+    const result = this.engine.tcpRequest(sourceId, address, port, { operation: 'close', sessionId },{vrf:this.clientVRFs.get(sourceId+'|'+sessionId),source:port===22?this.engine.getDevice(sourceId)?.config.features.ssh?.sourceInterface:undefined});
     this.wait(result);return result;
   }
   archive(device: Device, configuration: string): string {

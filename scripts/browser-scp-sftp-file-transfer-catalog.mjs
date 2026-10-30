@@ -1,0 +1,78 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {readFile,writeFile,mkdir,mkdtemp,rm} from 'node:fs/promises';
+import {pathToFileURL} from 'node:url';
+import {createHash} from 'node:crypto';
+import {parseDocument} from '../src/persistence.ts';
+import {SCP_SFTP_FILE_TRANSFER_COMMANDS as COMMANDS,SCP_SFTP_TRANSFER_STEPS as STEPS} from '../src/lab-catalog.ts';
+
+const require=createRequire(import.meta.url);
+const {chromium}=require(process.env.NETWORKSIM_PLAYWRIGHT_PATH||'/Users/erikpope/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const chrome=process.env.NETWORKSIM_CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const folder='.cache/scp-sftp-file-transfer-catalog-browser',id='scp-sftp-file-transfer',title='SCP/SFTP File Transfer',hash='#/labs/'+id;
+await mkdir(folder,{recursive:true});const html=await readFile('index.html','utf8');await writeFile(folder+'/index.html',html);
+const checks=[],errors=[],externalRequests=[];
+const terminalFixture=JSON.parse(await readFile('tests/fixtures/console-theme-styles.json','utf8'));
+async function assertTerminalTheme(page){
+  await page.locator('#terminal-input').focus();await page.waitForTimeout(200);
+  const theme=await page.locator('html').getAttribute('data-theme'),mobile=page.viewportSize().width<600;
+  const expected=mobile?terminalFixture.mobileThemes[theme].expanded:terminalFixture.themes[theme].normal;
+  const params={ids:expected.map(e=>e.key),props:Object.keys(expected[0].styles)};
+  const actual=await page.locator('#console-panel').evaluate((root,{ids,props})=>[root,...root.querySelectorAll('*')].filter(e=>ids.includes(e.id)).map(e=>({key:e.id,styles:Object.fromEntries(props.map(p=>[p,getComputedStyle(e)[p]]))})),params);
+  assert.deepEqual(actual,expected,'CLI font, colors, cursor and controls must retain their established styles');
+}
+const close=page=>page.locator('[data-action=close-dialog]').first().click();
+const progress=(page,n)=>page.waitForFunction(n=>document.querySelector('[data-guide-progress]')?.textContent===`${n} of 10 tasks complete`,n);
+const prompt=(page,text)=>page.waitForFunction(text=>document.querySelector('#terminal-prompt')?.textContent===text,text);
+async function command(page,line){await page.locator('#terminal-input').fill(line);await page.locator('#terminal-input').press('Enter');}
+async function output(page,line){const before=await page.locator('#terminal-output').textContent();await command(page,line);return (await page.locator('#terminal-output').textContent()).slice(before.length).replace(/\r?\n/g,'');}
+async function dockClose(page){if(await page.locator('[data-action=close-dock]').isVisible())await page.locator('[data-action=close-dock]').click();}
+async function openNode(page,name){await dockClose(page);await page.locator('[data-action=fit]').click();await page.locator(`[data-device="device-scp-sftp-${name.toLowerCase()}"] .device-body`).dblclick();}
+async function enable(page,name){
+ await openNode(page,name);
+ if(await page.locator('#terminal-prompt').textContent()==='Username:'){await command(page,'backup');await prompt(page,'Password:');await command(page,'ScpLab123');await prompt(page,'R2>');}
+ if((await page.locator('#terminal-prompt').textContent()).endsWith('>')){await command(page,'enable');if(await page.locator('#terminal-prompt').textContent()==='Password:')await command(page,'EnableLab123');}
+ await prompt(page,name+'#');await command(page,'terminal length 0');
+}
+async function detail(page){
+ await dockClose(page);await page.locator('.header-actions [data-action=lab-catalog]').click();const section=page.locator('[data-catalog-section="Services & Security"]');assert.equal(await section.getAttribute('aria-label'),'Services & Security, 4 labs');assert.equal(await section.locator('.catalog-count').textContent(),'4');await section.click();await page.locator(`[data-catalog-lab="${id}"]`).click();
+}
+async function guide(page,n){await dockClose(page);await page.locator('#lab-guide-button').click();await progress(page,n);}
+async function ping(page){for(const id of ['reach-r2','reach-sftp']){await page.locator(`[data-guide-test="${id}"]`).click();await page.waitForFunction(id=>document.querySelector(`[data-test-status="${id}"]`)?.textContent==='3 of 3 replies received.',id);}}
+async function copy(page,line,password,pattern=/bytes copied/){
+ await command(page,line);await prompt(page,'Password:');assert.equal(await page.locator('#terminal-input').getAttribute('type'),'password');const text=await output(page,password);await prompt(page,'R1#');assert.match(text,pattern);assert.equal(await page.locator('#terminal-input').getAttribute('type'),'text');assert.ok(!(await page.locator('#terminal-output').textContent()).includes(password));return text;
+}
+async function transfers(page){await enable(page,'R1');for(const step of STEPS)await copy(page,step.command,step.password);}
+async function scenario(theme,width){
+ const profile=await mkdtemp(`${folder}/profile-${theme}-${width}-`),context=await chromium.launchPersistentContext(profile,{executablePath:chrome,headless:true,viewport:{width,height:width<600?844:1000},isMobile:width<600,hasTouch:width<600});
+ const page=context.pages()[0]??await context.newPage();page.setDefaultTimeout(30000);page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(/^https?:/.test(r.url()))externalRequests.push(r.url());});await page.route(/^https?:\/\//,r=>r.abort());
+ await page.addInitScript(t=>{localStorage.setItem('network-sim.theme.v1',t);window.qaStartupWorkspace=localStorage.getItem('network-sim.workspace.v1');window.qaToasts=[];addEventListener('DOMContentLoaded',()=>{const e=document.querySelector('#toast');if(e)new MutationObserver(()=>window.qaToasts.push(e.textContent)).observe(e,{childList:true,subtree:true,characterData:true});});},theme);
+ try{
+  const artifact=`${folder}/index-${theme}-${width}.html`;await writeFile(artifact,html);await page.goto(pathToFileURL(process.cwd()+'/'+artifact).href);await detail(page);
+  assert.ok(page.url().endsWith(hash));assert.match(await page.locator('.catalog-meta').first().textContent(),/CCNA · Services & Security/);assert.equal(await page.locator('.catalog-tasks').first().locator('li').count(),10);assert.equal(await page.locator('.catalog-table tbody tr').count(),4);
+  await page.locator('.catalog-reference summary').click();for(const phrase of ['ip ssh source-interface GigabitEthernet0/0','aaa authorization exec default local','ip scp server enable','copy scp://backup@192.0.2.2/scp-readme.txt','copy startup-config sftp://archive@192.168.100.10/r1-startup.cfg','unsupported','1 MiB'])assert.ok((await page.locator('.catalog-reference').textContent()).includes(phrase));
+  await page.locator('[data-catalog-mode=practice]').click();await page.waitForFunction(()=>document.querySelectorAll('#world .device').length===3);await guide(page,0);await close(page);
+  for(const [name,lines]of Object.entries(COMMANDS)){await openNode(page,name);for(const line of lines)await command(page,line);await prompt(page,name+'#');}
+  await guide(page,4);await ping(page);await progress(page,6);await close(page);
+  await enable(page,'R1');await copy(page,STEPS[0].command,'WrongLab123',/Authentication failed/);await copy(page,'copy scp://backup@192.0.2.2/missing.txt flash:missing.txt','ScpLab123',/File not found/);await copy(page,'copy sftp://backup@192.0.2.2/scp-readme.txt flash:unsupported.txt','ScpLab123',/unsupported/);await guide(page,6);await close(page);
+  await transfers(page);assert.match(await output(page,'more flash:scp-readme.txt'),/IOS SCP endpoint: R2/);assert.match(await output(page,'more flash:sftp-readme.txt'),/Text backup endpoint: PC1/);await copy(page,'copy sftp://archive@192.168.100.10/r1-startup.cfg flash:sftp-backup-check.cfg','SftpLab123');assert.match(await output(page,'more flash:sftp-backup-check.cfg'),/hostname R1/);await assertTerminalTheme(page);
+  await guide(page,10);assert.equal(await page.locator('[data-guide-completion]').isVisible(),true);await close(page);
+  await enable(page,'R2');assert.match(await output(page,'more flash:r1-startup.cfg'),/ip ssh source-interface GigabitEthernet0\/0/);for(const line of ['configure terminal','no ip scp server enable','end'])await command(page,line);await guide(page,9);await close(page);await enable(page,'R1');await copy(page,STEPS[0].command,'ScpLab123',/disabled/);
+  await enable(page,'R2');for(const line of ['configure terminal','ip scp server enable','end','write memory'])await command(page,line);await guide(page,10);await close(page);
+  await enable(page,'R1');assert.match(await output(page,'delete flash:scp-readme.txt'),/File deleted/);await guide(page,9);assert.equal(await page.locator('[data-objective=scp-download]').getAttribute('data-complete'),'false');await close(page);await enable(page,'R1');await copy(page,STEPS[0].command,'ScpLab123');await guide(page,10);await close(page);
+  await page.waitForTimeout(1200);const saved=await page.evaluate(()=>localStorage.getItem('network-sim.workspace.v1'));const doc=parseDocument(saved),r1=doc.lab.devices.find(d=>d.config.hostname==='R1'),r2=doc.lab.devices.find(d=>d.config.hostname==='R2'),pc=doc.lab.devices.find(d=>d.config.hostname==='PC1');assert.equal(r1.config.features.files['scp-readme.txt'],r2.config.features.files['scp-readme.txt']);assert.equal(r2.config.features.files['r1-startup.cfg'],pc.config.services.sshFiles.files['r1-startup.cfg']);assert.ok(!Object.hasOwn(r1.config.features.files,'missing.txt'));
+  await page.reload();try{await page.waitForFunction(t=>document.querySelector('#lab-name')?.textContent===t,title);}catch(error){await writeFile(folder+'/reload-failure.json',JSON.stringify({before:JSON.parse(saved),after:await page.evaluate(()=>({name:document.querySelector('#lab-name')?.textContent,startup:window.qaStartupWorkspace,workspace:localStorage.getItem('network-sim.workspace.v1'),toasts:window.qaToasts}))},null,2));throw error;}
+  await guide(page,10);assert.ok(await page.locator('.dialog').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&e.scrollWidth<=e.clientWidth+1;}));await page.locator('[data-guide-progress]').scrollIntoViewIfNeeded();await page.locator('#toast').evaluate(e=>e.style.display='none');await page.screenshot({path:`${folder}/guide-${theme}-${width}.png`,animations:'disabled'});await close(page);await enable(page,'R2');assert.match(await output(page,'show privilege'),/level is 15/);await dockClose(page);await page.locator('[data-action=fit]').click();await page.screenshot({path:`${folder}/topology-${theme}-${width}.png`,animations:'disabled'});
+  await detail(page);await page.locator('[data-catalog-mode=completed]').click();await page.locator('#cancel-lab-import').click();assert.equal(await page.locator('#lab-name').textContent(),title);await detail(page);await page.locator('[data-catalog-mode=completed]').click();await page.locator('#lab-import-save').click();await page.waitForFunction(()=>document.querySelector('#lab-name')?.textContent.includes('Completed'));await guide(page,4);await ping(page);await close(page);await transfers(page);await guide(page,10);
+  checks.push(`${theme} ${width}px: four Services & Security labs; ten-task guide, four-row address plan, zero-credit practice, published IOS source-interface/AAA/SSHv2/SCP configuration; real ping and four authenticated TCP22 copies; hidden passwords, rejected password/missing file/IOS SFTP; file read-back, service outage/recovery, deleted-file live regression/repair, saved evidence and content after reload, fresh console authentication/enable, completed reference requiring actual traffic and copies, save/cancel protection, responsive guide/topology and unchanged CLI golden styles`);process.stdout.write(`PASS ${theme} ${width}\n`);
+ }catch(error){await writeFile(`${folder}/failure-${theme}-${width}.json`,JSON.stringify(await page.evaluate(()=>({name:document.querySelector('#lab-name')?.textContent,prompt:document.querySelector('#terminal-prompt')?.textContent,terminal:document.querySelector('#terminal-output')?.textContent,toasts:window.qaToasts})),null,2));await page.screenshot({path:`${folder}/failure-${theme}-${width}.png`});throw error;}
+ finally{await context.close();await rm(profile,{recursive:true,force:true});}
+}
+for(const theme of ['light','dark'])for(const width of [1440,390,320])await scenario(theme,width);
+const browser=await chromium.launch({executablePath:chrome,headless:true});
+try{
+ for(const theme of ['light','dark']){
+  const page=await browser.newPage({viewport:{width:390,height:844}}),base='https://training.example/campus/NetworkSim/index.html?class=ccna&room=2';page.on('pageerror',e=>errors.push(e.message));await page.route(/^https?:\/\//,r=>r.fulfill({status:200,contentType:'text/html',body:html}));await page.addInitScript(t=>{localStorage.setItem('network-sim.theme.v1',t);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copiedLabURL=text;}}});},theme);await page.goto(base+hash);await page.getByRole('heading',{name:title,exact:true}).waitFor();assert.equal(await page.locator('#world .device').count(),0);await page.locator('[data-catalog-copy]').click();await page.waitForFunction(expected=>window.copiedLabURL===expected,base+hash);await page.locator('[data-catalog-back]').click();const section=page.locator('[data-catalog-section="Services & Security"]');assert.equal(await section.getAttribute('aria-pressed'),'true');assert.equal(await section.locator('.catalog-count').textContent(),'4');assert.equal(await page.locator(`[data-catalog-lab="${id}"]`).getAttribute('href'),base+hash);checks.push(`${theme}: permalink preserves current host/path/query and returns to four Services & Security labs without replacing the workspace`);process.stdout.write(`PASS ${theme} permalink\n`);await page.close();
+ }
+ assert.deepEqual(errors,[]);assert.deepEqual(externalRequests,[]);await writeFile(folder+'/validation.json',JSON.stringify({artifactSha256:createHash('sha256').update(html).digest('hex'),checks,errors,externalRequests},null,2)+'\n');
+}finally{await browser.close();}

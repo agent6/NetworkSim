@@ -1,5 +1,5 @@
 import type {Simulator,ServiceResult} from './engine.ts';import type {Device} from './model.ts';import {renderConfig} from './config-renderer.ts';import {writeFlashFile} from './filesystem.ts';
-export interface SSHFileRequest {application:'ssh-file';protocol:'scp'|'sftp';operation:'read'|'write';username:string;password:string;path:string;content?:string}
+export interface SSHFileRequest {application:'ssh-file';protocol:'scp'|'sftp';operation:'read'|'write';username:string;password:string;path:string;content?:string;transferId?:string}
 export function sshFileEnabled(d:Device):boolean{return d.kind==='server'?false:['pc','laptop'].includes(d.kind)?!!d.config.services.sshFiles?.enabled:['router','switch','l3switch','poeswitch','wlc'].includes(d.kind)&&!!d.config.features.managementSettings?.scp&&!!d.config.features.ssh?.keys;}
 export type SSHFileAuthenticator=(username:string,password:string)=>{accepted:boolean;privilege?:number};
 /** Structured teaching SCP/SFTP operation over delivered TCP; SSH encryption is not emulated. */
@@ -18,9 +18,16 @@ export function handleSSHFile(engine:Simulator,d:Device,r:SSHFileRequest,source:
  let content:string|undefined;if(r.operation==='read'){const files=host?service.files:d.config.features.files;content=!host&&name==='running-config'?renderConfig(d).join('\n'):!host&&name==='startup-config'?d.startupConfig?renderConfig(d,d.startupConfig).join('\n'):undefined:files&&Object.hasOwn(files,name)?files[name]:undefined;}
  else{if(service.readOnly)return failure('File service is read-only');content=r.content;if(typeof content!=='string'||new TextEncoder().encode(content).length>1048576)return failure('File must contain at most 1 MiB of text');if(host)d.config.services.sshFiles.files={...(service.files??{}),[name]:content};else{try{writeFlashFile(d,name,content);}catch(error){return failure(String(error));}}engine.notify();}
  if(typeof content!=='string')return failure('File not found');const bytes=new TextEncoder().encode(content).length;
- const transfers=d.runtime.features.sshFileTransfers??=[];transfers.push({time:engine.clock.now(),source,protocol:r.protocol,operation:r.operation,path:name,bytes,username:r.username});if(transfers.length>500)transfers.shift();
+ const transfers=d.runtime.features.sshFileTransfers??=[];transfers.push({time:engine.clock.now(),source,protocol:r.protocol,operation:r.operation,path:name,bytes,username:r.username,transferId:r.transferId});if(transfers.length>500)transfers.shift();
  engine.emit({nodeId:d.id,protocol:r.protocol.toUpperCase(),label:r.operation==='read'?'File read':'File written',detail:name+' · '+bytes+' bytes',disposition:'success'});
- return {protocol:r.protocol,bytes,...r.operation==='read'?{content}:{}};
+ return {protocol:r.protocol,bytes,transferId:r.transferId,...r.operation==='read'?{content}:{}};
 }
 export function installSSHFileService(engine:Simulator):void{engine.registerTCPService(22,sshFileEnabled,(d,payload,source,destination)=>payload?.application==='ssh-file'?handleSSHFile(engine,d,payload,source,destination):{error:'This listener provides the modeled SSH file service only'});}
-export function transferSSHFile(engine:Simulator,sourceId:string,address:string,request:Omit<SSHFileRequest,'application'>):ServiceResult{return engine.tcpRequest(sourceId,address,22,{...request,application:'ssh-file'});}
+let transferSequence=0;
+export function transferSSHFile(engine:Simulator,sourceId:string,address:string,request:Omit<SSHFileRequest,'application'>):ServiceResult{return engine.tcpRequest(sourceId,address,22,{...request,application:'ssh-file',transferId:'ssh-file-'+(++transferSequence)},{source:engine.getDevice(sourceId)?.config.features.ssh?.sourceInterface});}
+/** Record only after the client has received success and committed its local file. No credentials or contents. */
+export function recordSSHFileCopy(engine:Simulator,sourceId:string,address:string,request:{protocol:'scp'|'sftp';operation:'read'|'write';username:string;path:string;localPath:string},result:ServiceResult):void{
+ if(result.status!=='success'||typeof result.transferId!=='string')return;
+ const d=engine.getDevice(sourceId);if(!d)return;
+ const copies=d.runtime.features.sshFileCopies??=[];copies.push({...request,path:request.path.replace(/^\/+|^flash:/g,''),address,transferId:result.transferId,bytes:result.bytes,time:engine.clock.now()});if(copies.length>500)copies.shift();
+}

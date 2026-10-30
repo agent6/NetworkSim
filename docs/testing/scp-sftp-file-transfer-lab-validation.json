@@ -1,0 +1,88 @@
+{
+  "feature": {
+    "title": "SCP/SFTP File Transfer",
+    "catalogId": "scp-sftp-file-transfer",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 4,
+    "devices": 3,
+    "links": 2,
+    "tasks": 10,
+    "addressingRows": 4,
+    "permalink": "#/labs/scp-sftp-file-transfer",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "R2 Gi0/0 192.0.2.2/24 \u2014 R1 Gi0/0 192.0.2.1/24; R1 Gi0/1 192.168.100.1/24 \u2014 PC1 Gi0 192.168.100.10/24. PC1 uses gateway 192.168.100.1. R2 is a learner-configured IOS SCP server; PC1 is a prepared SFTP workstation.",
+  "verificationNotes": [
+    "Practice starts at zero credit with ready addressing and reference files. The completed reference applies published router configuration only and earns four configuration goals. Two actual pings and four successful file transfers are required for ten tasks.",
+    "R2 uses privilege-15 local authentication and EXEC authorization, 2048-bit RSA keys, SSHv2, an SSH-only VTY and ip scp server enable. Its independent console uses local AAA and an enable secret after reopening.",
+    "R1 ip ssh source-interface is implemented, persisted, rendered and used for SSH and SCP/SFTP client requests. An unavailable or unaddressed source fails without silently reverting to another interface.",
+    "Each transfer objective combines correlated client/server completion evidence with a live exact-content comparison. A matching planted file, password prompt, receiver write without its returned success, unrelated transaction or wrong endpoint cannot finish a task.",
+    "Four task transfers download reference text files and back up saved startup-config with both protocols. Copies into flash remain files; they do not apply configuration. A read-back copy inspects the SFTP backup.",
+    "Wrong credentials, missing paths, disabled SCP, insufficient IOS privilege, a disabled SFTP listener, read-only SFTP host, packet filtering and lost responses fail without false client credit. IOS SFTP server mode remains unsupported.",
+    "Successful traffic/transfer observations survive portable saves and browser reopening, while current configuration and file integrity remain live. Changing startup-config or a destination file requires a new backup.",
+    "The earlier removal of generic Server TFTP and SCP/SFTP administration pages is preserved. The lab uses a prepared PC SFTP endpoint, without adding a Server service page.",
+    "This offline text-file model uses simulated TCP22, authentication and delivery, with a 1 MiB file limit. It does not emulate SSH encryption, host-key negotiation, binary images or live CML; no claim of those validations is made."
+  ],
+  "sources": [
+    {
+      "title": "Cisco IOS XE 17 Secure Copy",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/sec-vpn/b-security-vpn/m_sec-usr-ssh-sec-copy-0.html"
+    },
+    {
+      "title": "Cisco Catalyst 9200 IOS XE 17.7 SFTP client configuration",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-7/configuration_guide/sec/b_177_sec_9200_cg/configuring_sftp.html"
+    }
+  ],
+  "validation": {
+    "targetedTests": 35,
+    "targetedPassed": 35,
+    "typecheck": "passed",
+    "fullSuite": {
+      "tests": 1757,
+      "passed": 1757,
+      "failed": 0,
+      "command": "npm run check"
+    },
+    "build": "passed; generated root and dist HTML are identical",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: four Services & Security labs; ten-task guide, four-row address plan, zero-credit practice, published IOS source-interface/AAA/SSHv2/SCP configuration; real ping and four authenticated TCP22 copies; hidden passwords, rejected password/missing file/IOS SFTP; file read-back, service outage/recovery, deleted-file live regression/repair, saved evidence and content after reload, fresh console authentication/enable, completed reference requiring actual traffic and copies, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "light 390px: four Services & Security labs; ten-task guide, four-row address plan, zero-credit practice, published IOS source-interface/AAA/SSHv2/SCP configuration; real ping and four authenticated TCP22 copies; hidden passwords, rejected password/missing file/IOS SFTP; file read-back, service outage/recovery, deleted-file live regression/repair, saved evidence and content after reload, fresh console authentication/enable, completed reference requiring actual traffic and copies, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "light 320px: four Services & Security labs; ten-task guide, four-row address plan, zero-credit practice, published IOS source-interface/AAA/SSHv2/SCP configuration; real ping and four authenticated TCP22 copies; hidden passwords, rejected password/missing file/IOS SFTP; file read-back, service outage/recovery, deleted-file live regression/repair, saved evidence and content after reload, fresh console authentication/enable, completed reference requiring actual traffic and copies, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "dark 1440px: four Services & Security labs; ten-task guide, four-row address plan, zero-credit practice, published IOS source-interface/AAA/SSHv2/SCP configuration; real ping and four authenticated TCP22 copies; hidden passwords, rejected password/missing file/IOS SFTP; file read-back, service outage/recovery, deleted-file live regression/repair, saved evidence and content after reload, fresh console authentication/enable, completed reference requiring actual traffic and copies, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "dark 390px: four Services & Security labs; ten-task guide, four-row address plan, zero-credit practice, published IOS source-interface/AAA/SSHv2/SCP configuration; real ping and four authenticated TCP22 copies; hidden passwords, rejected password/missing file/IOS SFTP; file read-back, service outage/recovery, deleted-file live regression/repair, saved evidence and content after reload, fresh console authentication/enable, completed reference requiring actual traffic and copies, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "dark 320px: four Services & Security labs; ten-task guide, four-row address plan, zero-credit practice, published IOS source-interface/AAA/SSHv2/SCP configuration; real ping and four authenticated TCP22 copies; hidden passwords, rejected password/missing file/IOS SFTP; file read-back, service outage/recovery, deleted-file live regression/repair, saved evidence and content after reload, fresh console authentication/enable, completed reference requiring actual traffic and copies, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "light: permalink preserves current host/path/query and returns to four Services & Security labs without replacing the workspace",
+        "dark: permalink preserves current host/path/query and returns to four Services & Security labs without replacing the workspace"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches the existing desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology and guide",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "045fe3e8408b0f126a4b2efc87eb8f043222a844e9de2794da44030b2999c670"
+  }
+}
