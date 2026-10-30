@@ -7,6 +7,7 @@ import {endpointVoicePolicy, endpointNetworkPort} from './endpoint.ts';
 import {ospfLiveDetail} from './ospf-packets.ts';
 import {localSSHLoginSnapshot} from './management.ts';
 import {ownRecordValue} from './record-map.ts';
+import {validACLLabCriterion,matchesACLLabCriterion,type ACLLabCriterion} from './acl-lab.ts';
 import {validNATCriterion,matchesNATCriterion,type NATCriterion} from './nat-lab.ts';
 import {validFileTransferCriterion,matchesFileTransferCriterion,type FileTransferCriterion} from './file-transfer-lab.ts';
 import {validAAAClientCriterion,matchesAAAClientCriterion,type AAAClientCriterion} from './aaa-lab.ts';
@@ -15,6 +16,7 @@ export type Criterion =
   | AAAClientCriterion
   | FileTransferCriterion
   | NATCriterion
+  | ACLLabCriterion
   | { kind: "all" | "any"; criteria: Criterion[] }
   | { kind: "local-user"; device: string; username: string; privilege: number }
   | { kind: "local-management"; device: string; setting: "enable-secret" | "console-login" | "ssh-server" | "vty-login" }
@@ -108,6 +110,11 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     if (v.kind === "link") return text(v.a, 128) && text(v.b, 128);
     if (!text(v.device, 128)) return false;
     switch (v.kind) {
+      case "standard-acl":
+      case "acl-binding":
+      case "acl-ping":
+      case "acl-http":
+        return validACLLabCriterion(v);
       case "nat-interface":
       case "nat-static":
       case "nat-ping":
@@ -343,6 +350,7 @@ export function matches(
   const d = device(sim, criterion.device);
   if (!d) return false;
   if (['tacacs-server','radius-server','aaa-group','aaa-method','aaa-line','tacacs-session','radius-session'].includes(criterion.kind))return matchesAAAClientCriterion(sim,d,criterion as AAAClientCriterion);
+  if (['standard-acl','acl-binding','acl-ping','acl-http'].includes(criterion.kind))return matchesACLLabCriterion(sim,d,criterion as ACLLabCriterion);
   if (['nat-interface','nat-static','nat-ping','nat-http','nat-outbound-http','pat-acl','pat-rule','pat-sharing'].includes(criterion.kind))return matchesNATCriterion(sim,d,criterion as NATCriterion);
   if (['scp-server','ssh-file-client','file-transfer','file-copy'].includes(criterion.kind))return matchesFileTransferCriterion(sim,d,criterion as FileTransferCriterion);
   if (criterion.kind === "local-user") {
@@ -548,7 +556,7 @@ export function lessonProgress(sim: Simulator):
       );
     }
     const result = matches(sim, c);
-    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing") return result;
+    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http") return result;
     validKeys.add(key);
     if (result) observations.add(key);
     return result || observations.has(key);
@@ -556,7 +564,7 @@ export function lessonProgress(sim: Simulator):
   const rows = lesson.objectives.map((objective) => {
     const observed = observe(objective.criterion, JSON.stringify(objective.id));
     // Traffic, login and fault observations record accomplishments; configuration stays live.
-    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing";
+    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http";
     if (historical && observed)
       completed.add(objective.id);
     return {

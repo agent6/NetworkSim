@@ -1,0 +1,90 @@
+{
+  "feature": {
+    "title": "Standard IPv4 ACL",
+    "catalogId": "standard-ipv4-acl",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 7,
+    "devices": 7,
+    "links": 6,
+    "tasks": 10,
+    "addressingRows": 9,
+    "permalink": "#/labs/standard-ipv4-acl",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.10.10/24 and PC2 192.168.10.20/24 connect through SW1 to R1 Gi0/0 192.168.10.1/24. PC3 192.168.40.10/24 connects to R1 Gi0/3 192.168.40.1/24. R1 Gi0/1 192.168.20.1/24 connects to protected SRV1 192.168.20.10/24; Gi0/2 192.168.30.1/24 connects to control SRV2 192.168.30.10/24. All hosts have gateways; both servers have HTTP ready.",
+  "verificationNotes": [
+    "Practice begins at zero credit. The completed reference configures only R1 and earns two live configuration goals, with no packet evidence preloaded. Five ping checks and three HTTP checks supply the eight traffic achievements.",
+    "Named standard ACL SERVER-ACCESS permits host 192.168.10.10 at sequence10 and denies source subnet 192.168.10.0/24 at sequence20. PC2 matches the explicit subnet deny; PC3 is denied implicitly. Standard filtering is source-only and the /24 wildcard is 0.0.0.255.",
+    "The ACL is applied only outbound on R1 Gi0/1 near protected SRV1. The live binding check requires operational placement and no extra IPv4 interface bindings. Denied PCs must still reach unfiltered SRV2, distinguishing selective access control from broad connectivity loss.",
+    "Bounded, secret-free runtime ACL decisions record only actual applied interface filtering, including packet identity, direction, rule sequence or implicit decision, and TCP transaction. Advisory ACL queries and NAT/QoS classifier calls cannot create packet-filter proof. Existing permit/deny logic and IOS counters are preserved.",
+    "Permitted ICMP requires a corresponding interface permit, destination request acceptance and successful return. Denial requires the intended interface decision and the matching real drop. A powered-off endpoint, wrong direction, missing route, unrelated drop or raised hit counter cannot finish it.",
+    "HTTP permits require complete client/server delivery with the expected page and applied request permit. Blocked HTTP requires the actual SYN transaction and intended explicit/implicit drop, rather than a generic HTTP failure.",
+    "Counter checks distinguish sequence10 permit, sequence20 deny and implicit deny. Clearing counters changes neither policy nor achievements; implicit denial does not create a visible ACE or explicit sequence counter.",
+    "Wrong placement on the shared source LAN also cuts PC2 off from the control server. Wrong direction filters server responses instead of proving the intended client-source restriction. Missing host permit lets the broader subnet deny match PC1. Repairs and all published verification commands are tested.",
+    "Achieved packet tasks survive portable saves and browser reopening, while policy and binding remain live. Fresh runtime counters and decision evidence are rebuilt after load. The catalog and guide use the existing offline simulator and do not claim new live CML validation."
+  ],
+  "sources": [
+    {
+      "title": "Cisco: Creating an IP Access List and Applying It to an Interface",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/security-vpn/security-vpn/m_sec-create-ip-apply-0.html"
+    },
+    {
+      "title": "Cisco: Configure Commonly Used IP ACLs",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/access-lists/26448-ACLsamples.html"
+    }
+  ],
+  "validation": {
+    "targetedTests": 50,
+    "targetedPassed": 50,
+    "typecheck": "passed",
+    "fullSuite": {
+      "tests": 1808,
+      "passed": 1808,
+      "failed": 0,
+      "command": "npm run check"
+    },
+    "build": "passed; generated root and dist HTML are identical",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: seven Services & Security labs, ten-task guide and nine-row plan, zero-credit practice and prerequisite-gated tests, named standard host/subnet policy with exclusive outbound binding, permitted ICMP and HTTP, packet-backed explicit and implicit denies from distinct clients, both denied PCs retain control-server ping/HTTP, Windows commands and separate explicit-rule counters, implicit deny creates no visible ACE/counter, clear counters, unbound-list and missing-permit faults with genuine changed access and repairs, saved achievements with fresh counters after reopen, completed reference requires new traffic, save/cancel protection, clicked node centers remain inside the workspace after Fit, responsive guide/topology and unchanged CLI golden styles",
+        "light 390px: seven Services & Security labs, ten-task guide and nine-row plan, zero-credit practice and prerequisite-gated tests, named standard host/subnet policy with exclusive outbound binding, permitted ICMP and HTTP, packet-backed explicit and implicit denies from distinct clients, both denied PCs retain control-server ping/HTTP, Windows commands and separate explicit-rule counters, implicit deny creates no visible ACE/counter, clear counters, unbound-list and missing-permit faults with genuine changed access and repairs, saved achievements with fresh counters after reopen, completed reference requires new traffic, save/cancel protection, clicked node centers remain inside the workspace after Fit, responsive guide/topology and unchanged CLI golden styles",
+        "light 320px: seven Services & Security labs, ten-task guide and nine-row plan, zero-credit practice and prerequisite-gated tests, named standard host/subnet policy with exclusive outbound binding, permitted ICMP and HTTP, packet-backed explicit and implicit denies from distinct clients, both denied PCs retain control-server ping/HTTP, Windows commands and separate explicit-rule counters, implicit deny creates no visible ACE/counter, clear counters, unbound-list and missing-permit faults with genuine changed access and repairs, saved achievements with fresh counters after reopen, completed reference requires new traffic, save/cancel protection, clicked node centers remain inside the workspace after Fit, responsive guide/topology and unchanged CLI golden styles",
+        "dark 1440px: seven Services & Security labs, ten-task guide and nine-row plan, zero-credit practice and prerequisite-gated tests, named standard host/subnet policy with exclusive outbound binding, permitted ICMP and HTTP, packet-backed explicit and implicit denies from distinct clients, both denied PCs retain control-server ping/HTTP, Windows commands and separate explicit-rule counters, implicit deny creates no visible ACE/counter, clear counters, unbound-list and missing-permit faults with genuine changed access and repairs, saved achievements with fresh counters after reopen, completed reference requires new traffic, save/cancel protection, clicked node centers remain inside the workspace after Fit, responsive guide/topology and unchanged CLI golden styles",
+        "dark 390px: seven Services & Security labs, ten-task guide and nine-row plan, zero-credit practice and prerequisite-gated tests, named standard host/subnet policy with exclusive outbound binding, permitted ICMP and HTTP, packet-backed explicit and implicit denies from distinct clients, both denied PCs retain control-server ping/HTTP, Windows commands and separate explicit-rule counters, implicit deny creates no visible ACE/counter, clear counters, unbound-list and missing-permit faults with genuine changed access and repairs, saved achievements with fresh counters after reopen, completed reference requires new traffic, save/cancel protection, clicked node centers remain inside the workspace after Fit, responsive guide/topology and unchanged CLI golden styles",
+        "dark 320px: seven Services & Security labs, ten-task guide and nine-row plan, zero-credit practice and prerequisite-gated tests, named standard host/subnet policy with exclusive outbound binding, permitted ICMP and HTTP, packet-backed explicit and implicit denies from distinct clients, both denied PCs retain control-server ping/HTTP, Windows commands and separate explicit-rule counters, implicit deny creates no visible ACE/counter, clear counters, unbound-list and missing-permit faults with genuine changed access and repairs, saved achievements with fresh counters after reopen, completed reference requires new traffic, save/cancel protection, clicked node centers remain inside the workspace after Fit, responsive guide/topology and unchanged CLI golden styles",
+        "light: permalink preserves current host/path/query and returns to seven Services & Security labs without replacing the workspace",
+        "dark: permalink preserves current host/path/query and returns to seven Services & Security labs without replacing the workspace"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches the existing desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology and guide",
+        "light 320px topology",
+        "dark desktop topology",
+        "dark 390px and 320px guides"
+      ],
+      "canvasFit": "target node centers remain inside the workspace in every navigation step, including 320px",
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "79d2977f49aa60594e6d4e9b6b38bee12eb4f484056c0f5703c37df2138474bd"
+  }
+}

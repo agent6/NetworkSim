@@ -673,7 +673,7 @@ export class Simulator {
   private receiveIP(d: Device, input: string, packet: IPPacket, ingressQosHandled = false, tunnelPeer?:string): void {
     const c = d.config.interfaces[input]; packet.vrf = c.vrf;
     if (!ingressQosHandled && !applyQos(this, d, input, 'in', packet, (name, p) => this.aclAllows(d, name, p))) return;
-    if (!this.aclAllows(d, isIPv6(packet.destination) ? c.features.ipv6AclIn : c.features.aclIn, packet)) { this.packetEvent(d, packet, 'Ingress ACL denied', 'Access list ' + c.features.aclIn, 'drop', input); this.icmpError(d, packet, 'Administratively prohibited', input); return; }
+    if (!this.aclAllows(d, isIPv6(packet.destination) ? c.features.ipv6AclIn : c.features.aclIn, packet,{port:input,direction:'in'})) { this.packetEvent(d, packet, 'Ingress ACL denied', 'Access list ' + c.features.aclIn, 'drop', input); this.icmpError(d, packet, 'Administratively prohibited', input); return; }
     if(c.features.urpf&&isIPv4(packet.source)&&packet.source!=='0.0.0.0'){
       const policy=c.features.urpf,paths=resolveForwardingPaths(d,packet.source,c.vrf,port=>this.interfaceUp(d.id,port)),pass=paths.some(path=>!/^Null/i.test(path.port)&&(path.route.prefix>0||policy.allowDefault)&&(policy.mode==='any'||path.port===input));
       if(!pass&&!(policy.acl&&this.aclAllows(d,policy.acl,packet))){const counters=d.runtime.features.urpfDrops??={};counters[input]=(counters[input]??0)+1;this.packetEvent(d,packet,'uRPF verification failed','Source address has no permitted reverse forwarding path.','drop',input);return;}
@@ -718,7 +718,7 @@ export class Simulator {
     if(packet.protocol==='tcp'&&((packet.body?.kind==='tcp-channel'&&['syn','syn-ack'].includes(packet.body.phase))||['tcp-syn','tcp-syn-ack'].includes(packet.body?.kind))){const limits=[d.config.interfaces[route.port]?.features.tcpMss,input?d.config.interfaces[input]?.features.tcpMss:undefined].filter((value):value is number=>typeof value==='number');if(limits.length)packet.body.mss=Math.min(packet.body.mss??1024,...limits);}
     const translated = this.translateOutbound(d, input, route.port, packet); if (!translated) { if (input) this.icmpError(d, packet, 'NAT address pool exhausted', input); return; } packet = translated;
     if (!applyQos(this, d, route.port, 'out', packet, (name, p) => this.aclAllows(d, name, p))) return;
-    if (egressAclRequired(d,input) && !this.aclAllows(d, isIPv6(packet.destination) ? c.features.ipv6AclOut : c.features.aclOut, packet)) { this.packetEvent(d, packet, 'Egress ACL denied', 'Access list ' + c.features.aclOut, 'drop', route.port); if (input) this.icmpError(d, packet, 'Administratively prohibited', input); else this.failLocal(d.id, packet, 'Administratively prohibited'); return; }
+    if (egressAclRequired(d,input) && !this.aclAllows(d, isIPv6(packet.destination) ? c.features.ipv6AclOut : c.features.aclOut, packet,{port:route.port,direction:'out'})) { this.packetEvent(d, packet, 'Egress ACL denied', 'Access list ' + c.features.aclOut, 'drop', route.port); if (input) this.icmpError(d, packet, 'Administratively prohibited', input); else this.failLocal(d.id, packet, 'Administratively prohibited'); return; }
     if (this.cryptoServices.protect(d, route.port, packet)) return;
     const mtu = Math.max(68, Number(c.features.ipMtu ?? c.mtu));
     recordFlow(this, d, input, route.port, packet);
@@ -935,9 +935,14 @@ export class Simulator {
     return range.periodic.some((p: any) => p.startMinutes <= p.endMinutes ? (p.days.includes(day) && minute >= p.startMinutes && minute < p.endMinutes) : (p.days.includes(day) && minute >= p.startMinutes) || (p.days.includes((day + 6) % 7) && minute < p.endMinutes));
   }
   packetACLPermits(d: Device, name: string | undefined, packet: IPPacket): boolean { return this.aclAllows(d, name, packet); }
-  private aclAllows(d: Device, name: string | undefined, packet: IPPacket): boolean {
+  private aclAllows(d: Device, name: string | undefined, packet: IPPacket, context?: {port:string;direction:'in'|'out'}): boolean {
     if (!name) return true;
     const acl = ownRecordValue(d.config.features.acls, name); if (!acl) return true;
+    // Only applied interface filters create packet evidence; classifier/query calls do not.
+    const decision=(action:'permit'|'deny',sequence?:number,implicit=false)=>{
+      if(context){const rows=d.runtime.features.aclDecisions??=[];rows.push({time:this.clock.now(),name,port:context.port,direction:context.direction,packetId:packet.id,source:packet.source,destination:packet.destination,protocol:packet.protocol,kind:packet.body?.kind,sourcePort:packet.sourcePort,destinationPort:packet.destinationPort,transaction:packet.body?.transaction,action,sequence,implicit});if(rows.length>1000)rows.shift();}
+      return action==='permit';
+    };
     // NX-OS empty RACLs permit packets until the first entry is configured.
     if (d.kind === 'datacenter' && !(acl.entries ?? []).length) return true;
     for (const entry of [...(acl.entries ?? [])].sort((a: any, b: any) => a.sequence - b.sequence)) {
@@ -949,9 +954,9 @@ export class Simulator {
       if (!this.portMatches(packet.sourcePort, entry.sourcePort) || !this.portMatches(packet.destinationPort, entry.destinationPort)) continue;
       if(!aclIcmpMatches(entry,packet))continue;
       if (d.kind !== 'datacenter' || acl.statistics) { const hits = d.runtime.features.aclHits ??= {}; hits[name + ':' + entry.sequence] = (hits[name + ':' + entry.sequence] ?? 0) + 1; }
-      return entry.action === 'permit';
+      return decision(entry.action,entry.sequence);
     }
-    return false;
+    return decision('deny',undefined,true);
   }
   private addressMatches(address: string, rule?: string, wildcard?: string): boolean {
     if (!rule || rule === 'any') return true; rule = rule.replace(/^host\s+/, '');
