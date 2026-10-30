@@ -1,0 +1,93 @@
+{
+  "feature": {
+    "title": "PAT Configuration",
+    "catalogId": "pat-configuration",
+    "group": "CCNP ENCOR",
+    "section": "IP Services",
+    "sectionLabCount": 2,
+    "groupLabCount": 20,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6,
+      "Layer 3": 9
+    },
+    "devices": 7,
+    "links": 6,
+    "tasks": 19,
+    "addressingRows": 8,
+    "notes": 3,
+    "permalink": "#/labs/pat-configuration",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "Three inside PCs192.168.10.10/.20/.30 on SW1, gateway R1 Gi0/0 192.168.10.1/24. R1 Gi0/1 203.0.113.1/24 faces ISP1 Gi0/0 .2; ISP1 Gi0/1 198.51.100.1/24 faces SRV1 .10, gateway .1. SRV1 provides HTTP80 and DNS53 A record app.pat.lab=198.51.100.10; client resolvers prepared. ISP1 has no private-LAN return route. Final interface global203.0.113.1; temporary single-address pool global203.0.113.20/24 with overload.",
+  "verificationNotes": [
+    "Adds the second ENCOR IP Services entry with a plural2-lab badge and independent current-host/path/query share link. Existing ENCOR NAT Configuration and separate CCNA PAT/Static NAT remain unchanged in behavior; other ENCOR sections remain3/6/9.",
+    "Practice starts0/19. Actual R1 CLI configures operational inside/outside roles, exact /24 PAT-CLIENTS classifier, usable default route, interface overload and startup save, earning six live goals without preloaded traffic. Completed reference likewise contains saved interface-only configuration, no pool/static mappings and empty runtime with six live goals.",
+    "Three actual ICMP request/reply pairs require current interface-global bindings with three unique translated identifiers; three independent TCP HTTP200 responses prove delivery for every PC. A separate PC3 explicit nslookup proves real UDP53 PAT, received server query and delivered response restoring the local client port.",
+    "DNS proof correlates active UDP allocation, actual server query name/type/answer/global source and packet ID, R1 Source NAT/global port, parent-linked response at PC3 with correct source/destination ports, and return Destination NAT. Cache-only success, disabled service, receiver-only answer, wrong packet identity/port and missing return translation cannot fabricate the outcome.",
+    "Actual clear-and-switch commands replace interface overload with a single PUBLIC address plus overload. All three pool ping actions must deliver replies; shared-pool proof requires three distinct current identifiers and correlated translated requests/replies. Separate actual PC1 HTTP200 must use pool global203.0.113.20, not an earlier interface-global transaction.",
+    "Removing overload creates basic one-to-one allocation: the first PC works, other hosts exhaust the one address and cannot satisfy pool sharing. In-use rule edits reject until translations are cleared. Final restore clears state, removes the pool rule and pool definition, reinstalls interface overload and saves only the intended final policy.",
+    "Tests cover classifier exclusion without interface filtering, default-route/NAT-role faults, private-return-route shortcuts, extra static mappings, unsaved changes, missing/404 HTTP services, per-client HTTP evidence, allocation uniqueness and packet tampering, clear/recreation, portable reopen, IOS reload, every published verification command, contextual question-mark/Tab syntax and bounded imported criteria.",
+    "Traffic/application achievements persist across offline reopening; dynamic translations, queries and protocol service runtime are rebuilt from new traffic. Roles, classifier, routing, current final rule and healthy startup-save checks remain live. Existing simulation/NAT/TCP/UDP/DNS engine and terminal styling unchanged.",
+    "Scope is IOS IPv4 interface and single-address pool overload for ICMP/TCP/UDP. No claim to static port forwarding, outside-source/hairpin/NAT64, ALGs, exact platform port-allocation behavior or full platform parity. Existing CML NAT replay contracts run in the full suite; no new live CML capture is claimed.",
+    "Chrome file-origin page.reload intermittently lost localStorage before app initialization, including one sequential390px run. The driver now verifies actual offline reopening by closing Chrome, relaunching the same persistent profile and opening the same HTML, without injecting saved workspace state. The final browser matrix uses sequential fresh-session reopening against the unchanged application artifact; initial reload diagnostics were retained. This is an automation/browser observation, not a new simulation-engine change."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE17: Configuring NAT for IP Address Conservation",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-addressing/b-ip-addressing/m_iadnat-addr-consv-xe.html",
+      "relevance": "Interface/pool overload, source classification and translation behavior."
+    },
+    {
+      "title": "Cisco IOS XE: Port Handling for Interface Overload Mapping",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipaddr_nat/configuration/xe-16-10/nat-xe-16-book/nat-xe-16-book_chapter_011101.html",
+      "relevance": "Real platforms manage translated ports; this lab validates unique translations and actual delivery rather than promising identical numeric allocation."
+    },
+    {
+      "title": "Existing reviewed CML NAT observations and regressions",
+      "path": "scripts/cml/fixtures/nat-observations.json",
+      "tests": "tests/cml-nat-validation.test.ts",
+      "relevance": "Prior captured IOS/NX-OS interface/pool PAT behavior and native contracts are replayed in the full suite rather than newly captured."
+    }
+  ],
+  "validation": {
+    "typecheck": "passed",
+    "fullCheck": "npm run check passed, including deterministic offline build",
+    "tests": 2365,
+    "passed": 2365,
+    "failed": 0,
+    "focusedTests": 24,
+    "browserScenarios": 15,
+    "browserChecks": [
+      "light 320px: two ENCOR IP Services labs with plural badge; independent seven-node six-link19-task zero-credit practice and eight-row plan; actual IOS interface overload/roles/classifier/default/save; three real pings sharing interface global with unique ICMP identifiers; three independent browser HTTP200 TCP deliveries; real PC3 nslookup UDP53 and returned A response; clear/switch to one-address PUBLIC overload, three delivered clients with distinct identifiers plus actual pool-global TCP/HTTP; restore interface-only policy and remove pool completes19; ICMP/TCP/UDP tables, statistics, ACL, verbose, question-mark/Tab; unchanged golden CLI styles; saved offline fresh-session reopening rebuilds dynamic/service state and retains achievements; six-goal configuration-only reference requires all actual traffic and pool comparison; cancel/save-copy protection and fitted responsive topology/guide",
+      "dark 320px: two ENCOR IP Services labs with plural badge; independent seven-node six-link19-task zero-credit practice and eight-row plan; actual IOS interface overload/roles/classifier/default/save; three real pings sharing interface global with unique ICMP identifiers; three independent browser HTTP200 TCP deliveries; real PC3 nslookup UDP53 and returned A response; clear/switch to one-address PUBLIC overload, three delivered clients with distinct identifiers plus actual pool-global TCP/HTTP; restore interface-only policy and remove pool completes19; ICMP/TCP/UDP tables, statistics, ACL, verbose, question-mark/Tab; unchanged golden CLI styles; saved offline fresh-session reopening rebuilds dynamic/service state and retains achievements; six-goal configuration-only reference requires all actual traffic and pool comparison; cancel/save-copy protection and fitted responsive topology/guide",
+      "light 1440px: two ENCOR IP Services labs with plural badge; independent seven-node six-link19-task zero-credit practice and eight-row plan; actual IOS interface overload/roles/classifier/default/save; three real pings sharing interface global with unique ICMP identifiers; three independent browser HTTP200 TCP deliveries; real PC3 nslookup UDP53 and returned A response; clear/switch to one-address PUBLIC overload, three delivered clients with distinct identifiers plus actual pool-global TCP/HTTP; restore interface-only policy and remove pool completes19; ICMP/TCP/UDP tables, statistics, ACL, verbose, question-mark/Tab; unchanged golden CLI styles; saved offline fresh-session reopening rebuilds dynamic/service state and retains achievements; six-goal configuration-only reference requires all actual traffic and pool comparison; cancel/save-copy protection and fitted responsive topology/guide",
+      "dark 1440px: two ENCOR IP Services labs with plural badge; independent seven-node six-link19-task zero-credit practice and eight-row plan; actual IOS interface overload/roles/classifier/default/save; three real pings sharing interface global with unique ICMP identifiers; three independent browser HTTP200 TCP deliveries; real PC3 nslookup UDP53 and returned A response; clear/switch to one-address PUBLIC overload, three delivered clients with distinct identifiers plus actual pool-global TCP/HTTP; restore interface-only policy and remove pool completes19; ICMP/TCP/UDP tables, statistics, ACL, verbose, question-mark/Tab; unchanged golden CLI styles; saved offline fresh-session reopening rebuilds dynamic/service state and retains achievements; six-goal configuration-only reference requires all actual traffic and pool comparison; cancel/save-copy protection and fitted responsive topology/guide",
+      "light 390px: two ENCOR IP Services labs with plural badge; independent seven-node six-link19-task zero-credit practice and eight-row plan; actual IOS interface overload/roles/classifier/default/save; three real pings sharing interface global with unique ICMP identifiers; three independent browser HTTP200 TCP deliveries; real PC3 nslookup UDP53 and returned A response; clear/switch to one-address PUBLIC overload, three delivered clients with distinct identifiers plus actual pool-global TCP/HTTP; restore interface-only policy and remove pool completes19; ICMP/TCP/UDP tables, statistics, ACL, verbose, question-mark/Tab; unchanged golden CLI styles; saved offline fresh-session reopening rebuilds dynamic/service state and retains achievements; six-goal configuration-only reference requires all actual traffic and pool comparison; cancel/save-copy protection and fitted responsive topology/guide",
+      "dark 390px: two ENCOR IP Services labs with plural badge; independent seven-node six-link19-task zero-credit practice and eight-row plan; actual IOS interface overload/roles/classifier/default/save; three real pings sharing interface global with unique ICMP identifiers; three independent browser HTTP200 TCP deliveries; real PC3 nslookup UDP53 and returned A response; clear/switch to one-address PUBLIC overload, three delivered clients with distinct identifiers plus actual pool-global TCP/HTTP; restore interface-only policy and remove pool completes19; ICMP/TCP/UDP tables, statistics, ACL, verbose, question-mark/Tab; unchanged golden CLI styles; saved offline fresh-session reopening rebuilds dynamic/service state and retains achievements; six-goal configuration-only reference requires all actual traffic and pool comparison; cancel/save-copy protection and fitted responsive topology/guide",
+      "light: permalink preserves current host/path/query/workspace, returns to IP Services with two labs and plural badge, preserves ENCOR NAT Configuration and separate CCNA PAT/Static NAT with independent section choices",
+      "dark: permalink preserves current host/path/query/workspace, returns to IP Services with two labs and plural badge, preserves ENCOR NAT Configuration and separate CCNA PAT/Static NAT with independent section choices",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "offlineReopen": "Chrome fully closed and same persistent profile relaunched without injecting saved workspace state",
+    "artifactSha256": "6cbf72dcb5742f804cf64bb944cff94ad65c5b7287600512455e489424032010",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}
