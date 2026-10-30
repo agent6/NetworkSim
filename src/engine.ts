@@ -461,7 +461,8 @@ export class Simulator {
       if (frame.remoteSpan) { if (frame.remoteSpan.vlan !== vlan || !(d.config.features.rspanVlans ?? []).includes(vlan)) { this.event(d, port, frame, 'RSPAN VLAN rejected', 'Mirrored transit requires a VLAN configured for remote SPAN.', 'drop'); return; } receiveRemoteSpanFrame(this, d, port, vlan, frame); this.bridge(d, port, frame, vlan); return; }
       observeMulticastFrame(this, d, port, vlan, frame);
       const origin=frame.vpcSource,runtime=vpcRuntime(d),sourceMember=origin&&origin.domain===d.config.features.nsos?.vpc?.domain&&origin.sender===runtime?.peerId?runtime?.members[origin.member]:undefined;
-      const learnPort=sourceMember?.up&&sourceMember.activeVlans.includes(vlan)?sourceMember.port:port;
+      const group=c.features.channelGroup,channel=group&&d.runtime.features.portChannels?.[group],aggregate=channel?.state==='up'&&channel.activeMembers.includes(port)&&d.config.interfaces['Port-channel'+group]?.switchport?'Port-channel'+group:port;
+      const learnPort=sourceMember?.up&&sourceMember.activeVlans.includes(vlan)?sourceMember.port:aggregate;
       const learned=learnMac(d,learnPort,vlan,frame.sourceMac,this.clock.now());vpcObserveMac(this,d,port,vlan,frame.sourceMac);if(learned==='full'&&(d.runtime.features.macCapacityLog??-Infinity)+1000<=this.clock.now()){d.runtime.features.macCapacityLog=this.clock.now();this.log(d.id,'%L2FM-4-MAC_TABLE_FULL: MAC learning capacity exhausted; unknown unicast continues to flood.',4);}this.ensureAging(d);
     }
     const logical = this.logicalPorts(d, port, vlan);

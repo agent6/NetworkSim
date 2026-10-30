@@ -1,0 +1,93 @@
+{
+  "feature": {
+    "title": "EtherChannel Troubleshooting",
+    "catalogId": "etherchannel-troubleshooting",
+    "group": "CCNP ENCOR",
+    "section": "Layer 2",
+    "sectionLabCount": 2,
+    "devices": 6,
+    "links": 6,
+    "tasks": 14,
+    "addressingRows": 2,
+    "permalink": "#/labs/etherchannel-troubleshooting",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "SW1 and SW2 connect through Gi0/23 and Gi0/24, assigned to local Layer 2 Port-channel1. PC1/PC2 are VLAN10 at 192.168.10.11/.12 /24; PC3/PC4 are VLAN20 at 192.168.20.11/.12 /24. Access ports, VLANs and hosts are prepared. The target trunk uses native VLAN 99 and exactly allowed VLANs 10,20,99 with normal STP.",
+  "preparedFaults": [
+    "Both switches use LACP passive/passive",
+    "SW2 Gi0/24 belongs to local group2 instead of group1",
+    "SW1 Gi0/24 native VLAN1 disagrees with its other member and logical Po1",
+    "SW1 Gi0/23 administratively shut",
+    "SW2 Port-channel1 administratively shut",
+    "SW2 logical/member allowed VLAN lists omit20"
+  ],
+  "verificationNotes": [
+    "Fresh practice starts at zero with two enabled diagnostic ping actions and two guarded survivor actions. The completed reference starts with nine live config/save/negotiation/STP tasks and empty runtime; no packet, failure or MAC credit is fabricated.",
+    "The six fault goals remain live, as do the startup-save, two-member negotiated bundle, logical STP and dynamic MAC goals. Normal and survivor traffic accomplishments are historical. The final task state requires both members restored, compatible local policy saved on both switches, received synchronized LACP partners, one logical STP port per VLAN and four live remote dynamic MAC entries on Po1.",
+    "The repair recipe removes each wrong membership, normalizes Layer 2 member trunk/speed/duplex, assigns active/passive group1, enables members/logical Po1, restores VLAN policy, removes unused SW2 Po2 and saves. The one-time Po2 cleanup is skipped only in test helpers when replaying the repair after it has already been removed; the initial practice verifies every advertised command verbatim.",
+    "Packet predicates correlate accepted destination requests with source replies via parent IDs, tagged send/receive events at both actual link endpoints, current LACP partners, earlier received LACP PDUs and the current logical-up epoch. They support independently selected forward/reverse members and use actual topology links rather than requiring equal port numbers.",
+    "Each survivor achievement requires exactly one active member on both switches, a genuinely shut local failed interface and fresh traffic after that interface down transition. The existing LINK transition log provides the simulated-time boundary. Old normal pings, static-mode delivery and configuration alone do not satisfy LACP or survivor achievements. Both VLANs are tested during either member failure in the engine suite.",
+    "Corrected shared MAC learning to use the active logical Layer 2 port-channel while retaining vPC source-member handling. Forwarding already resolves logical entries to active physical egress members. MAC clear/expiration, membership failure and restoration, IOS reload, vPC and portable persistence are covered.",
+    "Corrected LACP wire compatibility to compare physical speed/duplex rather than the opposite switch’s VLAN list, switchport mode, VRF or MTU. Local member consistency still checks those local properties. Actor/partner keys continue to identify the neighboring aggregate. Static/PAgP compatibility checks remain unchanged. An asymmetric allowed-list mismatch now leaves LACP up while the affected VLAN fails.",
+    "The cross-peer VLAN handling follows the inference that VLAN lists are not exchanged in the LACP PDU shown in Cisco’s packet dissection; local member compatibility remains required. This task used Cisco primary references and current-engine validation, without claiming a fresh CML capture.",
+    "All advertised IOS and Windows verification commands execute against real simulated state. Tests also cover passive/passive failure, active/active validity, locally different channel numbers, local group splitting, member/native/speed/duplex faults, physical/logical shutdown, VLAN pruning, wrong tag/identity/path evidence and bounded imported criteria.",
+    "Offline reopening retains thirteen tasks after LACP reconverges; only current dynamic MAC learning needs fresh pair traffic. Tests preserve stable device IDs through display-name changes and verify startup restoration after an unsaved speed fault.",
+    "File-origin Chrome QA covers light/dark at 1440, 390 and 320px: console repair, all fourteen tasks, both real member failures/restorations, CLI show/Windows output, asymmetric VLAN regression, saved reload, completed reference and cancel/save-copy protection. Two independent permalink checks preserve host/path/query and return to Layer2 with two labs. Terminal golden styles remain exact. A temporary localhost preview returned HTTP200."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco IOS XE 17: Etherchannels",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr2-fwd/etherchannel/etherchannel-configuration-guide/etherchannels.html"
+    },
+    {
+      "title": "Cisco: Troubleshoot LACP on Nexus, including decoded actor/partner PDUs",
+      "url": "https://www.cisco.com/c/en/us/support/docs/lan-switching/link-aggregation-control-protocol-lacp-8023ad/221051-troubleshoot-link-aggregation-control-pr.html"
+    },
+    {
+      "title": "Cisco IOS LAN Switching Command Reference: logical EtherChannel MAC port designation",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/lanswitch/command/lsw-cr-book/lsw-s1.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 20,
+    "focusedPassed": 20,
+    "focusedAndRelatedTests": 127,
+    "relatedPassed": 127,
+    "fullCheck": "npm run check",
+    "typecheck": "passed",
+    "fullTests": 2027,
+    "fullPassed": 2027,
+    "fullFailed": 0,
+    "build": "passed",
+    "browserChecks": [
+      "light 1440px: two Layer 2 labs; six-node/14-task practice starts at zero with two enabled diagnosis pings and guarded survivor actions; real failed ping and published IOS repairs; Po1(SU), LACP partners, logical STP, dynamic Po1 MAC learning and tagged VLAN delivery; each member shut separately with fresh survivor packets and both members restored; asymmetric VLAN pruning retains LACP while losing live policy/save/STP goals; Windows CLI pings; startup-save and offline reload retain 13 goals until fresh MAC learning; completed reference, cancel/save-copy protection, responsive fitted topology/guide and unchanged terminal golden styles",
+      "light 390px: two Layer 2 labs; six-node/14-task practice starts at zero with two enabled diagnosis pings and guarded survivor actions; real failed ping and published IOS repairs; Po1(SU), LACP partners, logical STP, dynamic Po1 MAC learning and tagged VLAN delivery; each member shut separately with fresh survivor packets and both members restored; asymmetric VLAN pruning retains LACP while losing live policy/save/STP goals; Windows CLI pings; startup-save and offline reload retain 13 goals until fresh MAC learning; completed reference, cancel/save-copy protection, responsive fitted topology/guide and unchanged terminal golden styles",
+      "light 320px: two Layer 2 labs; six-node/14-task practice starts at zero with two enabled diagnosis pings and guarded survivor actions; real failed ping and published IOS repairs; Po1(SU), LACP partners, logical STP, dynamic Po1 MAC learning and tagged VLAN delivery; each member shut separately with fresh survivor packets and both members restored; asymmetric VLAN pruning retains LACP while losing live policy/save/STP goals; Windows CLI pings; startup-save and offline reload retain 13 goals until fresh MAC learning; completed reference, cancel/save-copy protection, responsive fitted topology/guide and unchanged terminal golden styles",
+      "dark 1440px: two Layer 2 labs; six-node/14-task practice starts at zero with two enabled diagnosis pings and guarded survivor actions; real failed ping and published IOS repairs; Po1(SU), LACP partners, logical STP, dynamic Po1 MAC learning and tagged VLAN delivery; each member shut separately with fresh survivor packets and both members restored; asymmetric VLAN pruning retains LACP while losing live policy/save/STP goals; Windows CLI pings; startup-save and offline reload retain 13 goals until fresh MAC learning; completed reference, cancel/save-copy protection, responsive fitted topology/guide and unchanged terminal golden styles",
+      "dark 390px: two Layer 2 labs; six-node/14-task practice starts at zero with two enabled diagnosis pings and guarded survivor actions; real failed ping and published IOS repairs; Po1(SU), LACP partners, logical STP, dynamic Po1 MAC learning and tagged VLAN delivery; each member shut separately with fresh survivor packets and both members restored; asymmetric VLAN pruning retains LACP while losing live policy/save/STP goals; Windows CLI pings; startup-save and offline reload retain 13 goals until fresh MAC learning; completed reference, cancel/save-copy protection, responsive fitted topology/guide and unchanged terminal golden styles",
+      "dark 320px: two Layer 2 labs; six-node/14-task practice starts at zero with two enabled diagnosis pings and guarded survivor actions; real failed ping and published IOS repairs; Po1(SU), LACP partners, logical STP, dynamic Po1 MAC learning and tagged VLAN delivery; each member shut separately with fresh survivor packets and both members restored; asymmetric VLAN pruning retains LACP while losing live policy/save/STP goals; Windows CLI pings; startup-save and offline reload retain 13 goals until fresh MAC learning; completed reference, cancel/save-copy protection, responsive fitted topology/guide and unchanged terminal golden styles",
+      "light: permalink preserves host/path/query and workspace; returns to ENCOR Layer 2 with two labs; section choices stay independent",
+      "dark: permalink preserves host/path/query and workspace; returns to ENCOR Layer 2 with two labs; section choices stay independent",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "aa71931619a4d97eb852d74fdebe0fe1ab09355b965ce086cb491790fa0231ad",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}

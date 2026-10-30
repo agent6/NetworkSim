@@ -476,6 +476,10 @@ function channelProtocol(a: string, b: string): string | undefined {
   if (['desirable','auto'].includes(a) && ['desirable','auto'].includes(b) && (a === 'desirable' || b === 'desirable')) return 'pagp';
 }
 function channelSignature(p: Port, wire = false): string {
+  // LACP actor/partner keys are locally significant. VLAN policy is checked
+  // among local members, not compared with the neighbor's allowed VLAN list.
+  // PAgP and static compatibility retain their existing wire checks.
+  if(wire&&['active','passive'].includes(p.iface.features.channelMode))return JSON.stringify([interfaceSpeed(p.device,p.iface),interfaceDuplex(p.device,p.iface)]);
   // VRF names are locally significant. Local members must agree, but the
   // neighboring router may use a different VRF name for the same routed link.
   const layer2=p.iface.switchport?[effectiveTrunk(p),p.iface.vlan,p.iface.nativeVlan,p.iface.allowedVlans===null?null:[...p.iface.allowedVlans].sort((a,b)=>a-b)]:[];
