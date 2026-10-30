@@ -53,11 +53,11 @@ function showCatalogDetail(id:string,dialog:Dialog,open:OpenLab,navigate=true):v
  document.querySelector<HTMLButtonElement>('[data-catalog-back]')!.onclick=()=>showLabCatalog(dialog,open);
  document.querySelectorAll<HTMLButtonElement>('[data-catalog-mode]').forEach(b=>b.onclick=()=>{try{const labDocument=createCatalogLab(id,b.dataset.catalogMode as CatalogMode);clearCatalogLocation();open(labDocument,`Lab catalog · ${entry.group}`);}catch(error){const body=document.querySelector('.dialog-body')!;let alert=body.querySelector<HTMLElement>('[data-catalog-error]');if(!alert){alert=document.createElement('p');alert.dataset.catalogError='';alert.className='notice mt-3';alert.setAttribute('role','alert');body.append(alert);}alert.textContent=error instanceof Error?error.message:String(error);}});
 }
-type GuideTest={kind:'ping';result:PingResult}|{kind:'dhcp';result:ServiceResult};
+type GuideTest={kind:'ping';result:PingResult}|{kind:'dhcp';result:ServiceResult}|{kind:'arp';result:{status:'success'}};
 export function showLabGuide(sim:Simulator,dialog:Dialog,isPlaying:()=>boolean):void{
  const progress=lessonProgress(sim);if(!progress)return;
  const catalogId=(sim.lab as CatalogLab).catalogId,resources=catalogGuideResources(catalogId),isRoas=catalogId==='router-on-a-stick',description=isRoas?currentRouterOnAStickGuide(progress.lesson.description):progress.lesson.description;
- dialog(progress.lesson.title,`<p class="catalog-instructions">${esc(description)}</p><div class="catalog-completion" data-guide-completion hidden><span aria-hidden="true">✓</span><div><strong>Lab complete!</strong><p>All tasks are complete.</p></div></div><p class="catalog-progress" data-guide-progress role="status"></p><ol class="catalog-checks">${progress.rows.map(({objective:o})=>`<li data-objective="${esc(o.id)}"><span data-objective-state role="img" aria-label="Not complete"></span><div><strong>${esc(o.title)}</strong>${o.description?`<p>${esc(o.description)}</p>`:''}${o.action?`<button class="btn" data-guide-test="${esc(o.id)}">${o.action.kind==='dhcp'?'Request DHCP lease':'Test connectivity'}</button><p class="catalog-test-status" data-test-status="${esc(o.id)}" role="status"></p>`:''}</div></li>`).join('')}</ol>${resources?addressPlan(resources)+reference(resources):''}`,'<button class="btn-primary" data-action="close-dialog">Done</button>');decorate();
+ dialog(progress.lesson.title,`<p class="catalog-instructions">${esc(description)}</p><div class="catalog-completion" data-guide-completion hidden><span aria-hidden="true">✓</span><div><strong>Lab complete!</strong><p>All tasks are complete.</p></div></div><p class="catalog-progress" data-guide-progress role="status"></p><ol class="catalog-checks">${progress.rows.map(({objective:o})=>`<li data-objective="${esc(o.id)}"><span data-objective-state role="img" aria-label="Not complete"></span><div><strong>${esc(o.title)}</strong>${o.description?`<p>${esc(o.description)}</p>`:''}${o.action?`<button class="btn" data-guide-test="${esc(o.id)}">${o.action.kind==='dhcp'?'Request DHCP lease':o.action.kind==='arp'?'Send ARP test':'Test connectivity'}</button><p class="catalog-test-status" data-test-status="${esc(o.id)}" role="status"></p>`:''}</div></li>`).join('')}</ol>${resources?addressPlan(resources)+reference(resources):''}`,'<button class="btn-primary" data-action="close-dialog">Done</button>');decorate();
  const root=document.querySelector<HTMLElement>('.catalog-checks')!,running=new Map<string,GuideTest>();
  const render=()=>{
   const next=lessonProgress(sim);if(!next)return;
@@ -69,10 +69,10 @@ export function showLabGuide(sim:Simulator,dialog:Dialog,isPlaying:()=>boolean):
    const state=row.querySelector('[data-objective-state]')!,symbol=complete?'✓':'○';
    if(state.textContent!==symbol){state.textContent=symbol;state.setAttribute('aria-label',complete?'Complete':'Not complete');}
    const test=running.get(objective.id),button=row.querySelector<HTMLButtonElement>('[data-guide-test]');
-   if(button){const available=actionAvailable(sim,objective);button.disabled=test?.result.status==='running'||!available;button.dataset.tooltip=available?(objective.action?.kind==='dhcp'?'Request IPv4 settings from the DHCP service':'Send three ICMP echo requests'):'Power on the source device and complete the action prerequisites first.';}
+   if(button){const available=actionAvailable(sim,objective);button.disabled=test?.result.status==='running'||!available;button.dataset.tooltip=available?(objective.action?.kind==='dhcp'?'Request IPv4 settings from the DHCP service':objective.action?.kind==='arp'?'Send the test host’s gratuitous ARP claim':'Send three ICMP echo requests'):'Power on the source device and complete the action prerequisites first.';}
    if(test){
     const status=row.querySelector('[data-test-status]')!;
-    const message=test.kind==='dhcp'
+    const message=test.kind==='arp'?'ARP test sent. Inspect the packet trace and task result.':test.kind==='dhcp'
      ?test.result.status==='running'?'Requesting a DHCP lease…':test.result.status==='success'?`Lease received: ${test.result.address}. Verify its settings against the addressing plan.`:complete?'A valid DHCP lease is active.':'No lease received. Check the DHCP service, client pool and relay.'
      :test.result.status==='running'?'Checking connectivity…':test.result.received?`${test.result.received} of ${test.result.sent} replies received.`:'No replies. Check interface addresses, masks, link status and routing.';
     if(status.textContent!==message)status.textContent=message;
@@ -83,7 +83,8 @@ export function showLabGuide(sim:Simulator,dialog:Dialog,isPlaying:()=>boolean):
   const button=(event.target as Element).closest<HTMLButtonElement>('[data-guide-test]');if(!button)return;
   const objective=progress.lesson.objectives.find(o=>o.id===button.dataset.guideTest),action=objective?.action;
   if(!objective||!action||!actionAvailable(sim,objective))return;
-  if(!isPlaying()){root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`)!.textContent=action.kind==='dhcp'?'Resume the simulation to request a DHCP lease.':'Resume the simulation to run a connectivity check.';return;}
+  if(!isPlaying()){root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`)!.textContent=action.kind==='dhcp'?'Resume the simulation to request a DHCP lease.':action.kind==='arp'?'Resume the simulation to send an ARP test.':'Resume the simulation to run a connectivity check.';return;}
+  if(action.kind==='arp'){sim.sendGratuitousARP(action.device,action.interface,action.address);running.set(objective.id,{kind:'arp',result:{status:'success'}});render();return;}
   running.set(objective.id,action.kind==='dhcp'?{kind:'dhcp',result:sim.requestDHCP(action.device,action.interface)}:{kind:'ping',result:sim.ping(action.device,action.target,{count:3})});render();
  };
  render();const timer=window.setInterval(()=>{if(!root.isConnected){window.clearInterval(timer);return;}render();},250);

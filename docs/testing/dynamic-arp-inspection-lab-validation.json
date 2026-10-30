@@ -1,0 +1,95 @@
+{
+  "feature": {
+    "title": "Dynamic ARP Inspection",
+    "catalogId": "dynamic-arp-inspection",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 11,
+    "devices": 7,
+    "links": 6,
+    "tasks": 12,
+    "addressingRows": 7,
+    "permalink": "#/labs/dynamic-arp-inspection",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "VLAN 10 has DHCP PCs on SW1 Gi0/1–2, gateway/DHCP router R1 192.168.10.1 on Gi0/3, static SRV2 192.168.10.50 (0200.0010.0050) on Gi0/4 and ARP test host PC3 192.168.10.60 on Gi0/5. R1 Gi0/1 192.168.20.1 routes to remote HTTP/DNS server SRV1 192.168.20.10. Addresses, access VLANs, PortFast, router DHCP and server services are prepared.",
+  "verificationNotes": [
+    "Practice begins unprotected at zero earned tasks even after existing legitimate DHCP leases. Applying the published IOS reference earns five policy tasks; admitted DHCP ACKs earn two dynamic-binding tasks. Real routed pings, static ARP acceptance, a forged-claim drop and the current correct gateway neighbor complete all twelve.",
+    "DHCP snooping is enabled globally and for VLAN 10 with Option 82 insertion disabled for this router-served pool. Only Gi0/3 has DHCP server trust. ARP inspection and src-mac/dst-mac/IP validation protect VLAN 10; separate ARP trust is exclusive to Gi0/3. All four attached untrusted access ports have explicit 15pps ARP limits.",
+    "The exact static-server IP/MAC ACL is applied without static; unmatched clients fall back to DHCP snooping bindings. A static filter, a wrong static MAC, a missing ACL and broad permits are tested. Broad permit-any cannot satisfy the exact-host policy or static-acceptance observation.",
+    "Guide ARP tests use the existing real frame path to emit gratuitous ARP, not fictional Windows CLI syntax. PC3 keeps its actual .60 address while falsely claiming .1 with its own NIC MAC. A correlated received ingress/drop packet proves rejection; counters or unrelated drops cannot award credit. Static acceptance requires exact ACL rule evidence, delivery to PC1 and the real learned MAC.",
+    "Trusting the test-host ingress or disabling VLAN inspection admits the same forged claim and poisons endpoint gateway caches. Restoring inspection does not rewrite caches. arp -d * on both clients followed by fresh routed pings repairs them. Removing gateway ARP trust blocks real gateway replies even while DHCP trust is retained.",
+    "Clearing snooping bindings leaves cached paths temporarily usable; clear endpoint caches to expose the missing-binding failure, then renew to rebuild dynamic entries. Explicit ARP rate violations err-disable the offending port and recover through corrected limits plus shutdown/no shutdown.",
+    "Configuration, actual blocked/accepted ARP achievements and valid ping observations survive portable saves. Dynamic DHCP binding and live gateway-cache tasks rebuild from traffic after reopening. The completed reference includes no fabricated runtime evidence.",
+    "ARP ingress decisions retain bounded 1000-row telemetry and rejected ARP trace entries include actual packet identity and addresses. Existing policy algorithms and CLI styling are preserved. Inspection statistics expose aggregate drops; per-VLAN/per-cause counters are not advertised as implemented."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco Catalyst 3650 IOS XE 16.12: Configuring Dynamic ARP Inspection",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3650/software/release/16-12/configuration_guide/sec/b_1612_sec_3650_cg/configuring_dynamic_arp_inspection.html"
+    },
+    {
+      "title": "Cisco Catalyst 3560: Configuring Dynamic ARP Inspection",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3560/software/release/15-0_2_se/configuration/guide/scg3560/swdynarp.html"
+    }
+  ],
+  "validation": {
+    "focusedTests": 15,
+    "focusedPassed": 15,
+    "typecheck": "passed",
+    "fullSuite": {
+      "command": "npm run check",
+      "tests": 1880,
+      "passed": 1880,
+      "failed": 0
+    },
+    "build": "passed; root and dist single-file artifacts match",
+    "postSuiteValidation": {
+      "change": "Move the topology annotation away from PC3’s IP label; no simulation or command changes.",
+      "focusedTests": 15,
+      "passed": 15,
+      "build": "passed"
+    },
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: eleven Services & Security labs, twelve tasks/seven addressing rows, unprotected zero-credit practice, five IOS policy goals, real DHCP bindings, routed pings, exact static ARP ACL acceptance, forged gateway drop and unchanged correct client cache, unsafe trust demonstrably poisons the cache and policy repair requires endpoint cache clearing, binding clear/renew recovery, saved observations with live binding/cache rebuild, completed reference/cancel/save-copy protection, fit-visible node navigation, responsive guide/topology and unchanged terminal golden styles",
+        "light 390px: eleven Services & Security labs, twelve tasks/seven addressing rows, unprotected zero-credit practice, five IOS policy goals, real DHCP bindings, routed pings, exact static ARP ACL acceptance, forged gateway drop and unchanged correct client cache, unsafe trust demonstrably poisons the cache and policy repair requires endpoint cache clearing, binding clear/renew recovery, saved observations with live binding/cache rebuild, completed reference/cancel/save-copy protection, fit-visible node navigation, responsive guide/topology and unchanged terminal golden styles",
+        "light 320px: eleven Services & Security labs, twelve tasks/seven addressing rows, unprotected zero-credit practice, five IOS policy goals, real DHCP bindings, routed pings, exact static ARP ACL acceptance, forged gateway drop and unchanged correct client cache, unsafe trust demonstrably poisons the cache and policy repair requires endpoint cache clearing, binding clear/renew recovery, saved observations with live binding/cache rebuild, completed reference/cancel/save-copy protection, fit-visible node navigation, responsive guide/topology and unchanged terminal golden styles",
+        "dark 1440px: eleven Services & Security labs, twelve tasks/seven addressing rows, unprotected zero-credit practice, five IOS policy goals, real DHCP bindings, routed pings, exact static ARP ACL acceptance, forged gateway drop and unchanged correct client cache, unsafe trust demonstrably poisons the cache and policy repair requires endpoint cache clearing, binding clear/renew recovery, saved observations with live binding/cache rebuild, completed reference/cancel/save-copy protection, fit-visible node navigation, responsive guide/topology and unchanged terminal golden styles",
+        "dark 390px: eleven Services & Security labs, twelve tasks/seven addressing rows, unprotected zero-credit practice, five IOS policy goals, real DHCP bindings, routed pings, exact static ARP ACL acceptance, forged gateway drop and unchanged correct client cache, unsafe trust demonstrably poisons the cache and policy repair requires endpoint cache clearing, binding clear/renew recovery, saved observations with live binding/cache rebuild, completed reference/cancel/save-copy protection, fit-visible node navigation, responsive guide/topology and unchanged terminal golden styles",
+        "dark 320px: eleven Services & Security labs, twelve tasks/seven addressing rows, unprotected zero-credit practice, five IOS policy goals, real DHCP bindings, routed pings, exact static ARP ACL acceptance, forged gateway drop and unchanged correct client cache, unsafe trust demonstrably poisons the cache and policy repair requires endpoint cache clearing, binding clear/renew recovery, saved observations with live binding/cache rebuild, completed reference/cancel/save-copy protection, fit-visible node navigation, responsive guide/topology and unchanged terminal golden styles",
+        "light: permalink preserves current host/path/query and returns to eleven Services & Security labs without replacing the workspace",
+        "dark: permalink preserves current host/path/query and returns to eleven Services & Security labs without replacing the workspace"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches the existing desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology with clear PC3 IP and annotation",
+        "light 320px topology",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "canvasFit": "each navigated node center remains in the workspace; annotation does not overlap PC3’s address in all six cases",
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "ad4994dff4c131d36e31a0a0edde8a89f925158eb9011a43d6bd912d6e1b5a98"
+  }
+}

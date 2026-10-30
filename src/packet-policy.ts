@@ -15,7 +15,9 @@ export function inspectIngress(engine: Simulator, device: Device, port: string, 
   const features = device.config.features, iface = device.config.interfaces[port], state = device.runtime.features;
   const payload = frame.payload;
   const dhcp = 'kind' in payload ? (payload.kind === 'dhcp' ? payload : undefined) : payload.body?.kind === 'dhcp-unicast' ? payload.body.message : undefined;
-  const drop = (counter: string, protocol: string, label: string, detail: string) => { state[counter] = (state[counter] ?? 0) + 1; engine.emit({ nodeId: device.id, port, protocol, label, detail, disposition: 'drop',...dhcp?{packet:{id:frame.id,source:dhcp.serverAddress??dhcp.clientId,destination:dhcp.clientId,protocol:'DHCP',dhcpOperation:dhcp.operation,requestedAddress:dhcp.address}}:{} }); return false; };
+  const arp='kind' in payload&&payload.kind==='arp'&&payload.family===4?payload:undefined;
+  const arpDecision=(action:'permit'|'deny',basis:string,acl?:string,rule?:unknown)=>{if(!arp)return;const rows=state.arpInspectionEvents??=[];rows.push({time:engine.clock.now(),frameId:frame.id,port,vlan,source:arp.source,target:arp.target,sourceMac:frame.sourceMac,arpMac:arp.mac,operation:arp.operation,action,basis,...acl?{acl}:{},...rule?{rule:structuredClone(rule)}:{}});if(rows.length>1000)rows.shift();};
+  const drop = (counter: string, protocol: string, label: string, detail: string) => { state[counter] = (state[counter] ?? 0) + 1; engine.emit({ nodeId: device.id, port, protocol, label, detail, disposition: 'drop',...arp?{packet:{id:frame.id,source:arp.source,destination:arp.target,protocol:'ARP',sourceMac:frame.sourceMac,destinationMac:frame.destinationMac,arpOperation:arp.operation}}:dhcp?{packet:{id:frame.id,source:dhcp.serverAddress??dhcp.clientId,destination:dhcp.clientId,protocol:'DHCP',dhcpOperation:dhcp.operation,requestedAddress:dhcp.address}}:{} }); return false; };
   const cleanMac = (mac: string) => mac.replace(/[^0-9a-f]/gi, '').toLowerCase();
   if (!inspectPortSecurity(engine, device, iface, vlan, frame)) return false;
   const ageBindings = () => { state.dhcpBindings = (state.dhcpBindings ?? []).filter((b: any) => b.expires > engine.clock.now()); state.ipv6Bindings = (state.ipv6Bindings ?? []).filter((b: any) => b.expires > engine.clock.now()); };
@@ -25,7 +27,7 @@ export function inspectIngress(engine: Simulator, device: Device, port: string, 
   let releasedBinding: any;
   const rate = (kind: string, maximum: number | undefined) => { if (maximum === undefined) return true; const key = port + ':' + kind, meters = state.policyRateMeters ??= {}, window = Math.floor(engine.clock.now() / 1000); let meter = meters[key]; if (!meter || meter.window !== window) meter = meters[key] = { window, packets: 0 }; if (++meter.packets <= Math.max(1, maximum)) return true; disablePort(engine, device, port, kind === 'DHCP' ? 'dhcp-rate-limit' : 'arp-inspection'); return drop(kind === 'DHCP' ? 'dhcpSnoopingDrops' : 'arpInspectionDrops', kind, kind + ' rate limit', 'The configured packet-per-second limit was exceeded.'); };
   if (dhcp && inspectVlan && !rate('DHCP', iface.features.dhcpSnoopingRate)) return false;
-  if ('kind' in payload && payload.kind === 'arp' && payload.family === 4 && (features.arpInspection?.vlans ?? []).includes(vlan) && !rate('ARP', iface.features.arpInspectionRate)) return false;
+  if ('kind' in payload && payload.kind === 'arp' && payload.family === 4 && (features.arpInspection?.vlans ?? []).includes(vlan) && !rate('ARP', iface.features.arpInspectionRate)) {arpDecision('deny','rate');return false;}
   if (dhcp && inspectVlan) {
     const server = dhcp.operation === 'offer' || dhcp.operation === 'ack' || dhcp.operation === 'nak';
     if (server && !iface.features.dhcpSnoopingTrust) {
@@ -52,14 +54,16 @@ export function inspectIngress(engine: Simulator, device: Device, port: string, 
   const matchesBinding = (ip: string) => [...(state.dhcpBindings ?? []), ...(features.staticBindings ?? []).map((x: any) => ({ ...x, port: x.interface, expires: Infinity }))].some((x: any) => x.port === port && x.vlan === vlan && cleanMac(x.mac) === cleanMac(frame.sourceMac) && x.ip === ip && x.expires > engine.clock.now());
   if ('kind' in payload && payload.kind === 'arp' && payload.family === 4 && (features.arpInspection?.vlans ?? []).includes(vlan) && !iface.features.arpInspectionTrust) {
     const validation = features.arpInspection.validations ?? {};
-    if ((validation.sourceMac && cleanMac(payload.mac) !== cleanMac(frame.sourceMac)) || (validation.destinationMac && payload.operation === 'reply' && payload.targetMac && cleanMac(payload.targetMac) !== cleanMac(frame.destinationMac))) return drop('arpInspectionDrops', 'ARP', 'ARP header validation drop', 'Ethernet and ARP hardware addresses disagree.');
-    if (validation.ip && (payload.operation === 'reply' ? [payload.source, payload.target] : [payload.source]).some(ip => { try { const value = ipToInt(ip); return value === 0 || value === 0xffffffff || (value >>> 28) >= 14; } catch { return true; } })) return drop('arpInspectionDrops', 'ARP', 'ARP IP validation drop', 'The ARP protocol address is invalid.');
+    if ((validation.sourceMac && cleanMac(payload.mac) !== cleanMac(frame.sourceMac)) || (validation.destinationMac && payload.operation === 'reply' && payload.targetMac && cleanMac(payload.targetMac) !== cleanMac(frame.destinationMac))) {arpDecision('deny','header');return drop('arpInspectionDrops', 'ARP', 'ARP header validation drop', 'Ethernet and ARP hardware addresses disagree.');}
+    if (validation.ip && (payload.operation === 'reply' ? [payload.source, payload.target] : [payload.source]).some(ip => { try { const value = ipToInt(ip); return value === 0 || value === 0xffffffff || (value >>> 28) >= 14; } catch { return true; } })) {arpDecision('deny','ip');return drop('arpInspectionDrops', 'ARP', 'ARP IP validation drop', 'The ARP protocol address is invalid.');}
     const filter = (features.arpInspection.filters ?? []).find((f: any) => f.vlans.includes(vlan));
     const rule = filter && (features.arpAcls?.[filter.acl] ?? []).find((r: any) => arpBindingRuleMatches(r,payload.source,payload.mac,payload.operation));
     if(rule?.log)engine.log(device.id,`%ARP_ACL: ${filter.acl} ${rule.action} ${payload.source} ${payload.mac} on ${port}`,6);
-    if (rule?.action === 'deny' || (!rule && filter?.static)) return drop('arpInspectionDrops', 'ARP', 'ARP ACL drop', 'The VLAN ARP ACL denied this source.');
-    if (rule?.action !== 'permit' && payload.source !== '0.0.0.0' && (!matchesBinding(payload.source) || cleanMac(payload.mac) !== cleanMac(frame.sourceMac))) return drop('arpInspectionDrops', 'ARP', 'Dynamic ARP inspection drop', 'The sender IP/MAC/port does not match a valid DHCP or static binding.');
+    if (rule?.action === 'deny' || (!rule && filter?.static)) {arpDecision('deny','acl',filter?.acl);return drop('arpInspectionDrops', 'ARP', 'ARP ACL drop', 'The VLAN ARP ACL denied this source.');}
+    if (rule?.action !== 'permit' && payload.source !== '0.0.0.0' && (!matchesBinding(payload.source) || cleanMac(payload.mac) !== cleanMac(frame.sourceMac))) {arpDecision('deny','binding');return drop('arpInspectionDrops', 'ARP', 'Dynamic ARP inspection drop', 'The sender IP/MAC/port does not match a valid DHCP or static binding.');}
+    arpDecision('permit',rule?.action==='permit'?'acl':payload.source==='0.0.0.0'?'probe':'binding',filter?.acl,rule);
   }
+  if(arp&&(features.arpInspection?.vlans??[]).includes(vlan)&&iface.features.arpInspectionTrust)arpDecision('permit','trusted');
   if (!('kind' in payload) && iface.features.sourceGuard && !isIPv6(payload.source) && !matchesBinding(payload.source)) return drop('sourceGuardDrops', payload.protocol.toUpperCase(), 'IP source guard drop', 'No matching source IP/MAC binding exists on this port.');
   const policies = features.ipv6Policies ?? {}, vlanPolicies = features.fhsVlanPolicies?.[vlan] ?? {};
   const policyName = (kind: string) => iface.features[kind + 'Policy'] ?? vlanPolicies[kind + 'Policy'];

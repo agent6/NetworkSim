@@ -7870,9 +7870,9 @@ ${end.comment}` : end.comment;
   }
 
   // src/port-security.ts
-  var secureMac = (mac6) => mac6.replace(/[^0-9a-f]/gi, "").toLowerCase();
-  var secureDotted = (mac6) => secureMac(mac6).match(/.{4}/g)?.join(".") ?? mac6;
-  var colon = (mac6) => secureMac(mac6).match(/../g).join(":");
+  var secureMac = (mac7) => mac7.replace(/[^0-9a-f]/gi, "").toLowerCase();
+  var secureDotted = (mac7) => secureMac(mac7).match(/.{4}/g)?.join(".") ?? mac7;
+  var colon = (mac7) => secureMac(mac7).match(/../g).join(":");
   function securityConfig(p) {
     const c = p.features.portSecurity ??= { enabled: false, maximum: 1, violation: "shutdown", sticky: false, macs: [], stickyMacs: [] };
     if (c.stickyMacs === void 0) {
@@ -7892,10 +7892,10 @@ ${end.comment}` : end.comment;
     const legacy = c.stickyMacs === void 0 && c.sticky, seen = /* @__PURE__ */ new Set(), out = [];
     for (const [macs, type] of [[legacy ? [] : c.macs ?? [], "SecureConfigured"], [legacy ? c.macs ?? [] : c.stickyMacs ?? [], "SecureSticky"], [d.runtime.features.secureMacs?.[p.name] ?? [], "SecureDynamic"]])
       for (const raw of macs) {
-        const mac6 = secureMac(raw);
-        if (seen.has(mac6)) continue;
-        seen.add(mac6);
-        out.push({ mac: mac6, type, vlan: d.runtime.features.secureMacVlans?.[p.name + "|" + mac6] ?? p.vlan ?? 1 });
+        const mac7 = secureMac(raw);
+        if (seen.has(mac7)) continue;
+        seen.add(mac7);
+        out.push({ mac: mac7, type, vlan: d.runtime.features.secureMacVlans?.[p.name + "|" + mac7] ?? p.vlan ?? 1 });
       }
     return out;
   }
@@ -7915,11 +7915,11 @@ ${end.comment}` : end.comment;
       else delete d.secureSticky[p.name];
     }
   }
-  function forget(d, p, mac6) {
+  function forget(d, p, mac7) {
     const state4 = d.runtime.features;
-    if (state4.secureMacs?.[p.name]) state4.secureMacs[p.name] = mac6 ? state4.secureMacs[p.name].filter((m) => secureMac(m) !== mac6) : [];
-    for (const key4 of Object.keys(state4.secureMacTimes ?? {})) if (key4.startsWith(p.name + "|") && (!mac6 || key4 === p.name + "|" + mac6)) delete state4.secureMacTimes[key4];
-    for (const [key4, row5] of Object.entries(d.runtime.mac)) if (row5.port === p.name && row5.secure && (!mac6 || secureMac(row5.mac) === mac6)) delete d.runtime.mac[key4];
+    if (state4.secureMacs?.[p.name]) state4.secureMacs[p.name] = mac7 ? state4.secureMacs[p.name].filter((m) => secureMac(m) !== mac7) : [];
+    for (const key4 of Object.keys(state4.secureMacTimes ?? {})) if (key4.startsWith(p.name + "|") && (!mac7 || key4 === p.name + "|" + mac7)) delete state4.secureMacTimes[key4];
+    for (const [key4, row5] of Object.entries(d.runtime.mac)) if (row5.port === p.name && row5.secure && (!mac7 || secureMac(row5.mac) === mac7)) delete d.runtime.mac[key4];
   }
   function reconcilePortSecurity(e, d) {
     for (const [key4, row5] of Object.entries(d.runtime.mac)) if (row5.secure && (!d.config.interfaces[row5.port] || !securityEnabled(d, d.config.interfaces[row5.port]) || !e.interfaceUp(d.id, row5.port))) delete d.runtime.mac[key4];
@@ -7944,36 +7944,36 @@ ${end.comment}` : end.comment;
       }
       const allowed = /* @__PURE__ */ new Set();
       for (const row5 of secureEntries(d, p)) {
-        const mac6 = colon(row5.mac), key4 = row5.vlan + "|" + mac6;
+        const mac7 = colon(row5.mac), key4 = row5.vlan + "|" + mac7;
         allowed.add(key4);
-        d.runtime.mac[key4] = { mac: mac6, port: p.name, vlan: row5.vlan, expires: Number.MAX_SAFE_INTEGER, static: true, secure: true };
+        d.runtime.mac[key4] = { mac: mac7, port: p.name, vlan: row5.vlan, expires: Number.MAX_SAFE_INTEGER, static: true, secure: true };
       }
       for (const [key4, row5] of Object.entries(d.runtime.mac)) if (row5.secure && row5.port === p.name && !allowed.has(key4)) delete d.runtime.mac[key4];
     }
   }
   function inspectPortSecurity(e, d, p, vlan, f) {
     if (!securityEnabled(d, p)) return true;
-    const c = securityConfig(p), state4 = d.runtime.features, mac6 = secureMac(f.sourceMac), key4 = p.name + "|" + mac6;
-    if (!/^[0-9a-f]{12}$/.test(mac6) || parseInt(mac6.slice(0, 2), 16) & 1 || /^0{12}$/.test(mac6)) {
+    const c = securityConfig(p), state4 = d.runtime.features, mac7 = secureMac(f.sourceMac), key4 = p.name + "|" + mac7;
+    if (!/^[0-9a-f]{12}$/.test(mac7) || parseInt(mac7.slice(0, 2), 16) & 1 || /^0{12}$/.test(mac7)) {
       e.emit({ nodeId: d.id, port: p.name, protocol: "ETHERNET", label: "Invalid Ethernet source", detail: "The source must be a nonzero unicast MAC address.", disposition: "drop" });
       return false;
     }
-    const entries4 = secureEntries(d, p), moved = Object.values(d.config.interfaces).some((other) => other !== p && securityEnabled(d, other) && secureEntries(d, other).some((x) => x.mac === mac6 && x.vlan === vlan));
-    const known = entries4.some((x) => x.mac === mac6);
+    const entries4 = secureEntries(d, p), moved = Object.values(d.config.interfaces).some((other) => other !== p && securityEnabled(d, other) && secureEntries(d, other).some((x) => x.mac === mac7 && x.vlan === vlan));
+    const known = entries4.some((x) => x.mac === mac7);
     (state4.portSecurityLastSource ??= {})[p.name] = { mac: f.sourceMac, vlan };
     if (moved || !known && entries4.length >= (c.maximum ?? 1)) {
       const nx = d.kind === "datacenter", mode = moved && nx ? "shutdown" : c.violation ?? "shutdown";
       const rejected2 = (state4.portSecurityRejected ??= {})[p.name] ??= [];
-      if (mode !== "protect" && (!nx || !rejected2.includes(mac6))) {
+      if (mode !== "protect" && (!nx || !rejected2.includes(mac7))) {
         (state4.portSecurityPortViolations ??= {})[p.name] = (state4.portSecurityPortViolations[p.name] ?? 0) + 1;
-        if (nx) rejected2.push(mac6);
+        if (nx) rejected2.push(mac7);
       }
       if (mode !== "protect" || nx) {
-        const logs = state4.portSecurityLogAt ??= {}, notified = (state4.portSecurityNotified ??= {})[p.name] ??= {}, notificationKey = mode + "|" + mac6;
+        const logs = state4.portSecurityLogAt ??= {}, notified = (state4.portSecurityNotified ??= {})[p.name] ??= {}, notificationKey = mode + "|" + mac7;
         if ((!nx || !notified[notificationKey]) && (mode === "shutdown" || e.clock.now() - (logs[p.name] ?? -Infinity) >= 1e3)) {
           if (nx) notified[notificationKey] = true;
           logs[p.name] = e.clock.now();
-          e.log(d.id, nx ? `%DAEMON-2-SYSTEM_MSG: <<%ETH-PORT-SEC-2-ETH_PORT_SEC_SECURITY_MAX_ADDR_COUNT_VIOLATION>> Triggered max address count violation ${mode.toUpperCase()} on port ${p.name} - eth_port_sec` : `%PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address ${secureDotted(mac6)} on port ${p.name}.`, 2);
+          e.log(d.id, nx ? `%DAEMON-2-SYSTEM_MSG: <<%ETH-PORT-SEC-2-ETH_PORT_SEC_SECURITY_MAX_ADDR_COUNT_VIOLATION>> Triggered max address count violation ${mode.toUpperCase()} on port ${p.name} - eth_port_sec` : `%PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address ${secureDotted(mac7)} on port ${p.name}.`, 2);
         }
       }
       if (mode === "shutdown" && disableInterface(e, d, p.name, "psecure-violation")) {
@@ -7986,20 +7986,20 @@ ${end.comment}` : end.comment;
     }
     if (!known) {
       if (c.sticky) {
-        c.stickyMacs.push(colon(mac6));
+        c.stickyMacs.push(colon(mac7));
         if (d.kind === "datacenter") (d.secureSticky ??= {})[p.name] = [...c.stickyMacs];
-      } else (state4.secureMacs ??= {})[p.name] = [...state4.secureMacs?.[p.name] ?? [], colon(mac6)];
+      } else (state4.secureMacs ??= {})[p.name] = [...state4.secureMacs?.[p.name] ?? [], colon(mac7)];
       (state4.secureMacVlans ??= {})[key4] = vlan;
     }
     const times = state4.secureMacTimes ??= {}, row5 = times[key4] ??= { first: e.clock.now(), last: e.clock.now() };
     row5.last = e.clock.now();
-    const ageable = () => !c.stickyMacs.some((m) => secureMac(m) === mac6) && (!c.macs.some((m) => secureMac(m) === mac6) || c.agingStatic);
+    const ageable = () => !c.stickyMacs.some((m) => secureMac(m) === mac7) && (!c.macs.some((m) => secureMac(m) === mac7) || c.agingStatic);
     if (Number(c.agingTime) > 0 && !row5.scheduled && ageable()) {
       row5.scheduled = true;
       const expire3 = () => {
         if (d.runtime.features !== state4 || times[key4] !== row5) return;
         const current2 = d.config.interfaces[p.name], config4 = current2?.features.portSecurity;
-        if (!current2 || !securityEnabled(d, current2) || !(Number(config4?.agingTime) > 0) || !secureEntries(d, current2).some((x) => x.mac === mac6 && x.type !== "SecureSticky" && (x.type !== "SecureConfigured" || config4.agingStatic))) {
+        if (!current2 || !securityEnabled(d, current2) || !(Number(config4?.agingTime) > 0) || !secureEntries(d, current2).some((x) => x.mac === mac7 && x.type !== "SecureSticky" && (x.type !== "SecureConfigured" || config4.agingStatic))) {
           row5.scheduled = false;
           return;
         }
@@ -8008,13 +8008,13 @@ ${end.comment}` : end.comment;
           e.clock.schedule(due - e.clock.now(), expire3, { owner: d.id, label: "Secure MAC aging" });
           return;
         }
-        forget(d, current2, mac6);
-        if (config4.agingStatic) config4.macs = config4.macs.filter((m) => secureMac(m) !== mac6);
+        forget(d, current2, mac7);
+        if (config4.agingStatic) config4.macs = config4.macs.filter((m) => secureMac(m) !== mac7);
         e.emit({ nodeId: d.id, port: p.name, protocol: "ETHERNET", label: "Secure MAC aged out", detail: f.sourceMac, disposition: "info" });
       };
       e.clock.schedule(Number(c.agingTime) * 6e4, expire3, { owner: d.id, label: "Secure MAC aging" });
     }
-    const address2 = colon(mac6);
+    const address2 = colon(mac7);
     d.runtime.mac[vlan + "|" + address2] = { mac: address2, port: p.name, vlan, expires: Number.MAX_SAFE_INTEGER, static: true, secure: true };
     return true;
   }
@@ -8029,8 +8029,8 @@ ${end.comment}` : end.comment;
     if (c.agingStatic && !nxos) a.push(" switchport port-security aging static");
     if (c.sticky) a.push(" switchport port-security mac-address sticky");
     const legacy = c.stickyMacs === void 0 && c.sticky;
-    for (const mac6 of legacy ? [] : c.macs ?? []) a.push(" switchport port-security mac-address " + secureDotted(mac6));
-    if (!nxos) for (const mac6 of legacy ? c.macs ?? [] : c.stickyMacs ?? []) a.push(" switchport port-security mac-address sticky " + secureDotted(mac6));
+    for (const mac7 of legacy ? [] : c.macs ?? []) a.push(" switchport port-security mac-address " + secureDotted(mac7));
+    if (!nxos) for (const mac7 of legacy ? c.macs ?? [] : c.stickyMacs ?? []) a.push(" switchport port-security mac-address sticky " + secureDotted(mac7));
     if (c.enabled !== false) a.push(" switchport port-security");
     return a;
   }
@@ -11827,9 +11827,9 @@ ${end.comment}` : end.comment;
   function macCapacity(d) {
     return d.kind === "datacenter" ? NS_DC_MAC_CAPACITY : ["switch", "l3switch", "poeswitch"].includes(d.kind) ? C9300_MAC_CAPACITY : Infinity;
   }
-  function learnMac(d, port3, vlan, mac6, now) {
-    if (!/^(?:[0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac6) || parseInt(mac6.slice(0, 2), 16) & 1 || /^00(?::00){5}$/.test(mac6)) return "ignored";
-    const key4 = vlan + "|" + mac6.toLowerCase(), old = d.runtime.mac[key4];
+  function learnMac(d, port3, vlan, mac7, now) {
+    if (!/^(?:[0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac7) || parseInt(mac7.slice(0, 2), 16) & 1 || /^00(?::00){5}$/.test(mac7)) return "ignored";
+    const key4 = vlan + "|" + mac7.toLowerCase(), old = d.runtime.mac[key4];
     if (old?.static) return "ignored";
     if (!old && Number.isFinite(macCapacity(d))) {
       for (const [k, row5] of Object.entries(d.runtime.mac)) if (!row5.static && row5.expires <= now) delete d.runtime.mac[k];
@@ -11839,7 +11839,7 @@ ${end.comment}` : end.comment;
       }
     }
     const seconds4 = macAgingSeconds(d, vlan);
-    d.runtime.mac[key4] = { mac: mac6.toLowerCase(), port: port3, vlan, lastSeen: now, expires: seconds4 === 0 ? Number.MAX_SAFE_INTEGER : now + seconds4 * 1e3 };
+    d.runtime.mac[key4] = { mac: mac7.toLowerCase(), port: port3, vlan, lastSeen: now, expires: seconds4 === 0 ? Number.MAX_SAFE_INTEGER : now + seconds4 * 1e3 };
     return old ? "updated" : "learned";
   }
   function installStaticMac(d) {
@@ -11956,8 +11956,8 @@ ${end.comment}` : end.comment;
   function vpcInterfaceMTU(d, p) {
     return vpcPeerLink(d, p.name) ? 9216 : p.mtu;
   }
-  function normalizedMac(mac6) {
-    return mac6.replace(/[:.]/g, "").toLowerCase();
+  function normalizedMac(mac7) {
+    return mac7.replace(/[:.]/g, "").toLowerCase();
   }
   function keepaliveVRF(vrf2) {
     return vrf2 === "default" ? void 0 : vrf2;
@@ -12346,10 +12346,10 @@ ${end.comment}` : end.comment;
     const id2 = vpcMemberId(d, output), r = vpcRuntime(d);
     return !id2 || !r?.adjacency || r.members[id2]?.peerUp === false;
   }
-  function vpcObserveMac(e, d, port3, vlan, mac6) {
+  function vpcObserveMac(e, d, port3, vlan, mac7) {
     const s = sessions2.get(e)?.get(d.id);
     if (!s) return;
-    const key4 = vlan + "|" + mac6.toLowerCase();
+    const key4 = vlan + "|" + mac7.toLowerCase();
     if (vpcPeerLink(d, port3)) s.remoteMacs.add(key4);
     else s.remoteMacs.delete(key4);
   }
@@ -12432,8 +12432,8 @@ ${end.comment}` : end.comment;
     if (c) {
       if (!ns.enabled.includes("vpc") || !integer5(c.domain, 1, 1e3) || !integer5(c.rolePriority, 1, 65535) || !integer5(c.systemPriority, 1, 65535) || c.systemMac !== void 0 && (typeof c.systemMac !== "string" || !/^(?:[0-9a-f]{12}|(?:[0-9a-f]{2}:){5}[0-9a-f]{2}|[0-9a-f]{4}(?:\.[0-9a-f]{4}){2})$/i.test(c.systemMac))) throw Error("Invalid vPC domain or priority.");
       if (c.systemMac) {
-        const mac6 = normalizedMac(c.systemMac);
-        if (parseInt(mac6.slice(0, 2), 16) & 1 || /^0+$/.test(mac6)) throw Error("vPC system MAC must be a nonzero unicast address.");
+        const mac7 = normalizedMac(c.systemMac);
+        if (parseInt(mac7.slice(0, 2), 16) & 1 || /^0+$/.test(mac7)) throw Error("vPC system MAC must be a nonzero unicast address.");
       }
       for (const key4 of ["peerSwitch", "peerGateway", "arpSynchronize", "autoRecovery", "gracefulConsistency"]) if (typeof c[key4] !== "boolean") throw Error("Invalid vPC option " + key4);
       if (!integer5(c.reloadDelay, 24e4, 36e5) || !integer5(c.delayRestore, 0, 36e5) || !integer5(c.delayRestoreSVI, 0, 36e5)) throw Error("Invalid vPC recovery timer.");
@@ -12916,7 +12916,7 @@ ${end.comment}` : end.comment;
     for (const field3 of ["wlans", "policies", "policyTags", "siteTags", "rfTags", "apProfiles", "flexProfiles", "rfProfiles", "assignments", "dot1xLists"]) if (!dict(v[field3])) fail7();
     if (v.apAuthorization) {
       const a2 = v.apAuthorization;
-      if (!obj(a2) || !bool2(a2.enabled) || !text3(a2.methodList, 32) || !dict(a2.lists) || Object.values(a2.lists).some((p) => !obj(p) || !["local", "radius"].includes(p.method) || p.method === "radius" && !text3(p.group, 32)) || !Array.isArray(a2.macs) || a2.macs.length > 512 || new Set(a2.macs).size !== a2.macs.length || a2.macs.some((mac6) => typeof mac6 !== "string" || !/^[a-f0-9]{12}$/.test(mac6))) fail7();
+      if (!obj(a2) || !bool2(a2.enabled) || !text3(a2.methodList, 32) || !dict(a2.lists) || Object.values(a2.lists).some((p) => !obj(p) || !["local", "radius"].includes(p.method) || p.method === "radius" && !text3(p.group, 32)) || !Array.isArray(a2.macs) || a2.macs.length > 512 || new Set(a2.macs).size !== a2.macs.length || a2.macs.some((mac7) => typeof mac7 !== "string" || !/^[a-f0-9]{12}$/.test(mac7))) fail7();
     }
     const ids = /* @__PURE__ */ new Set();
     for (const [key4, p] of Object.entries(v.wlans)) {
@@ -12929,7 +12929,7 @@ ${end.comment}` : end.comment;
     for (const p of Object.values(v.siteTags)) if (!obj(p) || !bool2(p.localSite) || !text3(p.apProfile, 32) || !text3(p.flexProfile, 32)) fail7();
     for (const p of Object.values(v.apProfiles)) if (!obj(p) || !integer5(p.echoInterval, 1, 30) || !integer5(p.deadInterval, 1, 3600)) fail7();
     for (const p of Object.values(v.flexProfiles)) if (!obj(p) || !integer5(p.nativeVlan, 1, 4094) || !dict(p.vlans)) fail7();
-    for (const [mac6, p] of Object.entries(v.assignments)) if (!/^[a-f0-9]{12}$/.test(mac6) || !obj(p) || !text3(p.policyTag, 32) || !text3(p.siteTag, 32) || !text3(p.rfTag, 32)) fail7();
+    for (const [mac7, p] of Object.entries(v.assignments)) if (!/^[a-f0-9]{12}$/.test(mac7) || !obj(p) || !text3(p.policyTag, 32) || !text3(p.siteTag, 32) || !text3(p.rfTag, 32)) fail7();
     const radio = (p, profile = false) => obj(p) && ["2.4", "5"].includes(p.band) && bool2(p.enabled) && (profile && p.channel === 0 || (p.band === "2.4" ? [1, 6, 11] : [36, 40, 44, 48, 149, 153, 157, 161, 165]).includes(p.channel)) && [20, 40, 80].includes(p.width) && (p.band !== "2.4" || p.width === 20) && num2(p.power, -10, 30) && (profile || integer5(p.maxClients, 1, 200));
     if (!Array.isArray(v.radios) || v.radios.length > 2 || v.radios.some((p) => !radio(p))) fail7();
     for (const p of Object.values(v.rfProfiles)) if (!radio(p, true)) fail7();
@@ -13273,12 +13273,12 @@ ${end.comment}` : end.comment;
 
   // src/ios-wireless.ts
   function configureWirelessUsername(device2, a, no, fail7) {
-    const w = wirelessConfig(device2), mac6 = canonicalMAC(a[0] ?? "");
-    if (device2.kind !== "wlc" || !w || a[1] !== "mac" && !(no && w.apAuthorization?.macs.includes(mac6))) return false;
-    if (!/^[a-f0-9]{12}$/.test(mac6) || a.length !== (a[1] === "mac" ? 2 : 1)) fail7("% Use username <AP Ethernet MAC> mac.");
+    const w = wirelessConfig(device2), mac7 = canonicalMAC(a[0] ?? "");
+    if (device2.kind !== "wlc" || !w || a[1] !== "mac" && !(no && w.apAuthorization?.macs.includes(mac7))) return false;
+    if (!/^[a-f0-9]{12}$/.test(mac7) || a.length !== (a[1] === "mac" ? 2 : 1)) fail7("% Use username <AP Ethernet MAC> mac.");
     const auth = w.apAuthorization ??= { enabled: false, methodList: "default", lists: {}, macs: [] };
-    auth.macs = auth.macs.filter((v) => v !== mac6);
-    if (!no) auth.macs.push(mac6);
+    auth.macs = auth.macs.filter((v) => v !== mac7);
+    if (!no) auth.macs.push(mac7);
     return true;
   }
   var wirelessPrompts = { "wireless-ssid": "config-ssid", "wireless-radio": "config-if", "wireless-wlan": "config-wlan", "wireless-policy": "config-wireless-policy", "wireless-policy-tag": "config-policy-tag", "wireless-site-tag": "config-site-tag", "wireless-rf-tag": "config-wireless-rf-tag", "wireless-ap": "config-ap-tag", "wireless-ap-profile": "config-ap-profile", "wireless-flex": "config-wireless-flex-profile", "wireless-rf-profile": "config-rf-profile" };
@@ -13454,12 +13454,12 @@ ${end.comment}` : end.comment;
       }, "<RF-profile-name>");
       add2("ap", (a, no) => {
         exact5(a, 1);
-        const mac6 = canonicalMAC(a[0]);
-        if (!/^[a-f0-9]{12}$/.test(mac6)) h.fail();
-        if (no) delete w.assignments[mac6];
+        const mac7 = canonicalMAC(a[0]);
+        if (!/^[a-f0-9]{12}$/.test(mac7)) h.fail();
+        if (no) delete w.assignments[mac7];
         else {
-          w.assignments[mac6] ??= { policyTag: "default-policy-tag", siteTag: "default-site-tag", rfTag: "default-rf-tag" };
-          h.enter("wireless-ap", { name: mac6 });
+          w.assignments[mac7] ??= { policyTag: "default-policy-tag", siteTag: "default-site-tag", rfTag: "default-rf-tag" };
+          h.enter("wireless-ap", { name: mac7 });
         }
         h.changed();
       }, "<Ethernet-MAC-address>");
@@ -13709,7 +13709,7 @@ ${end.comment}` : end.comment;
     if (w.apAuthorization) {
       const a = w.apAuthorization;
       for (const [name2, list] of Object.entries(a.lists)) lines2.push("aaa authorization credential-download " + name2 + (list.method === "local" ? " local" : " group " + list.group));
-      for (const mac6 of a.macs) lines2.push("username " + mac6 + " mac");
+      for (const mac7 of a.macs) lines2.push("username " + mac7 + " mac");
       if (a.enabled) lines2.push("ap auth-list authorize-mac");
       if (a.methodList !== "default" || Object.hasOwn(a.lists, "default")) lines2.push("ap auth-list method-list " + a.methodList);
     }
@@ -13727,7 +13727,7 @@ ${end.comment}` : end.comment;
     for (const [name2, tag] of Object.entries(w.siteTags)) lines2.push("wireless tag site " + name2, " ap-profile " + tag.apProfile, " flex-profile " + tag.flexProfile, tag.localSite ? " local-site" : " no local-site", "!");
     for (const [name2, p] of Object.entries(w.rfProfiles)) lines2.push("ap dot11 " + (p.band === "2.4" ? "24ghz" : "5ghz") + " rf-profile " + name2, " tx-power max " + p.power, " channel chan-width " + p.width, p.enabled ? " no shutdown" : " shutdown", "!");
     for (const [name2, tag] of Object.entries(w.rfTags)) lines2.push("wireless tag rf " + name2, ...tag.band24 ? [" 24ghz-rf-policy " + tag.band24] : [], ...tag.band5 ? [" 5ghz-rf-policy " + tag.band5] : [], "!");
-    for (const [mac6, tag] of Object.entries(w.assignments)) lines2.push("ap " + ciscoMAC(mac6), " policy-tag " + tag.policyTag, " site-tag " + tag.siteTag, " rf-tag " + tag.rfTag, "!");
+    for (const [mac7, tag] of Object.entries(w.assignments)) lines2.push("ap " + ciscoMAC(mac7), " policy-tag " + tag.policyTag, " site-tag " + tag.siteTag, " rf-tag " + tag.rfTag, "!");
     return lines2;
   }
 
@@ -13776,13 +13776,13 @@ ${end.comment}` : end.comment;
     if (a.length) fail7();
     return rule;
   }
-  function arpBindingRuleMatches(rule, ip2, mac6, operation) {
+  function arpBindingRuleMatches(rule, ip2, mac7, operation) {
     if (rule.kind && rule.kind !== (operation === "reply" ? "response" : "request")) return false;
-    return (rule.ip === "any" || ((ipToInt(ip2) ^ ipToInt(rule.ip)) & ~ipToInt(rule.ipWild ?? "0.0.0.0")) >>> 0 === 0) && (rule.mac === "any" || ((BigInt("0x" + clean(mac6)) ^ BigInt("0x" + clean(rule.mac))) & ~BigInt("0x" + clean(rule.macWild ?? "0000.0000.0000"))) === 0n);
+    return (rule.ip === "any" || ((ipToInt(ip2) ^ ipToInt(rule.ip)) & ~ipToInt(rule.ipWild ?? "0.0.0.0")) >>> 0 === 0) && (rule.mac === "any" || ((BigInt("0x" + clean(mac7)) ^ BigInt("0x" + clean(rule.mac))) & ~BigInt("0x" + clean(rule.macWild ?? "0000.0000.0000"))) === 0n);
   }
   function renderARPBindingRule(rule) {
-    const address2 = rule.ip === "any" ? "any" : rule.ipWild ? rule.ip + " " + rule.ipWild : "host " + rule.ip, mac6 = rule.mac === "any" ? "any" : rule.macWild ? clean(rule.mac).match(/.{4}/g).join(".") + " " + clean(rule.macWild).match(/.{4}/g).join(".") : "host " + clean(rule.mac).match(/.{4}/g).join(".");
-    return `${rule.action}${rule.kind ? " " + rule.kind : ""} ip ${address2} mac ${mac6}${rule.log ? " log" : ""}`;
+    const address2 = rule.ip === "any" ? "any" : rule.ipWild ? rule.ip + " " + rule.ipWild : "host " + rule.ip, mac7 = rule.mac === "any" ? "any" : rule.macWild ? clean(rule.mac).match(/.{4}/g).join(".") + " " + clean(rule.macWild).match(/.{4}/g).join(".") : "host " + clean(rule.mac).match(/.{4}/g).join(".");
+    return `${rule.action}${rule.kind ? " " + rule.kind : ""} ip ${address2} mac ${mac7}${rule.log ? " log" : ""}`;
   }
 
   // src/bgp-policy.ts
@@ -14571,9 +14571,9 @@ ${end.comment}` : end.comment;
         } else {
           exact5(a, 6);
           kw(a[3], ["interface"]);
-          const port3 = h.interfaceName(a[4]), mac6 = a[5].replace(/[^a-f0-9]/gi, "").toLowerCase();
-          if (!/^[0-9a-f]{12}$/.test(mac6) || !/^([a-f\d]{4}\.){2}[a-f\d]{4}$|^([a-f\d]{2}:){5}[a-f\d]{2}$/i.test(a[5])) h.fail();
-          const row5 = { ip: address2, vlan, port: port3, mac: mac6.match(/../g).join(":") };
+          const port3 = h.interfaceName(a[4]), mac7 = a[5].replace(/[^a-f0-9]/gi, "").toLowerCase();
+          if (!/^[0-9a-f]{12}$/.test(mac7) || !/^([a-f\d]{4}\.){2}[a-f\d]{4}$|^([a-f\d]{2}:){5}[a-f\d]{2}$/i.test(a[5])) h.fail();
+          const row5 = { ip: address2, vlan, port: port3, mac: mac7.match(/../g).join(":") };
           const old = bindings.find((b) => b.vlan === vlan && sameAddress(b.ip, address2));
           if (old) Object.assign(old, row5);
           else bindings.push(row5);
@@ -20903,9 +20903,9 @@ ${end.comment}` : end.comment;
         for (const t of Array.isArray(settings.track) ? settings.track : settings.track !== void 0 ? [typeof settings.track === "object" ? settings.track : { id: settings.track, decrement: 10 }] : []) if (!tracks[t.id]?.up) priority -= Number(t.decrement ?? 10);
         priority = Math.max(0, priority);
         if (protocol === "vrrp" && settings.virtualIp === p.ip) priority = 255;
-        const local = { deviceId: d.id, interface: p.name, source: p.ip, priority, role: old?.role, settings }, others = fhrpPeerView(engine, d.id, p.name, settings).map((v) => ({ ...v, settings: { ...settings, ...v.settings } })), active3 = electGateway(engine, d, local, others, protocol, `${protocol}|${p.name}|${settings.group}|${settings.virtualIp}`), standby2 = [local, ...others].filter((c) => c.deviceId !== active3.deviceId).sort((a, b) => b.priority - a.priority || ipNumber(b.source) - ipNumber(a.source))[0], role = !active3.deviceId ? "listen" : active3.deviceId === d.id ? "active" : standby2?.deviceId === d.id ? "standby" : "listen", n = Number(settings.group ?? 0), hex2 = n.toString(16).padStart(4, "0"), mac6 = protocol === "vrrp" ? `00:00:5e:00:01:${hex2.slice(-2)}` : Number(settings.version ?? 1) === 2 ? `00:00:0c:9f:f${hex2.slice(-3, -2)}:${hex2.slice(-2)}` : `00:00:0c:07:ac:${hex2.slice(-2)}`;
-        d.runtime.features.virtualIps.push({ interface: p.name, ip: settings.virtualIp, mac: mac6, protocol, group: n, role, activeDeviceId: active3.deviceId, priority, version: settings.version ?? (protocol === "vrrp" ? 2 : 1) });
-        if (role === "active" && old?.role !== "active") engine.clock.schedule(1, () => engine.sendGratuitousARP?.(d.id, p.name, settings.virtualIp, mac6), { owner: d.id, label: "Virtual gateway announcement" });
+        const local = { deviceId: d.id, interface: p.name, source: p.ip, priority, role: old?.role, settings }, others = fhrpPeerView(engine, d.id, p.name, settings).map((v) => ({ ...v, settings: { ...settings, ...v.settings } })), active3 = electGateway(engine, d, local, others, protocol, `${protocol}|${p.name}|${settings.group}|${settings.virtualIp}`), standby2 = [local, ...others].filter((c) => c.deviceId !== active3.deviceId).sort((a, b) => b.priority - a.priority || ipNumber(b.source) - ipNumber(a.source))[0], role = !active3.deviceId ? "listen" : active3.deviceId === d.id ? "active" : standby2?.deviceId === d.id ? "standby" : "listen", n = Number(settings.group ?? 0), hex2 = n.toString(16).padStart(4, "0"), mac7 = protocol === "vrrp" ? `00:00:5e:00:01:${hex2.slice(-2)}` : Number(settings.version ?? 1) === 2 ? `00:00:0c:9f:f${hex2.slice(-3, -2)}:${hex2.slice(-2)}` : `00:00:0c:07:ac:${hex2.slice(-2)}`;
+        d.runtime.features.virtualIps.push({ interface: p.name, ip: settings.virtualIp, mac: mac7, protocol, group: n, role, activeDeviceId: active3.deviceId, priority, version: settings.version ?? (protocol === "vrrp" ? 2 : 1) });
+        if (role === "active" && old?.role !== "active") engine.clock.schedule(1, () => engine.sendGratuitousARP?.(d.id, p.name, settings.virtualIp, mac7), { owner: d.id, label: "Virtual gateway announcement" });
         if (old?.role !== role) event3(engine, d, protocol.toUpperCase(), `Group ${n} ${role}`, `Virtual address ${settings.virtualIp}; priority ${priority}; active peer ${active3.source}.`);
       }
     }
@@ -25833,7 +25833,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       h.fail();
     }, "*|inside <global-address> <local-address>");
     const clearMac = (a) => {
-      let port3, vlan, mac6;
+      let port3, vlan, mac7;
       for (let i = 0; i < a.length; i++) {
         const key4 = keyword2(a[i], ["dynamic", "interface", "vlan", "address"]);
         if (key4 === "dynamic") continue;
@@ -25846,10 +25846,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         } else {
           const hex2 = value.replace(/[.:-]/g, "").toLowerCase();
           if (!/^[0-9a-f]{12}$/.test(hex2)) h.fail();
-          mac6 = hex2;
+          mac7 = hex2;
         }
       }
-      for (const [key4, row5] of Object.entries(r.mac)) if (!row5.static && (!port3 || row5.port === port3) && (!vlan || row5.vlan === vlan) && (!mac6 || row5.mac.replace(/:/g, "").toLowerCase() === mac6)) delete r.mac[key4];
+      for (const [key4, row5] of Object.entries(r.mac)) if (!row5.static && (!port3 || row5.port === port3) && (!vlan || row5.vlan === vlan) && (!mac7 || row5.mac.replace(/:/g, "").toLowerCase() === mac7)) delete r.mac[key4];
     };
     add2("clear mac address-table", clearMac, "[dynamic] [interface name] [vlan id] [address MAC]");
     add2("clear mac address-table dynamic", clearMac, "[interface name] [vlan id] [address MAC]");
@@ -28005,8 +28005,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       return lines2;
     });
   }
-  var dottedMac = (mac6) => {
-    const hexes = String(mac6 ?? "").replace(/[^0-9a-f]/gi, "").toLowerCase().padStart(12, "0");
+  var dottedMac = (mac7) => {
+    const hexes = String(mac7 ?? "").replace(/[^0-9a-f]/gi, "").toLowerCase().padStart(12, "0");
     return `${hexes.slice(0, 4)}.${hexes.slice(4, 8)}.${hexes.slice(8, 12)}`;
   };
   var fhrpTime = (ms) => ms % 1e3 ? `${ms} msec` : `${ms / 1e3} sec`;
@@ -29257,8 +29257,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const s = state2(e, d, p), sw = switchKind(d), kind = interfaceKind(p.name), c = { ...d.runtime.counters[p.name] }, n = (v) => v ?? 0, now = e.clock.now();
     const physical4 = kind === "physical", ether = physical4 || kind === "channel", virtual = kind === "loopback" || kind === "tunnel" || kind === "null";
     const status3 = kind === "tunnel" && p.adminUp ? "up" : s.status, suffix = sw && ether ? ` (${p.features.errDisabled ? "err-disabled" : !p.adminUp ? "disabled" : s.up ? "connected" : "notconnect"})` : "";
-    const mac6 = iosMac(e.macOf(d.id, p.name)), bia = p.features.macAddress ? burnedInMac(d, p.name) : mac6;
-    const hardware = kind === "loopback" ? "Loopback" : kind === "tunnel" ? "Tunnel" : kind === "null" ? "Unknown" : `${kind === "svi" ? "EtherSVI" : kind === "channel" ? sw ? "EtherChannel" : "GEChannel" : "iGbE"}, address is ${mac6} (bia ${bia})`;
+    const mac7 = iosMac(e.macOf(d.id, p.name)), bia = p.features.macAddress ? burnedInMac(d, p.name) : mac7;
+    const hardware = kind === "loopback" ? "Loopback" : kind === "tunnel" ? "Tunnel" : kind === "null" ? "Unknown" : `${kind === "svi" ? "EtherSVI" : kind === "channel" ? sw ? "EtherChannel" : "GEChannel" : "iGbE"}, address is ${mac7} (bia ${bia})`;
     const bw = kind === "loopback" ? p.features.bandwidth ?? 8e6 : kind === "tunnel" ? p.features.bandwidth ?? 100 : interfaceBandwidth(d, p);
     const dly = p.features.delay !== void 0 ? p.features.delay * 10 : kind === "loopback" ? 5e3 : kind === "tunnel" ? 5e4 : 10;
     const mtu = kind === "loopback" && p.mtu === 1500 ? 1514 : kind === "tunnel" ? 17916 : p.mtu;
@@ -29444,7 +29444,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (a.length) return invalid3();
     const entries4 = Object.values(d.runtime.arp).filter((x) => isIPv4(x.ip) && (x.vrf ?? "") === (vrf2 ?? "") && (x.static || x.expires > e.clock.now()) && (!address2 || x.ip === address2) && (!port3 || x.port === port3));
     const pending = e.pendingNeighbors(d.id).filter((x) => isIPv4(x.ip) && (d.config.interfaces[x.port]?.vrf ?? "") === (vrf2 ?? "") && (!address2 || x.ip === address2) && (!port3 || x.port === port3));
-    const now = e.clock.now(), arpRow = (ip2, age4, mac6, port4) => ("Internet  " + ip2.padEnd(17) + age4.padStart(8) + "   " + mac6.padEnd(16) + "ARPA   " + port4).trimEnd();
+    const now = e.clock.now(), arpRow = (ip2, age4, mac7, port4) => ("Internet  " + ip2.padEnd(17) + age4.padStart(8) + "   " + mac7.padEnd(16) + "ARPA   " + port4).trimEnd();
     const own2 = ports3(d).filter((p) => (p.vrf ?? "") === (vrf2 ?? "") && !/^(Loopback|Tunnel|Null|Virtual-Template|Dialer|Serial)/i.test(p.name) && e.interfaceUp(d.id, p.name) && (!port3 || p.name === port3)).flatMap((p) => [p.ip, ...(p.features.secondaryIps ?? []).map((x) => x.ip)].filter((ip2) => !!ip2 && (!address2 || ip2 === address2)).map((ip2) => ({ ip: ip2, age: "-", mac: iosMac(e.macOf(d.id, p.name)), port: p.name })));
     const learned = entries4.filter((x) => !own2.some((o) => o.ip === x.ip)).map((x) => ({ ip: x.ip, age: x.static ? "-" : String(Math.max(0, Math.floor(((d.config.interfaces[x.port]?.features.arpTimeout ?? 300) * 1e3 - (x.expires - now)) / 6e4))), mac: iosMac(x.mac), port: x.port }));
     const rows2 = [...own2, ...learned, ...pending.map((x) => ({ ip: x.ip, age: "0", mac: "Incomplete", port: "" }))].sort((a2, b) => ipToInt(a2.ip) - ipToInt(b.ip));
@@ -30567,8 +30567,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
   function formsFor(path, context6) {
     if (path === "switchport port-security mac-address") {
-      const mac6 = argument("H.H.H", "48-bit hardware address", (value) => /^(?:[0-9a-f]{4}\.){2}[0-9a-f]{4}$|^(?:[0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(value));
-      return [[mac6], [word5("sticky")], [word5("sticky"), mac6]];
+      const mac7 = argument("H.H.H", "48-bit hardware address", (value) => /^(?:[0-9a-f]{4}\.){2}[0-9a-f]{4}$|^(?:[0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(value));
+      return [[mac7], [word5("sticky")], [word5("sticky"), mac7]];
     }
     if (path === "ip sla") return [[number4(1, 2147483647, "IP SLAs operation number")]];
     if (path === "ip sla responder") {
@@ -30701,7 +30701,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (path === "ip access-list") return combine(choices(["standard", "extended"]), [[text("Access list name")]]);
     if (path === "ipv6 access-list") return [[text("IPv6 access list name")]];
     if ((path === "permit" || path === "deny") && context6.mode === "arp-acl") {
-      const mac6 = argument("H.H.H", "MAC address"), ips = [[word5("any")], [word5("host"), ip()], [ip(), ip("Wildcard mask")]], macs = [[word5("any")], [word5("host"), mac6], [mac6, argument("H.H.H", "MAC wildcard mask")]];
+      const mac7 = argument("H.H.H", "MAC address"), ips = [[word5("any")], [word5("host"), ip()], [ip(), ip("Wildcard mask")]], macs = [[word5("any")], [word5("host"), mac7], [mac7, argument("H.H.H", "MAC wildcard mask")]];
       return combine(combine(combine(combine([[], ...choices(["request", "response"])], [[word5("ip")]]), ips), combine([[word5("mac")]], macs)), optional(word5("log")));
     }
     if (path === "permit" || path === "deny") {
@@ -34040,13 +34040,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         }, "<name>"),
         this.c("ip source binding", "Configure a static security binding", (a, no) => {
           exactly(a, 6);
-          const mac6 = this.mac(a[0]);
+          const mac7 = this.mac(a[0]);
           keyword(a[1], ["vlan"]);
           const vlan = integer2(a[2], 1, 4094), ip2 = ipv42(a[3]);
           keyword(a[4], ["interface"]);
           const name2 = this.getInterface(a[5]);
           f.staticBindings = (f.staticBindings || []).filter((b) => b.ip !== ip2 || b.vlan !== vlan);
-          if (!no) f.staticBindings.push({ ip: ip2, mac: mac6, vlan, interface: name2 });
+          if (!no) f.staticBindings.push({ ip: ip2, mac: mac7, vlan, interface: name2 });
           this.change();
         }, "<MAC> vlan <VLAN> <IP> interface <port>"),
         this.c("ip arp inspection filter", "Apply ARP ACL to VLANs", (a, no) => {
@@ -34842,24 +34842,24 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
             f.staticArp = (f.staticArp || []).filter((r) => r.ip !== ipv42(a[0]));
           } else {
             if (a.length !== 3 && a.length !== 4) fail5();
-            const ip2 = ipv42(a[0]), mac6 = this.mac(a[1]);
+            const ip2 = ipv42(a[0]), mac7 = this.mac(a[1]);
             keyword(a[2], ["arpa"]);
             const name2 = a[3] ? this.getInterface(a[3]) : Object.values(this.device.config.interfaces).find((p) => p.ip && network(p.ip, maskPrefix(p.mask || "255.255.255.0")) === network(ip2, maskPrefix(p.mask || "255.255.255.0")))?.name;
             if (!name2) fail5("% Supply an interface for this ARP entry.");
             f.staticArp = (f.staticArp || []).filter((r) => r.ip !== ip2);
-            f.staticArp.push({ ip: ip2, mac: mac6, interface: name2 });
+            f.staticArp.push({ ip: ip2, mac: mac7, interface: name2 });
           }
           this.change();
         }, "<IPv4> <MAC> arpa [interface]"),
         this.c("mac address-table static", "Configure a static switch forwarding entry", (a, no) => {
           exactly(a, 5);
-          const mac6 = this.mac(a[0]);
+          const mac7 = this.mac(a[0]);
           keyword(a[1], ["vlan"]);
           const vlan = integer2(a[2], 1, 4094);
           keyword(a[3], ["interface"]);
           const name2 = this.getInterface(a[4]);
-          f.staticMac = (f.staticMac || []).filter((r) => r.mac !== mac6 || r.vlan !== vlan);
-          if (!no) f.staticMac.push({ mac: mac6, vlan, interface: name2 });
+          f.staticMac = (f.staticMac || []).filter((r) => r.mac !== mac7 || r.vlan !== vlan);
+          if (!no) f.staticMac.push({ mac: mac7, vlan, interface: name2 });
           this.change();
         }, "<MAC> vlan <id> interface <port>"),
         this.c("clock calendar-valid", "Treat the simulated calendar as an authoritative local clock", (a, no) => {
@@ -36653,7 +36653,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }
       const raw = a[sticky ? 1 : 0];
       if (!/^([0-9a-f]{2}:){5}[0-9a-f]{2}$|^[0-9a-f]{4}(\.[0-9a-f]{4}){2}$/i.test(raw)) fail5("% Invalid MAC address.");
-      const clean2 = secureMac(raw), mac6 = clean2.match(/../g).join(":");
+      const clean2 = secureMac(raw), mac7 = clean2.match(/../g).join(":");
       if (parseInt(clean2.slice(0, 2), 16) & 1 || /^0{12}$/.test(clean2)) fail5("% Invalid secure MAC address.");
       for (const p of this.ports()) {
         const entries4 = secureEntries(this.device, p);
@@ -36666,7 +36666,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         c[field3] = c[field3].filter((m) => secureMac(m) !== clean2);
         if (!no) {
           if (sticky) setSticky(this.device, p, true);
-          c[field3].push(mac6);
+          c[field3].push(mac7);
           if (this.device.runtime.features.secureMacs?.[p.name]) this.device.runtime.features.secureMacs[p.name] = this.device.runtime.features.secureMacs[p.name].filter((m) => secureMac(m) !== clean2);
         }
       });
@@ -38703,7 +38703,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   function nsosInterface(engine, d, p) {
     const now = engine.clock.now(), up = engine.interfaceUp(d.id, p.name), svi = /^Vlan/.test(p.name), channel = /^Port-channel/.test(p.name), c = d.runtime.counters[p.name], short3 = svi ? 60 : 30;
     if (/^Loopback/.test(p.name)) return [`${p.name.toLowerCase()} is ${up ? "up" : "down"}`, `admin state is ${p.adminUp ? "up" : "down"},`, "  Hardware: Loopback", ...p.description ? ["  Description: " + p.description] : [], ...p.ip ? [`  Internet Address is ${p.ip}/${maskToPrefix(p.mask ?? "255.255.255.255")}`] : [], ...p.ipv6.map((a) => "  IPv6 address: " + a), `  MTU ${p.mtu} bytes, BW ${interfaceBandwidth(d, p)} Kbit , DLY ${(p.features.delay ?? 500) * 10} usec`, "  Encapsulation LOOPBACK, medium is broadcast", `    ${c?.rx ?? 0} packets input ${c?.rxBytes ?? 0} bytes`, `    ${c?.inputErrors ?? 0} input errors`, `    ${c?.tx ?? 0} packets output ${c?.txBytes ?? 0} bytes`, `    ${c?.outputErrors ?? 0} output errors`, ""];
-    const cleared = d.runtime.features.countersClearedAt?.[p.name], mac6 = dotted2(engine.macOf(d.id, p.name));
+    const cleared = d.runtime.features.countersClearedAt?.[p.name], mac7 = dotted2(engine.macOf(d.id, p.name));
     const windows = [short3, 300].flatMap((seconds4, index) => {
       const r = interfaceRates(d, p.name, now, seconds4);
       return [`  Load-Interval #${index + 1}: ${seconds4 === 300 ? "5 minute (300 seconds)" : seconds4 + " seconds"}`, `    ${seconds4} seconds input rate ${r.inputBits} bits/sec, ${r.inputPackets} packets/sec`, `    ${seconds4} seconds output rate ${r.outputBits} bits/sec, ${r.outputPackets} packets/sec`];
@@ -38712,7 +38712,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     return [
       `${channel ? p.name.toLowerCase() : p.name} is ${up ? "up" : "down"}${svi ? `${up ? "" : !p.adminUp ? " (Administratively down)" : peerDown ? " (vPC peer-link down)" : " (VLAN/BD is down)"}, line protocol is ${up ? "up" : "down"}, autostate enabled` : !up && peerDown ? " (vpc peerlink is down)" : ""}`,
       ...svi ? [] : [`admin state is ${p.adminUp ? "up" : "down"}, Dedicated Interface`],
-      `  Hardware${svi ? " is EtherSVI" : channel ? ": Port-Channel" : ": Ethernet"}, address${svi ? " is" : ":"} ${mac6}`,
+      `  Hardware${svi ? " is EtherSVI" : channel ? ": Port-Channel" : ": Ethernet"}, address${svi ? " is" : ":"} ${mac7}`,
       ...p.description ? [`  Description: ${p.description}`] : [],
       ...p.ip ? [`  Internet Address is ${p.ip}/${maskToPrefix(p.mask ?? "255.255.255.0")}`] : [],
       ...p.ipv6.map((a) => "  IPv6 address: " + a),
@@ -39608,12 +39608,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         cmd("switchport port-security mac-address <mac>", "Configure a static secure source MAC", (a, no) => {
           this.securePort(p);
           if (!/^[0-9a-f]{4}(\.[0-9a-f]{4}){2}$/i.test(a[0])) fail6("Invalid MAC address.");
-          const mac6 = secureMac(a[0]), c2 = securityConfig(p), rows2 = secureEntries(this.device, p);
-          if (parseInt(mac6.slice(0, 2), 16) & 1 || /^0{12}$/.test(mac6)) fail6("Invalid secure MAC address.");
-          if (!no && !rows2.some((x) => x.mac === mac6) && rows2.length >= (c2.maximum ?? 1)) fail6("Total secure mac-addresses on interface has reached maximum limit.");
-          if (!no && Object.values(this.device.config.interfaces).some((other) => other !== p && secureEntries(this.device, other).some((x) => x.mac === mac6 && x.vlan === p.vlan))) fail6("Duplicate secure MAC address.");
-          c2.macs = c2.macs.filter((m) => secureMac(m) !== mac6);
-          if (!no) c2.macs.push(mac6.match(/../g).join(":"));
+          const mac7 = secureMac(a[0]), c2 = securityConfig(p), rows2 = secureEntries(this.device, p);
+          if (parseInt(mac7.slice(0, 2), 16) & 1 || /^0{12}$/.test(mac7)) fail6("Invalid secure MAC address.");
+          if (!no && !rows2.some((x) => x.mac === mac7) && rows2.length >= (c2.maximum ?? 1)) fail6("Total secure mac-addresses on interface has reached maximum limit.");
+          if (!no && Object.values(this.device.config.interfaces).some((other) => other !== p && secureEntries(this.device, other).some((x) => x.mac === mac7 && x.vlan === p.vlan))) fail6("Duplicate secure MAC address.");
+          c2.macs = c2.macs.filter((m) => secureMac(m) !== mac7);
+          if (!no) c2.macs.push(mac7.match(/../g).join(":"));
         }, { no: "switchport port-security mac-address <mac>" }),
         cmd("speed <speed>", "Set supported physical speed in Mbps", (a, no) => {
           const supported3 = f.ethernetSpeeds || [];
@@ -46532,12 +46532,19 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const features = device2.config.features, iface2 = device2.config.interfaces[port3], state4 = device2.runtime.features;
     const payload = frame2.payload;
     const dhcp3 = "kind" in payload ? payload.kind === "dhcp" ? payload : void 0 : payload.body?.kind === "dhcp-unicast" ? payload.body.message : void 0;
+    const arp2 = "kind" in payload && payload.kind === "arp" && payload.family === 4 ? payload : void 0;
+    const arpDecision = (action, basis, acl, rule) => {
+      if (!arp2) return;
+      const rows2 = state4.arpInspectionEvents ??= [];
+      rows2.push({ time: engine.clock.now(), frameId: frame2.id, port: port3, vlan, source: arp2.source, target: arp2.target, sourceMac: frame2.sourceMac, arpMac: arp2.mac, operation: arp2.operation, action, basis, ...acl ? { acl } : {}, ...rule ? { rule: structuredClone(rule) } : {} });
+      if (rows2.length > 1e3) rows2.shift();
+    };
     const drop = (counter2, protocol, label, detail) => {
       state4[counter2] = (state4[counter2] ?? 0) + 1;
-      engine.emit({ nodeId: device2.id, port: port3, protocol, label, detail, disposition: "drop", ...dhcp3 ? { packet: { id: frame2.id, source: dhcp3.serverAddress ?? dhcp3.clientId, destination: dhcp3.clientId, protocol: "DHCP", dhcpOperation: dhcp3.operation, requestedAddress: dhcp3.address } } : {} });
+      engine.emit({ nodeId: device2.id, port: port3, protocol, label, detail, disposition: "drop", ...arp2 ? { packet: { id: frame2.id, source: arp2.source, destination: arp2.target, protocol: "ARP", sourceMac: frame2.sourceMac, destinationMac: frame2.destinationMac, arpOperation: arp2.operation } } : dhcp3 ? { packet: { id: frame2.id, source: dhcp3.serverAddress ?? dhcp3.clientId, destination: dhcp3.clientId, protocol: "DHCP", dhcpOperation: dhcp3.operation, requestedAddress: dhcp3.address } } : {} });
       return false;
     };
-    const cleanMac = (mac6) => mac6.replace(/[^0-9a-f]/gi, "").toLowerCase();
+    const cleanMac = (mac7) => mac7.replace(/[^0-9a-f]/gi, "").toLowerCase();
     if (!inspectPortSecurity(engine, device2, iface2, vlan, frame2)) return false;
     const ageBindings = () => {
       state4.dhcpBindings = (state4.dhcpBindings ?? []).filter((b) => b.expires > engine.clock.now());
@@ -46560,7 +46567,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       return drop(kind === "DHCP" ? "dhcpSnoopingDrops" : "arpInspectionDrops", kind, kind + " rate limit", "The configured packet-per-second limit was exceeded.");
     };
     if (dhcp3 && inspectVlan && !rate("DHCP", iface2.features.dhcpSnoopingRate)) return false;
-    if ("kind" in payload && payload.kind === "arp" && payload.family === 4 && (features.arpInspection?.vlans ?? []).includes(vlan) && !rate("ARP", iface2.features.arpInspectionRate)) return false;
+    if ("kind" in payload && payload.kind === "arp" && payload.family === 4 && (features.arpInspection?.vlans ?? []).includes(vlan) && !rate("ARP", iface2.features.arpInspectionRate)) {
+      arpDecision("deny", "rate");
+      return false;
+    }
     if (dhcp3 && inspectVlan) {
       const server = dhcp3.operation === "offer" || dhcp3.operation === "ack" || dhcp3.operation === "nak";
       if (server && !iface2.features.dhcpSnoopingTrust) {
@@ -46599,7 +46609,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const matchesBinding = (ip2) => [...state4.dhcpBindings ?? [], ...(features.staticBindings ?? []).map((x) => ({ ...x, port: x.interface, expires: Infinity }))].some((x) => x.port === port3 && x.vlan === vlan && cleanMac(x.mac) === cleanMac(frame2.sourceMac) && x.ip === ip2 && x.expires > engine.clock.now());
     if ("kind" in payload && payload.kind === "arp" && payload.family === 4 && (features.arpInspection?.vlans ?? []).includes(vlan) && !iface2.features.arpInspectionTrust) {
       const validation = features.arpInspection.validations ?? {};
-      if (validation.sourceMac && cleanMac(payload.mac) !== cleanMac(frame2.sourceMac) || validation.destinationMac && payload.operation === "reply" && payload.targetMac && cleanMac(payload.targetMac) !== cleanMac(frame2.destinationMac)) return drop("arpInspectionDrops", "ARP", "ARP header validation drop", "Ethernet and ARP hardware addresses disagree.");
+      if (validation.sourceMac && cleanMac(payload.mac) !== cleanMac(frame2.sourceMac) || validation.destinationMac && payload.operation === "reply" && payload.targetMac && cleanMac(payload.targetMac) !== cleanMac(frame2.destinationMac)) {
+        arpDecision("deny", "header");
+        return drop("arpInspectionDrops", "ARP", "ARP header validation drop", "Ethernet and ARP hardware addresses disagree.");
+      }
       if (validation.ip && (payload.operation === "reply" ? [payload.source, payload.target] : [payload.source]).some((ip2) => {
         try {
           const value = ipToInt(ip2);
@@ -46607,13 +46620,24 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         } catch {
           return true;
         }
-      })) return drop("arpInspectionDrops", "ARP", "ARP IP validation drop", "The ARP protocol address is invalid.");
+      })) {
+        arpDecision("deny", "ip");
+        return drop("arpInspectionDrops", "ARP", "ARP IP validation drop", "The ARP protocol address is invalid.");
+      }
       const filter = (features.arpInspection.filters ?? []).find((f) => f.vlans.includes(vlan));
       const rule = filter && (features.arpAcls?.[filter.acl] ?? []).find((r) => arpBindingRuleMatches(r, payload.source, payload.mac, payload.operation));
       if (rule?.log) engine.log(device2.id, `%ARP_ACL: ${filter.acl} ${rule.action} ${payload.source} ${payload.mac} on ${port3}`, 6);
-      if (rule?.action === "deny" || !rule && filter?.static) return drop("arpInspectionDrops", "ARP", "ARP ACL drop", "The VLAN ARP ACL denied this source.");
-      if (rule?.action !== "permit" && payload.source !== "0.0.0.0" && (!matchesBinding(payload.source) || cleanMac(payload.mac) !== cleanMac(frame2.sourceMac))) return drop("arpInspectionDrops", "ARP", "Dynamic ARP inspection drop", "The sender IP/MAC/port does not match a valid DHCP or static binding.");
+      if (rule?.action === "deny" || !rule && filter?.static) {
+        arpDecision("deny", "acl", filter?.acl);
+        return drop("arpInspectionDrops", "ARP", "ARP ACL drop", "The VLAN ARP ACL denied this source.");
+      }
+      if (rule?.action !== "permit" && payload.source !== "0.0.0.0" && (!matchesBinding(payload.source) || cleanMac(payload.mac) !== cleanMac(frame2.sourceMac))) {
+        arpDecision("deny", "binding");
+        return drop("arpInspectionDrops", "ARP", "Dynamic ARP inspection drop", "The sender IP/MAC/port does not match a valid DHCP or static binding.");
+      }
+      arpDecision("permit", rule?.action === "permit" ? "acl" : payload.source === "0.0.0.0" ? "probe" : "binding", filter?.acl, rule);
     }
+    if (arp2 && (features.arpInspection?.vlans ?? []).includes(vlan) && iface2.features.arpInspectionTrust) arpDecision("permit", "trusted");
     if (!("kind" in payload) && iface2.features.sourceGuard && !isIPv6(payload.source) && !matchesBinding(payload.source)) return drop("sourceGuardDrops", payload.protocol.toUpperCase(), "IP source guard drop", "No matching source IP/MAC binding exists on this port.");
     const policies = features.ipv6Policies ?? {}, vlanPolicies = features.fhsVlanPolicies?.[vlan] ?? {};
     const policyName = (kind) => iface2.features[kind + "Policy"] ?? vlanPolicies[kind + "Policy"];
@@ -47050,11 +47074,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       for (const d of aps) this.tickAP(d);
       for (const d of this.engine.lab.devices.filter((d2) => d2.kind === "wlc")) {
         const table2 = d.runtime.features.wirelessAPs ??= {}, w = wirelessConfig(d), signature2 = JSON.stringify([w, wirelessPolicyDependencies(d)]);
-        for (const [mac6, row5] of Object.entries(table2)) {
-          const assignment = w.assignments[mac6] ?? { policyTag: "default-policy-tag", siteTag: "default-site-tag", rfTag: "default-rf-tag" }, site = wirelessEntry(w.siteTags, assignment.siteTag), dead = (wirelessEntry(w.apProfiles, site?.apProfile ?? "default-ap-profile")?.deadInterval ?? 90) * 1e3;
+        for (const [mac7, row5] of Object.entries(table2)) {
+          const assignment = w.assignments[mac7] ?? { policyTag: "default-policy-tag", siteTag: "default-site-tag", rfTag: "default-rf-tag" }, site = wirelessEntry(w.siteTags, assignment.siteTag), dead = (wirelessEntry(w.apProfiles, site?.apProfile ?? "default-ap-profile")?.deadInterval ?? 90) * 1e3;
           if (this.now() - row5.lastSeen > dead) {
-            delete table2[mac6];
-            this.event(d, "CAPWAP", "AP loss", "CAPWAP heartbeat expired for " + row5.name, void 0, { apEthernetMac: mac6, reasonCode: "echo-timeout" });
+            delete table2[mac7];
+            this.event(d, "CAPWAP", "AP loss", "CAPWAP heartbeat expired for " + row5.name, void 0, { apEthernetMac: mac7, reasonCode: "echo-timeout" });
             this.engine.log(d.id, "%CAPWAP-4-AP_LOST: " + row5.name + " heartbeat timed out", 4);
             continue;
           }
@@ -47171,28 +47195,28 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (packet.destinationPort !== 5246) return true;
       if (d.kind === "wlc") {
         if (!this.management(d)) return true;
-        const ap = this.engine.getDevice(b.apId), mac6 = canonicalMAC(b.mac ?? "");
-        if (!ap || ap.kind !== "ap" || mac6 !== canonicalMAC(this.engine.macOf(ap.id, "GigabitEthernet0"))) return true;
+        const ap = this.engine.getDevice(b.apId), mac7 = canonicalMAC(b.mac ?? "");
+        if (!ap || ap.kind !== "ap" || mac7 !== canonicalMAC(this.engine.macOf(ap.id, "GigabitEthernet0"))) return true;
         const w2 = wirelessConfig(d), table2 = d.runtime.features.wirelessAPs ??= {};
         if (b.type === "discovery") {
           this.control(d, packet.source, { type: "discovery-response", apId: ap.id, controllerId: d.id });
           return true;
         }
         if (b.type === "join") {
-          this.authorizeAP(d, ap, mac6, packet.source, (accepted, reason) => {
-            if (accepted) table2[mac6] = { id: ap.id, name: ap.config.hostname, address: packet.source, state: "JOIN", lastSeen: this.now() };
+          this.authorizeAP(d, ap, mac7, packet.source, (accepted, reason) => {
+            if (accepted) table2[mac7] = { id: ap.id, name: ap.config.hostname, address: packet.source, state: "JOIN", lastSeen: this.now() };
             this.control(d, packet.source, { type: "join-response", apId: ap.id, controllerId: d.id, accepted, reason });
           });
           return true;
         }
-        const row5 = table2[mac6];
+        const row5 = table2[mac7];
         if (!row5 || row5.address !== packet.source) return true;
         row5.lastSeen = this.now();
         row5.name = ap.config.hostname;
         if (b.type === "configure" || b.type === "echo") {
           row5.state = "RUN";
           row5.signature = JSON.stringify([w2, wirelessPolicyDependencies(d)]);
-          const assignment = w2.assignments[mac6] ?? { policyTag: "default-policy-tag", siteTag: "default-site-tag", rfTag: "default-rf-tag" };
+          const assignment = w2.assignments[mac7] ?? { policyTag: "default-policy-tag", siteTag: "default-site-tag", rfTag: "default-rf-tag" };
           this.control(d, packet.source, { type: b.type === "echo" ? "echo-response" : "configure-response", apId: ap.id, controllerId: d.id, config: w2, assignment });
         }
         if (b.type === "client-auth") {
@@ -47250,25 +47274,25 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }
       return true;
     }
-    authorizeAP(wlc, ap, mac6, address2, reply) {
+    authorizeAP(wlc, ap, mac7, address2, reply) {
       const config4 = wirelessConfig(wlc).apAuthorization;
       if (!config4?.enabled) {
         reply(true, "AP MAC authorization is disabled");
         return;
       }
-      const authorizationSignature = () => JSON.stringify([wirelessConfig(wlc)?.apAuthorization, wlc.config.features.aaa?.enabled, wlc.config.features.aaa?.groups, wlc.config.features.aaa?.servers]), signature2 = authorizationSignature(), runtime = wlc.runtime, apState = this.ap(ap), generation2 = apState.generation, table2 = wlc.runtime.features.apAuthorizations ??= {}, old = table2[mac6];
+      const authorizationSignature = () => JSON.stringify([wirelessConfig(wlc)?.apAuthorization, wlc.config.features.aaa?.enabled, wlc.config.features.aaa?.groups, wlc.config.features.aaa?.servers]), signature2 = authorizationSignature(), runtime = wlc.runtime, apState = this.ap(ap), generation2 = apState.generation, table2 = wlc.runtime.features.apAuthorizations ??= {}, old = table2[mac7];
       if (old?.signature === signature2 && old.apState === apState && old.generation === generation2 && (old.status === "pending" || this.now() - old.time < 5e3)) {
         if (old.status !== "pending") reply(old.status === "accepted", old.reason);
         return;
       }
-      const row5 = table2[mac6] = { signature: signature2, apState, generation: generation2, address: address2, time: this.now(), status: "pending", reason: "AP MAC authorization pending" }, active3 = () => this.engine.getDevice(wlc.id) === wlc && wlc.runtime === runtime && this.engine.devicePowered(wlc.id) && this.engine.getDevice(ap.id) === ap && this.ap(ap) === apState && apState.generation === generation2 && this.engine.devicePowered(ap.id) && authorizationSignature() === signature2;
+      const row5 = table2[mac7] = { signature: signature2, apState, generation: generation2, address: address2, time: this.now(), status: "pending", reason: "AP MAC authorization pending" }, active3 = () => this.engine.getDevice(wlc.id) === wlc && wlc.runtime === runtime && this.engine.devicePowered(wlc.id) && this.engine.getDevice(ap.id) === ap && this.ap(ap) === apState && apState.generation === generation2 && this.engine.devicePowered(ap.id) && authorizationSignature() === signature2;
       const finish = (accepted, reason) => {
         if (!active3()) return;
         row5.status = accepted ? "accepted" : "rejected";
         row5.reason = reason;
         row5.time = this.now();
-        this.event(wlc, "CAPWAP", accepted ? "AP authorization accepted" : "AP authorization rejected", mac6 + ": " + reason, ap, { apEthernetMac: mac6, methodList: config4.methodList });
-        this.engine.log(wlc.id, "%CAPWAP-" + (accepted ? "6-AP_AUTHORIZED: " : "4-AP_AUTH_REJECT: ") + mac6 + " " + reason, accepted ? 6 : 4);
+        this.event(wlc, "CAPWAP", accepted ? "AP authorization accepted" : "AP authorization rejected", mac7 + ": " + reason, ap, { apEthernetMac: mac7, methodList: config4.methodList });
+        this.engine.log(wlc.id, "%CAPWAP-" + (accepted ? "6-AP_AUTHORIZED: " : "4-AP_AUTH_REJECT: ") + mac7 + " " + reason, accepted ? 6 : 4);
         reply(accepted, reason);
       };
       const method = wirelessEntry(config4.lists, config4.methodList);
@@ -47281,7 +47305,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return;
       }
       if (method.method === "local") {
-        finish(config4.macs.includes(mac6), config4.macs.includes(mac6) ? "Local AP MAC record matched" : "AP Ethernet MAC is absent from the local authorization database");
+        finish(config4.macs.includes(mac7), config4.macs.includes(mac7) ? "Local AP MAC record matched" : "AP Ethernet MAC is absent from the local authorization database");
         return;
       }
       const aaa2 = wlc.config.features.aaa ?? {}, group = method.group, names3 = wirelessEntry(aaa2.groups, group)?.servers ?? (group === "radius" ? Object.keys(aaa2.servers ?? {}) : []), servers = names3.map((name2) => wirelessEntry(aaa2.servers, name2)).filter((server) => server?.protocol === "radius" && server.address);
@@ -47292,8 +47316,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           finish(false, "AP RADIUS group unavailable or timed out");
           return;
         }
-        const result = this.engine.udpRequest(wlc.id, server.address, server.port ?? 1812, { operation: "authenticate", kind: "ap-mac", username: mac6, password: mac6, key: server.key }, { timeout: Math.max(1, Math.min(1e3, server.timeout ?? 5)) * 1e3 });
-        this.event(wlc, "RADIUS", "AP Access-Request", mac6 + " via " + server.address, ap, { apEthernetMac: mac6, radiusServer: server.address, radiusAttempt: attempt + 1 });
+        const result = this.engine.udpRequest(wlc.id, server.address, server.port ?? 1812, { operation: "authenticate", kind: "ap-mac", username: mac7, password: mac7, key: server.key }, { timeout: Math.max(1, Math.min(1e3, server.timeout ?? 5)) * 1e3 });
+        this.event(wlc, "RADIUS", "AP Access-Request", mac7 + " via " + server.address, ap, { apEthernetMac: mac7, radiusServer: server.address, radiusAttempt: attempt + 1 });
         const poll = () => {
           if (!active3()) {
             if (row5.status === "pending") {
@@ -47628,7 +47652,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     negotiate(c, ad, authPMK, clientPMK) {
       const s = this.client(c);
       this.transition(c, "KEY_NEGOTIATING", "Four-way key handshake (" + (negotiatedWirelessSecurity(ad.wlan.security, wirelessConfig(c).adapter.security) === "wpa3-personal" ? "WPA3 SAE" : "WPA2") + ")");
-      const nonce = () => Array.from({ length: 8 }, () => Math.floor(this.engine.clock.random() * 4294967296).toString(16).padStart(8, "0")).join(""), anonce = nonce(), snonce = nonce(), mac6 = this.engine.macOf(c.id, "Wireless0"), aKey = sessionKey(authPMK, ad.bssid, mac6, anonce, snonce), cKey = sessionKey(clientPMK, ad.bssid, mac6, anonce, snonce), replay = s.generation, context6 = [ad.bssid, mac6, anonce, snonce, replay];
+      const nonce = () => Array.from({ length: 8 }, () => Math.floor(this.engine.clock.random() * 4294967296).toString(16).padStart(8, "0")).join(""), anonce = nonce(), snonce = nonce(), mac7 = this.engine.macOf(c.id, "Wireless0"), aKey = sessionKey(authPMK, ad.bssid, mac7, anonce, snonce), cKey = sessionKey(clientPMK, ad.bssid, mac7, anonce, snonce), replay = s.generation, context6 = [ad.bssid, mac7, anonce, snonce, replay];
       this.radioStep(c, ad, "EAPOL-Key 1/4", 25, () => this.radioStep(c, ad, "EAPOL-Key 2/4", 25, () => {
         if (keyProof(aKey, [2, ...context6]) !== keyProof(cKey, [2, ...context6])) {
           this.fail(c, "AUTH_FAILED", "EAPOL message 2 MIC validation failed");
@@ -47644,7 +47668,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }));
     }
     associated(c, ad, keyId) {
-      const s = this.client(c), mac6 = this.engine.macOf(c.id, "Wireless0"), duplicate = this.engine.lab.devices.find((d) => d.kind === "laptop" && d.id !== c.id && this.client(d).association && this.engine.macOf(d.id, "Wireless0") === mac6);
+      const s = this.client(c), mac7 = this.engine.macOf(c.id, "Wireless0"), duplicate = this.engine.lab.devices.find((d) => d.kind === "laptop" && d.id !== c.id && this.client(d).association && this.engine.macOf(d.id, "Wireless0") === mac7);
       if (duplicate) {
         this.fail(c, "ASSOCIATION_FAILED", "Duplicate wireless client MAC address");
         return;
@@ -47694,8 +47718,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     interfaceUp(d) {
       return d.kind === "laptop" && !!this.client(d).association?.authorized && wirelessConfig(d).adapter.enabled && d.powered;
     }
-    deauthenticate(controllerId, mac6) {
-      const controller = this.engine.getDevice(controllerId), client = this.engine.lab.devices.find((c) => c.kind === "laptop" && canonicalMAC(this.engine.macOf(c.id, "Wireless0")) === canonicalMAC(mac6)), association = client && this.association(client.id), ap = association && this.engine.getDevice(association.apId), management = ap && this.management(ap);
+    deauthenticate(controllerId, mac7) {
+      const controller = this.engine.getDevice(controllerId), client = this.engine.lab.devices.find((c) => c.kind === "laptop" && canonicalMAC(this.engine.macOf(c.id, "Wireless0")) === canonicalMAC(mac7)), association = client && this.association(client.id), ap = association && this.engine.getDevice(association.apId), management = ap && this.management(ap);
       if (!controller || controller.kind !== "wlc" || !this.engine.devicePowered(controllerId) || !client || association?.controllerId !== controllerId || !ap || !management) return false;
       this.control(controller, management.ip, { type: "client-disconnect", controllerId, apId: ap.id, clientId: client.id });
       return true;
@@ -50306,11 +50330,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       packet.vrf = d.config.interfaces[port3]?.vrf;
       this.forwardIP(d, { port: port3, target: peer, route: { network: peer, prefix: isIPv6(peer) ? 128 : 32, interface: port3, protocol: "BFD echo", ad: 0, metric: 0 } }, packet);
     }
-    sendGratuitousARP(deviceId, port3, ip2, mac6) {
+    sendGratuitousARP(deviceId, port3, ip2, mac7) {
       const d = this.getDevice(deviceId);
       if (!d) return;
-      mac6 ??= this.macOf(d.id, port3);
-      this.transmit(d, port3, BROADCAST, { kind: "arp", operation: "reply", source: ip2, target: ip2, mac: mac6, family: 4 }, mac6);
+      mac7 ??= this.macOf(d.id, port3);
+      this.transmit(d, port3, BROADCAST, { kind: "arp", operation: "reply", source: ip2, target: ip2, mac: mac7, family: 4 }, mac7);
     }
     hash(value) {
       let n = 0;
@@ -52398,6 +52422,44 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   };
 
+  // src/arp-inspection-lab.ts
+  var mac5 = (s) => s.replace(/[^a-f0-9]/gi, "").toLowerCase();
+  var exactRule = (r, address2, sourceMac) => r?.action === "permit" && !r.kind && r.ip === address2 && (!r.ipWild || r.ipWild === "0.0.0.0") && mac5(r.mac) === mac5(sourceMac) && (!r.macWild || mac5(r.macWild) === "000000000000");
+  var find = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  function validARPInspectionCriterion(c) {
+    const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
+    const vlan = (v) => Number.isInteger(v) && Number(v) > 0 && Number(v) < 4095;
+    if (c.kind === "dai-vlan") return vlan(c.vlan);
+    if (c.kind === "dai-trust") return name2(c.interface);
+    if (c.kind === "dai-rate") return Array.isArray(c.interfaces) && c.interfaces.length > 0 && c.interfaces.length <= 48 && new Set(c.interfaces).size === c.interfaces.length && c.interfaces.every(name2) && Number.isInteger(c.rate) && c.rate >= 1 && c.rate <= 2048;
+    if (c.kind === "arp-neighbor") return name2(c.interface) && isIPv4(c.address) && name2(c.owner) && name2(c.ownerInterface);
+    if (!["dai-static-acl", "dai-frame"].includes(c.kind) || !vlan(c.vlan) || !name2(c.source) || !name2(c.sourceInterface) || !name2(c.interface) || !isIPv4(c.address)) return false;
+    return c.kind === "dai-static-acl" ? name2(c.acl) : ["acl", "deny"].includes(c.decision) && name2(c.receiver);
+  }
+  function matchesARPInspectionCriterion(sim2, d, c) {
+    const inspection = d.config.features.arpInspection;
+    if (c.kind === "dai-vlan") return !!d.powered && !!d.config.vlans[c.vlan]?.active && inspection?.vlans?.includes(c.vlan) && ["sourceMac", "destinationMac", "ip"].every((k) => inspection.validations?.[k] === true);
+    if (c.kind === "dai-trust") return sim2.interfaceUp(d.id, c.interface) && d.config.interfaces[c.interface]?.features.arpInspectionTrust === true && Object.entries(d.config.interfaces).every(([name2, p]) => name2 === c.interface || !p.features.arpInspectionTrust);
+    if (c.kind === "dai-rate") return c.interfaces.every((name2) => sim2.interfaceUp(d.id, name2) && d.config.interfaces[name2]?.features.arpInspectionRate === c.rate);
+    if (c.kind === "arp-neighbor") {
+      const owner = find(sim2, c.owner), entry = d.runtime.arp[c.interface + "|" + c.address];
+      return !!owner && sim2.interfaceUp(d.id, c.interface) && sim2.interfaceUp(owner.id, c.ownerInterface) && owner.config.interfaces[c.ownerInterface]?.ip === c.address && !!entry && !entry.static && entry.expires > sim2.clock.now() && mac5(entry.mac) === mac5(sim2.macOf(owner.id, c.ownerInterface));
+    }
+    const source = find(sim2, c.source);
+    if (!source) return false;
+    const sourceMac = sim2.macOf(source.id, c.sourceInterface);
+    if (!source.config.interfaces[c.sourceInterface]) return false;
+    if (c.kind === "dai-static-acl") {
+      const filter = inspection?.filters?.find((f) => f.vlans.includes(c.vlan));
+      if (!inspection?.vlans?.includes(c.vlan) || filter?.acl !== c.acl || filter.static || d.config.interfaces[c.interface]?.features.arpInspectionTrust) return false;
+      const rules = d.config.features.arpAcls?.[c.acl] ?? [];
+      return source.config.interfaces[c.sourceInterface].ip === c.address && rules.length === 1 && exactRule(rules[0], c.address, sourceMac);
+    }
+    const receiver = find(sim2, c.receiver);
+    if (!receiver) return false;
+    return (d.runtime.features.arpInspectionEvents ?? []).some((r) => r.port === c.interface && r.vlan === c.vlan && r.source === c.address && mac5(r.sourceMac) === mac5(sourceMac) && r.operation === "reply" && (c.decision === "deny" ? r.action === "deny" && sim2.events.some((e) => e.nodeId === d.id && e.port === c.interface && e.disposition === "drop" && e.packet?.id === r.frameId && e.packet?.source === c.address && e.packet?.arpOperation === "reply") : r.action === "permit" && r.basis === "acl" && exactRule(r.rule, c.address, sourceMac) && sim2.events.some((e) => e.nodeId === receiver.id && e.label === "Frame received" && e.packet?.id === r.frameId && e.packet?.source === c.address) && Object.values(receiver.runtime.arp).some((entry) => entry.ip === c.address && entry.expires > sim2.clock.now() && mac5(entry.mac) === mac5(sourceMac))));
+  }
+
   // src/dhcp-snooping-lab.ts
   function validSnoopingCriterion(c) {
     const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
@@ -52409,10 +52471,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "snooping-rogue-drop") return true;
     return name2(c.clientInterface) && isIPv4(c.network) && Number.isInteger(c.prefix) && c.prefix >= 0 && c.prefix <= 32 && isIPv4(c.gateway) && isIPv4(c.dnsServer) && (c.kind !== "snooping-ping" || name2(c.target));
   }
-  var find = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
-  var mac5 = (value) => value.replace(/[^a-f0-9]/gi, "").toLowerCase();
+  var find2 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var mac6 = (value) => value.replace(/[^a-f0-9]/gi, "").toLowerCase();
   function bindingProof(sim2, d, c) {
-    const source = find(sim2, c.source), server = find(sim2, c.server), port3 = d.config.interfaces[c.interface], settings = d.config.features.dhcpSnooping, now = sim2.clock.now();
+    const source = find2(sim2, c.source), server = find2(sim2, c.server), port3 = d.config.interfaces[c.interface], settings = d.config.features.dhcpSnooping, now = sim2.clock.now();
     if (!source || !server || !settings?.enabled || !settings.vlans?.includes(c.vlan) || !port3?.switchport || port3.vlan !== c.vlan || port3.features.dhcpSnoopingTrust || !sim2.interfaceUp(d.id, c.interface) || !sim2.interfaceUp(source.id, c.clientInterface)) return;
     const client = source.config.interfaces[c.clientInterface], lease = source.runtime.features.dhcpClientLeases?.[c.clientInterface];
     if (!client?.features.dhcp || !isIPv4(client.ip ?? "") || !client.mask || !lease || !["BOUND", "RENEWING", "REBINDING"].includes(lease.state) || lease.expires <= now || lease.serverId !== server.id || lease.address !== client.ip || source.config.defaultGateway !== c.gateway || !source.config.dnsServers.includes(c.dnsServer)) return;
@@ -52421,7 +52483,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     } catch {
       return;
     }
-    const binding = (d.runtime.features.dhcpBindings ?? []).find((b) => b.port === c.interface && b.vlan === c.vlan && b.ip === client.ip && mac5(b.mac) === mac5(sim2.macOf(source.id, c.clientInterface)) && b.expires > now && b.serverId === server.id && b.transaction === lease.transaction);
+    const binding = (d.runtime.features.dhcpBindings ?? []).find((b) => b.port === c.interface && b.vlan === c.vlan && b.ip === client.ip && mac6(b.mac) === mac6(sim2.macOf(source.id, c.clientInterface)) && b.expires > now && b.serverId === server.id && b.transaction === lease.transaction);
     const serverLease = (server.runtime.features.dhcpLeases ?? []).find((l) => l.clientId === source.id && l.address === client.ip && l.state === "BOUND" && l.expires > now);
     if (binding && serverLease) return { source, server, lease, binding, serverLease };
   }
@@ -52433,7 +52495,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "snooping-trust") return sim2.interfaceUp(d.id, c.interface) && d.config.interfaces[c.interface]?.features.dhcpSnoopingTrust === true && (!c.exclusive || Object.entries(d.config.interfaces).every(([name2, p]) => name2 === c.interface || !p.features.dhcpSnoopingTrust));
     if (c.kind === "snooping-rate") return c.interfaces.every((name2) => sim2.interfaceUp(d.id, name2) && d.config.interfaces[name2]?.features.dhcpSnoopingRate === c.rate);
     if (c.kind === "snooping-rogue-drop") {
-      const source = find(sim2, c.source), server = find(sim2, c.server);
+      const source = find2(sim2, c.source), server = find2(sim2, c.server);
       if (!source || !server) return false;
       return (d.runtime.features.dhcpSnoopingEvents ?? []).some((r) => r.reason === "untrusted-server" && r.clientId === source.id && r.serverId === server.id && r.port === c.interface && r.vlan === c.vlan && ["offer", "ack", "nak"].includes(r.operation) && sim2.events.some((e) => e.nodeId === d.id && e.port === c.interface && e.label === "DHCP snooping drop" && e.disposition === "drop" && e.packet?.id === r.frameId && e.packet?.dhcpOperation === r.operation));
     }
@@ -52444,7 +52506,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const expected = { circuitId: c.vlan + ":" + c.interface, remoteId: d.id };
       return d.config.features.dhcpSnooping.option82 === true && [proof.lease.option82, proof.serverLease.option82].every((v) => v?.circuitId === expected.circuitId && v.remoteId === expected.remoteId);
     }
-    const target = find(sim2, c.target);
+    const target = find2(sim2, c.target);
     if (!target) return false;
     const address2 = Object.values(target.config.interfaces).find((p) => p.ip)?.ip;
     if (!address2) return false;
@@ -52469,7 +52531,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "acl-dns") return c.action === "permit" && typeof c.query === "string" && c.query.length > 0 && c.query.length <= 253 && c.query.split(".").every((part) => part.length > 0 && part.length <= 63 && /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(part)) && isIPv4(c.answer);
     return c.kind !== "acl-http" || (c.content === void 0 || typeof c.content === "string" && c.content.length > 0 && c.content.length <= 1e3) && (c.action === "deny" || typeof c.content === "string");
   }
-  var find2 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find3 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   var address = (d) => Object.values(d.config.interfaces).find((p) => !!p.ip)?.ip;
   function matchesACLLabCriterion(sim2, d, c) {
     if (c.kind === "standard-acl" || c.kind === "extended-acl") {
@@ -52483,7 +52545,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const field3 = c.direction === "in" ? "aclIn" : "aclOut";
       return d.config.interfaces[c.interface]?.features[field3] === c.name && sim2.interfaceUp(d.id, c.interface) && (!c.exclusive || Object.entries(d.config.interfaces).every(([port3, p]) => ["aclIn", "aclOut"].every((key4) => !p.features[key4] || port3 === c.interface && key4 === field3 && p.features[key4] === c.name)));
     }
-    const source = find2(sim2, c.source), target = find2(sim2, c.target);
+    const source = find3(sim2, c.source), target = find3(sim2, c.target);
     if (!source || !target) return false;
     const src = address(source), dst = address(target);
     if (!src || !dst) return false;
@@ -52523,11 +52585,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "nat-static") return true;
     return name2(c.inside) && name2(c.outside) && isIPv4(c.outsideAddress) && (c.kind === "nat-ping" ? ["inside-out", "outside-in"].includes(c.direction) : ["nat-http", "nat-outbound-http"].includes(c.kind) && typeof c.content === "string" && c.content.length > 0 && c.content.length <= 1e3);
   }
-  var find3 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find4 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   var natEvent = (d, e, label) => e.nodeId === d.id && e.label === label && e.disposition === "forward";
   var overloadRule = (d, c) => (d.config.features.nat?.rules ?? []).find((r) => r.acl === c.acl && r.interface === c.interface && r.overload === true && !r.pool);
   function deliveredPing(sim2, d, c, direction, identifiers) {
-    const inside = find3(sim2, c.inside), outside = find3(sim2, c.outside);
+    const inside = find4(sim2, c.inside), outside = find4(sim2, c.outside);
     if (!inside || !outside) return false;
     const events = sim2.events, outbound = direction === "inside-out", sender = outbound ? inside : outside, receiver = outbound ? outside : inside;
     const translated = (label, packet) => !!packet && events.some((e) => natEvent(d, e, label) && e.packet?.id === packet.id && e.packet.source === packet.source && e.packet.destination === packet.destination && e.packet.icmpIdentifier === packet.icmpIdentifier);
@@ -52551,14 +52613,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (!rule) return false;
       const rows2 = d.runtime.features.natTranslations ?? [], key4 = natRuleKey(rule);
       const choices2 = c.inside.map((name2) => {
-        const host2 = find3(sim2, name2);
+        const host2 = find4(sim2, name2);
         return rows2.filter((row5) => host2 && Object.values(host2.config.interfaces).some((p) => p.ip === row5.inside) && row5.overload === true && row5.rule === key4 && row5.protocol === "icmp" && row5.outside === c.insideGlobal && row5.remote === c.outsideAddress && row5.expires > sim2.clock.now() && deliveredPing(sim2, d, { device: d.id, inside: host2.id, outside: c.outside, insideLocal: row5.inside, insideGlobal: c.insideGlobal, outsideAddress: c.outsideAddress }, "inside-out", { inside: row5.insidePort, outside: row5.outsidePort }));
       });
       const distinct = (index, used) => index === choices2.length || choices2[index].some((row5) => !used.has(row5.outsidePort) && distinct(index + 1, /* @__PURE__ */ new Set([...used, row5.outsidePort])));
       return distinct(0, /* @__PURE__ */ new Set());
     }
     if (c.kind === "nat-ping") return deliveredPing(sim2, d, c, c.direction);
-    const inside = find3(sim2, c.inside), outside = find3(sim2, c.outside);
+    const inside = find4(sim2, c.inside), outside = find4(sim2, c.outside);
     if (!inside || !outside) return false;
     const outbound = c.kind === "nat-outbound-http", client = outbound ? inside : outside, server = outbound ? outside : inside;
     const target = outbound ? c.outsideAddress : c.insideGlobal, serverLocal = outbound ? c.outsideAddress : c.insideLocal, remoteSource = outbound ? c.insideGlobal : c.outsideAddress;
@@ -52632,11 +52694,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   }
   var ownsAddress = (d, address2) => typeof address2 === "string" && !!d && Object.values(d.config.interfaces).some((p) => !!p.ip && sameAddress(p.ip, address2));
-  var find4 = (sim2, name2) => sim2.lab.devices.find((d) => d.id === name2 || d.config.hostname === name2);
+  var find5 = (sim2, name2) => sim2.lab.devices.find((d) => d.id === name2 || d.config.hostname === name2);
   function matchesAAAClientCriterion(sim2, d, c) {
     const aaa2 = d.config.features.aaa ?? {};
     if (c.kind === "tacacs-server" || c.kind === "radius-server") {
-      const protocol = c.kind === "radius-server" ? "radius" : "tacacs", server = find4(sim2, c.server), service = server?.config.services[protocol], entry = ownRecordValue(aaa2.servers, c.name);
+      const protocol = c.kind === "radius-server" ? "radius" : "tacacs", server = find5(sim2, c.server), service = server?.config.services[protocol], entry = ownRecordValue(aaa2.servers, c.name);
       return !!entry && entry.protocol === protocol && (protocol === "radius" ? (entry.port ?? 1812) === 1812 && (entry.accountingPort ?? 1813) === 1813 : (entry.port ?? 49) === 49) && ownsAddress(server, entry.address) && typeof entry.key === "string" && entry.key.length > 0 && entry.key === service?.secret && service.enabled === true && service.accountingEnabled !== false;
     }
     if (c.kind === "aaa-group") {
@@ -52659,7 +52721,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }));
     }
     if (c.kind === "tacacs-session" || c.kind === "radius-session") {
-      const protocol = c.kind === "radius-session" ? "radius" : "tacacs", server = find4(sim2, c.server), source = find4(sim2, c.source);
+      const protocol = c.kind === "radius-session" ? "radius" : "tacacs", server = find5(sim2, c.server), source = find5(sim2, c.source);
       if (!server || !source) return false;
       const requests = server.runtime.features.aaaRequests ?? [], received = server.runtime.features.aaaAccountingReceived ?? [], deliveries = d.runtime.features.aaaAccountingEvents ?? [];
       const rows2 = received.filter((row5) => row5.protocol === protocol && row5.kind === "exec" && row5.username === c.username && row5.privilege === c.privilege && /^vty /.test(row5.line) && ownsAddress(d, row5.source) && ownsAddress(source, row5.remoteSource));
@@ -52683,6 +52745,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (v.kind === "link") return text3(v.a, 128) && text3(v.b, 128);
       if (!text3(v.device, 128)) return false;
       switch (v.kind) {
+        case "dai-vlan":
+        case "dai-trust":
+        case "dai-rate":
+        case "dai-static-acl":
+        case "dai-frame":
+        case "arp-neighbor":
+          return validARPInspectionCriterion(v);
         case "dhcp-snooping":
         case "snooping-trust":
         case "snooping-rate":
@@ -52834,13 +52903,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           "A lab objective has an invalid ID, description, or condition."
         );
       ids.add(o.id);
-      if (o.action !== void 0 && (!record2(o.action) || !["ping", "dhcp"].includes(o.action.kind) || !text3(o.action.device, 128) || (o.action.kind === "ping" ? !address2(o.action.target) : !text3(o.action.interface, 128)) || o.action.when !== void 0 && !criterion(o.action.when)))
+      if (o.action !== void 0 && (!record2(o.action) || !["ping", "dhcp", "arp"].includes(o.action.kind) || !text3(o.action.device, 128) || (o.action.kind === "ping" ? !address2(o.action.target) : !text3(o.action.interface, 128) || o.action.kind === "arp" && !isIPv4(o.action.address)) || o.action.when !== void 0 && !criterion(o.action.when)))
         throw Error("A lab objective action is invalid.");
     }
   }
   function actionAvailable(sim2, objective) {
     const action = objective.action;
-    return !!action && !!device(sim2, action.device)?.powered && (action.kind !== "dhcp" || sim2.interfaceUp(device(sim2, action.device).id, action.interface)) && (!action.when || matches(sim2, action.when));
+    return !!action && !!device(sim2, action.device)?.powered && (action.kind === "ping" || sim2.interfaceUp(device(sim2, action.device).id, action.interface)) && (!action.when || matches(sim2, action.when));
   }
   function matches(sim2, criterion, depth = 0) {
     if (!criterion || typeof criterion !== "object" || depth > 16) return false;
@@ -52855,6 +52924,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!("device" in criterion)) return false;
     const d = device(sim2, criterion.device);
     if (!d) return false;
+    if (["dai-vlan", "dai-trust", "dai-rate", "dai-static-acl", "dai-frame", "arp-neighbor"].includes(criterion.kind)) return matchesARPInspectionCriterion(sim2, d, criterion);
     if (["tacacs-server", "radius-server", "aaa-group", "aaa-method", "aaa-line", "tacacs-session", "radius-session"].includes(criterion.kind)) return matchesAAAClientCriterion(sim2, d, criterion);
     if (["dhcp-snooping", "snooping-trust", "snooping-rate", "snooping-binding", "snooping-option82", "snooping-ping", "snooping-rogue-drop"].includes(criterion.kind)) return matchesSnoopingCriterion(sim2, d, criterion);
     if (["standard-acl", "extended-acl", "acl-binding", "acl-ping", "acl-http", "acl-dns"].includes(criterion.kind)) return matchesACLLabCriterion(sim2, d, criterion);
@@ -52994,7 +53064,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (criterion.kind === "mac-learned") {
       const source = device(sim2, criterion.source);
       if (!source?.config.interfaces[criterion.sourceInterface] || !d.config.interfaces[criterion.interface]) return false;
-      const mac6 = sim2.macOf(source.id, criterion.sourceInterface).toLowerCase(), entry = d.runtime.mac[criterion.vlan + "|" + mac6];
+      const mac7 = sim2.macOf(source.id, criterion.sourceInterface).toLowerCase(), entry = d.runtime.mac[criterion.vlan + "|" + mac7];
       return !!entry && !entry.static && entry.expires > sim2.clock.now() && entry.port === criterion.interface && entry.vlan === criterion.vlan;
     }
     if (criterion.kind === "interface") {
@@ -53026,14 +53096,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return results.length > 0 && (c.kind === "all" ? results.every(Boolean) : results.some(Boolean));
       }
       const result = matches(sim2, c);
-      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop") return result;
+      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame") return result;
       validKeys.add(key4);
       if (result) observations.add(key4);
       return result || observations.has(key4);
     };
     const rows2 = lesson2.objectives.map((objective) => {
       const observed = observe(objective.criterion, JSON.stringify(objective.id));
-      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop";
+      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame";
       if (historical && observed)
         completed.add(objective.id);
       return {
@@ -53419,8 +53489,30 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "extended-ipv4-acl", group: "CCNA", section: "Services & Security", title: "Extended IPv4 ACL", description: "Filter by source, destination, protocol and destination port. Allow selected HTTP, DNS and ICMP flows, verify explicit and implicit denies, and troubleshoot an inbound policy near the source.", devices: 6, links: 5, practice: true },
     { id: "named-and-numbered-acl", group: "CCNA", section: "Services & Security", title: "Named and Numbered ACL", description: "Compare named and numbered standard and extended IPv4 lists on four server paths. Configure bindings, verify equivalent filtering, edit numbered sequences safely and diagnose missing or misapplied lists.", devices: 9, links: 8, practice: true },
     { id: "dhcp-snooping", group: "CCNA", section: "Services & Security", title: "DHCP Snooping", description: "Protect a client VLAN from a live rogue DHCP server. Configure trusted ingress and rate limits, verify delivered leases and dynamic bindings, inspect Option 82 and troubleshoot failed or unsafe discovery.", devices: 6, links: 5, practice: true },
+    { id: "dynamic-arp-inspection", group: "CCNA", section: "Services & Security", title: "Dynamic ARP Inspection", description: "Validate ARP against DHCP snooping bindings, trust the gateway uplink, permit a static server with an ARP ACL, and test forged gateway claims and recovery.", devices: 7, links: 6, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
+  var DAI_STATIC_MAC = "02:00:00:10:00:50";
+  var DAI_COMMANDS = { SW1: [
+    "enable",
+    "configure terminal",
+    "ip dhcp snooping",
+    "ip dhcp snooping vlan 10",
+    "no ip dhcp snooping information option",
+    "ip arp inspection vlan 10",
+    "ip arp inspection validate src-mac dst-mac ip",
+    "interface GigabitEthernet0/3",
+    "ip dhcp snooping trust",
+    "ip arp inspection trust",
+    ...[1, 2, 4, 5].flatMap((n) => ["interface GigabitEthernet0/" + n, "no ip dhcp snooping trust", "no ip arp inspection trust", "ip arp inspection limit rate 15"]),
+    "exit",
+    "arp access-list STATIC-SERVER",
+    "permit ip host 192.168.10.50 mac host 0200.0010.0050",
+    "exit",
+    "ip arp inspection filter STATIC-SERVER vlan 10",
+    "end",
+    "write memory"
+  ] };
   var DHCP_SNOOPING_COMMANDS = { SW1: [
     "enable",
     "configure terminal",
@@ -53941,6 +54033,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
   };
   var GUIDE_RESOURCES = {
+    "dynamic-arp-inspection": { columns: ["Device", "Interface", "IPv4 address", "Role / gateway"], rows: [["PC1", "Gi0", "DHCP: 192.168.10.100\u2013149 /24", "SW1 Gi0/1; gateway 192.168.10.1"], ["PC2", "Gi0", "DHCP: 192.168.10.100\u2013149 /24", "SW1 Gi0/2; gateway 192.168.10.1"], ["R1", "Gi0/0", "192.168.10.1 /24", "Gateway and DHCP; SW1 Gi0/3"], ["R1", "Gi0/1", "192.168.20.1 /24", "Remote server gateway"], ["SRV1", "Gi0", "192.168.20.10 /24", "Remote ping/HTTP/DNS; gateway 192.168.20.1"], ["SRV2", "Gi0", "192.168.10.50 /24", "Static server; MAC 0200.0010.0050; SW1 Gi0/4"], ["PC3", "Gi0", "192.168.10.60 /24", "ARP test host; SW1 Gi0/5"]], commands: DAI_COMMANDS, verification: { SW1: ["show ip dhcp snooping", "show ip dhcp snooping binding", "show ip arp inspection", "show ip arp inspection interfaces", "show ip arp inspection statistics", "show running-config | section arp access-list", "show running-config | include inspection", "show interfaces status err-disabled", "show logging"], R1: ["show ip dhcp binding", "show ip interface brief"], PC1: ["ipconfig /all", "arp -a", "ping -n 3 192.168.20.10", "ping -n 3 192.168.10.50"], PC2: ["ipconfig /all", "arp -a", "ping -n 3 192.168.20.10"] }, setup: [
+      { title: "Protect the client VLAN", instructions: ["VLAN 10, PortFast access ports, router addressing, the DHCP pool and server services are ready. Configure SW1 only. Enable DHCP snooping globally and for VLAN 10. Disable Option 82 insertion for this router-served pool with no ip dhcp snooping information option.", "Enable ip arp inspection vlan 10 and the src-mac, dst-mac and ip validation checks. DHCP snooping trust and ARP inspection trust are separate settings: apply both only to Gi0/3 toward R1. Keep all client and static-server ports untrusted. Explicitly set ip arp inspection limit rate 15 on Gi0/1, Gi0/2, Gi0/4 and Gi0/5."] },
+      { title: "Permit the static server without bypassing inspection", instructions: ["SRV2 has no DHCP binding. In arp access-list STATIC-SERVER, permit only its IP 192.168.10.50 and MAC 0200.0010.0050. Apply ip arp inspection filter STATIC-SERVER vlan 10. Keep Gi0/4 untrusted.", "Omit the static keyword on the filter and do not add deny ip any mac any: unmatched DHCP clients must fall back to the snooping binding table. A broad permit defeats the protection."] },
+      { title: "Build bindings and test actual ARP", instructions: ["Request leases for PC1 and PC2 after enabling snooping, using the guide or ipconfig /release followed by ipconfig /renew. A lease obtained before snooping was enabled does not already have a learned switch binding. Verify both current MAC/IP/VLAN/access-port rows, then run both remote-server ping tasks.", "Send the static-server ARP test. It transmits a real gratuitous ARP claim from SRV2 for 192.168.10.50; the task requires ARP-ACL admission and receipt at PC1. Send the forged-gateway ARP test from PC3. PC3 retains its real .60 address but claims gateway .1 with its own NIC MAC. This is a guide test frame, not an invented Windows command.", "The forged claim must be dropped on Gi0/5. Inspect the ARP drop in the packet trace and the inspection counter. PC1\u2019s arp -a must retain R1\u2019s actual gateway MAC, not PC3\u2019s. A successful ping alone cannot prove the attack was filtered."] },
+      { title: "Troubleshoot, repair and save", instructions: ["Trust Gi0/5 temporarily or disable inspection for VLAN 10, then resend the forged claim: PC1 can learn the wrong gateway MAC. Restore inspection and untrusted access ports. The policy does not repair poisoned caches automatically: use arp -d * on each PC, then ping SRV1 to relearn R1. Resend the forged claim and verify the correct cache remains.", "Remove ARP trust from Gi0/3: legitimate R1 ARP replies have no snooping binding and are blocked even while DHCP trust remains correct. Restore ARP trust, clear PC caches and retry.", "Apply the filter with static temporarily: the unmatched DHCP-client ARP is now denied. Remove the filter and reapply it without static. A wrong SRV2 MAC in the ARP ACL blocks its test; repair the exact host rule.", "Clear ip dhcp snooping binding * to remove learned bindings. Existing ARP caches can temporarily hide the fault, so clear client caches before retrying a ping. Renew both leases to rebuild the bindings. Save SW1 with write memory and save the lab. Dynamic bindings and neighbor caches rebuild after reopening; observed ARP-test and successful-ping achievements are retained."] }
+    ], note: "Practice starts unprotected at zero tasks. The completed reference contains the five policy tasks; fresh DHCP traffic earns the two binding tasks after load. The remaining five tasks require real pings, static ARP acceptance, a blocked forged claim and a correct live gateway cache. Inspection statistics currently report aggregate drops, not per-VLAN or per-cause counters." },
     "dhcp-snooping": { columns: ["Device", "Interface", "IPv4 address", "Role / gateway"], rows: [["PC1", "Gi0", "DHCP: 192.168.10.100\u2013149 /24", "Client on SW1 Gi0/1"], ["PC2", "Gi0", "DHCP: 192.168.10.100\u2013149 /24", "Client on SW1 Gi0/2"], ["SRV1", "Gi0", "192.168.10.10 /24", "Legitimate DHCP/DNS/HTTP; SW1 Gi0/3"], ["SRV2", "Gi0", "192.168.10.20 /24", "Rogue DHCP; SW1 Gi0/4"], ["R1", "Gi0/0", "192.168.10.1 /24", "Legitimate gateway; SW1 Gi0/5"]], commands: DHCP_SNOOPING_COMMANDS, verification: { SW1: ["show ip dhcp snooping", "show ip dhcp snooping binding", "show ip source binding", "show vlan brief", "show interfaces status", "show interfaces status err-disabled", "show running-config | include snooping", "show logging"], PC1: ["ipconfig /all", "ping -n 3 192.168.10.10", "ping -n 3 192.168.10.1", "nslookup server.snoop.lab 192.168.10.10"], PC2: ["ipconfig /all", "ping -n 3 192.168.10.10", "ping -n 3 192.168.10.1"] }, setup: [
       { title: "Keep the rogue server live", instructions: ["VLAN 10, all access ports, R1 and both DHCP servers are prepared. SRV1 offers 192.168.10.100\u2013149 with gateway 192.168.10.1 and DNS 192.168.10.10. SRV2 offers 192.168.10.200\u2013249 with a wrong gateway of 192.168.10.254 and DNS 203.0.113.53.", "The rogue path responds faster, so an unprotected client can accept its lease. Leave SRV2 connected, powered and enabled; disabling it cannot demonstrate DHCP snooping. Configure SW1, then request fresh leases to replace any earlier rogue settings."] },
       { title: "Trust only the legitimate server ingress", instructions: ["Enable ip dhcp snooping globally and for VLAN 10, and enable ip dhcp snooping information option. Trust only Gi0/3 toward SRV1. Keep the PC ports Gi0/1\u20132, rogue port Gi0/4 and gateway port Gi0/5 untrusted.", "Trust controls DHCP server replies entering the switch. It does not mean that every port toward a router is automatically trusted. Configure ip dhcp snooping limit rate 10 on both client ports.", "The prepared Server service accepts Option 82. The switch inserts circuit-id 10:GigabitEthernet0/1 or 10:GigabitEthernet0/2 and its remote ID; SRV1 returns that information with the ACK. Other DHCP server platforms can require separate Option 82 handling."] },
@@ -54043,6 +54141,55 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createDynamicARPInspectionLab(mode = "practice") {
+    const make = (name2, kind, x, y) => ({ id: "device-dai-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const pc1 = make("PC1", "pc", 150, 100), pc2 = make("PC2", "pc", 150, 330), sw = make("SW1", "switch", 450, 275), r1 = make("R1", "router", 750, 110), srv1 = make("SRV1", "server", 1020, 110), srv2 = make("SRV2", "server", 750, 400), pc3 = make("PC3", "pc", 450, 535), p = "GigabitEthernet0";
+    for (const d of [pc1, pc2]) {
+      const port3 = d.config.interfaces[p];
+      delete port3.ip;
+      delete port3.mask;
+      port3.adminUp = true;
+      port3.features.dhcp = true;
+    }
+    for (const [d, port3, ip2] of [[r1, "GigabitEthernet0/0", "192.168.10.1"], [r1, "GigabitEthernet0/1", "192.168.20.1"], [srv1, p, "192.168.20.10"], [srv2, p, "192.168.10.50"], [pc3, p, "192.168.10.60"]]) {
+      Object.assign(d.config.interfaces[port3], { ip: ip2, mask: "255.255.255.0", adminUp: true });
+      d.config.interfaces[port3].features.dhcp = false;
+    }
+    srv1.config.defaultGateway = "192.168.20.1";
+    srv2.config.defaultGateway = pc3.config.defaultGateway = "192.168.10.1";
+    srv2.config.interfaces[p].features.macAddress = DAI_STATIC_MAC;
+    r1.config.services.dhcp = { enabled: true, pools: [{ name: "USERS", network: "192.168.10.0", prefix: 24, defaultRouter: "192.168.10.1", dnsServers: ["192.168.20.10"], leaseSeconds: 3600 }], excluded: [{ start: "192.168.10.1", end: "192.168.10.99" }, { start: "192.168.10.150", end: "192.168.10.254" }] };
+    srv1.config.services.dns = { enabled: true, resourceRecords: [{ name: "server.dai.lab", type: "A", value: "192.168.20.10", ttl: 300 }] };
+    for (const d of [srv1, srv2]) d.config.services.http = { enabled: true, port: 80, authentication: "none", content: '<!doctype html><html lang="en"><meta charset="utf-8"><title>' + d.config.hostname + "</title><h1>" + d.config.hostname + ": ARP-protected service reached</h1></html>" };
+    sw.config.vlans[10] = { id: 10, name: "USERS", active: true };
+    for (const n of [1, 2, 3, 4, 5]) {
+      const port3 = sw.config.interfaces["GigabitEthernet0/" + n];
+      Object.assign(port3, { mode: "access", vlan: 10, adminUp: true });
+      port3.features.portfast = true;
+    }
+    const devices = [pc1, pc2, sw, r1, srv1, srv2, pc3];
+    for (const d of devices) d.startupConfig = structuredClone(d.config);
+    const snooping = { kind: "all", criteria: [{ kind: "dhcp-snooping", device: sw.id, vlan: 10, option82: false }, { kind: "snooping-trust", device: sw.id, interface: "GigabitEthernet0/3", exclusive: true }] };
+    const scope = { kind: "dai-vlan", device: sw.id, vlan: 10 }, trust = { kind: "dai-trust", device: sw.id, interface: "GigabitEthernet0/3" }, acl = { kind: "dai-static-acl", device: sw.id, vlan: 10, acl: "STATIC-SERVER", source: srv2.id, sourceInterface: p, interface: "GigabitEthernet0/4", address: "192.168.10.50" }, rate = { kind: "dai-rate", device: sw.id, interfaces: [1, 2, 4, 5].map((n) => "GigabitEthernet0/" + n), rate: 15 }, ready = { kind: "all", criteria: [snooping, scope, trust, acl, rate] };
+    const lease = (pc, i) => ({ device: sw.id, source: pc.id, server: r1.id, interface: "GigabitEthernet0/" + (i + 1), clientInterface: p, vlan: 10, network: "192.168.10.0", prefix: 24, gateway: "192.168.10.1", dnsServer: "192.168.20.10" });
+    const blocked = { kind: "dai-frame", device: sw.id, source: pc3.id, sourceInterface: p, interface: "GigabitEthernet0/5", vlan: 10, address: "192.168.10.1", decision: "deny", receiver: pc1.id };
+    const link = (name2, d, n) => ({ id: "link-dai-" + name2, a: { deviceId: d.id, port: d === r1 ? "GigabitEthernet0/0" : p }, b: { deviceId: sw.id, port: "GigabitEthernet0/" + n }, enabled: true, delay: 0.1, loss: 0 });
+    const resources = GUIDE_RESOURCES["dynamic-arp-inspection"];
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "dynamic-arp-inspection", name: "Dynamic ARP Inspection" + (mode === "completed" ? " \xB7 Completed" : ""), devices, links: [link("pc1", pc1, 1), link("pc2", pc2, 2), link("gateway", r1, 3), link("static", srv2, 4), link("test", pc3, 5), { id: "link-dai-remote", a: { deviceId: r1.id, port: "GigabitEthernet0/1" }, b: { deviceId: srv1.id, port: p }, enabled: true, delay: 0.1, loss: 0 }], notes: [{ id: "note-dai", x: 830, y: 550, text: "VLAN 10 \xB7 Trust Gi0/3 \u2192 R1 only\nSRV2: static ARP ACL \xB7 PC3: forged gateway test\nRenew DHCP after enabling snooping" }], lesson: { title: "Dynamic ARP Inspection", description: "Protect VLAN 10 against forged ARP while keeping DHCP clients and a static server reachable. Addressing, access ports, R1\u2019s DHCP pool and server services are prepared. Configure SW1 only.\n\n" + resources.setup.map((s) => s.title + "\n" + s.instructions.join("\n")).join("\n\n"), objectives: [
+      { id: "snooping", title: "Enable VLAN 10 snooping; trust only R1 for DHCP", description: "Disable Option 82 insertion for this router-served pool.", criterion: snooping },
+      { id: "inspection", title: "Inspect VLAN 10 ARP with MAC and IP validation", criterion: scope },
+      { id: "trusted-gateway", title: "Trust only Gi0/3 toward R1 for ARP inspection", criterion: trust },
+      { id: "static-acl", title: "Permit only SRV2\u2019s static IP/MAC through its ARP ACL", description: "Apply STATIC-SERVER to VLAN 10 without the static keyword. Keep Gi0/4 untrusted.", criterion: acl },
+      { id: "arp-rate", title: "Set all four untrusted access ports to 15 ARP pps", criterion: rate },
+      ...[pc1, pc2].map((pc, i) => ({ id: "pc" + (i + 1) + "-lease", title: "Learn " + pc.config.hostname + "\u2019s real DHCP snooping binding", criterion: { kind: "snooping-binding", ...lease(pc, i) }, action: { kind: "dhcp", device: pc.id, interface: p, when: ready } })),
+      ...[pc1, pc2].map((pc, i) => ({ id: "pc" + (i + 1) + "-ping", title: "Verify " + pc.config.hostname + " reaches remote SRV1 through the gateway", criterion: { kind: "all", criteria: [ready, { kind: "snooping-ping", ...lease(pc, i), target: srv1.id }] }, action: { kind: "ping", device: pc.id, target: "192.168.20.10", when: { kind: "all", criteria: [ready, { kind: "snooping-binding", ...lease(pc, i) }] } } })),
+      { id: "static-arp", title: "Accept SRV2\u2019s static ARP claim through the exact ACL", description: "Send SRV2\u2019s genuine 192.168.10.50 claim and verify receipt at PC1.", criterion: { kind: "dai-frame", device: sw.id, vlan: 10, source: srv2.id, sourceInterface: p, interface: "GigabitEthernet0/4", address: "192.168.10.50", decision: "acl", receiver: pc1.id }, action: { kind: "arp", device: srv2.id, interface: p, address: "192.168.10.50" } },
+      { id: "forged-arp", title: "Drop PC3\u2019s forged gateway ARP on Gi0/5", description: "Send a false 192.168.10.1 claim with PC3\u2019s own NIC MAC. The switch must actually drop it.", criterion: blocked, action: { kind: "arp", device: pc3.id, interface: p, address: "192.168.10.1" } },
+      { id: "gateway-cache", title: "Keep PC1\u2019s live gateway cache mapped to R1 after the blocked claim", description: "Ping remote SRV1 first to resolve R1. After poisoning during troubleshooting, use arp -d * and ping again.", criterion: { kind: "all", criteria: [ready, blocked, { kind: "arp-neighbor", device: pc1.id, interface: p, address: "192.168.10.1", owner: r1.id, ownerInterface: "GigabitEthernet0/0" }] } }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, DAI_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createDHCPSnoopingLab(mode = "practice") {
     const make = (name2, kind, x, y) => ({ id: "device-snooping-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
     const pc1 = make("PC1", "pc", 150, 150), pc2 = make("PC2", "pc", 150, 420), sw = make("SW1", "switch", 450, 280), server = make("SRV1", "server", 800, 110), rogue = make("SRV2", "server", 800, 420), router = make("R1", "router", 450, 540);
@@ -55654,6 +55801,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "dynamic-arp-inspection") return createDynamicARPInspectionLab(mode);
     if (id2 === "dhcp-snooping") return createDHCPSnoopingLab(mode);
     if (id2 === "named-and-numbered-acl") return createNamedNumberedACLLab(mode);
     if (id2 === "extended-ipv4-acl") return createExtendedIPv4ACLLab(mode);
@@ -55862,7 +56010,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     const progress = lessonProgress(sim2);
     if (!progress) return;
     const catalogId = sim2.lab.catalogId, resources = catalogGuideResources(catalogId), isRoas = catalogId === "router-on-a-stick", description = isRoas ? currentRouterOnAStickGuide(progress.lesson.description) : progress.lesson.description;
-    dialog2(progress.lesson.title, `<p class="catalog-instructions">${escapeHTML(description)}</p><div class="catalog-completion" data-guide-completion hidden><span aria-hidden="true">\u2713</span><div><strong>Lab complete!</strong><p>All tasks are complete.</p></div></div><p class="catalog-progress" data-guide-progress role="status"></p><ol class="catalog-checks">${progress.rows.map(({ objective: o }) => `<li data-objective="${escapeHTML(o.id)}"><span data-objective-state role="img" aria-label="Not complete"></span><div><strong>${escapeHTML(o.title)}</strong>${o.description ? `<p>${escapeHTML(o.description)}</p>` : ""}${o.action ? `<button class="btn" data-guide-test="${escapeHTML(o.id)}">${o.action.kind === "dhcp" ? "Request DHCP lease" : "Test connectivity"}</button><p class="catalog-test-status" data-test-status="${escapeHTML(o.id)}" role="status"></p>` : ""}</div></li>`).join("")}</ol>${resources ? addressPlan(resources) + reference(resources) : ""}`, '<button class="btn-primary" data-action="close-dialog">Done</button>');
+    dialog2(progress.lesson.title, `<p class="catalog-instructions">${escapeHTML(description)}</p><div class="catalog-completion" data-guide-completion hidden><span aria-hidden="true">\u2713</span><div><strong>Lab complete!</strong><p>All tasks are complete.</p></div></div><p class="catalog-progress" data-guide-progress role="status"></p><ol class="catalog-checks">${progress.rows.map(({ objective: o }) => `<li data-objective="${escapeHTML(o.id)}"><span data-objective-state role="img" aria-label="Not complete"></span><div><strong>${escapeHTML(o.title)}</strong>${o.description ? `<p>${escapeHTML(o.description)}</p>` : ""}${o.action ? `<button class="btn" data-guide-test="${escapeHTML(o.id)}">${o.action.kind === "dhcp" ? "Request DHCP lease" : o.action.kind === "arp" ? "Send ARP test" : "Test connectivity"}</button><p class="catalog-test-status" data-test-status="${escapeHTML(o.id)}" role="status"></p>` : ""}</div></li>`).join("")}</ol>${resources ? addressPlan(resources) + reference(resources) : ""}`, '<button class="btn-primary" data-action="close-dialog">Done</button>');
     decorate();
     const root = document.querySelector(".catalog-checks"), running = /* @__PURE__ */ new Map();
     const render = () => {
@@ -55883,11 +56031,11 @@ Inspect show power inline and the per-port detail and priority views. The full 3
         if (button2) {
           const available = actionAvailable(sim2, objective);
           button2.disabled = test?.result.status === "running" || !available;
-          button2.dataset.tooltip = available ? objective.action?.kind === "dhcp" ? "Request IPv4 settings from the DHCP service" : "Send three ICMP echo requests" : "Power on the source device and complete the action prerequisites first.";
+          button2.dataset.tooltip = available ? objective.action?.kind === "dhcp" ? "Request IPv4 settings from the DHCP service" : objective.action?.kind === "arp" ? "Send the test host\u2019s gratuitous ARP claim" : "Send three ICMP echo requests" : "Power on the source device and complete the action prerequisites first.";
         }
         if (test) {
           const status3 = row5.querySelector("[data-test-status]");
-          const message2 = test.kind === "dhcp" ? test.result.status === "running" ? "Requesting a DHCP lease\u2026" : test.result.status === "success" ? `Lease received: ${test.result.address}. Verify its settings against the addressing plan.` : complete2 ? "A valid DHCP lease is active." : "No lease received. Check the DHCP service, client pool and relay." : test.result.status === "running" ? "Checking connectivity\u2026" : test.result.received ? `${test.result.received} of ${test.result.sent} replies received.` : "No replies. Check interface addresses, masks, link status and routing.";
+          const message2 = test.kind === "arp" ? "ARP test sent. Inspect the packet trace and task result." : test.kind === "dhcp" ? test.result.status === "running" ? "Requesting a DHCP lease\u2026" : test.result.status === "success" ? `Lease received: ${test.result.address}. Verify its settings against the addressing plan.` : complete2 ? "A valid DHCP lease is active." : "No lease received. Check the DHCP service, client pool and relay." : test.result.status === "running" ? "Checking connectivity\u2026" : test.result.received ? `${test.result.received} of ${test.result.sent} replies received.` : "No replies. Check interface addresses, masks, link status and routing.";
           if (status3.textContent !== message2) status3.textContent = message2;
         }
       }
@@ -55898,7 +56046,13 @@ Inspect show power inline and the per-port detail and priority views. The full 3
       const objective = progress.lesson.objectives.find((o) => o.id === button2.dataset.guideTest), action = objective?.action;
       if (!objective || !action || !actionAvailable(sim2, objective)) return;
       if (!isPlaying()) {
-        root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`).textContent = action.kind === "dhcp" ? "Resume the simulation to request a DHCP lease." : "Resume the simulation to run a connectivity check.";
+        root.querySelector(`[data-test-status="${CSS.escape(objective.id)}"]`).textContent = action.kind === "dhcp" ? "Resume the simulation to request a DHCP lease." : action.kind === "arp" ? "Resume the simulation to send an ARP test." : "Resume the simulation to run a connectivity check.";
+        return;
+      }
+      if (action.kind === "arp") {
+        sim2.sendGratuitousARP(action.device, action.interface, action.address);
+        running.set(objective.id, { kind: "arp", result: { status: "success" } });
+        render();
         return;
       }
       running.set(objective.id, action.kind === "dhcp" ? { kind: "dhcp", result: sim2.requestDHCP(action.device, action.interface) } : { kind: "ping", result: sim2.ping(action.device, action.target, { count: 3 }) });
@@ -55998,7 +56152,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
       }
       if (clients) {
         const records = Object.entries(d.runtime.features.apAuthorizations ?? {});
-        clients.insertAdjacentHTML("beforeend", `<div class="section-label mt-4 mb-2">AP join authorization \xB7 ${records.length}</div><div class="wireless-table-wrap" data-wlc-ap-authorizations><table class="wireless-table"><thead><tr><th>Ethernet MAC / IP</th><th>Result</th><th>Reason</th><th>Age</th></tr></thead><tbody>${records.map(([mac6, r]) => `<tr><td>${escapeHTML(ciscoMAC(mac6))}<small>${escapeHTML(r.address)}</small></td><td>${escapeHTML(r.status)}</td><td>${escapeHTML(r.reason)}</td><td>${Math.max(0, Math.floor((sim2.clock.now() - r.time) / 1e3))}s</td></tr>`).join("") || '<tr><td colspan="4">No AP MAC authorization requests received</td></tr>'}</tbody></table></div>`);
+        clients.insertAdjacentHTML("beforeend", `<div class="section-label mt-4 mb-2">AP join authorization \xB7 ${records.length}</div><div class="wireless-table-wrap" data-wlc-ap-authorizations><table class="wireless-table"><thead><tr><th>Ethernet MAC / IP</th><th>Result</th><th>Reason</th><th>Age</th></tr></thead><tbody>${records.map(([mac7, r]) => `<tr><td>${escapeHTML(ciscoMAC(mac7))}<small>${escapeHTML(r.address)}</small></td><td>${escapeHTML(r.status)}</td><td>${escapeHTML(r.reason)}</td><td>${Math.max(0, Math.floor((sim2.clock.now() - r.time) / 1e3))}s</td></tr>`).join("") || '<tr><td colspan="4">No AP MAC authorization requests received</td></tr>'}</tbody></table></div>`);
       }
     };
   }
@@ -56134,9 +56288,9 @@ Inspect show power inline and the per-port detail and priority views. The full 3
         exec("aaa authorization credential-download " + key4 + (method === "local" ? " local" : " group " + group));
       });
       const macs = csv("admin-ap-macs").map(canonicalMAC);
-      if (macs.some((mac6) => !/^([a-f0-9]{12})$/.test(mac6)) || new Set(macs).size !== macs.length) throw Error("Use unique AP Ethernet MAC addresses.");
-      for (const mac6 of auth?.macs ?? []) if (!macs.includes(mac6)) exec("no username " + mac6);
-      for (const mac6 of macs) exec("username " + mac6 + " mac");
+      if (macs.some((mac7) => !/^([a-f0-9]{12})$/.test(mac7)) || new Set(macs).size !== macs.length) throw Error("Use unique AP Ethernet MAC addresses.");
+      for (const mac7 of auth?.macs ?? []) if (!macs.includes(mac7)) exec("no username " + mac7);
+      for (const mac7 of macs) exec("username " + mac7 + " mac");
       const selected2 = at("admin-ap-method");
       if (has("admin-ap-enabled") && (!has("admin-aaa-enabled") || !apLists.includes(selected2))) throw Error("Enable AAA and select an existing AP authorization list.");
       exec(apLists.includes(selected2) ? "ap auth-list method-list " + selected2 : "no ap auth-list method-list");
@@ -56231,7 +56385,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     }
     next.policyTags["default-policy-tag"] ??= {};
     next.assignments = structuredClone(original.assignments);
-    for (const mac6 of presentedAPs) delete next.assignments[canonicalMAC(mac6)];
+    for (const mac7 of presentedAPs) delete next.assignments[canonicalMAC(mac7)];
     const retain = (field3, name2) => {
       const table2 = next[field3], old = original[field3];
       if (wirelessEntry(old, name2)) setWirelessEntry(table2, name2, structuredClone(wirelessEntry(old, name2)));
@@ -56352,8 +56506,8 @@ Inspect show power inline and the per-port detail and priority views. The full 3
       exec("wlan " + at("tag-wlan", i) + " policy " + at("tag-policy", i));
       exec("exit");
     }, false);
-    each("ap-mac", (i, mac6) => {
-      exec("ap " + mac6);
+    each("ap-mac", (i, mac7) => {
+      exec("ap " + mac7);
       exec("policy-tag " + at("ap-policy", i));
       exec("site-tag " + at("ap-site", i));
       exec("rf-tag " + at("ap-rf", i));
@@ -56518,12 +56672,12 @@ Inspect show power inline and the per-port detail and priority views. The full 3
           if (!security2.some((x) => x[0] === sec)) throw Error("Select a supported security mode.");
           if (["wpa2-personal", "wpa3-personal", "wpa2-wpa3-personal"].includes(sec) && ssid && !validPSK(passphrase)) throw Error("Personal security requires 8\u201363 ASCII characters or 64 hexadecimal digits.");
           if (new TextEncoder().encode(ssid).length > 32) throw Error("SSID must be at most 32 bytes.");
-          const mac6 = canonicalMAC(read(f, "mac"));
-          if (!/^[a-f0-9]{12}$/.test(mac6) || parseInt(mac6.slice(0, 2), 16) % 2 || /^0+$/.test(mac6)) throw Error("Enter a valid unicast MAC address.");
+          const mac7 = canonicalMAC(read(f, "mac"));
+          if (!/^[a-f0-9]{12}$/.test(mac7) || parseInt(mac7.slice(0, 2), 16) % 2 || /^0+$/.test(mac7)) throw Error("Enter a valid unicast MAC address.");
           Object.assign(next.adapter, { enabled: on(f, "adapter-enabled"), autoConnect: on(f, "auto-connect"), ssid, security: sec, passphrase, username: read(f, "username"), password: String(f.get("password") ?? ""), roamHysteresis: number5(f, "hysteresis", 1, 30), minimumResidence: number5(f, "residence", 1, 300) * 1e3 });
           if (a.pmfCapable !== void 0 || !on(f, "pmf-capable")) next.adapter.pmfCapable = on(f, "pmf-capable");
           Object.assign(next.rf, { metersPerUnit: number5(f, "meters", 0.01, 10), pathLossExponent: number5(f, "exponent", 1, 6), noiseFloor: number5(f, "noise", -120, -40), attenuation: number5(f, "attenuation", 0, 80), sensitivity: number5(f, "sensitivity", -100, -30), interference: on(f, "interference") });
-          next.adapter.macAddress = mac6.match(/../g).join(":");
+          next.adapter.macAddress = mac7.match(/../g).join(":");
         } else {
           const controller = read(f, "controller");
           if (controller && !isIPv4(controller)) throw Error("Enter a valid controller IPv4 address.");
@@ -56651,8 +56805,8 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     const rfTagRow = (name2 = "", p = {}) => row4("RF tag", `<div class="grid grid-cols-3 gap-3">${definition("RF tag", "rftag-name", name2, "default-rf-tag")}${wlcReference("2.4 GHz RF profile", "rftag-24", p.band24, "rf24", catalog)}${wlcReference("5 GHz RF profile", "rftag-5", p.band5, "rf5", catalog)}</div>`, name2 !== "default-rf-tag");
     const list = (kind, body) => `<div data-wireless-list="${kind}" class="space-y-3">${body}</div><button class="btn mt-2" type="button" data-wireless-add="${kind}">+ Add ${kind}</button>`;
     form(`${d.config.hostname} \xB7 WLC`, `<div class="text-[10px] text-slate-400">IOS XE 17.12 \xB7 simulated configuration and operational state</div><nav class="flex flex-wrap gap-1 border-b border-slate-200 pb-3" role="tablist" aria-label="Wireless controller sections">${sectionNames.map((name2, i) => `<button class="btn ${i === 0 ? "tool-active" : ""}" type="button" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-wireless-tab="${name2}">${name2}</button>`).join("")}</nav>${panel("Overview", `<div class="flex justify-between items-center"><span class="section-label">Monitoring \xB7 Wireless</span><button class="btn" type="button" data-wireless-console>Open IOS XE console</button></div><pre class="wireless-output" data-wlc-overview></pre><div class="section-label">Wireless management interface</div><div class="grid grid-cols-2 gap-3">${input3("Hostname", "hostname", d.config.hostname)}${wlcReference("Interface", "management-interface", w.managementInterface ?? "GigabitEthernet1", "interface", catalog)}${input3("IPv4 address", "management-ip", d.config.interfaces[w.managementInterface ?? "GigabitEthernet1"]?.ip)}${input3("Subnet mask", "management-mask", d.config.interfaces[w.managementInterface ?? "GigabitEthernet1"]?.mask ?? "255.255.255.0")}${input3("Default gateway", "management-gateway", d.config.defaultGateway)}${input3("DNS servers", "management-dns", d.config.dnsServers.join(", "))}</div><p class="text-xs text-slate-500">Apply updates running configuration. Use Save startup configuration in Monitoring to retain it after a reload.</p>`, true)}${panel("WLANs", `<p class="text-xs text-slate-500">Configuration \u203A Tags & Profiles \u203A WLANs. A WLAN advertises only after an enabled policy is mapped in the AP\u2019s policy tag.</p>${list("WLAN", Object.values(w.wlans).map(wlanRow).join(""))}`)}${panel("Policy profiles", `<p class="text-xs text-slate-500">Configuration \u203A Tags & Profiles \u203A Policy. Local switching requires a FlexConnect site tag.</p>${list("Policy", Object.entries(w.policies).map(([name2, p]) => policyRow({ ...p, name: name2 })).join(""))}`)}${panel("Tags & profiles", `<p class="text-xs text-slate-500">Create profiles and tags, then select them in mappings. New items are available immediately before Apply.</p><input type="hidden" name="policy-tag-definitions" value="1">${list("Policy tag", Object.keys(w.policyTags).map((name2) => policyTagRow(name2)).join(""))}${list("Policy tag mapping", Object.entries(w.policyTags).flatMap(([tag, maps]) => Object.entries(maps).map(([wlan, policy]) => mappingRow(tag, wlan, policy))).join(""))}<details><summary class="cursor-pointer text-xs font-semibold">Site tags, AP join profiles, and Flex profiles</summary><div class="mt-3 space-y-4">${list("AP join profile", Object.entries(w.apProfiles).map(([n, p]) => joinRow(n, p)).join(""))}${list("Flex profile", Object.entries(w.flexProfiles).map(([n, p]) => flexRow(n, p)).join(""))}${list("Site tag", Object.entries(w.siteTags).map(([n, p]) => siteRow(n, p)).join(""))}</div></details><details><summary class="cursor-pointer text-xs font-semibold">RF profiles and RF tags</summary><div class="mt-3 space-y-4">${list("RF profile", Object.entries(w.rfProfiles).map(([n, p]) => rfRow(n, p)).join(""))}${list("RF tag", Object.entries(w.rfTags).map(([n, p]) => rfTagRow(n, p)).join(""))}</div></details>`)}${panel("Access points", `<p class="text-xs text-slate-500">Configuration \u203A Wireless \u203A Access Points \u203A General \u203A Tags. APs require IP reachability and a completed CAPWAP join.</p><div class="space-y-3">${sim2.lab.devices.filter((a) => a.kind === "ap" && !standaloneAP(wirelessConfig(a))).map((ap) => {
-      const mac6 = canonicalMAC(sim2.macOf(ap.id, "GigabitEthernet0")), tag = w.assignments[mac6] ?? { policyTag: "default-policy-tag", siteTag: "default-site-tag", rfTag: "default-rf-tag" };
-      return row4("AP assignment", `<div class="font-semibold text-xs">${escapeHTML(ap.config.hostname)} \xB7 ${escapeHTML(ciscoMAC(mac6))}</div><input type="hidden" name="ap-mac" value="${mac6}"><div class="grid grid-cols-3 gap-3">${wlcReference("Policy tag", "ap-policy", tag.policyTag, "policy-tag", catalog)}${wlcReference("Site tag", "ap-site", tag.siteTag, "site-tag", catalog)}${wlcReference("RF tag", "ap-rf", tag.rfTag, "rf-tag", catalog)}</div>`);
+      const mac7 = canonicalMAC(sim2.macOf(ap.id, "GigabitEthernet0")), tag = w.assignments[mac7] ?? { policyTag: "default-policy-tag", siteTag: "default-site-tag", rfTag: "default-rf-tag" };
+      return row4("AP assignment", `<div class="font-semibold text-xs">${escapeHTML(ap.config.hostname)} \xB7 ${escapeHTML(ciscoMAC(mac7))}</div><input type="hidden" name="ap-mac" value="${mac7}"><div class="grid grid-cols-3 gap-3">${wlcReference("Policy tag", "ap-policy", tag.policyTag, "policy-tag", catalog)}${wlcReference("Site tag", "ap-site", tag.siteTag, "site-tag", catalog)}${wlcReference("RF tag", "ap-rf", tag.rfTag, "rf-tag", catalog)}</div>`);
     }).join("") || '<p class="text-xs text-slate-400">Place a lightweight AP in the diagram to assign its tags.</p>'}</div>`)}${panel("Administration", renderWLCAdministration(d))}${panel("Monitoring", '<div class="flex gap-2"><button type="button" class="btn" data-wlc-save>Save startup configuration</button><button type="button" class="btn" data-wlc-reload>Reload controller</button></div><p class="text-xs text-slate-500" data-wlc-action-status></p><pre class="wireless-output" data-wlc-monitor></pre><div data-wlc-clients></div>')}<div role="status" class="text-[10px] text-slate-400">Fields use the same authoritative configuration model as the console. Credentials are lab data and are included in exported topologies.</div>`, (f) => {
       const config4 = controllerFormDraft(sim2.seed, d, f, sim2.lab.devices.filter((ap) => ap.kind === "ap" && !standaloneAP(wirelessConfig(ap))).map((ap) => sim2.macOf(ap.id, "GigabitEthernet0")));
       commit(() => {
@@ -57256,11 +57410,11 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
         const binding = client.runtime.features.dhcpClientLeases?.[name2];
         return binding?.serverId === d.id && binding.address === lease.address;
       });
-      const mac6 = client && port3 ? sim2.macOf(client.id, port3) : "";
-      return { lease, client: client?.config.hostname ?? lease.clientId, mac: mac6 };
+      const mac7 = client && port3 ? sim2.macOf(client.id, port3) : "";
+      return { lease, client: client?.config.hostname ?? lease.clientId, mac: mac7 };
     }).filter((row5) => [row5.lease.address, row5.client, row5.lease.clientId, row5.mac, row5.lease.pool].some((value) => String(value ?? "").toLowerCase().includes(query2))).sort((a, b) => ipToInt(a.lease.address) - ipToInt(b.lease.address));
     return `<div class="flex items-center justify-between gap-3"><span class="section-label">Active leases</span><span class="text-xs text-slate-500" data-dhcp-lease-count>${query2 ? `${rows2.length} of ${leases.length}` : leases.length} ${leases.length === 1 ? "lease" : "leases"}</span></div>
-    ${rows2.length ? `<div class="wireless-table-wrap"><table class="wireless-table" aria-label="DHCP leases"><thead><tr><th scope="col">IP address</th><th scope="col">Client</th><th scope="col">Pool</th><th scope="col">Remaining</th></tr></thead><tbody>${rows2.map(({ lease, client, mac: mac6 }) => `<tr data-dhcp-lease="${escapeHTML(lease.address)}"><td class="font-mono whitespace-nowrap">${escapeHTML(lease.address)}</td><td>${escapeHTML(client)}<small class="font-mono">${escapeHTML(mac6 || lease.clientId)}</small>${lease.option82 ? `<details class="mt-1 text-xs" data-dhcp-option82><summary>Option 82</summary><dl class="mt-1 space-y-1"><dt>Circuit ID</dt><dd class="font-mono break-all">${escapeHTML(lease.option82.circuitId)}</dd><dt>Remote ID</dt><dd class="font-mono break-all">${escapeHTML(lease.option82.remoteId)}</dd></dl></details>` : ""}</td><td>${escapeHTML(lease.pool)}</td><td class="whitespace-nowrap" data-lease-remaining>${leaseDuration(lease.expires - now)}</td></tr>`).join("")}</tbody></table></div>` : `<p class="rounded-xl border border-slate-200 p-4 text-xs text-slate-500" data-dhcp-lease-empty>${query2 ? "No leases match your search." : "No active leases. Clients will appear here after this server allocates an address."}</p>`}`;
+    ${rows2.length ? `<div class="wireless-table-wrap"><table class="wireless-table" aria-label="DHCP leases"><thead><tr><th scope="col">IP address</th><th scope="col">Client</th><th scope="col">Pool</th><th scope="col">Remaining</th></tr></thead><tbody>${rows2.map(({ lease, client, mac: mac7 }) => `<tr data-dhcp-lease="${escapeHTML(lease.address)}"><td class="font-mono whitespace-nowrap">${escapeHTML(lease.address)}</td><td>${escapeHTML(client)}<small class="font-mono">${escapeHTML(mac7 || lease.clientId)}</small>${lease.option82 ? `<details class="mt-1 text-xs" data-dhcp-option82><summary>Option 82</summary><dl class="mt-1 space-y-1"><dt>Circuit ID</dt><dd class="font-mono break-all">${escapeHTML(lease.option82.circuitId)}</dd><dt>Remote ID</dt><dd class="font-mono break-all">${escapeHTML(lease.option82.remoteId)}</dd></dl></details>` : ""}</td><td>${escapeHTML(lease.pool)}</td><td class="whitespace-nowrap" data-lease-remaining>${leaseDuration(lease.expires - now)}</td></tr>`).join("")}</tbody></table></div>` : `<p class="rounded-xl border border-slate-200 p-4 text-xs text-slate-500" data-dhcp-lease-empty>${query2 ? "No leases match your search." : "No active leases. Clients will appear here after this server allocates an address."}</p>`}`;
   }
   function showServices(d, formDialog2, commit, sim2) {
     const svc = d.config.services;
