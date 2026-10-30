@@ -11,7 +11,15 @@ const sessions = new WeakMap<Simulator,Map<string,{runtime:Device['runtime'];sig
 
 export function disableInterface(engine:Simulator,d:Device,port:string,cause:string):boolean {
   const iface=d.config.interfaces[port];if(!iface||!errdisableDetectionEnabled(d,cause))return false;
-  if(!iface.features.errDisabled){iface.features.errDisabled=true;(d.runtime.features.errdisableCauses??={})[port]=cause;(d.runtime.features.errdisableAt??={})[port]=engine.clock.now();}
+  if(!iface.features.errDisabled){
+    iface.features.errDisabled=true;(d.runtime.features.errdisableCauses??={})[port]=cause;(d.runtime.features.errdisableAt??={})[port]=engine.clock.now();
+    if(cause==='bpduguard'){
+      const short=port.replace('GigabitEthernet','Gi').replace('Ethernet','Eth');
+      engine.log?.(d.id,`%SPANTREE-2-BLOCK_BPDUGUARD: Received BPDU on port ${port} with BPDU Guard enabled. Disabling port.`,2);
+      engine.log?.(d.id,`%PM-4-ERR_DISABLE: bpduguard error detected on ${short}, putting ${short} in err-disable state`,4);
+      engine.emit({nodeId:d.id,port,protocol:'STP',label:'BPDU guard err-disable',detail:'Received BPDU on a BPDU Guard protected interface.',disposition:'drop'});
+    }
+  }
   reconcileErrdisable(engine,d);return true;
 }
 

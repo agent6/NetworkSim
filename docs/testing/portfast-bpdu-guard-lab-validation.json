@@ -1,0 +1,112 @@
+{
+  "feature": "CCNA Switching: PortFast and BPDU Guard",
+  "catalogId": "portfast-and-bpdu-guard",
+  "artifactSha256": "c860ad02a58feaa4b43a3a9dc643027f28c92b5faedcd6748cd6588156a23812",
+  "devices": 6,
+  "links": 5,
+  "tasks": 8,
+  "topology": {
+    "ASW1": "VLAN 10 Gi0/1 to PC1; Gi0/3 test edge to ROGUE; Gi0/24 normal VLAN 10/99 trunk to DSW1",
+    "DSW1": "VLAN 10 trusted root, base priority 8192; PC2 on Gi0/1",
+    "ROGUE": "Base priority 4096; Gi0/1 starts shut; PC3 on VLAN 10 Gi0/2",
+    "PC1": "192.168.10.10/24, no gateway",
+    "PC2": "192.168.10.20/24, no gateway",
+    "PC3": "192.168.10.30/24, unauthorized client behind ROGUE"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1486,
+    "passed": 1486,
+    "failed": 0,
+    "focusedTests": 29,
+    "newLabTests": 14,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "checks": [
+    "practice is independent, safely staged and starts with zero earned tasks and pre-addressed clients",
+    "published setup enables immediate host-edge forwarding without making the trusted trunk an edge or guarded port",
+    "an actual superior BPDU err-disables only the rogue edge, logs once and preserves the root and legitimate traffic",
+    "BPDU Guard also shuts an edge on inferior BPDUs, not just an attempted root takeover",
+    "PortFast by itself does not block BPDUs or stop a superior rogue from becoming root",
+    "configured protection without delivered BPDUs cannot earn the incident or recovery goals",
+    "a premature manual reset trips again while the rogue still sends BPDUs",
+    "removing the source alone leaves err-disable latched; manual recovery retains protection and may correctly leave the link down",
+    "automatic recovery is disabled by default, including after the cause is removed",
+    "optional configured timer recovery is real, retrips with an active source and recovers once it is removed",
+    "completed reference actually earns the BPDU incident and recovers safely, leaving real traffic tests for the learner",
+    "published verification commands show live err-disable reasons, BPDU Guard logs, recovery defaults, edge and normal trunk state",
+    "saved reload and startup power cycles preserve incident observations while live configuration and forwarding are re-evaluated",
+    "incident and interface criteria are bounded on import and an unrelated err-disable cannot earn BPDU observation credit"
+  ],
+  "scope": "Adds a staged IOS switching lab, explicit BPDU Guard/err-disable lesson properties, persistent observed-incident credit and BPDU Guard diagnostic logs/events on real err-disable transitions. Uses the existing received-BPDU STP and packet-forwarding engines. The completed reference executes the actual setup, trip and recovery commands; no fabricated incident or traffic credit is inserted. No backend, dependencies or live CML validation is claimed.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/support/docs/lan-switching/spanning-tree-protocol/10586-65.html",
+    "https://www.cisco.com/c/en/us/support/docs/lan-switching/spanning-tree-protocol/69980-errdisable-recovery.html",
+    "https://www.cisco.com/c/dam/en/us/td/docs/switches/lan/catalyst2928/software/release/12-2_55_ez/system/message/2928smg.pdf"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "verificationNotes": [
+    "The new-lab browser test freezes the offline build before exercising reloads. The final index.html, dist/index.html and frozen browser artifact match byte for byte. The standard catalog regression ran after the final build.",
+    "An initial mobile reload assertion saw Untitled network immediately after reload. The browser check now waits for the restored lab title and validates retained incident credit, live forwarding and both PC directions. The isolated case and complete six-case browser matrix subsequently passed."
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "browserChecks": [
+    "light 1440px: fourteen Switching entries, eight-task staged guide, zero-credit practice, real CLI edge protection, 3/3 PC replies before/during/after actual BPDU err-disable, visible reason/logs and retained trusted root, source removal without premature credit, protected manual recovery, retained incident after reload, completed reference, safe workspace replacement and unchanged CLI colors, plus premature reset retrips while the rogue remains active",
+    "light 390px: fourteen Switching entries, eight-task staged guide, zero-credit practice, real CLI edge protection, 3/3 PC replies before/during/after actual BPDU err-disable, visible reason/logs and retained trusted root, source removal without premature credit, protected manual recovery, retained incident after reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "light 320px: fourteen Switching entries, eight-task staged guide, zero-credit practice, real CLI edge protection, 3/3 PC replies before/during/after actual BPDU err-disable, visible reason/logs and retained trusted root, source removal without premature credit, protected manual recovery, retained incident after reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 1440px: fourteen Switching entries, eight-task staged guide, zero-credit practice, real CLI edge protection, 3/3 PC replies before/during/after actual BPDU err-disable, visible reason/logs and retained trusted root, source removal without premature credit, protected manual recovery, retained incident after reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 390px: fourteen Switching entries, eight-task staged guide, zero-credit practice, real CLI edge protection, 3/3 PC replies before/during/after actual BPDU err-disable, visible reason/logs and retained trusted root, source removal without premature credit, protected manual recovery, retained incident after reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 320px: fourteen Switching entries, eight-task staged guide, zero-credit practice, real CLI edge protection, 3/3 PC replies before/during/after actual BPDU err-disable, visible reason/logs and retained trusted root, source removal without premature credit, protected manual recovery, retained incident after reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "light: share link preserves current host/path/query and returns to fourteen Switching labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to fourteen Switching labs without replacing the workspace"
+  ],
+  "reloadChecks": [
+    {
+      "theme": "light",
+      "width": 1440,
+      "firstLabel": "PortFast and BPDU Guard",
+      "restoredAfterMs": 12
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "firstLabel": "PortFast and BPDU Guard",
+      "restoredAfterMs": 10
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "firstLabel": "PortFast and BPDU Guard",
+      "restoredAfterMs": 9
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "firstLabel": "PortFast and BPDU Guard",
+      "restoredAfterMs": 12
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "firstLabel": "PortFast and BPDU Guard",
+      "restoredAfterMs": 11
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "firstLabel": "PortFast and BPDU Guard",
+      "restoredAfterMs": 7
+    }
+  ]
+}

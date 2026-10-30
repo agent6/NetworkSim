@@ -7752,6 +7752,12 @@ ${end.comment}` : end.comment;
       iface2.features.errDisabled = true;
       (d.runtime.features.errdisableCauses ??= {})[port3] = cause;
       (d.runtime.features.errdisableAt ??= {})[port3] = engine.clock.now();
+      if (cause === "bpduguard") {
+        const short3 = port3.replace("GigabitEthernet", "Gi").replace("Ethernet", "Eth");
+        engine.log?.(d.id, `%SPANTREE-2-BLOCK_BPDUGUARD: Received BPDU on port ${port3} with BPDU Guard enabled. Disabling port.`, 2);
+        engine.log?.(d.id, `%PM-4-ERR_DISABLE: bpduguard error detected on ${short3}, putting ${short3} in err-disable state`, 4);
+        engine.emit({ nodeId: d.id, port: port3, protocol: "STP", label: "BPDU guard err-disable", detail: "Received BPDU on a BPDU Guard protected interface.", disposition: "drop" });
+      }
     }
     reconcileErrdisable(engine, d);
     return true;
@@ -52269,6 +52275,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           return v.powered === void 0 || typeof v.powered === "boolean";
         case "interface-up":
           return text3(v.interface, 128);
+        case "bpdu-guard-trip":
+          return text3(v.interface, 128) && v.interface !== "";
         case "ip-routing":
           return typeof v.enabled === "boolean";
         case "address":
@@ -52318,7 +52326,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           return text3(v.interface, 128) && text3(v.source, 128) && text3(v.sourceInterface, 128) && Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094;
         case "interface":
           if (!text3(v.interface, 128)) return false;
-          if (["switchport", "ipv4Addressed", "portfast", "speedAuto", "nonegotiate", "cdp", "lldpTransmit", "lldpReceive"].includes(v.property)) return typeof v.value === "boolean";
+          if (["switchport", "ipv4Addressed", "portfast", "bpduguard", "errDisabled", "speedAuto", "nonegotiate", "cdp", "lldpTransmit", "lldpReceive"].includes(v.property)) return typeof v.value === "boolean";
           if (v.property === "description") return text3(v.value, 240);
           if (v.property === "channelGroup") return Number.isInteger(v.value) && v.value >= 1 && v.value <= 4096;
           if (v.property === "channelMode") return ["active", "passive", "on", "desirable", "auto"].includes(v.value);
@@ -52460,6 +52468,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       return d.runtime.neighbors.some(
         (n) => n.protocol.toLowerCase() === criterion.protocol.toLowerCase() && (!criterion.state || n.state.toLowerCase() === criterion.state.toLowerCase())
       );
+    if (criterion.kind === "bpdu-guard-trip")
+      return sim2.events.some((e) => e.nodeId === d.id && e.port === criterion.interface && e.protocol === "STP" && e.label === "BPDU guard err-disable" && e.disposition === "drop");
     if (criterion.kind === "echo")
       return sim2.events.some(
         (e) => e.nodeId === d.id && e.label === "Echo reply received" && e.disposition === "success" && !!e.packet?.source && sameAddress(e.packet.source, criterion.from)
@@ -52476,7 +52486,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (criterion.kind === "interface") {
       const port3 = d.config.interfaces[criterion.interface];
       if (!port3) return false;
-      const value = criterion.property === "cdp" || criterion.property === "lldpTransmit" || criterion.property === "lldpReceive" ? port3.features[criterion.property] !== false : criterion.property === "ipv4Addressed" ? !!(port3.ip || port3.features.secondaryIps?.length || port3.features.dhcp) : criterion.property === "channelGroup" ? port3.features.channelGroup : criterion.property === "channelMode" ? port3.features.channelMode : criterion.property === "nonegotiate" ? port3.features.nonegotiate === true : criterion.property === "portfast" ? port3.features.portfast === true : criterion.property === "speedAuto" ? port3.features.speedAuto !== false : criterion.property === "voiceVlan" ? port3.features.voiceVlan : port3[criterion.property];
+      const value = criterion.property === "cdp" || criterion.property === "lldpTransmit" || criterion.property === "lldpReceive" ? port3.features[criterion.property] !== false : criterion.property === "ipv4Addressed" ? !!(port3.ip || port3.features.secondaryIps?.length || port3.features.dhcp) : criterion.property === "channelGroup" ? port3.features.channelGroup : criterion.property === "channelMode" ? port3.features.channelMode : criterion.property === "nonegotiate" ? port3.features.nonegotiate === true : criterion.property === "portfast" ? port3.features.portfast === true : criterion.property === "bpduguard" ? port3.features.bpduguard === true : criterion.property === "errDisabled" ? port3.features.errDisabled === true : criterion.property === "speedAuto" ? port3.features.speedAuto !== false : criterion.property === "voiceVlan" ? port3.features.voiceVlan : port3[criterion.property];
       return value === criterion.value;
     }
     return false;
@@ -52502,18 +52512,19 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return results.length > 0 && (c.kind === "all" ? results.every(Boolean) : results.some(Boolean));
       }
       const result = matches(sim2, c);
-      if (c.kind !== "echo") return result;
+      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip") return result;
       validKeys.add(key4);
       if (result) observations.add(key4);
       return result || observations.has(key4);
     };
     const rows2 = lesson2.objectives.map((objective) => {
       const observed = observe(objective.criterion, JSON.stringify(objective.id));
-      if (objective.criterion.kind === "echo" && observed)
+      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip";
+      if (historical && observed)
         completed.add(objective.id);
       return {
         objective,
-        complete: observed || objective.criterion.kind === "echo" && completed.has(objective.id)
+        complete: observed || historical && completed.has(objective.id)
       };
     });
     lesson2.completed = [...completed].filter(
@@ -52870,6 +52881,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "layer-2-layer-3-cli-troubleshooting", group: "CCNA", section: "Switching", title: "Layer 2/Layer 3 CLI Troubleshooting", description: "Diagnose six access, trunk, SVI and routing faults using IOS show commands, repair both traffic directions, and verify actual MAC learning and packet delivery.", devices: 6, links: 5, practice: true },
     { id: "rapid-pvst", group: "CCNA", section: "Switching", title: "Rapid PVST+", description: "Elect different roots for two VLANs, verify root and alternate port roles across a redundant triangle, configure edge PortFast, and test forwarding and recovery.", devices: 7, links: 7, practice: true },
     { id: "stp-root-bridge-selection", group: "CCNA", section: "Switching", title: "STP Root Bridge Selection", description: "Compare bridge priorities and MAC-address tie breaks, select an intentional primary and secondary root, and verify received elections, port roles and resilient forwarding.", devices: 5, links: 5, practice: true },
+    { id: "portfast-and-bpdu-guard", group: "CCNA", section: "Switching", title: "PortFast and BPDU Guard", description: "Protect edge access ports, trigger a real BPDU Guard err-disable with a rogue switch, diagnose the fault and recover safely while legitimate traffic keeps working.", devices: 6, links: 5, practice: true },
     { id: "router-on-a-stick", group: "CCNA", section: "Routing", title: "Router on a stick", description: "Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.", devices: 4, links: 3, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
@@ -53093,7 +53105,31 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     SW2: ["enable", "configure terminal", "spanning-tree vlan 10 root secondary", "end", "write memory"],
     SW3: ["enable", "configure terminal", "spanning-tree vlan 10 priority 32768", "end", "write memory"]
   };
+  var PORTFAST_BPDU_GUARD_COMMANDS = { ASW1: [
+    "enable",
+    "configure terminal",
+    "interface range GigabitEthernet0/1 , GigabitEthernet0/3",
+    "switchport mode access",
+    "switchport access vlan 10",
+    "spanning-tree portfast",
+    "spanning-tree bpduguard enable",
+    "no shutdown",
+    "end",
+    "write memory"
+  ] };
+  var PORTFAST_BPDU_GUARD_TRIGGER = { ROGUE: [
+    "enable",
+    "configure terminal",
+    "interface GigabitEthernet0/1",
+    "no shutdown",
+    "end"
+  ] };
+  var PORTFAST_BPDU_GUARD_RECOVERY = {
+    ROGUE: ["enable", "configure terminal", "interface GigabitEthernet0/1", "shutdown", "end", "write memory"],
+    ASW1: ["enable", "configure terminal", "interface GigabitEthernet0/3", "shutdown", "no shutdown", "end", "write memory"]
+  };
   var GUIDE_RESOURCES = {
+    "portfast-and-bpdu-guard": { planTitle: "Edge protection and addressing", columns: ["Device", "Interface / VLAN", "Purpose", "IPv4 address"], rows: [["ASW1", "Gi0/1 \xB7 VLAN 10", "PC1 edge: PortFast + BPDU Guard", "\u2014"], ["ASW1", "Gi0/3 \xB7 VLAN 10", "Guarded test edge to ROGUE", "\u2014"], ["ASW1 / DSW1", "Gi0/24 \xB7 VLANs 10,99", "Normal STP trunk; no edge features", "\u2014"], ["PC1", "ASW1 Gi0/1 \xB7 VLAN 10", "Legitimate client", "192.168.10.10 /24"], ["PC2", "DSW1 Gi0/1 \xB7 VLAN 10", "Legitimate client", "192.168.10.20 /24"], ["PC3", "ROGUE Gi0/2 \xB7 VLAN 10", "Unauthorized client; must stay isolated", "192.168.10.30 /24"]], commands: { "1 \xB7 ASW1 \u2014 Protect the edge ports": PORTFAST_BPDU_GUARD_COMMANDS.ASW1, "2 \xB7 ROGUE \u2014 Trigger a received BPDU": PORTFAST_BPDU_GUARD_TRIGGER.ROGUE, "3 \xB7 ROGUE \u2014 Remove the BPDU source": PORTFAST_BPDU_GUARD_RECOVERY.ROGUE, "4 \xB7 ASW1 \u2014 Recover the protected port": PORTFAST_BPDU_GUARD_RECOVERY.ASW1 }, verification: { ASW1: ["show spanning-tree interface GigabitEthernet0/1 detail", "show spanning-tree interface GigabitEthernet0/3 detail", "show interfaces status err-disabled", "show logging", "show errdisable recovery", "show spanning-tree vlan 10", "show interfaces trunk", "show running-config interface GigabitEthernet0/3"], DSW1: ["show spanning-tree vlan 10"], ROGUE: ["show interfaces status"], PC1: ["ipconfig", "ping -n 3 192.168.10.20"], PC2: ["ping -n 3 192.168.10.10"] }, note: "Complete the four command phases in order. VLANs, PC addresses, the normal ASW1\u2013DSW1 trunk and Rapid PVST are ready. DSW1 is VLAN 10\u2019s trusted root (base priority 8192); ROGUE has a superior priority of 4096, but its Gi0/1 starts shut. ASW1 Gi0/1 starts shut and both test edge ports lack protection. Configure PortFast and explicit BPDU Guard on ASW1 Gi0/1 and Gi0/3. PortFast permits immediate host forwarding; it does not disable STP. Keep both features off the normal Gi0/24 inter-switch trunk. Test PC1 \u2194 PC2, then enable ROGUE Gi0/1 and wait for a received BPDU to err-disable ASW1 Gi0/3. BPDU Guard reacts to any BPDU, not only a superior one. Inspect the bpduguard reason and the SPANTREE/PM log messages; PC3 must be isolated while legitimate traffic and DSW1\u2019s root role remain intact. The guide remembers this observed incident through recovery and saved reload. Shut ROGUE Gi0/1 to remove the cause, then issue shutdown followed by no shutdown on ASW1 Gi0/3. A reset while ROGUE still transmits will trip again. With the rogue peer shut, the recovered local port is administratively enabled but its link remains down; it must no longer be err-disabled. Retain PortFast and BPDU Guard. Automatic recovery is disabled by default; do not enable it for this exercise. Repeat both legitimate PC tests and save ASW1 and ROGUE, then save or export the lab." },
     "stp-root-bridge-selection": { planTitle: "Bridge identities and addressing", columns: ["Device", "VLAN / access port", "Bridge MAC", "IPv4 address", "Target role / priority"], rows: [["SW1", "VLAN 10", "0200.0000.0030", "\u2014", "Primary \xB7 24576"], ["SW2", "VLAN 10", "0200.0000.0020", "\u2014", "Secondary \xB7 28672"], ["SW3", "VLAN 10", "0200.0000.0010", "\u2014", "Default \xB7 32768"], ["PC1", "SW2 Gi0/1 \xB7 VLAN 10", "\u2014", "192.168.10.10 /24", "No gateway needed"], ["PC2", "SW3 Gi0/1 \xB7 VLAN 10", "\u2014", "192.168.10.20 /24", "No gateway needed"]], commands: STP_ROOT_COMMANDS, verification: { SW1: ["show spanning-tree vlan 10", "show spanning-tree root", "show spanning-tree bridge", "show running-config | include spanning-tree", "show interfaces trunk"], SW2: ["show spanning-tree vlan 10", "show spanning-tree root", "show spanning-tree interface GigabitEthernet0/24 detail", "show mac address-table dynamic"], SW3: ["show spanning-tree vlan 10", "show spanning-tree root", "show spanning-tree bridge", "show spanning-tree blockedports", "show spanning-tree interface GigabitEthernet0/23 detail", "show spanning-tree interface GigabitEthernet0/24 detail", "show mac address-table dynamic"], PC1: ["ipconfig", "ping -n 3 192.168.10.20"], PC2: ["ipconfig", "ping -n 3 192.168.10.10"] }, note: "All links, VLAN 10 access ports, VLAN 10/99 trunks, Rapid PVST and PC PortFast are ready. All switches begin at base priority 32768 for VLAN 10. Before changing anything, compare Root ID and Bridge ID: SW3 wins the tie because 0200.0000.0010 is the lowest bridge MAC, not because of its hostname, port number, IP address or location. The bridge identities in this topology are fixed; do not change them. Make SW1 primary and SW2 secondary for VLAN 10 while SW3 remains at its default priority. With these default-priority peers, root primary sets base priority 24576 and root secondary sets 28672; the running configuration stores numeric priorities. The displayed priority includes VLAN 10\u2019s extended system ID: 24586 for SW1, 28682 for SW2, and 32778 for SW3. Lower bridge ID wins: priority is compared before MAC address. Every switch must agree on SW1\u2019s root ID. SW2 should use Gi0/24 as Root FWD. SW3 should use Gi0/23 as Root FWD and Gi0/24 as Altn BLK; SW1\u2019s inter-switch ports are designated/forwarding. Generate PC traffic before inspecting dynamic MAC learning. A successful ping alone cannot prove the intended root. For the tie experiment, set VLAN 10 priority 32768 on SW1 and SW2, wait for SW3 to win again, then restore the reference priorities. To test secondary takeover, power off SW1 or shut both of its inter-switch ports, wait for the remaining SW2/SW3 component to elect SW2, and repeat both PC tests. An isolated powered-on SW1 remains root only in its own component. Restore SW1 and verify that its lower saved priority wins again; root macros do not continually defend a root against later configuration changes. Changing an interface path cost affects the root port, not the root bridge: an optional SW3 Gi0/23 VLAN 10 cost of 100 should select Gi0/24 while keeping SW1 as root. Remove that override before finishing. Keep inter-switch PortFast disabled and do not add routing or host gateways. Save all three switches, then save or export the lab." },
     "rapid-pvst": { columns: ["Device", "Access port", "VLAN", "IPv4 address", "Default gateway"], rows: [["PC1", "SW3 Gi0/1", "10", "192.168.10.11 /24", "Not required"], ["PC2", "SW2 Gi0/1", "10", "192.168.10.12 /24", "Not required"], ["PC3", "SW3 Gi0/2", "20", "192.168.20.11 /24", "Not required"], ["PC4", "SW1 Gi0/1", "20", "192.168.20.12 /24", "Not required"]], commands: RAPID_PVST_COMMANDS, verification: { SW1: ["show spanning-tree summary", "show spanning-tree vlan 10", "show spanning-tree vlan 20", "show interfaces trunk", "show running-config | include spanning-tree"], SW2: ["show spanning-tree vlan 10", "show spanning-tree vlan 20", "show spanning-tree root", "show interfaces trunk"], SW3: ["show spanning-tree summary", "show spanning-tree root", "show spanning-tree vlan 10", "show spanning-tree vlan 20", "show spanning-tree interface GigabitEthernet0/23 detail", "show spanning-tree interface GigabitEthernet0/24 detail", "show spanning-tree blockedports", "show mac address-table dynamic"], PC1: ["ipconfig", "ping -n 3 192.168.10.12"], PC3: ["ipconfig", "ping -n 3 192.168.20.12"] }, note: "VLANs 10, 20 and 99, trunk settings and all PC IPv4 addresses are preconfigured. Inter-switch Gi0/23\u201324 ports begin administratively down and the switches use classic PVST in this practice fixture. Configure rapid-pvst on each switch before enabling its trunks, so every newly connected peer already speaks RSTP. SW1 is VLAN 10 primary and VLAN 20 secondary; SW2 is VLAN 20 primary and VLAN 10 secondary. With the other bridges at default priority, root primary sets base priority 24576 and root secondary sets 28672. The displayed bridge priority includes the VLAN system-ID extension: VLAN 10 primary shows 24586 and VLAN 20 primary shows 24596. These macros set priorities once; they do not dynamically enforce a preferred root. Verify protocol rstp, actual root IDs, and SW3\u2019s opposite root/alternate ports per VLAN. SW3 Gi0/23 is Root FWD for VLAN 10 and Altn BLK for VLAN 20; Gi0/24 is the reverse. BLK represents the nonforwarding/discarding alternate path. Use PortFast only on the four PC-facing access ports, leaving normal STP on all switch-to-switch trunks. After both VLAN tests work, shut SW3 Gi0/23. VLAN 10 should reconverge through Gi0/24 and SW2; VLAN 20 should continue over Gi0/24. Repeat both traffic checks, then restore Gi0/23 and verify the original per-VLAN roles. Next try shutting Gi0/24 and repeat, restoring it afterward. Do not promise zero packet loss during convergence. If you enabled trunks while a peer still used classic PVST and output shows Peer(STP), finish changing all three modes, then run clear spanning-tree detected-protocols on each switch at privileged EXEC and verify RSTP again. Keep default STP timers. Same-VLAN pairs need no router or gateway; cross-VLAN pings should fail. Save all three switches and the lab." },
     "layer-2-layer-3-cli-troubleshooting": { columns: ["Device", "Interface", "VLAN", "IPv4 address", "Default gateway"], rows: [["PC1", "GigabitEthernet0", "10", "192.168.10.10 /24", "192.168.10.1"], ["PC2", "GigabitEthernet0", "20", "192.168.20.10 /24", "192.168.20.1"], ["DSW1", "Vlan10 / Vlan20", "10 / 20", "192.168.10.1 /24; 192.168.20.1 /24", "\u2014"], ["SW1 / DSW1", "Vlan99", "99", "192.168.99.2 /24; 192.168.99.1 /24", "SW1: 192.168.99.1"], ["DSW1 / R1", "Gi0/1 / Gi0/0", "Routed", "192.0.2.1 /30; 192.0.2.2 /30", "\u2014"], ["R1", "GigabitEthernet0/1", "Routed", "203.0.113.1 /24", "\u2014"], ["SRV1", "GigabitEthernet0", "Server LAN", "203.0.113.10 /24", "203.0.113.1"]], commands: SWITCHING_TROUBLESHOOTING_COMMANDS, verification: { SW1: ["show interfaces status", "show vlan brief", "show interfaces GigabitEthernet0/1 switchport", "show interfaces trunk", "show spanning-tree vlan 20", "show mac address-table dynamic", "show cdp neighbors", "show running-config interface GigabitEthernet0/24"], DSW1: ["show ip interface brief", "show interfaces Vlan20", "show interfaces trunk", "show running-config | include ip routing", "show ip route", "show ip arp", "show running-config | include ip route", "ping 192.0.2.2"], R1: ["show ip interface brief", "show ip route", "show ip arp", "show running-config | include ip route", "ping 203.0.113.10"], PC1: ["ipconfig /all", "ping -n 3 192.168.10.1", "ping -n 3 192.168.20.10", "ping -n 3 203.0.113.10", "tracert 203.0.113.10"], PC2: ["ipconfig /all", "ping -n 3 192.168.20.1", "ping -n 3 192.168.10.10", "ping -n 3 203.0.113.10"] }, note: "Start with the symptoms and diagnostic commands before opening the repair reference. PC addressing, VLAN definitions, physical links, the routed /30 transit and the server LAN are preconfigured. Do not change the host IP settings, bridge the user VLANs together or add a default route to bypass diagnosis. Inspect interface status and VLAN membership, then trunk allowed/forwarding VLANs, SVI administrative and line-protocol state, IP routing, and both forward and return routes. Correct behavior is PC1 in VLAN 10, PC2 in VLAN 20, and Gi0/24 as an 802.1Q trunk carrying 10,20,99 with native VLAN 99. DSW1 routes through its .1/24 SVIs and reaches 203.0.113.0/24 via 192.0.2.2. R1 needs both user LAN routes via 192.0.2.1; VLAN 10 is already present. An SVI requires a local active forwarding VLAN member in addition to no shutdown. An up/up SVI can still be unreachable when a remote trunk prunes its VLAN. A ping to a local gateway does not prove inter-VLAN routing, and a successful transit ping does not prove a remote LAN return path. Generate traffic before reading the dynamic MAC and ARP tables. The four tests verify inter-VLAN traffic in both directions and each PC\u2019s server path. After repair, remove only R1\u2019s VLAN 20 return route: PC1 should still reach SRV1 while PC2\u2019s server ping fails despite reaching its own gateway. Restore that route before finishing. Save SW1, DSW1 and R1, then save or export the lab." },
@@ -53141,6 +53177,68 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createPortFastBPDUGuardLab(mode = "practice") {
+    const g = (n) => `GigabitEthernet0/${n}`;
+    const make = (name2, kind, x, y) => ({ id: "device-portfast-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const asw = make("ASW1", "switch", 400, 260), dsw = make("DSW1", "switch", 900, 260), rogue = make("ROGUE", "switch", 400, 570), pcs = [make("PC1", "pc", 160, 260), make("PC2", "pc", 1140, 260), make("PC3", "pc", 700, 570)];
+    for (const [i, sw] of [asw, dsw, rogue].entries()) {
+      sw.config.features.stp = { mode: "rapid-pvst", vlanPriorities: { 10: [32768, 8192, 4096][i] } };
+      for (const [id2, name2] of [[10, "USERS"], [99, "NATIVE"]]) sw.config.vlans[id2] = { id: id2, name: name2, active: true };
+    }
+    for (const sw of [asw, dsw]) {
+      const p = sw.config.interfaces[g(24)];
+      Object.assign(p, { mode: "trunk", nativeVlan: 99, allowedVlans: [10, 99], description: "TRUSTED_UPLINK" });
+      Object.assign(p.features, { nonegotiate: true, portfast: false, bpduguard: false });
+    }
+    for (const [sw, n, edge] of [[asw, 1, false], [asw, 3, false], [dsw, 1, true], [rogue, 1, false], [rogue, 2, true]]) {
+      const p = sw.config.interfaces[g(n)];
+      Object.assign(p, { mode: "access", vlan: 10 });
+      Object.assign(p.features, { portfast: edge, bpduguard: false });
+    }
+    asw.config.interfaces[g(1)].adminUp = false;
+    rogue.config.interfaces[g(1)].adminUp = false;
+    for (const [i, pc] of pcs.entries()) {
+      Object.assign(pc.config.interfaces.GigabitEthernet0, { ip: `192.168.10.${(i + 1) * 10}`, mask: "255.255.255.0" });
+      pc.config.interfaces.GigabitEthernet0.features.dhcp = false;
+      pc.config.defaultGateway = void 0;
+    }
+    const devices = [asw, dsw, rogue, ...pcs];
+    for (const d of devices) d.startupConfig = structuredClone(d.config);
+    const setting = (d, n, property, value) => ({ kind: "interface", device: d.id, interface: g(n), property, value });
+    const trip = { kind: "bpdu-guard-trip", device: asw.id, interface: g(3) }, sourceRemoved = { kind: "all", criteria: [trip, setting(rogue, 1, "adminUp", false)] };
+    const link = (id2, a, ap, b, bp) => ({ id: "link-portfast-" + id2, a: { deviceId: a.id, port: ap }, b: { deviceId: b.id, port: bp }, enabled: true, delay: 0.1, loss: 0 });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "portfast-and-bpdu-guard", name: "PortFast and BPDU Guard" + (mode === "completed" ? " \xB7 Completed" : ""), devices, links: [link("uplink", asw, g(24), dsw, g(24)), link("pc1", asw, g(1), pcs[0], "GigabitEthernet0"), link("pc2", dsw, g(1), pcs[1], "GigabitEthernet0"), link("rogue", asw, g(3), rogue, g(1)), link("pc3", rogue, g(2), pcs[2], "GigabitEthernet0")], notes: [{ id: "note-portfast", x: 650, y: 100, text: "Protect ASW1 Gi0/1 + Gi0/3\nROGUE Gi0/1 starts shut\nTrigger \u2192 inspect \u2192 remove cause \u2192 recover" }], lesson: { title: "PortFast and BPDU Guard", description: "Protect host-facing access ports without making the trusted inter-switch trunk an edge port. VLAN 10 and all PC addresses are ready; DSW1 is the trusted root. ROGUE Gi0/1 starts shut so you can configure protection safely.\n\nFirst configure ASW1 Gi0/1 and Gi0/3 as VLAN 10 access ports with PortFast and BPDU Guard, then enable them. Verify PC1 and PC2 can communicate across the normal Gi0/24 trunk. PortFast accelerates host forwarding and still participates in STP.\n\nNext enable ROGUE Gi0/1. Wait for its actual BPDU to err-disable ASW1 Gi0/3. Inspect show interfaces status err-disabled and show logging. Check that DSW1 remains root and PC1/PC2 still communicate; PC3 behind ROGUE must not reach them. The incident task stays earned after recovery.\n\nRemove the cause by shutting ROGUE Gi0/1. Then reset ASW1 Gi0/3 with shutdown followed by no shutdown, retaining both protective features. Resetting before removing the source causes another trip. A recovered port with its peer shut remains link-down, which is expected. Automatic recovery remains disabled. Repeat both PC tests, save device configurations and save or export the lab.", objectives: [
+      { id: "edge-portfast", title: "Configure and enable both ASW1 edge access ports", description: "Gi0/1 and Gi0/3: static access VLAN 10, PortFast, no shutdown. Keep Gi0/24 a normal trunk.", criterion: { kind: "all", criteria: [...[1, 3].flatMap((n) => [setting(asw, n, "mode", "access"), setting(asw, n, "vlan", 10), setting(asw, n, "portfast", true), setting(asw, n, "adminUp", true)]), setting(asw, 24, "portfast", false), setting(asw, 24, "mode", "trunk")] } },
+      { id: "edge-guard", title: "Enable BPDU Guard on the two edge ports only", description: "Use spanning-tree bpduguard enable on Gi0/1 and Gi0/3; leave it disabled on Gi0/24.", criterion: { kind: "all", criteria: [setting(asw, 1, "bpduguard", true), setting(asw, 3, "bpduguard", true), setting(asw, 24, "bpduguard", false)] } },
+      { id: "trusted-forwarding", title: "Verify legitimate forwarding and the trusted root", description: "PC1\u2019s edge and the uplink must forward VLAN 10, with DSW1 elected as root.", criterion: { kind: "all", criteria: [{ kind: "stp-forwarding", device: asw.id, interface: g(1), vlans: [10] }, { kind: "stp-forwarding", device: asw.id, interface: g(24), vlans: [10] }, { kind: "stp-root", device: asw.id, vlan: 10, root: dsw.id }, { kind: "stp-root", device: dsw.id, vlan: 10, root: dsw.id }] } },
+      { id: "guard-incident", title: "Trigger and observe BPDU Guard err-disable", description: "Enable ROGUE Gi0/1. An actual received BPDU must trip ASW1 Gi0/3; inspect the reason and logs.", criterion: trip },
+      { id: "remove-source", title: "Remove the offending BPDU source", description: "After observing the incident, shut ROGUE Gi0/1. Protection on ASW1 stays enabled.", criterion: sourceRemoved },
+      { id: "recover-port", title: "Recover ASW1 Gi0/3 safely and retain protection", description: "After removing the cause, shutdown / no shutdown. Link-down is expected while ROGUE is shut; err-disabled is not.", criterion: { kind: "all", criteria: [sourceRemoved, setting(asw, 3, "adminUp", true), setting(asw, 3, "errDisabled", false), setting(asw, 3, "portfast", true), setting(asw, 3, "bpduguard", true)] } },
+      { id: "pc1-ping", title: "Verify PC1 reaches PC2", description: "192.168.10.10 \u2192 192.168.10.20. Repeat during the incident and after recovery.", criterion: { kind: "echo", device: pcs[0].id, from: "192.168.10.20" }, action: { kind: "ping", device: pcs[0].id, target: "192.168.10.20" } },
+      { id: "pc2-ping", title: "Verify PC2 reaches PC1", description: "192.168.10.20 \u2192 192.168.10.10. No router or default gateway is needed.", criterion: { kind: "echo", device: pcs[1].id, from: "192.168.10.10" }, action: { kind: "ping", device: pcs[1].id, target: "192.168.10.10" } }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261029, lab };
+    if (mode === "practice") return parseDocument2(JSON.stringify(doc));
+    const sim2 = new Simulator(doc.seed);
+    sim2.load(doc);
+    const run = (commands) => {
+      for (const [name2, lines2] of Object.entries(commands)) {
+        const cli = new IOSSession(sim2, sim2.getDevice(name2).id);
+        for (const line2 of lines2) {
+          const out = cli.execute(line2);
+          if (out.some(iosRejected)) throw Error(`Could not prepare ${name2}: ${line2}
+${out.join("\n")}`);
+        }
+        sim2.advance(3e3);
+      }
+    };
+    run(PORTFAST_BPDU_GUARD_COMMANDS);
+    run(PORTFAST_BPDU_GUARD_TRIGGER);
+    if (!lessonProgress(sim2).rows.find((row5) => row5.objective.id === "guard-incident").complete) throw Error("Reference BPDU Guard incident did not occur.");
+    run(PORTFAST_BPDU_GUARD_RECOVERY);
+    lessonProgress(sim2);
+    return sim2.serialize();
+  }
   function createSTPRootSelectionLab(mode = "practice") {
     const make = (name2, kind, x, y) => ({ id: "device-stp-root-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
     const switches = [make("SW1", "switch", 350, 160), make("SW2", "switch", 850, 160), make("SW3", "switch", 600, 420)], pcs = [make("PC1", "pc", 1050, 420), make("PC2", "pc", 600, 680)], [sw1, sw2, sw3] = switches;
@@ -53804,6 +53902,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "portfast-and-bpdu-guard") return createPortFastBPDUGuardLab(mode);
     if (id2 === "stp-root-bridge-selection") return createSTPRootSelectionLab(mode);
     if (id2 === "rapid-pvst") return createRapidPVSTLab(mode);
     if (id2 === "layer-2-layer-3-cli-troubleshooting") return createSwitchingTroubleshootingLab(mode);

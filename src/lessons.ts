@@ -28,6 +28,7 @@ export type Criterion =
   | { kind: "discovery-settings"; device: string; protocol: "CDP" | "LLDP"; enabled: boolean; interval?: number; holdtime?: number }
   | { kind: "discovery-neighbor"; device: string; protocol: "CDP" | "LLDP"; interface: string; peer: string; peerInterface: string }
   | { kind: "echo"; device: string; from: string }
+  | { kind: "bpdu-guard-trip"; device: string; interface: string }
   | { kind: "vlan"; device: string; id: number }
   | { kind: "lacp-bundle"; device: string; group: number; peer: string; members: string[] }
   | { kind: "stp-forwarding"; device: string; interface: string; vlans: number[] }
@@ -44,7 +45,7 @@ export type Criterion =
       kind: "interface";
       device: string;
       interface: string;
-      property: "adminUp" | "vlan" | "voiceVlan" | "nativeVlan" | "nonegotiate" | "channelGroup" | "channelMode" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "ipv4Addressed" | "duplex" | "portfast" | "speedAuto" | "cdp" | "lldpTransmit" | "lldpReceive";
+      property: "adminUp" | "vlan" | "voiceVlan" | "nativeVlan" | "nonegotiate" | "channelGroup" | "channelMode" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "ipv4Addressed" | "duplex" | "portfast" | "bpduguard" | "errDisabled" | "speedAuto" | "cdp" | "lldpTransmit" | "lldpReceive";
       value: string | number | boolean;
     };
 export interface Objective {
@@ -90,6 +91,8 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         return v.powered === undefined || typeof v.powered === "boolean";
       case "interface-up":
         return text(v.interface,128);
+      case "bpdu-guard-trip":
+        return text(v.interface,128) && v.interface!=="";
       case "ip-routing":
         return typeof v.enabled === "boolean";
       case "address":
@@ -150,7 +153,7 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         return text(v.interface,128) && text(v.source,128) && text(v.sourceInterface,128) && Number.isInteger(v.vlan) && v.vlan>=1 && v.vlan<=4094;
       case "interface":
         if (!text(v.interface, 128)) return false;
-        if (["switchport","ipv4Addressed","portfast","speedAuto","nonegotiate","cdp","lldpTransmit","lldpReceive"].includes(v.property)) return typeof v.value === "boolean";
+        if (["switchport","ipv4Addressed","portfast","bpduguard","errDisabled","speedAuto","nonegotiate","cdp","lldpTransmit","lldpReceive"].includes(v.property)) return typeof v.value === "boolean";
         if (v.property === "description") return text(v.value,240);
         if (v.property === "channelGroup") return Number.isInteger(v.value) && v.value>=1 && v.value<=4096;
         if (v.property === "channelMode") return ["active","passive","on","desirable","auto"].includes(v.value);
@@ -352,6 +355,8 @@ export function matches(
         (!criterion.state ||
           n.state.toLowerCase() === criterion.state.toLowerCase()),
     );
+  if (criterion.kind === "bpdu-guard-trip")
+    return sim.events.some(e=>e.nodeId===d.id && e.port===criterion.interface && e.protocol==='STP' && e.label==='BPDU guard err-disable' && e.disposition==='drop');
   if (criterion.kind === "echo")
     return sim.events.some(
       (e) =>
@@ -372,7 +377,7 @@ export function matches(
   }
   if (criterion.kind === "interface") {
     const port=d.config.interfaces[criterion.interface];if(!port)return false;
-    const value=(criterion.property==="cdp"||criterion.property==="lldpTransmit"||criterion.property==="lldpReceive")?port.features[criterion.property]!==false:criterion.property==="ipv4Addressed"?!!(port.ip||port.features.secondaryIps?.length||port.features.dhcp):criterion.property==="channelGroup"?port.features.channelGroup:criterion.property==="channelMode"?port.features.channelMode:criterion.property==="nonegotiate"?port.features.nonegotiate===true:criterion.property==="portfast"?port.features.portfast===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
+    const value=(criterion.property==="cdp"||criterion.property==="lldpTransmit"||criterion.property==="lldpReceive")?port.features[criterion.property]!==false:criterion.property==="ipv4Addressed"?!!(port.ip||port.features.secondaryIps?.length||port.features.dhcp):criterion.property==="channelGroup"?port.features.channelGroup:criterion.property==="channelMode"?port.features.channelMode:criterion.property==="nonegotiate"?port.features.nonegotiate===true:criterion.property==="portfast"?port.features.portfast===true:criterion.property==="bpduguard"?port.features.bpduguard===true:criterion.property==="errDisabled"?port.features.errDisabled===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
     return value===criterion.value;
   }
   return false;
@@ -413,21 +418,22 @@ export function lessonProgress(sim: Simulator):
       );
     }
     const result = matches(sim, c);
-    if (c.kind !== "echo") return result;
+    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip") return result;
     validKeys.add(key);
     if (result) observations.add(key);
     return result || observations.has(key);
   };
   const rows = lesson.objectives.map((objective) => {
     const observed = observe(objective.criterion, JSON.stringify(objective.id));
-    // Traffic goals record an accomplishment; configuration goals stay live.
-    if (objective.criterion.kind === "echo" && observed)
+    // Traffic and fault observations record accomplishments; configuration stays live.
+    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip";
+    if (historical && observed)
       completed.add(objective.id);
     return {
       objective,
       complete:
         observed ||
-        (objective.criterion.kind === "echo" && completed.has(objective.id)),
+        (historical && completed.has(objective.id)),
     };
   });
   lesson.completed = [...completed].filter((id) =>

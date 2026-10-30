@@ -40,6 +40,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **STP Root Bridge Selection** under Switching begins with equal priorities and an unintended root elected by the lowest bridge MAC. Compare bridge IDs, make SW1 primary and SW2 secondary for VLAN 10, verify actual root/port roles and dynamic MAC learning, then explore ties, secondary takeover and the difference between root selection and path cost.
 
+**PortFast and BPDU Guard** under Switching protects two access ports and uses a staged rogue switch to trigger a real received-BPDU err-disable. Inspect the reason and logs, verify legitimate traffic continues while the rogue client is isolated, remove the cause and manually recover the protected port. The guide remembers the observed incident after recovery and saved reload; a completed reference exercises the same sequence.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.
