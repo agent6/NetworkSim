@@ -1,0 +1,58 @@
+{
+  "feature": "Lab guide completion celebration",
+  "artifactSha256": "34edd8a6303283c0ac4a3235510c4f93d08fc4ad9d0e40cc555bf16fdd458353",
+  "validation": {
+    "command": "npm run check",
+    "tests": 1343,
+    "passed": 1343,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "focusedTests": 25,
+    "browserChecks": 25
+  },
+  "behavior": [
+    "Finishing every task earns a single celebration for that saved attempt, even with the guide closed",
+    "Empty and partially completed guides cannot trigger the effect",
+    "Real delivered ping replies are required for connectivity tasks",
+    "Celebration metadata survives YAML, workspace reload and later task repair without replay",
+    "Starting a fresh catalog attempt can celebrate independently",
+    "Confetti is decorative, inert and ignores pointer input; it never steals terminal focus or changes its input draft",
+    "Short animation and DOM/listener cleanup work offline without new dependencies",
+    "Reduced motion skips confetti while retaining completion text; enabling reduced motion during a burst cancels it",
+    "No simulation or network logic changes; existing CLI appearance remains unchanged"
+  ],
+  "celebrationBrowserChecks": [
+    "light 1440px animation: real traffic completes all tasks, completion banner/toast, one decorative burst with cleanup, no replay on reopen/repair/reload, motion-change cancellation and a fresh attempt celebrates again",
+    "light 390px animation: real traffic completes all tasks, completion banner/toast, one decorative burst with cleanup, no replay on reopen/repair/reload",
+    "light 320px animation: real traffic completes all tasks, completion banner/toast, one decorative burst with cleanup, no replay on reopen/repair/reload",
+    "dark 1440px animation: real traffic completes all tasks, completion banner/toast, one decorative burst with cleanup, no replay on reopen/repair/reload",
+    "dark 390px animation: real traffic completes all tasks, completion banner/toast, one decorative burst with cleanup, no replay on reopen/repair/reload",
+    "dark 320px animation: real traffic completes all tasks, completion banner/toast, one decorative burst with cleanup, no replay on reopen/repair/reload",
+    "light 390px reduced motion: real traffic completes all tasks, completion banner/toast, no particles, no replay on reopen/repair/reload",
+    "dark 390px reduced motion: real traffic completes all tasks, completion banner/toast, no particles, no replay on reopen/repair/reload",
+    "Closed guide animation: completing a CLI task celebrates without stealing focus, losing the draft or changing CLI colors; opening the guide shows completion",
+    "Closed guide reduced motion: completing a CLI task celebrates without stealing focus, losing the draft or changing CLI colors; opening the guide shows completion"
+  ],
+  "themeRegression": [
+    "light desktop console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip and shortcuts use Mono Cobalt",
+    "light mobile console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip use Mono Cobalt",
+    "light desktop: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
+    "light mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
+    "dark desktop console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip and shortcuts use Mono Cobalt",
+    "dark mobile console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs, controls, resize handle and tooltip use Mono Cobalt",
+    "dark desktop: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
+    "dark mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

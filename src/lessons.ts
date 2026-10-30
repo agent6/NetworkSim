@@ -43,6 +43,8 @@ export interface Lesson {
   objectives: Objective[];
   completed?: string[];
   observations?: string[];
+  /** Remember the celebration for this saved lab attempt, including after reload. */
+  celebrated?: boolean;
 }
 export type GuidedLab = Lab & { lesson?: Lesson };
 const device = (sim: Simulator, name: string): Device | undefined =>
@@ -141,6 +143,8 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     value.objectives.length > 100
   )
     throw Error("The lab guide is invalid.");
+  if (value.celebrated !== undefined && typeof value.celebrated !== "boolean")
+    throw Error("The lab guide celebration record is invalid.");
   for (const key of ["completed", "observations"])
     if (
       value[key] !== undefined &&
@@ -347,4 +351,12 @@ export function lessonProgress(sim: Simulator):
     changed:
       previous !== JSON.stringify([lesson.completed, lesson.observations]),
   };
+}
+
+/** Completion is an achievement once per attempt; later repairs do not replay it. */
+export function claimLessonCelebration(sim: Simulator): {title:string;total:number}|undefined {
+  const progress=lessonProgress(sim);
+  if (!progress || progress.lesson.celebrated || !progress.rows.length || progress.complete!==progress.rows.length) return;
+  progress.lesson.celebrated=true;
+  return {title:progress.lesson.title,total:progress.rows.length};
 }

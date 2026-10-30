@@ -20,6 +20,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **VLAN and access ports**, also under Switching, separates four pre-addressed PCs into VLAN 10 and VLAN 20. Configure the access-port groups with `interface range`, verify both same-VLAN pairs, inspect VLAN-scoped MAC entries, and check that cross-VLAN pings fail without inter-VLAN routing.
 
+Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
+
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.
 2. Choose **Connect devices**, then select two devices and their physical ports. Use **Add another** to connect several port pairs in one step.
 3. Double-click a router or switch to open its console. Router interfaces begin administratively down; configure addressing and use `no shutdown`.

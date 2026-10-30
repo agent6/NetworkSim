@@ -678,6 +678,20 @@ input:is([name="ip"], [name="mask"], [name="gateway"], [name="dns"], [name="reco
 .catalog-reference h4 { margin: 16px 0 8px; font-weight: 600; }
 .catalog-reference pre { padding: 12px; overflow: auto; background: var(--ui-surface); border-radius: var(--ui-radius); font: 11px/1.7 var(--font-mono); }
 .catalog-progress { color: var(--ui-accent-text); font-size: 12px; font-weight: 600; }
+.catalog-completion { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 12px; margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--ui-status-up-text); border-radius: var(--ui-radius); background: var(--ui-panel); }
+.catalog-completion[hidden] { display: none; }
+.catalog-completion > span { color: var(--ui-status-up-text); font-size: 24px; }
+.catalog-completion strong { font-size: 13px; color: var(--ui-text); }
+.catalog-completion p { margin: 3px 0 0; font-size: 11px; color: var(--ui-muted); }
+.lab-confetti { position: fixed; inset: 0; z-index: 200; overflow: hidden; pointer-events: none; }
+.lab-confetti-piece { position: absolute; top: -20px; border-radius: 1px; pointer-events: none; opacity: 0; animation: lab-confetti-fall var(--confetti-duration) cubic-bezier(.2,.6,.45,1) var(--confetti-delay) both; }
+@keyframes lab-confetti-fall {
+  0% { opacity: 0; transform: translate3d(0,-4vh,0) rotate(0deg); }
+  10% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(var(--confetti-drift),110vh,0) rotate(var(--confetti-spin)); }
+}
+@media (prefers-reduced-motion: reduce) { .lab-confetti { display: none; } }
 .catalog-checks { margin: 16px 0; }
 .catalog-checks li { display: flex; gap: 10px; padding: 14px 0; border-bottom: 1px solid var(--ui-border); font-size: 12px; }
 .catalog-checks [data-objective-state] { color: var(--ui-muted); font-size: 16px; }

@@ -6,7 +6,8 @@ import{showPoE}from'./poe-ui.ts';
 import{showSimulation}from'./simulation-ui.ts';
 import projectLogo from './assets/networksim-logo.png';
 import {showLabCatalog,showLabGuide,setupCatalogPermalinks,clearCatalogLocation} from './lab-catalog-ui.ts';
-import type {GuidedLab} from './lessons.ts';
+import {claimLessonCelebration,type GuidedLab} from './lessons.ts';
+import {celebrateLabCompletion} from './lab-confetti.ts';
 import{showWireless}from'./wireless-ui.ts';
 import{wirelessConfig}from'./wireless-model.ts';
 import { layoutLinks, orderedPairLinks, shortInterface, type LinkLayout, type PortLabel } from "./link-layout.ts";
@@ -2857,7 +2858,8 @@ document.addEventListener("visibilitychange", () => {
 sim.subscribe(() => (dirty = true));
 let last = performance.now(),
   lastPaint = 0,
-  lastTerminalPoll = 0;
+  lastTerminalPoll = 0,
+  lastLessonPoll = 0;
 function frame(now: number) {
   const delta = Math.max(0, Math.min(100, now - last));
   last = now;
@@ -2894,6 +2896,14 @@ function frame(now: number) {
   if ((playing || localBootConsole) && now - lastTerminalPoll >= 1000) {
     lastTerminalPoll = now;
     pollTerminal();
+  }
+  if (now - lastLessonPoll >= 250) {
+    lastLessonPoll = now;
+    const completion = claimLessonCelebration(sim);
+    if (completion) {
+      toast(`Lab complete! ${completion.title} · ${completion.total} task${completion.total === 1 ? '' : 's'} complete.`);
+      celebrateLabCompletion();
+    }
   }
   if (now - lastAutosave >= 1000) {
     lastAutosave = now;
