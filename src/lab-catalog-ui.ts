@@ -29,7 +29,10 @@ export function showLabCatalog(dialog:Dialog,open:OpenLab,navigate=true):void{
  if(navigate)setCatalogLocation("#/labs");
  dialog('Lab catalog',`<p class="catalog-intro">Built-in labs, available offline. Choose a group to explore a topology or practice a configuration.</p><div class="catalog-layout"><nav class="catalog-groups" aria-label="Lab groups">${LAB_GROUPS.map(group=>`<button type="button" data-catalog-group="${group}" aria-pressed="${group===selectedGroup}"><span>${group}</span><span class="catalog-count">${LAB_CATALOG.filter(l=>l.group===group).length}</span></button>`).join('')}</nav><section class="catalog-results" aria-live="polite" data-catalog-results></section></div>`,'<button class="btn-primary" data-action="close-dialog">Done</button>');decorate(true);
  const results=document.querySelector<HTMLElement>('[data-catalog-results]')!;
- results.innerHTML=`<h3 data-catalog-heading></h3><nav class="catalog-subsections" aria-label="CCNA sections" data-catalog-sections>${CCNA_SECTIONS.map(section=>`<button type="button" data-catalog-section="${section}" aria-pressed="false">${section}</button>`).join('')}</nav><div data-catalog-entries></div>`;
+ results.innerHTML=`<h3 data-catalog-heading></h3><nav class="catalog-subsections" aria-label="CCNA sections" data-catalog-sections>${CCNA_SECTIONS.map(section=>{
+  const count=LAB_CATALOG.filter(l=>l.group==='CCNA'&&l.section===section).length;
+  return `<button type="button" data-catalog-section="${section}" aria-label="${esc(section)}${count?`, ${count} ${count===1?'lab':'labs'}`:''}" aria-pressed="false"><span>${esc(section)}</span>${count?`<span class="catalog-count" aria-hidden="true">${count}</span>`:''}</button>`;
+ }).join('')}</nav><div data-catalog-entries></div>`;
  const render=()=>{
   const isCCNA=selectedGroup==='CCNA',entries=LAB_CATALOG.filter(l=>l.group===selectedGroup&&(!isCCNA||('section' in l&&l.section===selectedSection)));
   results.querySelector('[data-catalog-heading]')!.textContent=selectedGroup;

@@ -649,7 +649,8 @@ input:is([name="ip"], [name="mask"], [name="gateway"], [name="dns"], [name="reco
 .catalog-results h3, .catalog-section-heading { font-size: 13px; font-weight: 600; margin: 0 0 14px; }
 .catalog-subsections { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 6px; margin-bottom: 20px; }
 .catalog-subsections[hidden] { display: none; }
-.catalog-subsections button { min-height: 44px; padding: 8px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); font-size: 11px; line-height: 1.5; color: var(--ui-muted); }
+.catalog-subsections button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); font-size: 11px; line-height: 1.5; color: var(--ui-muted); }
+.catalog-subsections .catalog-count { flex-shrink: 0; min-width: 20px; padding: 1px 5px; border-radius: var(--ui-radius); background: var(--ui-surface); }
 .catalog-subsections button:hover { background: var(--ui-surface); }
 .catalog-subsections button[aria-pressed=true] { color: var(--ui-accent-text); border-color: var(--ui-accent-border); background: var(--ui-accent-soft); }
 .catalog-subsection-heading { margin: 0 0 12px; font-size: 12px; font-weight: 600; }

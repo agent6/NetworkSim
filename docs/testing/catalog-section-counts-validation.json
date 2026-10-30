@@ -1,0 +1,33 @@
+{
+  "feature": "Lab catalog subcategory counts",
+  "artifactSha256": "238d6b3967ba4f642209135415c300061f2c9a590fe536af30880426b683b4b3",
+  "counts": {
+    "Fundamentals": 3,
+    "Switching": 3,
+    "Routing": 1,
+    "Services & Security": 0
+  },
+  "behavior": [
+    "Populated section buttons show a badge computed from catalog entries",
+    "Practice and completed variants count as one lab",
+    "Empty sections omit the badge",
+    "Accessible names include the count with singular/plural lab wording; decorative badge text is hidden from screen readers"
+  ],
+  "validation": {
+    "typecheck": "passed",
+    "catalogAndPermalinkTests": 19,
+    "productionBuild": "passed",
+    "browserChecks": 7
+  },
+  "browserChecks": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}
