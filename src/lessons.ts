@@ -1,6 +1,7 @@
 import type { Lab, Device } from "./model.ts";
 import type { Simulator } from "./engine.ts";
 import { isIPv4, isIPv6, ipToInt, inSubnet, maskToPrefix, sameAddress } from "./ip.ts";
+import {switchingPeer} from './switching-messages.ts';
 import {poeSettings,poePort} from './poe.ts';
 import {endpointVoicePolicy, endpointNetworkPort} from './endpoint.ts';
 
@@ -25,6 +26,8 @@ export type Criterion =
   | { kind: "neighbor"; device: string; protocol: string; state?: string }
   | { kind: "echo"; device: string; from: string }
   | { kind: "vlan"; device: string; id: number }
+  | { kind: "lacp-bundle"; device: string; group: number; peer: string; members: string[] }
+  | { kind: "stp-forwarding"; device: string; interface: string; vlans: number[] }
   | { kind: "trunk-allowed"; device: string; interface: string; vlans: number[] }
   | { kind: "poe-interface"; device: string; interface: string; mode: "auto" | "never"; max: number; priority: "high" | "low" }
   | { kind: "poe-supply"; device: string; switch: string; interface: string; watts: number; standard: "802.3af" | "802.3at"; class: 3 | 4; spatialStreams?: 2 | 4; usb?: boolean }
@@ -34,7 +37,7 @@ export type Criterion =
       kind: "interface";
       device: string;
       interface: string;
-      property: "adminUp" | "vlan" | "voiceVlan" | "nativeVlan" | "nonegotiate" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "duplex" | "portfast" | "speedAuto";
+      property: "adminUp" | "vlan" | "voiceVlan" | "nativeVlan" | "nonegotiate" | "channelGroup" | "channelMode" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "duplex" | "portfast" | "speedAuto";
       value: string | number | boolean;
     };
 export interface Objective {
@@ -112,6 +115,9 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         );
       case "vlan":
         return Number.isInteger(v.id) && v.id >= 1 && v.id <= 4094;
+      case "lacp-bundle":
+        return Number.isInteger(v.group) && v.group>=1 && v.group<=4096 && text(v.peer,128) && Array.isArray(v.members) && v.members.length>0 && v.members.length<=32 && v.members.every((p:unknown)=>text(p,128) && p!=="") && new Set(v.members).size===v.members.length;
+      case "stp-forwarding":
       case "trunk-allowed":
         return text(v.interface,128) && Array.isArray(v.vlans) && v.vlans.length>0 && v.vlans.length<=4094 && v.vlans.every((n:unknown)=>Number.isInteger(n) && Number(n)>=1 && Number(n)<=4094) && new Set(v.vlans).size===v.vlans.length;
       case "poe-interface":
@@ -126,6 +132,8 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         if (!text(v.interface, 128)) return false;
         if (["switchport","portfast","speedAuto","nonegotiate"].includes(v.property)) return typeof v.value === "boolean";
         if (v.property === "description") return text(v.value,240);
+        if (v.property === "channelGroup") return Number.isInteger(v.value) && v.value>=1 && v.value<=4096;
+        if (v.property === "channelMode") return ["active","passive","on","desirable","auto"].includes(v.value);
         if (v.property === "duplex") return ["auto","full","half"].includes(v.value);
         if (v.property === "ip") return typeof v.value === "string" && isIPv4(v.value);
         if (v.property === "mask") {
@@ -239,6 +247,14 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind === "lacp-bundle") {
+    const channel=d.runtime.features.portChannels?.[criterion.group],peer=device(sim,criterion.peer);
+    return !!peer && channel?.protocol==="lacp" && channel.state==="up" && channel.peerDeviceId===peer.id && sim.interfaceUp(d.id,`Port-channel${criterion.group}`) && channel.activeMembers.length===criterion.members.length && criterion.members.every(name=>{
+      const port=d.config.interfaces[name],partner=switchingPeer(sim,d.id,name,'LACP');
+      return port?.features.channelGroup===criterion.group && ["active","passive"].includes(port.features.channelMode) && channel.activeMembers.includes(name) && partner?.deviceId===peer.id && partner.synchronized===true && partner.partner?.deviceId===d.id && partner.partner?.port===name && partner.partner?.group===criterion.group;
+    });
+  }
+  if (criterion.kind === "stp-forwarding") return sim.interfaceUp(d.id,criterion.interface) && criterion.vlans.every(v=>d.runtime.stp[String(v)]?.ports[criterion.interface]?.state==="forwarding");
   if (criterion.kind === "interface-up") return sim.interfaceUp(d.id,criterion.interface);
   if (criterion.kind === "trunk-allowed") {
     const port=d.config.interfaces[criterion.interface],allowed=port?.allowedVlans;
@@ -317,7 +333,7 @@ export function matches(
   }
   if (criterion.kind === "interface") {
     const port=d.config.interfaces[criterion.interface];if(!port)return false;
-    const value=criterion.property==="nonegotiate"?port.features.nonegotiate===true:criterion.property==="portfast"?port.features.portfast===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
+    const value=criterion.property==="channelGroup"?port.features.channelGroup:criterion.property==="channelMode"?port.features.channelMode:criterion.property==="nonegotiate"?port.features.nonegotiate===true:criterion.property==="portfast"?port.features.portfast===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
     return value===criterion.value;
   }
   return false;
