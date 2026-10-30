@@ -1,0 +1,199 @@
+{
+  "feature": "Full-screen or hidden mobile console",
+  "artifactSha256": "7df4277c960296de91fc0720641a3cc6f454b67c60e93703def14c0559b835e8",
+  "mobileLayout": "Viewport width at most 650px, or primary coarse pointer with no hover; phone/tablet landscape remains full screen",
+  "validation": {
+    "command": "npm run check",
+    "tests": 1343,
+    "passed": 1343,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 29
+  },
+  "behavior": [
+    "Every console entry point uses the same full-screen layout on mobile, including an empty console and reopening a device",
+    "Mobile hides the resize handle and expand/restore button; closing returns to the diagram without shifting the topology",
+    "Console drafts, selection, history and per-device sessions survive closing, reopening and session switching",
+    "Full-screen dimensions track real visual-viewport resize events, reduced viewport height and orientation changes",
+    "Desktop retains partial-height resizing, expand/restore, and its dock height across responsive transitions",
+    "Original CLI fonts, colors, cursor and offline behavior remain unchanged; no engine changes"
+  ],
+  "responsiveChecks": [
+    {
+      "theme": "light",
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "mobileTwoStates": false,
+      "desktopResizeAndRestore": true,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": false,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "narrow-window",
+      "width": 650,
+      "height": 844,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": false,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "phone",
+      "width": 390,
+      "height": 844,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "small-phone",
+      "width": 320,
+      "height": 568,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "phone-landscape",
+      "width": 844,
+      "height": 390,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "tablet",
+      "width": 768,
+      "height": 1024,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "light",
+      "name": "tablet-landscape",
+      "width": 1180,
+      "height": 820,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000,
+      "mobileTwoStates": false,
+      "desktopResizeAndRestore": true,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": false,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "narrow-window",
+      "width": 650,
+      "height": 844,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": false,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "phone",
+      "width": 390,
+      "height": 844,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "small-phone",
+      "width": 320,
+      "height": 568,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "phone-landscape",
+      "width": 844,
+      "height": 390,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "tablet",
+      "width": 768,
+      "height": 1024,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "name": "tablet-landscape",
+      "width": 1180,
+      "height": 820,
+      "mobileTwoStates": true,
+      "desktopResizeAndRestore": false,
+      "restoresLayoutAndDraft": true,
+      "visualViewport": true,
+      "errors": []
+    }
+  ],
+  "themeRegression": [
+    "light desktop console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs and controls, resize handle, tooltip and shortcuts use Mono Cobalt",
+    "light mobile console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs and controls with full-screen-only mobile layout use Mono Cobalt",
+    "light desktop: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
+    "light mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
+    "dark desktop console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs and controls, resize handle, tooltip and shortcuts use Mono Cobalt",
+    "dark mobile console: original CLI fonts, colors, cursor and expanded CLI preserved; tabs and controls with full-screen-only mobile layout use Mono Cobalt",
+    "dark desktop: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs",
+    "dark mobile: semantic surfaces, local fonts, original artwork across all 11 node kinds, transparent workspace icons visible, focus, inspector and dialogs"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

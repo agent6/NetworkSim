@@ -54794,6 +54794,7 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
   var dockHeight = Math.min(340, Math.round(innerHeight * 0.38));
   var dockOpen = false;
   var dockMaximized = false;
+  var mobileConsole = window.matchMedia("(max-width: 650px), (hover: none) and (pointer: coarse)");
   var renderedSession = null;
   var lastSessionMarkup = "";
   var alignmentGuides = [];
@@ -55281,19 +55282,22 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
   }
   function setDock(open) {
     const before = $("#canvas-wrap").clientHeight;
-    const wasMaximized = dockMaximized;
+    const wasExpanded = consoleExpanded();
     dockOpen = open;
     if (!open) dockMaximized = false;
     renderDock();
-    if (!wasMaximized) viewport.y += ($("#canvas-wrap").clientHeight - before) / 2;
+    if (!wasExpanded && !consoleExpanded()) viewport.y += ($("#canvas-wrap").clientHeight - before) / 2;
     dirty = true;
   }
   function dockLimit() {
     return Math.max(150, $("main").clientHeight - 292);
   }
+  function consoleExpanded() {
+    return dockOpen && (dockMaximized || mobileConsole.matches);
+  }
   function revealConsoleDevice() {
     const device2 = activeDevice ? sim.getDevice(activeDevice) : void 0;
-    if (!device2 || !dockOpen || dockMaximized) return;
+    if (!device2 || !dockOpen || consoleExpanded()) return;
     const canvas = $("#canvas-wrap"), x = device2.x * viewport.scale + viewport.x, y = device2.y * viewport.scale + viewport.y;
     viewport.x += Math.max(55, Math.min(canvas.clientWidth - 55, x)) - x;
     viewport.y += Math.max(70, Math.min(canvas.clientHeight - 65, y)) - y;
@@ -55325,7 +55329,7 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
     focusTerminal();
   }
   function renderDock() {
-    const expanded = dockOpen && dockMaximized;
+    const expanded = consoleExpanded();
     app.classList.toggle("console-expanded", expanded);
     $("#dock").hidden = !dockOpen;
     $("#dock-resize").hidden = !dockOpen || expanded;
@@ -55341,6 +55345,7 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
       b.setAttribute("aria-pressed", String(on2));
     }
     const maximize = $('[data-action="maximize-dock"]');
+    maximize.hidden = mobileConsole.matches;
     maximize.setAttribute("aria-label", expanded ? "Restore console size" : "Expand console to full window");
     maximize.setAttribute("aria-expanded", String(expanded));
     maximize.setAttribute("aria-controls", "dock");
@@ -56649,6 +56654,7 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
       $("#topology").focus();
     },
     "maximize-dock": () => {
+      if (mobileConsole.matches) return;
       stashTerminal();
       dockMaximized = !dockMaximized;
       renderDock();
@@ -57528,10 +57534,15 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
     drag = null;
   });
   $("#dock-resize").addEventListener("pointerdown", (e) => {
+    if (!dockOpen || consoleExpanded()) return;
     e.preventDefault();
     dockMaximized = false;
     const start = e.clientY, height = dockHeight;
     const move = (v) => {
+      if (consoleExpanded() || !dockOpen) {
+        end();
+        return;
+      }
       dockHeight = Math.max(
         130,
         Math.min(dockLimit(), height + start - v.clientY)
@@ -57548,6 +57559,7 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
     window.addEventListener("pointerup", end);
   });
   $("#dock-resize").addEventListener("keydown", (e) => {
+    if (!dockOpen || consoleExpanded()) return;
     if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       e.preventDefault();
       e.stopPropagation();
@@ -57564,15 +57576,19 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
     }
   });
   window.addEventListener("resize", () => {
-    if (!dockMaximized) dockHeight = Math.min(dockHeight, dockLimit());
+    if (!dockMaximized && !mobileConsole.matches) dockHeight = Math.min(dockHeight, dockLimit());
+    renderDock();
+    dirty = true;
+  });
+  mobileConsole.addEventListener("change", () => {
     renderDock();
     dirty = true;
   });
   window.visualViewport?.addEventListener("resize", () => {
-    if (dockOpen && dockMaximized) renderDock();
+    if (consoleExpanded()) renderDock();
   });
   window.visualViewport?.addEventListener("scroll", () => {
-    if (dockOpen && dockMaximized) renderDock();
+    if (consoleExpanded()) renderDock();
   });
   window.addEventListener("beforeunload", (e) => {
     if (!flushWorkspace()) {

@@ -116,6 +116,7 @@ let inspectorOpen = false,
   dockHeight = Math.min(340, Math.round(innerHeight * 0.38)),
   dockOpen = false,
   dockMaximized = false;
+const mobileConsole = window.matchMedia('(max-width: 650px), (hover: none) and (pointer: coarse)');
 let renderedSession: string | null = null;
 let lastSessionMarkup = "";
 let alignmentGuides: AlignmentGuide[] = [];
@@ -627,17 +628,18 @@ function focusTerminal(scroll = false) {
 }
 function setDock(open: boolean) {
   const before = $("#canvas-wrap").clientHeight;
-  const wasMaximized = dockMaximized;
+  const wasExpanded = consoleExpanded();
   dockOpen = open;
   if (!open) dockMaximized = false;
   renderDock();
-  if (!wasMaximized) viewport.y += ($("#canvas-wrap").clientHeight - before) / 2;
+  if (!wasExpanded && !consoleExpanded()) viewport.y += ($("#canvas-wrap").clientHeight - before) / 2;
   dirty = true;
 }
 function dockLimit() { return Math.max(150, $("main").clientHeight - 292); }
+function consoleExpanded() { return dockOpen && (dockMaximized || mobileConsole.matches); }
 function revealConsoleDevice() {
   const device = activeDevice ? sim.getDevice(activeDevice) : undefined;
-  if (!device || !dockOpen || dockMaximized) return;
+  if (!device || !dockOpen || consoleExpanded()) return;
   const canvas = $("#canvas-wrap"), x = device.x * viewport.scale + viewport.x, y = device.y * viewport.scale + viewport.y;
   viewport.x += Math.max(55, Math.min(canvas.clientWidth - 55, x)) - x;
   viewport.y += Math.max(70, Math.min(canvas.clientHeight - 65, y)) - y;
@@ -669,7 +671,7 @@ function openConsole(id: string) {
   focusTerminal();
 }
 function renderDock() {
-  const expanded = dockOpen && dockMaximized;
+  const expanded = consoleExpanded();
   app.classList.toggle("console-expanded", expanded);
   $("#dock").hidden = !dockOpen;
   $("#dock-resize").hidden = !dockOpen || expanded;
@@ -685,6 +687,7 @@ function renderDock() {
     b.setAttribute("aria-pressed", String(on));
   }
   const maximize = $('[data-action="maximize-dock"]');
+  maximize.hidden = mobileConsole.matches;
   maximize.setAttribute("aria-label", expanded ? "Restore console size" : "Expand console to full window");
   maximize.setAttribute("aria-expanded", String(expanded));
   maximize.setAttribute("aria-controls", "dock");
@@ -1958,7 +1961,7 @@ const actions: Record<string, () => void> = {
     renderTerminal();
   },
   "close-dock": () => { stashTerminal(); setDock(false); $("#topology").focus(); },
-  "maximize-dock": () => { stashTerminal(); dockMaximized = !dockMaximized; renderDock(); focusTerminal(); dirty = true; },
+  "maximize-dock": () => { if (mobileConsole.matches) return; stashTerminal(); dockMaximized = !dockMaximized; renderDock(); focusTerminal(); dirty = true; },
   "terminal-bottom": () => focusTerminal(true),
   "edit-selected-link": () => { if (selectedLink) editLink(selectedLink); },
   "previous-link": () => cycleLink(-1),
@@ -2803,11 +2806,13 @@ window.addEventListener("blur", () => {
   drag = null;
 });
 $("#dock-resize").addEventListener("pointerdown", (e) => {
+  if (!dockOpen || consoleExpanded()) return;
   e.preventDefault();
   dockMaximized = false;
   const start = e.clientY,
     height = dockHeight;
   const move = (v: PointerEvent) => {
+    if (consoleExpanded() || !dockOpen) { end(); return; }
     dockHeight = Math.max(
       130,
       Math.min(dockLimit(), height + start - v.clientY),
@@ -2824,6 +2829,7 @@ $("#dock-resize").addEventListener("pointerdown", (e) => {
   window.addEventListener("pointerup", end);
 });
 $("#dock-resize").addEventListener("keydown", (e) => {
+  if (!dockOpen || consoleExpanded()) return;
   if (e.key === "ArrowUp" || e.key === "ArrowDown") {
     e.preventDefault();
     e.stopPropagation();
@@ -2839,10 +2845,11 @@ $("#dock-resize").addEventListener("keydown", (e) => {
     dirty = true;
   }
 });
-window.addEventListener("resize", () => { if (!dockMaximized) dockHeight = Math.min(dockHeight, dockLimit()); renderDock(); dirty = true; });
+window.addEventListener("resize", () => { if (!dockMaximized && !mobileConsole.matches) dockHeight = Math.min(dockHeight, dockLimit()); renderDock(); dirty = true; });
+mobileConsole.addEventListener("change", () => { renderDock(); dirty = true; });
 // Mobile keyboards resize/pan the visual viewport without always resizing the window.
-window.visualViewport?.addEventListener("resize", () => { if (dockOpen && dockMaximized) renderDock(); });
-window.visualViewport?.addEventListener("scroll", () => { if (dockOpen && dockMaximized) renderDock(); });
+window.visualViewport?.addEventListener("resize", () => { if (consoleExpanded()) renderDock(); });
+window.visualViewport?.addEventListener("scroll", () => { if (consoleExpanded()) renderDock(); });
 window.addEventListener("beforeunload", (e) => {
   // Flush synchronously so even an immediate refresh retains the latest edit.
   // Only block navigation when the browser actually refuses to store changes.
