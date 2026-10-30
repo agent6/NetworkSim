@@ -12,7 +12,7 @@ import {eigrpUpdateEpoch,invalidateEigrpUpdateEpoch,synchronizeEigrpUpdatePeers,
 import { communityListMatches, canonicalCommunity, matchIOSExpression } from './bgp-policy.ts';
 import { selectBgpCandidate, removePrivateAS, scopedBgpConfig, bgpAddressFamily, bgpMultipathEligible } from './bgp-compat.ts';
 import { syncFhrpPackets, receiveFhrpControl, fhrpPeerView } from './fhrp-packets.ts';
-import { syncOSPF, configuredOSPFNeighbors, verifiedOSPFAdjacency, ospfDatabaseView, receiveOSPFControl, type OSPFProtocol, type OSPFEndpoint, type OSPFOrigin, type OSPFSnapshot } from './ospf-packets.ts';
+import { syncOSPF, configuredOSPFNeighbors, verifiedOSPFAdjacency, ospfDatabaseView, ospfLiveDetail, receiveOSPFControl, type OSPFProtocol, type OSPFEndpoint, type OSPFOrigin, type OSPFSnapshot } from './ospf-packets.ts';
 import { synchronizeBgpSessions, sendBgpAdvertisements, rejectBgpMaximumPrefix, type BgpPeerConfig } from './bgp-session.ts';
 import type { TCPChannel, TCPChannelOptions } from './tcp-channel.ts';
 import { slaTrackUp } from './sla-config.ts';
@@ -773,6 +773,10 @@ function ospfTimers(p:RoutedPort,protocol:string):{hello:number;dead:number}{con
 function ospfElections(engine:Simulator,endpoints:RoutedPort[],peers:Map<string,RoutedPort[]>,protocol:string):void {
   const field=`${protocol}Interfaces`,old=new Map(engine.lab.devices.map(d=>[d.id,d.runtime.features[field]??{}]));for(const d of engine.lab.devices)d.runtime.features[field]={};
   const visited=new Set<string>();
+  // Bootstrap previously unheard peers as before, but do not keep an expired
+  // neighbor eligible merely because its Ethernet interface is physically up.
+  const received=new Map(endpoints.map(p=>[portKey(p),ospfLiveDetail(engine,p.device.id,protocol as OSPFProtocol,p.iface.vrf)?.neighbors]));
+  const alive=(a:RoutedPort,b:RoutedPort)=>{const n=received.get(portKey(a))?.find(n=>n.interface===a.name&&n.deviceId===b.device.id&&n.peerInterface===b.name);return !n||n.state!=='DOWN'&&n.deadAt>engine.clock.now();};
   const priority=(p:RoutedPort)=>Number(p.iface.features[protocol]?.priority??1);
   const order=(a:RoutedPort,b:RoutedPort)=>priority(b)-priority(a)||ipNumber(routerId(b.device,protocol))-ipNumber(routerId(a.device,protocol));
   for(const p of endpoints){
@@ -781,7 +785,7 @@ function ospfElections(engine:Simulator,endpoints:RoutedPort[],peers:Map<string,
     if(String(pf.networkType??'').startsWith('point-to-')){p.device.runtime.features[field][p.name]={role:'POINT-TO-POINT',area:areaId(network.area),authenticationMode:protocolAuthentication(engine,p,protocol).mode};visited.add(portKey(p));continue;}
     const members=[p,...(peers.get(endpointKey(p))??[]).filter(q=>{
       const qn=networkMatch(q,protocol),qf=q.iface.features[protocol]??{};
-      return qn&&!passive(q,protocol)&&!String(qf.networkType??'').startsWith('point-to-')&&areaId(qn.area)===areaId(network.area)&&(p.family===6||q.prefix===p.prefix&&contains(p.ip,p.prefix,q.ip))&&ospfTimers(p,protocol).hello===ospfTimers(q,protocol).hello&&ospfTimers(p,protocol).dead===ospfTimers(q,protocol).dead&&authenticationCompatible(engine,p,q,protocol);
+      return qn&&alive(p,q)&&alive(q,p)&&!passive(q,protocol)&&!String(qf.networkType??'').startsWith('point-to-')&&areaId(qn.area)===areaId(network.area)&&(p.family===6||q.prefix===p.prefix&&contains(p.ip,p.prefix,q.ip))&&ospfTimers(p,protocol).hello===ospfTimers(q,protocol).hello&&ospfTimers(p,protocol).dead===ospfTimers(q,protocol).dead&&authenticationCompatible(engine,p,q,protocol);
     })].filter((q,i,all)=>all.findIndex(x=>portKey(x)===portKey(q))===i);
     const eligible=members.filter(q=>priority(q)>0).sort(order);
     const prior=members.map(q=>old.get(q.device.id)?.[q.name]).filter(Boolean).sort((a,b)=>{

@@ -362,7 +362,12 @@ function ospfDatabaseEntries(v: OspfView): DbLsa[] {
     for (const [key, links] of segments) {
       const endpoints = links.flatMap(k => [k.from, k.to]), dr = endpoints.find(x => roleOf(x.deviceId, x.name) === 'DR');
       if (!dr || result.some(r => r.type === 2 && r.area === area && r.linkId === dr.address)) continue;
-      const attached = [...new Set([dr.routerId, ...endpoints.map(x => x.routerId)])], owner = lsas.find(l => l.routerId === dr.routerId);
+      const owner = lsas.find(l => l.routerId === dr.routerId);
+      // Retained records from other routers can still mention a disconnected peer.
+      // The DR's received record defines the current attached Full neighbors.
+      const drLinks = owner?.links.filter(k => areaKey(k.area) === area && !isP2p(k) && k.from.deviceId === dr.deviceId && k.from.name === dr.name) ?? [];
+      if (!drLinks.length) continue;
+      const attached = [...new Set([dr.routerId, ...drLinks.map(k => k.to.routerId)])];
       result.push({ type: 2, area, linkId: dr.address, adv: dr.routerId, age: owner?.age ?? 0, seq: owner?.sequence ?? 1, checksum: checksum(2, key, dr.routerId, owner?.sequence), mask: dr.prefix, attached });
     }
     // Summary LSAs (type 3/4) originated by area border routers attached to this area

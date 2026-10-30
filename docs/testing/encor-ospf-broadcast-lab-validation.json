@@ -1,0 +1,93 @@
+{
+  "feature": {
+    "title": "OSPF Broadcast Network",
+    "catalogId": "ospf-broadcast-network",
+    "group": "CCNP ENCOR",
+    "section": "Layer 3",
+    "sectionLabCount": 4,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6
+    },
+    "devices": 7,
+    "links": 6,
+    "tasks": 15,
+    "addressingRows": 8,
+    "notes": 1,
+    "permalink": "#/labs/ospf-broadcast-network",
+    "modes": [
+      "practice",
+      "completed"
+    ],
+    "independentCCNALab": "ospf-dr-bdr-election"
+  },
+  "topology": "R1–R4 Gi0/1 share SW1 VLAN1 access ports1–4 on 10.0.123.0/24, addresses .1 through .4. R1/R2 priorities100/50 select planned DR/BDR; R3/R4 priorities0 remain DROTHER. R3/R4 Gi0/0 passive cost1 LANs 192.168.30/40.1/24 connect PC1/PC2 at .10 with .1 gateways. Shared transit cost10; all six remote-LAN O routes are AD110/metric11. Four manual router IDs1.1.1.1 through4.4.4.4 and process10 use a normal Area0.",
+  "verificationNotes": [
+    "Adds the fourth ENCOR Layer3 lab without replacing the independent seven-node CCNA DR/BDR election lab. Practice starts at zero with addressing, Layer2 connectivity and host gateways prepared, but no OSPF/static router routes. Both diagnostic ping actions are enabled. The completed reference executes all four real IOS command sets, including explicit broadcast network type, priorities and LAN cost1, saves startup policy and serializes empty runtime. Fresh received control state earns eleven live setup/verification/save tasks, without invented traffic, non-preemption or promotion history.",
+    "Fifteen tasks cover four router activations, planned roles, all twelve directed neighbor relationships, received Network-LSA state from all four observers, six exact O routes, passive LANs, an OSPF-only normal domain, saved healthy policy, two actual traffic paths and two proved election experiments followed by restoration. Ten directed neighbors are Full and R3/R4 remain a normal two-direction2WAY/DROTHER pair. Priority0 is ineligible for both roles. Router-ID ties use higher IDs only in a fresh equal-priority election; an incumbent is not displaced merely by a later higher-priority router.",
+    "Network-LSA displays use DR interface address10.0.123.1 as LSID, advertising router1.1.1.1 and four attached router IDs. A real display bug unioned endpoints from retained records belonging to other routers, leaving a disconnected R1 attached to the new R2 DR advertisement. The formatter now derives attached Full neighbors from the received DR record on the exact broadcast interface/area, and omits a network advertisement without an owner Full link. Following R1 loss, the R2 advertisement uses LSID10.0.123.2/advertiser2.2.2.2, exactly three attached router IDs and length36; after R1 rejoins it has four and length40. No parsing of human CLI output is used for grading.",
+    "A real election gap kept an expired DR/BDR eligible while its Ethernet port was physically up. Existing election membership now excludes learned Down/Dead-expired peers in both directions using received neighbor liveness. Tests preserve the incumbent before Dead expiry, promote R2 after a physically-up R1 link stops delivering Hellos, expire an unreachable BDR without displacing a live DR, and preserve non-preemptive return. Existing bootstrap selection for previously unheard configured candidates remains; this is not a wholesale distributed per-interface election or Wait-state rewrite.",
+    "Bounded declarative obc-network criteria require the intended live DR, observer broadcast interface, all expected received router records, the exact DR attached set and actual Full owner adjacencies. obc-nonpreempt requires R1 priority100/DR, R2 priority200/BDR and the higher priority in R1’s received Full-peer Hello snapshot. Blocking R2 control datagrams prevents this observation despite changing its configuration. Restoring R2 priority50 and healthy live checks completes the experiment.",
+    "New obc-echo proof correlates IPv4 ICMP requests, parent-linked successful replies, source/target addresses, every physical send and receive port through PC1→R3→SW1→R4→PC2 and the return path, with actual O/AD110 edge next hops directly to the destination DROTHER. Any other router forwarding the same packet is rejected; DR/BDR are control-plane coordinators and not mandatory data-plane relays. Wrong packet identities, family, target, switch ingress ports or absent bridge sends fail. A test contaminates every probe when testing forbidden DR forwarding, preserving the rule that an unrelated valid probe may legitimately count.",
+    "obc-promote requires the explicit R1 Gi0/1 shutdown timestamp, a matching real Full-to-Down transition, R2 as DR without an eligible BDR, received three-member R2 network records on all surviving routers, and new successful requests in both directions during that same outage. Old successful packets, a never-formed R1, a physically-up loss incident or only one new request direction cannot fabricate this explicit exercise. Older Full event eviction does not invalidate a matching later Full-to-Down event. The observation is retained, while recovery stays incomplete until the planned healthy election returns.",
+    "The guide and tests restore R1 as BDR while R2 remains DR, then deliberately reset all shared interfaces and enable R1, R2, R3, R4 in order to restore R1 DR/R2 BDR. Both traffic directions continue through the two DROTHER routers. Tests also cover blocked protocol89 control, passive transit, one-sided area mismatch, Hello/Dead mismatch, LAN withdrawal, asymmetric cost, reversed join order, equal-priority fresh election and static-route bypass. Correct route metrics and network type remain live requirements even when traffic succeeds.",
+    "IOS write memory and reload restore an unsaved cost change. Portable reopening retains genuine packet and experiment observations, but fresh packets rebuild roles, neighbors and received databases before all15 tasks return. Stable-ID grading survives a router hostname change. Imported member/path/priority data is bounded and missing endpoints fail closed. The existing acknowledged logical OSPF router records still underpin the CLI Network-LSA projection and SPF; no binary LSA encoder, complete wire database or new live CML capture is claimed.",
+    "Final offline Chrome QA covers light/dark at1440/390/320px: all four actual console configurations; Full/2WAY and role distinctions; Network-LSA ownership/attachment changes; exact route costs and direct DROTHER Windows traces; received higher-priority non-preemption and restoration; R1 failure, R2 promotion and real bidirectional traffic; R1 non-preemptive return and controlled final reset; fifteen tasks; saved offline reload; configuration-only reference and cancel/save-copy protection. Both share-link checks preserve current host/path/query and workspace and return to ENCOR Layer3 with four labs, while CCNA election stays separate. Other sections and terminal golden styles remain unchanged. All16 HTML copies match the final build; desktop diagrams and both320px guides were visually inspected. Owned temporary localhost preview returned HTTP200."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco: OSPF Frequently Asked Questions",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/9237-9.html"
+    },
+    {
+      "title": "Cisco: Understand OSPF Neighbor States",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13685-13.html"
+    },
+    {
+      "title": "Cisco: What Does the show ip ospf interface Command Reveal",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13689-17.html"
+    },
+    {
+      "title": "Cisco Press/Pearson: ENARSI Official Cert Guide chapter6 key topics, non-preemptive DR/BDR roles",
+      "url": "https://ptgmedia.pearsoncmg.com/imprint_downloads/cisco/bookreg/9781587145254/keytopics/9781587145254_ch06_KeyTopic.pdf"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 25,
+    "existingElectionCompatibilityTests": 18,
+    "focusedPassed": 43,
+    "fullCheck": "npm run check",
+    "typecheck": "passed",
+    "fullTests": 2197,
+    "fullPassed": 2197,
+    "fullFailed": 0,
+    "build": "passed",
+    "browserChecks": [
+      "light 320px: ENCOR Layer3 with four labs; seven-node/15-task zero-credit practice and eight-row plan; all four actual IOS configurations; R1 DR/R2 BDR and ten Full plus two normal DROTHER 2WAY relationships; received Network-LSA views with four attached router IDs and exact O/AD110/metric11 routes; direct DROTHER traffic and bidirectional Windows traceroutes through SW1 without DR relay; received priority200 non-preemption with restoration50; genuine R1 shutdown, R2 promotion, corrected three-member Network LSA and new traffic in both directions during failure; returning R1 BDR, controlled reset restores intended election and fifteen tasks; saved offline reload rebuilds control state and retains experiment history; configuration-only reference, cancel/save-copy protection, fitted topology, responsive guide and unchanged terminal golden styles",
+      "light 390px: ENCOR Layer3 with four labs; seven-node/15-task zero-credit practice and eight-row plan; all four actual IOS configurations; R1 DR/R2 BDR and ten Full plus two normal DROTHER 2WAY relationships; received Network-LSA views with four attached router IDs and exact O/AD110/metric11 routes; direct DROTHER traffic and bidirectional Windows traceroutes through SW1 without DR relay; received priority200 non-preemption with restoration50; genuine R1 shutdown, R2 promotion, corrected three-member Network LSA and new traffic in both directions during failure; returning R1 BDR, controlled reset restores intended election and fifteen tasks; saved offline reload rebuilds control state and retains experiment history; configuration-only reference, cancel/save-copy protection, fitted topology, responsive guide and unchanged terminal golden styles",
+      "dark 320px: ENCOR Layer3 with four labs; seven-node/15-task zero-credit practice and eight-row plan; all four actual IOS configurations; R1 DR/R2 BDR and ten Full plus two normal DROTHER 2WAY relationships; received Network-LSA views with four attached router IDs and exact O/AD110/metric11 routes; direct DROTHER traffic and bidirectional Windows traceroutes through SW1 without DR relay; received priority200 non-preemption with restoration50; genuine R1 shutdown, R2 promotion, corrected three-member Network LSA and new traffic in both directions during failure; returning R1 BDR, controlled reset restores intended election and fifteen tasks; saved offline reload rebuilds control state and retains experiment history; configuration-only reference, cancel/save-copy protection, fitted topology, responsive guide and unchanged terminal golden styles",
+      "dark 390px: ENCOR Layer3 with four labs; seven-node/15-task zero-credit practice and eight-row plan; all four actual IOS configurations; R1 DR/R2 BDR and ten Full plus two normal DROTHER 2WAY relationships; received Network-LSA views with four attached router IDs and exact O/AD110/metric11 routes; direct DROTHER traffic and bidirectional Windows traceroutes through SW1 without DR relay; received priority200 non-preemption with restoration50; genuine R1 shutdown, R2 promotion, corrected three-member Network LSA and new traffic in both directions during failure; returning R1 BDR, controlled reset restores intended election and fifteen tasks; saved offline reload rebuilds control state and retains experiment history; configuration-only reference, cancel/save-copy protection, fitted topology, responsive guide and unchanged terminal golden styles",
+      "light 1440px: ENCOR Layer3 with four labs; seven-node/15-task zero-credit practice and eight-row plan; all four actual IOS configurations; R1 DR/R2 BDR and ten Full plus two normal DROTHER 2WAY relationships; received Network-LSA views with four attached router IDs and exact O/AD110/metric11 routes; direct DROTHER traffic and bidirectional Windows traceroutes through SW1 without DR relay; received priority200 non-preemption with restoration50; genuine R1 shutdown, R2 promotion, corrected three-member Network LSA and new traffic in both directions during failure; returning R1 BDR, controlled reset restores intended election and fifteen tasks; saved offline reload rebuilds control state and retains experiment history; configuration-only reference, cancel/save-copy protection, fitted topology, responsive guide and unchanged terminal golden styles",
+      "dark 1440px: ENCOR Layer3 with four labs; seven-node/15-task zero-credit practice and eight-row plan; all four actual IOS configurations; R1 DR/R2 BDR and ten Full plus two normal DROTHER 2WAY relationships; received Network-LSA views with four attached router IDs and exact O/AD110/metric11 routes; direct DROTHER traffic and bidirectional Windows traceroutes through SW1 without DR relay; received priority200 non-preemption with restoration50; genuine R1 shutdown, R2 promotion, corrected three-member Network LSA and new traffic in both directions during failure; returning R1 BDR, controlled reset restores intended election and fifteen tasks; saved offline reload rebuilds control state and retains experiment history; configuration-only reference, cancel/save-copy protection, fitted topology, responsive guide and unchanged terminal golden styles",
+      "light: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with four labs, other sections remain independent and CCNA DR/BDR election remains separate",
+      "dark: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with four labs, other sections remain independent and CCNA DR/BDR election remains separate",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with four labs and Layer 2 with six labs plus Layer 3 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with four labs and Layer 2 with six labs plus Layer 3 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with four labs and Layer 2 with six labs plus Layer 3 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with four labs and Layer 2 with six labs plus Layer 3 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with four labs and Layer 2 with six labs plus Layer 3 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with four labs and Layer 2 with six labs plus Layer 3 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "0439bdcb3f694a680c0f312b1a4ad7622bcb77c3b0b49f6225cb416267accc40",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}
