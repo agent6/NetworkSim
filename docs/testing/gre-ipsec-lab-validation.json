@@ -1,0 +1,91 @@
+{
+  "feature": {
+    "title": "GRE over IPsec Tunnel Configuration and Verification",
+    "catalogId": "gre-over-ipsec-tunnel-configuration-and-verification",
+    "group": "CCNP ENCOR",
+    "section": "Virtualization",
+    "sectionLabCount": 3,
+    "devices": 5,
+    "links": 4,
+    "tasks": 12,
+    "addressingRows": 10,
+    "permalink": "#/labs/gre-over-ipsec-tunnel-configuration-and-verification",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "Two PC LANs (192.168.10.0/24 and 192.168.20.0/24) attach to R1 and R2. Prepared WAN endpoints 192.0.2.2 and 198.51.100.2 route through ISP. Learners build Tunnel0 at 10.255.0.1/30 and .2/30, route the remote LAN, use MTU 1400, configure IKEv1 AES-256/SHA/pre-share/group14 with peer-specific keys, and apply GRE-IPSEC using GRE-TS AES-256/esp-sha-hmac transport mode, PFS14 and a 3600-second IPsec lifetime.",
+  "verificationNotes": [
+    "Practice starts without Tunnel0 or crypto configuration, at zero credit with only two underlay actions enabled. The completed reference contains seven configuration/startup goals, empty runtime and no fabricated SAs or traffic.",
+    "Two GRE/MTU/route goals, two IKE policy/key goals, two transform/profile/binding goals and a combined startup goal remain live. Traffic uses existing GRE and IKE/IPsec negotiation paths rather than synthetic success flags.",
+    "Protected achievements join actual destination echo requests and source replies to peer GRE decapsulation, the corresponding parent ESP envelope, ISP ESP transmission and both endpoint wire events. Both directions are required. Counters, unrelated labels, ordinary IP routing and plain GRE cannot substitute.",
+    "The live carrier goal checks current unexpired ready AES-256 transport SAs, QM_IDLE, current tunnel signatures and actual matching directional outbound/inbound SPIs/counters at both endpoints. The PC1 flow must use those current SPIs. Concurrent initiators may use separate valid directional associations and are covered.",
+    "Clearing SAs drops the live carrier goal; old protected achievements remain earned. New tunnel-only traffic cannot recycle an old PC proof. Portable reopening retains configuration and achievements but has eleven tasks until fresh PC1 traffic rebuilds current SA evidence. Actual IOS reload restores saved crypto configuration after unsaved damage.",
+    "Wire summaries now retain ESP-to-GRE parent correlation, actual SPI and sequence, protected protocol and IKE stage/exchange ID. IKE and ESP filters and hexadecimal SPI formatting expose these fields. Summary fields contain neither keys nor model tokens.",
+    "Negotiated AES key length is retained in both SA creation paths and shown in crypto output. Policy/transform verification shows configured key length. Actual AES-128 negotiation cannot satisfy the requested AES-256 policy. No cipher or authentication implementation was added.",
+    "Focused tests cover PSK and IKE mismatches, transport/PFS mismatch, missing profile fail-closed behavior, one/both unprotected peers, a routed bypass, missing return routes, SA clearing/replacement, simultaneous traffic, DF 1400/1401 MTU boundaries, startup/portable reloads, broken envelope identity and malformed imported criteria.",
+    "The PoE invalid-data fixture now uses explicitly untyped record fixtures to avoid TypeScript union expansion as the criterion vocabulary grows. Its runtime assertions are unchanged. The original GRE and VRF browser scripts and catalog counts are updated to three ENCOR Virtualization labs.",
+    "This is an educational IKE/ESP model with inspectable related inner packets, not cryptographic encryption. The guide and existing CLI model notices state this scope. IKEv2, crypto-map VPNs and multipoint GRE are outside this exercise."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco IOS XE 17.x: Sharing IPsec with Tunnel Protection",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/sec-vpn/b-security-vpn/m_sec-conn-dmvpn-share-ipsec-w-tun-protect-0.html"
+    },
+    {
+      "title": "Cisco: Troubleshoot IPsec using ISAKMP state and IPsec SAs",
+      "url": "https://www.cisco.com/c/en/us/support/docs/security-vpn/ipsec-negotiation-ike-protocols/5409-ipsec-debug-00.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 22,
+    "focusedAndRelatedTests": 57,
+    "focusedPassed": 57,
+    "typecheck": "passed",
+    "fullSuite": {
+      "command": "npm run check",
+      "tests": 1990,
+      "passed": 1990,
+      "failed": 0
+    },
+    "build": "passed; identical root and dist single-file offline artifacts",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: three ENCOR Virtualization labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS IKEv1 AES-256, peer-specific PSK, transport/PFS profile binding, GRE/MTU and overlay routes; QM_IDLE and active current negotiated AES-256 SAs; SPI-correlated ESP/inner GRE request and reply evidence; actual CLI SA clear loses one live goal and fresh PC traffic earns it with new SPIs; IKE stages, ESP SPI/sequence, related inner LAN packets and absence of secrets inspected; Windows CLI pings; startup save, fresh negotiation after offline reload, completed reference and cancel/save-copy protection; fitted icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light 390px: three ENCOR Virtualization labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS IKEv1 AES-256, peer-specific PSK, transport/PFS profile binding, GRE/MTU and overlay routes; QM_IDLE and active current negotiated AES-256 SAs; SPI-correlated ESP/inner GRE request and reply evidence; actual CLI SA clear loses one live goal and fresh PC traffic earns it with new SPIs; IKE stages, ESP SPI/sequence, related inner LAN packets and absence of secrets inspected; Windows CLI pings; startup save, fresh negotiation after offline reload, completed reference and cancel/save-copy protection; fitted icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light 320px: three ENCOR Virtualization labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS IKEv1 AES-256, peer-specific PSK, transport/PFS profile binding, GRE/MTU and overlay routes; QM_IDLE and active current negotiated AES-256 SAs; SPI-correlated ESP/inner GRE request and reply evidence; actual CLI SA clear loses one live goal and fresh PC traffic earns it with new SPIs; IKE stages, ESP SPI/sequence, related inner LAN packets and absence of secrets inspected; Windows CLI pings; startup save, fresh negotiation after offline reload, completed reference and cancel/save-copy protection; fitted icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 1440px: three ENCOR Virtualization labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS IKEv1 AES-256, peer-specific PSK, transport/PFS profile binding, GRE/MTU and overlay routes; QM_IDLE and active current negotiated AES-256 SAs; SPI-correlated ESP/inner GRE request and reply evidence; actual CLI SA clear loses one live goal and fresh PC traffic earns it with new SPIs; IKE stages, ESP SPI/sequence, related inner LAN packets and absence of secrets inspected; Windows CLI pings; startup save, fresh negotiation after offline reload, completed reference and cancel/save-copy protection; fitted icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 390px: three ENCOR Virtualization labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS IKEv1 AES-256, peer-specific PSK, transport/PFS profile binding, GRE/MTU and overlay routes; QM_IDLE and active current negotiated AES-256 SAs; SPI-correlated ESP/inner GRE request and reply evidence; actual CLI SA clear loses one live goal and fresh PC traffic earns it with new SPIs; IKE stages, ESP SPI/sequence, related inner LAN packets and absence of secrets inspected; Windows CLI pings; startup save, fresh negotiation after offline reload, completed reference and cancel/save-copy protection; fitted icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 320px: three ENCOR Virtualization labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS IKEv1 AES-256, peer-specific PSK, transport/PFS profile binding, GRE/MTU and overlay routes; QM_IDLE and active current negotiated AES-256 SAs; SPI-correlated ESP/inner GRE request and reply evidence; actual CLI SA clear loses one live goal and fresh PC traffic earns it with new SPIs; IKE stages, ESP SPI/sequence, related inner LAN packets and absence of secrets inspected; Windows CLI pings; startup save, fresh negotiation after offline reload, completed reference and cancel/save-copy protection; fitted icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light: permalink preserves host/path/query without replacing workspace and returns to ENCOR Virtualization with three labs",
+        "dark: permalink preserves host/path/query without replacing workspace and returns to ENCOR Virtualization with three labs"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, ENCOR Virtualization with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, ENCOR Virtualization with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches established desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology",
+        "light 320px topology",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "33722fee5b1aecb94b6df33221732c4ac4ee11c77a912ea36ae01f23f0a93c96"
+  }
+}

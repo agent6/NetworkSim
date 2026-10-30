@@ -337,6 +337,8 @@ export class Simulator {
   }
   private packetSummary(p: IPPacket): PacketSummary {
     const b = p.body ?? {}, v6 = isIPv6(p.destination), ports = ['tcp', 'udp'].includes(p.protocol), result: PacketSummary = { id: p.id, vrf:p.vrf, parentId: p.parentId, source: p.source, destination: p.destination, protocol: p.protocol.toUpperCase(), ipVersion: v6 ? 6 : 4, ttl: p.ttl, size: p.size, df: p.df, dscp: p.dscp ?? 0, ecn:p.ecn??0, sourcePort: ports ? p.sourcePort : undefined, destinationPort: ports ? p.destinationPort : undefined, messageType: b.kind };
+    if(b.kind==='esp')Object.assign(result,{espSpi:b.spi,espSequence:b.sequence,protectedProtocol:b.inner?.protocol?.toUpperCase()});
+    if(b.kind==='ike')Object.assign(result,{ikeStage:b.stage,ikeExchangeId:b.id});
     if(b.kind==='netflow-export')result.netflowVersion=b.version;
     if(b.kind==='control-plane'&&b.payload?.wireless)Object.assign(result,{messageType:'capwap-'+b.payload.type,innerFrameId:b.payload.frame?.id,vlan:b.payload.vlan,ssid:b.payload.wlan});
     if (p.fragment) Object.assign(result, { fragmentOffset: p.fragment.offset, moreFragments: p.fragment.more, fragmentId: p.fragment.id });
@@ -1240,7 +1242,7 @@ export class Simulator {
     const result = this.tcpRequest(sourceId, address, options.port??(options.secure?443:80), { application: 'http', secure:!!options.secure, path, method: options.method, headers: options.headers,body:options.body }, options); result.address = address; result.path = path; return result;
   }
   clearCrypto(deviceId: string,kind:'all'|'isakmp'|'ipsec'='all',peer?:string): void { this.cryptoServices.clear(deviceId,kind,peer); this.notify(); }
-  sendCryptoPacket(deviceId: string, source: string, destination: string, protocol: string, body: any, size: number,vrf?:string): void { const d = this.getDevice(deviceId); if (!d) return; const p = this.makePacket(source, destination, protocol, size, body);p.vrf=vrf; if (protocol === 'udp') { p.sourcePort = 500; p.destinationPort = 500; } this.originate(d, p); }
+  sendCryptoPacket(deviceId: string, source: string, destination: string, protocol: string, body: any, size: number,vrf?:string): void { const d = this.getDevice(deviceId); if (!d) return; const p = this.makePacket(source, destination, protocol, size, body);p.vrf=vrf;if(body?.kind==='esp')p.parentId=body.inner?.id; if (protocol === 'udp') { p.sourcePort = 500; p.destinationPort = 500; } this.originate(d, p); }
   receiveDecryptedPacket(deviceId: string, port: string, packet: IPPacket,protection?:TunnelProtection): void { const d = this.getDevice(deviceId); if (d && this.interfaceUp(d.id, port)){if(packet.body?.kind==='gre')this.receiveGRE(d,packet,protection);else this.receiveIP(d, port, packet);} }
   dropCryptoPacket(deviceId: string, packet: IPPacket, reason: string): void { const d = this.getDevice(deviceId); if (!d) return; this.packetEvent(d, packet, 'IPsec drop', reason, 'drop'); const original = packet.body?.kind === 'gre' ? packet.body.inner : packet;if(!original)return; if (this.localInterface(d, original.source, original.vrf)) this.failLocal(d.id, original, reason); else this.icmpError(d, original, reason); }
   registerUDPService(port: number, accepts: (device: Device) => boolean, handler: (device: Device, payload: any, sourceAddress: string,destinationAddress:string) => Record<string, any>|undefined): () => void { const service = { accepts, handler }; this.udpServices.set(port, service); return () => { if (this.udpServices.get(port) === service) this.udpServices.delete(port); }; }

@@ -109,6 +109,11 @@ export interface Note { id: string; x: number; y: number; text: string; locked?:
 export interface Lab { id: string; name: string; devices: Device[]; links: Link[]; notes: Note[] }
 export interface PacketSummary {
   id: string;
+  espSpi?: number;
+  espSequence?: number;
+  protectedProtocol?: string;
+  ikeStage?: string;
+  ikeExchangeId?: string;
   vrf?: string;
   parentId?: string;
   source: string;

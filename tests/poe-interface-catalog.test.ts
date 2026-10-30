@@ -46,13 +46,15 @@ test('unused port remains data-enabled and saved PoE configurations rebuild fres
 });
 test('PoE guide validates bounded data and exposes only implemented configuration and verification',()=>{
  const sim=load(),lesson=(sim.lab as CatalogLab).lesson!,resources=catalogGuideResources('poe-interface')!;assert.equal(lesson.objectives.length,8);for(const row of resources.rows)assert.equal(row.length,resources.columns.length);assert.match(resources.note,/30.8 W/);assert.match(resources.note,/controller joining.*outside/);
- for(const criterion of [
-  {...goal(sim,'phone-config').objective.criterion,max:30001},{...goal(sim,'phone-config').objective.criterion,mode:'static'},
-  {...goal(sim,'phone-config').objective.criterion,priority:'critical'},{...goal(sim,'phone-config').objective.criterion,max:15400.1},
-  {...goal(sim,'ap-power').objective.criterion,watts:Infinity},{...goal(sim,'ap-power').objective.criterion,watts:0},
-  {...goal(sim,'ap-power').objective.criterion,standard:'802.3bt'},{...goal(sim,'ap-power').objective.criterion,class:8},
-  {...goal(sim,'ap-power').objective.criterion,spatialStreams:8},{...goal(sim,'ap-power').objective.criterion,usb:'off'},
- ])assert.throws(()=>validateLesson({...lesson,objectives:[{id:'x',title:'x',criterion}]}),/invalid/);
+ const phoneCriterion=goal(sim,'phone-config').objective.criterion as unknown as Record<string,unknown>,apCriterion=goal(sim,'ap-power').objective.criterion as unknown as Record<string,unknown>;
+ const invalidCriteria:unknown[] = [
+  {...phoneCriterion,max:30001},{...phoneCriterion,mode:'static'},
+  {...phoneCriterion,priority:'critical'},{...phoneCriterion,max:15400.1},
+  {...apCriterion,watts:Infinity},{...apCriterion,watts:0},
+  {...apCriterion,standard:'802.3bt'},{...apCriterion,class:8},
+  {...apCriterion,spatialStreams:8},{...apCriterion,usb:'off'},
+];
+ for(const criterion of invalidCriteria)assert.throws(()=>validateLesson({...lesson,objectives:[{id:'x',title:'x',criterion}]}),/invalid/);
  const completed=load('completed'),cli=new IOSSession(completed,id('PSW1'));cli.execute('enable');for(const command of resources.verification.PSW1)assert.ok(!cli.execute(command).some(iosRejected),command);
  assert.equal(matches(sim,{kind:'poe-interface',device:'missing',interface:g(1),mode:'auto',max:15400,priority:'low'}),false);
 });

@@ -98,6 +98,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **GRE Tunnel Configuration and Verification** under **CCNP ENCOR → Virtualization** builds a point-to-point IPv4 overlay across a prepared ISP. Its twelve tasks verify the independent underlay, configure tunnel endpoints and LAN routes, prove encapsulation/decapsulation and bidirectional traffic, inspect ISP transport and save both endpoints. Includes a completed reference and `#/labs/gre-tunnel-configuration-and-verification`.
 
+**GRE over IPsec Tunnel Configuration and Verification** under **CCNP ENCOR → Virtualization** adds IOS IKEv1 peer authentication, AES-256 transport-mode protection, PFS and a saved tunnel profile. Its twelve tasks require real modeled ESP packet delivery and current SPI/counter evidence; reopening requires fresh SA negotiation. Includes a completed reference and `#/labs/gre-over-ipsec-tunnel-configuration-and-verification`.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.

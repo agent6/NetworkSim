@@ -41,7 +41,7 @@ export function matchesProtocol(event: SimEvent, selected: string): boolean {
 }
 
 export function packetGroups(packet: PacketSummary) {
-  const values = Object.entries(packet).filter(
+  const values = Object.entries(packet).map(([key,value])=>[key,key==='espSpi'&&typeof value==='number'?'0x'+value.toString(16):value] as [string,any]).filter(
     ([, value]) => value !== undefined && value !== null,
   );
   const used = new Set<string>();
@@ -51,6 +51,7 @@ export function packetGroups(packet: PacketSummary) {
     return { title, fields };
   };
   const groups = [
+    group("IPsec and IKE",["espSpi","espSequence","protectedProtocol","ikeStage","ikeExchangeId"]),
     group("802.11 and wireless transport",["frameType","subtype","bssid","ssid","channel","band","rssi","snr","rate","eapType","keyMessage","replayCounter","micValidated","innerFrameId"]),
     group("Ethernet", ["sourceMac", "destinationMac", "vlan", "cos"]),
     group("Addresses and forwarding", [
