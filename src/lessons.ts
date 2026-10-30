@@ -1,6 +1,7 @@
 import type { Lab, Device } from "./model.ts";
 import type { Simulator } from "./engine.ts";
 import { isIPv4, isIPv6, ipToInt, inSubnet, maskToPrefix, sameAddress } from "./ip.ts";
+import {endpointVoicePolicy, endpointNetworkPort} from './endpoint.ts';
 
 export type Criterion =
   | { kind: "all" | "any"; criteria: Criterion[] }
@@ -22,12 +23,13 @@ export type Criterion =
   | { kind: "neighbor"; device: string; protocol: string; state?: string }
   | { kind: "echo"; device: string; from: string }
   | { kind: "vlan"; device: string; id: number }
+  | { kind: "voice-policy"; device: string; vlan: number }
   | { kind: "mac-learned"; device: string; interface: string; source: string; sourceInterface: string; vlan: number }
   | {
       kind: "interface";
       device: string;
       interface: string;
-      property: "adminUp" | "vlan" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "duplex" | "portfast" | "speedAuto";
+      property: "adminUp" | "vlan" | "voiceVlan" | "mode" | "mtu" | "ip" | "mask" | "description" | "switchport" | "duplex" | "portfast" | "speedAuto";
       value: string | number | boolean;
     };
 export interface Objective {
@@ -103,6 +105,8 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         );
       case "vlan":
         return Number.isInteger(v.id) && v.id >= 1 && v.id <= 4094;
+      case "voice-policy":
+        return Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094;
       case "mac-learned":
         return text(v.interface,128) && text(v.source,128) && text(v.sourceInterface,128) && Number.isInteger(v.vlan) && v.vlan>=1 && v.vlan<=4094;
       case "interface":
@@ -123,7 +127,7 @@ export function validateLesson(value: unknown): asserts value is Lesson {
             "dynamic-auto",
             "dynamic-desirable",
           ].includes(v.value);
-        if (v.property === "vlan")
+        if (v.property === "vlan" || v.property === "voiceVlan")
           return Number.isInteger(v.value) && v.value >= 1 && v.value <= 4094;
         return (
           v.property === "mtu" &&
@@ -274,6 +278,8 @@ export function matches(
         sameAddress(e.packet.source, criterion.from),
     );
   if (criterion.kind === "vlan") return !!d.config.vlans[criterion.id]?.active;
+  if (criterion.kind === "voice-policy")
+    return sim.devicePowered(d.id) && sim.interfaceUp(d.id,endpointNetworkPort(d)) && endpointVoicePolicy(d,sim.clock.now())?.vlan === criterion.vlan;
   if (criterion.kind === "mac-learned") {
     const source=device(sim,criterion.source);
     if (!source?.config.interfaces[criterion.sourceInterface] || !d.config.interfaces[criterion.interface]) return false;
@@ -282,7 +288,7 @@ export function matches(
   }
   if (criterion.kind === "interface") {
     const port=d.config.interfaces[criterion.interface];if(!port)return false;
-    const value=criterion.property==="portfast"?port.features.portfast===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:port[criterion.property];
+    const value=criterion.property==="portfast"?port.features.portfast===true:criterion.property==="speedAuto"?port.features.speedAuto!==false:criterion.property==="voiceVlan"?port.features.voiceVlan:port[criterion.property];
     return value===criterion.value;
   }
   return false;

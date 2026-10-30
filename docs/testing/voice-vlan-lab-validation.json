@@ -1,0 +1,61 @@
+{
+  "feature": "CCNA Switching: Voice VLAN",
+  "catalogId": "voice-vlan",
+  "artifactSha256": "aeb1605cde1d962091e47d3df05d217647d0c5e52f13592fd51489c8e86e34fb",
+  "devices": 7,
+  "links": 6,
+  "tasks": 10,
+  "topology": {
+    "PSW1": "PoE switch; Gi0/1\u20132 phone ports; Gi0/3 router trunk; Gi0/4 services access port",
+    "PHONE1/PHONE2": "Network uplinks draw actual 15.4W PoE and tag received voice VLAN 20; PC ports bridge untagged data",
+    "PC1/PC2": "192.168.10.11/24 and 192.168.10.12/24 behind the phones",
+    "R1": "Preconfigured VLAN 10/20/100 router-on-a-stick; VLAN 20 DHCP relay to SRV1",
+    "SRV1": "192.168.100.10; actual voice DHCP pool, DNS and gateway-return route"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1370,
+    "passed": 1370,
+    "failed": 0,
+    "focusedTests": 43,
+    "newLabTests": 10,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "checks": [
+    "Practice starts with no task credit, phone ports shut and inline power disabled",
+    "Published IOS commands configure access VLAN 10, voice VLAN 20, PortFast, CDP, inline power and saved startup configuration",
+    "Policy tasks require actual unexpired CDP/LLDP-MED reception; switch configuration alone cannot pass",
+    "Phone leases require delivered server ACKs and both client/server lease records, correct /24, gateway and DNS",
+    "Tagged phone packets use VLAN 20 and CoS 5; PC passthrough retains the original MAC, untagged framing and IP TTL",
+    "Phone and PC dynamic MAC entries share each physical port in different VLANs",
+    "Wrong access/voice VLAN and PoE loss break the expected real traffic paths; repairs recover them",
+    "Missing discovery preserves PC data while phone policy/lease goals remain incomplete; restored delivery recovers voice",
+    "Static phone addresses cannot impersonate DHCP completion; malformed/executable imported criteria reject",
+    "Portable reload rebuilds policy, leases and MAC learning with stable device IDs and retained earned echo tasks",
+    "Existing runtime powers the phones; no registration, call-control, RTP or unimplemented telephony configuration added"
+  ],
+  "source": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-13/configuration_guide/vlan/b_1713_vlan_9300_cg/configuring_voice_vlans.html",
+  "browserChecks": [
+    "light 1440px: Switching count/entry, ten-task guide and reference, unpowered baseline, visible IOS configuration, both live phone power/policy/leases, 3/3 data and voice replies, separate MAC learning, actual PoE loss/repair, fresh policy/leases after reload and safe completed-reference replacement",
+    "light 390px: Switching count/entry, ten-task guide and reference, unpowered baseline, visible IOS configuration, both live phone power/policy/leases, 3/3 data and voice replies, separate MAC learning, actual PoE loss/repair, fresh policy/leases after reload and safe completed-reference replacement",
+    "light 320px: Switching count/entry, ten-task guide and reference, unpowered baseline, visible IOS configuration, both live phone power/policy/leases, 3/3 data and voice replies, separate MAC learning, actual PoE loss/repair, fresh policy/leases after reload and safe completed-reference replacement",
+    "dark 1440px: Switching count/entry, ten-task guide and reference, unpowered baseline, visible IOS configuration, both live phone power/policy/leases, 3/3 data and voice replies, separate MAC learning, actual PoE loss/repair, fresh policy/leases after reload and safe completed-reference replacement",
+    "dark 390px: Switching count/entry, ten-task guide and reference, unpowered baseline, visible IOS configuration, both live phone power/policy/leases, 3/3 data and voice replies, separate MAC learning, actual PoE loss/repair, fresh policy/leases after reload and safe completed-reference replacement",
+    "dark 320px: Switching count/entry, ten-task guide and reference, unpowered baseline, visible IOS configuration, both live phone power/policy/leases, 3/3 data and voice replies, separate MAC learning, actual PoE loss/repair, fresh policy/leases after reload and safe completed-reference replacement",
+    "light: permalink uses the current host/path/query, previews without replacing the workspace and returns to four Switching labs",
+    "dark: permalink uses the current host/path/query, previews without replacing the workspace and returns to four Switching labs"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

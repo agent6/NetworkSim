@@ -52272,6 +52272,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           return text3(v.protocol, 40) && (v.state === void 0 || text3(v.state, 40));
         case "vlan":
           return Number.isInteger(v.id) && v.id >= 1 && v.id <= 4094;
+        case "voice-policy":
+          return Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094;
         case "mac-learned":
           return text3(v.interface, 128) && text3(v.source, 128) && text3(v.sourceInterface, 128) && Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094;
         case "interface":
@@ -52297,7 +52299,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
               "dynamic-auto",
               "dynamic-desirable"
             ].includes(v.value);
-          if (v.property === "vlan")
+          if (v.property === "vlan" || v.property === "voiceVlan")
             return Number.isInteger(v.value) && v.value >= 1 && v.value <= 4094;
           return v.property === "mtu" && Number.isInteger(v.value) && v.value >= 68 && v.value <= 65535;
         default:
@@ -52379,6 +52381,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         (e) => e.nodeId === d.id && e.label === "Echo reply received" && e.disposition === "success" && !!e.packet?.source && sameAddress(e.packet.source, criterion.from)
       );
     if (criterion.kind === "vlan") return !!d.config.vlans[criterion.id]?.active;
+    if (criterion.kind === "voice-policy")
+      return sim2.devicePowered(d.id) && sim2.interfaceUp(d.id, endpointNetworkPort(d)) && endpointVoicePolicy(d, sim2.clock.now())?.vlan === criterion.vlan;
     if (criterion.kind === "mac-learned") {
       const source = device(sim2, criterion.source);
       if (!source?.config.interfaces[criterion.sourceInterface] || !d.config.interfaces[criterion.interface]) return false;
@@ -52388,7 +52392,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (criterion.kind === "interface") {
       const port3 = d.config.interfaces[criterion.interface];
       if (!port3) return false;
-      const value = criterion.property === "portfast" ? port3.features.portfast === true : criterion.property === "speedAuto" ? port3.features.speedAuto !== false : port3[criterion.property];
+      const value = criterion.property === "portfast" ? port3.features.portfast === true : criterion.property === "speedAuto" ? port3.features.speedAuto !== false : criterion.property === "voiceVlan" ? port3.features.voiceVlan : port3[criterion.property];
       return value === criterion.value;
     }
     return false;
@@ -52772,6 +52776,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "layer-2-switching-interfaces", group: "CCNA", section: "Switching", title: "Layer 2 switching interfaces", description: "Configure access interfaces, VLAN membership and link settings, shut an unused port, and verify dynamic MAC learning and host connectivity.", devices: 3, links: 2, practice: true },
     { id: "layer-3-routed-interfaces", group: "CCNA", section: "Switching", title: "Layer 3 routed interfaces", description: "Convert multilayer switch ports to routed interfaces, address two subnets, enable IPv4 routing, and verify end-to-end forwarding.", devices: 3, links: 2, practice: true },
     { id: "vlan-and-access-ports", group: "CCNA", section: "Switching", title: "VLAN and access ports", description: "Create two VLANs, assign four access ports, and verify same-VLAN connectivity, VLAN isolation and dynamic MAC learning.", devices: 5, links: 4, practice: true },
+    { id: "voice-vlan", group: "CCNA", section: "Switching", title: "Voice VLAN", description: "Provision PoE phones and PC passthrough on shared access ports. Separate voice and data VLANs, learn phone policy, obtain voice DHCP leases, and verify real traffic.", devices: 7, links: 6, practice: true },
     { id: "router-on-a-stick", group: "CCNA", section: "Routing", title: "Router on a stick", description: "Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.", devices: 4, links: 3, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
@@ -52865,7 +52870,36 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     "end",
     "write memory"
   ] };
+  var VOICE_VLAN_COMMANDS = { PSW1: [
+    "enable",
+    "configure terminal",
+    "vlan 10",
+    "name DATA",
+    "vlan 20",
+    "name VOICE",
+    "exit",
+    "cdp run",
+    "interface range GigabitEthernet0/1 - 2",
+    "switchport mode access",
+    "switchport access vlan 10",
+    "switchport voice vlan 20",
+    "spanning-tree portfast",
+    "cdp enable",
+    "power inline auto",
+    "no shutdown",
+    "end",
+    "write memory"
+  ] };
   var GUIDE_RESOURCES = {
+    "voice-vlan": { columns: ["Device", "Interface", "VLAN", "IPv4 address", "Default gateway"], rows: [
+      ["R1", "GigabitEthernet0/0.10", "10 \xB7 DATA", "192.168.10.1 /24", "\u2014"],
+      ["R1", "GigabitEthernet0/0.20", "20 \xB7 VOICE", "192.168.20.1 /24", "\u2014"],
+      ["R1", "GigabitEthernet0/0.100", "100 \xB7 SERVICES", "192.168.100.1 /24", "\u2014"],
+      ["SRV1", "GigabitEthernet0", "100 \xB7 SERVICES", "192.168.100.10 /24", "192.168.100.1"],
+      ["PHONE1 / PHONE2", "Network", "20 \xB7 VOICE", "DHCP \xB7 192.168.20.21\u2013254 /24", "192.168.20.1"],
+      ["PC1", "GigabitEthernet0", "10 \xB7 DATA", "192.168.10.11 /24", "192.168.10.1"],
+      ["PC2", "GigabitEthernet0", "10 \xB7 DATA", "192.168.10.12 /24", "192.168.10.1"]
+    ], commands: VOICE_VLAN_COMMANDS, verification: { PSW1: ["show vlan brief", "show interfaces GigabitEthernet0/1 switchport", "show interfaces GigabitEthernet0/2 switchport", "show power inline", "show cdp neighbors detail", "show mac address-table dynamic"], PC1: ["ipconfig", "ping -n 3 192.168.10.12", "ping -n 3 192.168.10.1"], PC2: ["ipconfig", "ping -n 3 192.168.10.11"], R1: ["show ip interface brief", "show ip route"] }, note: "Configure PSW1 only. R1, the voice DHCP/DNS server, the router trunk and server port are already configured; preserve VLAN 100 and those uplinks. Open each phone for live PoE, received CDP/LLDP-MED policy and DHCP status. The phones tag voice-VLAN traffic; each attached PC remains untagged in data VLAN 10. In the MAC table, each phone and PC share one switch port but belong to different VLANs. This exercise validates network provisioning and ICMP reachability; it does not register phones or simulate telephone calls. R1 provides inter-VLAN routing, so VLAN separation is not an access-control rule." },
     "vlan-and-access-ports": { columns: ["Device", "Switch port", "VLAN", "IPv4 address", "Default gateway"], rows: [["PC1", "SW1 Gi0/1", "10 \xB7 USERS", "192.168.10.11 /24", "\u2014"], ["PC2", "SW1 Gi0/2", "10 \xB7 USERS", "192.168.10.12 /24", "\u2014"], ["PC3", "SW1 Gi0/3", "20 \xB7 GUESTS", "192.168.20.11 /24", "\u2014"], ["PC4", "SW1 Gi0/4", "20 \xB7 GUESTS", "192.168.20.12 /24", "\u2014"]], commands: VLAN_ACCESS_COMMANDS, verification: { SW1: ["show vlan brief", "show interfaces status", "show interfaces GigabitEthernet0/1 switchport", "show interfaces GigabitEthernet0/3 switchport", "show mac address-table dynamic"], PC1: ["ipconfig", "ping -n 3 192.168.10.12", "ping -n 3 192.168.20.11"], PC3: ["ipconfig", "ping -n 3 192.168.20.12", "ping -n 3 192.168.10.11"] }, note: "PC1 \u2192 PC2 and PC3 \u2192 PC4 should each receive three replies. The cross-VLAN pings PC1 \u2192 PC3 and PC3 \u2192 PC1 should receive zero replies: this topology has no inter-VLAN routing or default gateways. Inspect VLAN 10 entries on Gi0/1\u20132 and VLAN 20 entries on Gi0/3\u20134. Each PC uses its GigabitEthernet0 interface. Access ports carry untagged endpoint traffic, with the switch assigning each frame to the configured access VLAN." },
     "layer-3-routed-interfaces": { columns: ["Device", "Interface", "IPv4 address", "Subnet mask", "Default gateway"], rows: [["DSW1", "GigabitEthernet0/1", "192.168.10.1", "255.255.255.0", "\u2014"], ["DSW1", "GigabitEthernet0/2", "192.168.20.1", "255.255.255.0", "\u2014"], ["PC1", "GigabitEthernet0", "192.168.10.10", "255.255.255.0", "192.168.10.1"], ["PC2", "GigabitEthernet0", "192.168.20.10", "255.255.255.0", "192.168.20.1"]], commands: L3_INTERFACE_COMMANDS, verification: { DSW1: ["show interfaces GigabitEthernet0/1 switchport", "show interfaces GigabitEthernet0/2 switchport", "show ip interface brief", "show ip route connected", "show running-config | include ip routing", "show ip arp"], PC1: ["ipconfig", "ping -n 3 192.168.10.1", "ping -n 3 192.168.20.10"], PC2: ["ipconfig", "ping -n 3 192.168.20.1", "ping -n 3 192.168.10.10"] }, note: "The PCs already have their static addresses and default gateways. Use no switchport before assigning an IP address to each physical switch port, then enable ip routing globally. Each up/up routed interface installs its directly connected subnet. No static routes or routing protocol are required for these two connected networks. Save DSW1 with write memory." },
     "layer-2-switching-interfaces": { columns: ["Device", "Interface", "VLAN", "IPv4 address", "Default gateway"], rows: [["PC1", "GigabitEthernet0", "10", "192.168.10.10 /24", "\u2014"], ["PC2", "GigabitEthernet0", "10", "192.168.10.20 /24", "\u2014"]], commands: L2_INTERFACE_COMMANDS, verification: { SW1: ["show vlan brief", "show interfaces status", "show interfaces GigabitEthernet0/1 switchport", "show interfaces GigabitEthernet0/2 switchport", "show interfaces GigabitEthernet0/1", "show mac address-table dynamic"], PC1: ["ipconfig", "ping -n 3 192.168.10.20"], PC2: ["ipconfig", "ping -n 3 192.168.10.10"] }, note: "Both PCs already have static /24 addresses and need no default gateway to communicate within their VLAN. Keep switch data ports at Layer 2; do not assign them IP addresses. PortFast is used on these endpoint-facing access ports. Generate traffic before inspecting dynamic MAC entries. To repeat the learning exercise, use clear mac address-table dynamic and send more pings." },
@@ -52895,6 +52929,50 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createVoiceVLANLab(mode = "practice") {
+    const make = (name2, kind, x, y) => ({ id: "device-voice-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const sw = make("PSW1", "poeswitch", 500, 300), router = make("R1", "router", 250, 100), server = make("SRV1", "server", 750, 100), phones = [make("PHONE1", "phone", 300, 510), make("PHONE2", "phone", 700, 510)], pcs = [make("PC1", "pc", 300, 720), make("PC2", "pc", 700, 720)];
+    for (const [i, pc] of pcs.entries()) {
+      Object.assign(pc.config.interfaces.GigabitEthernet0, { ip: `192.168.10.${11 + i}`, mask: "255.255.255.0" });
+      pc.config.interfaces.GigabitEthernet0.features.dhcp = false;
+      pc.config.defaultGateway = "192.168.10.1";
+    }
+    Object.assign(server.config.interfaces.GigabitEthernet0, { ip: "192.168.100.10", mask: "255.255.255.0" });
+    server.config.interfaces.GigabitEthernet0.features.dhcp = false;
+    server.config.defaultGateway = "192.168.100.1";
+    server.config.dnsServers = ["192.168.100.10"];
+    server.config.services.dns = { enabled: true, records: { "voice-server.lab": "192.168.100.10" } };
+    server.config.services.dhcp = { enabled: true, pools: [{ name: "VOICE", network: "192.168.20.0", prefix: 24, defaultRouter: "192.168.20.1", dnsServers: ["192.168.100.10"], domain: "voice.lab", leaseSeconds: 3600 }], excluded: [{ start: "192.168.20.1", end: "192.168.20.20" }] };
+    const ports4 = { kind: "all", criteria: [1, 2].flatMap((n) => [
+      { kind: "interface", device: sw.id, interface: `GigabitEthernet0/${n}`, property: "mode", value: "access" },
+      { kind: "interface", device: sw.id, interface: `GigabitEthernet0/${n}`, property: "vlan", value: 10 },
+      { kind: "interface", device: sw.id, interface: `GigabitEthernet0/${n}`, property: "voiceVlan", value: 20 },
+      { kind: "interface", device: sw.id, interface: `GigabitEthernet0/${n}`, property: "portfast", value: true },
+      { kind: "interface", device: sw.id, interface: `GigabitEthernet0/${n}`, property: "adminUp", value: true }
+    ]) };
+    const lease = (phone) => ({ kind: "dhcp-lease", device: phone.id, interface: "Network", server: server.id, network: "192.168.20.0", prefix: 24, gateway: "192.168.20.1", dnsServer: "192.168.100.10" });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "voice-vlan", name: "Voice VLAN" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [sw, router, server, ...phones, ...pcs], links: [
+      { id: "link-voice-router", a: { deviceId: sw.id, port: "GigabitEthernet0/3" }, b: { deviceId: router.id, port: "GigabitEthernet0/0" }, enabled: true, delay: 0.1, loss: 0 },
+      { id: "link-voice-server", a: { deviceId: sw.id, port: "GigabitEthernet0/4" }, b: { deviceId: server.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 },
+      ...phones.flatMap((phone, i) => [{ id: `link-voice-phone${i + 1}`, a: { deviceId: sw.id, port: `GigabitEthernet0/${i + 1}` }, b: { deviceId: phone.id, port: "Network" }, enabled: true, delay: 0.1, loss: 0 }, { id: `link-voice-pc${i + 1}`, a: { deviceId: phone.id, port: "PC" }, b: { deviceId: pcs[i].id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 }])
+    ], notes: [{ id: "note-voice-networks", x: 500, y: 850, text: "DATA \xB7 VLAN 10 \xB7 PCs remain untagged\nVOICE \xB7 VLAN 20 \xB7 Phones use DHCP + tagged traffic" }], lesson: { title: "Voice VLAN", description: "Two phones connect to PSW1, with a PC attached to each phone\u2019s PC passthrough port. The phone-facing switch ports begin shut down with inline power disabled. PCs already have their data-VLAN IPv4 settings.\n\nCreate VLAN 10 (DATA) and VLAN 20 (VOICE). Configure Gi0/1\u20132 as access ports in data VLAN 10 with voice VLAN 20, enable PortFast and CDP, restore inline power, and enable the ports. Keep the preconfigured router trunk, server port and services VLAN 100 intact.\n\nOpen each phone to inspect its actual power allocation, received voice policy and DHCP address. Use the checks below to test the PCs through the phones and each phone through voice VLAN 20. Inspect the MAC table: both VLANs must be learned on each shared phone-facing port. R1 and SRV1 already provide the routed gateways and voice DHCP/DNS service. Save PSW1 with write memory, then save or export the lab.", objectives: [
+      { id: "vlan10", title: "Create data VLAN 10 on PSW1", description: "Name it DATA.", criterion: { kind: "vlan", device: sw.id, id: 10 } },
+      { id: "vlan20", title: "Create voice VLAN 20 on PSW1", description: "Name it VOICE.", criterion: { kind: "vlan", device: sw.id, id: 20 } },
+      { id: "phone-ports", title: "Configure and enable the two shared phone access ports", description: "Gi0/1\u20132: access VLAN 10, voice VLAN 20 and PortFast.", criterion: ports4 },
+      { id: "poe", title: "Power both phones from PSW1", description: "Enable inline power on Gi0/1\u20132. Each phone needs a real PoE allocation.", criterion: { kind: "all", criteria: phones.map((phone) => ({ kind: "device", device: phone.id, powered: true })) } },
+      { id: "voice-policy", title: "Verify both phones learn voice VLAN 20", description: "Open each phone and inspect the received CDP or LLDP-MED policy.", criterion: { kind: "all", criteria: phones.map((phone) => ({ kind: "voice-policy", device: phone.id, vlan: 20 })) } },
+      { id: "voice-leases", title: "Verify both phones obtain voice DHCP leases", description: "192.168.20.0/24, gateway 192.168.20.1 and DNS 192.168.100.10. Inspect SRV1\u2019s DHCP leases if needed.", criterion: { kind: "all", criteria: phones.map(lease) } },
+      { id: "data-ping", title: "Verify PC1 can reach PC2 through the phones", description: "192.168.10.11 \u2192 192.168.10.12 in the untagged data VLAN.", criterion: { kind: "echo", device: pcs[0].id, from: "192.168.10.12" }, action: { kind: "ping", device: pcs[0].id, target: "192.168.10.12" } },
+      ...phones.map((phone, i) => ({ id: `phone${i + 1}-ping`, title: `Verify PHONE${i + 1} reaches the voice gateway`, description: "Test 192.168.20.1 using the phone\u2019s tagged voice-VLAN path.", criterion: { kind: "echo", device: phone.id, from: "192.168.20.1" }, action: { kind: "ping", device: phone.id, target: "192.168.20.1", when: lease(phone) } })),
+      { id: "mac-learning", title: "Verify separate voice and data MAC entries on both shared ports", description: "Gi0/1: PHONE1 in VLAN 20 and PC1 in VLAN 10; Gi0/2: PHONE2 in VLAN 20 and PC2 in VLAN 10.", criterion: { kind: "all", criteria: phones.flatMap((phone, i) => [{ kind: "mac-learned", device: sw.id, interface: `GigabitEthernet0/${i + 1}`, source: phone.id, sourceInterface: "Network", vlan: 20 }, { kind: "mac-learned", device: sw.id, interface: `GigabitEthernet0/${i + 1}`, source: pcs[i].id, sourceInterface: "GigabitEthernet0", vlan: 10 }]) } }
+    ] } };
+    const baseline = {
+      PSW1: ["enable", "configure terminal", "vlan 100", "name SERVICES", "interface range GigabitEthernet0/1 - 2", "power inline never", "shutdown", "interface GigabitEthernet0/3", "description TO_R1", "switchport mode trunk", "switchport trunk allowed vlan 10,20,100", "spanning-tree portfast trunk", "no shutdown", "interface GigabitEthernet0/4", "description TO_SRV1", "switchport mode access", "switchport access vlan 100", "spanning-tree portfast", "no shutdown", "end", "write memory"],
+      R1: ["enable", "configure terminal", "interface GigabitEthernet0/0", "description TRUNK_TO_PSW1", "no shutdown", "interface GigabitEthernet0/0.10", "encapsulation dot1Q 10", "ip address 192.168.10.1 255.255.255.0", "interface GigabitEthernet0/0.20", "encapsulation dot1Q 20", "ip address 192.168.20.1 255.255.255.0", "ip helper-address 192.168.100.10", "interface GigabitEthernet0/0.100", "encapsulation dot1Q 100", "ip address 192.168.100.1 255.255.255.0", "end", "write memory"]
+    };
+    const doc = completedDocument({ format: "netsim-lab", version: 1, seed: 20261029, lab }, baseline);
+    return mode === "completed" ? completedDocument(doc, VOICE_VLAN_COMMANDS) : doc;
+  }
   function createVLANAccessLab(mode = "practice") {
     const sw = { id: "device-vlan-sw1", kind: "switch", x: 500, y: 180, powered: true, config: factoryDeviceConfig("switch", "SW1"), runtime: emptyRuntime() };
     const pcs = [1, 2, 3, 4].map((n) => {
@@ -53102,6 +53180,7 @@ ${output.join("\n")}`);
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "voice-vlan") return createVoiceVLANLab(mode);
     if (id2 === "vlan-and-access-ports") return createVLANAccessLab(mode);
     if (id2 === "layer-3-routed-interfaces") return createL3InterfaceLab(mode);
     if (id2 === "layer-2-switching-interfaces") return createL2InterfaceLab(mode);
