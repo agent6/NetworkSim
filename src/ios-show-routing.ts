@@ -1,3 +1,4 @@
+import {vrrpMasterDown} from './vrrp.ts';
 import {activeIOSOSPFRouterId} from './ospf-router-id.ts';
 /**
  * Cisco IOS (IOSv 15.9) presentation of routing-protocol show commands: OSPF, EIGRP, BGP, RIP,
@@ -958,7 +959,7 @@ export function fhrpShow(e: Simulator, d: Device, protocol: FhrpProtocol, args: 
     const ownIp = (c: any) => d.config.interfaces[c.interface]?.ip ?? '0.0.0.0';
     const priorityOf = (c: any, r: any) => Number(r?.priority ?? c.priority ?? 100);
     const advertisement = (c: any) => Number(c.helloTime ?? (protocol === 'vrrp' ? 1000 : 3000));
-    const masterDown = (c: any, r: any) => 3 * advertisement(c) + Math.floor((256 - priorityOf(c, r)) * advertisement(c) / 256);
+    const masterDown = (c: any, r: any) => Math.floor(vrrpMasterDown(advertisement(c),priorityOf(c,r)));
     const preempt = (c: any) => c.preempt ?? protocol === 'vrrp';
     if (brief) {
       if (protocol === 'hsrp') return ['                     P indicates configured to preempt.', '                     |', 'Interface   Grp  Pri P State   Active          Standby         Virtual IP',

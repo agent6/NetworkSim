@@ -341,6 +341,7 @@ export class Simulator {
     if(b.kind==='esp')Object.assign(result,{espSpi:b.spi,espSequence:b.sequence,protectedProtocol:b.inner?.protocol?.toUpperCase()});
     if(b.kind==='ike')Object.assign(result,{ikeStage:b.stage,ikeExchangeId:b.id});
     if(b.kind==='netflow-export')result.netflowVersion=b.version;
+    if(b.kind==='control-plane'&&b.payload?.kind==='vrrp')Object.assign(result,{messageType:'vrrp-advertisement',fhrpGroup:b.payload.group,fhrpPriority:b.payload.priority,fhrpState:b.payload.state,fhrpVersion:b.payload.version,advertisementTime:b.payload.advertisementTime});
     if(b.kind==='control-plane'&&b.payload?.wireless)Object.assign(result,{messageType:'capwap-'+b.payload.type,innerFrameId:b.payload.frame?.id,vlan:b.payload.vlan,ssid:b.payload.wlan});
     if (p.fragment) Object.assign(result, { fragmentOffset: p.fragment.offset, moreFragments: p.fragment.more, fragmentId: p.fragment.id });
     if (p.protocol === 'tcp') {
@@ -603,17 +604,17 @@ export class Simulator {
     for (const port of forwarding.outgoing) this.forwardIP(d, { port, target: packet.destination, route: { network: packet.destination, prefix: 32, interface: port, protocol: 'multicast', ad: 0, metric: 0 } }, { ...clone(packet), ttl: packet.ttl - 1 }, input);
   }
   receiveRegisteredMulticast(deviceId: string, packet: IPPacket): void { const d = this.getDevice(deviceId); if (d?.powered) this.receiveMulticast(d, 'register', packet); }
-  sendControlDatagram(deviceId: string, source: string, destination: string, destinationPort: number, body: any, options: { interface?: string; vrf?: string; ttl?: number; protocol?: string; dscp?: number } = {}): void {
+  sendControlDatagram(deviceId: string, source: string, destination: string, destinationPort: number, body: any, options: { interface?: string; vrf?: string; ttl?: number; protocol?: string; dscp?: number; sourceMac?:string } = {}): void {
     const d = this.getDevice(deviceId); if (!d?.powered) return;
     const packet = this.makePacket(source, destination, options.protocol ?? 'udp', 64 + JSON.stringify(body).length, { kind: 'control-plane', payload: body });
     if(options.dscp!==undefined)packet.dscp=options.dscp;
     if(body?.wireless&&body.frame?.id)packet.parentId=body.frame.id;
-    packet.sourcePort = destinationPort; packet.destinationPort = destinationPort; packet.ttl = options.ttl ?? 64; packet.vrf = options.vrf;
+    if(packet.protocol!=='vrrp'){packet.sourcePort = destinationPort; packet.destinationPort = destinationPort;}packet.ttl = options.ttl ?? 64; packet.vrf = options.vrf;
     if (options.interface && this.interfaceUp(d.id, options.interface)) {
       if ((destination === '255.255.255.255' || this.isMulticast(destination) || /^ff/i.test(destination)) && !applyQos(this, d, options.interface, 'out', packet, (name, value) => this.aclAllows(d, name, value))) return;
       if (/^Tunnel/i.test(options.interface)) this.sendResolved(d, options.interface, destination, packet);
       else if (destination === '255.255.255.255') this.transmit(d, options.interface, BROADCAST, packet);
-      else if (this.isMulticast(destination) || /^ff/i.test(destination)) this.transmit(d, options.interface, isIPv6(destination) ? '33:33:00:00:00:01' : this.multicastMac(destination), packet);
+      else if (this.isMulticast(destination) || /^ff/i.test(destination)) this.transmit(d, options.interface, isIPv6(destination) ? '33:33:00:00:00:01' : this.multicastMac(destination), packet, options.sourceMac);
       else this.forwardIP(d, { port: options.interface, target: destination, route: { network: destination, prefix: isIPv6(destination) ? 128 : 32, interface: options.interface, protocol: 'control', ad: 0, metric: 0 } }, packet);
     } else this.originate(d, packet);
   }

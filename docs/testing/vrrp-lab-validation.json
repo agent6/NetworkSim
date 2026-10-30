@@ -1,0 +1,106 @@
+{
+  "feature": {
+    "title": "VRRP Configuration and Failover",
+    "catalogId": "vrrp-configuration-and-failover",
+    "group": "CCNP ENCOR",
+    "section": "IP Services",
+    "sectionLabCount": 4,
+    "groupLabCount": 22,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6,
+      "Layer 3": 9
+    },
+    "devices": 6,
+    "links": 6,
+    "tasks": 19,
+    "addressingRows": 7,
+    "notes": 3,
+    "permalink": "#/labs/vrrp-configuration-and-failover",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.20.10/24 uses VIP192.168.20.1 on SW1. R1/R2 Gi0/0 physical addresses192.168.20.2/.3. R1 Gi0/1 10.0.14.1/30 and R2 Gi0/1 10.0.24.1/30 face ISP1 .2 on each transit. ISP1 Gi0/2 198.51.100.1/24 faces HTTP server SRV1 .10. Prepared OSPF10 uses RIDs4.4.4.4/5.5.5.5/6.6.6.6, passive LANs and P2P uplinks at costs10/20, preserving a return path after either R1 LAN or uplink loss. IPv4 VRRPv2 group10; default1-second advertisements and preemption; priorities110/100. R1 track1 monitors Gi0/1 line protocol, decrement20.",
+  "verificationNotes": [
+    "Adds a fourth ENCOR IP Services entry with accurate badge/count and current-host/path/query share links. Existing NAT/PAT/HSRP entries remain present. ENCOR now has22 labs, with other section counts3/6/9 unchanged.",
+    "Practice starts0/19. Published IOS commands configure group10/VIP, priorities110/100 and interface tracking, then save both healthy gateways. Preemption is enabled by VRRP's default; the reference intentionally supplies no explicit preempt command. Completed reference has empty runtime and no earned traffic/fault observations; up to12 live tasks follow fresh convergence and actual GARP/ARP/FDB learning.",
+    "Corrected VRRP advertisements to be Master-only. Actual IPv4 VRRP packets use TTL255, multicast224.0.0.18 and group virtual source MAC0000.5e00.010a. VRRP no longer carries synthetic UDP/TCP transport-port metadata. Packet summaries expose real group/version/priority/state/advertisement interval for inspection. Backups listen rather than sending HSRP-like bidirectional Hellos.",
+    "VRRPv2 Master Down uses three advertisement intervals plus Skew Time=(256−local effective priority)/256 seconds. One-second defaults yield3.609375s for Backup100 and3.5703125s for110. Receiver expiry, startup listening and IOS show output now use this calculation; a two-second regression proves the skew remains in seconds. Lower-priority advertisements do not refresh a preempting Backup's Master Down timer; the incumbent is not displaced instantly on first reception.",
+    "The LAN exercise shuts SW1 Gi0/1 facing R1, leaving R1's LAN administratively enabled. After genuine Master Down expiry, R2 becomes Master and a fresh routed ping must traverse it. Restoring SW1 lets higher-priority R1 reclaim Master through default preemption. Client gateway IP/MAC remain unchanged and switch learning moves to the actual Master.",
+    "The uplink exercise keeps both VRRP LAN interfaces up while R1 Gi0/1 goes Down. Track1 changes state and lowers R1 to90. R2 receives/ignores the lower-priority advertisements without extending its existing deadline, then takes over after expiry. Fresh delivered traffic through R2 is required. Restoration returns110 and the preferred path, followed by another fresh delivered ping.",
+    "Configuration, current roles, compatible received Master advertisements, exact virtual MAC, healthy underlay, tracking, host gateway/ARP/FDB and startup-save goals remain live. Both ICMP directions correlate every forwarding hop, current CEF egress, virtual destination MAC and parent-linked replies. HTTP requires an actual complete TCP200 body; 404 and disabled service do not qualify.",
+    "Added bounded64-entry VRRP transition, expiry and ignored-advertisement observations separate from the general5000-event trace. This preserves baseline/fault proof after old packet events roll out, without preloading history. Fresh current traffic is still required. Runtime protocol history is discarded on export/reload; seven earned traffic/fault achievements persist and fresh advertisements/routing rebuild live state.",
+    "Thirty focused lab regressions cover both actual failure/recovery cycles, Master-only packet headers/MAC, exact Master Down timing, default/disabled/delayed preemption, owner255 remaining fixed despite tracking, interval mismatch, routing loss, physical-gateway shortcuts, missing/uncorrelated packet evidence, HTTP failures, healthy save drift, reload, portable reopening, bounded imports and trace rollover. Existing HSRP/FHRP/routing practical regressions run alongside them.",
+    "Scope is IPv4 IOS classic VRRPv2 with local-interface tracking and the prepared OSPF underlay. The lab does not introduce VRRPv3/IPv6, cryptographic authentication or graceful priority-zero shutdown timing; switch-side loss deliberately avoids depending on priority-zero processing. No new live CML capture or full hardware/platform equivalence is claimed.",
+    "Browser validation checks actual YAML export, a separate empty browser profile, normal file import and restored completion, without injecting workspace state. Same-session autosave JSON is also parsed and checked. A file-origin Chrome relaunch did not retain storage in one earlier automation run; the final portable-reopening checks use exported files rather than assuming browser-specific file-origin storage retention. Terminal golden styles remain unchanged.",
+    "An older show-output regression assumed takeover within1000ms for200ms VRRP advertisements. It now verifies Backup immediately before the computed peer expiry and Master afterward, preserving the same HSRP/GLBP received-peer checks."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE17: Configuring VRRP",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ntw-servs/b-network-services/m_fhp-vrrp-0.html",
+      "relevance": "IOS IPv4 VRRP configuration, Master advertisements, default preemption, priority and object tracking."
+    },
+    {
+      "title": "RFC3768: VRRPv2",
+      "url": "https://datatracker.ietf.org/doc/html/rfc3768",
+      "relevance": "IP112/TTL255, virtual MAC, Master-only transmission, Backup preemption processing, owner255 and the priority-dependent Master Down/Skew formula."
+    },
+    {
+      "title": "Cisco Catalyst9000: VRRP Configuration",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr3-fwd/fhrp/fhrp-configuration-guide/vrrp.html",
+      "relevance": "Default preemption, owner255 and owner tracking exception, virtual MAC and verification concepts; this lab uses the classic IPv4 syntax rather than its VRRPv3 address-family examples."
+    },
+    {
+      "title": "Cisco IOS12.2SX: Configuring VRRP",
+      "url": "https://www.cisco.com/en/US/docs/ios-xml/ios/ipapp/configuration/12-2sx/Configuring_VRRP.html",
+      "relevance": "Classic vrrp group ip/priority/track commands, IOS show vrrp output, default1-second advertisements and object-tracking examples."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "fullCheck": "Full native suite passed with two isolated test workers, followed by npm run build; the same complete test-file set used by npm run check",
+    "nativeCommand": "node --test --test-concurrency=2 tests/*.test.ts",
+    "tests": 2419,
+    "passed": 2419,
+    "failed": 0,
+    "focusedTests": 30,
+    "focusedWithExistingHSRPFHRPAndRoutingPracticalRegressions": 65,
+    "showOutputRegressionTests": 16,
+    "browserScenarios": 15,
+    "browserFullFailoverCases": [
+      "light1440px",
+      "dark320px"
+    ],
+    "browserChecks": [
+      "light 320px: four ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS VRRPv2/priority/preempt/object-track reference; real Master-only advertisements and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; baseline/application workflow earns15 with all four fault achievements still unearned; actual YAML export and import into an empty offline browser profile rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "dark 320px: four ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS VRRPv2/priority/preempt/object-track reference; real Master-only advertisements and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; full switch-side LAN hold-expiry failover, preemptive recovery, tracked-uplink priority90 failover and priority110 recovery earn19; actual YAML export and import into an empty offline browser profile rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "light 1440px: four ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS VRRPv2/priority/preempt/object-track reference; real Master-only advertisements and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; full switch-side LAN hold-expiry failover, preemptive recovery, tracked-uplink priority90 failover and priority110 recovery earn19; actual YAML export and import into an empty offline browser profile rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "dark 1440px: four ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS VRRPv2/priority/preempt/object-track reference; real Master-only advertisements and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; baseline/application workflow earns15 with all four fault achievements still unearned; actual YAML export and import into an empty offline browser profile rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "light 390px: four ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS VRRPv2/priority/preempt/object-track reference; real Master-only advertisements and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; baseline/application workflow earns15 with all four fault achievements still unearned; actual YAML export and import into an empty offline browser profile rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "dark 390px: four ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS VRRPv2/priority/preempt/object-track reference; real Master-only advertisements and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; baseline/application workflow earns15 with all four fault achievements still unearned; actual YAML export and import into an empty offline browser profile rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "light: share permalink preserves current host/path/query/workspace and returns to four IP Services labs with NAT/PAT/HSRP unchanged",
+      "dark: share permalink preserves current host/path/query/workspace and returns to four IP Services labs with NAT/PAT/HSRP unchanged",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "offlineReopen": "Actual YAML export using the application shortcut, then file import into a separate empty browser profile; same-session autosave JSON also parsed and verified",
+    "artifactSha256": "5a0f8ff1a774aae07be101428046a8a4b3b118b26ec2ea6e362a3f78b55741af",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}
