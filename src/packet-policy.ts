@@ -17,7 +17,7 @@ export function inspectIngress(engine: Simulator, device: Device, port: string, 
   const dhcp = 'kind' in payload ? (payload.kind === 'dhcp' ? payload : undefined) : payload.body?.kind === 'dhcp-unicast' ? payload.body.message : undefined;
   const arp='kind' in payload&&payload.kind==='arp'&&payload.family===4?payload:undefined;
   const arpDecision=(action:'permit'|'deny',basis:string,acl?:string,rule?:unknown)=>{if(!arp)return;const rows=state.arpInspectionEvents??=[];rows.push({time:engine.clock.now(),frameId:frame.id,port,vlan,source:arp.source,target:arp.target,sourceMac:frame.sourceMac,arpMac:arp.mac,operation:arp.operation,action,basis,...acl?{acl}:{},...rule?{rule:structuredClone(rule)}:{}});if(rows.length>1000)rows.shift();};
-  const drop = (counter: string, protocol: string, label: string, detail: string) => { state[counter] = (state[counter] ?? 0) + 1; engine.emit({ nodeId: device.id, port, protocol, label, detail, disposition: 'drop',...arp?{packet:{id:frame.id,source:arp.source,destination:arp.target,protocol:'ARP',sourceMac:frame.sourceMac,destinationMac:frame.destinationMac,arpOperation:arp.operation}}:dhcp?{packet:{id:frame.id,source:dhcp.serverAddress??dhcp.clientId,destination:dhcp.clientId,protocol:'DHCP',dhcpOperation:dhcp.operation,requestedAddress:dhcp.address}}:{} }); return false; };
+  const drop = (counter: string, protocol: string, label: string, detail: string) => { state[counter] = (state[counter] ?? 0) + 1; engine.emit({ nodeId: device.id, port, protocol, label, detail, disposition: 'drop',...arp?{packet:{id:frame.id,source:arp.source,destination:arp.target,protocol:'ARP',sourceMac:frame.sourceMac,destinationMac:frame.destinationMac,arpOperation:arp.operation}}:dhcp?{packet:{id:frame.id,source:dhcp.serverAddress??dhcp.clientId,destination:dhcp.clientId,protocol:'DHCP',dhcpOperation:dhcp.operation,requestedAddress:dhcp.address}}:!('kind' in payload)?{packet:{id:payload.id,source:payload.source,destination:payload.destination,protocol:payload.protocol.toUpperCase(),sourceMac:frame.sourceMac,destinationMac:frame.destinationMac}}:{} }); return false; };
   const cleanMac = (mac: string) => mac.replace(/[^0-9a-f]/gi, '').toLowerCase();
   if (!inspectPortSecurity(engine, device, iface, vlan, frame)) return false;
   const ageBindings = () => { state.dhcpBindings = (state.dhcpBindings ?? []).filter((b: any) => b.expires > engine.clock.now()); state.ipv6Bindings = (state.ipv6Bindings ?? []).filter((b: any) => b.expires > engine.clock.now()); };
@@ -126,7 +126,8 @@ export function inspectIngress(engine: Simulator, device: Device, port: string, 
   if (storm) {
     const isBroadcast = frame.destinationMac === 'ff:ff:ff:ff:ff:ff';
     const multicast = (parseInt(frame.destinationMac.slice(0, 2), 16) & 1) !== 0;
-    const kind = isBroadcast ? 'broadcast' : multicast ? 'multicast' : !device.runtime.mac[vlan + '|' + frame.destinationMac] ? 'unicast' : undefined;
+    const learned=device.runtime.mac[vlan+'|'+frame.destinationMac];
+    const kind = isBroadcast ? 'broadcast' : multicast ? 'multicast' : !learned||learned.expires<=engine.clock.now() ? 'unicast' : undefined;
     if (kind && storm[kind] !== undefined) {
       const window = Math.floor(engine.clock.now() / 1000), key = port + ':' + kind, setting = storm[kind];
       const rising = Number(typeof setting === 'number' ? setting : setting.rising), falling = Number(typeof setting === 'number' ? setting : setting.falling ?? setting.rising);
@@ -138,6 +139,7 @@ export function inspectIngress(engine: Simulator, device: Device, port: string, 
         if (!meter.blocked && storm.action === 'trap') engine.log(device.id, '%STORM_CONTROL: ' + port + ' ' + kind + ' threshold exceeded', 4);
         meter.blocked = true;
         if (storm.action === 'shutdown') disablePort(engine, device, port, 'storm-control');
+        const rows=state.stormControlEvents??=[];rows.push({time:engine.clock.now(),frameId:frame.id,packetId:'kind' in payload?frame.id:payload.id,port,vlan,kind,sourceMac:frame.sourceMac,destinationMac:frame.destinationMac,source:'kind' in payload?undefined:payload.source,action:storm.action??'filter',rising,falling,percent:fraction*100,errDisabled:iface.features.errDisabled===true});if(rows.length>1000)rows.shift();
         return drop('stormControlDrops', 'ETHERNET', 'Storm control drop', kind + ' traffic exceeded the configured one-second threshold.');
       }
     }

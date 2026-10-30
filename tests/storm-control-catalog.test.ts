@@ -1,0 +1,69 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {Simulator,type Frame} from '../src/engine.ts';
+import {IOSSession} from '../src/cli.ts';
+import {iosRejected} from '../src/ios-help.ts';
+import {inspectIngress} from '../src/packet-policy.ts';
+import {createCatalogLab,STORM_CONTROL_COMMANDS as COMMANDS,catalogGuideResources,LAB_CATALOG} from '../src/lab-catalog.ts';
+import {lessonProgress,matches,validateLesson,actionAvailable} from '../src/lessons.ts';
+import {parseLabFile,serializeLabFile} from '../src/persistence.ts';
+const id=(n:string)=>'device-storm-'+n.toLowerCase(),g=(n:number)=>'GigabitEthernet0/'+n,p='GigabitEthernet0';
+const d=(s:Simulator,n:string)=>s.getDevice(id(n))!;
+function load(mode:'practice'|'completed'='completed'){const s=new Simulator();s.load(parseLabFile(serializeLabFile(createCatalogLab('storm-control',mode))));s.advance(1500);return s;}
+function cli(s:Simulator,n='SW1'){const c=new IOSSession(s,id(n));if(!c.windowsMode)c.execute('enable');return c;}
+function run(c:IOSSession,...commands:string[]){for(const command of commands){const out=c.execute(command);assert.ok(!out.some(iosRejected),command+'\n'+out.join('\n'));assert.doesNotMatch(out.join('\n'),/not implemented|not recognized/i);}}
+function change(s:Simulator,...lines:string[]){run(cli(s),'configure terminal',...lines,'end');}
+const row=(s:Simulator,n:string)=>lessonProgress(s)!.rows.find(r=>r.objective.id===n)!;
+const goal=(s:Simulator,n:string)=>row(s,n).complete;
+function burst(s:Simulator,traffic:'broadcast'|'multicast'|'unicast'='broadcast',source='PC1'){const r=s.sendEthernetTestBurst(id(source),p,traffic);s.advance(2000);lessonProgress(s);return r;}
+function ping(s:Simulator,source='PC1'){const r=s.ping(id(source),'192.168.10.100',{count:3});s.advance(5000);lessonProgress(s);return r.received;}
+function finish(s:Simulator){for(const t of ['broadcast','multicast','unicast']as const)assert.equal(burst(s,t).status,'success');assert.equal(ping(s),3);burst(s,'broadcast','PC3');assert.equal(ping(s,'PC2'),3);s.advance(30000);assert.equal(ping(s,'PC3'),3);assert.equal(lessonProgress(s)!.complete,12);}
+
+test('Storm Control catalog has five nodes, four links, twelve tasks, four address rows and unprotected zero-credit practice',()=>{
+ const e=LAB_CATALOG.find(e=>e.id==='storm-control')!;assert.equal(e.group,'CCNA');assert.equal(e.section,'Services & Security');assert.equal(e.devices,5);assert.equal(e.links,4);const a=createCatalogLab(e.id),b=createCatalogLab(e.id);assert.notEqual(a.lab.id,b.lab.id);for(const n of a.lab.devices)assert.deepEqual(n.startupConfig,n.config);const s=load('practice');assert.equal(lessonProgress(s)!.complete,0);assert.equal(lessonProgress(s)!.rows.length,12);assert.equal(catalogGuideResources(e.id)!.rows.length,4);assert.equal(lessonProgress(s)!.rows.filter(r=>r.objective.action&&actionAvailable(s,r.objective)).length,3);assert.equal(burst(s).framesSent,256);assert.equal(d(s,'SW1').runtime.features.stormControlDrops,undefined);assert.equal(goal(s,'broadcast-drop'),false);
+});
+test('reference contains only saved configuration and published IOS commands configure practice without fabricating any traffic proof',()=>{
+ const doc=createCatalogLab('storm-control','completed');for(const n of doc.lab.devices){assert.deepEqual(n.runtime.features,{});assert.deepEqual(n.startupConfig,n.config);}const s=load('practice');run(new IOSSession(s,id('SW1')),...COMMANDS.SW1);assert.equal(lessonProgress(s)!.complete,5);assert.deepEqual(d(s,'SW1').runtime.features.stormControlEvents,undefined);finish(s);
+});
+test('all three finite bursts traverse real cables, admit initial frames, suppress excess and keep the filtering interface operational',()=>{
+ const s=load();for(const traffic of ['broadcast','multicast','unicast']as const){const r=burst(s,traffic);assert.equal(r.framesSent,256);assert.equal(r.status,'success');assert.equal(goal(s,traffic+'-drop'),true);assert.equal(s.interfaceUp(id('SW1'),g(1)),true);assert.ok(s.events.some(e=>e.nodeId===id('SRV1')&&e.label==='Frame received'&&e.packet?.source==='192.168.10.10'));const last=d(s,'SW1').runtime.features.stormControlEvents.find((r:any)=>r.kind===traffic);assert.ok(last.percent>.1);assert.equal(last.action,'filter');assert.ok(s.events.some(e=>e.nodeId===id('SW1')&&e.label==='Storm control drop'&&e.packet?.id===last.packetId));}assert.equal(actionAvailable(s,row(s,'pc1-ping').objective),true);assert.equal(ping(s),3);
+});
+test('filtering unknown unicast does not block learned unicast even while the unknown-unicast meter is blocking',()=>{
+ const s=load();assert.equal(ping(s),3);s.sendEthernetTestBurst(id('PC1'),p,'unicast');s.advance(300);const r=s.ping(id('PC1'),'192.168.10.100',{count:1});s.advance(450);assert.equal(r.received,1);assert.equal(d(s,'SW1').runtime.features.stormMeters[g(1)+':unicast'].blocked,true);assert.equal(s.interfaceUp(id('SW1'),g(1)),true);
+});
+test('a removed classifier or 100-percent threshold admits that traffic and earns no suppression, then a real repair restores filtering',()=>{
+ for(const fault of ['no storm-control broadcast level','storm-control broadcast level 100 100']){const s=load();change(s,'interface '+g(1),fault);burst(s);assert.equal(goal(s,'broadcast-policy'),false);assert.equal(goal(s,'broadcast-drop'),false);assert.equal(d(s,'SW1').runtime.features.stormControlDrops,undefined);change(s,'interface '+g(1),'storm-control broadcast level 0.10 0.05');burst(s);assert.equal(goal(s,'broadcast-policy'),true);assert.equal(goal(s,'broadcast-drop'),true);}
+});
+test('zero-percent suppresses tiny broadcasts, invalid falling threshold rejects without mutation, and idle traffic restores forwarding',()=>{
+ const s=load();change(s,'interface '+g(1),'storm-control broadcast level 0 0');s.sendGratuitousARP(id('PC1'),p,'192.168.10.10');s.advance(100);assert.ok(d(s,'SW1').runtime.features.stormControlDrops>0);assert.equal(goal(s,'broadcast-drop'),false,'the lab requires its actual reference thresholds');const c=cli(s);run(c,'configure terminal','interface '+g(1));const before=structuredClone(d(s,'SW1').config.interfaces[g(1)].features.stormControl);assert.ok(c.execute('storm-control broadcast level 1 2').some(iosRejected));assert.deepEqual(d(s,'SW1').config.interfaces[g(1)].features.stormControl,before);run(c,'storm-control broadcast level 0.10 0.05','end');s.advance(2200);assert.equal(ping(s),3);assert.match(cli(s).execute('show storm-control '+g(1)+' broadcast').join('\n'),/Forwarding/);
+});
+test('shutdown action produces a real isolated port and finite source interruption, while PC2 and SRV1 retain forwarding',()=>{
+ const s=load(),r=burst(s,'broadcast','PC3');assert.equal(r.status,'failure');assert.ok(r.framesSent>0&&r.framesSent<256);assert.equal(goal(s,'shutdown-trip'),true);assert.equal(d(s,'SW1').config.interfaces[g(4)].features.errDisabled,true);assert.equal(d(s,'SW1').runtime.features.errdisableCauses[g(4)],'storm-control');assert.equal(actionAvailable(s,row(s,'pc2-ping').objective),true);assert.equal(ping(s,'PC2'),3);assert.equal(goal(s,'pc2-ping'),true);assert.equal(ping(s,'PC3'),0);assert.equal(goal(s,'pc3-ping'),false);assert.match(cli(s).execute('show interfaces status err-disabled').join('\n'),/storm-control/);assert.match(cli(s).execute('show errdisable recovery').join('\n'),/Gi0\/4\s+storm-control/);
+});
+test('automatic timer recovery reenables only the affected port and actual post-recovery replies earn the recovery goal',()=>{
+ const s=load();burst(s,'broadcast','PC3');assert.equal(actionAvailable(s,row(s,'pc3-ping').objective),false);s.advance(30000);assert.equal(s.interfaceUp(id('SW1'),g(4)),true);assert.equal(actionAvailable(s,row(s,'pc3-ping').objective),true);assert.equal(goal(s,'pc3-ping'),false);assert.equal(ping(s,'PC3'),3);assert.equal(goal(s,'pc3-ping'),true);assert.ok(d(s,'SW1').runtime.logs.some(l=>l.includes('ERR_RECOVER')));
+});
+test('manual recovery cannot substitute for a timer event and removing the recovery cause leaves shutdown latched',()=>{
+ const s=load();change(s,'no errdisable recovery cause storm-control');burst(s,'broadcast','PC3');s.advance(32000);assert.equal(s.interfaceUp(id('SW1'),g(4)),false);assert.equal(goal(s,'recovery-policy'),false);change(s,'interface '+g(4),'shutdown','no shutdown');assert.equal(ping(s,'PC3'),3);assert.equal(goal(s,'pc3-ping'),false);change(s,'errdisable recovery cause storm-control');burst(s,'broadcast','PC3');s.advance(30000);assert.equal(ping(s,'PC3'),3);assert.equal(goal(s,'pc3-ping'),true);
+});
+test('no storm-control action restores actual default filtering, preserves thresholds and does not accidentally enable trap',()=>{
+ const s=load();change(s,'interface '+g(1),'storm-control action shutdown');burst(s);assert.equal(goal(s,'broadcast-policy'),false);assert.equal(goal(s,'broadcast-drop'),false);change(s,'interface '+g(1),'no storm-control action shutdown','shutdown','no shutdown');assert.equal(d(s,'SW1').config.interfaces[g(1)].features.stormControl.action,undefined);assert.equal(goal(s,'broadcast-policy'),true);s.advance(2000);burst(s);assert.equal(goal(s,'broadcast-drop'),true);assert.equal(s.interfaceUp(id('SW1'),g(1)),true);change(s,'interface '+g(1),'storm-control action trap','no storm-control action shutdown');assert.equal(d(s,'SW1').config.interfaces[g(1)].features.stormControl.action,'trap');change(s,'interface '+g(1),'no storm-control action trap');assert.equal(d(s,'SW1').config.interfaces[g(1)].features.stormControl.action,undefined);
+});
+test('an expired destination MAC is treated as unknown for storm suppression, while a current learned MAC is exempt',()=>{
+ for(const expired of [false,true]){const s=load();d(s,'SW1').runtime.mac['10|02:fe:00:00:00:fe']={mac:'02:fe:00:00:00:fe',port:g(3),vlan:10,static:false,expires:expired?s.clock.now()-1:s.clock.now()+60000};burst(s,'unicast');assert.equal(goal(s,'unicast-drop'),expired);assert.equal(!!d(s,'SW1').runtime.features.stormControlDrops,expired);}
+});
+test('counters, unrelated drops, wrong-source packets and mismatched event identities cannot create a storm achievement',()=>{
+ const s=load();d(s,'SW1').runtime.features.stormControlDrops=999;assert.equal(goal(s,'broadcast-drop'),false);simDrop();assert.equal(goal(s,'broadcast-drop'),false);burst(s);const criterion=row(s,'broadcast-drop').objective.criterion;assert.equal(matches(s,criterion),true);for(const r of d(s,'SW1').runtime.features.stormControlEvents)r.packetId='unrelated';assert.equal(matches(s,criterion),false);function simDrop(){s.emit({nodeId:id('SW1'),port:g(1),protocol:'ETHERNET',label:'Storm control drop',disposition:'drop',detail:'Unrelated'});}
+});
+test('traffic instruments reject invalid sources/kinds and overlapping runs and stop on a source power cycle',()=>{
+ const s=load();assert.equal(s.sendEthernetTestBurst(id('SW1'),g(1),'broadcast').status,'failure');assert.equal(s.sendEthernetTestBurst(id('PC1'),'bad','broadcast').status,'failure');assert.equal(s.sendEthernetTestBurst(id('PC1'),p,'invalid' as any).status,'failure');const r=s.sendEthernetTestBurst(id('PC1'),p,'broadcast');assert.equal(s.sendEthernetTestBurst(id('PC1'),p,'multicast').status,'failure');s.advance(20);s.power(id('PC1'),false);s.power(id('PC1'),true);s.advance(1000);assert.equal(r.status,'failure');assert.ok(r.framesSent<256);const other=load(),changed=other.sendEthernetTestBurst(id('PC1'),p,'broadcast');delete d(other,'PC1').config.interfaces[p].ip;other.advance(1000);assert.equal(changed.status,'failure');assert.equal(changed.framesSent,0);assert.ok(!other.events.some(e=>e.packet?.protocol==='UDP'&&e.packet.source===undefined));
+});
+test('bounded ingress telemetry retains at most one thousand actual decisions',()=>{
+ const s=load();change(s,'interface '+g(1),'storm-control broadcast level 0 0');const frame:Frame={id:'bounded-frame',sourceMac:s.macOf(id('PC1'),p),destinationMac:'ff:ff:ff:ff:ff:ff',hops:64,payload:{kind:'arp',operation:'request',family:4,source:'192.168.10.10',target:'192.168.10.100',mac:s.macOf(id('PC1'),p)}};for(let i=0;i<1005;i++){frame.id='bounded-'+i;inspectIngress(s,d(s,'SW1'),g(1),10,frame);}assert.equal(d(s,'SW1').runtime.features.stormControlEvents.length,1000);assert.equal(d(s,'SW1').runtime.features.stormControlEvents[0].frameId,'bounded-5');
+});
+test('portable reopening retains genuine observations and saved policy without inventing new traffic, and published commands/HTTP work',()=>{
+ const s=load();finish(s);for(const[n,commands]of Object.entries(catalogGuideResources('storm-control')!.verification))run(cli(s,n),...commands);const h=s.httpRequest(id('PC2'),'http://192.168.10.100/');s.advance(10000);assert.equal(h.statusCode,200);assert.match(h.body,/normal forwarding works/);const restored=new Simulator();restored.load(parseLabFile(serializeLabFile(s.serialize())));assert.equal(lessonProgress(restored)!.complete,12);assert.deepEqual(d(restored,'SW1').runtime.features.stormControlEvents,undefined);assert.notEqual(d(restored,'SW1').config.interfaces[g(4)].features.errDisabled,true);
+});
+test('imported storm criteria and traffic actions reject malformed and unbounded parameters',()=>{
+ const s=load(),obj=row(s,'broadcast-drop').objective;validateLesson({title:'Storm',description:'',objectives:[obj]});const base=row(s,'broadcast-policy').objective.criterion as any;for(const c of [{...base,rising:101},{...base,rising:NaN},{...base,falling:.2},{...base,action:'trap'},{...base,interface:[]},{kind:'storm-recovery',device:id('SW1'),interval:0}])assert.throws(()=>validateLesson({title:'Storm',description:'',objectives:[{...obj,criterion:c}]}));assert.throws(()=>validateLesson({title:'Storm',description:'',objectives:[{...obj,action:{...obj.action,traffic:'all'}}]}));d(s,'PC1').config.interfaces[p].adminUp=false;assert.equal(actionAvailable(s,obj),false);
+});

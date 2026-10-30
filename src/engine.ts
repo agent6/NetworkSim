@@ -614,6 +614,21 @@ export class Simulator {
     const packet=this.makePacket(source,source,'udp',64,{kind:'control-plane',payload:body});packet.sourcePort=49152;packet.destinationPort=3785;packet.ttl=255;packet.vrf=d.config.interfaces[port]?.vrf;
     this.forwardIP(d,{port,target:peer,route:{network:peer,prefix:isIPv6(peer)?128:32,interface:port,protocol:'BFD echo',ad:0,metric:0}},packet);
   }
+  /** A bounded lab instrument: real Ethernet frames, never a fabricated counter. */
+  sendEthernetTestBurst(deviceId:string,port:string,kind:'broadcast'|'multicast'|'unicast'):ServiceResult {
+    const result:ServiceResult={id:this.id('ethernet-test'),status:'running',framesSent:0,frames:256},d=this.getDevice(deviceId),c=d?.config.interfaces[port];
+    if(!d||!['pc','server','laptop'].includes(d.kind)||!c||c.switchport||!this.linkAt(deviceId,port)||!isIPv4(c.ip??'')||!['broadcast','multicast','unicast'].includes(kind)||!this.interfaceUp(deviceId,port)){result.status='failure';result.error='An operational addressed endpoint Ethernet interface is required.';return result;}
+    const bursts=d.runtime.features.ethernetTestBursts??={};if(bursts[port]?.status==='running'){result.status='failure';result.error='A traffic test is already running on this interface.';return result;}bursts[port]=result;
+    const runtime=d.runtime,generation=this.nodeGenerations.get(d.id)??0,source=c.ip!;
+    const destination=kind==='broadcast'?'255.255.255.255':kind==='multicast'?'239.1.1.1':'192.0.2.254',destinationMac=kind==='broadcast'?BROADCAST:kind==='multicast'?'01:00:5e:01:01:01':'02:fe:00:00:00:fe';
+    for(let i=0;i<256;i++)this.clock.schedule(i*2,()=>{
+      if(result.status!=='running')return;
+      if(this.getDevice(deviceId)!==d||d.runtime!==runtime||d.config.interfaces[port]!==c||c.ip!==source||(this.nodeGenerations.get(d.id)??0)!==generation||!this.interfaceUp(deviceId,port)){result.status='failure';result.error='Source interface became unavailable; inspect storm-control and err-disable state.';return;}
+      const packet=this.makePacket(source,destination,'udp',1500,{kind:'ethernet-test',testId:result.id,sequence:i+1,traffic:kind});packet.sourcePort=49000;packet.destinationPort=49001;
+      this.transmit(d,port,destinationMac,packet);result.framesSent++;if(result.framesSent===256)result.status='success';
+    },{label:'Ethernet traffic test'});
+    return result;
+  }
   sendGratuitousARP(deviceId: string, port: string, ip: string, mac?: string): void {
     const d = this.getDevice(deviceId); if (!d) return; mac ??= this.macOf(d.id, port);
     this.transmit(d, port, BROADCAST, { kind: 'arp', operation: 'reply', source: ip, target: ip, mac, family: 4 }, mac);

@@ -1,0 +1,96 @@
+{
+  "feature": {
+    "title": "Storm Control",
+    "catalogId": "storm-control",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 12,
+    "devices": 5,
+    "links": 4,
+    "tasks": 12,
+    "addressingRows": 4,
+    "permalink": "#/labs/storm-control",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "VLAN 10 has PC1 192.168.10.10 on SW1 Gi0/1 for filtering tests, unaffected PC2 .20 on Gi0/2, HTTP/ping SRV1 .100 on Gi0/3, and PC3 .30 on Gi0/4 for shutdown and recovery tests. Access VLANs, PortFast and /24 host addresses are prepared; no router is required.",
+  "verificationNotes": [
+    "Practice has zero earned tasks and accepts a real unprotected traffic burst. Published IOS commands or the completed reference earn five configuration goals. Three real class-specific suppressions, a PC1 server ping, real PC3 shutdown, a PC2 server ping during isolation and a PC3 ping after automatic recovery complete all twelve.",
+    "Gi0/1 uses 0.10/0.05-percent rising/falling thresholds for broadcast, multicast and unknown-unicast with default filtering. Gi0/4 uses those broadcast thresholds with shutdown action. Storm-control detection and a 30-second recovery timer are enabled globally. These low thresholds are teaching values, not production recommendations.",
+    "Guide instruments schedule at most 256 real 1500-byte UDP/IP packets two milliseconds apart over the real Ethernet path, with source validation, concurrent-run protection and generation checks. Packet serialization, VLAN forwarding, policy meters and delivery are exercised normally. No counters or task completion flags are injected. A shutdown interrupts the source before all frames are sent.",
+    "Broadcast, multicast and documentation-destination unknown-unicast bursts have explicit Ethernet destinations. Some packets pass before a threshold is crossed. Drop telemetry records actual class, port, source identity, measured percentage and packet ID; unrelated counters and events cannot fabricate proof. At most 1000 decision rows are retained.",
+    "Focused tests cover 100-percent bypass, removed classifiers, zero-percent suppression, invalid thresholds, idle recovery, wrong shutdown action, manual versus automatic recovery, source cancellation, missing recovery configuration, telemetry bounds and preserved saved observations. Learned-unicast traffic continues during unknown-unicast suppression; expired destination entries are treated as unknown.",
+    "The no storm-control action shutdown and no storm-control action trap forms now restore default filtering for the named active action, preserving thresholds. They do not inadvertently enable traps. Existing action trap logging is outside the lab requirements; SNMP trap delivery and bps/pps syntax are not claimed.",
+    "PC2 connectivity proof requires real correlated echo request/reply packets while the affected port is currently storm-control err-disabled. The PC3 recovery task requires the actual engine timer event and later real replies; manual shutdown/no shutdown is insufficient.",
+    "Configuration and earned packet observations survive portable reopening. The completed reference contains no fabricated runtime evidence. Both practice and completed modes are exercised through the browser in all six theme/viewport combinations."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco Catalyst 3750: Configuring Port-Based Traffic Control",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3750/software/release/15-0_2_se/configuration/guide/scg3750/swtrafc.html"
+    },
+    {
+      "title": "Cisco IOS LAN Switching Command Reference: storm-control",
+      "url": "https://www.cisco.com/en/US/docs/ios-xml/ios/lanswitch/command/lsw-se-s2.html"
+    }
+  ],
+  "validation": {
+    "focusedTests": 16,
+    "focusedPassed": 16,
+    "typecheck": "passed",
+    "fullSuite": {
+      "command": "npm run check",
+      "tests": 1896,
+      "passed": 1896,
+      "failed": 0
+    },
+    "build": "passed; root and dist single-file artifacts match",
+    "postSuiteValidation": {
+      "change": "Stop a finite traffic test if its source address is removed or changed during transmission.",
+      "typecheck": "passed",
+      "focusedTests": 16,
+      "passed": 16,
+      "build": "passed"
+    },
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: twelve Services & Security labs, twelve tasks/four addressing rows, actual unprotected burst earns zero credit, five IOS configuration goals, finite broadcast/multicast/unknown-unicast traffic suppression with all 256 frames sent, real shutdown stops its source early, healthy PC2 replies during isolation, actual 30-second timer recovery and PC3 replies, normal server HTTP, published show outputs and no-action filtering repair, portable achieved-state reload, completed reference/cancel/save-copy protection, fit-visible node navigation, non-overlapping annotations, responsive guide and unchanged terminal golden styles",
+        "light 390px: twelve Services & Security labs, twelve tasks/four addressing rows, actual unprotected burst earns zero credit, five IOS configuration goals, finite broadcast/multicast/unknown-unicast traffic suppression with all 256 frames sent, real shutdown stops its source early, healthy PC2 replies during isolation, actual 30-second timer recovery and PC3 replies, normal server HTTP, published show outputs and no-action filtering repair, portable achieved-state reload, completed reference/cancel/save-copy protection, fit-visible node navigation, non-overlapping annotations, responsive guide and unchanged terminal golden styles",
+        "light 320px: twelve Services & Security labs, twelve tasks/four addressing rows, actual unprotected burst earns zero credit, five IOS configuration goals, finite broadcast/multicast/unknown-unicast traffic suppression with all 256 frames sent, real shutdown stops its source early, healthy PC2 replies during isolation, actual 30-second timer recovery and PC3 replies, normal server HTTP, published show outputs and no-action filtering repair, portable achieved-state reload, completed reference/cancel/save-copy protection, fit-visible node navigation, non-overlapping annotations, responsive guide and unchanged terminal golden styles",
+        "dark 1440px: twelve Services & Security labs, twelve tasks/four addressing rows, actual unprotected burst earns zero credit, five IOS configuration goals, finite broadcast/multicast/unknown-unicast traffic suppression with all 256 frames sent, real shutdown stops its source early, healthy PC2 replies during isolation, actual 30-second timer recovery and PC3 replies, normal server HTTP, published show outputs and no-action filtering repair, portable achieved-state reload, completed reference/cancel/save-copy protection, fit-visible node navigation, non-overlapping annotations, responsive guide and unchanged terminal golden styles",
+        "dark 390px: twelve Services & Security labs, twelve tasks/four addressing rows, actual unprotected burst earns zero credit, five IOS configuration goals, finite broadcast/multicast/unknown-unicast traffic suppression with all 256 frames sent, real shutdown stops its source early, healthy PC2 replies during isolation, actual 30-second timer recovery and PC3 replies, normal server HTTP, published show outputs and no-action filtering repair, portable achieved-state reload, completed reference/cancel/save-copy protection, fit-visible node navigation, non-overlapping annotations, responsive guide and unchanged terminal golden styles",
+        "dark 320px: twelve Services & Security labs, twelve tasks/four addressing rows, actual unprotected burst earns zero credit, five IOS configuration goals, finite broadcast/multicast/unknown-unicast traffic suppression with all 256 frames sent, real shutdown stops its source early, healthy PC2 replies during isolation, actual 30-second timer recovery and PC3 replies, normal server HTTP, published show outputs and no-action filtering repair, portable achieved-state reload, completed reference/cancel/save-copy protection, fit-visible node navigation, non-overlapping annotations, responsive guide and unchanged terminal golden styles",
+        "light: permalink preserves current host/path/query and returns to twelve Services & Security labs without replacing the workspace",
+        "dark: permalink preserves current host/path/query and returns to twelve Services & Security labs without replacing the workspace"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches the existing desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology",
+        "light 320px topology",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "canvasFit": "each navigated node center remains in the workspace; annotation does not overlap host addressing",
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "b9dfd3437623013fd9f173bea7043049cf48352184d72461a24658d6ac33a51a"
+  }
+}
