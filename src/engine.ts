@@ -1,3 +1,4 @@
+import {stpPacketSummary} from './stp-packet.ts';
 import {natLive,natStats,natStatics,natRuleKey,refreshNatEntry,recordNatFlow,natTranslated,updateNatPeak} from './nat-state.ts';
 import {reconcilePortSecurity} from './port-security.ts';
 import {recordInterfaceSample} from './interface-telemetry.ts';
@@ -359,7 +360,7 @@ export class Simulator {
   private summary(frame: Frame): PacketSummary {
     const p = frame.payload;
     const ethernet = { vlan: frame.vlan,cos:frame.cos, sourceMac: frame.sourceMac, destinationMac: frame.destinationMac };
-    if ('kind' in p && p.kind === 'link-control') return { id: frame.id, source: p.body.source ?? '', destination: p.body.clientId ?? 'multicast', protocol: p.protocol, ...ethernet, messageType: p.body.type, ...(p.protocol === 'STP' && Array.isArray(p.body.vlans) ? {stpBpdus:p.body.vlans.filter((b:any)=>b&&typeof b==='object').map((b:any)=>({vlan:Number(b.vlan),mode:String(b.mode),version:b.mode==='pvst'?0:b.mode==='mst'?3:b.mode==='rapid-pvst'?2:-1,rootBridgeId:String(b.rootBridgeId),bridgeId:String(b.bridgeId),rootPathCost:Number(b.cost),role:String(b.role),proposal:!!b.proposal,agreement:!!b.agreement,topologyChange:!!b.tc}))} : {}), ...(p.protocol === 'DHCPV6' ? { dhcpOperation: p.body.type, requestedAddress: p.body.address } : p.protocol === 'ICMPV6' && ['ra', 'rs'].includes(p.body.type) ? { icmpType: p.body.type === 'ra' ? 134 : 133, icmpCode: 0 } : {}) };
+    if ('kind' in p && p.kind === 'link-control') return { id: frame.id, source: p.body.source ?? '', destination: p.body.clientId ?? 'multicast', protocol: p.protocol, ...ethernet, messageType: p.body.type, ...(p.protocol === 'STP' && Array.isArray(p.body.vlans) ? {stpBpdus:stpPacketSummary(p.body)} : {}), ...(p.protocol === 'DHCPV6' ? { dhcpOperation: p.body.type, requestedAddress: p.body.address } : p.protocol === 'ICMPV6' && ['ra', 'rs'].includes(p.body.type) ? { icmpType: p.body.type === 'ra' ? 134 : 133, icmpCode: 0 } : {}) };
     if ('kind' in p) return { id: frame.id, source: p.kind === 'arp' ? p.source : p.clientId, destination: p.kind === 'arp' ? p.target : p.serverId ?? 'broadcast', protocol: p.kind === 'arp' ? (p.family === 6 ? 'NDP' : 'ARP') : 'DHCP', ...ethernet, ...(p.kind === 'arp' ? { arpOperation: p.operation, targetMac: p.targetMac, ...(p.family === 6 ? { icmpType: p.operation === 'request' ? 135 : 136, icmpCode: 0 } : {}) } : { dhcpOperation: p.operation, requestedAddress: p.address, relayAddress: p.relay }) };
     return { ...this.packetSummary(p), ...ethernet };
   }

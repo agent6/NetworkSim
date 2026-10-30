@@ -1,3 +1,4 @@
+import {validMSTCriterion,matchesMSTCriterion,type MSTCriterion} from './mst-lab.ts';
 import {validRSTPCriterion,matchesRSTPCriterion,type RSTPCriterion} from './rstp-lab.ts';
 import {validEtherChannelTroubleshootingCriterion,matchesEtherChannelTroubleshootingCriterion,type EtherChannelTroubleshootingCriterion} from './etherchannel-troubleshooting-lab.ts';
 import {validTrunkTroubleshootingCriterion,matchesTrunkTroubleshootingCriterion,type TrunkTroubleshootingCriterion} from './trunk-troubleshooting-lab.ts';
@@ -35,6 +36,7 @@ export type Criterion =
   | PortSecurityCriterion
   | VRFCriterion
   | GRECriterion
+  | MSTCriterion
   | RSTPCriterion
   | EtherChannelTroubleshootingCriterion
   | TrunkTroubleshootingCriterion
@@ -132,6 +134,10 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     if (v.kind === "link") return text(v.a, 128) && text(v.b, 128);
     if (!text(v.device, 128)) return false;
     switch (v.kind) {
+      case "mst-region":
+      case "mst-priority":
+      case "mst-tree":
+        return validMSTCriterion(v);
       case "rstp-saved":
       case "rstp-edge":
       case "rstp-echo":
@@ -442,6 +448,7 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind==='mst-region'||criterion.kind==='mst-priority'||criterion.kind==='mst-tree')return matchesMSTCriterion(sim,d,criterion);
   if (criterion.kind==='rstp-saved'||criterion.kind==='rstp-edge'||criterion.kind==='rstp-echo')return matchesRSTPCriterion(sim,d,criterion);
   if (criterion.kind==='ec-saved'||criterion.kind==='ec-stp'||criterion.kind==='ec-echo')return matchesEtherChannelTroubleshootingCriterion(sim,d,criterion);
   if (criterion.kind==='trunk-saved'||criterion.kind==='trunk-echo')return matchesTrunkTroubleshootingCriterion(sim,d,criterion);

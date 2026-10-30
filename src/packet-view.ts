@@ -50,8 +50,8 @@ export function packetGroups(packet: PacketSummary) {
     fields.forEach(([key]) => used.add(key));
     return { title, fields };
   };
-  const spanningTree = (packet.stpBpdus || []).map(({vlan, ...fields}) => ({
-    title: `Spanning tree · VLAN ${vlan}`,
+  const spanningTree = (packet.stpBpdus || []).map(({vlan, region: _region, ...fields}) => ({
+    title: `Spanning tree · ${fields.mode === "mst" ? `MST${fields.instance ?? "?"} · ` : ""}VLAN ${vlan}`,
     fields: Object.entries(fields),
   }));
   if (spanningTree.length) used.add("stpBpdus");

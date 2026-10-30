@@ -2210,14 +2210,14 @@ THIS SOFTWARE.
   var FOLD_FLOW = "flow";
   var FOLD_BLOCK = "block";
   var FOLD_QUOTED = "quoted";
-  function foldFlowLines(text3, indent, mode = "flow", { indentAtStart, lineWidth = 80, minContentWidth = 20, onFold, onOverflow } = {}) {
+  function foldFlowLines(text4, indent, mode = "flow", { indentAtStart, lineWidth = 80, minContentWidth = 20, onFold, onOverflow } = {}) {
     if (!lineWidth || lineWidth < 0)
-      return text3;
+      return text4;
     if (lineWidth < minContentWidth)
       minContentWidth = 0;
     const endStep = Math.max(1 + minContentWidth, 1 + lineWidth - indent.length);
-    if (text3.length <= endStep)
-      return text3;
+    if (text4.length <= endStep)
+      return text4;
     const folds = [];
     const escapedFolds = {};
     let end = lineWidth - indent.length;
@@ -2234,14 +2234,14 @@ THIS SOFTWARE.
     let escStart = -1;
     let escEnd = -1;
     if (mode === FOLD_BLOCK) {
-      i = consumeMoreIndentedLines(text3, i, indent.length);
+      i = consumeMoreIndentedLines(text4, i, indent.length);
       if (i !== -1)
         end = i + endStep;
     }
-    for (let ch; ch = text3[i += 1]; ) {
+    for (let ch; ch = text4[i += 1]; ) {
       if (mode === FOLD_QUOTED && ch === "\\") {
         escStart = i;
-        switch (text3[i + 1]) {
+        switch (text4[i + 1]) {
           case "x":
             i += 3;
             break;
@@ -2258,12 +2258,12 @@ THIS SOFTWARE.
       }
       if (ch === "\n") {
         if (mode === FOLD_BLOCK)
-          i = consumeMoreIndentedLines(text3, i, indent.length);
+          i = consumeMoreIndentedLines(text4, i, indent.length);
         end = i + indent.length + endStep;
         split = void 0;
       } else {
         if (ch === " " && prev && prev !== " " && prev !== "\n" && prev !== "	") {
-          const next = text3[i + 1];
+          const next = text4[i + 1];
           if (next && next !== " " && next !== "\n" && next !== "	")
             split = i;
         }
@@ -2275,12 +2275,12 @@ THIS SOFTWARE.
           } else if (mode === FOLD_QUOTED) {
             while (prev === " " || prev === "	") {
               prev = ch;
-              ch = text3[i += 1];
+              ch = text4[i += 1];
               overflow = true;
             }
             const j = i > escEnd + 1 ? i - 2 : escStart - 1;
             if (escapedFolds[j])
-              return text3;
+              return text4;
             folds.push(j);
             escapedFolds[j] = true;
             end = j + endStep;
@@ -2295,39 +2295,39 @@ THIS SOFTWARE.
     if (overflow && onOverflow)
       onOverflow();
     if (folds.length === 0)
-      return text3;
+      return text4;
     if (onFold)
       onFold();
-    let res = text3.slice(0, folds[0]);
+    let res = text4.slice(0, folds[0]);
     for (let i2 = 0; i2 < folds.length; ++i2) {
       const fold = folds[i2];
-      const end2 = folds[i2 + 1] || text3.length;
+      const end2 = folds[i2 + 1] || text4.length;
       if (fold === 0)
         res = `
-${indent}${text3.slice(0, end2)}`;
+${indent}${text4.slice(0, end2)}`;
       else {
         if (mode === FOLD_QUOTED && escapedFolds[fold])
-          res += `${text3[fold]}\\`;
+          res += `${text4[fold]}\\`;
         res += `
-${indent}${text3.slice(fold + 1, end2)}`;
+${indent}${text4.slice(fold + 1, end2)}`;
       }
     }
     return res;
   }
-  function consumeMoreIndentedLines(text3, i, indent) {
+  function consumeMoreIndentedLines(text4, i, indent) {
     let end = i;
     let start = i + 1;
-    let ch = text3[start];
+    let ch = text4[start];
     while (ch === " " || ch === "	") {
       if (i < start + indent) {
-        ch = text3[++i];
+        ch = text4[++i];
       } else {
         do {
-          ch = text3[++i];
+          ch = text4[++i];
         } while (ch && ch !== "\n");
         end = i;
         start = i + 1;
-        ch = text3[start];
+        ch = text4[start];
       }
     }
     return end;
@@ -8260,19 +8260,19 @@ ${end.comment}` : end.comment;
   }
   function validateSLAConfiguration(config4) {
     const record2 = (value) => !!value && typeof value === "object" && !Array.isArray(value);
-    const integer5 = (value, min, max) => typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
+    const integer6 = (value, min, max) => typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
     const address2 = (value) => typeof value === "string" && (isIPv4(value) || isIPv6(value));
     const table2 = (name5) => {
       const value = config4.features[name5];
       if (value === void 0) return {};
-      if (!record2(value) || Object.keys(value).length > 2e3 || Object.keys(value).some((id2) => String(Number(id2)) !== id2 || !integer5(Number(id2), 1, 2147483647))) throw Error(`Invalid IP SLA ${name5 === "ipSla" ? "operation" : "schedule"} table.`);
+      if (!record2(value) || Object.keys(value).length > 2e3 || Object.keys(value).some((id2) => String(Number(id2)) !== id2 || !integer6(Number(id2), 1, 2147483647))) throw Error(`Invalid IP SLA ${name5 === "ipSla" ? "operation" : "schedule"} table.`);
       return value;
     };
     const operations = table2("ipSla");
     for (const [id2, probe] of Object.entries(operations)) {
       if (!record2(probe) || probe.type !== void 0 && (typeof probe.type !== "string" || !["icmp-echo", "http", "udp-jitter"].includes(probe.type)) || probe.target !== void 0 && probe.type === void 0) throw Error(`Invalid IP SLA ${id2} operation.`);
       for (const [key4, min, max] of [["frequency", 1, 604800], ["timeout", 1, 6048e5], ["threshold", 1, 6048e5], ["port", 1, 65535], ["sourcePort", 1, 65535], ["numPackets", 1, 100], ["interval", 1, 6e4]]) {
-        if (probe[key4] !== void 0 && !integer5(probe[key4], min, max)) throw Error(`Invalid IP SLA ${id2} ${key4}.`);
+        if (probe[key4] !== void 0 && !integer6(probe[key4], min, max)) throw Error(`Invalid IP SLA ${id2} ${key4}.`);
       }
       if (probe.source !== void 0 && (typeof probe.source !== "string" || !address2(probe.source) && !/^[a-z][a-z-]*\d[\d/.]*$/i.test(probe.source))) throw Error(`Invalid IP SLA ${id2} source.`);
       if (probe.control !== void 0 && typeof probe.control !== "boolean") throw Error(`Invalid IP SLA ${id2} responder control.`);
@@ -8285,20 +8285,20 @@ ${end.comment}` : end.comment;
             throw Error(`Invalid IP SLA ${id2} HTTP URL.`);
           }
           if (url.protocol !== "http:" || url.port && url.port !== "80" || url.hostname !== probe.target) throw Error(`Invalid IP SLA ${id2} HTTP target.`);
-        } else if (!address2(probe.target) || probe.type === "udp-jitter" && (!isIPv4(probe.target) || !integer5(probe.port, 1, 65535))) throw Error(`Invalid IP SLA ${id2} target.`);
+        } else if (!address2(probe.target) || probe.type === "udp-jitter" && (!isIPv4(probe.target) || !integer6(probe.port, 1, 65535))) throw Error(`Invalid IP SLA ${id2} target.`);
       }
     }
     for (const [id2, schedule5] of Object.entries(table2("ipSlaSchedules"))) {
       const probe = operations[id2];
-      if (!record2(schedule5) || !record2(probe) || !probe.target || schedule5.start !== void 0 && (typeof schedule5.start !== "string" || !["now", "pending", "after"].includes(schedule5.start)) || schedule5.life !== void 0 && !integer5(schedule5.life, 0, 2147483647) || schedule5.start === "after" && !integer5(schedule5.after, 0, 86399)) throw Error(`Invalid IP SLA ${id2} schedule.`);
+      if (!record2(schedule5) || !record2(probe) || !probe.target || schedule5.start !== void 0 && (typeof schedule5.start !== "string" || !["now", "pending", "after"].includes(schedule5.start)) || schedule5.life !== void 0 && !integer6(schedule5.life, 0, 2147483647) || schedule5.start === "after" && !integer6(schedule5.after, 0, 86399)) throw Error(`Invalid IP SLA ${id2} schedule.`);
     }
     for (const track2 of Object.values(config4.features.tracks ?? {})) {
-      if (record2(track2) && track2.type === "sla" && (!integer5(track2.sla, 1, 2147483647) || track2.aspect !== void 0 && (typeof track2.aspect !== "string" || !["state", "reachability"].includes(track2.aspect)))) throw Error("Invalid IP SLA tracked object.");
+      if (record2(track2) && track2.type === "sla" && (!integer6(track2.sla, 1, 2147483647) || track2.aspect !== void 0 && (typeof track2.aspect !== "string" || !["state", "reachability"].includes(track2.aspect)))) throw Error("Invalid IP SLA tracked object.");
     }
     const responder = config4.features.ipSlaResponder;
     if (responder !== void 0) {
       if (!record2(responder) || typeof responder.enabled !== "boolean" || !Array.isArray(responder.ports) || responder.ports.length > 2e3) throw Error("Invalid IP SLA responder.");
-      for (const port3 of responder.ports) if (!record2(port3) || !integer5(port3.port, 1, 65535) || slaReservedPorts.has(Number(port3.port)) || port3.address !== void 0 && !address2(port3.address)) throw Error("Invalid IP SLA responder port.");
+      for (const port3 of responder.ports) if (!record2(port3) || !integer6(port3.port, 1, 65535) || slaReservedPorts.has(Number(port3.port)) || port3.address !== void 0 && !address2(port3.address)) throw Error("Invalid IP SLA responder port.");
     }
   }
 
@@ -8492,10 +8492,10 @@ ${end.comment}` : end.comment;
   }
   function qosFlowBucket(packet) {
     if (!packet) return 0;
-    const text3 = [packet.source, packet.destination, packet.protocol, packet.sourcePort ?? "", packet.destinationPort ?? ""].join("|");
+    const text4 = [packet.source, packet.destination, packet.protocol, packet.sourcePort ?? "", packet.destinationPort ?? ""].join("|");
     let hash2 = 2166136261;
-    for (let n = 0; n < text3.length; n++) {
-      hash2 ^= text3.charCodeAt(n);
+    for (let n = 0; n < text4.length; n++) {
+      hash2 ^= text4.charCodeAt(n);
       hash2 = Math.imul(hash2, 16777619);
     }
     return (hash2 >>> 0) % 16;
@@ -8772,9 +8772,9 @@ ${end.comment}` : end.comment;
   // src/ios-snmp.ts
   function configureSNMP(h, args, no = false) {
     const fail7 = (message2 = "% Invalid input detected at '^' marker.") => h.fail(message2), incomplete5 = () => fail7("% Incomplete command.");
-    const keyword2 = (text3, options3) => {
-      if (!text3) return incomplete5();
-      const exact5 = options3.find((x) => x === text3.toLowerCase()), matches2 = exact5 ? [exact5] : options3.filter((x) => x.startsWith(text3.toLowerCase()));
+    const keyword2 = (text4, options3) => {
+      if (!text4) return incomplete5();
+      const exact5 = options3.find((x) => x === text4.toLowerCase()), matches2 = exact5 ? [exact5] : options3.filter((x) => x.startsWith(text4.toLowerCase()));
       if (matches2.length > 1) return fail7("% Ambiguous command.");
       return matches2[0] ?? fail7();
     };
@@ -9060,9 +9060,9 @@ ${end.comment}` : end.comment;
 
   // src/credentials.ts
   var type7Pad = "dsfd;kfoA,.iyewrkldJKDHSUB";
-  function encodeType7(text3, seed = 0) {
+  function encodeType7(text4, seed = 0) {
     if (!Number.isInteger(seed) || seed < 0 || seed >= type7Pad.length) throw new Error("Invalid Type 7 seed");
-    return String(seed).padStart(2, "0") + [...new TextEncoder().encode(text3)].map((byte, i) => (byte ^ type7Pad.charCodeAt((seed + i) % type7Pad.length)).toString(16).padStart(2, "0")).join("").toUpperCase();
+    return String(seed).padStart(2, "0") + [...new TextEncoder().encode(text4)].map((byte, i) => (byte ^ type7Pad.charCodeAt((seed + i) % type7Pad.length)).toString(16).padStart(2, "0")).join("").toUpperCase();
   }
   function decodeType7(encoded) {
     if (!/^\d{2}(?:[0-9a-f]{2})+$/i.test(encoded)) throw new Error("Invalid Type 7 password");
@@ -9144,11 +9144,11 @@ ${end.comment}` : end.comment;
       s.data?.close(reason);
       s.control.close(reason);
     };
-    const reply = (s, code, text3) => {
-      if (s.control.state === "OPEN") s.control.send(code + " " + text3 + "\r\n");
+    const reply = (s, code, text4) => {
+      if (s.control.state === "OPEN") s.control.send(code + " " + text4 + "\r\n");
     };
-    const failData = (s, text3) => {
-      reply(s, 426, text3);
+    const failData = (s, text4) => {
+      reply(s, 426, text4);
       release(s);
       s.data?.close("FTP data failed");
       delete s.data;
@@ -11558,7 +11558,7 @@ ${end.comment}` : end.comment;
     for (const candidate of paths2) {
       const canonical = canonicalPath(candidate);
       const replaced = (scope ? IOS_ARGUMENT_ROWS[`${scope}:${canonical}|${label}`] : void 0) ?? IOS_ARGUMENT_ROWS[`${canonical}|${label}`];
-      if (replaced) return replaced.map(([row5, text3]) => [row5, text3]);
+      if (replaced) return replaced.map(([row5, text4]) => [row5, text4]);
     }
     const spelled = iosLabel(label);
     return [[spelled, iosArgumentDescription(paths2, spelled, spelled === label ? description : iosArgumentDescription(paths2, label, description, mode, protocol), mode, protocol)]];
@@ -11597,11 +11597,11 @@ ${end.comment}` : end.comment;
     return void 0;
   }
   var rank = (label) => label === "<cr>" ? 2 : 0;
-  function wrap(text3, room) {
-    if (room <= 0 || text3.length <= room) return [text3];
+  function wrap(text4, room) {
+    if (room <= 0 || text4.length <= room) return [text4];
     const lines2 = [];
     let current2 = "";
-    for (const word6 of text3.split(" ")) {
+    for (const word6 of text4.split(" ")) {
       if (current2 && (current2 + " " + word6).length > room) {
         lines2.push(current2);
         current2 = word6;
@@ -11634,7 +11634,7 @@ ${end.comment}` : end.comment;
     if (current2) lines2.push(current2);
     return lines2.length ? [...lines2, ""] : [];
   }
-  var capitalize = (text3) => text3 ? text3[0].toUpperCase() + text3.slice(1) : text3;
+  var capitalize = (text4) => text4 ? text4[0].toUpperCase() + text4.slice(1) : text4;
   function placeholder(path, token, mode, protocol) {
     if (!token.startsWith("<") || /^<\d+-\d+>$|^<HH:MM|^<flash:/i.test(token)) return iosArgumentRows(path, token, token, mode, protocol);
     const name5 = token.slice(1, -1).replace(/\.\.\.$/, "").trim();
@@ -12413,7 +12413,7 @@ ${end.comment}` : end.comment;
     }
     if (!n || typeof n !== "object" || !("enabled" in n) || !Array.isArray(n.enabled) || n.enabled.some((f) => typeof f !== "string" || !NSOS_FEATURES.includes(f)) || new Set(n.enabled).size !== n.enabled.length) throw Error("Invalid NS-OS feature configuration.");
     const ns = n, c = ns.vpc;
-    const integer5 = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
+    const integer6 = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
     const nat2 = config4.features.nat;
     if (nat2 !== void 0) {
       if (!nat2 || typeof nat2 !== "object" || !ns.enabled.includes("nat") || !Array.isArray(nat2.static) || !Array.isArray(nat2.rules) || !nat2.pools || typeof nat2.pools !== "object" || Array.isArray(nat2.pools)) throw Error("Invalid NS-OS NAT configuration.");
@@ -12438,28 +12438,28 @@ ${end.comment}` : end.comment;
     if (!config4.interfaces.mgmt0 || config4.interfaces.mgmt0.switchport || config4.interfaces.mgmt0.vrf !== "management") throw Error("Datacenter Switch requires routed mgmt0 in the management VRF.");
     if (c !== void 0 && (!c || typeof c !== "object")) throw Error("Invalid vPC configuration.");
     if (c) {
-      if (!ns.enabled.includes("vpc") || !integer5(c.domain, 1, 1e3) || !integer5(c.rolePriority, 1, 65535) || !integer5(c.systemPriority, 1, 65535) || c.systemMac !== void 0 && (typeof c.systemMac !== "string" || !/^(?:[0-9a-f]{12}|(?:[0-9a-f]{2}:){5}[0-9a-f]{2}|[0-9a-f]{4}(?:\.[0-9a-f]{4}){2})$/i.test(c.systemMac))) throw Error("Invalid vPC domain or priority.");
+      if (!ns.enabled.includes("vpc") || !integer6(c.domain, 1, 1e3) || !integer6(c.rolePriority, 1, 65535) || !integer6(c.systemPriority, 1, 65535) || c.systemMac !== void 0 && (typeof c.systemMac !== "string" || !/^(?:[0-9a-f]{12}|(?:[0-9a-f]{2}:){5}[0-9a-f]{2}|[0-9a-f]{4}(?:\.[0-9a-f]{4}){2})$/i.test(c.systemMac))) throw Error("Invalid vPC domain or priority.");
       if (c.systemMac) {
         const mac7 = normalizedMac(c.systemMac);
         if (parseInt(mac7.slice(0, 2), 16) & 1 || /^0+$/.test(mac7)) throw Error("vPC system MAC must be a nonzero unicast address.");
       }
       for (const key4 of ["peerSwitch", "peerGateway", "arpSynchronize", "autoRecovery", "gracefulConsistency"]) if (typeof c[key4] !== "boolean") throw Error("Invalid vPC option " + key4);
-      if (!integer5(c.reloadDelay, 24e4, 36e5) || !integer5(c.delayRestore, 0, 36e5) || !integer5(c.delayRestoreSVI, 0, 36e5)) throw Error("Invalid vPC recovery timer.");
+      if (!integer6(c.reloadDelay, 24e4, 36e5) || !integer6(c.delayRestore, 0, 36e5) || !integer6(c.delayRestoreSVI, 0, 36e5)) throw Error("Invalid vPC recovery timer.");
       if (c.peerLink !== void 0 && (!/^Port-channel\d+$/.test(c.peerLink) || !config4.interfaces[c.peerLink]?.switchport || config4.interfaces[c.peerLink].mode !== "trunk" || config4.interfaces[c.peerLink].features.vpcId)) throw Error("Invalid vPC peer-link.");
       if (c.keepalive !== void 0) {
         const k = c.keepalive;
-        if (!k || typeof k !== "object" || typeof k.destination !== "string" || !isIPv4(k.destination) || k.source !== void 0 && (typeof k.source !== "string" || !isIPv4(k.source)) || typeof k.vrf !== "string" || !integer5(k.interval, 400, 1e4) || !integer5(k.timeout, 3e3, 2e4) || !integer5(k.holdTimeout, 3e3, 1e4)) throw Error("Invalid IPv4 vPC keepalive configuration.");
+        if (!k || typeof k !== "object" || typeof k.destination !== "string" || !isIPv4(k.destination) || k.source !== void 0 && (typeof k.source !== "string" || !isIPv4(k.source)) || typeof k.vrf !== "string" || !integer6(k.interval, 400, 1e4) || !integer6(k.timeout, 3e3, 2e4) || !integer6(k.holdTimeout, 3e3, 1e4)) throw Error("Invalid IPv4 vPC keepalive configuration.");
       }
     }
     const ids = /* @__PURE__ */ new Set();
     for (const p of Object.values(config4.interfaces)) {
       if (!/^(?:Ethernet1\/(?:[1-9]|[12]\d|30)|mgmt0|Port-channel\d+|Vlan\d+|Loopback\d+|Null0)$/.test(p.name)) throw Error("Unsupported NS-OS interface " + p.name);
-      if (/^Port-channel/.test(p.name) && !integer5(Number(p.name.slice(12)), 1, 4096) || /^Vlan/.test(p.name) && !integer5(Number(p.name.slice(4)), 1, 4094)) throw Error("Invalid NS-OS logical interface number.");
+      if (/^Port-channel/.test(p.name) && !integer6(Number(p.name.slice(12)), 1, 4096) || /^Vlan/.test(p.name) && !integer6(Number(p.name.slice(4)), 1, 4094)) throw Error("Invalid NS-OS logical interface number.");
       if (p.features.nsosAdminExplicit !== void 0 && typeof p.features.nsosAdminExplicit !== "boolean") throw Error("Invalid NS-OS administrative override.");
       if (p.features.ethernetSpeeds !== void 0 && (!Array.isArray(p.features.ethernetSpeeds) || !p.features.ethernetSpeeds.length || p.features.ethernetSpeeds.some((n2) => typeof n2 !== "number" || ![10, 100, 1e3, 1e4, 25e3, 4e4, 1e5].includes(n2)))) throw Error("Invalid Ethernet speed capability.");
       if (p.features.vpcId !== void 0) {
         const id2 = p.features.vpcId;
-        if (!c || !integer5(id2, 1, 4096) || !/^Port-channel\d+$/.test(p.name) || !p.switchport || ids.has(id2)) throw Error("Invalid or duplicate vPC member.");
+        if (!c || !integer6(id2, 1, 4096) || !/^Port-channel\d+$/.test(p.name) || !p.switchport || ids.has(id2)) throw Error("Invalid or duplicate vPC member.");
         ids.add(id2);
       }
       if (p.features.vpcOrphanSuspend !== void 0 && typeof p.features.vpcOrphanSuspend !== "boolean") throw Error("Invalid vPC orphan suspension.");
@@ -12475,8 +12475,8 @@ ${end.comment}` : end.comment;
   }
 
   // src/nsos-nat.ts
-  var fail = (text3) => {
-    throw Error(text3);
+  var fail = (text4) => {
+    throw Error(text4);
   };
   function feature(d) {
     if (!nsosFeature(d, "nat")) fail("Enable feature nat first.");
@@ -12914,43 +12914,43 @@ ${end.comment}` : end.comment;
     if (!["wlc", "ap", "laptop"].includes(kind)) return;
     const fail7 = () => {
       throw Error("The lab contains invalid wireless configuration.");
-    }, obj = (v2) => !!v2 && typeof v2 === "object" && !Array.isArray(v2), dict = (v2) => obj(v2) && Object.keys(v2).length <= 512, text3 = (v2, max = 64) => typeof v2 === "string" && new TextEncoder().encode(v2).length <= max, num2 = (v2, min, max) => typeof v2 === "number" && Number.isFinite(v2) && v2 >= min && v2 <= max, integer5 = (v2, min, max) => Number.isInteger(v2) && num2(v2, min, max), bool2 = (v2) => typeof v2 === "boolean";
+    }, obj = (v2) => !!v2 && typeof v2 === "object" && !Array.isArray(v2), dict = (v2) => obj(v2) && Object.keys(v2).length <= 512, text4 = (v2, max = 64) => typeof v2 === "string" && new TextEncoder().encode(v2).length <= max, num2 = (v2, min, max) => typeof v2 === "number" && Number.isFinite(v2) && v2 >= min && v2 <= max, integer6 = (v2, min, max) => Number.isInteger(v2) && num2(v2, min, max), bool2 = (v2) => typeof v2 === "boolean";
     const v = w;
     if (!obj(v) || !(kind === "ap" ? ["c9115-lightweight", "generic-standalone"].includes(v.profile) : v.profile === (kind === "wlc" ? "c9800-17.12" : "generic-dual-band"))) fail7();
     if (v.standalone) {
       const s = v.standalone;
-      if (!obj(s) || !integer5(s.nativeVlan, 1, 4094) || !Array.isArray(s.bindings) || s.bindings.length !== 2 || new Set(s.bindings.map((b) => b?.band)).size !== 2 || s.bindings.some((b) => !obj(b) || !["2.4", "5"].includes(b.band) || !Array.isArray(b.ssids) || b.ssids.length > 16 || b.ssids.some((n) => !text3(n, 32)) || new Set(b.ssids).size !== b.ssids.length || !Array.isArray(b.aesVlans) || b.aesVlans.some((n) => !integer5(n, 1, 4094)))) fail7();
+      if (!obj(s) || !integer6(s.nativeVlan, 1, 4094) || !Array.isArray(s.bindings) || s.bindings.length !== 2 || new Set(s.bindings.map((b) => b?.band)).size !== 2 || s.bindings.some((b) => !obj(b) || !["2.4", "5"].includes(b.band) || !Array.isArray(b.ssids) || b.ssids.length > 16 || b.ssids.some((n) => !text4(n, 32)) || new Set(b.ssids).size !== b.ssids.length || !Array.isArray(b.aesVlans) || b.aesVlans.some((n) => !integer6(n, 1, 4094)))) fail7();
     }
     for (const field3 of ["wlans", "policies", "policyTags", "siteTags", "rfTags", "apProfiles", "flexProfiles", "rfProfiles", "assignments", "dot1xLists"]) if (!dict(v[field3])) fail7();
     if (v.apAuthorization) {
       const a2 = v.apAuthorization;
-      if (!obj(a2) || !bool2(a2.enabled) || !text3(a2.methodList, 32) || !dict(a2.lists) || Object.values(a2.lists).some((p) => !obj(p) || !["local", "radius"].includes(p.method) || p.method === "radius" && !text3(p.group, 32)) || !Array.isArray(a2.macs) || a2.macs.length > 512 || new Set(a2.macs).size !== a2.macs.length || a2.macs.some((mac7) => typeof mac7 !== "string" || !/^[a-f0-9]{12}$/.test(mac7))) fail7();
+      if (!obj(a2) || !bool2(a2.enabled) || !text4(a2.methodList, 32) || !dict(a2.lists) || Object.values(a2.lists).some((p) => !obj(p) || !["local", "radius"].includes(p.method) || p.method === "radius" && !text4(p.group, 32)) || !Array.isArray(a2.macs) || a2.macs.length > 512 || new Set(a2.macs).size !== a2.macs.length || a2.macs.some((mac7) => typeof mac7 !== "string" || !/^[a-f0-9]{12}$/.test(mac7))) fail7();
     }
     const ids = /* @__PURE__ */ new Set();
     for (const [key4, p] of Object.entries(v.wlans)) {
       if (ids.has(p?.id)) fail7();
       ids.add(p?.id);
-      if (!text3(key4, 32) || !obj(p) || p.name !== key4 || !integer5(p.id, 1, 512) || !text3(p.ssid, 32) || !p.ssid || !bool2(p.enabled) || !bool2(p.broadcast) || !["open", "wpa2-personal", "wpa2-enterprise", "wpa3-personal", "wpa2-wpa3-personal"].includes(p.security) || p.psk !== void 0 && !text3(p.psk, 64) || p.authenticationList !== void 0 && !text3(p.authenticationList, 32) || p.openAuthentication !== void 0 && !bool2(p.openAuthentication) || p.akmEnabled !== void 0 && !bool2(p.akmEnabled) || p.wpa2Enabled !== void 0 && !bool2(p.wpa2Enabled) || p.wpa3Enabled !== void 0 && !bool2(p.wpa3Enabled) || p.saeEnabled !== void 0 && !bool2(p.saeEnabled) || p.pmf !== void 0 && !["disabled", "optional", "required"].includes(p.pmf)) fail7();
+      if (!text4(key4, 32) || !obj(p) || p.name !== key4 || !integer6(p.id, 1, 512) || !text4(p.ssid, 32) || !p.ssid || !bool2(p.enabled) || !bool2(p.broadcast) || !["open", "wpa2-personal", "wpa2-enterprise", "wpa3-personal", "wpa2-wpa3-personal"].includes(p.security) || p.psk !== void 0 && !text4(p.psk, 64) || p.authenticationList !== void 0 && !text4(p.authenticationList, 32) || p.openAuthentication !== void 0 && !bool2(p.openAuthentication) || p.akmEnabled !== void 0 && !bool2(p.akmEnabled) || p.wpa2Enabled !== void 0 && !bool2(p.wpa2Enabled) || p.wpa3Enabled !== void 0 && !bool2(p.wpa3Enabled) || p.saeEnabled !== void 0 && !bool2(p.saeEnabled) || p.pmf !== void 0 && !["disabled", "optional", "required"].includes(p.pmf)) fail7();
     }
-    for (const p of Object.values(v.policies)) if (!obj(p) || !bool2(p.enabled) || !integer5(p.vlan, 1, 4094) || !bool2(p.centralSwitching) || !integer5(p.sessionTimeout, 1, 86400) || [p.ipv4Acl, p.servicePolicyIn, p.servicePolicyOut, p.clientServicePolicyIn, p.clientServicePolicyOut].some((value) => value !== void 0 && (!text3(value, 64) || !value))) fail7();
-    for (const p of Object.values(v.policyTags)) if (!dict(p) || Object.keys(p).length > 16 || Object.entries(p).some(([name5, value]) => !text3(name5, 32) || !text3(value, 32))) fail7();
-    for (const p of Object.values(v.siteTags)) if (!obj(p) || !bool2(p.localSite) || !text3(p.apProfile, 32) || !text3(p.flexProfile, 32)) fail7();
-    for (const p of Object.values(v.apProfiles)) if (!obj(p) || !integer5(p.echoInterval, 1, 30) || !integer5(p.deadInterval, 1, 3600)) fail7();
-    for (const p of Object.values(v.flexProfiles)) if (!obj(p) || !integer5(p.nativeVlan, 1, 4094) || !dict(p.vlans)) fail7();
-    for (const [mac7, p] of Object.entries(v.assignments)) if (!/^[a-f0-9]{12}$/.test(mac7) || !obj(p) || !text3(p.policyTag, 32) || !text3(p.siteTag, 32) || !text3(p.rfTag, 32)) fail7();
-    const radio = (p, profile = false) => obj(p) && ["2.4", "5"].includes(p.band) && bool2(p.enabled) && (profile && p.channel === 0 || (p.band === "2.4" ? [1, 6, 11] : [36, 40, 44, 48, 149, 153, 157, 161, 165]).includes(p.channel)) && [20, 40, 80].includes(p.width) && (p.band !== "2.4" || p.width === 20) && num2(p.power, -10, 30) && (profile || integer5(p.maxClients, 1, 200));
+    for (const p of Object.values(v.policies)) if (!obj(p) || !bool2(p.enabled) || !integer6(p.vlan, 1, 4094) || !bool2(p.centralSwitching) || !integer6(p.sessionTimeout, 1, 86400) || [p.ipv4Acl, p.servicePolicyIn, p.servicePolicyOut, p.clientServicePolicyIn, p.clientServicePolicyOut].some((value) => value !== void 0 && (!text4(value, 64) || !value))) fail7();
+    for (const p of Object.values(v.policyTags)) if (!dict(p) || Object.keys(p).length > 16 || Object.entries(p).some(([name5, value]) => !text4(name5, 32) || !text4(value, 32))) fail7();
+    for (const p of Object.values(v.siteTags)) if (!obj(p) || !bool2(p.localSite) || !text4(p.apProfile, 32) || !text4(p.flexProfile, 32)) fail7();
+    for (const p of Object.values(v.apProfiles)) if (!obj(p) || !integer6(p.echoInterval, 1, 30) || !integer6(p.deadInterval, 1, 3600)) fail7();
+    for (const p of Object.values(v.flexProfiles)) if (!obj(p) || !integer6(p.nativeVlan, 1, 4094) || !dict(p.vlans)) fail7();
+    for (const [mac7, p] of Object.entries(v.assignments)) if (!/^[a-f0-9]{12}$/.test(mac7) || !obj(p) || !text4(p.policyTag, 32) || !text4(p.siteTag, 32) || !text4(p.rfTag, 32)) fail7();
+    const radio = (p, profile = false) => obj(p) && ["2.4", "5"].includes(p.band) && bool2(p.enabled) && (profile && p.channel === 0 || (p.band === "2.4" ? [1, 6, 11] : [36, 40, 44, 48, 149, 153, 157, 161, 165]).includes(p.channel)) && [20, 40, 80].includes(p.width) && (p.band !== "2.4" || p.width === 20) && num2(p.power, -10, 30) && (profile || integer6(p.maxClients, 1, 200));
     if (!Array.isArray(v.radios) || v.radios.length > 2 || v.radios.some((p) => !radio(p))) fail7();
     for (const p of Object.values(v.rfProfiles)) if (!radio(p, true)) fail7();
-    for (const p of Object.values(v.rfTags)) if (!obj(p) || p.band24 !== void 0 && (!text3(p.band24, 32) || wirelessEntry(v.rfProfiles, p.band24) && wirelessEntry(v.rfProfiles, p.band24).band !== "2.4") || p.band5 !== void 0 && (!text3(p.band5, 32) || wirelessEntry(v.rfProfiles, p.band5) && wirelessEntry(v.rfProfiles, p.band5).band !== "5")) fail7();
+    for (const p of Object.values(v.rfTags)) if (!obj(p) || p.band24 !== void 0 && (!text4(p.band24, 32) || wirelessEntry(v.rfProfiles, p.band24) && wirelessEntry(v.rfProfiles, p.band24).band !== "2.4") || p.band5 !== void 0 && (!text4(p.band5, 32) || wirelessEntry(v.rfProfiles, p.band5) && wirelessEntry(v.rfProfiles, p.band5).band !== "5")) fail7();
     const a = v.adapter, r = v.rf;
-    if (!obj(a) || !bool2(a.enabled) || !bool2(a.autoConnect) || !text3(a.ssid, 32) || !["open", "wpa2-personal", "wpa2-enterprise", "wpa3-personal", "wpa2-wpa3-personal"].includes(a.security) || !text3(a.passphrase, 64) || !text3(a.username, 128) || !text3(a.password, 128) || !Array.isArray(a.bands) || !a.bands.length || a.bands.some((b) => !["2.4", "5"].includes(b)) || !num2(a.roamHysteresis, 1, 30) || !num2(a.minimumResidence, 1e3, 3e5) || a.pmfCapable !== void 0 && !bool2(a.pmfCapable)) fail7();
+    if (!obj(a) || !bool2(a.enabled) || !bool2(a.autoConnect) || !text4(a.ssid, 32) || !["open", "wpa2-personal", "wpa2-enterprise", "wpa3-personal", "wpa2-wpa3-personal"].includes(a.security) || !text4(a.passphrase, 64) || !text4(a.username, 128) || !text4(a.password, 128) || !Array.isArray(a.bands) || !a.bands.length || a.bands.some((b) => !["2.4", "5"].includes(b)) || !num2(a.roamHysteresis, 1, 30) || !num2(a.minimumResidence, 1e3, 3e5) || a.pmfCapable !== void 0 && !bool2(a.pmfCapable)) fail7();
     if (!obj(r) || !num2(r.metersPerUnit, 0.01, 10) || !num2(r.pathLossExponent, 1, 6) || !num2(r.noiseFloor, -120, -40) || !num2(r.attenuation, 0, 80) || !num2(r.sensitivity, -100, -30) || !bool2(r.interference)) fail7();
-    if (v.controller !== void 0 && (typeof v.controller !== "string" || !/^\d{1,3}(\.\d{1,3}){3}$/.test(v.controller) || v.controller.split(".").some((part) => +part > 255)) || v.controllerName !== void 0 && !text3(v.controllerName, 32) || v.managementInterface !== void 0 && !text3(v.managementInterface, 64)) fail7();
-    for (const p of Object.values(v.dot1xLists)) if (!text3(p, 32)) fail7();
+    if (v.controller !== void 0 && (typeof v.controller !== "string" || !/^\d{1,3}(\.\d{1,3}){3}$/.test(v.controller) || v.controller.split(".").some((part) => +part > 255)) || v.controllerName !== void 0 && !text4(v.controllerName, 32) || v.managementInterface !== void 0 && !text4(v.managementInterface, 64)) fail7();
+    for (const p of Object.values(v.dot1xLists)) if (!text4(p, 32)) fail7();
   }
 
   // src/wireless-security.ts
-  var bytes = (text3) => new TextEncoder().encode(text3);
+  var bytes = (text4) => new TextEncoder().encode(text4);
   var cat = (...parts) => {
     const out = new Uint8Array(parts.reduce((n2, p) => n2 + p.length, 0));
     let n = 0;
@@ -13083,7 +13083,7 @@ ${end.comment}` : end.comment;
     if (!["c9115-lightweight", "generic-standalone"].includes(profile)) throw Error("Select a supported AP profile.");
     next.profile = profile;
     if (profile !== "generic-standalone") return next;
-    const at = (name5, i = 0) => String(f.getAll(name5)[i] ?? ""), integer5 = (name5, i, min, max) => {
+    const at = (name5, i = 0) => String(f.getAll(name5)[i] ?? ""), integer6 = (name5, i, min, max) => {
       const raw = at(name5, i), n = Number(raw);
       if (!/^[-]?\d+$/.test(raw) || !Number.isInteger(n) || n < min || n > max) throw Error(name5 + " must be between " + min + " and " + max + ".");
       return n;
@@ -13095,7 +13095,7 @@ ${end.comment}` : end.comment;
     const old = structuredClone(next.wlans);
     next.wlans = {};
     next.policies = {};
-    next.standalone = { nativeVlan: integer5("local-native", 0, 1, 4094), bindings: next.radios.map((r) => ({ band: r.band, ssids: [], aesVlans: [...w.standalone?.bindings.find((b) => b.band === r.band)?.aesVlans ?? []] })) };
+    next.standalone = { nativeVlan: integer6("local-native", 0, 1, 4094), bindings: next.radios.map((r) => ({ band: r.band, ssids: [], aesVlans: [...w.standalone?.bindings.find((b) => b.band === r.band)?.aesVlans ?? []] })) };
     if (f.getAll("local-ssid").length > 16) throw Error("This profile supports up to 16 local SSIDs.");
     f.getAll("local-ssid").forEach((_value, i) => {
       const ssid = at("local-ssid", i);
@@ -13106,7 +13106,7 @@ ${end.comment}` : end.comment;
       let id2 = wirelessEntry(old, at("local-original", i))?.id ?? 1;
       while (Object.values(next.wlans).some((p) => p.id === id2)) id2++;
       setWirelessEntry(next.wlans, ssid, { name: ssid, id: id2, ssid, enabled: choice2("local-enabled", i, ["on", "off"]) === "on", security: security3, psk: key4 || void 0, openAuthentication: choice2("local-auth", i, ["on", "off"]) === "on", broadcast: choice2("local-broadcast", i, ["on", "off"]) === "on" });
-      const vlan4 = integer5("local-vlan", i, 1, 4094);
+      const vlan4 = integer6("local-vlan", i, 1, 4094);
       setWirelessEntry(next.policies, ssid, { name: ssid, enabled: true, vlan: vlan4, centralSwitching: false, sessionTimeout: 1800 });
       const bands = choice2("local-bands", i, ["none", "both", "2.4", "5"]), aes = choice2("local-aes", i, ["on", "off", "preserve"]);
       for (const binding2 of next.standalone.bindings) if (bands === "both" || binding2.band === bands) {
@@ -13117,10 +13117,10 @@ ${end.comment}` : end.comment;
     });
     next.radios.forEach((r, i) => {
       r.enabled = choice2("local-radio-enabled", i, ["on", "off"]) === "on";
-      r.channel = integer5("local-radio-channel", i, 1, 165);
-      r.width = integer5("local-radio-width", i, 20, 80);
-      r.power = integer5("local-radio-power", i, -10, 30);
-      r.maxClients = integer5("local-radio-clients", i, 1, 200);
+      r.channel = integer6("local-radio-channel", i, 1, 165);
+      r.width = integer6("local-radio-width", i, 20, 80);
+      r.power = integer6("local-radio-power", i, -10, 30);
+      r.maxClients = integer6("local-radio-clients", i, 1, 200);
     });
     validateWireless("ap", next);
     return next;
@@ -13135,7 +13135,7 @@ ${end.comment}` : end.comment;
     if (h.device.kind !== "ap" || !standaloneAP(w)) return commands;
     const add2 = (path, run, args) => commands.push({ words: path.toLowerCase().split(" "), description: "Configure the generic standalone AP teaching profile", args, nativeOutput: true, run }), exact5 = (a, n) => {
       if (a.length !== n) h.fail(a.length < n ? "% Incomplete command." : void 0);
-    }, integer5 = (raw, min, max) => {
+    }, integer6 = (raw, min, max) => {
       const n = Number(raw);
       if (!/^\d+$/.test(raw ?? "") || !Number.isInteger(n) || n < min || n > max) h.fail();
       return n;
@@ -13176,7 +13176,7 @@ ${end.comment}` : end.comment;
       });
       add2("interface dot11radio", (a, no) => {
         exact5(a, 1);
-        const slot = integer5(a[0], 0, 1);
+        const slot = integer6(a[0], 0, 1);
         if (no) h.fail("% A fixed physical radio interface cannot be removed.");
         h.enter("wireless-radio", { name: slot ? "5" : "2.4" });
       }, "0|1");
@@ -13215,7 +13215,7 @@ ${end.comment}` : end.comment;
       });
       add2("vlan", (a, no) => {
         exact5(a, no ? 0 : 1);
-        policy2.vlan = no ? 1 : integer5(a[0], 1, 4094);
+        policy2.vlan = no ? 1 : integer6(a[0], 1, 4094);
         h.changed();
       }, "<1-4094>");
     }
@@ -13239,7 +13239,7 @@ ${end.comment}` : end.comment;
       add2("encryption", (a, no) => {
         let index = 0, vlan4 = 1;
         if (a[index] === "vlan") {
-          vlan4 = integer5(a[++index], 1, 4094);
+          vlan4 = integer6(a[++index], 1, 4094);
           index++;
         }
         if (a.slice(index).join(" ") !== "mode ciphers aes-ccm") h.fail("% Use encryption [vlan <id>] mode ciphers aes-ccm.");
@@ -13250,14 +13250,14 @@ ${end.comment}` : end.comment;
       }, "[vlan <id>] mode ciphers aes-ccm");
       add2("channel", (a, no) => {
         exact5(a, no ? 0 : 1);
-        const n = no ? r.band === "2.4" ? 1 : 36 : integer5(a[0], 1, 165);
+        const n = no ? r.band === "2.4" ? 1 : 36 : integer6(a[0], 1, 165);
         if (!(r.band === "2.4" ? [1, 6, 11] : [36, 40, 44, 48, 149, 153, 157, 161, 165]).includes(n)) h.fail("% Channel is outside the supported band.");
         r.channel = n;
         h.changed();
       }, "<channel>");
       add2("channel width", (a, no) => {
         exact5(a, no ? 0 : 1);
-        const n = no ? 20 : integer5(a[0], 20, 80);
+        const n = no ? 20 : integer6(a[0], 20, 80);
         if (!(r.band === "2.4" ? [20] : [20, 40, 80]).includes(n)) h.fail("% Unsupported channel width.");
         r.width = n;
         h.changed();
@@ -13747,8 +13747,8 @@ ${end.comment}` : end.comment;
   }
   function parseARPBindingRule(input5, action, fail7) {
     const a = [...input5], take = () => a.shift() ?? fail7("% Incomplete command."), keyword2 = (options3) => {
-      const text3 = take().toLowerCase(), found = options3.includes(text3) ? [text3] : options3.filter((o) => o.startsWith(text3));
-      if (found.length !== 1) fail7(found.length ? '% Ambiguous command: "' + text3 + '"' : void 0);
+      const text4 = take().toLowerCase(), found = options3.includes(text4) ? [text4] : options3.filter((o) => o.startsWith(text4));
+      if (found.length !== 1) fail7(found.length ? '% Ambiguous command: "' + text4 + '"' : void 0);
       return found[0];
     }, ip2 = () => {
       const value = take();
@@ -15067,14 +15067,14 @@ ${end.comment}` : end.comment;
     stats.sent ??= {};
     stats.sent[type] = (stats.sent[type] ?? 0) + 1;
     countInterfaceTraffic(stats, "sent", local.name, type, ospfWireLength(type, data) + 20);
-    const payload = { protocol: "ospf-packets", version: node.protocol, type, endpoint: type === "hello" ? copy(local) : { ...copy(local), snapshot: void 0 }, ...copy(data) }, text3 = JSON.stringify(payload), transmit3 = (body) => engine.sendControlDatagram?.(node.deviceId, local.transportAddress ?? local.address, peer?.transportAddress ?? peer?.address ?? (local.transportAddress || local.family === 6 ? "ff02::5" : "224.0.0.5"), 89, body, { interface: local.name, vrf: local.vrf, ttl: routingConfig(d, node.protocol, node.vrf)?.ttlSecurity ? 255 : 1, protocol: node.protocol });
-    if (new TextEncoder().encode(text3).length <= 900) {
+    const payload = { protocol: "ospf-packets", version: node.protocol, type, endpoint: type === "hello" ? copy(local) : { ...copy(local), snapshot: void 0 }, ...copy(data) }, text4 = JSON.stringify(payload), transmit3 = (body) => engine.sendControlDatagram?.(node.deviceId, local.transportAddress ?? local.address, peer?.transportAddress ?? peer?.address ?? (local.transportAddress || local.family === 6 ? "ff02::5" : "224.0.0.5"), 89, body, { interface: local.name, vrf: local.vrf, ttl: routingConfig(d, node.protocol, node.vrf)?.ttlSecurity ? 255 : 1, protocol: node.protocol });
+    if (new TextEncoder().encode(text4).length <= 900) {
       transmit3(payload);
       return;
     }
     const chunks = [];
     let chunk = "", bytes3 = 0;
-    for (const character of text3) {
+    for (const character of text4) {
       const length = new TextEncoder().encode(character).length;
       if (bytes3 + length > 400) {
         chunks.push(chunk);
@@ -15774,8 +15774,8 @@ ${end.comment}` : end.comment;
   }
   function validateTunnelConfiguration(config4) {
     const object3 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-    const integer5 = (v, min, max) => typeof v === "number" && Number.isInteger(v) && v >= min && v <= max;
-    const text3 = (v) => typeof v === "string" && v.length > 0 && v.length <= 1024;
+    const integer6 = (v, min, max) => typeof v === "number" && Number.isInteger(v) && v >= min && v <= max;
+    const text4 = (v) => typeof v === "string" && v.length > 0 && v.length <= 1024;
     const ip2 = (v) => typeof v === "string" && isIPv4(v);
     const array = (v) => Array.isArray(v) && v.length <= 1024;
     function error(field3) {
@@ -15784,13 +15784,13 @@ ${end.comment}` : end.comment;
     for (const [port3, iface2] of Object.entries(config4.interfaces)) {
       if (!iface2 || !object3(iface2.features)) continue;
       const f = iface2.features, n = f.nhrp;
-      for (const field3 of ["tunnelSource", "tunnelDestination", "tunnelProtection", "tunnelVrf"]) if (f[field3] !== void 0 && !text3(f[field3])) error(port3 + " " + field3);
+      for (const field3 of ["tunnelSource", "tunnelDestination", "tunnelProtection", "tunnelVrf"]) if (f[field3] !== void 0 && !text4(f[field3])) error(port3 + " " + field3);
       if (f.tunnelDestination !== void 0 && (typeof f.tunnelDestination !== "string" || !isIPv4(f.tunnelDestination))) error(port3 + " destination");
-      if (f.tunnelKey !== void 0 && !integer5(f.tunnelKey, 0, 4294967295)) error(port3 + " key");
+      if (f.tunnelKey !== void 0 && !integer6(f.tunnelKey, 0, 4294967295)) error(port3 + " key");
       if (n === void 0) continue;
       if (!object3(n)) error(port3 + " NHRP");
       for (const [field3, max] of [["networkId", 4294967295], ["holdtime", 65535], ["registrationTimeout", 65535]])
-        if (n[field3] !== void 0 && !integer5(n[field3], 1, max)) error(port3 + " " + field3);
+        if (n[field3] !== void 0 && !integer6(n[field3], 1, max)) error(port3 + " " + field3);
       if (n.authentication !== void 0 && typeof n.authentication !== "string") error(port3 + " authentication");
       for (const field3 of ["shortcut", "redirect"]) if (n[field3] !== void 0 && typeof n[field3] !== "boolean") error(port3 + " " + field3);
       if (n.nhs !== void 0 && (!array(n.nhs) || n.nhs.some((v) => typeof v === "string" ? !ip2(v) : !object3(v) || !ip2(v.address) || v.nbma !== void 0 && !ip2(v.nbma)))) error(port3 + " NHS");
@@ -15804,14 +15804,14 @@ ${end.comment}` : end.comment;
     for (const field3 of ["profiles", "maps", "transformSets"]) if (crypto3[field3] !== void 0 && !object3(crypto3[field3])) error(field3);
     for (const [name5, profile] of Object.entries(crypto3.profiles ?? {})) {
       if (!object3(profile)) error("profile " + name5);
-      if (profile.transformSet !== void 0 && !text3(profile.transformSet)) error("transform set " + name5);
-      if (profile.pfs !== void 0 && !integer5(profile.pfs, 1, 24)) error("PFS " + name5);
-      if (profile.lifetime !== void 0 && !integer5(profile.lifetime, 1, 86400)) error("lifetime " + name5);
+      if (profile.transformSet !== void 0 && !text4(profile.transformSet)) error("transform set " + name5);
+      if (profile.pfs !== void 0 && !integer6(profile.pfs, 1, 24)) error("PFS " + name5);
+      if (profile.lifetime !== void 0 && !integer6(profile.lifetime, 1, 86400)) error("lifetime " + name5);
     }
-    for (const [name5, transform] of Object.entries(crypto3.transformSets ?? {})) if (!object3(transform) || transform.keyLength !== void 0 && (typeof transform.keyLength !== "number" || ![128, 192, 256].includes(transform.keyLength)) || transform.mode !== void 0 && transform.mode !== "tunnel" && transform.mode !== "transport" || transform.encryption !== void 0 && !text3(transform.encryption) || transform.integrity !== void 0 && !text3(transform.integrity)) error("transform " + name5);
-    for (const [name5, rules] of Object.entries(crypto3.maps ?? {})) if (!array(rules) || rules.some((v) => !object3(v) || v.transformSets !== void 0 && (!array(v.transformSets) || v.transformSets.some((n) => !text3(n))))) error("map " + name5);
+    for (const [name5, transform] of Object.entries(crypto3.transformSets ?? {})) if (!object3(transform) || transform.keyLength !== void 0 && (typeof transform.keyLength !== "number" || ![128, 192, 256].includes(transform.keyLength)) || transform.mode !== void 0 && transform.mode !== "tunnel" && transform.mode !== "transport" || transform.encryption !== void 0 && !text4(transform.encryption) || transform.integrity !== void 0 && !text4(transform.integrity)) error("transform " + name5);
+    for (const [name5, rules] of Object.entries(crypto3.maps ?? {})) if (!array(rules) || rules.some((v) => !object3(v) || v.transformSets !== void 0 && (!array(v.transformSets) || v.transformSets.some((n) => !text4(n))))) error("map " + name5);
     if (array(crypto3.isakmpKeys)) {
-      for (const key4 of crypto3.isakmpKeys) if (!object3(key4) || !text3(key4.key) || !ip2(key4.peer)) error("IKE key");
+      for (const key4 of crypto3.isakmpKeys) if (!object3(key4) || !text4(key4.key) || !ip2(key4.peer)) error("IKE key");
     }
   }
 
@@ -18671,8 +18671,8 @@ ${end.comment}` : end.comment;
       const old = d.runtime.stp;
       d.runtime.stp = {};
       if (!d.powered) continue;
-      const vlans5 = /* @__PURE__ */ new Set([1, ...Object.values(d.config.vlans).filter((v) => v.active).map((v) => v.id), ...Object.values(d.config.interfaces).filter((i) => i.switchport).flatMap((i) => [i.vlan, i.nativeVlan])]);
-      for (const vlan4 of [...vlans5].sort((a, b) => a - b)) {
+      const vlans6 = /* @__PURE__ */ new Set([1, ...Object.values(d.config.vlans).filter((v) => v.active).map((v) => v.id), ...Object.values(d.config.interfaces).filter((i) => i.switchport).flatMap((i) => [i.vlan, i.nativeVlan])]);
+      for (const vlan4 of [...vlans6].sort((a, b) => a - b)) {
         if (!vlanActive(d, vlan4)) continue;
         const localPorts = stpInterfaces(d).map((iface2) => ({ device: d, iface: iface2, name: iface2.name })).filter((p) => stpCarries(p, vlan4));
         const valid2 = (p) => {
@@ -18810,7 +18810,7 @@ ${end.comment}` : end.comment;
   function sendStp(engine, s) {
     const d = engine.getDevice(s.deviceId), iface2 = d?.config.interfaces[s.port];
     if (!d || !iface2 || !engine.interfaceUp(d.id, s.port) || iface2.features.bpdufilter) return;
-    const now = engine.clock.now(), vlans5 = [];
+    const now = engine.clock.now(), vlans6 = [];
     const window2 = Math.floor(now / 1e3);
     if (s.window !== window2) {
       s.window = window2;
@@ -18834,13 +18834,13 @@ ${end.comment}` : end.comment;
       if (s.sent.get(vlan4) === sig && now - (s.lastSent.get(vlan4) ?? -Infinity) < tree.helloTime) continue;
       s.sent.set(vlan4, sig);
       s.lastSent.set(vlan4, now);
-      vlans5.push(body);
+      vlans6.push(body);
     }
-    if (vlans5.length) {
+    if (vlans6.length) {
       s.sentCount = (s.sentCount ?? 0) + 1;
       const counters = (d.runtime.features.stpCounters ??= {})[s.port] ??= { sent: 0, received: 0 };
       counters.sent++;
-      engine.sendLinkControl?.(d.id, stpMembers(d, s.port).find((name5) => engine.interfaceUp(d.id, name5)), { kind: "link-control", protocol: "STP", body: { deviceId: d.id, port: s.port, vlans: vlans5 } });
+      engine.sendLinkControl?.(d.id, stpMembers(d, s.port).find((name5) => engine.interfaceUp(d.id, name5)), { kind: "link-control", protocol: "STP", body: { deviceId: d.id, port: s.port, vlans: vlans6 } });
     }
   }
   function synchronizeStpHeartbeats(engine) {
@@ -22401,40 +22401,40 @@ ${end.comment}` : end.comment;
   }
   var RENDERED_DEFAULTS = /^(version \d+\.\d+(?:\.\d+)?|boot-start-marker|boot-end-marker|(no )?mmi .*|ip forward-protocol nd|(no )?ipv6 cef|multilink bundle-name authenticated|no scheduler allocate|vlan internal allocation policy ascending|spanning-tree extend system-id)$/;
   function isRenderedDefaultLine(device2, line2, parentHead) {
-    const text3 = line2.trim(), c = device2.config, f = c.features;
+    const text4 = line2.trim(), c = device2.config, f = c.features;
     if (!parentHead) {
-      if (RENDERED_DEFAULTS.test(text3)) return true;
-      if (text3 === "no service password-encryption") return !f.passwordEncryption;
-      if (text3 === "no aaa new-model") return !f.aaa?.enabled;
-      if (text3 === "ip cef") return f.cef !== false;
-      if (text3 === "no ip http server") return !c.services.http?.enabled;
-      if (text3 === "no ip http secure-server") return !c.services.http?.secureEnabled;
-      if (text3 === "spanning-tree mode rapid-pvst") return f.stp === void 0;
+      if (RENDERED_DEFAULTS.test(text4)) return true;
+      if (text4 === "no service password-encryption") return !f.passwordEncryption;
+      if (text4 === "no aaa new-model") return !f.aaa?.enabled;
+      if (text4 === "ip cef") return f.cef !== false;
+      if (text4 === "no ip http server") return !c.services.http?.enabled;
+      if (text4 === "no ip http secure-server") return !c.services.http?.secureEnabled;
+      if (text4 === "spanning-tree mode rapid-pvst") return f.stp === void 0;
       return false;
     }
     const head = parentHead.trim();
     if (head.startsWith("interface ")) {
       const port3 = c.interfaces[head.slice(10).trim()];
       if (!port3) return false;
-      if (text3 === "duplex auto") return port3.duplex === "auto";
-      if (text3 === "speed auto") return speedIsAuto(port3);
-      if (text3 === "media-type rj45") return port3.features.mediaType === void 0;
-      if (text3 === "no ip address") return !port3.ip && !port3.features.dhcp;
+      if (text4 === "duplex auto") return port3.duplex === "auto";
+      if (text4 === "speed auto") return speedIsAuto(port3);
+      if (text4 === "media-type rj45") return port3.features.mediaType === void 0;
+      if (text4 === "no ip address") return !port3.ip && !port3.features.dhcp;
       return false;
     }
     const lineMatch = /^line (con(?:sole)?|vty) (\d+)(?: (\d+))?$/.exec(head);
     if (lineMatch) {
       const name5 = lineMatch[1].startsWith("con") ? "console 0" : `vty ${lineMatch[2]}${lineMatch[3] && lineMatch[3] !== lineMatch[2] ? " " + lineMatch[3] : ""}`, entry = f.lines?.[name5];
-      if (text3 === "no login") return entry?.login === void 0;
-      if (text3 === "transport input none" && name5.startsWith("vty")) return entry?.transport === void 0;
+      if (text4 === "no login") return entry?.login === void 0;
+      if (text4 === "transport input none" && name5.startsWith("vty")) return entry?.transport === void 0;
     }
     return false;
   }
   function isRenderedDefaultBlock(device2, head, children) {
-    const text3 = head.trim(), rows2 = children.map((line2) => line2.trim()).filter(Boolean);
-    if (/^line aux 0$/.test(text3)) return true;
-    if (!rows2.length && /^(line con(sole)? 0|control-plane|redundancy)$/.test(text3)) return true;
-    const vty = /^line vty (\d+) (\d+)$/.exec(text3);
+    const text4 = head.trim(), rows2 = children.map((line2) => line2.trim()).filter(Boolean);
+    if (/^line aux 0$/.test(text4)) return true;
+    if (!rows2.length && /^(line con(sole)? 0|control-plane|redundancy)$/.test(text4)) return true;
+    const vty = /^line vty (\d+) (\d+)$/.exec(text4);
     if (vty && !device2.config.features.lines?.[`vty ${vty[1]} ${vty[2]}`]) return rows2.every((row5) => row5 === "login" || row5 === "transport input none") && rows2.includes("transport input none");
     return false;
   }
@@ -22975,7 +22975,7 @@ ${end.comment}` : end.comment;
     for (const [name5, address2] of Object.entries(c.services.dns?.records || {})) lines2.push(`ip host ${name5} ${address2}`);
     lines2.push(...platformGlobal.filter((line2) => !line2.startsWith("boot system ") && !line2.startsWith("ip http ")), "!");
     if (router || c.features.controlPlanePolicyIn) lines2.push("control-plane", ...c.features.controlPlanePolicyIn ? [` service-policy input ${c.features.controlPlanePolicyIn}`] : [], "!");
-    for (const [kind, text3] of Object.entries(c.features.banners || {})) lines2.push(`banner ${kind} ^C${text3}^C`);
+    for (const [kind, text4] of Object.entries(c.features.banners || {})) lines2.push(`banner ${kind} ^C${text4}^C`);
     lines2.push("!");
     lines2.push(...renderLineBlocks(c, device2.kind));
     lines2.push("!");
@@ -23004,7 +23004,7 @@ ${end.comment}` : end.comment;
   function fileSystemStats(device2) {
     const configured = device2.config.features.fileSystem?.capacityBytes;
     const capacity = Number.isSafeInteger(configured) && configured >= 0 ? configured : 16 * 1024 * 1024;
-    const used = Object.values(device2.config.features.files || {}).reduce((sum, text3) => sum + new TextEncoder().encode(text3).byteLength, 0);
+    const used = Object.values(device2.config.features.files || {}).reduce((sum, text4) => sum + new TextEncoder().encode(text4).byteLength, 0);
     return { capacity, used, free: Math.max(0, capacity - used) };
   }
   function writeFlashFile(device2, name5, content) {
@@ -25192,16 +25192,16 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     reply(session, output = []) {
       return { sessionId: session.id, output, prompt: session.phase === "username" ? "Username:" : session.phase === "password" ? "Password:" : session.cli.prompt, passwordInput: session.phase === "password" || session.cli.passwordInput, pageLength: session.cli.pageLength, pageWidth: session.cli.pageWidth, editing: session.cli.editing, history: session.cli.commandHistory, timestamp: session.cli.commandTimestamp, closed: false };
     }
-    authenticateSession(session, device2, text3) {
+    authenticateSession(session, device2, text4) {
       if (session.phase === "username") {
-        session.username = text3.trim();
+        session.username = text4.trim();
         session.phase = "password";
         return this.reply(session);
       }
       const line2 = device2.config.features.lines[session.line];
       const user = ownRecordValue(device2.config.features.users, session.username), expected = accountCredential(user);
-      const remote = session.method === "aaa" ? this.authenticate(device2.id, line2.authentication || "default", session.username || "", text3, "login", session.line) : void 0;
-      const valid2 = remote ? remote.accepted : session.method === "local" ? expected !== void 0 && expected === text3 : typeof line2.password === "string" && line2.password.length > 0 && line2.password === text3;
+      const remote = session.method === "aaa" ? this.authenticate(device2.id, line2.authentication || "default", session.username || "", text4, "login", session.line) : void 0;
+      const valid2 = remote ? remote.accepted : session.method === "local" ? expected !== void 0 && expected === text4 : typeof line2.password === "string" && line2.password.length > 0 && line2.password === text4;
       if (valid2) {
         const authorization = this.execPrivilege(device2.id, session.line, session.username, true, remote?.privilege ?? user?.privilege ?? line2.privilege ?? 1, remote);
         if (!authorization.accepted) {
@@ -25301,10 +25301,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       session.lastActivity = this.engine.clock.now();
       session.expires = this.engine.clock.now() + (line2.execTimeout === 0 ? Number.MAX_SAFE_INTEGER : (line2.execTimeout ?? 600) * 1e3);
       if (session.phase === "ready") this.scheduleExpiry(session);
-      const text3 = String(payload.line ?? "");
-      if (session.phase !== "ready") return this.authenticateSession(session, d, text3);
-      const execExit = !session.cli.remoteConnected && !session.cli.passwordInput && /^(exit|logout)$/i.test(text3.trim()) && ["user", "priv"].includes(session.cli.mode);
-      const output = session.cli.execute(text3);
+      const text4 = String(payload.line ?? "");
+      if (session.phase !== "ready") return this.authenticateSession(session, d, text4);
+      const execExit = !session.cli.remoteConnected && !session.cli.passwordInput && /^(exit|logout)$/i.test(text4.trim()) && ["user", "priv"].includes(session.cli.mode);
+      const output = session.cli.execute(text4);
       if (execExit) {
         this.close(session, "logout");
         return { closed: true, output: ["Connection closed."] };
@@ -25382,10 +25382,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
 
   // src/ios-system-show.ts
   var SWITCH_KINDS = ["switch", "poeswitch", "l3switch"];
-  var hash = (text3) => {
+  var hash = (text4) => {
     let h = 2166136261;
-    for (let i = 0; i < text3.length; i++) {
-      h ^= text3.charCodeAt(i);
+    for (let i = 0; i < text4.length; i++) {
+      h ^= text4.charCodeAt(i);
       h = Math.imul(h, 16777619) >>> 0;
     }
     return h >>> 0;
@@ -25552,8 +25552,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!scheduled) return ["No reload is scheduled."];
     const at = iosClock(device2, scheduled.due)[0].replace(/^[*.]/, "").replace(/\.\d{3} /, " ");
     const remaining2 = Math.max(0, Math.ceil((scheduled.due - now) / 1e3)), minutes = Math.floor(remaining2 / 60), seconds4 = remaining2 % 60;
-    const text3 = minutes && seconds4 ? `${plural(minutes, "minute")} and ${plural(seconds4, "second")}` : minutes ? plural(minutes, "minute") : plural(seconds4, "second");
-    return [`Reload scheduled for ${at} (in ${text3}) by console`, `Reload reason: ${scheduled.reason}`];
+    const text4 = minutes && seconds4 ? `${plural(minutes, "minute")} and ${plural(seconds4, "second")}` : minutes ? plural(minutes, "minute") : plural(seconds4, "second");
+    return [`Reload scheduled for ${at} (in ${text4}) by console`, `Reload reason: ${scheduled.reason}`];
   }
   function base64(bytes3) {
     const table2 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -26050,15 +26050,15 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!debug?.flags?.length) return;
     const conditions = debug.conditions || [];
     if (conditions.length && !conditions.some((condition) => condition.type === "interface" ? event4.port === condition.value : event4.packet?.source === condition.value || event4.packet?.destination === condition.value)) return;
-    const text3 = [event4.protocol, event4.label, event4.detail, event4.packet?.messageType].join(" ").toLowerCase();
+    const text4 = [event4.protocol, event4.label, event4.detail, event4.packet?.messageType].join(" ").toLowerCase();
     const matches2 = (flag) => {
       if (flag === "all") return true;
       if (flag.startsWith("ip packet")) return event4.packet?.ipVersion === 4;
       const protocol = flag.startsWith("spanning-tree") ? "stp" : flag.startsWith("event manager") ? "eem" : flag.startsWith("crypto isakmp") ? "ike" : flag.startsWith("crypto ipsec") ? "ipsec" : flag.replace(/^(ip|ipv6) /, "").split(" ")[0];
-      if (protocol === "nd") return /ndp|neighbor (solicitation|advertisement)|icmpv6.*(neighbor|router)/.test(text3);
-      if (!text3.includes(protocol) && !(protocol === "standby" && text3.includes("hsrp"))) return false;
-      if (/ (hello|keepalives)$/.test(flag)) return /hello|keepalive/.test(text3);
-      if (/ updates?$/.test(flag)) return /update|advertis/.test(text3);
+      if (protocol === "nd") return /ndp|neighbor (solicitation|advertisement)|icmpv6.*(neighbor|router)/.test(text4);
+      if (!text4.includes(protocol) && !(protocol === "standby" && text4.includes("hsrp"))) return false;
+      if (/ (hello|keepalives)$/.test(flag)) return /hello|keepalive/.test(text4);
+      if (/ updates?$/.test(flag)) return /update|advertis/.test(text4);
       return true;
     };
     if (!debug.flags.some(matches2)) return;
@@ -26140,16 +26140,16 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
     return out;
   }
-  var fnv = (text3, seed) => {
+  var fnv = (text4, seed) => {
     let h = (2166136261 ^ seed) >>> 0;
-    for (const ch of text3) {
+    for (const ch of text4) {
       h ^= ch.charCodeAt(0);
       h = Math.imul(h, 16777619) >>> 0;
     }
     return h;
   };
-  var digest = (text3) => [0, 1, 2, 3].flatMap((i) => {
-    const h = fnv(text3, i * 2654435769);
+  var digest = (text4) => [0, 1, 2, 3].flatMap((i) => {
+    const h = fnv(text4, i * 2654435769);
     return [h >>> 24, h >>> 16 & 255, h >>> 8 & 255, h & 255];
   });
   function formatIOSL2Show(e, d, topic, input5) {
@@ -26271,11 +26271,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
   function spanningTree2(e, d, a) {
     const stp = d.config.features.stp ?? {};
-    let vlans5, vlanText = "", port3, view = "tree";
+    let vlans6, vlanText = "", port3, view = "tree";
     while (a.length) {
       const key4 = word(a.shift(), ["active", "backbonefast", "blockedports", "bridge", "detail", "inconsistentports", "interface", "mst", "pathcost", "root", "summary", "uplinkfast", "vlan"]);
       if (key4 === "mst") {
-        if (vlans5 || port3 || view !== "tree") bad();
+        if (vlans6 || port3 || view !== "tree") bad();
         return mstShow(e, d, a);
       }
       if (key4 === "pathcost") {
@@ -26297,9 +26297,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return ["UplinkFast is enabled", "", "Station update rate set to 150 packets/sec.", "", "UplinkFast statistics", "-----------------------", "Number of transitions via uplinkFast (all VLANs)            : 0", "Number of proxy multicast addresses transmitted (all VLANs) : 0", "", "Name                 Interface List", "-------------------- ------------------------------------", ...rows2];
       }
       if (key4 === "vlan") {
-        if (vlans5) bad();
+        if (vlans6) bad();
         vlanText = a[0] ?? "";
-        vlans5 = vlanList(a.shift());
+        vlans6 = vlanList(a.shift());
       } else if (key4 === "interface") {
         if (port3) bad();
         port3 = takePort(d, a);
@@ -26316,7 +26316,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }
     }
     let list2 = instances(d);
-    if (vlans5) list2 = list2.filter((i) => i.vlans.some((v) => vlans5.includes(v)));
+    if (vlans6) list2 = list2.filter((i) => i.vlans.some((v) => vlans6.includes(v)));
     const logical = port3 ? stpPortName(d, port3.name) : void 0;
     if (view === "summary" || view === "totals") return stpSummary(d, list2, view === "totals");
     if (view === "blockedports" || view === "inconsistentports") {
@@ -26324,7 +26324,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const count = rows2.reduce((n, r) => n + r.names.length, 0);
       return blocked ? ["", "Name                 Blocked Interfaces List", "-------------------- ------------------------------------", ...rows2.map((r) => r.i.label.padEnd(20) + " " + r.names.map(([n]) => short(n)).join(", ")), "", `Number of blocked ports (segments) in the system : ${count}`] : ["", "Name                 Interface                Inconsistency", "-------------------- ------------------------ ------------------", ...rows2.flatMap((r) => r.names.map(([n, s]) => r.i.label.padEnd(20) + " " + n.padEnd(24) + " " + (s.role === "root-inconsistent" ? "Root Inconsistent" : "Loop Inconsistent"))), "", `Number of inconsistent ports (segments) in the system : ${count}`];
     }
-    if (vlans5 && !list2.length) return [`Spanning tree instance(s) for vlan ${vlanText} does not exist.`];
+    if (vlans6 && !list2.length) return [`Spanning tree instance(s) for vlan ${vlanText} does not exist.`];
     if (logical) {
       list2 = list2.filter((i) => i.ports.some(([n]) => n === logical));
       if (!list2.length) return [`no spanning tree info available for ${port3.name}`];
@@ -26442,9 +26442,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
     let ids, port3, detail = false;
     if (/^\d/.test(a[0] ?? "")) {
-      const text3 = a.shift();
+      const text4 = a.shift();
       ids = [];
-      for (const part of text3.split(",")) {
+      for (const part of text4.split(",")) {
         const r = /^(\d+)(?:-(\d+))?$/.exec(part);
         if (!r) bad();
         const lo = num(r[1], 0, 4094), hi = num(r[2] ?? r[1], 0, 4094);
@@ -26535,10 +26535,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       view = found[0];
       a.shift();
       if (view === "id") {
-        const text3 = a[0] ?? "";
+        const text4 = a[0] ?? "";
         const ids = vlanList(a.shift());
         filter = (v) => ids.includes(v.id);
-        missingText = `VLAN id ${text3} not found in current VLAN database`;
+        missingText = `VLAN id ${text4} not found in current VLAN database`;
       }
       if (view === "name") {
         const name5 = a.shift() ?? missing();
@@ -26866,7 +26866,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   function vtp(e, d, a) {
     const cfg = d.config.features.vtp;
     if (!a.length || !cfg) return void 0;
-    const kind = word(a.shift(), ["counters", "devices", "interface", "password", "status", "conflicts"]), version2 = Number(cfg.version ?? 1), label = (text3, width) => text3.padEnd(width) + ": ";
+    const kind = word(a.shift(), ["counters", "devices", "interface", "password", "status", "conflicts"]), version2 = Number(cfg.version ?? 1), label = (text4, width) => text4.padEnd(width) + ": ";
     if (kind === "interface") {
       const selected2 = a.length ? [takePort(d, a)] : ports(d).filter((p) => !/^Port-channel/i.test(p.name));
       exact3(a);
@@ -26885,13 +26885,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const msgs = Object.entries(d.runtime.features.switchingMessages ?? {}).filter(([, r]) => r.VTP), sum = (f) => msgs.reduce((n, [, r]) => n + Number(r.VTP[f] ?? 0), 0), trunks = ports(d).filter((p) => !channelOf(d, p) && d.runtime.features.trunks?.[p.name]?.operational);
       return ["VTP statistics:", label("Summary advertisements received", 35) + Math.max(0, sum("received") - sum("errors")), label("Subset advertisements received", 35) + (d.runtime.features.vtpSyncCount ?? 0), label("Request advertisements received", 35) + 0, label("Summary advertisements transmitted", 35) + sum("sent"), label("Subset advertisements transmitted", 35) + 0, label("Request advertisements transmitted", 35) + 0, label("Number of config revision errors", 35) + 0, label("Number of config digest errors", 35) + sum("errors"), label("Number of V1 summary errors", 35) + 0, "", "", "VTP pruning statistics:", "", "Trunk            Join Transmitted Join Received    Summary advts received from", "                                                   non-pruning-capable device", "---------------- ---------------- ---------------- ---------------------------", ...trunks.map((p) => short(p.name).padEnd(20) + "0".padEnd(17) + "0".padEnd(17) + "0")];
     }
-    const vlans5 = vlanRecords(d), sync = [d.runtime.features.vtpLastSync, d.runtime.features.vtpLastModified].filter(Boolean).sort((x, y) => y.at - x.at)[0], origin2 = sync ? sync.hostname === d.config.hostname ? d : e.lab.devices.find((x) => x.config.hostname === sync.hostname) : void 0, local = ipOf(d), mode = MODE_LABEL[cfg.mode] ?? "Server";
-    const bytes3 = digest(JSON.stringify([cfg.domain ?? "", cfg.password ?? "", cfg.revision ?? 0, vlans5.filter((v) => v.id <= 1005).map((v) => [v.id, v.name, v.status])])), hex2 = bytes3.map((b) => "0x" + b.toString(16).toUpperCase().padStart(2, "0"));
+    const vlans6 = vlanRecords(d), sync = [d.runtime.features.vtpLastSync, d.runtime.features.vtpLastModified].filter(Boolean).sort((x, y) => y.at - x.at)[0], origin2 = sync ? sync.hostname === d.config.hostname ? d : e.lab.devices.find((x) => x.config.hostname === sync.hostname) : void 0, local = ipOf(d), mode = MODE_LABEL[cfg.mode] ?? "Server";
+    const bytes3 = digest(JSON.stringify([cfg.domain ?? "", cfg.password ?? "", cfg.revision ?? 0, vlans6.filter((v) => v.id <= 1005).map((v) => [v.id, v.name, v.status])])), hex2 = bytes3.map((b) => "0x" + b.toString(16).toUpperCase().padStart(2, "0"));
     const md5 = [label("MD5 digest", 34) + hex2.slice(0, 8).join(" ") + " ", " ".repeat(36) + hex2.slice(8).join(" ") + " "];
     const head = [label("VTP Version capable", 32) + "1 to 3", label("VTP version running", 32) + version2, label("VTP Domain Name", 32) + (cfg.domain ?? ""), label("VTP Pruning Mode", 32) + (cfg.pruning ? "Enabled" : "Disabled"), label("VTP Traps Generation", 32) + "Disabled", label("Device ID", 32) + dotted(bridgeMac(d))];
-    if (version2 === 3) return [...head, "", "Feature VLAN:", "--------------", label("VTP Operating Mode", 34) + mode, label("Number of existing VLANs", 34) + vlans5.filter((v) => v.id <= 1005).length, label("Number of existing extended VLANs", 34) + vlans5.filter((v) => v.id > 1005).length, label("Maximum VLANs supported locally", 34) + 4096, label("Configuration Revision", 34) + (cfg.revision ?? 0), label("Primary ID", 34) + "0000.0000.0000", label("Primary Description", 34), ...md5, "", "", "Feature MST:", "--------------", label("VTP Operating Mode", 34) + "Transparent", "", "", "Feature UNKNOWN:", "--------------", label("VTP Operating Mode", 34) + "Transparent", ""];
+    if (version2 === 3) return [...head, "", "Feature VLAN:", "--------------", label("VTP Operating Mode", 34) + mode, label("Number of existing VLANs", 34) + vlans6.filter((v) => v.id <= 1005).length, label("Number of existing extended VLANs", 34) + vlans6.filter((v) => v.id > 1005).length, label("Maximum VLANs supported locally", 34) + 4096, label("Configuration Revision", 34) + (cfg.revision ?? 0), label("Primary ID", 34) + "0000.0000.0000", label("Primary Description", 34), ...md5, "", "", "Feature MST:", "--------------", label("VTP Operating Mode", 34) + "Transparent", "", "", "Feature UNKNOWN:", "--------------", label("VTP Operating Mode", 34) + "Transparent", ""];
     const originIp = origin2 ? ipOf(origin2)?.ip ?? "0.0.0.0" : "0.0.0.0";
-    return [...head, `Configuration last modified by ${originIp} at ${sync ? vtpTime(wall(d, sync.at)) : "0-0-00 00:00:00"}`, ...cfg.mode === "server" ? [local ? `Local updater ID is ${local.ip} on interface ${short(local.name).replace(/^Vlan/i, "Vl")} (lowest numbered VLAN interface found)` : "Local updater ID is 0.0.0.0 (no valid interface found)"] : [], "", "Feature VLAN:", "--------------", label("VTP Operating Mode", 34) + mode, label("Maximum VLANs supported locally", 34) + 1005, label("Number of existing VLANs", 34) + vlans5.length, label("Configuration Revision", 34) + (cfg.revision ?? 0), ...md5];
+    return [...head, `Configuration last modified by ${originIp} at ${sync ? vtpTime(wall(d, sync.at)) : "0-0-00 00:00:00"}`, ...cfg.mode === "server" ? [local ? `Local updater ID is ${local.ip} on interface ${short(local.name).replace(/^Vlan/i, "Vl")} (lowest numbered VLAN interface found)` : "Local updater ID is 0.0.0.0 (no valid interface found)"] : [], "", "Feature VLAN:", "--------------", label("VTP Operating Mode", 34) + mode, label("Maximum VLANs supported locally", 34) + 1005, label("Number of existing VLANs", 34) + vlans6.length, label("Configuration Revision", 34) + (cfg.revision ?? 0), ...md5];
   }
   var dtpAdmin = (p) => p.features.nonegotiate ? "NONEGOTIATE" : { trunk: "ON", access: "OFF", "dynamic-auto": "AUTO", "dynamic-desirable": "DESIRABLE" }[p.mode] ?? "AUTO";
   function dtp(e, d, a) {
@@ -26901,7 +26901,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const selected2 = a.length ? [takePort(d, a)] : candidates;
     exact3(a);
     if (selected2.some((p) => !p.switchport)) bad();
-    const now = e.clock.now(), line2 = (text3, value) => "  " + text3.padEnd(42) + value;
+    const now = e.clock.now(), line2 = (text4, value) => "  " + text4.padEnd(42) + value;
     return selected2.flatMap((p) => {
       const c = channelOf(d, p), logical = c?.po ? c.po.name : p.name, on2 = !!d.runtime.features.trunks?.[logical]?.operational, state4 = on2 ? "TRUNK" : "ACCESS", up = e.interfaceUp(d.id, p.name), enabled4 = !p.features.nonegotiate, peer = switchingPeer(e, d.id, p.name, "DTP"), other = peer ? e.getDevice(peer.deviceId) : void 0, nbr = (peer ? String(e.macOf(peer.deviceId, peer.port) ?? "") : "").replace(/[^0-9a-f]/gi, "").toUpperCase().padStart(12, "0"), stats = d.runtime.features.switchingMessages?.[p.name]?.DTP ?? { sent: 0, received: 0, errors: 0 }, good = Math.max(0, Number(stats.received) - Number(stats.errors)), boot = Number(d.runtime.features.bootTime ?? 0), t = wall(d, boot), days2 = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], months2 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       return [`DTP information for ${p.name}:`, line2("TOS/TAS/TNS:", `${state4}/${dtpAdmin(p)}/${state4}`), line2("TOT/TAT/TNT:", on2 ? "802.1Q/802.1Q/802.1Q" : "NATIVE/802.1Q/NATIVE"), line2("Neighbor address 1:", nbr), line2("Neighbor address 2:", "000000000000"), line2("Hello timer expiration (sec/state):", up && enabled4 ? `${30 - Math.floor(now / 1e3) % 30}/RUNNING` : "never/STOPPED"), line2("Access timer expiration (sec/state):", peer && up && enabled4 ? `${Math.max(0, Math.ceil((peer.expires - now) / 1e3))}/RUNNING` : "never/STOPPED"), line2("Negotiation timer expiration (sec/state):", "never/STOPPED"), line2("Multidrop timer expiration (sec/state):", "never/STOPPED"), line2("FSM state:", !up || !enabled4 ? "S1:OFF" : on2 ? "S6:TRUNK" : "S2:ACCESS"), line2("# times multi & trunk", 0), line2("Enabled:", enabled4 ? "yes" : "no"), line2("In STP:", Object.values(d.runtime.stp).some((tree) => tree.ports[stpPortName(d, p.name)]) ? "yes" : "no"), "", "  Statistics", "  ----------", `  ${stats.received} packets received (${good} good)`, `  ${stats.errors} packets dropped`, `      0 nonegotiate, 0 bad version, ${stats.errors} domain mismatches,`, "      0 bad TLVs, 0 bad TAS, 0 bad TAT, 0 bad TOT, 0 other", `  ${stats.sent} packets output (${stats.sent} good)`, `      ${stats.sent} native, 0 software encap isl, 0 isl hardware native`, "  0 output errors", "  0 trunk timeouts", up ? `  1 link ups, last link up on ${days2[t.getUTCDay()]} ${months2[t.getUTCMonth()]} ${pad2(t.getUTCDate())} ${t.getUTCFullYear()}, ${hms(t.getUTCHours() * 36e5 + t.getUTCMinutes() * 6e4 + t.getUTCSeconds() * 1e3)}` : "  0 link ups", "  0 link downs", ""];
@@ -27068,9 +27068,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const weeks = Math.floor(days2 / 7);
     return weeks < 52 ? `${weeks}w${days2 % 7}d` : `${Math.floor(weeks / 52)}y${weeks % 52}w`;
   }
-  function fold16(text3) {
+  function fold16(text4) {
     let h = 2166136261;
-    for (const c of text3) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+    for (const c of text4) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
     return (h >>> 16 ^ h) & 65535 || 7467;
   }
   var hex = (value, digits) => value.toString(16).toUpperCase().padStart(digits, "0");
@@ -27102,8 +27102,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     return lines2;
   }
   var areaKey = (area) => {
-    const text3 = String(area ?? 0);
-    return text3.includes(".") && isIPv4(text3) ? String(ipToInt(text3)) : String(Number(text3));
+    const text4 = String(area ?? 0);
+    return text4.includes(".") && isIPv4(text4) ? String(ipToInt(text4)) : String(Number(text4));
   };
   function areaConfig(config4, key4) {
     for (const [id2, value] of Object.entries(config4?.areas ?? {})) if (areaKey(id2) === key4) return value;
@@ -28950,16 +28950,16 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     only(a);
     const describe = (c, policy2, port3, dir) => {
       const key4 = policy2 + ":" + c.name + ":" + port3 + ":" + dir, stats = port3 ? d.runtime.features.qosCounters?.[key4] : void 0, p = c.police;
-      const text3 = [`    Class-map: ${c.name} (match-${f.classMaps?.[c.name]?.match ?? "any"})`];
-      if (port3) text3.push(`      ${stats?.matched ?? 0} packets, ${stats?.bytes ?? 0} bytes`, `      Transmitted ${stats?.transmitted ?? 0}, dropped ${stats?.dropped ?? 0}`);
-      if (c.drop) text3.push("      Drop all packets");
-      if (c.dscp !== void 0) text3.push("      QoS Set: dscp " + c.dscp);
+      const text4 = [`    Class-map: ${c.name} (match-${f.classMaps?.[c.name]?.match ?? "any"})`];
+      if (port3) text4.push(`      ${stats?.matched ?? 0} packets, ${stats?.bytes ?? 0} bytes`, `      Transmitted ${stats?.transmitted ?? 0}, dropped ${stats?.dropped ?? 0}`);
+      if (c.drop) text4.push("      Drop all packets");
+      if (c.dscp !== void 0) text4.push("      QoS Set: dscp " + c.dscp);
       if (p) {
         const burst = p.burst ?? Math.max(1500, Math.round(p.rate / 32)), threeColor = p.threeColor === true || p.violate !== void 0 || p.excessBurst !== void 0;
-        text3.push(`      police: cir ${p.rate} bps, bc ${burst} bytes${threeColor ? ", be " + (p.excessBurst ?? burst) + " bytes" : ""}`);
+        text4.push(`      police: cir ${p.rate} bps, bc ${burst} bytes${threeColor ? ", be " + (p.excessBurst ?? burst) + " bytes" : ""}`);
         for (const color of ["conform", "exceed", ...threeColor ? ["violate"] : []]) {
           const action = p[color] ?? { kind: color === "conform" ? "transmit" : "drop" }, tally = stats?.colors?.[color];
-          text3.push(`        ${color === "conform" ? "conformed" : color === "exceed" ? "exceeded" : "violated"}${port3 ? " " + (tally?.packets ?? 0) + " packets, " + (tally?.bytes ?? 0) + " bytes" : ""}; action ${action.kind === "set-dscp" ? "set-dscp-transmit " + action.value : action.kind === "set-precedence" ? "set-prec-transmit " + action.value : action.kind}`);
+          text4.push(`        ${color === "conform" ? "conformed" : color === "exceed" ? "exceeded" : "violated"}${port3 ? " " + (tally?.packets ?? 0) + " packets, " + (tally?.bytes ?? 0) + " bytes" : ""}; action ${action.kind === "set-dscp" ? "set-dscp-transmit " + action.value : action.kind === "set-precedence" ? "set-prec-transmit " + action.value : action.kind}`);
         }
       }
       const queueing = [];
@@ -28970,22 +28970,22 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (c.randomDetect) queueing.push(...renderWred(c.randomDetect));
       if (c.queueLimit !== void 0) queueing.push("queue-limit " + c.queueLimit + " packets");
       if (queueing.length) {
-        text3.push("      Queueing: " + queueing.join(", "));
+        text4.push("      Queueing: " + queueing.join(", "));
         const queue = port3 ? d.runtime.features.qosQueues?.[key4] : void 0, error = schedulingError(f.policyMaps?.[policy2], port3, dir, void 0, catalystQueueProfile(d), d.kind === "router");
-        if (error) text3.push("      Unsupported: " + error);
-        else if (port3) text3.push(`      (queue depth/total drops) ${queue?.depth ?? 0}/${queue?.dropped ?? 0}`, `      Packets enqueued ${queue?.queued ?? 0}, dequeued ${queue?.dequeued ?? 0}, peak depth ${queue?.peakDepth ?? 0}`, `      Priority bandwidth exceed drops ${queue?.priorityDropped ?? 0}`, `      Bytes dequeued ${queue?.bytesSent ?? 0}`);
-        if (!error && c.fairQueue) text3.push("      Flow queues: 16", ...entries3(queue?.flows).map(([bucket, v]) => `        Flow ${bucket}: depth ${v.depth}, dequeued ${v.dequeued}, bytes ${v.bytesSent}, drops ${v.dropped}`));
+        if (error) text4.push("      Unsupported: " + error);
+        else if (port3) text4.push(`      (queue depth/total drops) ${queue?.depth ?? 0}/${queue?.dropped ?? 0}`, `      Packets enqueued ${queue?.queued ?? 0}, dequeued ${queue?.dequeued ?? 0}, peak depth ${queue?.peakDepth ?? 0}`, `      Priority bandwidth exceed drops ${queue?.priorityDropped ?? 0}`, `      Bytes dequeued ${queue?.bytesSent ?? 0}`);
+        if (!error && c.fairQueue) text4.push("      Flow queues: 16", ...entries3(queue?.flows).map(([bucket, v]) => `        Flow ${bucket}: depth ${v.depth}, dequeued ${v.dequeued}, bytes ${v.bytesSent}, drops ${v.dropped}`));
         if (!error && c.randomDetect) {
           const config4 = wredConfiguration(c.randomDetect), limit = c.queueLimit ?? (c.fairQueue ? 16 : 64);
-          text3.push(`      Exponential weight: ${config4.exponent ?? 6}; mean queue depth ${(queue?.averageDepth ?? 0).toFixed(3)} packets`, ...config4.ecn ? ["      Explicit congestion notification enabled"] : [], line(["      " + config4.mode, "Transmitted", "Random drop", "Maximum drop", "Tail drop", "ECN mark", "Min", "Max", "Mark probability"], [18, 18, 18, 18, 18, 18, 8, 8]));
+          text4.push(`      Exponential weight: ${config4.exponent ?? 6}; mean queue depth ${(queue?.averageDepth ?? 0).toFixed(3)} packets`, ...config4.ecn ? ["      Explicit congestion notification enabled"] : [], line(["      " + config4.mode, "Transmitted", "Random drop", "Maximum drop", "Tail drop", "ECN mark", "Min", "Max", "Mark probability"], [18, 18, 18, 18, 18, 18, 8, 8]));
           const keys3 = config4.mode === "precedence" ? Array.from({ length: 8 }, (_, n) => n) : [...new Set([...Object.keys(config4.curves ?? {}), ...Object.keys(queue?.wredCurves ?? {})].map(Number))].sort((a2, b) => a2 - b);
           for (const key5 of keys3) {
             const v = queue?.wredCurves?.[key5] ?? {}, curve = wredCurve(config4, key5, limit);
-            text3.push(line(["      " + key5, `${v.transmittedPackets ?? 0}/${v.transmittedBytes ?? 0}`, `${v.randomDropped ?? 0}/${v.randomDroppedBytes ?? 0}`, `${v.maximumDropped ?? 0}/${v.maximumDroppedBytes ?? 0}`, `${v.tailDropped ?? 0}/${v.tailDroppedBytes ?? 0}`, `${v.marked ?? 0}/${v.markedBytes ?? 0}`, curve.min, curve.max, "1/" + curve.denominator], [18, 18, 18, 18, 18, 18, 8, 8]));
+            text4.push(line(["      " + key5, `${v.transmittedPackets ?? 0}/${v.transmittedBytes ?? 0}`, `${v.randomDropped ?? 0}/${v.randomDroppedBytes ?? 0}`, `${v.maximumDropped ?? 0}/${v.maximumDroppedBytes ?? 0}`, `${v.tailDropped ?? 0}/${v.tailDroppedBytes ?? 0}`, `${v.marked ?? 0}/${v.markedBytes ?? 0}`, curve.min, curve.max, "1/" + curve.denominator], [18, 18, 18, 18, 18, 18, 8, 8]));
           }
         }
       }
-      return text3;
+      return text4;
     };
     if (!kind) {
       const policies = entries3(f.policyMaps).filter(([n]) => !name5 || n === name5);
@@ -30043,8 +30043,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       items.sort((a2, b) => ipToInt(a2.network) - ipToInt(b.network) || a2.prefix - b.prefix || a2.index - b.index);
     }
     if (detail || filtered) {
-      const count = items.filter((x) => !x.index).length, text3 = (x) => x.next === "receive" ? "receive" + (x.path.port ? " for " + x.path.port : "") : x.next === "attached" || x.next === "drop" && x.path.port ? "attached to " + x.path.port : ["drop", "unresolved"].includes(x.next) ? x.next : `nexthop ${x.next} ${x.path.port ?? ""}`.trimEnd();
-      return [...filtered ? [] : ["IPv4 CEF is enabled and running", `VRF ${vrf2 ?? "Default"}`, ` ${count} prefixes (${count}/0 fwd/non-fwd)`, " Table id 0x0", ` Database epoch:        0 (${count} entries at this epoch)`, ""], ...items.flatMap((x) => [...x.index ? [] : [`${x.network}/${x.prefix}${detail ? ", epoch 0" : ""}`], "  " + text3(x)])];
+      const count = items.filter((x) => !x.index).length, text4 = (x) => x.next === "receive" ? "receive" + (x.path.port ? " for " + x.path.port : "") : x.next === "attached" || x.next === "drop" && x.path.port ? "attached to " + x.path.port : ["drop", "unresolved"].includes(x.next) ? x.next : `nexthop ${x.next} ${x.path.port ?? ""}`.trimEnd();
+      return [...filtered ? [] : ["IPv4 CEF is enabled and running", `VRF ${vrf2 ?? "Default"}`, ` ${count} prefixes (${count}/0 fwd/non-fwd)`, " Table id 0x0", ` Database epoch:        0 (${count} entries at this epoch)`, ""], ...items.flatMap((x) => [...x.index ? [] : [`${x.network}/${x.prefix}${detail ? ", epoch 0" : ""}`], "  " + text4(x)])];
     }
     return ["Prefix               Next Hop             Interface", ...items.map((x) => row([x.index ? "" : x.network + "/" + x.prefix, x.next, x.path.port ?? ""], [20, 20]))];
   }
@@ -30133,8 +30133,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     };
     return lists2.flatMap(([name5, acl]) => [`${acl.type === "ipv6" ? "IPv6" : acl.type === "standard" ? "Standard IP" : "Extended IP"} access list ${name5}`, ...[...acl.entries].filter((r) => r.action !== "remark").sort((a, b) => a.sequence - b.sequence).map((r) => {
       const hits = d.runtime.features.aclHits?.[name5 + ":" + r.sequence] ?? 0;
-      let text3 = acl.type === "standard" ? r.action.padEnd(6) + " " + address2(r.source, r.wildcard, true) + (r.log ? " log" : "") : `${r.action} ${r.protocol ?? "ip"} ${address2(r.source, r.wildcard)}${port3(r.sourcePort, r.protocol)} ${address2(r.destination, r.destinationWildcard)}${port3(r.destinationPort, r.protocol)}${r.icmpType === void 0 ? "" : " " + r.icmpType}${r.icmpCode === void 0 ? "" : " " + r.icmpCode}${r.log ? " log" : ""}${r.timeRange ? " time-range " + r.timeRange : ""}`;
-      return `    ${acl.type === "ipv6" ? "" : r.sequence + " "}${text3}${hits ? " (" + hits + " " + (hits === 1 ? "match" : "matches") + ")" : ""}${acl.type === "ipv6" ? " sequence " + r.sequence : ""}`;
+      let text4 = acl.type === "standard" ? r.action.padEnd(6) + " " + address2(r.source, r.wildcard, true) + (r.log ? " log" : "") : `${r.action} ${r.protocol ?? "ip"} ${address2(r.source, r.wildcard)}${port3(r.sourcePort, r.protocol)} ${address2(r.destination, r.destinationWildcard)}${port3(r.destinationPort, r.protocol)}${r.icmpType === void 0 ? "" : " " + r.icmpType}${r.icmpCode === void 0 ? "" : " " + r.icmpCode}${r.log ? " log" : ""}${r.timeRange ? " time-range " + r.timeRange : ""}`;
+      return `    ${acl.type === "ipv6" ? "" : r.sequence + " "}${text4}${hits ? " (" + hits + " " + (hits === 1 ? "match" : "matches") + ")" : ""}${acl.type === "ipv6" ? " sequence " + r.sequence : ""}`;
     })]);
   }
   function etherchannel2(e, d, input5) {
@@ -30496,7 +30496,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         branch("timers", no ? done : timers3),
         branch("authentication", no ? done : authentication),
         ...glbp2 ? [
-          branch("load-balancing", no ? done : union(...[["host-dependent", "Load balance equally, source MAC determines forwarder choice"], ["round-robin", "Load balance equally using each forwarder in turn"], ["weighted", "Load balance in proportion to forwarder weighting"]].map(([value, text3]) => chain([word5(value, text3)], done)))),
+          branch("load-balancing", no ? done : union(...[["host-dependent", "Load balance equally, source MAC determines forwarder choice"], ["round-robin", "Load balance equally using each forwarder in turn"], ["weighted", "Load balance in proportion to forwarder weighting"]].map(([value, text4]) => chain([word5(value, text4)], done)))),
           branch("weighting", no ? done : chain([number4(1, 254, "Weighting maximum value")], union(done, chain([word5("lower", "Weighting lower threshold"), threshold, word5("upper", "Weighting upper threshold"), threshold], done))))
         ] : []
       );
@@ -30507,13 +30507,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const acl = union(done, chain([number4(1, 99, "IP Standard access list number")], done), chain([text("Standard access-list name")], done));
       const rule = chain([number4(1, 255, "Administrative distance")], union(done, chain([ip("IP Source address"), ip("Wildcard bits")], acl)));
       const kinds2 = [["external", "External type 5 and type 7 routes", "Distance for external type 5 and type 7 routes"], ["inter-area", "Inter-area routes", "Distance for inter-area routes"], ["intra-area", "Intra-area routes", "Distance for intra-area routes"]];
-      const ospf2 = chain([word5("ospf", "OSPF distance")], optionGraph(kinds2.map(([key4, text3, value]) => no ? [word5(key4, text3)] : [word5(key4, text3), number4(1, 255, value)])));
+      const ospf2 = chain([word5("ospf", "OSPF distance")], optionGraph(kinds2.map(([key4, text4, value]) => no ? [word5(key4, text4)] : [word5(key4, text4), number4(1, 255, value)])));
       const eigrp2 = chain([word5("eigrp", "IP-EIGRP distance")], no ? done : chain([number4(1, 255, "Distance for internal routes"), number4(1, 255, "Distance for external routes")], done));
       return union(...no ? [done] : [], rule, ...context6.protocol === "ospf" ? [ospf2] : context6.protocol === "eigrp" ? [eigrp2] : []);
     }
     if (path === "distribute-list" && context6.mode === "router" && ["ospf", "eigrp", "rip"].includes(context6.protocol || "")) {
       const sources = [["bgp", "Border Gateway Protocol (BGP)", number4(1, 4294967295, "Autonomous system number")], ["connected", "Connected"], ["eigrp", "Enhanced Interior Gateway Routing Protocol (EIGRP)", number4(1, 65535, "Autonomous system number")], ["ospf", "Open Shortest Path First (OSPF)", number4(1, 65535, "Process ID")], ["rip", "Routing Information Protocol (RIP)"], ["static", "Static routes"]];
-      const target = (out) => union(done, chain([iface(context6)], done), ...out && context6.protocol === "ospf" ? sources.map(([key4, text3, id2]) => chain([word5(key4, text3)], id2 ? union(done, chain([id2], done)) : done)) : []);
+      const target = (out) => union(done, chain([iface(context6)], done), ...out && context6.protocol === "ospf" ? sources.map(([key4, text4, id2]) => chain([word5(key4, text4)], id2 ? union(done, chain([id2], done)) : done)) : []);
       const direction = union(chain([word5("in", "Filter incoming routing updates")], target(false)), chain([word5("out", "Filter outgoing routing updates")], target(true)));
       return union(chain([number4(1, 199, "IP access list number")], direction), chain([text("Access-list name")], direction), chain([word5("prefix", "Filter prefixes in address updates"), text("Name of an IP prefix-list")], direction), chain([word5("route-map", "Filter prefixes based on the route-map"), text("route-map name")], direction));
     }
@@ -30706,8 +30706,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (path === "switchport mode") return [...choices(["access", "trunk"]), ...combine([[word5("dynamic")]], choices(["auto", "desirable"]))];
     if (path === "switchport access vlan" || path === "switchport trunk native vlan") return [[number4(1, 4094, "VLAN ID")]];
     if (path === "vlan" || path === "switchport trunk allowed vlan") {
-      const vlans5 = argument("WORD", "VLAN IDs and ranges", (value) => /^\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*$/.test(value));
-      return path === "vlan" ? [[vlans5]] : [[vlans5], ...choices(["all", "none"]), ...combine(choices(["add", "remove", "except"]), [[vlans5]])];
+      const vlans6 = argument("WORD", "VLAN IDs and ranges", (value) => /^\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*$/.test(value));
+      return path === "vlan" ? [[vlans6]] : [[vlans6], ...choices(["all", "none"]), ...combine(choices(["add", "remove", "except"]), [[vlans6]])];
     }
     if (path === "encapsulation dot1q") return combine([[number4(1, 4094, "VLAN ID")]], optional(word5("native")));
     if (path === "channel-group") return combine([[number4(1, 48, "Port-channel number"), word5("mode")]], choices(["active", "passive", "on", "desirable", "auto"]));
@@ -31157,10 +31157,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (args.length < count) incomplete4();
     if (args.length > count) fail5();
   };
-  var integer2 = (text3, min, max) => {
-    if (text3 === void 0) return incomplete4();
-    if (!/^\d+$/.test(text3)) return fail5(`% Expected an integer between ${min} and ${max}.`);
-    const n = Number(text3);
+  var integer2 = (text4, min, max) => {
+    if (text4 === void 0) return incomplete4();
+    if (!/^\d+$/.test(text4)) return fail5(`% Expected an integer between ${min} and ${max}.`);
+    const n = Number(text4);
     if (!Number.isSafeInteger(n) || n < min || n > max) return fail5(`% Value must be between ${min} and ${max}.`);
     return n;
   };
@@ -31192,10 +31192,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (matches2.length > 1) return fail5(`% Ambiguous command: "${input5}"`);
     return matches2[0] || fail5();
   };
-  function vlans3(text3, minimum = 1) {
-    if (!text3) return incomplete4();
+  function vlans3(text4, minimum = 1) {
+    if (!text4) return incomplete4();
     const result = /* @__PURE__ */ new Set();
-    for (const part of text3.split(",")) {
+    for (const part of text4.split(",")) {
       const range = part.split("-");
       if (range.length > 2) fail5("% Invalid VLAN range.");
       const a = integer2(range[0], minimum, 4094), b = range.length === 1 ? a : integer2(range[1], a, 4094);
@@ -31207,7 +31207,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     return [...result].sort((a, b) => a - b);
   }
   var clone = (x) => JSON.parse(JSON.stringify(x));
-  var utf8Bytes = (text3) => new TextEncoder().encode(text3).byteLength;
+  var utf8Bytes = (text4) => new TextEncoder().encode(text4).byteLength;
   var bytesCopied = (bytes3, ms = Math.ceil(bytes3 / 100)) => {
     const msec = Math.max(1, Math.round(ms));
     return `${bytes3} bytes copied in ${(msec / 1e3).toFixed(3)} secs (${Math.floor(bytes3 * 1e3 / msec)} bytes/sec)`;
@@ -31249,7 +31249,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     sshCopy;
     ftpCopy;
     get ftp() {
-      return this.ftpCopy ??= new IOSFTPClient(this.engine, this.deviceId, { localName: (name5) => this.copyName(name5), readFile: (name5) => this.readFile(name5), applyText: (text3, target) => this.applyText(text3, target), resolveTarget: (name5) => this.resolveTarget(name5), username: () => this.identity?.username });
+      return this.ftpCopy ??= new IOSFTPClient(this.engine, this.deviceId, { localName: (name5) => this.copyName(name5), readFile: (name5) => this.readFile(name5), applyText: (text4, target) => this.applyText(text4, target), resolveTarget: (name5) => this.resolveTarget(name5), username: () => this.identity?.username });
     }
     pendingMST;
     copyPrompt;
@@ -31432,16 +31432,16 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (method === "local" || method === "group" || line2.login === "local") this.auth = { kind: "username", attempts: 0 };
       else if (line2.login === "password") this.auth = { kind: "password", attempts: 0 };
     }
-    authenticate(text3) {
+    authenticate(text4) {
       const auth = this.auth, f = this.device.config.features, line2 = f.lines?.["console 0"] || {};
       if (auth.kind === "username") {
-        auth.username = text3.trim();
+        auth.username = text4.trim();
         auth.kind = "password";
         return [];
       }
       const user = ownRecordValue(f.users, auth.username), expected = accountCredential(user);
-      const remote = f.aaa?.enabled ? auth.kind === "enable" && f.aaa.enable?.default ? this.management.authenticate(this.deviceId, "default", this.identity?.username || "$enab15$", text3, "enable") : auth.username !== void 0 ? this.management.authenticate(this.deviceId, line2.authentication || "default", auth.username, text3, "login", "console 0") : void 0 : void 0;
-      const valid2 = remote ? remote.accepted : auth.kind === "enable" ? typeof (f.enableSecret ?? f.enablePassword) === "string" && (f.enableSecret ?? f.enablePassword).length > 0 && text3 === (f.enableSecret ?? f.enablePassword) : auth.username !== void 0 ? expected !== void 0 && text3 === expected : typeof line2.password === "string" && line2.password.length > 0 && text3 === line2.password;
+      const remote = f.aaa?.enabled ? auth.kind === "enable" && f.aaa.enable?.default ? this.management.authenticate(this.deviceId, "default", this.identity?.username || "$enab15$", text4, "enable") : auth.username !== void 0 ? this.management.authenticate(this.deviceId, line2.authentication || "default", auth.username, text4, "login", "console 0") : void 0 : void 0;
+      const valid2 = remote ? remote.accepted : auth.kind === "enable" ? typeof (f.enableSecret ?? f.enablePassword) === "string" && (f.enableSecret ?? f.enablePassword).length > 0 && text4 === (f.enableSecret ?? f.enablePassword) : auth.username !== void 0 ? expected !== void 0 && text4 === expected : typeof line2.password === "string" && line2.password.length > 0 && text4 === line2.password;
       if (valid2) {
         const authorization = auth.kind === "enable" ? { accepted: true, privilege: auth.level ?? 15 } : this.management.execPrivilege(this.deviceId, "console 0", auth.username, true, remote?.privilege ?? user?.privilege ?? line2.privilege ?? 1, remote);
         if (!authorization.accepted) {
@@ -31918,8 +31918,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         }
         if (this.privilege < 15) return ["% Insufficient privilege level."];
       }
-      const level = navigation ? 0 : this.mode === "user" || userCommand ? 1 : 15, taskId = String(++this.accountingSequence), text3 = [no ? "no" : "", name5, ...args].filter(Boolean).join(" "), hook = name5 === "do" ? void 0 : this.accountingHook;
-      hook?.(text3, level, "start", taskId);
+      const level = navigation ? 0 : this.mode === "user" || userCommand ? 1 : 15, taskId = String(++this.accountingSequence), text4 = [no ? "no" : "", name5, ...args].filter(Boolean).join(" "), hook = name5 === "do" ? void 0 : this.accountingHook;
+      hook?.(text4, level, "start", taskId);
       try {
         if (name5.startsWith("show ") && !command.nativeOutput) {
           const words = command.words.slice(1);
@@ -31933,7 +31933,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         }
         return command.run(args, no) || [];
       } finally {
-        hook?.(text3, level, "stop", taskId);
+        hook?.(text4, level, "stop", taskId);
       }
     }
     syntaxContext() {
@@ -32052,11 +32052,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     /** local omits global configuration commands that IOS accepts in sub-modes but does not list in their help. */
     commands(local = false) {
       if (this.device.kind === "phone") return [];
-      const system = ["user", "priv"].includes(this.mode) ? systemExecCommands({ engine: this.engine, device: this.device, privileged: this.mode === "priv" && this.privilege === 15, identity: this.identity, activeSessionId: this.management.sessionIdFor(this), interfaceName: (name5) => this.getInterface(name5), dispatch: (line2) => this.dispatch(line2), testAuthentication: (group, user, password) => this.management.testAuthentication(this.deviceId, group, user, password), prompt: (text3, answer) => {
-        this.confirmPrompt = { text: text3, answer };
+      const system = ["user", "priv"].includes(this.mode) ? systemExecCommands({ engine: this.engine, device: this.device, privileged: this.mode === "priv" && this.privilege === 15, identity: this.identity, activeSessionId: this.management.sessionIdFor(this), interfaceName: (name5) => this.getInterface(name5), dispatch: (line2) => this.dispatch(line2), testAuthentication: (group, user, password) => this.management.testAuthentication(this.deviceId, group, user, password), prompt: (text4, answer) => {
+        this.confirmPrompt = { text: text4, answer };
       }, reload: (reason) => this.restartIOS(reason), fail: fail5 }) : [];
-      const compatibility = [...endpointCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name5) => this.getInterface(name5), ports: () => this.ports(), fail: fail5 }), ...poeCommands({ engine: this.engine, device: this.device, context: this.context, ports: () => this.ports(), interfaceName: (name5) => this.getInterface(name5), changed: () => this.change(), fail: fail5 }), ...wirelessCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name5) => this.getInterface(name5), fail: fail5 }), ...system, ...switchingCompatibilityCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name5) => this.getInterface(name5), ports: () => this.ports(), fail: fail5 }), ...platformCompatibilityCommands({ device: this.device, mode: this.mode, now: () => this.engine.clock.now(), ports: () => this.ports(), changed: () => this.change(), fail: fail5 }), ...this.mode === "priv" ? maintenanceCommands({ engine: this.engine, device: this.device, interfaceName: (name5) => this.getInterface(name5), fail: fail5 }) : [], ...routingCompatibilityCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name5) => this.getInterface(name5), ports: () => this.ports(), fail: fail5, prompt: (text3, answer) => {
-        this.confirmPrompt = { text: text3, answer };
+      const compatibility = [...endpointCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name5) => this.getInterface(name5), ports: () => this.ports(), fail: fail5 }), ...poeCommands({ engine: this.engine, device: this.device, context: this.context, ports: () => this.ports(), interfaceName: (name5) => this.getInterface(name5), changed: () => this.change(), fail: fail5 }), ...wirelessCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name5) => this.getInterface(name5), fail: fail5 }), ...system, ...switchingCompatibilityCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name5) => this.getInterface(name5), ports: () => this.ports(), fail: fail5 }), ...platformCompatibilityCommands({ device: this.device, mode: this.mode, now: () => this.engine.clock.now(), ports: () => this.ports(), changed: () => this.change(), fail: fail5 }), ...this.mode === "priv" ? maintenanceCommands({ engine: this.engine, device: this.device, interfaceName: (name5) => this.getInterface(name5), fail: fail5 }) : [], ...routingCompatibilityCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name5) => this.getInterface(name5), ports: () => this.ports(), fail: fail5, prompt: (text4, answer) => {
+        this.confirmPrompt = { text: text4, answer };
       } })];
       const replaced = new Set(compatibility.map((command) => command.words.join(" ")));
       const base = [...compatibility.filter((command) => !(local && command.inherited)), ...this.modeCommands(!local).filter((command) => !replaced.has(command.words.join(" ")))];
@@ -32216,9 +32216,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         this.change();
       }, "[sequence]"), ...["match", "set"].map((k) => this.c(k, "Policy clause", (a, no) => {
         if (!a.length) incomplete4();
-        let text3 = a.join(" ");
+        let text4 = a.join(" ");
         const valid2 = k === "match" ? /^((?:ip|ipv6) address prefix-list \S+(?: \S+)*|ip address \S+(?: \S+)*|tag \d+|community \S+(?: \S+)*|as-path \S+(?: \S+)*)$/ : /^(metric \d+|weight \d+|tag \d+|local-preference \d+|metric-type type-[12]|ip (?:default )?next-hop [0-9.]+(?: [0-9.]+)*|ipv6 next-hop [0-9a-fA-F:]+|as-path prepend [0-9 ]+|community [A-Za-z0-9: -]+)$/;
-        if (!valid2.test(text3)) this.unsupported(`Route-map ${k} clause`);
+        if (!valid2.test(text4)) this.unsupported(`Route-map ${k} clause`);
         if (k === "set" && a[0] === "community") {
           if (a[1] === "none") {
             exactly(a, 2);
@@ -32229,15 +32229,15 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
               return community;
             });
             if (!values2.length) incomplete4();
-            text3 = "community " + values2.join(" ") + (a.includes("additive") ? " additive" : "");
+            text4 = "community " + values2.join(" ") + (a.includes("additive") ? " additive" : "");
           }
         }
         if (k === "set" && a[0] === "weight") integer2(a[1], 0, 65535);
         if (k === "set" && a[0] === "ipv6" && !isIPv6(a[2])) fail5("% Invalid IPv6 next hop.");
-        if (k === "set" && /^ip (?:default )?next-hop /.test(text3)) text3.replace(/^ip (?:default )?next-hop /, "").split(" ").forEach(ipv42);
+        if (k === "set" && /^ip (?:default )?next-hop /.test(text4)) text4.replace(/^ip (?:default )?next-hop /, "").split(" ").forEach(ipv42);
         const map2 = this.device.config.features.routeMaps[this.context.name];
         map2[k] ??= [];
-        map2[k] = no ? map2[k].filter((x) => x !== text3) : [.../* @__PURE__ */ new Set([...map2[k], text3])];
+        map2[k] = no ? map2[k].filter((x) => x !== text4) : [.../* @__PURE__ */ new Set([...map2[k], text4])];
         this.change();
       }, "<clause>"))];
       return common;
@@ -32847,9 +32847,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           if (a.length < 4) incomplete4();
           const kind = keyword(a[1], ["cli", "syslog"]);
           keyword(a[2], [kind === "cli" ? "command" : "msg"]);
-          const text3 = a.slice(3).join(" ");
+          const text4 = a.slice(3).join(" ");
           applet.actions = applet.actions.filter((x) => x.order !== order);
-          applet.actions.push({ order, kind, text: text3 });
+          applet.actions.push({ order, kind, text: text4 });
         }
         this.change();
       }, "<order> cli command|syslog msg <text>")];
@@ -33692,25 +33692,25 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         if (!this.device.startupConfig) fail5("% startup-config is absent.");
         return renderConfig(this.device, this.device.startupConfig).join("\n");
       }
-      const text3 = ownRecordValue(this.device.config.features.files, name5.replace(/^flash:/, ""));
-      if (typeof text3 !== "string") fail5("% File does not exist.");
-      return text3;
+      const text4 = ownRecordValue(this.device.config.features.files, name5.replace(/^flash:/, ""));
+      if (typeof text4 !== "string") fail5("% File does not exist.");
+      return text4;
     }
-    applyText(text3, target, ms) {
+    applyText(text4, target, ms) {
       if (target.startsWith("flash:")) {
         try {
-          writeFlashFile(this.device, target.slice(6), text3);
+          writeFlashFile(this.device, target.slice(6), text4);
         } catch (error) {
           fail5("% " + error.message);
         }
         this.change();
-        return [bytesCopied(utf8Bytes(text3), ms)];
+        return [bytesCopied(utf8Bytes(text4), ms)];
       }
       if (!["running-config", "startup-config"].includes(target)) fail5("% Invalid local destination.");
       const original = clone(this.device.config), old = this.context;
       this.configMode();
       let errors = [];
-      const rows2 = text3.split(/\r?\n/).filter((line2) => {
+      const rows2 = text4.split(/\r?\n/).filter((line2) => {
         const t = line2.trim();
         return !!t && !t.startsWith("!") && t !== "end" && !/^Building configuration\.\.\.$|^Current configuration\s*:\s*\d+ bytes$|^Using \d+(?: out of \d+)? bytes$|^startup-config is not present$/.test(t);
       });
@@ -33747,7 +33747,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           this.device.config = original;
         }
         this.change();
-        return [bytesCopied(utf8Bytes(text3), ms)];
+        return [bytesCopied(utf8Bytes(text4), ms)];
       } finally {
         this.context = old;
       }
@@ -33835,8 +33835,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const global = this.device.config.features.igmpSnooping || {}, state4 = this.device.runtime.features.igmpSnooping || {}, selected2 = (row5) => vlan4 === void 0 || row5.vlan === vlan4;
       const port3 = (name5) => name5 === "local" ? "Router" : name5.replace(/^GigabitEthernet/, "Gi").replace(/^FastEthernet/, "Fa").replace(/^TenGigabitEthernet/, "Te").replace(/^Port-channel/, "Po");
       if (!command) {
-        const vlans5 = vlan4 === void 0 ? [.../* @__PURE__ */ new Set([...Object.keys(this.device.config.vlans).map(Number), ...Object.keys(global.vlans || {}).map(Number)])].sort((a2, b) => a2 - b) : [vlan4];
-        return ["Global IGMP Snooping configuration:", "-------------------------------------------", `IGMP snooping                : ${global.enabled !== false ? "Enabled" : "Disabled"}`, ...vlans5.flatMap((id2) => {
+        const vlans6 = vlan4 === void 0 ? [.../* @__PURE__ */ new Set([...Object.keys(this.device.config.vlans).map(Number), ...Object.keys(global.vlans || {}).map(Number)])].sort((a2, b) => a2 - b) : [vlan4];
+        return ["Global IGMP Snooping configuration:", "-------------------------------------------", `IGMP snooping                : ${global.enabled !== false ? "Enabled" : "Disabled"}`, ...vlans6.flatMap((id2) => {
           const local = global.vlans?.[id2] || {}, enabled4 = global.enabled !== false && local.enabled !== false;
           return ["", `Vlan ${id2}:`, "--------", `IGMP snooping                       : ${enabled4 ? "Enabled" : "Disabled"}`, `IGMPv2 immediate leave              : ${local.immediateLeave ?? global.immediateLeave ? "Enabled" : "Disabled"}`, `IGMP snooping querier               : ${local.querier ?? global.querier ? "Enabled" : "Disabled"}`];
         })];
@@ -34942,13 +34942,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         }, "<name> <hours> [minutes]")
       ];
     }
-    mac(text3) {
-      const digits = text3.replace(/[:.\-]/g, "");
+    mac(text4) {
+      const digits = text4.replace(/[:.\-]/g, "");
       if (!/^[0-9a-f]{12}$/i.test(digits)) fail5("% Invalid MAC address.");
       return digits.toLowerCase().match(/../g).join(":");
     }
-    parseTime(text3) {
-      const m = /^(\d{1,2}):(\d{2})$/.exec(text3);
+    parseTime(text4) {
+      const m = /^(\d{1,2}):(\d{2})$/.exec(text4);
       if (!m) return fail5("% Expected HH:MM.");
       return integer2(m[1], 0, 23) * 60 + integer2(m[2], 0, 59);
     }
@@ -35722,12 +35722,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         }, "<seconds>")
       ];
     }
-    dscp(text3) {
-      if (text3 === void 0) return incomplete4();
+    dscp(text4) {
+      if (text4 === void 0) return incomplete4();
       const names3 = { default: 0, ef: 46 };
       for (let c = 1; c <= 7; c++) names3[`cs${c}`] = c * 8;
       for (let c = 1; c <= 4; c++) for (let d = 1; d <= 3; d++) names3[`af${c}${d}`] = c * 8 + d * 2;
-      return names3[text3] ?? integer2(text3, 0, 63);
+      return names3[text4] ?? integer2(text4, 0, 63);
     }
     qosAction(a) {
       if (!a.length) incomplete4();
@@ -37789,13 +37789,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (!acl) fail5("% No ACL selected.");
       if (!action) incomplete4();
       action = keyword(action, ["permit", "deny", "remark"]);
-      const text3 = [action, ...a].join(" ");
+      const text4 = [action, ...a].join(" ");
       if (no) {
-        acl.entries = acl.entries.filter((e) => sequence !== void 0 ? e.sequence !== sequence : e.text !== text3);
+        acl.entries = acl.entries.filter((e) => sequence !== void 0 ? e.sequence !== sequence : e.text !== text4);
         this.change();
         return;
       }
-      const entry = { sequence: sequence ?? (acl.entries.at(-1)?.sequence || 0) + 10, action, text: text3 };
+      const entry = { sequence: sequence ?? (acl.entries.at(-1)?.sequence || 0) + 10, action, text: text4 };
       if (action === "remark") {
         if (!a.length) incomplete4();
         entry.remark = a.join(" ");
@@ -38914,19 +38914,19 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   var fail6 = (message2) => {
     throw new NSOSError("% " + message2);
   };
-  var integer3 = (text3, min, max) => {
-    if (!text3 || !/^\d+$/.test(text3) || !Number.isSafeInteger(+text3) || +text3 < min || +text3 > max) return fail6(`Value must be an integer between ${min} and ${max}.`);
-    return +text3;
+  var integer3 = (text4, min, max) => {
+    if (!text4 || !/^\d+$/.test(text4) || !Number.isSafeInteger(+text4) || +text4 < min || +text4 > max) return fail6(`Value must be an integer between ${min} and ${max}.`);
+    return +text4;
   };
-  var name = (text3) => /^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}$/.test(text3) ? text3 : fail6("Invalid name.");
-  var ip4 = (text3) => isIPv4(text3) ? text3 : fail6("Invalid IPv4 address.");
+  var name = (text4) => /^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}$/.test(text4) ? text4 : fail6("Invalid name.");
+  var ip4 = (text4) => isIPv4(text4) ? text4 : fail6("Invalid IPv4 address.");
   var clone2 = (value) => structuredClone(value);
   var wildcard4 = (word6) => word6.startsWith("<");
   var remainder = (word6) => word6.endsWith("...>");
   var mask2 = (prefix2) => [24, 16, 8, 0].map((shift) => (prefix2 === 0 ? 0 : 4294967295 << 32 - prefix2) >>> shift & 255).join(".");
-  function vlanList3(text3) {
+  function vlanList3(text4) {
     const result = /* @__PURE__ */ new Set();
-    for (const entry of text3.split(",")) {
+    for (const entry of text4.split(",")) {
       const m = /^(\d+)(?:-(\d+))?$/.exec(entry);
       if (!m) fail6("Invalid VLAN list.");
       const low = integer3(m[1], 1, 4094), high = integer3(m[2] ?? m[1], low, 4094);
@@ -39326,8 +39326,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         cmd("ping <address> vrf <vrf> count <count>", "Send a bounded number of probes in a VRF", (a) => this.ping(a[0], a[1], integer3(a[2], 1, 20)), { read: true })
       ];
       const globals = [
-        ...nsosNATCommands(this.engine, this.device, (text3) => this.port(text3), (text3, run) => {
-          this.pendingNAT = { text: text3, run };
+        ...nsosNATCommands(this.engine, this.device, (text4) => this.port(text4), (text4, run) => {
+          this.pendingNAT = { text: text4, run };
         }),
         ...nsosAAACommands(this.device, (group) => {
           this.context = { mode: "aaa-group", name: group, parent: { mode: "config" } };
@@ -39554,13 +39554,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           f.stp.mst.revision = integer3(a[0], 0, 65535);
         }),
         cmd("instance <instance> vlan <vlans>", "Map VLANs to MST instance", (a, no) => {
-          const id2 = integer3(a[0], 1, 4094), vlans5 = vlanList3(a[1]), m = f.stp.mst;
-          for (const row5 of m.instances) row5.vlans = row5.vlans.filter((v) => !vlans5.includes(v) || no && row5.id !== id2);
+          const id2 = integer3(a[0], 1, 4094), vlans6 = vlanList3(a[1]), m = f.stp.mst;
+          for (const row5 of m.instances) row5.vlans = row5.vlans.filter((v) => !vlans6.includes(v) || no && row5.id !== id2);
           m.instances = m.instances.filter((r) => r.vlans.length);
           if (!no) {
             const prior = m.instances.find((r) => r.id === id2);
-            if (prior) prior.vlans = [.../* @__PURE__ */ new Set([...prior.vlans, ...vlans5])].sort((a2, b) => a2 - b);
-            else m.instances.push({ id: id2, vlans: vlans5 });
+            if (prior) prior.vlans = [.../* @__PURE__ */ new Set([...prior.vlans, ...vlans6])].sort((a2, b) => a2 - b);
+            else m.instances.push({ id: id2, vlans: vlans6 });
           }
         }, { no: "instance <instance> vlan <vlans>" })
       ]);
@@ -39939,9 +39939,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       this.requireFeature("port-security");
       if (!/^Ethernet/.test(p.name) || !p.switchport || p.mode !== "access" || p.features.channelGroup || p.features.vpcId) fail6("Port-security is implemented on standalone physical Ethernet access ports only.");
     }
-    area(text3) {
-      if (isIPv4(text3)) return String(text3.split(".").reduce((n, x) => n * 256 + Number(x) >>> 0, 0));
-      return String(integer3(text3, 0, 4294967295));
+    area(text4) {
+      if (isIPv4(text4)) return String(text4.split(".").reduce((n, x) => n * 256 + Number(x) >>> 0, 0));
+      return String(integer3(text4, 0, 4294967295));
     }
     vpcCommands() {
       const cmd = this.c.bind(this), v = nsosConfig(this.device).vpc;
@@ -40007,11 +40007,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (typeof file2 !== "string") fail6("File not found.");
       return file2;
     }
-    applyText(text3) {
+    applyText(text4) {
       const old = this.context, before = clone2(this.device.config);
       this.context = { mode: "config" };
       try {
-        for (const line2 of text3.split(/\r?\n/)) {
+        for (const line2 of text4.split(/\r?\n/)) {
           if (!line2.trim() || line2.trim().startsWith("!")) continue;
           if (this.context.mode === "priv") fail6("Configuration replay cannot execute EXEC commands after leaving configuration mode.");
           const output = this.execute(line2.trim());
@@ -40963,8 +40963,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       fields.forEach(([key4]) => used.add(key4));
       return { title, fields };
     };
-    const spanningTree4 = (packet.stpBpdus || []).map(({ vlan: vlan4, ...fields }) => ({
-      title: `Spanning tree \xB7 VLAN ${vlan4}`,
+    const spanningTree4 = (packet.stpBpdus || []).map(({ vlan: vlan4, region: _region, ...fields }) => ({
+      title: `Spanning tree \xB7 ${fields.mode === "mst" ? `MST${fields.instance ?? "?"} \xB7 ` : ""}VLAN ${vlan4}`,
       fields: Object.entries(fields)
     }));
     if (spanningTree4.length) used.add("stpBpdus");
@@ -45738,6 +45738,28 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   };
 
+  // src/stp-packet.ts
+  function stpPacketSummary(payload) {
+    if (!Array.isArray(payload?.vlans)) return [];
+    return payload.vlans.filter((b) => b && typeof b === "object").map((b) => {
+      const vlan4 = Number(b.vlan), summary = { vlan: vlan4, mode: String(b.mode), version: b.mode === "pvst" ? 0 : b.mode === "mst" ? 3 : b.mode === "rapid-pvst" ? 2 : -1, rootBridgeId: String(b.rootBridgeId), bridgeId: String(b.bridgeId), rootPathCost: Number(b.cost), role: String(b.role), proposal: !!b.proposal, agreement: !!b.agreement, topologyChange: !!b.tc };
+      if (b.mode === "mst") {
+        const signature2 = typeof b.region === "string" ? b.region : "";
+        summary.region = signature2;
+        try {
+          const region = JSON.parse(signature2);
+          if (Array.isArray(region) && typeof region[0] === "string" && Number.isInteger(region[1]) && Array.isArray(region[2])) {
+            summary.regionName = region[0];
+            summary.revision = region[1];
+            summary.instance = region[2].find((i) => Array.isArray(i) && Array.isArray(i[1]) && i[1].includes(vlan4))?.[0] ?? 0;
+          }
+        } catch {
+        }
+      }
+      return summary;
+    });
+  }
+
   // src/sla.ts
   var SLAController = class {
     ports = /* @__PURE__ */ new Set();
@@ -45976,9 +45998,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       this.session = session;
     }
   };
-  function decode(text3) {
-    if (/&(?![a-zA-Z]+;|#(?:x[0-9a-f]+|\d+);)/i.test(text3)) throw new ModelError("malformed-message", "Malformed XML entity.");
-    return text3.replace(/&([^;]+);/g, (_, value) => {
+  function decode(text4) {
+    if (/&(?![a-zA-Z]+;|#(?:x[0-9a-f]+|\d+);)/i.test(text4)) throw new ModelError("malformed-message", "Malformed XML entity.");
+    return text4.replace(/&([^;]+);/g, (_, value) => {
       const named = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
       if (Object.hasOwn(named, value)) return named[value];
       if (/^#(?:x[0-9a-f]+|\d+)$/i.test(value)) {
@@ -45988,12 +46010,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       throw new ModelError("malformed-message", "Unsupported or malformed XML entity.");
     });
   }
-  function xml(text3) {
-    if (typeof text3 !== "string" || text3.length > 262144 || /<!|<\?(?!xml\s)/i.test(text3)) throw new ModelError("malformed-message", "Unsupported or oversized XML message.");
-    text3 = text3.replace(/^\s*<\?xml[^?]*\?>/, "").replace(/\]\]>\]\]>\s*$/, "");
+  function xml(text4) {
+    if (typeof text4 !== "string" || text4.length > 262144 || /<!|<\?(?!xml\s)/i.test(text4)) throw new ModelError("malformed-message", "Unsupported or oversized XML message.");
+    text4 = text4.replace(/^\s*<\?xml[^?]*\?>/, "").replace(/\]\]>\]\]>\s*$/, "");
     const stack = [];
     let root, index = 0;
-    const tokens = text3.match(/<[^>]*>|[^<]+/g) ?? [];
+    const tokens = text4.match(/<[^>]*>|[^<]+/g) ?? [];
     for (const token of tokens) {
       index += token.length;
       if (!token.startsWith("<")) {
@@ -46028,7 +46050,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }
       if (!match[3]) stack.push({ qname: match[1], node });
     }
-    if (!root || stack.length || index !== text3.length) throw new ModelError("malformed-message", "Incomplete XML message.");
+    if (!root || stack.length || index !== text4.length) throw new ModelError("malformed-message", "Incomplete XML message.");
     return root;
   }
   var child = (node, name5) => node.children.find((n) => n.name === name5);
@@ -47247,9 +47269,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         if (w.controller) addresses.add(w.controller);
         const option = d.config.interfaces.GigabitEthernet0.features.dhcpLease?.options?.["43"];
         if (typeof option === "string") {
-          const text3 = option.replace(/[^a-f0-9]/gi, "");
-          if (text3.startsWith("f1") && text3.length >= 12) {
-            for (let n = 4; n + 8 <= text3.length; n += 8) addresses.add(text3.slice(n, n + 8).match(/../g).map((x) => parseInt(x, 16)).join("."));
+          const text4 = option.replace(/[^a-f0-9]/gi, "");
+          if (text4.startsWith("f1") && text4.length >= 12) {
+            for (let n = 4; n + 8 <= text4.length; n += 8) addresses.add(text4.slice(n, n + 8).match(/../g).map((x) => parseInt(x, 16)).join("."));
           } else if (/^\d+\.\d+\.\d+\.\d+$/.test(option)) addresses.add(option);
         }
         if (a.dns?.status === "success" && a.dns.address) addresses.add(a.dns.address);
@@ -49907,7 +49929,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     summary(frame2) {
       const p = frame2.payload;
       const ethernet = { vlan: frame2.vlan, cos: frame2.cos, sourceMac: frame2.sourceMac, destinationMac: frame2.destinationMac };
-      if ("kind" in p && p.kind === "link-control") return { id: frame2.id, source: p.body.source ?? "", destination: p.body.clientId ?? "multicast", protocol: p.protocol, ...ethernet, messageType: p.body.type, ...p.protocol === "STP" && Array.isArray(p.body.vlans) ? { stpBpdus: p.body.vlans.filter((b) => b && typeof b === "object").map((b) => ({ vlan: Number(b.vlan), mode: String(b.mode), version: b.mode === "pvst" ? 0 : b.mode === "mst" ? 3 : b.mode === "rapid-pvst" ? 2 : -1, rootBridgeId: String(b.rootBridgeId), bridgeId: String(b.bridgeId), rootPathCost: Number(b.cost), role: String(b.role), proposal: !!b.proposal, agreement: !!b.agreement, topologyChange: !!b.tc })) } : {}, ...p.protocol === "DHCPV6" ? { dhcpOperation: p.body.type, requestedAddress: p.body.address } : p.protocol === "ICMPV6" && ["ra", "rs"].includes(p.body.type) ? { icmpType: p.body.type === "ra" ? 134 : 133, icmpCode: 0 } : {} };
+      if ("kind" in p && p.kind === "link-control") return { id: frame2.id, source: p.body.source ?? "", destination: p.body.clientId ?? "multicast", protocol: p.protocol, ...ethernet, messageType: p.body.type, ...p.protocol === "STP" && Array.isArray(p.body.vlans) ? { stpBpdus: stpPacketSummary(p.body) } : {}, ...p.protocol === "DHCPV6" ? { dhcpOperation: p.body.type, requestedAddress: p.body.address } : p.protocol === "ICMPV6" && ["ra", "rs"].includes(p.body.type) ? { icmpType: p.body.type === "ra" ? 134 : 133, icmpCode: 0 } : {} };
       if ("kind" in p) return { id: frame2.id, source: p.kind === "arp" ? p.source : p.clientId, destination: p.kind === "arp" ? p.target : p.serverId ?? "broadcast", protocol: p.kind === "arp" ? p.family === 6 ? "NDP" : "ARP" : "DHCP", ...ethernet, ...p.kind === "arp" ? { arpOperation: p.operation, targetMac: p.targetMac, ...p.family === 6 ? { icmpType: p.operation === "request" ? 135 : 136, icmpCode: 0 } : {} } : { dhcpOperation: p.operation, requestedAddress: p.address, relayAddress: p.relay } };
       return { ...this.packetSummary(p), ...ethernet };
     }
@@ -52559,35 +52581,67 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   };
 
+  // src/mst-lab.ts
+  var text3 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
+  var integer5 = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
+  var vlans5 = (v) => Array.isArray(v) && v.length > 0 && v.length <= 64 && v.every((n) => integer5(n, 1, 4094)) && new Set(v).size === v.length;
+  function validMSTCriterion(c) {
+    if (!text3(c.device)) return false;
+    if (c.kind === "mst-region") return text3(c.name) && c.name.length <= 32 && integer5(c.revision, 0, 65535) && Array.isArray(c.instances) && c.instances.length > 0 && c.instances.length <= 16 && c.instances.every((i) => i && integer5(i.id, 1, 4094) && vlans5(i.vlans)) && new Set(c.instances.map((i) => i.id)).size === c.instances.length && new Set(c.instances.flatMap((i) => i.vlans)).size === c.instances.reduce((n, i) => n + i.vlans.length, 0);
+    if (!integer5(c.instance, 0, 4094)) return false;
+    if (c.kind === "mst-priority") return integer5(c.priority, 0, 61440) && c.priority % 4096 === 0;
+    return c.kind === "mst-tree" && vlans5(c.vlans) && text3(c.root) && (c.ports === void 0 || Array.isArray(c.ports) && c.ports.length > 0 && c.ports.length <= 32 && c.ports.every((p) => p && text3(p.name) && ["root", "designated", "alternate"].includes(p.role) && ["forwarding", "blocking"].includes(p.state)) && new Set(c.ports.map((p) => p.name)).size === c.ports.length);
+  }
+  function matchesMSTCriterion(s, d, c) {
+    const stp = d.config.features.stp, m = stp?.mst;
+    if (stp?.mode !== "mst" || !m) return false;
+    if (c.kind === "mst-region") {
+      const canonical = (rows2) => JSON.stringify(rows2.map((i) => [i.id, [...i.vlans].sort((a, b) => a - b)]).sort((a, b) => a[0] - b[0]));
+      return m.name === c.name && (m.revision ?? 0) === c.revision && canonical(m.instances ?? []) === canonical(c.instances);
+    }
+    if (c.kind === "mst-priority") return (m.priorities?.[c.instance] ?? m.instances?.find((i) => i.id === c.instance)?.priority ?? stp.priority ?? 32768) === c.priority;
+    if (!s.devicePowered(d.id) || !s.getDevice(c.root)) return false;
+    const first = d.runtime.stp[c.vlans[0]];
+    return c.vlans.every((v) => {
+      const instance = m.instances?.find((i) => i.vlans.includes(v))?.id ?? 0, t = d.runtime.stp[v];
+      return !!d.config.vlans[v]?.active && instance === c.instance && t?.mode === "mst" && !t.boundary && t.rootId === c.root && t.rootBridgeId === first?.rootBridgeId && t.rootPort === first?.rootPort && t.cost === first?.cost && (c.ports ?? []).every((p) => {
+        const state4 = t.ports[p.name];
+        return s.interfaceUp(d.id, p.name) && state4?.role === p.role && state4.state === p.state && state4.linkType === "point-to-point" && !state4.edge && !d.runtime.features.stpLegacy?.[p.name];
+      });
+    });
+  }
+
   // src/rstp-lab.ts
   var name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
   var vlan = (v) => Number.isInteger(v) && Number(v) >= 1 && Number(v) <= 4094;
   var list = (v, max, item) => Array.isArray(v) && v.length > 0 && v.length <= max && v.every(item) && new Set(v).size === v.length;
   function validRSTPCriterion(c) {
-    if (!name2(c.device)) return false;
+    if (!name2(c.device) || c.protocol !== void 0 && !["rapid-pvst", "mst"].includes(c.protocol)) return false;
     if (c.kind === "rstp-saved") return list(c.interfaces, 32, name2) && list(c.vlans, 64, vlan);
     if (!vlan(c.vlan)) return false;
     if (c.kind === "rstp-edge") return name2(c.interface);
     return c.kind === "rstp-echo" && name2(c.target) && name2(c.root) && list(c.bridges, 8, name2) && c.bridges.includes(c.root) && typeof c.address === "string" && isIPv4(c.address) && Array.isArray(c.path) && c.path.length > 0 && c.path.length <= 4 && c.path.every((p) => p && ["aDevice", "aPort", "bDevice", "bPort"].every((k) => name2(p[k])) && c.bridges.includes(p.aDevice) && c.bridges.includes(p.bDevice) && p.aDevice !== p.bDevice) && (c.failed === void 0 || c.failed && name2(c.failed.device) && c.bridges.includes(c.failed.device) && name2(c.failed.interface) && name2(c.failed.survivor) && c.failed.interface !== c.failed.survivor);
   }
-  function projection(c, interfaces2, vlans5) {
-    if (interfaces2.some((p) => !Object.hasOwn(c.interfaces, p)) || vlans5.some((v) => !Object.hasOwn(c.vlans, v))) return;
+  function projection(c, interfaces2, vlans6) {
+    if (interfaces2.some((p) => !Object.hasOwn(c.interfaces, p)) || vlans6.some((v) => !Object.hasOwn(c.vlans, v))) return;
     return JSON.stringify([c.features.stp, interfaces2.map((p) => {
       const i = c.interfaces[p];
       return [i.adminUp, i.switchport, i.mode, i.vlan, i.nativeVlan, i.allowedVlans === null ? null : [...i.allowedVlans].sort((a, b) => a - b), i.speed, i.duplex, i.features.speedAuto, !!i.features.portfast, !!i.features.nonegotiate, i.features.bpdufilter, i.features.stpLinkType];
-    }), vlans5.map((v) => c.vlans[v].active)]);
+    }), vlans6.map((v) => c.vlans[v].active)]);
   }
   function matchesRSTPCriterion(s, d, c) {
+    const protocol = "protocol" in c ? c.protocol ?? "rapid-pvst" : "rapid-pvst";
     if (c.kind === "rstp-saved") {
       const current2 = projection(d.config, c.interfaces, c.vlans);
       return !!d.startupConfig && current2 !== void 0 && current2 === projection(d.startupConfig, c.interfaces, c.vlans);
     }
     if (c.kind === "rstp-edge") {
       const p = d.config.interfaces[c.interface], state4 = d.runtime.stp[c.vlan]?.ports[c.interface];
-      return d.config.features.stp?.mode === "rapid-pvst" && !!p?.switchport && p.mode === "access" && p.vlan === c.vlan && p.features.portfast === true && s.interfaceUp(d.id, c.interface) && state4?.edge === true && state4.state === "forwarding";
+      return d.config.features.stp?.mode === protocol && !!p?.switchport && p.mode === "access" && p.vlan === c.vlan && p.features.portfast === true && s.interfaceUp(d.id, c.interface) && state4?.edge === true && state4.state === "forwarding";
     }
     const target = s.getDevice(c.target), bridges = c.bridges.map((id2) => s.getDevice(id2));
-    if (!target || bridges.some((b) => !b || !s.devicePowered(b.id) || b.config.features.stp?.mode !== "rapid-pvst" || b.runtime.stp[c.vlan]?.rootId !== c.root)) return false;
+    if (!target || bridges.some((b) => !b || !s.devicePowered(b.id) || b.config.features.stp?.mode !== protocol || b.runtime.stp[c.vlan]?.rootId !== c.root)) return false;
+    if (protocol === "mst" && bridges.some((b) => stpRegion(b) !== stpRegion(bridges[0]) || b.runtime.stp[c.vlan]?.boundary)) return false;
     let floor = -1;
     if (c.failed) {
       const b = s.getDevice(c.failed.device), p = b?.runtime.stp[c.vlan]?.ports[c.failed.survivor];
@@ -52597,7 +52651,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
     const bpduBefore = (bridge, port3, time2) => {
       const latest = s.events.filter((e) => e.nodeId === bridge.id && e.port === port3 && e.label === "Frame received" && e.protocol === "STP" && e.time <= time2 && e.packet?.stpBpdus?.some((b) => b.vlan === c.vlan)).at(-1);
-      return latest?.packet?.stpBpdus?.some((b) => b.vlan === c.vlan && b.mode === "rapid-pvst" && b.version === 2 && b.rootBridgeId === bridge.runtime.stp[c.vlan]?.rootBridgeId) ?? false;
+      return latest?.packet?.stpBpdus?.some((b) => b.vlan === c.vlan && b.mode === protocol && b.version === (protocol === "mst" ? 3 : 2) && b.rootBridgeId === bridge.runtime.stp[c.vlan]?.rootBridgeId && (protocol !== "mst" || b.region === stpRegion(bridge) && b.instance === (bridge.config.features.stp?.mst?.instances?.find((i) => i.vlans.includes(c.vlan))?.id ?? 0))) ?? false;
     };
     const leg = (packetId, reverse) => c.path.every((p) => {
       const a = s.getDevice(reverse ? p.bDevice : p.aDevice), b = s.getDevice(reverse ? p.aDevice : p.bDevice), ap = reverse ? p.bPort : p.aPort, bp = reverse ? p.aPort : p.bPort;
@@ -52620,13 +52674,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "ec-saved" || c.kind === "ec-stp") return Array.isArray(c.vlans) && c.vlans.length > 0 && c.vlans.length <= 64 && c.vlans.every(vlan2) && new Set(c.vlans).size === c.vlans.length;
     return c.kind === "ec-echo" && name3(c.target) && name3(c.localSwitch) && name3(c.remoteSwitch) && c.localSwitch !== c.remoteSwitch && typeof c.address === "string" && isIPv4(c.address) && vlan2(c.vlan) && (c.failed === void 0 || c.members.includes(c.failed) && c.members.length === 2);
   }
-  var projection2 = (c, group, members2, vlans5) => {
+  var projection2 = (c, group, members2, vlans6) => {
     const ports4 = [`Port-channel${group}`, ...members2];
-    if (ports4.some((p) => !Object.hasOwn(c.interfaces, p)) || vlans5.some((v) => !Object.hasOwn(c.vlans, v))) return;
+    if (ports4.some((p) => !Object.hasOwn(c.interfaces, p)) || vlans6.some((v) => !Object.hasOwn(c.vlans, v))) return;
     return JSON.stringify([ports4.map((p) => {
       const i = c.interfaces[p];
       return [i.adminUp, i.switchport, i.mode, i.vlan, i.nativeVlan, i.allowedVlans === null ? null : [...i.allowedVlans].sort((a, b) => a - b), i.speed, i.duplex, i.features.speedAuto, !!i.features.nonegotiate, !!i.features.portfast, i.features.channelGroup, i.features.channelMode, i.features.channelProtocol];
-    }), vlans5.map((v) => c.vlans[v].active)]);
+    }), vlans6.map((v) => c.vlans[v].active)]);
   };
   var lastTransition = (d, port3, state4) => (d.runtime.features.logEntries ?? []).reduce((latest, e) => e.message === `%LINK-3-UPDOWN: Interface ${port3}, changed state to ${state4}` ? Math.max(latest, e.time) : latest, -1);
   function matchesEtherChannelTroubleshootingCriterion(s, d, c) {
@@ -52666,12 +52720,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "trunk-saved") return Array.isArray(c.interfaces) && c.interfaces.length > 0 && c.interfaces.length <= 32 && c.interfaces.every(name4) && new Set(c.interfaces).size === c.interfaces.length && Array.isArray(c.vlans) && c.vlans.length > 0 && c.vlans.length <= 64 && c.vlans.every(vlan3) && new Set(c.vlans).size === c.vlans.length;
     return c.kind === "trunk-echo" && name4(c.target) && typeof c.address === "string" && isIPv4(c.address) && vlan3(c.vlan) && vlan3(c.nativeVlan) && Array.isArray(c.path) && c.path.length > 0 && c.path.length <= 8 && c.path.every((p) => p && ["aDevice", "aPort", "bDevice", "bPort"].every((k) => name4(p[k])));
   }
-  function projection3(c, ports4, vlans5) {
-    if (ports4.some((p) => !Object.hasOwn(c.interfaces, p)) || vlans5.some((v) => !Object.hasOwn(c.vlans, v))) return;
+  function projection3(c, ports4, vlans6) {
+    if (ports4.some((p) => !Object.hasOwn(c.interfaces, p)) || vlans6.some((v) => !Object.hasOwn(c.vlans, v))) return;
     return JSON.stringify([ports4.map((p) => {
       const i = c.interfaces[p];
       return [i.adminUp, i.switchport, i.mode, i.vlan, i.nativeVlan, i.allowedVlans === null ? null : [...i.allowedVlans].sort((a, b) => a - b), !!i.features.nonegotiate, !!i.features.portfast];
-    }), vlans5.map((v) => c.vlans[v].active)]);
+    }), vlans6.map((v) => c.vlans[v].active)]);
   }
   function matchesTrunkTroubleshootingCriterion(s, d, c) {
     if (c.kind === "trunk-saved") {
@@ -53245,16 +53299,20 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   var device = (sim2, name5) => sim2.lab.devices.find((d) => d.id === name5 || d.config.hostname === name5);
   function validateLesson(value) {
     const record2 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-    const text3 = (v, limit = 2e3) => typeof v === "string" && v.length <= limit;
+    const text4 = (v, limit = 2e3) => typeof v === "string" && v.length <= limit;
     const address2 = (v) => typeof v === "string" && (isIPv4(v) || isIPv6(v));
     let nodes = 0;
     const criterion = (v, depth = 0) => {
       if (!record2(v) || ++nodes > 1e3 || depth > 16) return false;
       if (v.kind === "all" || v.kind === "any")
         return Array.isArray(v.criteria) && v.criteria.length > 0 && v.criteria.every((c) => criterion(c, depth + 1));
-      if (v.kind === "link") return text3(v.a, 128) && text3(v.b, 128);
-      if (!text3(v.device, 128)) return false;
+      if (v.kind === "link") return text4(v.a, 128) && text4(v.b, 128);
+      if (!text4(v.device, 128)) return false;
       switch (v.kind) {
+        case "mst-region":
+        case "mst-priority":
+        case "mst-tree":
+          return validMSTCriterion(v);
         case "rstp-saved":
         case "rstp-edge":
         case "rstp-echo":
@@ -53355,18 +53413,18 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           return validAAAClientCriterion(v);
         case "local-user":
         case "local-ssh-login":
-          return text3(v.username, 128) && v.username !== "" && Number.isInteger(v.privilege) && v.privilege >= 0 && v.privilege <= 15 && (v.kind !== "local-ssh-login" || text3(v.source, 128) && v.source !== "");
+          return text4(v.username, 128) && v.username !== "" && Number.isInteger(v.privilege) && v.privilege >= 0 && v.privilege <= 15 && (v.kind !== "local-ssh-login" || text4(v.source, 128) && v.source !== "");
         case "local-management":
           return ["enable-secret", "console-login", "ssh-server", "vty-login"].includes(v.setting);
         case "interface-up":
-          return text3(v.interface, 128);
+          return text4(v.interface, 128);
         case "bpdu-guard-trip":
-          return text3(v.interface, 128) && v.interface !== "";
+          return text4(v.interface, 128) && v.interface !== "";
         case "root-guard-block":
         case "loop-guard-block":
-          return text3(v.interface, 128) && v.interface !== "" && Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094;
+          return text4(v.interface, 128) && v.interface !== "" && Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094;
         case "link-loss":
-          return text3(v.interface, 128) && v.interface !== "" && [v.receive, v.transmit].every((n) => Number.isFinite(n) && n >= 0 && n <= 1);
+          return text4(v.interface, 128) && v.interface !== "" && [v.receive, v.transmit].every((n) => Number.isFinite(n) && n >= 0 && n <= 1);
         case "ip-routing":
         case "ipv6-routing":
           return typeof v.enabled === "boolean";
@@ -53375,54 +53433,54 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         case "default-gateway":
           return typeof v.address === "string" && isIPv4(v.address);
         case "dhcp-relay":
-          return text3(v.interface, 128) && typeof v.serverAddress === "string" && isIPv4(v.serverAddress);
+          return text4(v.interface, 128) && typeof v.serverAddress === "string" && isIPv4(v.serverAddress);
         case "dhcp-pool":
         case "dhcp-lease": {
           const ip2 = (key4) => typeof v[key4] === "string" && isIPv4(v[key4]);
           if (!ip2("network") || !Number.isInteger(v.prefix) || v.prefix < 0 || v.prefix > 32 || !ip2("gateway") || !ip2("dnsServer")) return false;
-          return v.kind === "dhcp-lease" ? text3(v.interface, 128) && text3(v.server, 128) : text3(v.name, 128) && ip2("excludedStart") && ip2("excludedEnd") && ipToInt(v.excludedStart) <= ipToInt(v.excludedEnd) && Number.isInteger(v.leaseSeconds) && v.leaseSeconds >= 1 && v.leaseSeconds <= 4294967295;
+          return v.kind === "dhcp-lease" ? text4(v.interface, 128) && text4(v.server, 128) : text4(v.name, 128) && ip2("excludedStart") && ip2("excludedEnd") && ipToInt(v.excludedStart) <= ipToInt(v.excludedEnd) && Number.isInteger(v.leaseSeconds) && v.leaseSeconds >= 1 && v.leaseSeconds <= 4294967295;
         }
         case "echo":
           return address2(v.from);
         case "route":
-          return address2(v.network) && Number.isInteger(v.prefix) && v.prefix >= 0 && v.prefix <= (v.network.includes(":") ? 128 : 32) && (v.protocol === void 0 || text3(v.protocol, 40)) && (v.nextHop === void 0 || address2(v.nextHop)) && (v.interface === void 0 || text3(v.interface, 128) && v.interface !== "") && (v.ad === void 0 || Number.isInteger(v.ad) && v.ad >= 0 && v.ad <= 255) && (v.metric === void 0 || Number.isSafeInteger(v.metric) && v.metric >= 0);
+          return address2(v.network) && Number.isInteger(v.prefix) && v.prefix >= 0 && v.prefix <= (v.network.includes(":") ? 128 : 32) && (v.protocol === void 0 || text4(v.protocol, 40)) && (v.nextHop === void 0 || address2(v.nextHop)) && (v.interface === void 0 || text4(v.interface, 128) && v.interface !== "") && (v.ad === void 0 || Number.isInteger(v.ad) && v.ad >= 0 && v.ad <= 255) && (v.metric === void 0 || Number.isSafeInteger(v.metric) && v.metric >= 0);
         case "static-route":
-          return address2(v.network) && Number.isInteger(v.prefix) && v.prefix >= 0 && v.prefix <= (v.network.includes(":") ? 128 : 32) && address2(v.nextHop) && v.network.includes(":") === v.nextHop.includes(":") && text3(v.interface, 128) && v.interface !== "" && Number.isInteger(v.ad) && v.ad >= 1 && v.ad <= 255;
+          return address2(v.network) && Number.isInteger(v.prefix) && v.prefix >= 0 && v.prefix <= (v.network.includes(":") ? 128 : 32) && address2(v.nextHop) && v.network.includes(":") === v.nextHop.includes(":") && text4(v.interface, 128) && v.interface !== "" && Number.isInteger(v.ad) && v.ad >= 1 && v.ad <= 255;
         case "neighbor":
-          return text3(v.protocol, 40) && (v.state === void 0 || text3(v.state, 40)) && (v.peer === void 0 || text3(v.peer, 128) && v.peer !== "") && (v.interface === void 0 || text3(v.interface, 128) && v.interface !== "");
+          return text4(v.protocol, 40) && (v.state === void 0 || text4(v.state, 40)) && (v.peer === void 0 || text4(v.peer, 128) && v.peer !== "") && (v.interface === void 0 || text4(v.interface, 128) && v.interface !== "");
         case "ospf-interface":
-          return (v.protocol === void 0 || ["ospf", "ospfv3"].includes(v.protocol)) && text3(v.interface, 128) && v.interface !== "" && (v.configuredRouterId === void 0 || v.configuredRouterId === null || typeof v.configuredRouterId === "string" && isIPv4(v.configuredRouterId) && v.configuredRouterId !== "0.0.0.0") && (v.processId === void 0 || Number.isInteger(v.processId) && v.processId >= 1 && v.processId <= 65535) && (v.routerId === void 0 || typeof v.routerId === "string" && isIPv4(v.routerId)) && (v.area === void 0 || Number.isInteger(v.area) && v.area >= 0 && v.area <= 4294967295) && (v.passive === void 0 || typeof v.passive === "boolean") && (v.networkType === void 0 || ["broadcast", "point-to-point"].includes(v.networkType)) && (v.configuredCost === void 0 || Number.isInteger(v.configuredCost) && v.configuredCost >= 1 && v.configuredCost <= 65535) && (v.configuredPriority === void 0 || Number.isInteger(v.configuredPriority) && v.configuredPriority >= 0 && v.configuredPriority <= 255) && (v.role === void 0 || ["DR", "BDR", "DROTHER", "POINT-TO-POINT"].includes(v.role));
+          return (v.protocol === void 0 || ["ospf", "ospfv3"].includes(v.protocol)) && text4(v.interface, 128) && v.interface !== "" && (v.configuredRouterId === void 0 || v.configuredRouterId === null || typeof v.configuredRouterId === "string" && isIPv4(v.configuredRouterId) && v.configuredRouterId !== "0.0.0.0") && (v.processId === void 0 || Number.isInteger(v.processId) && v.processId >= 1 && v.processId <= 65535) && (v.routerId === void 0 || typeof v.routerId === "string" && isIPv4(v.routerId)) && (v.area === void 0 || Number.isInteger(v.area) && v.area >= 0 && v.area <= 4294967295) && (v.passive === void 0 || typeof v.passive === "boolean") && (v.networkType === void 0 || ["broadcast", "point-to-point"].includes(v.networkType)) && (v.configuredCost === void 0 || Number.isInteger(v.configuredCost) && v.configuredCost >= 1 && v.configuredCost <= 65535) && (v.configuredPriority === void 0 || Number.isInteger(v.configuredPriority) && v.configuredPriority >= 0 && v.configuredPriority <= 255) && (v.role === void 0 || ["DR", "BDR", "DROTHER", "POINT-TO-POINT"].includes(v.role));
         case "discovery-settings":
           return ["CDP", "LLDP"].includes(v.protocol) && typeof v.enabled === "boolean" && (v.interval === void 0 || Number.isInteger(v.interval) && v.interval >= 5 && v.interval <= (v.protocol === "CDP" ? 255 : 65535)) && (v.holdtime === void 0 || Number.isInteger(v.holdtime) && v.holdtime >= 1 && v.holdtime <= (v.protocol === "CDP" ? 255 : 65535));
         case "discovery-neighbor":
-          return ["CDP", "LLDP"].includes(v.protocol) && [v.interface, v.peer, v.peerInterface].every((s) => text3(s, 128) && s !== "");
+          return ["CDP", "LLDP"].includes(v.protocol) && [v.interface, v.peer, v.peerInterface].every((s) => text4(s, 128) && s !== "");
         case "vlan":
           return Number.isInteger(v.id) && v.id >= 1 && v.id <= 4094;
         case "lacp-bundle":
-          return Number.isInteger(v.group) && v.group >= 1 && v.group <= 4096 && text3(v.peer, 128) && Array.isArray(v.members) && v.members.length > 0 && v.members.length <= 32 && v.members.every((p) => text3(p, 128) && p !== "") && new Set(v.members).size === v.members.length;
+          return Number.isInteger(v.group) && v.group >= 1 && v.group <= 4096 && text4(v.peer, 128) && Array.isArray(v.members) && v.members.length > 0 && v.members.length <= 32 && v.members.every((p) => text4(p, 128) && p !== "") && new Set(v.members).size === v.members.length;
         case "stp-mode":
           return ["pvst", "rapid-pvst", "mst"].includes(v.mode);
         case "stp-priority":
           return Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094 && Number.isInteger(v.priority) && v.priority >= 0 && v.priority <= 61440 && v.priority % 4096 === 0;
         case "stp-root":
-          return Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094 && text3(v.root, 128) && v.root !== "";
+          return Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094 && text4(v.root, 128) && v.root !== "";
         case "stp-port":
-          return Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094 && text3(v.interface, 128) && v.interface !== "" && ["root", "designated", "alternate"].includes(v.role) && ["forwarding", "blocking"].includes(v.state) && (v.rapid === void 0 || typeof v.rapid === "boolean");
+          return Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094 && text4(v.interface, 128) && v.interface !== "" && ["root", "designated", "alternate"].includes(v.role) && ["forwarding", "blocking"].includes(v.state) && (v.rapid === void 0 || typeof v.rapid === "boolean");
         case "stp-forwarding":
         case "trunk-allowed":
-          return text3(v.interface, 128) && Array.isArray(v.vlans) && v.vlans.length > 0 && v.vlans.length <= 4094 && v.vlans.every((n) => Number.isInteger(n) && Number(n) >= 1 && Number(n) <= 4094) && new Set(v.vlans).size === v.vlans.length;
+          return text4(v.interface, 128) && Array.isArray(v.vlans) && v.vlans.length > 0 && v.vlans.length <= 4094 && v.vlans.every((n) => Number.isInteger(n) && Number(n) >= 1 && Number(n) <= 4094) && new Set(v.vlans).size === v.vlans.length;
         case "poe-interface":
-          return text3(v.interface, 128) && ["auto", "never"].includes(v.mode) && Number.isInteger(v.max) && v.max >= 4e3 && v.max <= 3e4 && ["high", "low"].includes(v.priority);
+          return text4(v.interface, 128) && ["auto", "never"].includes(v.mode) && Number.isInteger(v.max) && v.max >= 4e3 && v.max <= 3e4 && ["high", "low"].includes(v.priority);
         case "poe-supply":
-          return text3(v.switch, 128) && text3(v.interface, 128) && Number.isFinite(v.watts) && v.watts > 0 && v.watts <= 30 && ["802.3af", "802.3at"].includes(v.standard) && [3, 4].includes(v.class) && (v.spatialStreams === void 0 || [2, 4].includes(v.spatialStreams)) && (v.usb === void 0 || typeof v.usb === "boolean");
+          return text4(v.switch, 128) && text4(v.interface, 128) && Number.isFinite(v.watts) && v.watts > 0 && v.watts <= 30 && ["802.3af", "802.3at"].includes(v.standard) && [3, 4].includes(v.class) && (v.spatialStreams === void 0 || [2, 4].includes(v.spatialStreams)) && (v.usb === void 0 || typeof v.usb === "boolean");
         case "voice-policy":
           return Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094;
         case "mac-learned":
-          return text3(v.interface, 128) && text3(v.source, 128) && text3(v.sourceInterface, 128) && Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094;
+          return text4(v.interface, 128) && text4(v.source, 128) && text4(v.sourceInterface, 128) && Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094;
         case "interface":
-          if (!text3(v.interface, 128)) return false;
+          if (!text4(v.interface, 128)) return false;
           if (["switchport", "ipv4Addressed", "portfast", "bpduguard", "rootGuard", "loopGuard", "errDisabled", "speedAuto", "nonegotiate", "cdp", "lldpTransmit", "lldpReceive"].includes(v.property)) return typeof v.value === "boolean";
-          if (v.property === "description") return text3(v.value, 240);
+          if (v.property === "description") return text4(v.value, 240);
           if (v.property === "channelGroup") return Number.isInteger(v.value) && v.value >= 1 && v.value <= 4096;
           if (v.property === "channelMode") return ["active", "passive", "on", "desirable", "auto"].includes(v.value);
           if (v.property === "duplex") return ["auto", "full", "half"].includes(v.value);
@@ -53451,21 +53509,21 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           return false;
       }
     };
-    if (!record2(value) || !text3(value.title, 200) || !text3(value.description, 1e4) || !Array.isArray(value.objectives) || value.objectives.length > 100)
+    if (!record2(value) || !text4(value.title, 200) || !text4(value.description, 1e4) || !Array.isArray(value.objectives) || value.objectives.length > 100)
       throw Error("The lab guide is invalid.");
     if (value.celebrated !== void 0 && typeof value.celebrated !== "boolean")
       throw Error("The lab guide celebration record is invalid.");
     for (const key4 of ["completed", "observations"])
-      if (value[key4] !== void 0 && (!Array.isArray(value[key4]) || value[key4].length > 1e3 || value[key4].some((id2) => !text3(id2, 300))))
+      if (value[key4] !== void 0 && (!Array.isArray(value[key4]) || value[key4].length > 1e3 || value[key4].some((id2) => !text4(id2, 300))))
         throw Error("The lab guide completion record is invalid.");
     const ids = /* @__PURE__ */ new Set();
     for (const o of value.objectives) {
-      if (!record2(o) || !text3(o.id, 128) || !o.id || ids.has(o.id) || !text3(o.title, 500) || o.description !== void 0 && !text3(o.description, 1e4) || !criterion(o.criterion))
+      if (!record2(o) || !text4(o.id, 128) || !o.id || ids.has(o.id) || !text4(o.title, 500) || o.description !== void 0 && !text4(o.description, 1e4) || !criterion(o.criterion))
         throw Error(
           "A lab objective has an invalid ID, description, or condition."
         );
       ids.add(o.id);
-      if (o.action !== void 0 && (!record2(o.action) || !["ping", "dhcp", "arp", "traffic", "slaac"].includes(o.action.kind) || !text3(o.action.device, 128) || (o.action.kind === "ping" ? !address2(o.action.target) : !text3(o.action.interface, 128) || o.action.kind === "arp" && !isIPv4(o.action.address) || o.action.kind === "traffic" && !["broadcast", "multicast", "unicast"].includes(o.action.traffic)) || o.action.kind === "ping" && o.action.vrf !== void 0 && (!text3(o.action.vrf, 128) || o.action.vrf.length === 0) || o.action.kind === "ping" && o.action.expect !== void 0 && o.action.expect !== "blocked" || o.action.when !== void 0 && !criterion(o.action.when)))
+      if (o.action !== void 0 && (!record2(o.action) || !["ping", "dhcp", "arp", "traffic", "slaac"].includes(o.action.kind) || !text4(o.action.device, 128) || (o.action.kind === "ping" ? !address2(o.action.target) : !text4(o.action.interface, 128) || o.action.kind === "arp" && !isIPv4(o.action.address) || o.action.kind === "traffic" && !["broadcast", "multicast", "unicast"].includes(o.action.traffic)) || o.action.kind === "ping" && o.action.vrf !== void 0 && (!text4(o.action.vrf, 128) || o.action.vrf.length === 0) || o.action.kind === "ping" && o.action.expect !== void 0 && o.action.expect !== "blocked" || o.action.when !== void 0 && !criterion(o.action.when)))
         throw Error("A lab objective action is invalid.");
     }
   }
@@ -53486,6 +53544,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!("device" in criterion)) return false;
     const d = device(sim2, criterion.device);
     if (!d) return false;
+    if (criterion.kind === "mst-region" || criterion.kind === "mst-priority" || criterion.kind === "mst-tree") return matchesMSTCriterion(sim2, d, criterion);
     if (criterion.kind === "rstp-saved" || criterion.kind === "rstp-edge" || criterion.kind === "rstp-echo") return matchesRSTPCriterion(sim2, d, criterion);
     if (criterion.kind === "ec-saved" || criterion.kind === "ec-stp" || criterion.kind === "ec-echo") return matchesEtherChannelTroubleshootingCriterion(sim2, d, criterion);
     if (criterion.kind === "trunk-saved" || criterion.kind === "trunk-echo") return matchesTrunkTroubleshootingCriterion(sim2, d, criterion);
@@ -53776,15 +53835,15 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           throw Error(`Protocol ${key4} must be an array.`);
     }
   }
-  function parseDocument2(text3) {
-    if (new TextEncoder().encode(text3).byteLength > MAX_LAB_FILE_BYTES)
+  function parseDocument2(text4) {
+    if (new TextEncoder().encode(text4).byteLength > MAX_LAB_FILE_BYTES)
       throw Error("This lab exceeds the 10 MB file limit.");
-    return validateDocument(JSON.parse(text3));
+    return validateDocument(JSON.parse(text4));
   }
-  function parseLabFile(text3) {
-    if (new TextEncoder().encode(text3).byteLength > MAX_LAB_FILE_BYTES)
+  function parseLabFile(text4) {
+    if (new TextEncoder().encode(text4).byteLength > MAX_LAB_FILE_BYTES)
       throw Error("This lab exceeds the 10 MB file limit.");
-    const yaml = parseDocument(text3, {
+    const yaml = parseDocument(text4, {
       version: "1.2",
       schema: "core",
       merge: false,
@@ -54072,6 +54131,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "802-1q-trunk-troubleshooting", group: "CCNP ENCOR", section: "Layer 2", title: "802.1Q Trunk Troubleshooting", description: "Diagnose six faults across a three-switch topology. Restore static trunks, native and allowed VLANs, VLAN state and access membership; prove tagging, STP forwarding and dynamic MAC learning.", devices: 9, links: 8, practice: true },
     { id: "etherchannel-troubleshooting", group: "CCNP ENCOR", section: "Layer 2", title: "EtherChannel Troubleshooting", description: "Repair LACP mode, membership, member consistency, shutdown and VLAN faults. Verify negotiated aggregation, logical spanning tree, MAC learning and real traffic through each surviving link.", devices: 6, links: 6, practice: true },
     { id: "rapid-spanning-tree-protocol", group: "CCNP ENCOR", section: "Layer 2", title: "Rapid Spanning Tree Protocol (RSTP)", description: "Configure Cisco Rapid PVST+, elect per-VLAN roots and verify rapid point-to-point and edge behavior. Inspect proposal/agreement BPDUs, prove alternate-port recovery and restore both forwarding trees.", devices: 7, links: 7, practice: true },
+    { id: "multiple-spanning-tree", group: "CCNP ENCOR", section: "Layer 2", title: "Multiple Spanning Tree (MST)", description: "Build one MST region with two VLANs sharing MST1 and a separate MST2 tree. Verify MST0, committed region settings, per-instance roots and roles, actual VLAN traffic and alternate-path recovery.", devices: 9, links: 9, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
   var GRE_IPSEC_PSK = "ENCOR-Lab-PSK";
@@ -54777,7 +54837,46 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     "end",
     "write memory"
   ]]));
+  var MST_COMMANDS = Object.fromEntries(["SW1", "SW2", "SW3"].map((name5, i) => [name5, [
+    "enable",
+    "configure terminal",
+    "spanning-tree mode mst",
+    "spanning-tree pathcost method long",
+    "spanning-tree mst configuration",
+    "name ENCOR-MST",
+    "revision 10",
+    "no instance 1",
+    "no instance 2",
+    "instance 1 vlan 10,20",
+    "instance 2 vlan 30",
+    "show pending",
+    "exit",
+    `spanning-tree mst 0 priority ${[24576, 28672, 32768][i]}`,
+    `spanning-tree mst 1 priority ${[24576, 28672, 32768][i]}`,
+    `spanning-tree mst 2 priority ${[28672, 24576, 32768][i]}`,
+    "interface range GigabitEthernet0/23 - 24",
+    "shutdown",
+    "switchport mode trunk",
+    "switchport trunk native vlan 99",
+    "switchport trunk allowed vlan 1,10,20,30,99",
+    "switchport nonegotiate",
+    "no spanning-tree portfast",
+    "speed auto",
+    "duplex auto",
+    "no shutdown",
+    ...i === 0 ? ["interface GigabitEthernet0/1"] : ["interface range GigabitEthernet0/1 - " + (i === 1 ? 2 : 3)],
+    "spanning-tree portfast",
+    "no shutdown",
+    "end",
+    "write memory"
+  ]]));
   var GUIDE_RESOURCES = {
+    "multiple-spanning-tree": { planTitle: "MST instances and addressing plan", columns: ["Instance / VLAN", "Hosts / access ports", "IPv4 addresses /24", "Primary / secondary"], rows: [["MST1 \xB7 VLAN 10", "PC1: SW3 Gi0/1 \xB7 PC2: SW2 Gi0/1", "192.168.10.11 \u2194 192.168.10.12", "SW1 24576 \xB7 SW2 28672"], ["MST1 \xB7 VLAN 20", "PC3: SW3 Gi0/2 \xB7 PC4: SW2 Gi0/2", "192.168.20.11 \u2194 192.168.20.12", "Same tree as VLAN 10"], ["MST2 \xB7 VLAN 30", "PC5: SW3 Gi0/3 \xB7 PC6: SW1 Gi0/1", "192.168.30.11 \u2194 192.168.30.12", "SW2 24576 \xB7 SW1 28672"], ["MST0 \xB7 VLAN 1,99", "No host addressing required", "Unmapped VLANs use instance 0", "SW1 24576 \xB7 SW2 28672"]], commands: MST_COMMANDS, verification: { SW1: ["show spanning-tree summary", "show spanning-tree mst configuration", "show spanning-tree mst 0", "show spanning-tree mst 1", "show spanning-tree mst 2", "show interfaces trunk", "show spanning-tree pathcost method", "show startup-config"], SW2: ["show spanning-tree mst configuration", "show spanning-tree mst 1", "show spanning-tree mst 2", "show mac address-table dynamic", "show startup-config"], SW3: ["show spanning-tree mst configuration", "show spanning-tree mst 0", "show spanning-tree mst 1", "show spanning-tree mst 2", "show spanning-tree mst 1 interface GigabitEthernet0/23 detail", "show spanning-tree mst 2 interface GigabitEthernet0/24 detail", "show spanning-tree mst interface GigabitEthernet0/24", "show mac address-table dynamic", "show logging", "show startup-config"], PC1: ["ipconfig", "ping -n 3 192.168.10.12"], PC3: ["ipconfig", "ping -n 3 192.168.20.12"], PC5: ["ipconfig", "ping -n 3 192.168.30.12"] }, setup: [
+      { title: "Build and commit one matching MST region", instructions: ["The nine-node triangle has prepared VLANs and PC addresses. Practice starts in classic PVST with inter-switch interfaces shut down. Configure spanning-tree mode mst on all three switches.", "Under spanning-tree mst configuration, use name ENCOR-MST and revision 10. Map VLANs10,20 to instance 1 and VLAN 30 to instance 2. All remaining VLANs, including 1 and 99, remain in MST0. Compare show current and show pending; exit commits the pending region and abort discards it. Pending edits cannot complete the region task.", "Region membership requires the same name, revision and complete VLAN mapping. A higher revision does not automatically overwrite another switch. Configure every switch explicitly; root priorities are local settings and need not match."] },
+      { title: "Elect per-instance roots and verify shared trees", instructions: ["Make SW1 the primary for MST0 and MST1 at base priority 24576, with SW2 at 28672 and SW3 at 32768. Make SW2 primary for MST2 at 24576, SW1 secondary at 28672 and SW3 at 32768. Use spanning-tree mst <instance> priority <value>.", "Set spanning-tree pathcost method long. A Gigabit link has cost 20000 in this lab. Enable trunks with native VLAN 99 and exactly allowed VLANs 1,10,20,30,99; keep inter-switch PortFast disabled and enable PortFast on the six PC access ports only.", "Verify show spanning-tree mst configuration and MST0/1/2 output. Instance1 includes both VLAN 10 and20, which must have the same root, root port and path cost. SW3 uses Gi0/23 Root FWD and Gi0/24 Altn BLK for MST0/1, and opposite roles for MST2. Displayed priority includes the instance ID: 24577 for the MST1 primary and 24578 for MST2.", "Open Simulation \u2192 Packet inspection, select STP and inspect the MST/VLAN field groups. Delivered modeled BPDUs show version 3, region name/revision and the instance classification, plus root, role and proposal/agreement fields."] },
+      { title: "Prove both instances and alternate-path recovery", instructions: ["Run all three normal pair tests. VLAN 10 and20 follow SW3 \u2192 SW1 \u2192 SW2 together through MST1. VLAN 30 follows SW3 \u2192 SW2 \u2192 SW1 through MST2. These are separate Layer 2 domains; no router or default gateway is needed.", "Shut SW3 Gi0/23 only and test fresh VLAN 10 traffic through the promoted Gi0/24 path directly to SW2. Restore Gi0/23 and rerun the three normal tests. Then shut SW3 Gi0/24 only and test fresh VLAN 30 traffic through Gi0/23 directly to SW1. Restore Gi0/24 and repeat all normal tests. Old pings cannot complete a new failure exercise.", "Finish with the original instance roles, both uplinks enabled and fresh dynamic MACs on the normal paths. Save all three healthy configurations with write memory. Reopening retains earned traffic/failure achievements, but MAC learning must be rebuilt."] },
+      { title: "Diagnose a region mismatch", instructions: ["Optionally change SW3\u2019s revision to 11, its name, or the VLAN 20 mapping. Commit the edit and inspect boundary versus internal status with show spanning-tree mst interface GigabitEthernet0/24. The lab\u2019s matched-region and instance-tree tasks must lose credit. A working ping alone cannot prove correct region membership.", "Restore ENCOR-MST, revision 10 and the exact instance mappings, then wait for new BPDUs and repeat all normal tests. This exercise validates one correctly matched region and recovery from a mismatch; it does not require building a multi-region or PVST-interoperability topology."] }
+    ], note: "MST0 is the IST/CIST instance within this exercise. VLANs10 and20 deliberately share one MST1 forwarding tree. The completed reference starts with ten live configuration/region/tree/save tasks, empty runtime and no fabricated traffic, failure or MAC evidence." },
     "rapid-spanning-tree-protocol": { planTitle: "VLAN, root and addressing plan", columns: ["VLAN", "Hosts / access ports", "IPv4 addresses /24", "Primary / secondary"], rows: [["10", "PC1: SW3 Gi0/1 \xB7 PC2: SW2 Gi0/1", "192.168.10.11 \u2194 192.168.10.12", "SW1 24576 \xB7 SW2 28672"], ["20", "PC3: SW3 Gi0/2 \xB7 PC4: SW1 Gi0/1", "192.168.20.11 \u2194 192.168.20.12", "SW2 24576 \xB7 SW1 28672"]], commands: RSTP_COMMANDS, verification: { SW1: ["show spanning-tree summary", "show spanning-tree vlan 10", "show spanning-tree vlan 20", "show spanning-tree interface GigabitEthernet0/24 detail", "show interfaces trunk", "show mac address-table dynamic", "show startup-config"], SW2: ["show spanning-tree vlan 10", "show spanning-tree vlan 20", "show spanning-tree root", "show mac address-table dynamic", "show startup-config"], SW3: ["show spanning-tree vlan 10", "show spanning-tree vlan 20", "show spanning-tree interface GigabitEthernet0/23 detail", "show spanning-tree interface GigabitEthernet0/24 detail", "show spanning-tree blockedports", "show spanning-tree inconsistentports", "show mac address-table dynamic", "show logging", "show startup-config"], PC1: ["ipconfig", "ping -n 3 192.168.10.12"], PC3: ["ipconfig", "ping -n 3 192.168.20.12"] }, setup: [
       { title: "Configure IOS Rapid PVST+ and intentional roots", instructions: ["Cisco IOS implements per-VLAN RSTP with spanning-tree mode rapid-pvst. There is no separate spanning-tree mode rstp command in this lab. VLANs, trunk policy and PC addressing are prepared; practice starts in classic PVST with inter-switch interfaces shut down.", "Make SW1 primary for VLAN 10 at base priority 24576 and secondary for VLAN 20 at 28672. Reverse those priorities on SW2; leave SW3 at 32768 for both VLANs. The displayed bridge priority includes the VLAN system-ID extension, so the VLAN 10 and VLAN 20 primary values display as 24586 and 24596."] },
       { title: "Verify point-to-point, edge and alternate behavior", instructions: ["Enable all six inter-switch interfaces as full-duplex 802.1Q trunks, native VLAN 99, exactly allowed VLANs 10,20,99, with DTP disabled and PortFast off. Enable PortFast only on the four PC-facing access ports. Do not make switch-to-switch links edge ports to bypass convergence.", "Inspect protocol rstp and actual Root/Designated/Alternate roles. SW3 uses Gi0/23 Root FWD and Gi0/24 Altn BLK in VLAN 10; VLAN 20 uses the opposite uplinks. IOS displays BLK for the alternate\u2019s discarding behavior. Full-duplex inter-switch links should show P2p; host ports show P2p Edge.", "Open Simulation \u2192 Packet inspection and filter STP. Select received BPDUs and inspect the Spanning tree group: VLAN, mode, protocol version 2, root bridge, sender bridge, root path cost, role and proposal/agreement/topology-change flags. These fields come from delivered control messages. Compare event timestamps during a failure; configured priorities alone do not prove an elected or rapidly converged tree."] },
@@ -56228,6 +56327,69 @@ ${out.join("\n")}`);
     const doc = { format: "netsim-lab", version: 1, seed: 20261029, lab };
     return mode === "completed" ? completedDocument(doc, STP_ROOT_COMMANDS) : parseDocument2(JSON.stringify(doc));
   }
+  function createMSTLab(mode = "practice") {
+    const make = (name5, kind, x, y) => ({ id: "device-mst-" + name5.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name5), runtime: emptyRuntime() });
+    const switches = [make("SW1", "switch", 360, 160), make("SW2", "switch", 940, 160), make("SW3", "switch", 650, 450)], [sw1, sw2, sw3] = switches, g = (n) => "GigabitEthernet0/" + n;
+    const pcs = [make("PC1", "pc", 420, 750), make("PC2", "pc", 1160, 360), make("PC3", "pc", 650, 750), make("PC4", "pc", 1160, 600), make("PC5", "pc", 880, 750), make("PC6", "pc", 140, 450)];
+    const endpoints = [[pcs[0], sw3, 1, 10], [pcs[1], sw2, 1, 10], [pcs[2], sw3, 2, 20], [pcs[3], sw2, 2, 20], [pcs[4], sw3, 3, 30], [pcs[5], sw1, 1, 30]];
+    for (const sw of switches) {
+      sw.config.features.stp = { mode: "pvst" };
+      for (const v of [10, 20, 30, 99]) sw.config.vlans[v] = { id: v, name: v === 99 ? "NATIVE" : "VLAN" + v, active: true };
+      for (const n of [23, 24]) {
+        const p = sw.config.interfaces[g(n)];
+        Object.assign(p, { mode: "trunk", nativeVlan: 99, allowedVlans: [1, 10, 20, 30, 99], adminUp: false });
+        p.features.nonegotiate = true;
+        p.features.portfast = false;
+      }
+    }
+    for (const [pc, sw, n, v] of endpoints) {
+      Object.assign(sw.config.interfaces[g(n)], { mode: "access", vlan: v });
+      sw.config.interfaces[g(n)].features.portfast = false;
+      const side = Number(pc.config.hostname.slice(2)) % 2 ? 11 : 12;
+      Object.assign(pc.config.interfaces.GigabitEthernet0, { ip: `192.168.${v}.${side}`, mask: "255.255.255.0" });
+      pc.config.interfaces.GigabitEthernet0.features.dhcp = false;
+      delete pc.config.defaultGateway;
+    }
+    for (const d of [...switches, ...pcs]) d.startupConfig = structuredClone(d.config);
+    const instances2 = [{ id: 1, vlans: [10, 20] }, { id: 2, vlans: [30] }], all = (criteria) => ({ kind: "all", criteria }), property = (d, p, property2, value) => ({ kind: "interface", device: d.id, interface: p, property: property2, value });
+    const modeGoal = all(switches.map((sw) => ({ kind: "stp-mode", device: sw.id, mode: "mst" })));
+    const region = all(switches.map((sw) => ({ kind: "mst-region", device: sw.id, name: "ENCOR-MST", revision: 10, instances: instances2 })));
+    const priorities = (instance) => all(switches.map((sw, i) => ({ kind: "mst-priority", device: sw.id, instance, priority: (instance === 2 ? [28672, 24576, 32768] : [24576, 28672, 32768])[i] })));
+    const tree = (sw, instance, ports4) => ({ kind: "mst-tree", device: sw.id, instance, vlans: instance === 0 ? [1, 99] : instance === 1 ? [10, 20] : [30], root: instance === 2 ? sw2.id : sw1.id, ...ports4 ? { ports: ports4 } : {} });
+    const role = (n, role2) => ({ name: g(n), role: role2, state: role2 === "alternate" ? "blocking" : "forwarding" });
+    const trunks = all(switches.flatMap((sw) => [23, 24].flatMap((n) => [{ kind: "trunk-allowed", device: sw.id, interface: g(n), vlans: [1, 10, 20, 30, 99] }, property(sw, g(n), "nativeVlan", 99), property(sw, g(n), "portfast", false), property(sw, g(n), "nonegotiate", true), { kind: "interface-up", device: sw.id, interface: g(n) }])));
+    const edges = all(endpoints.map(([, sw, n, vlan4]) => ({ kind: "rstp-edge", protocol: "mst", device: sw.id, interface: g(n), vlan: vlan4 })));
+    const elections = all(switches.flatMap((sw) => [0, 1, 2].map((instance) => tree(sw, instance))));
+    const roles = all([0, 1, 2].flatMap((instance) => {
+      const root = instance === 2 ? sw2 : sw1, other = instance === 2 ? sw1 : sw2;
+      return [tree(root, instance, [role(23, "designated"), role(24, "designated")]), tree(other, instance, [role(24, "root"), role(23, "designated")]), tree(sw3, instance, [role(instance === 2 ? 24 : 23, "root"), role(instance === 2 ? 23 : 24, "alternate")])];
+    }));
+    const ready = all([modeGoal, region, priorities(0), priorities(1), priorities(2), trunks, edges, elections, roles]);
+    const segment = (a, ap, b, bp) => ({ aDevice: a.id, aPort: g(ap), bDevice: b.id, bPort: g(bp) }), bridges = switches.map((sw) => sw.id);
+    const traffic2 = (vlan4, failed) => {
+      const pair = [10, 20, 30].indexOf(vlan4);
+      return { kind: "rstp-echo", protocol: "mst", device: pcs[2 * pair].id, target: pcs[2 * pair + 1].id, address: `192.168.${vlan4}.12`, vlan: vlan4, root: vlan4 === 30 ? sw2.id : sw1.id, bridges, path: failed ? [segment(sw3, failed === 23 ? 24 : 23, failed === 23 ? sw2 : sw1, 23)] : vlan4 === 30 ? [segment(sw3, 24, sw2, 23), segment(sw2, 24, sw1, 24)] : [segment(sw3, 23, sw1, 23), segment(sw1, 24, sw2, 24)], ...failed ? { failed: { device: sw3.id, interface: g(failed), survivor: g(failed === 23 ? 24 : 23) } } : {} };
+    };
+    const resource = GUIDE_RESOURCES["multiple-spanning-tree"];
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "multiple-spanning-tree", name: "Multiple Spanning Tree (MST)" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [...switches, ...pcs], links: [
+      ...[segment(sw1, 24, sw2, 24), segment(sw1, 23, sw3, 23), segment(sw2, 23, sw3, 24)].map((p, i) => ({ id: "link-mst-" + ["core", "left", "right"][i], a: { deviceId: p.aDevice, port: p.aPort }, b: { deviceId: p.bDevice, port: p.bPort }, enabled: true, delay: 0.1, loss: 0 })),
+      ...endpoints.map(([pc, sw, n]) => ({ id: "link-mst-" + pc.config.hostname.toLowerCase(), a: { deviceId: sw.id, port: g(n) }, b: { deviceId: pc.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 }))
+    ], notes: [{ id: "note-mst", x: 650, y: 910, text: "ENCOR-MST \xB7 revision 10\nMST0 / MST1: root SW1 \xB7 MST1 = VLANs 10,20\nMST2: root SW2 \xB7 VLAN 30 \xB7 long path costs" }], lesson: { title: "Multiple Spanning Tree (MST)", description: "Build one matching MST region, share a forwarding tree between two VLANs and prove independent forwarding and alternate recovery for another instance.\n\n" + resource.setup.map((s) => s.title + "\n" + s.instructions.join("\n")).join("\n\n"), objectives: [
+      { id: "mst-mode", title: "Enable MST on all three switches", criterion: modeGoal },
+      { id: "region", title: "Commit the same ENCOR-MST region on every switch", description: "Revision 10; MST1 contains VLANs 10,20 and MST2 contains VLAN 30. Other VLANs remain in MST0.", criterion: region },
+      ...[0, 1, 2].map((instance) => ({ id: "priority-" + instance, title: `Set the intended MST${instance} root priorities`, description: instance === 2 ? "SW2 24576, SW1 28672, SW3 32768." : "SW1 24576, SW2 28672, SW3 32768.", criterion: priorities(instance) })),
+      { id: "trunks", title: "Enable safe inter-switch trunks", description: "Native VLAN 99, allowed VLANs 1,10,20,30,99, DTP disabled and PortFast off on all six interfaces.", criterion: trunks },
+      { id: "edges", title: "Enable operational edge behavior on the six PC access ports", criterion: edges },
+      { id: "elections", title: "Verify received roots and coherent VLAN-to-instance trees", description: "MST0/1 elect SW1 and MST2 elects SW2. VLANs in each instance must agree on root, root port and cost, without a region boundary.", criterion: elections },
+      { id: "roles", title: "Verify per-instance point-to-point root and alternate roles", description: "SW3 uses Gi0/23 Root and Gi0/24 Alternate for MST0/1; MST2 reverses those roles. Core links must agree.", criterion: roles },
+      { id: "saved", title: "Save the healthy MST configuration on all three switches", description: "Use write memory with both uplinks restored.", criterion: all([ready, ...switches.map((sw, i) => ({ kind: "rstp-saved", device: sw.id, interfaces: [g(23), g(24), ...Array.from({ length: [1, 2, 3][i] }, (_, n) => g(n + 1))], vlans: [1, 10, 20, 30, 99] }))]) },
+      ...[10, 20, 30].map((vlan4, i) => ({ id: "vlan" + vlan4 + "-ping", title: `Verify VLAN ${vlan4} over MST${vlan4 === 30 ? 2 : 1}`, description: `PC${2 * i + 1} \u2192 PC${2 * i + 2}. ${vlan4 === 30 ? "SW3 \u2192 SW2 \u2192 SW1" : "SW3 \u2192 SW1 \u2192 SW2"}; tagged replies and preceding matching-region MST BPDUs are required.`, criterion: traffic2(vlan4), action: { kind: "ping", device: pcs[2 * i].id, target: `192.168.${vlan4}.12` } })),
+      ...[23, 24].map((failed, i) => ({ id: "fail-gi" + failed, title: `Shut SW3 Gi0/${failed} and prove MST${i === 0 ? 1 : 2} alternate recovery`, description: `Run fresh VLAN ${i === 0 ? 10 : 30} traffic over Gi0/${failed === 23 ? 24 : 23}, restore the failed link, then repeat all three normal tests.`, criterion: traffic2(i === 0 ? 10 : 30, failed), action: { kind: "ping", device: pcs[i === 0 ? 0 : 4].id, target: `192.168.${i === 0 ? 10 : 30}.12`, when: all([property(sw3, g(failed), "adminUp", false), tree(sw3, i === 0 ? 1 : 2, [role(failed === 23 ? 24 : 23, "root")])]) } })),
+      { id: "mac-learning", title: "Verify fresh MAC learning on the restored instance paths", description: "Learn all six hosts at their access ports; SW3 learns remote VLAN10/20 hosts via Gi0/23 and VLAN30 via Gi0/24. Repeat all normal tests after link restoration.", criterion: all([ready, ...endpoints.map(([pc, sw, n, vlan4]) => ({ kind: "mac-learned", device: sw.id, interface: g(n), source: pc.id, sourceInterface: "GigabitEthernet0", vlan: vlan4 })), ...[10, 20, 30].map((vlan4, i) => ({ kind: "mac-learned", device: sw3.id, interface: g(vlan4 === 30 ? 24 : 23), source: pcs[2 * i + 1].id, sourceInterface: "GigabitEthernet0", vlan: vlan4 }))]) }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, MST_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createRSTPLab(mode = "practice") {
     const doc = parseDocument2(JSON.stringify(createRapidPVSTLab()).replaceAll("device-rapid-pvst-", "device-rst-").replaceAll("link-rapid-pvst-", "link-rst-"));
     const lab = doc.lab, switches = lab.devices.filter((d) => d.kind === "switch"), pcs = lab.devices.filter((d) => d.kind === "pc"), [sw1, sw2, sw3] = switches, g = (n) => "GigabitEthernet0/" + n;
@@ -56998,6 +57160,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "multiple-spanning-tree") return createMSTLab(mode);
     if (id2 === "rapid-spanning-tree-protocol") return createRSTPLab(mode);
     if (id2 === "etherchannel-troubleshooting") return createEtherChannelTroubleshootingLab(mode);
     if (id2 === "802-1q-trunk-troubleshooting") return createTrunkTroubleshootingLab(mode);
@@ -57231,8 +57394,8 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     const render = () => {
       const next = lessonProgress(sim2);
       if (!next) return;
-      const summary = document.querySelector("[data-guide-progress]"), text3 = `${next.complete} of ${next.rows.length} tasks complete`;
-      if (summary.textContent !== text3) summary.textContent = text3;
+      const summary = document.querySelector("[data-guide-progress]"), text4 = `${next.complete} of ${next.rows.length} tasks complete`;
+      if (summary.textContent !== text4) summary.textContent = text4;
       document.querySelector("[data-guide-completion]").hidden = next.rows.length === 0 || next.complete !== next.rows.length;
       for (const { objective, complete: complete2 } of next.rows) {
         const row5 = root.querySelector(`[data-objective="${CSS.escape(objective.id)}"]`);
@@ -57976,8 +58139,8 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     watch(sim2, d, () => {
       coverageHint();
       const state5 = d.runtime.features.wireless;
-      const text3 = document.querySelector("[data-wireless-live-state]"), reason = document.querySelector("[data-wireless-live-reason]");
-      if (text3) text3.textContent = state5?.state ?? "BOOT";
+      const text4 = document.querySelector("[data-wireless-live-state]"), reason = document.querySelector("[data-wireless-live-reason]");
+      if (text4) text4.textContent = state5?.state ?? "BOOT";
       if (reason) reason.textContent = state5?.reason ?? "";
       const history2 = document.querySelector("[data-wireless-history]");
       if (history2) history2.textContent = (state5?.history ?? []).map((r) => `${(r.time / 1e3).toFixed(1)}s ${r.state}: ${r.reason}`).join("\n");
@@ -58266,11 +58429,11 @@ Inspect show power inline and the per-port detail and priority views. The full 3
       for (let i = 1; i < samples.length; i++) distances.push(distances[i - 1] + Math.hypot(samples[i].x - samples[i - 1].x, samples[i].y - samples[i - 1].y));
       const total2 = distances.at(-1);
       const place = (endpoint, fromStart) => {
-        const text3 = shortInterface(endpoint.port), width = Math.max(48, text3.length * 6.6 + 14), height = 22;
+        const text4 = shortInterface(endpoint.port), width = Math.max(48, text4.length * 6.6 + 14), height = 22;
         let best;
         const anchors = [];
         const consider = (anchor, perpendicular, fraction, offset) => {
-          const center = add(anchor, perpendicular, offset), label2 = { ...center, width, height, text: text3, endpoint, anchor };
+          const center = add(anchor, perpendicular, offset), label2 = { ...center, width, height, text: text4, endpoint, anchor };
           const collisions = reserved.reduce((n, box) => n + Number(overlap(label2, box)), 0);
           const cost = collisions * 1e5 + Math.abs(offset) + Math.abs(fraction - 0.18) * 100;
           if (!best || collisions < best.collisions || collisions === best.collisions && cost < best.cost) best = { label: label2, cost, collisions };
@@ -58314,12 +58477,12 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     const blocked = trees.filter(([, tree]) => ["blocking", "discarding", "disabled"].includes(tree.ports[stpPort].state));
     const transitioning = trees.filter(([, tree]) => ["listening", "learning"].includes(tree.ports[stpPort].state));
     const forwarding = trees.filter(([, tree]) => tree.ports[stpPort].state === "forwarding");
-    const vlans5 = (rows2) => rows2.map(([vlan4]) => vlan4).join(", ");
+    const vlans6 = (rows2) => rows2.map(([vlan4]) => vlan4).join(", ");
     if (blocked.length) return {
       state: forwarding.length ? "partial" : "blocked",
-      description: `STP blocking VLAN ${vlans5(blocked)}${forwarding.length ? `; forwarding VLAN ${vlans5(forwarding)}` : ""}`
+      description: `STP blocking VLAN ${vlans6(blocked)}${forwarding.length ? `; forwarding VLAN ${vlans6(forwarding)}` : ""}`
     };
-    if (transitioning.length) return { state: "transitioning", description: `STP converging in VLAN ${vlans5(transitioning)}` };
+    if (transitioning.length) return { state: "transitioning", description: `STP converging in VLAN ${vlans6(transitioning)}` };
     return { state: "up", description: "Link up; STP forwarding" };
   }
   var LinkActivity = class {
@@ -58391,8 +58554,8 @@ Click to add \xB7 Drag to position`;
       if (target.hasAttribute("data-link"))
         return `${target.getAttribute("aria-label")}
 ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-click for cable settings`;
-      const text3 = target.getAttribute("data-tooltip") || actionHints[target.getAttribute("data-action") || ""] || target.getAttribute("aria-label") || target.textContent?.trim().replace(/\s+/g, " ") || "";
-      return text3.length <= 200 ? text3 : "";
+      const text4 = target.getAttribute("data-tooltip") || actionHints[target.getAttribute("data-action") || ""] || target.getAttribute("aria-label") || target.textContent?.trim().replace(/\s+/g, " ") || "";
+      return text4.length <= 200 ? text4 : "";
     }
     function hide() {
       window.clearTimeout(showTimer);
@@ -58407,10 +58570,10 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
     }
     function show(target) {
       if (active4 !== target || !target.isConnected) return hide();
-      const text3 = description(target);
+      const text4 = description(target);
       const bounds = target.getBoundingClientRect();
-      if (!text3 || !bounds.width || !bounds.height) return hide();
-      popup.textContent = text3;
+      if (!text4 || !bounds.width || !bounds.height) return hide();
+      popup.textContent = text4;
       popup.hidden = false;
       const { width, height } = popup.getBoundingClientRect();
       const margin = 8;
@@ -58559,7 +58722,7 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
   var userRow2 = (name5 = "", user = {}) => `<div class="grid grid-cols-[1fr_1fr_auto_30px] items-end gap-3 rounded-xl border border-slate-200 p-3" data-ftp-row><label class="field">Username<input name="ftp-user" value="${escapeHTML(name5)}" autocomplete="off"></label><label class="field">Lab password<input type="password" name="ftp-password" value="${escapeHTML(user.password ?? "")}" autocomplete="off"></label><label class="flex items-center gap-2 pb-2 text-xs"><input type="checkbox" data-ftp-user-readonly ${user.readOnly ? "checked" : ""}>Read only</label><input type="hidden" name="ftp-user-readonly" value="${user.readOnly ? "true" : "false"}"><button class="icon-btn" type="button" data-ftp-remove aria-label="Remove FTP user">${icon("trash", 15)}</button></div>`;
   var fileRow = (path = "", content = "") => `<div class="space-y-3 rounded-xl border border-slate-200 p-3" data-ftp-row><div class="flex items-end gap-3"><label class="field flex-1">File path<input name="ftp-path" value="${escapeHTML(path)}" placeholder="configs/router.cfg"></label><button class="icon-btn" type="button" data-ftp-remove aria-label="Remove FTP file">${icon("trash", 15)}</button></div><label class="field">Text content<textarea name="ftp-content" rows="5" class="font-mono text-xs">${escapeHTML(content)}</textarea></label></div>`;
   function ftpFormFields(service) {
-    return `<input type="hidden" name="ftp-form" value="1"><label class="flex items-center gap-2 text-xs"><input type="checkbox" name="ftp-enabled" ${service?.enabled ? "checked" : ""}>FTP server enabled</label><p class="text-xs leading-5 text-slate-500">Transfer configuration text using the simulated FTP control and passive data connections. Files and lab credentials are included in exported labs.</p><label class="flex items-center gap-2 text-xs"><input type="checkbox" name="ftp-readonly" ${service?.readOnly ? "checked" : ""}>Make all files read only</label><div class="section-label pt-2">Accounts</div><div class="space-y-3" data-ftp-users>${Object.entries(service?.users ?? {}).map(([name5, user]) => userRow2(name5, user)).join("")}</div><button class="btn" type="button" data-ftp-add-user>${icon("plus", 14)} Add account</button><div class="section-label pt-2">Files</div><div class="space-y-3" data-ftp-files>${Object.entries(service?.files ?? {}).map(([name5, text3]) => fileRow(name5, text3)).join("")}</div><button class="btn" type="button" data-ftp-add-file>${icon("plus", 14)} Add file</button>`;
+    return `<input type="hidden" name="ftp-form" value="1"><label class="flex items-center gap-2 text-xs"><input type="checkbox" name="ftp-enabled" ${service?.enabled ? "checked" : ""}>FTP server enabled</label><p class="text-xs leading-5 text-slate-500">Transfer configuration text using the simulated FTP control and passive data connections. Files and lab credentials are included in exported labs.</p><label class="flex items-center gap-2 text-xs"><input type="checkbox" name="ftp-readonly" ${service?.readOnly ? "checked" : ""}>Make all files read only</label><div class="section-label pt-2">Accounts</div><div class="space-y-3" data-ftp-users>${Object.entries(service?.users ?? {}).map(([name5, user]) => userRow2(name5, user)).join("")}</div><button class="btn" type="button" data-ftp-add-user>${icon("plus", 14)} Add account</button><div class="section-label pt-2">Files</div><div class="space-y-3" data-ftp-files>${Object.entries(service?.files ?? {}).map(([name5, text4]) => fileRow(name5, text4)).join("")}</div><button class="btn" type="button" data-ftp-add-file>${icon("plus", 14)} Add file</button>`;
   }
   function ftpDraft(data, config4) {
     if (!data.has("ftp-form")) return config4.services.ftp;
@@ -59087,10 +59250,10 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
     toggle4.setAttribute("data-tooltip", `Switch to ${next} mode`);
     document.querySelector('meta[name="color-scheme"]')?.setAttribute("content", colorTheme);
   }
-  function toast(text3) {
+  function toast(text4) {
     clearTimeout(toastTimer);
     $("#toast").className = "toast";
-    $("#toast").textContent = text3;
+    $("#toast").textContent = text4;
     toastTimer = setTimeout(() => {
       $("#toast").className = "";
       $("#toast").textContent = "";
@@ -59108,10 +59271,10 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
   function persistWorkspace() {
     try {
       const doc = documentState();
-      const text3 = JSON.stringify(doc);
-      if (text3 !== lastWorkspaceSnapshot || workspaceError) {
+      const text4 = JSON.stringify(doc);
+      if (text4 !== lastWorkspaceSnapshot || workspaceError) {
         saveWorkspace(doc);
-        lastWorkspaceSnapshot = text3;
+        lastWorkspaceSnapshot = text4;
         workspaceError = "";
         dirty = true;
       }
@@ -59184,8 +59347,8 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
   function message(e) {
     return e instanceof Error ? e.message : String(e);
   }
-  function restore(text3) {
-    const doc = parseDocument2(text3);
+  function restore(text4) {
+    const doc = parseDocument2(text4);
     sim.load(doc);
     restoreView(doc);
     selected.clear();
@@ -59545,11 +59708,11 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
       return;
     }
     syncTerminalColumns(state4);
-    const text3 = state4.lines.length ? state4.lines.join("\n") + "\n" : "";
+    const text4 = state4.lines.length ? state4.lines.join("\n") + "\n" : "";
     const previous = output.textContent ?? "";
-    if (text3 !== previous) {
-      if (!switched2 && text3.startsWith(previous) && output.firstChild instanceof Text) output.firstChild.appendData(text3.slice(previous.length));
-      else output.textContent = text3;
+    if (text4 !== previous) {
+      if (!switched2 && text4.startsWith(previous) && output.firstChild instanceof Text) output.firstChild.appendData(text4.slice(previous.length));
+      else output.textContent = text4;
     }
     $("#terminal-prompt").textContent = state4.pending?.length ? "--More--" : state4.cli.busy ? "" : state4.cli.prompt;
     const input5 = $("#terminal-input");
@@ -59781,11 +59944,11 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
     );
   }
   var noteMeasure = document.createElement("canvas").getContext("2d");
-  function noteLayout(text3) {
+  function noteLayout(text4) {
     if (noteMeasure) noteMeasure.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
     const measure = (value) => noteMeasure?.measureText(value).width ?? value.length * 7;
     const lines2 = [];
-    for (const raw of text3.split("\n")) {
+    for (const raw of text4.split("\n")) {
       let line2 = "";
       for (const char of raw) {
         if (line2 && measure(line2 + char) > 420) {
@@ -59814,14 +59977,14 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
   function finishNoteEdit(save) {
     const editing = noteEdit;
     if (!editing) return;
-    const text3 = $("textarea", editing.element).value.trim();
+    const text4 = $("textarea", editing.element).value.trim();
     noteEdit = null;
     editing.element.remove();
     const existing = sim.lab.notes.find((n) => n.id === editing.id);
-    if (save && text3 && text3 !== existing?.text) transaction(() => {
-      if (existing) existing.text = text3;
+    if (save && text4 && text4 !== existing?.text) transaction(() => {
+      if (existing) existing.text = text4;
       else {
-        const note = { id: crypto.randomUUID(), x: editing.x, y: editing.y, text: text3 };
+        const note = { id: crypto.randomUUID(), x: editing.x, y: editing.y, text: text4 };
         sim.lab.notes.push(note);
         selected.clear();
         selected.add(note.id);
@@ -60356,7 +60519,7 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
   function hostProfile(d) {
     if (!["pc", "laptop"].includes(d.kind)) return;
     const endpoint = d.config.features.endpoint ?? { role: "computer", power: "external" }, roles = d.kind === "pc" ? [["computer", "Computer"], ["printer", "Printer"], ["iot", "IoT appliance"], ["phone", "VoIP phone"]] : [["computer", "Computer"]];
-    const select5 = (label, name5, value, options3) => `<label class="field">${label}<select name="${name5}">${options3.map(([id2, text3]) => `<option value="${id2}" ${id2 === value ? "selected" : ""}>${text3}</option>`).join("")}</select></label>`;
+    const select5 = (label, name5, value, options3) => `<label class="field">${label}<select name="${name5}">${options3.map(([id2, text4]) => `<option value="${id2}" ${id2 === value ? "selected" : ""}>${text4}</option>`).join("")}</select></label>`;
     formDialog(`${d.config.hostname} \xB7 Client profile`, `${select5("Operating system", "host-os", d.config.features.hostOS ?? "windows", [["windows", "Windows"], ["linux", "Linux"], ["macos", "macOS"]])}${select5("Endpoint role", "endpoint-role", endpoint.role, roles)}${d.kind === "pc" ? select5("Power source", "endpoint-power", endpoint.power, [["external", "External power"], ["poe", "PoE from switch"]]) : ""}<p class="text-xs leading-5 text-slate-500">The operating system selects the network console commands. Printers, appliances and phones use the same network stack. Phones require PoE and learn their voice VLAN from the connected switch.</p>`, (f) => {
       const hostOS = String(f.get("host-os")), role2 = String(f.get("endpoint-role")), power2 = role2 === "phone" ? "poe" : role2 === "computer" ? "external" : d.kind === "pc" ? String(f.get("endpoint-power")) : "external";
       if (!["windows", "linux", "macos"].includes(hostOS) || !roles.some(([id2]) => id2 === role2) || !["external", "poe"].includes(power2)) throw Error("Select a valid client profile.");
@@ -61183,13 +61346,13 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
   $("#terminal-input").addEventListener("paste", (e) => {
     const state4 = activeDevice ? sessions6.get(activeDevice) : void 0;
     if (!state4 || state4.cli.passwordInput) return;
-    const text3 = e.clipboardData?.getData("text");
-    if (!text3 || !/[\r\n]/.test(text3)) return;
+    const text4 = e.clipboardData?.getData("text");
+    if (!text4 || !/[\r\n]/.test(text4)) return;
     e.preventDefault();
     const input5 = e.target;
     const prefix2 = input5.value.slice(0, input5.selectionStart ?? input5.value.length);
     const suffix = input5.value.slice(input5.selectionEnd ?? input5.value.length);
-    const lines2 = (prefix2 + text3.replace(/\r\n?/g, "\n")).split("\n");
+    const lines2 = (prefix2 + text4.replace(/\r\n?/g, "\n")).split("\n");
     const tail2 = lines2.pop() + suffix;
     input5.value = "";
     pageTerminal(false, true);
@@ -61550,8 +61713,8 @@ ${target.querySelector(".wire.down") ? "Link down" : "Link up"} \xB7 Double-clic
     menu.setAttribute("aria-label", `${label} actions`);
     menu.innerHTML = `<div class="menu-heading" aria-hidden="true">${escapeHTML(label)}</div>` + items.map((item) => {
       if (!item) return '<div class="menu-separator" role="separator"></div>';
-      const [action, glyph, text3, shortcut, disabled] = item;
-      return `<button type="button" role="menuitem" tabindex="-1" class="menu-item${action === "delete" ? " menu-item-danger" : ""}" data-action="${action}"${disabled ? ' disabled aria-disabled="true"' : ""}>${icon(glyph, 16)}<span class="menu-label">${escapeHTML(text3)}</span>${shortcut ? `<span class="menu-shortcut" aria-hidden="true">${escapeHTML(shortcut)}</span>` : ""}</button>`;
+      const [action, glyph, text4, shortcut, disabled] = item;
+      return `<button type="button" role="menuitem" tabindex="-1" class="menu-item${action === "delete" ? " menu-item-danger" : ""}" data-action="${action}"${disabled ? ' disabled aria-disabled="true"' : ""}>${icon(glyph, 16)}<span class="menu-label">${escapeHTML(text4)}</span>${shortcut ? `<span class="menu-shortcut" aria-hidden="true">${escapeHTML(shortcut)}</span>` : ""}</button>`;
     }).join("");
     menu.addEventListener("contextmenu", (event4) => event4.preventDefault());
     menu.addEventListener("keydown", (event4) => {

@@ -1,0 +1,86 @@
+{
+  "feature": {
+    "title": "Multiple Spanning Tree (MST)",
+    "catalogId": "multiple-spanning-tree",
+    "group": "CCNP ENCOR",
+    "section": "Layer 2",
+    "sectionLabCount": 4,
+    "devices": 9,
+    "links": 9,
+    "tasks": 16,
+    "addressingRows": 4,
+    "permalink": "#/labs/multiple-spanning-tree",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "Three-switch triangle: SW1 Gi0/24 \u2194 SW2 Gi0/24; SW1 Gi0/23 \u2194 SW3 Gi0/23; SW2 Gi0/23 \u2194 SW3 Gi0/24. VLAN10: PC1 at SW3 Gi0/1 (192.168.10.11/24), PC2 at SW2 Gi0/1 (.12/24). VLAN20: PC3 at SW3 Gi0/2 (192.168.20.11/24), PC4 at SW2 Gi0/2 (.12/24). VLAN30: PC5 at SW3 Gi0/3 (192.168.30.11/24), PC6 at SW1 Gi0/1 (.12/24). No gateways or inter-VLAN routing.",
+  "verificationNotes": [
+    "Practice starts at zero with prepared VLANs and host addresses, classic PVST, shut inter-switch ports and no PC PortFast. Three normal diagnostics are enabled and the two alternate-path actions are guarded by real shutdown and promoted-root state. The completed reference executes the published IOS commands, serializes empty runtime and earns ten live configuration/tree/save tasks only after new BPDUs converge; it contains no invented traffic, failure or MAC achievements.",
+    "Every switch must commit name ENCOR-MST, revision 10, MST1 VLANs 10,20 and MST2 VLAN30. All remaining VLANs belong to MST0, with active VLANs1,99 verified. The exact complete mapping is checked, including unused VLANs. show current/show pending, exit commit and abort discard are exercised. Higher revisions do not replicate configuration. Canonical ordering and different local priorities do not split a region.",
+    "MST0/1 base priorities are SW1 24576, SW2 28672, SW3 32768; MST2 reverses SW1/SW2. Display priorities include the instance ID: MST1 24577 and MST2 24578 for their primaries. Long path costs give a Gigabit cost of 20000. SW3 Gi0/23 is Root FWD and Gi0/24 Alternate BLK for MST0/1; MST2 reverses them. All expected core roles, coherent roots/root ports/costs, active mappings, non-edge point-to-point trunks and received non-boundary MST state are required.",
+    "All six trunk endpoints require native VLAN99, exactly allowed VLANs1,10,20,30,99, DTP disabled, PortFast off and operational links. All six PC access ports require the correct VLAN and operational edge forwarding. Healthy startup checks compare STP and relevant interface/VLAN policy on all switches; an unsaved region revision is restored by IOS reload and subsequent convergence.",
+    "VLAN10/20 share the MST1 tree SW3 \u2192 SW1 \u2192 SW2 while retaining separate Layer2 domains. VLAN30 follows MST2 SW3 \u2192 SW2 \u2192 SW1. Traffic goals correlate the actual request/reply IDs, tagged send/receive hops and latest preceding version3 BPDU with matching send-time region, instance and root. Classic traffic cannot retroactively become MST evidence after a mode change. Packet identity, tags, path, region and instance tampering are rejected.",
+    "Shutting SW3 Gi0/23 requires fresh VLAN10 traffic directly through promoted Gi0/24 to SW2; shutting Gi0/24 requires fresh VLAN30 traffic directly through promoted Gi0/23 to SW1. Existing LINK-down event timestamps prevent older pings from completing either failure goal. Both VLAN trees recover through either survivor within three simulated seconds. Tests also isolate both uplinks and fail the core link; unexpected recovered paths cannot replace the intended normal-path proof.",
+    "Historical traffic/failure accomplishments persist; live configuration, tree, saved-policy and MAC tasks stay live. Finish with both uplinks restored, intended roles and all three normal tests repeated. Nine dynamic MAC checks cover six access entries and the three remote destinations on SW3 normal root ports. Clearing or expiry loses MAC credit until fresh traffic relearns it. Portable save/reopen retains fifteen goals after new BPDUs, and fresh normal traffic restores sixteen. Display-name changes retain stable-ID goals.",
+    "Optional region-name, revision and VLAN-map mismatches produce boundary state and lose matching-region/tree credit. A working ping is insufficient. Restore the exact region and receive new BPDUs before correct tree/traffic proof can return. The guide explicitly scopes this exercise to one correctly matched region and mismatch recovery; the existing engine uses per-VLAN state and conservative boundary handling. This task adds no complete binary IEEE BPDU encoder or general multi-region CIST implementation and claims no new CML capture.",
+    "Delivered STP summaries preserve send-time modeled VLAN/mode/version/root/bridge/cost/role/proposal/agreement/topology-change fields plus MST region signature. The inspector decodes readable region name, revision and instance into separate MST/VLAN groups and hides the raw serialized tuple. Malformed null entries are skipped. No forwarding/timing algorithm, terminal styling or new dependency was introduced.",
+    "Final Chrome file-origin QA covers light/dark at 1440,390,320px: real console configuration, all sixteen tasks, both fresh failures/restorations, tagged traffic, roles and MACs, clear/relearn, MST BPDU inspection, Windows pings, saved offline reload, completed reference and cancel/save-copy protection. Host/path/query-safe permalinks return to ENCOR Layer2 with four labs. All node bodies and the note fit; dialogs remain usable; terminal golden styles are unchanged. Temporary localhost preview returned HTTP200.",
+    "The first generic browser matrix encountered an intermittent headless file-origin reload-storage loss at dark320px: both workspace and saved-lab keys disappeared while theme remained, with no application error. Before-reload data was valid. No persistence code or storage injection was introduced. A complete rerun of the identical artifact passed all seven generic checks. The final report uses that passing matrix alongside eight passing MST checks."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco: Troubleshoot MST on Catalyst 9000 Switches",
+      "url": "https://www.cisco.com/c/en/us/support/docs/lan-switching/stp/218351-troubleshoot-mst-on-catalyst-9000-switch.html"
+    },
+    {
+      "title": "Cisco IOS 15.0(2)SE Catalyst3750-X/3560-X: Configuring MSTP",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3750x_3560x/software/release/15-0_2_se/configuration/guide/3750x_cg/swmstp.html"
+    },
+    {
+      "title": "Cisco IOS 15.0(2)SE Catalyst3560: Configuring MSTP",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3560/software/release/15-0_2_se/configuration/guide/scg3560/swmstp.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 23,
+    "focusedPassed": 23,
+    "focusedAndRelatedTests": 189,
+    "relatedPassed": 189,
+    "fullCheck": "npm run check",
+    "typecheck": "passed",
+    "fullTests": 2070,
+    "fullPassed": 2070,
+    "fullFailed": 0,
+    "build": "passed",
+    "browserChecks": [
+      "dark 1440px: four Layer 2 labs; nine-node/16-task practice starts at zero with three diagnostics and guarded alternate recovery tasks; real IOS MST region commit, instance0/1/2 roots and long costs; VLAN10/20 share MST1 while VLAN30 follows MST2; all three tagged packet paths and both fresh failure/restoration exercises; dynamic MAC learning and clear/relearn; version3 regional BPDU fields per MST/VLAN group; Windows pings; startup save and offline reload retain 15 goals until MAC relearning; completed reference, cancel/save-copy protection, fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "light 1440px: four Layer 2 labs; nine-node/16-task practice starts at zero with three diagnostics and guarded alternate recovery tasks; real IOS MST region commit, instance0/1/2 roots and long costs; VLAN10/20 share MST1 while VLAN30 follows MST2; all three tagged packet paths and both fresh failure/restoration exercises; dynamic MAC learning and clear/relearn; version3 regional BPDU fields per MST/VLAN group; Windows pings; startup save and offline reload retain 15 goals until MAC relearning; completed reference, cancel/save-copy protection, fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "light 390px: four Layer 2 labs; nine-node/16-task practice starts at zero with three diagnostics and guarded alternate recovery tasks; real IOS MST region commit, instance0/1/2 roots and long costs; VLAN10/20 share MST1 while VLAN30 follows MST2; all three tagged packet paths and both fresh failure/restoration exercises; dynamic MAC learning and clear/relearn; version3 regional BPDU fields per MST/VLAN group; Windows pings; startup save and offline reload retain 15 goals until MAC relearning; completed reference, cancel/save-copy protection, fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "dark 390px: four Layer 2 labs; nine-node/16-task practice starts at zero with three diagnostics and guarded alternate recovery tasks; real IOS MST region commit, instance0/1/2 roots and long costs; VLAN10/20 share MST1 while VLAN30 follows MST2; all three tagged packet paths and both fresh failure/restoration exercises; dynamic MAC learning and clear/relearn; version3 regional BPDU fields per MST/VLAN group; Windows pings; startup save and offline reload retain 15 goals until MAC relearning; completed reference, cancel/save-copy protection, fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "dark 320px: four Layer 2 labs; nine-node/16-task practice starts at zero with three diagnostics and guarded alternate recovery tasks; real IOS MST region commit, instance0/1/2 roots and long costs; VLAN10/20 share MST1 while VLAN30 follows MST2; all three tagged packet paths and both fresh failure/restoration exercises; dynamic MAC learning and clear/relearn; version3 regional BPDU fields per MST/VLAN group; Windows pings; startup save and offline reload retain 15 goals until MAC relearning; completed reference, cancel/save-copy protection, fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "light 320px: four Layer 2 labs; nine-node/16-task practice starts at zero with three diagnostics and guarded alternate recovery tasks; real IOS MST region commit, instance0/1/2 roots and long costs; VLAN10/20 share MST1 while VLAN30 follows MST2; all three tagged packet paths and both fresh failure/restoration exercises; dynamic MAC learning and clear/relearn; version3 regional BPDU fields per MST/VLAN group; Windows pings; startup save and offline reload retain 15 goals until MAC relearning; completed reference, cancel/save-copy protection, fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "light: permalink preserves host/path/query and workspace; returns to ENCOR Layer 2 with four labs; section choices stay independent",
+      "dark: permalink preserves host/path/query and workspace; returns to ENCOR Layer 2 with four labs; section choices stay independent",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "f16822f5fcf3bf6c2e3bbda7cf131300e5613bc1b2d384d4c6529718ae512dc1",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide",
+      "light320px MST/VLAN BPDU inspector"
+    ]
+  }
+}
