@@ -1,0 +1,94 @@
+{
+  "feature": {
+    "title": "PAT",
+    "catalogId": "pat",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 6,
+    "devices": 6,
+    "links": 5,
+    "tasks": 10,
+    "addressingRows": 7,
+    "permalink": "#/labs/pat",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.10.10/24 and PC2 192.168.10.20/24 connect through prepared SW1 access ports to R1 Gi0/0 192.168.10.1/24. R1 Gi0/1 203.0.113.1/24 connects to ISP1 Gi0/0 203.0.113.2/24; ISP1 Gi0/1 198.51.100.1/24 connects to HTTP server SRV1 198.51.100.10/24. Hosts have gateways; ISP1 has no private return route.",
+  "verificationNotes": [
+    "Practice starts at zero credit with addressing, switching, ISP1 and HTTP ready. R1 has no NAT roles, ACL, overload rule or default. The completed reference earns only five configuration goals and preloads no translations or packet achievements.",
+    "PAT-INSIDE is a standard source-classification ACL with the intended /24 permit, not an interface packet filter. Interface overload shares 203.0.113.1; no pool or static mappings are configured.",
+    "Each ping task correlates a translated request and successful return. The shared-address task also matches live PAT bindings for both PCs with distinct translated ICMP identifiers, the intended rule and actual returned evidence. One PC, router-originated probes, counters or table rows alone cannot finish it.",
+    "Outbound HTTP criteria require a completed client response, corresponding server transaction, correct page, live overload binding and matching NAT endpoint ports. Simultaneous requests with the same local source port are validated with independent global ports and successful delivery to both PCs.",
+    "A real PAT classifier gap was reproduced: an existing UDP tuple stopped translating after an ACL edit. The outbound path now reuses its active binding before classifying a new allocation, while retaining configured-rule, interface-role, route, expiry and packet-filter checks. Clearing or expiring the tuple makes subsequent traffic use the current classifier.",
+    "Wrong or missing ACLs, wrong overload interface, either missing role, absent rule/default, excluded second host, wrong HTTP path, disabled service and undelivered HTTP response cannot fabricate success. Existing classifier decisions and new-flow behavior are tested separately.",
+    "Clearing removes dynamic bindings but preserves the source ACL and overload rule. Real traffic recreates entries. Saved achievements survive reopening while the ACL, overload rule, operational NAT roles and usable default remain live. Fresh loads rebuild clean runtime state.",
+    "This is an offline IPv4 interface-overload lab using the existing switching, NAT, ARP, routing, ICMP, TCP, UDP and HTTP models. It does not claim new live CML validation, inbound server publication, pool PAT, port forwarding or firewall-policy emulation.",
+    "The compact topology keeps both PCs accessible after Fit at 320px. Browser navigation asserts the clicked node center remains inside the canvas before using an actual double click; no forced pointer actions or UI bypasses are used."
+  ],
+  "sources": [
+    {
+      "title": "Cisco: Configure Network Address Translation",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/network-address-translation-nat/13772-12.html"
+    },
+    {
+      "title": "Cisco: How to Change the Dynamic NAT Configuration",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/network-address-translation-nat/13779-clear-nat-comments.html"
+    },
+    {
+      "title": "Cisco IOS XE: NAT for IP Address Conservation",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-addressing/b-ip-addressing/m_iadnat-addr-consv-xe.html"
+    }
+  ],
+  "validation": {
+    "targetedTests": 57,
+    "targetedPassed": 57,
+    "typecheck": "passed",
+    "fullSuite": {
+      "tests": 1789,
+      "passed": 1789,
+      "failed": 0,
+      "command": "npm run check"
+    },
+    "build": "passed; generated root and dist HTML are identical",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: six Services & Security labs; ten-task guide, seven-row plan, zero-credit practice and prepared switched LAN; published IOS NAT roles/classifier/interface overload/default; actual Windows ping and guide pings for both hosts; one public IP with distinct translated ICMP identifiers; HTTP200 from each PC and real TCP translations; show statistics/ACL, question-mark help and Tab; clear dynamic state without losing configuration; ACL excludes only PC2, missing-overload failures and successful repairs; saved achievements with fresh translations after reopen; completed reference requires real traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "light 390px: six Services & Security labs; ten-task guide, seven-row plan, zero-credit practice and prepared switched LAN; published IOS NAT roles/classifier/interface overload/default; actual Windows ping and guide pings for both hosts; one public IP with distinct translated ICMP identifiers; HTTP200 from each PC and real TCP translations; show statistics/ACL, question-mark help and Tab; clear dynamic state without losing configuration; ACL excludes only PC2, missing-overload failures and successful repairs; saved achievements with fresh translations after reopen; completed reference requires real traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "light 320px: six Services & Security labs; ten-task guide, seven-row plan, zero-credit practice and prepared switched LAN; published IOS NAT roles/classifier/interface overload/default; actual Windows ping and guide pings for both hosts; one public IP with distinct translated ICMP identifiers; HTTP200 from each PC and real TCP translations; show statistics/ACL, question-mark help and Tab; clear dynamic state without losing configuration; ACL excludes only PC2, missing-overload failures and successful repairs; saved achievements with fresh translations after reopen; completed reference requires real traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "dark 1440px: six Services & Security labs; ten-task guide, seven-row plan, zero-credit practice and prepared switched LAN; published IOS NAT roles/classifier/interface overload/default; actual Windows ping and guide pings for both hosts; one public IP with distinct translated ICMP identifiers; HTTP200 from each PC and real TCP translations; show statistics/ACL, question-mark help and Tab; clear dynamic state without losing configuration; ACL excludes only PC2, missing-overload failures and successful repairs; saved achievements with fresh translations after reopen; completed reference requires real traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "dark 390px: six Services & Security labs; ten-task guide, seven-row plan, zero-credit practice and prepared switched LAN; published IOS NAT roles/classifier/interface overload/default; actual Windows ping and guide pings for both hosts; one public IP with distinct translated ICMP identifiers; HTTP200 from each PC and real TCP translations; show statistics/ACL, question-mark help and Tab; clear dynamic state without losing configuration; ACL excludes only PC2, missing-overload failures and successful repairs; saved achievements with fresh translations after reopen; completed reference requires real traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "dark 320px: six Services & Security labs; ten-task guide, seven-row plan, zero-credit practice and prepared switched LAN; published IOS NAT roles/classifier/interface overload/default; actual Windows ping and guide pings for both hosts; one public IP with distinct translated ICMP identifiers; HTTP200 from each PC and real TCP translations; show statistics/ACL, question-mark help and Tab; clear dynamic state without losing configuration; ACL excludes only PC2, missing-overload failures and successful repairs; saved achievements with fresh translations after reopen; completed reference requires real traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "light: permalink preserves current host/path/query and returns to six Services & Security labs without replacing the workspace",
+        "dark: permalink preserves current host/path/query and returns to six Services & Security labs without replacing the workspace"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches the existing desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology and guide",
+        "light 320px topology",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "canvasFit": "target node centers remain inside the workspace in every navigation step, including 320px",
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "e6ebb7c5bd961ffebea19ac6c8c9371412a7d95aa125ddf2ba9bf53e2343dc33"
+  }
+}

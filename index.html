@@ -51049,6 +51049,17 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         this.packetEvent(d, packet, "Source NAT", p.source + " \u2192 " + packet.source, "forward", output);
         return packet;
       }
+      const configuredRules = new Set((nat2.rules ?? []).map(natRuleKey));
+      const established2 = table2.find((x) => x.overload && x.expires > this.clock.now() && configuredRules.has(x.rule) && x.inside === packet.source && x.insidePort === packet.sourcePort && x.protocol === packet.protocol && x.remote === packet.destination && (packet.protocol === "icmp" || x.remotePort === packet.destinationPort));
+      if (established2) {
+        recordNatFlow(this, d, established2, packet);
+        natTranslated(d);
+        packet.source = established2.outside;
+        packet.sourcePort = established2.outsidePort;
+        if (packet.protocol === "icmp") packet.destinationPort = established2.outsidePort;
+        this.packetEvent(d, packet, "Source NAT", p.source + " \u2192 " + packet.source, "forward", output);
+        return packet;
+      }
       for (const [index, rule] of (nat2.rules ?? []).entries()) {
         if (rule.acl && !ownRecordValue(d.config.features.acls, rule.acl) || !this.aclAllows(d, rule.acl, packet)) continue;
         let global = rule.interface ? d.config.interfaces[rule.interface]?.ip : nat2.pools?.[rule.pool]?.start;
@@ -52372,40 +52383,69 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   function validNATCriterion(c) {
     const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
     if (c.kind === "nat-interface") return name2(c.interface) && ["inside", "outside"].includes(c.role);
+    if (c.kind === "pat-acl") return name2(c.name) && isIPv4(c.network) && isIPv4(c.wildcard);
+    if (c.kind === "pat-rule") return name2(c.acl) && name2(c.interface);
+    if (c.kind === "pat-sharing") return name2(c.acl) && name2(c.interface) && name2(c.outside) && isIPv4(c.insideGlobal) && isIPv4(c.outsideAddress) && Array.isArray(c.inside) && c.inside.length >= 2 && c.inside.length <= 8 && new Set(c.inside).size === c.inside.length && c.inside.every(name2);
     if (!isIPv4(c.insideLocal) || !isIPv4(c.insideGlobal)) return false;
     if (c.kind === "nat-static") return true;
-    return name2(c.inside) && name2(c.outside) && isIPv4(c.outsideAddress) && (c.kind === "nat-ping" ? ["inside-out", "outside-in"].includes(c.direction) : c.kind === "nat-http" && typeof c.content === "string" && c.content.length > 0 && c.content.length <= 1e3);
+    return name2(c.inside) && name2(c.outside) && isIPv4(c.outsideAddress) && (c.kind === "nat-ping" ? ["inside-out", "outside-in"].includes(c.direction) : ["nat-http", "nat-outbound-http"].includes(c.kind) && typeof c.content === "string" && c.content.length > 0 && c.content.length <= 1e3);
   }
   var find = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var natEvent = (d, e, label) => e.nodeId === d.id && e.label === label && e.disposition === "forward";
+  var overloadRule = (d, c) => (d.config.features.nat?.rules ?? []).find((r) => r.acl === c.acl && r.interface === c.interface && r.overload === true && !r.pool);
+  function deliveredPing(sim2, d, c, direction, identifiers) {
+    const inside = find(sim2, c.inside), outside = find(sim2, c.outside);
+    if (!inside || !outside) return false;
+    const events = sim2.events, outbound = direction === "inside-out", sender = outbound ? inside : outside, receiver = outbound ? outside : inside;
+    const translated = (label, packet) => !!packet && events.some((e) => natEvent(d, e, label) && e.packet?.id === packet.id && e.packet.source === packet.source && e.packet.destination === packet.destination && e.packet.icmpIdentifier === packet.icmpIdentifier);
+    return events.some((reply) => {
+      const packet = reply.packet;
+      if (reply.nodeId !== sender.id || reply.label !== "Echo reply received" || reply.disposition !== "success" || packet?.icmpType !== 0 || packet.source !== (outbound ? c.outsideAddress : c.insideGlobal) || packet.destination !== (outbound ? c.insideLocal : c.outsideAddress) || identifiers && packet.icmpIdentifier !== identifiers.inside) return false;
+      const request2 = events.find((e) => e.nodeId === receiver.id && e.label === "Echo request accepted" && e.packet?.id === packet.parentId && e.packet?.icmpType === 8 && e.packet.source === (outbound ? c.insideGlobal : c.outsideAddress) && e.packet.destination === (outbound ? c.outsideAddress : c.insideLocal) && (!identifiers || e.packet.icmpIdentifier === identifiers.outside));
+      return !!request2 && translated(outbound ? "Source NAT" : "Destination NAT", request2.packet) && translated(outbound ? "Destination NAT" : "Source NAT", packet);
+    });
+  }
   function matchesNATCriterion(sim2, d, c) {
     if (c.kind === "nat-interface") return d.config.interfaces[c.interface]?.features.nat === c.role && sim2.interfaceUp(d.id, c.interface);
     if (c.kind === "nat-static") return (d.config.features.nat?.static ?? []).some((row5) => row5.inside === c.insideLocal && row5.outside === c.insideGlobal);
+    if (c.kind === "pat-acl") {
+      const acl = ownRecordValue(d.config.features.acls, c.name), entries4 = (acl?.entries ?? []).filter((e) => e.action !== "remark" && e.remark === void 0);
+      return acl?.type === "standard" && entries4.length === 1 && entries4[0].action === "permit" && entries4[0].source === c.network && entries4[0].wildcard === c.wildcard;
+    }
+    if (c.kind === "pat-rule") return !!overloadRule(d, c);
+    if (c.kind === "pat-sharing") {
+      const rule = overloadRule(d, c);
+      if (!rule) return false;
+      const rows2 = d.runtime.features.natTranslations ?? [], key4 = natRuleKey(rule);
+      const choices2 = c.inside.map((name2) => {
+        const host2 = find(sim2, name2);
+        return rows2.filter((row5) => host2 && Object.values(host2.config.interfaces).some((p) => p.ip === row5.inside) && row5.overload === true && row5.rule === key4 && row5.protocol === "icmp" && row5.outside === c.insideGlobal && row5.remote === c.outsideAddress && row5.expires > sim2.clock.now() && deliveredPing(sim2, d, { device: d.id, inside: host2.id, outside: c.outside, insideLocal: row5.inside, insideGlobal: c.insideGlobal, outsideAddress: c.outsideAddress }, "inside-out", { inside: row5.insidePort, outside: row5.outsidePort }));
+      });
+      const distinct = (index, used) => index === choices2.length || choices2[index].some((row5) => !used.has(row5.outsidePort) && distinct(index + 1, /* @__PURE__ */ new Set([...used, row5.outsidePort])));
+      return distinct(0, /* @__PURE__ */ new Set());
+    }
+    if (c.kind === "nat-ping") return deliveredPing(sim2, d, c, c.direction);
     const inside = find(sim2, c.inside), outside = find(sim2, c.outside);
     if (!inside || !outside) return false;
-    const events = sim2.events;
-    const nat2 = (e, label) => e.nodeId === d.id && e.label === label && e.disposition === "forward";
-    if (c.kind === "nat-ping") {
-      const outbound = c.direction === "inside-out", sender = outbound ? inside : outside, receiver = outbound ? outside : inside;
-      const translated = (label, packet) => !!packet && events.some((e) => nat2(e, label) && e.packet?.id === packet.id && e.packet.source === packet.source && e.packet.destination === packet.destination);
-      return events.some((reply) => {
-        const packet = reply.packet;
-        if (reply.nodeId !== sender.id || reply.label !== "Echo reply received" || reply.disposition !== "success" || packet?.icmpType !== 0 || packet.source !== (outbound ? c.outsideAddress : c.insideGlobal) || packet.destination !== (outbound ? c.insideLocal : c.outsideAddress)) return false;
-        const request2 = events.find((e) => e.nodeId === receiver.id && e.label === "Echo request accepted" && e.packet?.id === packet.parentId && e.packet?.icmpType === 8 && e.packet.source === (outbound ? c.insideGlobal : c.outsideAddress) && e.packet.destination === (outbound ? c.outsideAddress : c.insideLocal));
-        return !!request2 && translated(outbound ? "Source NAT" : "Destination NAT", request2.packet) && translated(outbound ? "Destination NAT" : "Source NAT", packet);
-      });
-    }
-    for (const [transaction2, conn] of Object.entries(outside.runtime.features.tcpConnections ?? {})) {
-      if (conn.remoteAddress !== c.insideGlobal || conn.remotePort !== 80 || conn.payload?.application !== "http" || (conn.payload.method ?? "GET") !== "GET" || conn.payload.path !== "/" || !Number.isInteger(conn.expected) || conn.expected < 1 || conn.expected > 2048 || conn.received !== conn.expected) continue;
-      const server = ownRecordValue(inside.runtime.features.tcpConnections, transaction2);
-      if (server?.source !== c.outsideAddress || server.localAddress !== c.insideLocal || server.destinationPort !== 80 || server.response?.statusCode !== 200) continue;
+    const outbound = c.kind === "nat-outbound-http", client = outbound ? inside : outside, server = outbound ? outside : inside;
+    const target = outbound ? c.outsideAddress : c.insideGlobal, serverLocal = outbound ? c.outsideAddress : c.insideLocal, remoteSource = outbound ? c.insideGlobal : c.outsideAddress;
+    for (const [transaction2, conn] of Object.entries(client.runtime.features.tcpConnections ?? {})) {
+      if (conn.remoteAddress !== target || conn.remotePort !== 80 || conn.payload?.application !== "http" || (conn.payload.method ?? "GET") !== "GET" || conn.payload.path !== "/" || !Number.isInteger(conn.expected) || conn.expected < 1 || conn.expected > 2048 || conn.received !== conn.expected) continue;
+      const received = ownRecordValue(server.runtime.features.tcpConnections, transaction2);
+      if (received?.source !== remoteSource || received.localAddress !== serverLocal || received.destinationPort !== 80 || received.response?.statusCode !== 200) continue;
       let response;
       try {
         response = JSON.parse(Array.from({ length: conn.expected }, (_, i) => conn.segments[i]).join(""));
       } catch {
         continue;
       }
-      if (response.error || response.statusCode !== 200 || typeof response.content !== "string" || !response.content.includes(c.content) || response.content !== server.response.content) continue;
-      if (events.some((e) => nat2(e, "Destination NAT") && e.packet?.protocol === "TCP" && e.packet.source === c.outsideAddress && e.packet.destination === c.insideLocal && e.packet.sourcePort === conn.localPort && e.packet.destinationPort === 80) && events.some((e) => nat2(e, "Source NAT") && e.packet?.protocol === "TCP" && e.packet.source === c.insideGlobal && e.packet.destination === c.outsideAddress && e.packet.sourcePort === 80 && e.packet.destinationPort === conn.localPort)) return true;
+      if (response.error || response.statusCode !== 200 || typeof response.content !== "string" || !response.content.includes(c.content) || response.content !== received.response.content) continue;
+      const binding = outbound ? (d.runtime.features.natTranslations ?? []).find((r) => r.overload && r.inside === c.insideLocal && r.insidePort === conn.localPort && r.outside === c.insideGlobal && r.remote === c.outsideAddress && r.remotePort === 80 && r.protocol === "tcp" && r.expires > sim2.clock.now()) : void 0;
+      if (outbound && !binding) continue;
+      const sourcePort = outbound ? binding.outsidePort : 80;
+      if (outbound) {
+        if (sim2.events.some((e) => natEvent(d, e, "Source NAT") && e.packet?.protocol === "TCP" && e.packet.source === c.insideGlobal && e.packet.destination === c.outsideAddress && e.packet.sourcePort === sourcePort && e.packet.destinationPort === 80) && sim2.events.some((e) => natEvent(d, e, "Destination NAT") && e.packet?.protocol === "TCP" && e.packet.source === c.outsideAddress && e.packet.destination === c.insideLocal && e.packet.sourcePort === 80 && e.packet.destinationPort === conn.localPort)) return true;
+      } else if (sim2.events.some((e) => natEvent(d, e, "Destination NAT") && e.packet?.protocol === "TCP" && e.packet.source === c.outsideAddress && e.packet.destination === c.insideLocal && e.packet.sourcePort === conn.localPort && e.packet.destinationPort === 80) && sim2.events.some((e) => natEvent(d, e, "Source NAT") && e.packet?.protocol === "TCP" && e.packet.source === c.insideGlobal && e.packet.destination === c.outsideAddress && e.packet.sourcePort === 80 && e.packet.destinationPort === conn.localPort)) return true;
     }
     return false;
   }
@@ -52514,6 +52554,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         case "nat-static":
         case "nat-ping":
         case "nat-http":
+        case "nat-outbound-http":
+        case "pat-acl":
+        case "pat-rule":
+        case "pat-sharing":
           return validNATCriterion(v);
         case "scp-server":
         case "ssh-file-client":
@@ -52664,7 +52708,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const d = device(sim2, criterion.device);
     if (!d) return false;
     if (["tacacs-server", "radius-server", "aaa-group", "aaa-method", "aaa-line", "tacacs-session", "radius-session"].includes(criterion.kind)) return matchesAAAClientCriterion(sim2, d, criterion);
-    if (["nat-interface", "nat-static", "nat-ping", "nat-http"].includes(criterion.kind)) return matchesNATCriterion(sim2, d, criterion);
+    if (["nat-interface", "nat-static", "nat-ping", "nat-http", "nat-outbound-http", "pat-acl", "pat-rule", "pat-sharing"].includes(criterion.kind)) return matchesNATCriterion(sim2, d, criterion);
     if (["scp-server", "ssh-file-client", "file-transfer", "file-copy"].includes(criterion.kind)) return matchesFileTransferCriterion(sim2, d, criterion);
     if (criterion.kind === "local-user") {
       const user = ownRecordValue(d.config.features.users, criterion.username);
@@ -52832,14 +52876,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return results.length > 0 && (c.kind === "all" ? results.every(Boolean) : results.some(Boolean));
       }
       const result = matches(sim2, c);
-      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http") return result;
+      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing") return result;
       validKeys.add(key4);
       if (result) observations.add(key4);
       return result || observations.has(key4);
     };
     const rows2 = lesson2.objectives.map((objective) => {
       const observed = observe(objective.criterion, JSON.stringify(objective.id));
-      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http";
+      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing";
       if (historical && observed)
         completed.add(objective.id);
       return {
@@ -53220,8 +53264,26 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "radius-aaa-client", group: "CCNA", section: "Services & Security", title: "RADIUS AAA Client", description: "Configure an IOS RADIUS client with named AAA lists, SSH, Access-Accept EXEC attributes and acknowledged session accounting. Verify rejection, UDP retry behavior and local recovery.", devices: 3, links: 2, practice: true },
     { id: "scp-sftp-file-transfer", group: "CCNA", section: "Services & Security", title: "SCP/SFTP File Transfer", description: "Configure an IOS SCP server and an SSH file client. Download reference files, back up startup configurations with SCP and SFTP, verify content and diagnose rejected or interrupted transfers.", devices: 3, links: 2, practice: true },
     { id: "static-nat", group: "CCNA", section: "Services & Security", title: "Static NAT", description: "Publish an inside server through a permanent one-to-one IPv4 mapping. Configure NAT roles and an upstream default route, prove bidirectional translations and access the server\u2019s website from outside.", devices: 4, links: 3, practice: true },
+    { id: "pat", group: "CCNA", section: "Services & Security", title: "PAT", description: "Share one outside IPv4 address between two inside PCs using NAT overload. Configure a scoped source ACL, prove distinct translated identifiers, test web access from both clients and troubleshoot missing translations.", devices: 6, links: 5, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
+  var PAT_COMMANDS = { R1: [
+    "enable",
+    "configure terminal",
+    "interface GigabitEthernet0/0",
+    "ip nat inside",
+    "interface GigabitEthernet0/1",
+    "ip nat outside",
+    "exit",
+    "ip access-list standard PAT-INSIDE",
+    "permit 192.168.10.0 0.0.0.255",
+    "exit",
+    "ip nat inside source list PAT-INSIDE interface GigabitEthernet0/1 overload",
+    "ip route 0.0.0.0 0.0.0.0 203.0.113.2",
+    "end",
+    "write memory"
+  ] };
+  var PAT_PAGE = '<!doctype html><html lang="en"><meta charset="utf-8"><title>PAT lab</title><body><h1>PAT: outside server reached</h1><p>PC1 and PC2 reach SRV1 at 198.51.100.10 through R1.</p><p>Both clients share the public address 203.0.113.1 using distinct transport identifiers.</p></body></html>';
   var STATIC_NAT_COMMANDS = { R1: [
     "enable",
     "configure terminal",
@@ -53663,6 +53725,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
   };
   var GUIDE_RESOURCES = {
+    "pat": { columns: ["Device", "Interface", "IPv4 address", "Role / gateway"], rows: [["PC1", "Gi0", "192.168.10.10 /24", "Inside host; gateway 192.168.10.1"], ["PC2", "Gi0", "192.168.10.20 /24", "Inside host; gateway 192.168.10.1"], ["R1", "Gi0/0", "192.168.10.1 /24", "NAT inside"], ["R1", "Gi0/1", "203.0.113.1 /24", "NAT outside and shared inside global"], ["ISP1", "Gi0/0", "203.0.113.2 /24", "R1 upstream next hop"], ["ISP1", "Gi0/1", "198.51.100.1 /24", "Outside server gateway"], ["SRV1", "Gi0", "198.51.100.10 /24", "HTTP server; gateway 198.51.100.1"]], commands: PAT_COMMANDS, verification: { R1: ["show ip interface brief", "show ip route", "show access-lists PAT-INSIDE", "show running-config | include ip nat", "show ip nat translations", "show ip nat translations verbose", "show ip nat statistics"], PC1: ["ipconfig", "ping -n 3 198.51.100.10"], PC2: ["ipconfig", "ping -n 3 198.51.100.10"], SW1: ["show interfaces status", "show mac address-table dynamic"], ISP1: ["show ip route"] }, setup: [
+      { title: "One public address, separate sessions", instructions: ["PC1 and PC2 use different inside local addresses. Both translate to R1\u2019s Gi0/1 address, 203.0.113.1. TCP/UDP ports or ICMP identifiers distinguish their flows.", "Run both ping tasks before their live ICMP translations expire. The sharing task checks delivered replies for both clients and different translated identifiers on the same public address. A static mapping or an empty translation table cannot prove PAT."] },
+      { title: "PC1 and PC2 \xB7 Desktop \u2192 Web browser", instructions: ["On each PC, open http://198.51.100.10/ and expect 200 OK with the heading PAT: outside server reached. SRV1\u2019s HTTP service and page are ready.", "Each client needs its own completed translated HTTP response. Inspect TCP entries on R1: the inside local client ports map to distinct inside global ports on 203.0.113.1."] },
+      { title: "Classifier, routing and recovery exercises", instructions: ["PAT-INSIDE is a standard source-classification ACL, not an interface packet filter. Permit only 192.168.10.0 0.0.0.255 and reference it from the overload rule. Do not apply it with ip access-group.", "Run clear ip nat translation * before changing the classifier or PAT rule. Existing bindings can continue using an earlier classification decision. Clearing removes dynamic bindings, while the configured ACL and overload rule remain.", "Try permitting only PC1 in PAT-INSIDE, clear the old translations and test both PCs. PC1 should work while PC2 cannot complete a translated session. Restore the /24 permit and retest.", "Remove the overload rule or default route and observe the failure; restore it, repeat both pings and web visits, then save R1 and the lab. Unmatched traffic can be routed untranslated; the ISP has no private return route in this lab.", "A ping to R1\u2019s public interface is only a ping to R1. PAT does not publish either PC as an inbound server or provide a complete firewall policy."] }
+    ], note: "All addressing, host gateways, SW1 access ports, ISP1 and the outside web server are ready. Configure only R1. Use interface overload, without a pool or static mappings. PAT-INSIDE contains one subnet permit; remarks are allowed. The completed reference applies configuration only and earns five configuration tasks. Perform both client pings and HTTP visits for actual packet achievements. Those achievements survive reopening while the ACL, overload rule, operational NAT roles and default route remain live." },
     "static-nat": { columns: ["Device", "Interface", "IPv4 address", "Role / gateway"], rows: [["SRV1", "Gi0", "192.168.10.10 /24", "Inside local; gateway 192.168.10.1"], ["R1", "Gi0/0", "192.168.10.1 /24", "NAT inside"], ["R1", "Gi0/1", "203.0.113.1 /24", "NAT outside; next hop 203.0.113.2"], ["ISP1", "Gi0/0", "203.0.113.2 /24", "Transit toward R1"], ["ISP1", "Gi0/1", "198.51.100.1 /24", "Outside client gateway"], ["PC1", "Gi0", "198.51.100.10 /24", "Outside host; gateway 198.51.100.1"]], commands: STATIC_NAT_COMMANDS, verification: { R1: ["show ip interface brief", "show ip route", "show running-config | include ip nat", "show ip nat translations", "show ip nat translations verbose", "show ip nat statistics"], ISP1: ["show ip interface brief", "show ip route", "show ip arp"], SRV1: ["ipconfig", "ping -n 3 198.51.100.10"], PC1: ["ipconfig", "ping -n 3 203.0.113.10"] }, setup: [
       { title: "Address roles", instructions: ["Inside local: SRV1\u2019s actual address 192.168.10.10. Inside global: the public mapping 203.0.113.10. PC1\u2019s outside local and outside global are both 198.51.100.10; this lab does not translate the outside host.", "203.0.113.10 is an unused address on R1\u2019s outside subnet. Do not assign it to an interface. The static mapping supplies an ARP alias so ISP1 can reach it."] },
       { title: "PC1 \xB7 Desktop \u2192 Web browser", instructions: ["Browse to http://203.0.113.10/ and expect 200 OK with the heading Static NAT: SRV1 reached. The HTTP service and page on SRV1 are prepared.", "The application task requires a complete delivered HTTP response from SRV1 through R1\u2019s translation. A TCP SYN, an ICMP reply or a translation-table entry alone cannot finish it."] },
@@ -53736,6 +53803,37 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createPATLab(mode = "practice") {
+    const make = (name2, kind, x, y = 300) => ({ id: "device-pat-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const pc1 = make("PC1", "pc", 180, 180), pc2 = make("PC2", "pc", 180, 420), sw = make("SW1", "switch", 400), r1 = make("R1", "router", 620), isp = make("ISP1", "router", 840), srv = make("SRV1", "server", 1060);
+    for (const [d, port3, ip2] of [[pc1, "GigabitEthernet0", "192.168.10.10"], [pc2, "GigabitEthernet0", "192.168.10.20"], [r1, "GigabitEthernet0/0", "192.168.10.1"], [r1, "GigabitEthernet0/1", "203.0.113.1"], [isp, "GigabitEthernet0/0", "203.0.113.2"], [isp, "GigabitEthernet0/1", "198.51.100.1"], [srv, "GigabitEthernet0", "198.51.100.10"]]) {
+      Object.assign(d.config.interfaces[port3], { adminUp: true, ip: ip2, mask: "255.255.255.0" });
+      d.config.interfaces[port3].features.dhcp = false;
+      d.config.interfaces[port3].features.proxyArp = false;
+    }
+    pc1.config.defaultGateway = pc2.config.defaultGateway = "192.168.10.1";
+    srv.config.defaultGateway = "198.51.100.1";
+    srv.config.services.http = { enabled: true, port: 80, authentication: "none", content: PAT_PAGE };
+    for (const port3 of ["GigabitEthernet0/1", "GigabitEthernet0/2", "GigabitEthernet0/3"]) {
+      sw.config.interfaces[port3].mode = "access";
+      sw.config.interfaces[port3].features.portfast = true;
+    }
+    for (const d of [pc1, pc2, sw, r1, isp, srv]) d.startupConfig = structuredClone(d.config);
+    const endpoints = (pc) => ({ device: r1.id, inside: pc.id, outside: srv.id, insideLocal: pc.config.interfaces.GigabitEthernet0.ip, insideGlobal: "203.0.113.1", outsideAddress: "198.51.100.10" });
+    const link = (id2, a, ap, b, bp) => ({ id: "link-pat-" + id2, a: { deviceId: a.id, port: ap }, b: { deviceId: b.id, port: bp }, enabled: true, delay: 0.1, loss: 0 });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "pat", name: "PAT" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [pc1, pc2, sw, r1, isp, srv], links: [link("pc1", pc1, "GigabitEthernet0", sw, "GigabitEthernet0/1"), link("pc2", pc2, "GigabitEthernet0", sw, "GigabitEthernet0/2"), link("inside", sw, "GigabitEthernet0/3", r1, "GigabitEthernet0/0"), link("transit", r1, "GigabitEthernet0/1", isp, "GigabitEthernet0/0"), link("outside", isp, "GigabitEthernet0/1", srv, "GigabitEthernet0")], notes: [{ id: "note-pat", x: 620, y: 530, text: "PAT \xB7 two inside PCs share 203.0.113.1\nStandard ACL: 192.168.10.0 /24 \xB7 interface overload\nBoth PC Web browsers: http://198.51.100.10/" }], lesson: { title: "PAT", description: "PC1 and PC2 share an inside LAN through SW1. R1 connects that LAN to ISP1 and the outside server SRV1. Addressing, gateways, switch access ports and SRV1\u2019s HTTP page are prepared. Configure R1 only. ISP1 has no route to the private LAN, so untranslated traffic cannot complete a normal return path.\n\nMark R1 GigabitEthernet0/0 with ip nat inside and GigabitEthernet0/1 with ip nat outside. Create the standard ACL PAT-INSIDE with permit 192.168.10.0 0.0.0.255. This ACL selects source addresses for translation; it is not an interface traffic filter and should not be applied using ip access-group.\n\nConfigure ip nat inside source list PAT-INSIDE interface GigabitEthernet0/1 overload. Add a default route through ISP1 at 203.0.113.2, then save with write memory. There is no pool or static mapping. PAT uses the actual outside interface address 203.0.113.1 for both clients and distinguishes sessions with transport ports or ICMP identifiers.\n\nBefore traffic, show ip nat translations should have no dynamic entries. Use both ping task buttons, or each PC\u2019s Command prompt, to ping 198.51.100.10. Verify real replies from SRV1. On R1, inspect ICMP entries showing 192.168.10.10 and 192.168.10.20 sharing 203.0.113.1 with different translated identifiers. Complete both pings while their ICMP entries are live to earn the shared-address task.\n\nOn each PC, open Desktop \u2192 Web browser and visit http://198.51.100.10/. Expect 200 OK and the heading PAT: outside server reached. Both HTTP tasks need their own complete translated response. Inspect the TCP entries in show ip nat translations verbose and compare local and global ports. A configured overload rule, router-originated ping, SYN or one client\u2019s success cannot finish the other client\u2019s tasks.\n\nUse show access-lists PAT-INSIDE, show ip nat statistics and show ip route to separate classifier, translation and routing problems. Run clear ip nat translation * to remove the dynamic state, then generate fresh traffic. The ACL and overload configuration stay in place; dynamic entries are recreated by actual sessions.\n\nClassifier exercise: temporarily permit only PC1, clear old translations and retest both clients. PC1 should still receive translated replies while PC2 cannot complete a translated session. Existing bindings retain their initial classification, so clear them before testing ACL changes. Restore the /24 permit and repeat both pings and web visits.\n\nAlso remove and restore the PAT rule or the default route, testing after each change. Clear translations before removing a live PAT rule to avoid an in-use rejection. A ping to 203.0.113.1 reaches R1 itself; it does not publish a PC through PAT. NAT is separate from routing and a complete firewall policy.\n\nSave R1 and the lab after restoring the intended settings. Packet achievements survive reopening; the source ACL, overload rule, operational NAT roles and usable default route remain live requirements. The completed reference configures R1 but leaves all packet achievements for you to perform.", objectives: [
+      { id: "inside-role", title: "Mark R1 Gi0/0 as NAT inside", criterion: { kind: "nat-interface", device: r1.id, interface: "GigabitEthernet0/0", role: "inside" } },
+      { id: "outside-role", title: "Mark R1 Gi0/1 as NAT outside", criterion: { kind: "nat-interface", device: r1.id, interface: "GigabitEthernet0/1", role: "outside" } },
+      { id: "source-acl", title: "Select only the inside /24 with standard ACL PAT-INSIDE", criterion: { kind: "pat-acl", device: r1.id, name: "PAT-INSIDE", network: "192.168.10.0", wildcard: "0.0.0.255" } },
+      { id: "overload-rule", title: "Overload R1\u2019s Gi0/1 address using PAT-INSIDE", criterion: { kind: "pat-rule", device: r1.id, acl: "PAT-INSIDE", interface: "GigabitEthernet0/1" } },
+      { id: "default-route", title: "Install R1\u2019s usable default route through 203.0.113.2", criterion: { kind: "all", criteria: [{ kind: "route", device: r1.id, network: "0.0.0.0", prefix: 0, protocol: "static", nextHop: "203.0.113.2", ad: 1 }, { kind: "interface-up", device: r1.id, interface: "GigabitEthernet0/1" }] } },
+      ...[pc1, pc2].map((pc, i) => ({ id: "pc" + (i + 1) + "-icmp", title: "Verify " + pc.config.hostname + " reaches SRV1 through PAT", criterion: { kind: "nat-ping", ...endpoints(pc), direction: "inside-out" }, action: { kind: "ping", device: pc.id, target: "198.51.100.10" } })),
+      { id: "shared-address", title: "Prove both PCs share 203.0.113.1 with distinct translated ICMP identifiers", criterion: { kind: "pat-sharing", device: r1.id, acl: "PAT-INSIDE", interface: "GigabitEthernet0/1", inside: [pc1.id, pc2.id], outside: srv.id, insideGlobal: "203.0.113.1", outsideAddress: "198.51.100.10" } },
+      ...[pc1, pc2].map((pc, i) => ({ id: "pc" + (i + 1) + "-http", title: "Open SRV1\u2019s website from " + pc.config.hostname + " through PAT", description: pc.config.hostname + " \u2192 Desktop \u2192 Web browser \u2192 http://198.51.100.10/ \xB7 expect 200 OK.", criterion: { kind: "nat-outbound-http", ...endpoints(pc), content: "PAT: outside server reached" } }))
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, PAT_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createStaticNATLab(mode = "practice") {
     const make = (name2, kind, x) => ({ id: "device-static-nat-" + name2.toLowerCase(), kind, x, y: 260, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
     const srv = make("SRV1", "server", 180), r1 = make("R1", "router", 500), isp = make("ISP1", "router", 820), pc = make("PC1", "pc", 1140);
@@ -55155,6 +55253,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "pat") return createPATLab(mode);
     if (id2 === "static-nat") return createStaticNATLab(mode);
     if (id2 === "scp-sftp-file-transfer") return createSCPSFTPFileTransferLab(mode);
     if (id2 === "radius-aaa-client") return createRADIUSAAAClientLab(mode);

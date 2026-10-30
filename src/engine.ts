@@ -971,6 +971,13 @@ export class Simulator {
     if(direct){recordNatFlow(this,d,direct,packet);natTranslated(d);packet.source=direct.outside;if(packet.body?.kind==='icmp-error'&&packet.body.original?.destination===direct.inside)packet.body.original.destination=direct.outside;this.packetEvent(d,packet,'Source NAT',p.source+' → '+packet.source,'forward',output);return packet;}
     const table:any[]=d.runtime.features.natTranslations??=[],assigned=findDynamicNatBinding(table,{inside:packet.source},this.clock.now());
     if(assigned){assigned.binding=true;recordNatFlow(this,d,assigned,packet);natTranslated(d);packet.source=assigned.outside;if(packet.body?.kind==='icmp-error'&&packet.body.original?.destination===assigned.inside)packet.body.original.destination=assigned.outside;this.packetEvent(d,packet,'Source NAT',p.source+' → '+packet.source,'forward',output);return packet;}
+    // An existing PAT tuple keeps its allocation decision until cleared or expired.
+    const configuredRules=new Set((nat.rules??[]).map(natRuleKey));
+    const established=table.find(x=>x.overload&&x.expires>this.clock.now()&&configuredRules.has(x.rule)&&x.inside===packet.source&&x.insidePort===packet.sourcePort&&x.protocol===packet.protocol&&x.remote===packet.destination&&(packet.protocol==='icmp'||x.remotePort===packet.destinationPort));
+    if(established){
+      recordNatFlow(this,d,established,packet);natTranslated(d);packet.source=established.outside;packet.sourcePort=established.outsidePort;if(packet.protocol==='icmp')packet.destinationPort=established.outsidePort;
+      this.packetEvent(d,packet,'Source NAT',p.source+' → '+packet.source,'forward',output);return packet;
+    }
     for(const [index,rule]of (nat.rules??[]).entries()){
       if(rule.acl&&!ownRecordValue(d.config.features.acls,rule.acl)||!this.aclAllows(d,rule.acl,packet))continue;
       let global=rule.interface?d.config.interfaces[rule.interface]?.ip:nat.pools?.[rule.pool]?.start;

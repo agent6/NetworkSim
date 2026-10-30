@@ -112,6 +112,10 @@ export function validateLesson(value: unknown): asserts value is Lesson {
       case "nat-static":
       case "nat-ping":
       case "nat-http":
+      case "nat-outbound-http":
+      case "pat-acl":
+      case "pat-rule":
+      case "pat-sharing":
         return validNATCriterion(v);
       case "scp-server":
       case "ssh-file-client":
@@ -339,7 +343,7 @@ export function matches(
   const d = device(sim, criterion.device);
   if (!d) return false;
   if (['tacacs-server','radius-server','aaa-group','aaa-method','aaa-line','tacacs-session','radius-session'].includes(criterion.kind))return matchesAAAClientCriterion(sim,d,criterion as AAAClientCriterion);
-  if (['nat-interface','nat-static','nat-ping','nat-http'].includes(criterion.kind))return matchesNATCriterion(sim,d,criterion as NATCriterion);
+  if (['nat-interface','nat-static','nat-ping','nat-http','nat-outbound-http','pat-acl','pat-rule','pat-sharing'].includes(criterion.kind))return matchesNATCriterion(sim,d,criterion as NATCriterion);
   if (['scp-server','ssh-file-client','file-transfer','file-copy'].includes(criterion.kind))return matchesFileTransferCriterion(sim,d,criterion as FileTransferCriterion);
   if (criterion.kind === "local-user") {
     const user=ownRecordValue(d.config.features.users,criterion.username);
@@ -544,7 +548,7 @@ export function lessonProgress(sim: Simulator):
       );
     }
     const result = matches(sim, c);
-    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http") return result;
+    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing") return result;
     validKeys.add(key);
     if (result) observations.add(key);
     return result || observations.has(key);
@@ -552,7 +556,7 @@ export function lessonProgress(sim: Simulator):
   const rows = lesson.objectives.map((objective) => {
     const observed = observe(objective.criterion, JSON.stringify(objective.id));
     // Traffic, login and fault observations record accomplishments; configuration stays live.
-    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http";
+    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing";
     if (historical && observed)
       completed.add(objective.id);
     return {
