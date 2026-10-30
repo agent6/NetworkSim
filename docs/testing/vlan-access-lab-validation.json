@@ -1,0 +1,67 @@
+{
+  "feature": "CCNA Switching: VLAN and access ports",
+  "catalogId": "vlan-and-access-ports",
+  "artifactSha256": "87d5dfc82a64106ee6d1ef387db433a90aad2d654b2af55c871f6e00d26d3e14",
+  "devices": 5,
+  "links": 4,
+  "tasks": 7,
+  "topology": {
+    "switch": "SW1",
+    "vlan10": "USERS; Gi0/1\u20132; PC1 192.168.10.11/24 and PC2 192.168.10.12/24",
+    "vlan20": "GUESTS; Gi0/3\u20134; PC3 192.168.20.11/24 and PC4 192.168.20.12/24",
+    "interVlanRouting": false,
+    "defaultGateways": false
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1338,
+    "passed": 1338,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "focusedTests": 31
+  },
+  "scenarioChecks": [
+    "Practice starts with four administratively down VLAN 1 interfaces and no task credit",
+    "Published interface-range commands create named VLANs and assign both access-port groups",
+    "Both same-VLAN pairs exchange real simulated ICMP traffic in both directions",
+    "ARP broadcast flooding reaches only the correct same-VLAN port and never the other VLAN pair",
+    "Cross-VLAN pings fail with no inter-VLAN routing or host default gateway",
+    "Wrong VLAN assignment or shutdown breaks the affected pair while the other VLAN pair remains operational; repair restores it",
+    "The MAC task requires all four received dynamic entries in their expected VLANs and ports",
+    "Clear/relearn and saved reloads require fresh MAC learning while earned ping tasks persist",
+    "Every published IOS and Windows verification command returns the documented success or expected cross-VLAN loss",
+    "Portable copies, renamed nodes and device power cycles retain working VLAN and host configuration"
+  ],
+  "browserChecks": [
+    "light 1440px: Switching entry, four-PC plan and reference, failed baseline, visible interface-range/VLAN configuration, both same-VLAN pairs receive 3/3 replies, both cross-VLAN CMD checks receive zero replies, four-MAC learning/clear/relearn, saved progress and safe completed-reference replacement",
+    "light 390px: Switching entry, four-PC plan and reference, failed baseline, visible interface-range/VLAN configuration, both same-VLAN pairs receive 3/3 replies, both cross-VLAN CMD checks receive zero replies, four-MAC learning/clear/relearn, saved progress and safe completed-reference replacement",
+    "light 320px: Switching entry, four-PC plan and reference, failed baseline, visible interface-range/VLAN configuration, both same-VLAN pairs receive 3/3 replies, both cross-VLAN CMD checks receive zero replies, four-MAC learning/clear/relearn, saved progress and safe completed-reference replacement",
+    "dark 1440px: Switching entry, four-PC plan and reference, failed baseline, visible interface-range/VLAN configuration, both same-VLAN pairs receive 3/3 replies, both cross-VLAN CMD checks receive zero replies, four-MAC learning/clear/relearn, saved progress and safe completed-reference replacement",
+    "dark 390px: Switching entry, four-PC plan and reference, failed baseline, visible interface-range/VLAN configuration, both same-VLAN pairs receive 3/3 replies, both cross-VLAN CMD checks receive zero replies, four-MAC learning/clear/relearn, saved progress and safe completed-reference replacement",
+    "dark 320px: Switching entry, four-PC plan and reference, failed baseline, visible interface-range/VLAN configuration, both same-VLAN pairs receive 3/3 replies, both cross-VLAN CMD checks receive zero replies, four-MAC learning/clear/relearn, saved progress and safe completed-reference replacement",
+    "light: shared link uses current host/path/query, protects the workspace and returns to all three Switching labs",
+    "dark: shared link uses current host/path/query, protects the workspace and returns to all three Switching labs"
+  ],
+  "layer2Regression": [
+    "light 1440px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "light 390px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "light 320px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "dark 1440px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "dark 390px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "dark 320px: Switching entry, reference, failed baseline, visible IOS interface configuration, dynamic MAC learning, 3/3 replies in both directions, clear/relearn, fresh runtime checks after reload and safe completed-reference replacement",
+    "light: shared link preserves current host/path/query, previews without replacing the workspace and returns to Switching",
+    "dark: shared link preserves current host/path/query, previews without replacing the workspace and returns to Switching"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

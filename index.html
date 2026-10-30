@@ -52574,6 +52574,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "dhcp-server-and-relay", group: "CCNA", section: "Fundamentals", title: "DHCP server and relay", description: "Configure a remote DHCP server and an IOS relay, deliver IPv4 settings to two clients, and verify routed connectivity.", devices: 5, links: 4, practice: true },
     { id: "layer-2-switching-interfaces", group: "CCNA", section: "Switching", title: "Layer 2 switching interfaces", description: "Configure access interfaces, VLAN membership and link settings, shut an unused port, and verify dynamic MAC learning and host connectivity.", devices: 3, links: 2, practice: true },
     { id: "layer-3-routed-interfaces", group: "CCNA", section: "Switching", title: "Layer 3 routed interfaces", description: "Convert multilayer switch ports to routed interfaces, address two subnets, enable IPv4 routing, and verify end-to-end forwarding.", devices: 3, links: 2, practice: true },
+    { id: "vlan-and-access-ports", group: "CCNA", section: "Switching", title: "VLAN and access ports", description: "Create two VLANs, assign four access ports, and verify same-VLAN connectivity, VLAN isolation and dynamic MAC learning.", devices: 5, links: 4, practice: true },
     { id: "router-on-a-stick", group: "CCNA", section: "Routing", title: "Router on a stick", description: "Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.", devices: 4, links: 3, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
@@ -52645,7 +52646,30 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     "end",
     "write memory"
   ] };
+  var VLAN_ACCESS_COMMANDS = { SW1: [
+    "enable",
+    "configure terminal",
+    "vlan 10",
+    "name USERS",
+    "vlan 20",
+    "name GUESTS",
+    "interface range GigabitEthernet0/1 - 2",
+    "description VLAN10_USERS",
+    "switchport mode access",
+    "switchport access vlan 10",
+    "spanning-tree portfast",
+    "no shutdown",
+    "interface range GigabitEthernet0/3 - 4",
+    "description VLAN20_GUESTS",
+    "switchport mode access",
+    "switchport access vlan 20",
+    "spanning-tree portfast",
+    "no shutdown",
+    "end",
+    "write memory"
+  ] };
   var GUIDE_RESOURCES = {
+    "vlan-and-access-ports": { columns: ["Device", "Switch port", "VLAN", "IPv4 address", "Default gateway"], rows: [["PC1", "SW1 Gi0/1", "10 \xB7 USERS", "192.168.10.11 /24", "\u2014"], ["PC2", "SW1 Gi0/2", "10 \xB7 USERS", "192.168.10.12 /24", "\u2014"], ["PC3", "SW1 Gi0/3", "20 \xB7 GUESTS", "192.168.20.11 /24", "\u2014"], ["PC4", "SW1 Gi0/4", "20 \xB7 GUESTS", "192.168.20.12 /24", "\u2014"]], commands: VLAN_ACCESS_COMMANDS, verification: { SW1: ["show vlan brief", "show interfaces status", "show interfaces GigabitEthernet0/1 switchport", "show interfaces GigabitEthernet0/3 switchport", "show mac address-table dynamic"], PC1: ["ipconfig", "ping -n 3 192.168.10.12", "ping -n 3 192.168.20.11"], PC3: ["ipconfig", "ping -n 3 192.168.20.12", "ping -n 3 192.168.10.11"] }, note: "PC1 \u2192 PC2 and PC3 \u2192 PC4 should each receive three replies. The cross-VLAN pings PC1 \u2192 PC3 and PC3 \u2192 PC1 should receive zero replies: this topology has no inter-VLAN routing or default gateways. Inspect VLAN 10 entries on Gi0/1\u20132 and VLAN 20 entries on Gi0/3\u20134. Each PC uses its GigabitEthernet0 interface. Access ports carry untagged endpoint traffic, with the switch assigning each frame to the configured access VLAN." },
     "layer-3-routed-interfaces": { columns: ["Device", "Interface", "IPv4 address", "Subnet mask", "Default gateway"], rows: [["DSW1", "GigabitEthernet0/1", "192.168.10.1", "255.255.255.0", "\u2014"], ["DSW1", "GigabitEthernet0/2", "192.168.20.1", "255.255.255.0", "\u2014"], ["PC1", "GigabitEthernet0", "192.168.10.10", "255.255.255.0", "192.168.10.1"], ["PC2", "GigabitEthernet0", "192.168.20.10", "255.255.255.0", "192.168.20.1"]], commands: L3_INTERFACE_COMMANDS, verification: { DSW1: ["show interfaces GigabitEthernet0/1 switchport", "show interfaces GigabitEthernet0/2 switchport", "show ip interface brief", "show ip route connected", "show running-config | include ip routing", "show ip arp"], PC1: ["ipconfig", "ping -n 3 192.168.10.1", "ping -n 3 192.168.20.10"], PC2: ["ipconfig", "ping -n 3 192.168.20.1", "ping -n 3 192.168.10.10"] }, note: "The PCs already have their static addresses and default gateways. Use no switchport before assigning an IP address to each physical switch port, then enable ip routing globally. Each up/up routed interface installs its directly connected subnet. No static routes or routing protocol are required for these two connected networks. Save DSW1 with write memory." },
     "layer-2-switching-interfaces": { columns: ["Device", "Interface", "VLAN", "IPv4 address", "Default gateway"], rows: [["PC1", "GigabitEthernet0", "10", "192.168.10.10 /24", "\u2014"], ["PC2", "GigabitEthernet0", "10", "192.168.10.20 /24", "\u2014"]], commands: L2_INTERFACE_COMMANDS, verification: { SW1: ["show vlan brief", "show interfaces status", "show interfaces GigabitEthernet0/1 switchport", "show interfaces GigabitEthernet0/2 switchport", "show interfaces GigabitEthernet0/1", "show mac address-table dynamic"], PC1: ["ipconfig", "ping -n 3 192.168.10.20"], PC2: ["ipconfig", "ping -n 3 192.168.10.10"] }, note: "Both PCs already have static /24 addresses and need no default gateway to communicate within their VLAN. Keep switch data ports at Layer 2; do not assign them IP addresses. PortFast is used on these endpoint-facing access ports. Generate traffic before inspecting dynamic MAC entries. To repeat the learning exercise, use clear mac address-table dynamic and send more pings." },
     "dhcp-server-and-relay": { columns: ["Device", "Interface", "IPv4 address", "Subnet mask", "Default gateway"], rows: [["R1", "GigabitEthernet0/0", "192.168.10.1", "255.255.255.0", "\u2014"], ["R1", "GigabitEthernet0/1", "192.168.100.1", "255.255.255.0", "\u2014"], ["SRV1", "GigabitEthernet0", "192.168.100.10", "255.255.255.0", "192.168.100.1"], ["PC1", "GigabitEthernet0", "DHCP: 192.168.10.21\u2013254", "255.255.255.0", "192.168.10.1"], ["PC2", "GigabitEthernet0", "DHCP: 192.168.10.21\u2013254", "255.255.255.0", "192.168.10.1"]], commands: DHCP_RELAY_COMMANDS, verification: { R1: ["show running-config interface GigabitEthernet0/0", "show ip interface GigabitEthernet0/0", "show ip route"], PC1: ["ipconfig /renew", "ipconfig /all", "ping -n 3 192.168.100.10", "nslookup server.lab.example"], PC2: ["ipconfig /renew", "ipconfig /all", "ping -n 3 192.168.100.10"] }, note: "R1, SW1 and the server network are already addressed and enabled. The helper belongs on the client-facing interface. SRV1 serves DHCP; inspect its leases in Services \u2192 DHCP. R1 relays requests and does not maintain the server lease database. DNS on SRV1 is preconfigured for server.lab.example.", setup: [{ title: "SRV1 \xB7 Services \u2192 DHCP", instructions: ["Enable the DHCP server and add an address pool named CLIENTS.", "Network address: 192.168.10.0. Prefix length: 24.", "Default gateway: 192.168.10.1. DNS server: 192.168.100.10.", "Lease duration: 3600 seconds. DNS domain: lab.example.", "Excluded addresses: 192.168.10.1 - 192.168.10.20. Save changes."] }] },
@@ -52674,6 +52698,35 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createVLANAccessLab(mode = "practice") {
+    const sw = { id: "device-vlan-sw1", kind: "switch", x: 500, y: 180, powered: true, config: factoryDeviceConfig("switch", "SW1"), runtime: emptyRuntime() };
+    const pcs = [1, 2, 3, 4].map((n) => {
+      const vlan = n <= 2 ? 10 : 20, config4 = factoryDeviceConfig("pc", `PC${n}`), port3 = config4.interfaces.GigabitEthernet0;
+      Object.assign(port3, { ip: `192.168.${vlan}.${n % 2 === 1 ? 11 : 12}`, mask: "255.255.255.0", adminUp: true });
+      port3.features.dhcp = false;
+      delete config4.defaultGateway;
+      sw.config.interfaces[`GigabitEthernet0/${n}`].adminUp = false;
+      return { id: `device-vlan-pc${n}`, kind: "pc", x: 180 + (n - 1) * 215, y: 430, powered: true, config: config4, runtime: emptyRuntime() };
+    });
+    sw.startupConfig = structuredClone(sw.config);
+    const accessGroup = (ports4, vlan) => ({ kind: "all", criteria: ports4.flatMap((n) => [
+      { kind: "interface", device: sw.id, interface: `GigabitEthernet0/${n}`, property: "switchport", value: true },
+      { kind: "interface", device: sw.id, interface: `GigabitEthernet0/${n}`, property: "mode", value: "access" },
+      { kind: "interface", device: sw.id, interface: `GigabitEthernet0/${n}`, property: "vlan", value: vlan },
+      { kind: "interface", device: sw.id, interface: `GigabitEthernet0/${n}`, property: "adminUp", value: true }
+    ]) });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "vlan-and-access-ports", name: "VLAN and access ports" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [sw, ...pcs], links: pcs.map((d, i) => ({ id: `link-vlan-pc${i + 1}`, a: { deviceId: sw.id, port: `GigabitEthernet0/${i + 1}` }, b: { deviceId: d.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 })), notes: [{ id: "note-vlan-users", x: 285, y: 550, text: "VLAN 10 \xB7 USERS \xB7 192.168.10.0/24\nPC1 \u2194 PC2" }, { id: "note-vlan-guests", x: 715, y: 550, text: "VLAN 20 \xB7 GUESTS \xB7 192.168.20.0/24\nPC3 \u2194 PC4" }], lesson: { title: "VLAN and access ports", description: "Four PCs are connected to SW1 and already have static IPv4 addresses. PC1 and PC2 belong in VLAN 10 (USERS); PC3 and PC4 belong in VLAN 20 (GUESTS). All four switch access interfaces begin administratively down in VLAN 1.\n\nCreate both VLANs. Configure Gi0/1\u20132 as access ports in VLAN 10 and Gi0/3\u20134 as access ports in VLAN 20, then enable the interfaces. The reference uses interface range and PortFast for these endpoint-facing access ports.\n\nTest PC1 \u2192 PC2 and PC3 \u2192 PC4, then inspect the dynamic MAC table for all four PCs in their correct VLANs and ports. In each PC Command prompt, also verify that PC1 \u2192 PC3 and PC3 \u2192 PC1 receive no replies. The two VLANs form separate broadcast domains, and this lab provides no inter-VLAN routing. Save SW1 with write memory and save or export your lab.", objectives: [
+      { id: "vlan10", title: "Create VLAN 10 on SW1", description: "Name it USERS.", criterion: { kind: "vlan", device: sw.id, id: 10 } },
+      { id: "vlan20", title: "Create VLAN 20 on SW1", description: "Name it GUESTS.", criterion: { kind: "vlan", device: sw.id, id: 20 } },
+      { id: "users-ports", title: "Assign and enable Gi0/1\u20132 as access ports in VLAN 10", description: "These ports connect PC1 and PC2.", criterion: accessGroup([1, 2], 10) },
+      { id: "guests-ports", title: "Assign and enable Gi0/3\u20134 as access ports in VLAN 20", description: "These ports connect PC3 and PC4.", criterion: accessGroup([3, 4], 20) },
+      { id: "users-ping", title: "Verify PC1 can ping PC2 within VLAN 10", description: "192.168.10.11 \u2192 192.168.10.12", criterion: { kind: "echo", device: pcs[0].id, from: "192.168.10.12" }, action: { kind: "ping", device: pcs[0].id, target: "192.168.10.12" } },
+      { id: "guests-ping", title: "Verify PC3 can ping PC4 within VLAN 20", description: "192.168.20.11 \u2192 192.168.20.12", criterion: { kind: "echo", device: pcs[2].id, from: "192.168.20.12" }, action: { kind: "ping", device: pcs[2].id, target: "192.168.20.12" } },
+      { id: "mac-learning", title: "Verify all four PC MAC addresses are learned in their VLANs", description: "PC1/PC2 on Gi0/1\u20132 in VLAN 10; PC3/PC4 on Gi0/3\u20134 in VLAN 20. Generate traffic first.", criterion: { kind: "all", criteria: pcs.map((d, i) => ({ kind: "mac-learned", device: sw.id, interface: `GigabitEthernet0/${i + 1}`, source: d.id, sourceInterface: "GigabitEthernet0", vlan: i < 2 ? 10 : 20 })) } }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261105, lab };
+    return mode === "practice" ? doc : completedDocument(doc, VLAN_ACCESS_COMMANDS);
+  }
   function createL3InterfaceLab(mode = "practice") {
     const make = (id2, kind, hostname, x, y) => ({ id: id2, kind, x, y, powered: true, config: factoryDeviceConfig(kind, hostname), runtime: emptyRuntime() });
     const sw = make("device-l3-dsw1", "l3switch", "DSW1", 500, 180), a = make("device-l3-pc1", "pc", "PC1", 280, 420), b = make("device-l3-pc2", "pc", "PC2", 720, 420);
@@ -52852,6 +52905,7 @@ ${output.join("\n")}`);
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "vlan-and-access-ports") return createVLANAccessLab(mode);
     if (id2 === "layer-3-routed-interfaces") return createL3InterfaceLab(mode);
     if (id2 === "layer-2-switching-interfaces") return createL2InterfaceLab(mode);
     if (id2 === "dhcp-server-and-relay") return createDHCPRelayLab(mode);
