@@ -50,7 +50,13 @@ export function packetGroups(packet: PacketSummary) {
     fields.forEach(([key]) => used.add(key));
     return { title, fields };
   };
+  const spanningTree = (packet.stpBpdus || []).map(({vlan, ...fields}) => ({
+    title: `Spanning tree · VLAN ${vlan}`,
+    fields: Object.entries(fields),
+  }));
+  if (spanningTree.length) used.add("stpBpdus");
   const groups = [
+    ...spanningTree,
     group("IPsec and IKE",["espSpi","espSequence","protectedProtocol","ikeStage","ikeExchangeId"]),
     group("802.11 and wireless transport",["frameType","subtype","bssid","ssid","channel","band","rssi","snr","rate","eapType","keyMessage","replayCounter","micValidated","innerFrameId"]),
     group("Ethernet", ["sourceMac", "destinationMac", "vlan", "cos"]),

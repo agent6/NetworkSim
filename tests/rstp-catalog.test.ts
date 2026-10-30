@@ -1,0 +1,82 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {Simulator} from '../src/engine.ts';
+import {IOSSession} from '../src/cli.ts';
+import {iosRejected} from '../src/ios-help.ts';
+import {createCatalogLab,RSTP_COMMANDS as COMMANDS,catalogGuideResources,LAB_CATALOG,type CatalogLab} from '../src/lab-catalog.ts';
+import {actionAvailable,lessonProgress,matches,validateLesson,type Criterion} from '../src/lessons.ts';
+import {parseLabFile,serializeLabFile} from '../src/persistence.ts';
+import {packetGroups,matchesProtocol} from '../src/packet-view.ts';
+const slug='rapid-spanning-tree-protocol',id=(n:string)=>'device-rst-'+n.toLowerCase(),g=(n:number)=>'GigabitEthernet0/'+n;
+function load(mode:'practice'|'completed'='completed'){const s=new Simulator();s.load(parseLabFile(serializeLabFile(createCatalogLab(slug,mode))));s.advance(12000);return s;}
+const d=(s:Simulator,n:string)=>s.getDevice(id(n))!;
+const row=(s:Simulator,n:string)=>lessonProgress(s)!.rows.find(r=>r.objective.id===n)!;
+function cli(s:Simulator,n:string){const c=new IOSSession(s,id(n));if(!c.windowsMode)c.execute('enable');return c;}
+function run(c:IOSSession,...lines:string[]){for(const line of lines){const out=c.execute(line);assert.ok(!out.some(iosRejected),line+'\n'+out.join('\n'));assert.doesNotMatch(out.join('\n'),/not implemented|not recognized|TypeError/i);}}
+function change(s:Simulator,n:string,...lines:string[]){run(cli(s,n),'conf t',...lines,'end');s.advance(12000);}
+function configure(s:Simulator,save=true){for(const[n,lines]of Object.entries(COMMANDS))run(new IOSSession(s,id(n)),...lines.filter(l=>save||l!=='write memory'));s.advance(12000);}
+function ping(s:Simulator,n:string,address:string){const p=s.ping(id(n),address,{count:3});s.advance(5000);lessonProgress(s);return p.received;}
+function pairs(s:Simulator){for(const[v,n]of [[10,1],[20,3]])assert.equal(ping(s,'PC'+n,`192.168.${v}.12`),3);}
+function failure(s:Simulator,failed:23|24){const started=s.clock.now(),survivor=failed===23?24:23,vlan=failed===23?10:20;run(cli(s,'SW3'),'conf t','interface '+g(failed),'shutdown','end');s.advance(1000);assert.equal(row(s,'fail-gi'+failed).complete,false,'old normal replies cannot satisfy a fresh failure');const promoted=s.events.find(e=>e.time>=started&&e.nodeId===id('SW3')&&e.label===g(survivor)+' forwarding'&&e.detail.startsWith('VLAN '+vlan+': root port'));assert.ok(promoted);assert.ok(promoted.time-started<3000,'direct failure promotes the alternate without classic 30-second forward delay');assert.equal(actionAvailable(s,row(s,'fail-gi'+failed).objective),true);assert.equal(ping(s,failed===23?'PC1':'PC3',`192.168.${vlan}.12`),3);assert.equal(row(s,'fail-gi'+failed).complete,true);pairs(s);change(s,'SW3','interface '+g(failed),'no shutdown');pairs(s);}
+function finish(s:Simulator){pairs(s);assert.equal(lessonProgress(s)!.complete,12);failure(s,23);assert.equal(lessonProgress(s)!.complete,13);failure(s,24);assert.equal(lessonProgress(s)!.complete,14);}
+
+test('ENCOR Layer 2 has three labs and a portable independent seven-node fourteen-task RSTP practice',()=>{
+ assert.deepEqual(LAB_CATALOG.filter(e=>e.group==='CCNP ENCOR'&&e.section==='Layer 2').map(e=>e.id),['802-1q-trunk-troubleshooting','etherchannel-troubleshooting',slug]);const a=createCatalogLab(slug),b=createCatalogLab(slug);assert.notEqual(a.lab.id,b.lab.id);a.lab.devices[0].config.vlans[10].name='changed';assert.equal(b.lab.devices[0].config.vlans[10].name,'USERS');const s=load('practice');validateLesson((s.lab as CatalogLab).lesson);assert.equal(s.lab.devices.length,7);assert.equal(s.lab.links.length,7);assert.equal(lessonProgress(s)!.rows.length,14);assert.equal(lessonProgress(s)!.complete,0);assert.equal(lessonProgress(s)!.rows.filter(r=>r.objective.action&&actionAvailable(s,r.objective)).length,2);for(const n of ['SW1','SW2','SW3']){assert.equal(d(s,n).config.features.stp.mode,'pvst');for(const p of [23,24])assert.equal(d(s,n).config.interfaces[g(p)].adminUp,false);}assert.equal(ping(s,'PC1','192.168.10.12'),0);
+});
+test('published IOS configuration builds saved per-VLAN rapid trees and real normal/failure traffic earns all fourteen tasks',()=>{
+ const s=load('practice');configure(s);assert.equal(lessonProgress(s)!.complete,9);for(const n of ['SW1','SW2','SW3'])assert.deepEqual(d(s,n).config,d(s,n).startupConfig);finish(s);
+});
+test('completed reference has nine live goals, empty runtime and no fabricated packet, failure or MAC proof',()=>{
+ const doc=createCatalogLab(slug,'completed');for(const node of doc.lab.devices){assert.deepEqual(node.runtime.features,{});assert.deepEqual(node.config,node.startupConfig);}const s=load();assert.equal(lessonProgress(s)!.complete,9);for(const n of ['vlan10-ping','vlan20-ping','fail-gi23','fail-gi24','mac-learning'])assert.equal(row(s,n).complete,false);finish(s);
+});
+test('both intended roots and opposite SW3 Root/Alternate ports are elected by received BPDUs',()=>{
+ const s=load();for(const n of ['SW1','SW2','SW3'])for(const v of [10,20])assert.equal(d(s,n).runtime.stp[v].rootId,id(v===10?'SW1':'SW2'));for(const[v,r,a]of [[10,23,24],[20,24,23]]){const tree=d(s,'SW3').runtime.stp[v];assert.equal(tree.ports[g(r)].role,'root');assert.equal(tree.ports[g(r)].state,'forwarding');assert.equal(tree.ports[g(a)].role,'alternate');assert.equal(tree.ports[g(a)].state,'blocking');assert.equal(tree.ports[g(r)].linkType,'point-to-point');assert.equal(tree.cost,4);}
+});
+test('configuration alone cannot elect received roots or prove rapid roles when STP BPDUs are dropped',()=>{
+ const s=new Simulator(),send=s.sendLinkControl.bind(s);let drop=true;s.sendLinkControl=(device,port,message)=>{if(drop&&message.protocol==='STP')return;send(device,port,message);};s.load(createCatalogLab(slug,'completed'));s.advance(12000);assert.equal(row(s,'rapid-mode').complete,true);for(const n of ['root-election','vlan10-roles','vlan20-roles','trunk-ports'])assert.equal(row(s,n).complete,false);drop=false;s.advance(12000);assert.equal(row(s,'root-election').complete,true);pairs(s);assert.equal(row(s,'vlan10-ping').complete,true);
+});
+test('only host interfaces are operational edge ports; switch-to-switch PortFast is rejected by live lab checks',()=>{
+ const s=load();for(const[n,p,v]of [['SW1',1,20],['SW2',1,10],['SW3',1,10],['SW3',2,20]] as const){const sw=d(s,n);assert.equal(sw.runtime.stp[v].ports[g(p)].edge,true);assert.equal(sw.config.interfaces[g(p)].features.portfast,true);}change(s,'SW3','interface gi0/23','spanning-tree portfast trunk');assert.equal(row(s,'trunk-ports').complete,false);configure(s);assert.equal(row(s,'trunk-ports').complete,true);change(s,'SW1','interface gi0/1','no spanning-tree portfast');assert.equal(row(s,'edge-ports').complete,false);
+});
+test('full-duplex point-to-point roles cannot be substituted by shared half-duplex trunks',()=>{
+ const s=load();change(s,'SW3','interface gi0/23','speed 100','duplex half');assert.equal(row(s,'vlan10-roles').complete,false);assert.equal(row(s,'trunk-ports').complete,false);configure(s);assert.equal(row(s,'vlan10-roles').complete,true);assert.equal(row(s,'trunk-ports').complete,true);
+});
+test('normal VLAN flows use the elected two-hop trees with tags and unchanged TTL while alternates suppress user traffic',()=>{
+ const s=load();for(const[v,pc,root,alternate]of [[10,1,23,24],[20,3,24,23]]){const before=s.events.length;assert.equal(ping(s,'PC'+pc,`192.168.${v}.12`),3);const events=s.events.slice(before),original=events.find(e=>e.nodeId===id('PC'+pc)&&e.label==='Frame sent'&&e.packet?.protocol==='ICMP')!.packet!;const frames=events.filter(e=>e.nodeId===id('SW3')&&e.label==='Frame sent'&&e.packet?.protocol==='ICMP'&&[g(23),g(24)].includes(e.port??''));assert.ok(frames.some(e=>e.port===g(root)));assert.ok(frames.every(e=>e.port!==g(alternate)&&e.packet!.vlan===v&&e.packet!.ttl===original.ttl));assert.equal(matches(s,row(s,'vlan'+v+'-ping').objective.criterion),true);}assert.equal(ping(s,'PC1','192.168.20.12'),0);
+});
+test('packet inspection exposes delivered version2 BPDUs, roots, roles and real proposal/agreement flags',()=>{
+ const s=load();const received=s.events.filter(e=>e.protocol==='STP'&&e.label==='Frame received'&&e.nodeId.startsWith('device-rst-sw'));assert.ok(received.length);const bpdus=received.flatMap(e=>e.packet?.stpBpdus??[]);assert.ok(bpdus.some(b=>b.proposal));assert.ok(bpdus.some(b=>b.agreement));assert.ok(bpdus.every(b=>b.mode==='rapid-pvst'&&b.version===2&&Number.isInteger(b.vlan)&&b.rootBridgeId.includes('.')&&typeof b.topologyChange==='boolean'));assert.ok(matchesProtocol(received[0],'STP'));assert.ok(packetGroups(received[0].packet!).some(g=>g.title.startsWith('Spanning tree · VLAN ')&&g.fields.some(([k])=>k==='version')));
+});
+test('fresh failure tasks require an actual down transition, rapid alternate promotion and new packets on the direct surviving path',()=>{
+ const s=load();pairs(s);failure(s,23);failure(s,24);assert.equal(lessonProgress(s)!.complete,14);for(const n of ['fail-gi23','fail-gi24'])assert.equal(row(s,n).complete,true);
+});
+test('both SW3 uplinks down isolate both sources; a core-link failure retains loop-free forwarding through SW3',()=>{
+ const s=load();change(s,'SW3','interface range gi0/23 - 24','shutdown');assert.equal(ping(s,'PC1','192.168.10.12'),0);assert.equal(ping(s,'PC3','192.168.20.12'),0);configure(s);change(s,'SW1','interface gi0/24','shutdown');assert.equal(row(s,'root-election').complete,true);assert.equal(d(s,'SW2').runtime.stp[10].rootPort,g(23));pairs(s);assert.equal(matches(s,row(s,'vlan10-ping').objective.criterion),false,'working alternate core topology cannot replace the intended normal packet path');
+});
+test('secondary roots take over on primary failure and original roots return when the saved primary boots',()=>{
+ const s=load();for(const[primary,secondary,v,pc]of [['SW1','SW2',10,'PC1'],['SW2','SW1',20,'PC3']] as const){s.power(id(primary),false);s.advance(12000);assert.equal(d(s,'SW3').runtime.stp[v].rootId,id(secondary));assert.equal(ping(s,pc,`192.168.${v}.12`),3);s.power(id(primary),true);s.advance(12000);assert.equal(d(s,'SW3').runtime.stp[v].rootId,id(primary));pairs(s);}
+});
+test('classic PVST traffic and pre-migration packets cannot satisfy RSTP path achievements',()=>{
+ const doc=createCatalogLab(slug,'completed');for(const sw of doc.lab.devices.filter(d=>d.kind==='switch'))sw.config.features.stp.mode='pvst';const s=new Simulator();s.load(doc);s.advance(35000);pairs(s);assert.equal(row(s,'rapid-mode').complete,false);assert.equal(row(s,'vlan10-ping').complete,false);assert.ok(s.events.some(e=>e.packet?.stpBpdus?.some(b=>b.version===0&&b.mode==='pvst')));configure(s);for(const n of ['SW1','SW2','SW3'])run(cli(s,n),'clear spanning-tree detected-protocols');s.advance(12000);assert.equal(row(s,'vlan10-ping').complete,false,'later RSTP BPDUs cannot retroactively validate an older classic data packet');pairs(s);assert.equal(row(s,'vlan10-ping').complete,true);
+});
+test('mixed classic peers create a legacy boundary; mode repair plus migration reset restores rapid port checks',()=>{
+ const doc=createCatalogLab(slug,'completed');doc.lab.devices.find(d=>d.id===id('SW2'))!.config.features.stp.mode='pvst';const s=new Simulator();s.load(doc);s.advance(35000);assert.ok(d(s,'SW3').runtime.features.stpLegacy?.[g(24)]);assert.equal(row(s,'vlan20-roles').complete,false);configure(s);for(const n of ['SW1','SW2','SW3'])run(cli(s,n),'clear spanning-tree detected-protocols');s.advance(12000);assert.equal(row(s,'vlan20-roles').complete,true);pairs(s);
+});
+test('wrong identities, missing hop events, wrong tags and absent or classic preceding BPDUs invalidate direct packet matches',()=>{
+ const s=load();pairs(s);const criterion=row(s,'vlan10-ping').objective.criterion,originals=structuredClone(s.events);s.events.splice(0,s.events.length,...s.events.filter(e=>!(e.nodeId===id('SW1')&&e.port===g(24)&&e.label==='Frame sent'&&e.packet?.protocol==='ICMP')));assert.equal(matches(s,criterion),false);s.events.splice(0,s.events.length,...structuredClone(originals));for(const e of s.events)if(e.label==='Echo reply received'&&e.packet)e.packet.parentId='unrelated';assert.equal(matches(s,criterion),false);s.events.splice(0,s.events.length,...structuredClone(originals));for(const e of s.events)if(e.packet?.stpBpdus)for(const b of e.packet.stpBpdus){b.mode='pvst';b.version=0;}assert.equal(matches(s,criterion),false);s.events.splice(0,s.events.length,...structuredClone(originals));for(const e of s.events)if(e.nodeId===id('SW1')&&e.packet?.protocol==='ICMP')e.packet.vlan=20;assert.equal(matches(s,criterion),false);
+});
+test('six dynamic MAC goals follow restored access and root paths and demand fresh learning after clear or expiry',()=>{
+ const s=load();pairs(s);assert.equal(row(s,'mac-learning').complete,true);run(cli(s,'SW3'),'clear mac address-table dynamic');assert.equal(row(s,'mac-learning').complete,false);pairs(s);assert.equal(row(s,'mac-learning').complete,true);for(const e of Object.values(d(s,'SW3').runtime.mac))e.expires=s.clock.now()-1;assert.equal(row(s,'mac-learning').complete,false);pairs(s);assert.equal(row(s,'mac-learning').complete,true);
+});
+test('healthy startup policies must be saved and IOS reload restores unsaved priority damage',()=>{
+ const s=load('practice');configure(s,false);assert.equal(row(s,'saved').complete,false);for(const n of ['SW1','SW2','SW3'])run(cli(s,n),'write memory');assert.equal(row(s,'saved').complete,true);change(s,'SW1','spanning-tree vlan 10 priority 61440');assert.equal(row(s,'saved').complete,false);assert.equal(row(s,'root-election').complete,false);s.reloadIOS(id('SW1'));s.advance(24000);assert.equal(row(s,'saved').complete,true);assert.equal(row(s,'root-election').complete,true);pairs(s);
+});
+test('offline persistence retains traffic/failure achievements but rebuilds BPDUs and dynamic MAC state with stable IDs',()=>{
+ const s=load();finish(s);d(s,'PC1').config.hostname='Student PC';const fresh=new Simulator();fresh.load(parseLabFile(serializeLabFile(s.serialize())));fresh.advance(12000);assert.equal((fresh.lab as CatalogLab).catalogId,slug);assert.equal(lessonProgress(fresh)!.complete,13);assert.equal(row(fresh,'mac-learning').complete,false);pairs(fresh);assert.equal(lessonProgress(fresh)!.complete,14);
+});
+test('all advertised IOS and Windows verification commands expose actual roots, roles, P2p Edge and data delivery',()=>{
+ const s=load();pairs(s);const resources=catalogGuideResources(slug)!;for(const[n,lines]of Object.entries(resources.verification))for(const line of lines){const out=cli(s,n).execute(line).join('\n');assert.doesNotMatch(out,/% (Invalid|Incomplete)|not implemented|not recognized/);if(line==='show spanning-tree vlan 10'){assert.match(out,/protocol rstp/);assert.match(out,/Root ID\s+Priority\s+24586/);if(n==='SW3'){assert.match(out,/Gi0\/23\s+Root\s+FWD/);assert.match(out,/Gi0\/24\s+Altn\s+BLK/);assert.match(out,/P2p Edge/);}}if(line==='show spanning-tree vlan 20')assert.match(out,/Root ID\s+Priority\s+24596/);if(line.startsWith('ping'))assert.match(out,/Received = 3/);}for(const r of resources.rows)assert.equal(r.length,resources.columns.length);assert.match(resources.note,/Rapid PVST\+/);
+});
+test('imported RSTP predicates are bounded data and unknown targets, paths, edges or interfaces fail closed',()=>{
+ const s=load(),lesson=(s.lab as CatalogLab).lesson!,traffic:Record<string,unknown>={...row(s,'vlan10-ping').objective.criterion},saved:Record<string,unknown>={kind:'rstp-saved',device:id('SW1'),interfaces:[g(23),g(24)],vlans:[10,20,99]};const invalid:unknown[]=[{...traffic,path:[]},{...traffic,path:[null]},{...traffic,path:Array(5).fill({aDevice:id('SW1'),aPort:g(23),bDevice:id('SW3'),bPort:g(23)})},{...traffic,bridges:[]},{...traffic,bridges:[id('SW1'),id('SW1')]},{...traffic,root:'missing'},{...traffic,vlan:0},{...traffic,address:'bad'},{...traffic,failed:{device:id('SW3'),interface:g(23),survivor:g(23)}},{...saved,interfaces:[]},{...saved,vlans:[99,99]},{kind:'rstp-edge',device:id('SW3'),interface:g(1),vlan:4095}];for(const criterion of invalid)assert.throws(()=>validateLesson({...lesson,objectives:[{id:'x',title:'x',criterion}]}),/invalid/);assert.equal(matches(s,{...traffic,target:'missing'} as Criterion),false);assert.equal(matches(s,{...saved,interfaces:['missing']} as Criterion),false);assert.equal(matches(s,{kind:'rstp-edge',device:id('SW3'),interface:'missing',vlan:10}),false);
+});

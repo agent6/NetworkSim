@@ -108,6 +108,7 @@ export interface Link { id: string; a: Endpoint; b: Endpoint; enabled: boolean; 
 export interface Note { id: string; x: number; y: number; text: string; locked?: boolean }
 export interface Lab { id: string; name: string; devices: Device[]; links: Link[]; notes: Note[] }
 export interface PacketSummary {
+  stpBpdus?: {vlan:number;mode:string;version:number;rootBridgeId:string;bridgeId:string;rootPathCost:number;role:string;proposal:boolean;agreement:boolean;topologyChange:boolean}[];
   id: string;
   espSpi?: number;
   espSequence?: number;

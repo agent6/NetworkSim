@@ -1,0 +1,84 @@
+{
+  "feature": {
+    "title": "Rapid Spanning Tree Protocol (RSTP)",
+    "catalogId": "rapid-spanning-tree-protocol",
+    "group": "CCNP ENCOR",
+    "section": "Layer 2",
+    "sectionLabCount": 3,
+    "devices": 7,
+    "links": 7,
+    "tasks": 14,
+    "addressingRows": 2,
+    "permalink": "#/labs/rapid-spanning-tree-protocol",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "Three-switch triangle: SW1 Gi0/24 ↔ SW2 Gi0/24; SW1 Gi0/23 ↔ SW3 Gi0/23; SW2 Gi0/23 ↔ SW3 Gi0/24. VLAN10: PC1 at SW3 Gi0/1 (192.168.10.11/24), PC2 at SW2 Gi0/1 (.12/24). VLAN20: PC3 at SW3 Gi0/2 (192.168.20.11/24), PC4 at SW1 Gi0/1 (.12/24). No gateways or inter-VLAN routing.",
+  "verificationNotes": [
+    "Cisco IOS uses spanning-tree mode rapid-pvst for this per-VLAN RSTP exercise. The lab does not introduce a separate unsupported mode rstp command. Prepared VLANs, trunk policy and host addressing are preserved; practice starts at zero with classic PVST and shut inter-switch ports.",
+    "The completed reference starts with nine live configuration/save/tree tasks and empty runtime. It must receive BPDUs and converge after loading before all operational goals appear. It contains no fabricated normal traffic, alternate-path accomplishments or MAC learning.",
+    "SW1 has base priorities 24576/28672 for VLAN10/20; SW2 reverses those values; SW3 stays 32768. Received trees must elect SW1 for VLAN10 and SW2 for VLAN20. SW3 uses opposite Root FWD and Alternate BLK uplinks. IOS display priority includes the VLAN system-ID extension; BLK describes alternate discarding behavior.",
+    "Full-duplex point-to-point inter-switch ports must remain non-edge and PortFast-free. Four PC-facing access interfaces must be operational RSTP edge ports in the correct VLAN. The six trunks and expected core roles are checked in addition to SW3 roles; shared/half-duplex and legacy boundaries do not qualify as rapid links.",
+    "Normal packet achievements correlate the actual destination request and source reply parent ID with every tagged send/receive hop along the intended two-hop tree. Each endpoint must have a preceding received version 2 Rapid PVST+ BPDU for that VLAN/root, selected as the latest preceding VLAN BPDU. Later rapid BPDUs cannot retroactively validate older classic-PVST packets.",
+    "Each failure action requires a real SW3 uplink shutdown, the other interface promoted to Root FWD, and new matching packets after the existing LINK-down transition timestamp. The VLAN10 failure uses SW3 → SW2 directly; VLAN20 uses SW3 → SW1 directly. Old normal replies cannot satisfy these tasks. Tests measure promoted forwarding events within three simulated seconds of direct failure and test both VLAN pairs through either surviving link.",
+    "After restoring links, expected normal roles and all enabled trunks remain live requirements. Both normal tests are repeated to learn remote MACs on the restored SW3 root ports. The MAC task checks four live access entries plus PC2 via SW3 Gi0/23/VLAN10 and PC4 via Gi0/24/VLAN20. Clearing, expiry and offline reopening demand fresh learning.",
+    "Saved-policy checks compare STP configuration, relevant interface/VLAN policy and healthy live goals on all three switches. IOS reload restores an unsaved priority change, including simulated boot time and subsequent protocol convergence. Offline reopening retains thirteen achievements after BPDUs rebuild, then fresh pair traffic restores the MAC task. Device display-name changes preserve ID-based goals.",
+    "STP wire summaries now retain VLAN, protocol mode/derived version, root and sender bridge IDs, root path cost, role and boolean proposal/agreement/topology-change fields from the delivered modeled control payload. Packet inspection renders a separate readable field group per VLAN rather than one JSON blob. Malformed null entries are skipped in the summary. No forwarding/timing algorithm or terminal styling was changed.",
+    "Tests cover missing BPDUs, classic and mixed-peer fallback, migration reset, half-duplex, inappropriate inter-switch PortFast, packet identity/tag/path failures, both uplink losses, both uplinks isolated, core-link loss, primary/secondary root takeover, saved/portable reloads and bounded imported criteria. All published IOS/Windows commands and optional interoperability/root-failure exercises run in the simulator.",
+    "The final per-VLAN packet-inspector formatting also passed 23 focused RSTP/packet-view tests, a final typecheck/build and the final browser artifact matrix. Primary Cisco references inform the exercise; this task makes no claim of a new CML capture or binary BPDU implementation.",
+    "Final Chrome file-origin QA covers light/dark at 1440, 390 and 320px: real console configuration, all fourteen tasks, both fresh alternate-path tests/restorations, tagged flow/role/MAC verification, live clear/relearn, STP field inspection, Windows pings, persisted reload, completed reference and cancel/save-copy protection. Permalinks preserve host/path/query and return to Layer2 with three labs. Terminal golden styles remain unchanged. Temporary localhost preview returned HTTP 200."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco: Understand Rapid Spanning Tree Protocol (802.1w)",
+      "url": "https://www.cisco.com/c/en/us/support/docs/lan-switching/spanning-tree-protocol/24062-146.html"
+    },
+    {
+      "title": "Cisco IOS XE17: Spanning Tree Protocol",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr2-fwd/stp/stp-configuration-guide/m-stp.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 20,
+    "focusedPassed": 20,
+    "focusedAndRelatedTests": 93,
+    "relatedPassed": 93,
+    "finalPacketInspectorTests": 23,
+    "fullCheck": "npm run check",
+    "typecheck": "passed",
+    "fullTests": 2047,
+    "fullPassed": 2047,
+    "fullFailed": 0,
+    "build": "passed",
+    "browserChecks": [
+      "light 1440px: three Layer 2 labs; seven-node/14-task practice at zero with two ready diagnostic actions and two guarded alternate-path actions; real failed ping and published IOS Rapid PVST+ configuration; per-VLAN roots, opposite SW3 root/alternate roles, P2p Edge and dynamic MACs; both fresh uplink-failure tests, restored normal packet paths and MAC relearning; STP packet-inspection group with delivered version2/root/role/proposal/agreement/TC fields; Windows CLI pings; live MAC clear/relearn; saved offline reload retains 13 goals until fresh MAC learning; completed reference and cancel/save-copy protection; fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "dark 1440px: three Layer 2 labs; seven-node/14-task practice at zero with two ready diagnostic actions and two guarded alternate-path actions; real failed ping and published IOS Rapid PVST+ configuration; per-VLAN roots, opposite SW3 root/alternate roles, P2p Edge and dynamic MACs; both fresh uplink-failure tests, restored normal packet paths and MAC relearning; STP packet-inspection group with delivered version2/root/role/proposal/agreement/TC fields; Windows CLI pings; live MAC clear/relearn; saved offline reload retains 13 goals until fresh MAC learning; completed reference and cancel/save-copy protection; fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "light 390px: three Layer 2 labs; seven-node/14-task practice at zero with two ready diagnostic actions and two guarded alternate-path actions; real failed ping and published IOS Rapid PVST+ configuration; per-VLAN roots, opposite SW3 root/alternate roles, P2p Edge and dynamic MACs; both fresh uplink-failure tests, restored normal packet paths and MAC relearning; STP packet-inspection group with delivered version2/root/role/proposal/agreement/TC fields; Windows CLI pings; live MAC clear/relearn; saved offline reload retains 13 goals until fresh MAC learning; completed reference and cancel/save-copy protection; fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "dark 390px: three Layer 2 labs; seven-node/14-task practice at zero with two ready diagnostic actions and two guarded alternate-path actions; real failed ping and published IOS Rapid PVST+ configuration; per-VLAN roots, opposite SW3 root/alternate roles, P2p Edge and dynamic MACs; both fresh uplink-failure tests, restored normal packet paths and MAC relearning; STP packet-inspection group with delivered version2/root/role/proposal/agreement/TC fields; Windows CLI pings; live MAC clear/relearn; saved offline reload retains 13 goals until fresh MAC learning; completed reference and cancel/save-copy protection; fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "dark 320px: three Layer 2 labs; seven-node/14-task practice at zero with two ready diagnostic actions and two guarded alternate-path actions; real failed ping and published IOS Rapid PVST+ configuration; per-VLAN roots, opposite SW3 root/alternate roles, P2p Edge and dynamic MACs; both fresh uplink-failure tests, restored normal packet paths and MAC relearning; STP packet-inspection group with delivered version2/root/role/proposal/agreement/TC fields; Windows CLI pings; live MAC clear/relearn; saved offline reload retains 13 goals until fresh MAC learning; completed reference and cancel/save-copy protection; fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "light 320px: three Layer 2 labs; seven-node/14-task practice at zero with two ready diagnostic actions and two guarded alternate-path actions; real failed ping and published IOS Rapid PVST+ configuration; per-VLAN roots, opposite SW3 root/alternate roles, P2p Edge and dynamic MACs; both fresh uplink-failure tests, restored normal packet paths and MAC relearning; STP packet-inspection group with delivered version2/root/role/proposal/agreement/TC fields; Windows CLI pings; live MAC clear/relearn; saved offline reload retains 13 goals until fresh MAC learning; completed reference and cancel/save-copy protection; fitted topology/guide, non-overlapping note and unchanged terminal golden styles",
+      "light: permalink preserves host/path/query and workspace; returns to ENCOR Layer 2 with three labs; section choices stay independent",
+      "dark: permalink preserves host/path/query and workspace; returns to ENCOR Layer 2 with three labs; section choices stay independent",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "e3c9955666a683499483763907d3252a86e9f1539d685072d076936915b9ef51",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide",
+      "per-VLAN BPDU inspector"
+    ]
+  }
+}

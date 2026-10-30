@@ -1,3 +1,4 @@
+import {validRSTPCriterion,matchesRSTPCriterion,type RSTPCriterion} from './rstp-lab.ts';
 import {validEtherChannelTroubleshootingCriterion,matchesEtherChannelTroubleshootingCriterion,type EtherChannelTroubleshootingCriterion} from './etherchannel-troubleshooting-lab.ts';
 import {validTrunkTroubleshootingCriterion,matchesTrunkTroubleshootingCriterion,type TrunkTroubleshootingCriterion} from './trunk-troubleshooting-lab.ts';
 import {validGREIPsecCriterion,matchesGREIPsecCriterion,type GREIPsecCriterion} from './gre-ipsec-lab.ts';
@@ -34,6 +35,7 @@ export type Criterion =
   | PortSecurityCriterion
   | VRFCriterion
   | GRECriterion
+  | RSTPCriterion
   | EtherChannelTroubleshootingCriterion
   | TrunkTroubleshootingCriterion
   | GREIPsecCriterion
@@ -130,6 +132,10 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     if (v.kind === "link") return text(v.a, 128) && text(v.b, 128);
     if (!text(v.device, 128)) return false;
     switch (v.kind) {
+      case "rstp-saved":
+      case "rstp-edge":
+      case "rstp-echo":
+        return validRSTPCriterion(v);
       case "ec-saved":
       case "ec-stp":
       case "ec-echo":
@@ -436,6 +442,7 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind==='rstp-saved'||criterion.kind==='rstp-edge'||criterion.kind==='rstp-echo')return matchesRSTPCriterion(sim,d,criterion);
   if (criterion.kind==='ec-saved'||criterion.kind==='ec-stp'||criterion.kind==='ec-echo')return matchesEtherChannelTroubleshootingCriterion(sim,d,criterion);
   if (criterion.kind==='trunk-saved'||criterion.kind==='trunk-echo')return matchesTrunkTroubleshootingCriterion(sim,d,criterion);
   if (['gip-ike','gip-profile','gip-saved','gip-traffic','gip-carrier'].includes(criterion.kind))return matchesGREIPsecCriterion(sim,d,criterion as GREIPsecCriterion);
@@ -653,7 +660,7 @@ export function lessonProgress(sim: Simulator):
       );
     }
     const result = matches(sim, c);
-    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping" && c.kind !== "ra-block" && c.kind !== "ra-ping" && c.kind !== "ps-incident" && c.kind !== "ps-ping" && c.kind !== "vrf-traffic" && c.kind !== "vrf-global-drop" && c.kind !== "gre-ping" && c.kind !== "gre-traffic" && c.kind !== "gip-traffic" && c.kind !== "trunk-echo" && c.kind !== "ec-echo") return result;
+    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping" && c.kind !== "ra-block" && c.kind !== "ra-ping" && c.kind !== "ps-incident" && c.kind !== "ps-ping" && c.kind !== "vrf-traffic" && c.kind !== "vrf-global-drop" && c.kind !== "gre-ping" && c.kind !== "gre-traffic" && c.kind !== "gip-traffic" && c.kind !== "trunk-echo" && c.kind !== "ec-echo" && c.kind !== "rstp-echo") return result;
     validKeys.add(key);
     if (result) observations.add(key);
     return result || observations.has(key);
@@ -661,7 +668,7 @@ export function lessonProgress(sim: Simulator):
   const rows = lesson.objectives.map((objective) => {
     const observed = observe(objective.criterion, JSON.stringify(objective.id));
     // Traffic, login and fault observations record accomplishments; configuration stays live.
-    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping" || objective.criterion.kind === "ra-block" || objective.criterion.kind === "ra-ping" || objective.criterion.kind === "ps-incident" || objective.criterion.kind === "ps-ping" || objective.criterion.kind === "vrf-traffic" || objective.criterion.kind === "vrf-global-drop" || objective.criterion.kind === "gre-ping" || objective.criterion.kind === "gre-traffic" || objective.criterion.kind === "gip-traffic" || objective.criterion.kind === "trunk-echo" || objective.criterion.kind === "ec-echo";
+    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping" || objective.criterion.kind === "ra-block" || objective.criterion.kind === "ra-ping" || objective.criterion.kind === "ps-incident" || objective.criterion.kind === "ps-ping" || objective.criterion.kind === "vrf-traffic" || objective.criterion.kind === "vrf-global-drop" || objective.criterion.kind === "gre-ping" || objective.criterion.kind === "gre-traffic" || objective.criterion.kind === "gip-traffic" || objective.criterion.kind === "trunk-echo" || objective.criterion.kind === "ec-echo" || objective.criterion.kind === "rstp-echo";
     if (historical && observed)
       completed.add(objective.id);
     return {
