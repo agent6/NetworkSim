@@ -1,0 +1,114 @@
+{
+  "feature": {
+    "title": "eBGP Best Path Selection",
+    "catalogId": "ebgp-best-path-selection",
+    "group": "CCNP ENCOR",
+    "section": "Layer 3",
+    "sectionLabCount": 9,
+    "groupLabCount": 18,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6
+    },
+    "devices": 6,
+    "links": 6,
+    "tasks": 14,
+    "addressingRows": 6,
+    "notes": 4,
+    "permalink": "#/labs/ebgp-best-path-selection",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "R1 AS65001/RID1.1.1.1 connects R2/R3 AS65002/RIDs2.2.2.2 and3.3.3.3. Both connect R4 AS65004/RID4.4.4.4. Four /30 links: R1-R2 10.0.12.1/.2, R1-R3 10.0.13.1/.2, R2-R4 10.0.24.1/.2, R3-R4 10.0.34.1/.2. R1 Gi0/0 LAN192.168.10.1/24 hosts PC1 .10; R4 Gi0/0 LAN192.168.40.1/24 hosts SRV1 .10. Gateways .1. Interface addressing is prepared without router BGP, static or IGP routes. R2/R3 are deliberately independent transit routers in the same neighboring AS to isolate the default MED comparison, not a complete provider-AS design.",
+  "stages": [
+    {
+      "phase": "baseline",
+      "candidates": "Both external paths65002 65004; weight0/localpref100/MED0/origin i",
+      "winner": "Either equal-attribute path accepted; no universal baseline tie-break winner prescribed"
+    },
+    {
+      "phase": "med",
+      "candidates": "Equal weight/localpref/AS length/origin; R2 MED100, R3 MED50; same neighboring AS65002",
+      "winner": "R3 nextHop10.0.13.2, RIB B AD20/metric50"
+    },
+    {
+      "phase": "aspath",
+      "candidates": "R2 AS65002 65004/MED100; R3 AS65002 65002 65002 65004/MED50; weight0/localpref100",
+      "winner": "R2 nextHop10.0.12.2, shorter AS path precedes MED"
+    },
+    {
+      "phase": "localpref",
+      "candidates": "R3 localpref200 versus R2 100; both weight0; R3 retains longer AS path",
+      "winner": "R3 nextHop10.0.13.2, local preference precedes AS-path length"
+    },
+    {
+      "phase": "weight",
+      "candidates": "R2 weight300/localpref100/MED100 versus R3 weight0/localpref200/longerAS/MED50",
+      "winner": "R2 nextHop10.0.12.2, one B route atAD20/metric100"
+    },
+    {
+      "phase": "return",
+      "candidates": "Final weight/localpref/prepend/MED policy restored",
+      "winner": "Actual server-to-PC request/reply, allowing asymmetric return routing"
+    }
+  ],
+  "verificationNotes": [
+    "Four baseline IOS configurations plus distinct MED, AS prepend, local preference and weight command sets are exported and executed. Existing TCP/BGP/CEF/packet engine unchanged. Eight directed sessions require actual received TCP179 OPEN, KEEPALIVE and UPDATE. Both same-prefix external candidates must remain eligible and exactly one selected route must install; static routes, ECMP and always-compare-med overrides fail the intended contract.",
+    "Practice starts0/14 and baseline converges to five live goals. Completed reference starts8/14 from saved final configuration with empty runtime and no fabricated traffic achievements. Five stage-specific forward tests plus a real reverse test are needed to reach14. Reference instructions explain reversing policy to revisit stages, then restoring final state and saving all routers.",
+    "State fingerprints and per-attempt observation epochs reject old packets from a prior attribute stage, including two stages with the same next hop. Real source send, delivered request, each selected router egress and received frame, and a parent-correlated echo reply prove actual forwarding. Only achievements persist; protocol runtime and observation epochs rebuild on portable reload. Current peer, path, policy, RIB and save checks remain live.",
+    "Same-AS MED comparison uses lower50 versus100 with earlier attributes equal; shorter AS path beats the lower MED; localpref200 then overrides the longer AS path; Cisco weight300 overrides that local preference. Inbound local preference and local weight are not advertised to external peers. R3 outbound prepend does not alter its own selected server path.",
+    "Tests cover real UPDATE non-delivery, unbound maps, same TCP channel/uptime during soft policy changes, stale-stage packet rejection, packet-proof tampering, unrelated/failed pings, candidate-loss failover and recovery, policy/save drift, IOS reload, portable reopening, bounded imported criteria and every published IOS/Windows verification command.",
+    "Scope is the four stated attribute comparisons with origin, route type and other earlier criteria held equal. No claim to exercise the entire Cisco algorithm, locally originated comparisons, origin-code preference, eBGP/iBGP, IGP next-hop cost, ECMP or later tie breakers. No new live CML capture or platform-wide parity claim.",
+    "Existing layout, simulation engine and terminal styling preserved; current-host/path/query permalink and independent catalog sections retained. Historical validation reports remain unchanged."
+  ],
+  "references": [
+    {
+      "title": "Cisco: Select BGP Best-path Algorithm",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/border-gateway-protocol-bgp/13753-25.html",
+      "relevance": "Weight local to router; default localpref100; AS-path length before origin/MED; default MED compares same neighboring AS; external oldest-path tie-break caveats."
+    },
+    {
+      "title": "Cisco IOS XE: Connecting to a Service Provider Using External BGP",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-routing/b-ip-routing/m_irg-external-sp-0.html",
+      "relevance": "Local preference for outbound selection and omission on external advertisements."
+    }
+  ],
+  "validation": {
+    "typecheck": "passed",
+    "fullCheck": "npm run check passed, including deterministic offline build",
+    "tests": 2317,
+    "passed": 2317,
+    "failed": 0,
+    "focusedTests": 23,
+    "browserScenarios": 15,
+    "browserChecks": [
+      "light 320px: nine ENCOR Layer3 labs; six-node six-link fourteen-task zero-credit practice and six-row plan; four real baseline IOS configurations establish eight directed TCP179 peers and two eligible server routes; fresh actual traffic proves baseline, same-AS MED50 viaR3, shorter AS path viaR2 despiteMED100, LP200 via longerR3 and weight300 viaR2 despiteLP200; every selected RIB next hop checked; real reverse traffic and final startup saves complete14; IOS summary/prefix details and Windows trace; saved offline reload rebuilds live protocol state with retained stage achievements; completed reference starts8/14 without fabricated traffic, reverses policy and repeats all actual stages; cancel/save-copy protection; responsive fitted topology/guide; unchanged golden terminal styles",
+      "dark 390px: nine ENCOR Layer3 labs; six-node six-link fourteen-task zero-credit practice and six-row plan; four real baseline IOS configurations establish eight directed TCP179 peers and two eligible server routes; fresh actual traffic proves baseline, same-AS MED50 viaR3, shorter AS path viaR2 despiteMED100, LP200 via longerR3 and weight300 viaR2 despiteLP200; every selected RIB next hop checked; real reverse traffic and final startup saves complete14; IOS summary/prefix details and Windows trace; saved offline reload rebuilds live protocol state with retained stage achievements; completed reference starts8/14 without fabricated traffic, reverses policy and repeats all actual stages; cancel/save-copy protection; responsive fitted topology/guide; unchanged golden terminal styles",
+      "light 390px: nine ENCOR Layer3 labs; six-node six-link fourteen-task zero-credit practice and six-row plan; four real baseline IOS configurations establish eight directed TCP179 peers and two eligible server routes; fresh actual traffic proves baseline, same-AS MED50 viaR3, shorter AS path viaR2 despiteMED100, LP200 via longerR3 and weight300 viaR2 despiteLP200; every selected RIB next hop checked; real reverse traffic and final startup saves complete14; IOS summary/prefix details and Windows trace; saved offline reload rebuilds live protocol state with retained stage achievements; completed reference starts8/14 without fabricated traffic, reverses policy and repeats all actual stages; cancel/save-copy protection; responsive fitted topology/guide; unchanged golden terminal styles",
+      "dark 320px: nine ENCOR Layer3 labs; six-node six-link fourteen-task zero-credit practice and six-row plan; four real baseline IOS configurations establish eight directed TCP179 peers and two eligible server routes; fresh actual traffic proves baseline, same-AS MED50 viaR3, shorter AS path viaR2 despiteMED100, LP200 via longerR3 and weight300 viaR2 despiteLP200; every selected RIB next hop checked; real reverse traffic and final startup saves complete14; IOS summary/prefix details and Windows trace; saved offline reload rebuilds live protocol state with retained stage achievements; completed reference starts8/14 without fabricated traffic, reverses policy and repeats all actual stages; cancel/save-copy protection; responsive fitted topology/guide; unchanged golden terminal styles",
+      "light 1440px: nine ENCOR Layer3 labs; six-node six-link fourteen-task zero-credit practice and six-row plan; four real baseline IOS configurations establish eight directed TCP179 peers and two eligible server routes; fresh actual traffic proves baseline, same-AS MED50 viaR3, shorter AS path viaR2 despiteMED100, LP200 via longerR3 and weight300 viaR2 despiteLP200; every selected RIB next hop checked; real reverse traffic and final startup saves complete14; IOS summary/prefix details and Windows trace; saved offline reload rebuilds live protocol state with retained stage achievements; completed reference starts8/14 without fabricated traffic, reverses policy and repeats all actual stages; cancel/save-copy protection; responsive fitted topology/guide; unchanged golden terminal styles",
+      "dark 1440px: nine ENCOR Layer3 labs; six-node six-link fourteen-task zero-credit practice and six-row plan; four real baseline IOS configurations establish eight directed TCP179 peers and two eligible server routes; fresh actual traffic proves baseline, same-AS MED50 viaR3, shorter AS path viaR2 despiteMED100, LP200 via longerR3 and weight300 viaR2 despiteLP200; every selected RIB next hop checked; real reverse traffic and final startup saves complete14; IOS summary/prefix details and Windows trace; saved offline reload rebuilds live protocol state with retained stage achievements; completed reference starts8/14 without fabricated traffic, reverses policy and repeats all actual stages; cancel/save-copy protection; responsive fitted topology/guide; unchanged golden terminal styles",
+      "light: share link preserves current host/path/query and workspace, returns to the correct section with nine labs and preserves independent section choices",
+      "dark: share link preserves current host/path/query and workspace, returns to the correct section with nine labs and preserves independent section choices",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "33110e65692005c7da420a7cfaad69e0c8ee498c419899921802d87cf79cf686",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}
