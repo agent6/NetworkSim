@@ -1,0 +1,88 @@
+{
+  "feature": {
+    "title": "Multi-Area OSPFv2",
+    "catalogId": "multi-area-ospfv2",
+    "group": "CCNP ENCOR",
+    "section": "Layer 3",
+    "sectionLabCount": 1,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6
+    },
+    "devices": 7,
+    "links": 6,
+    "tasks": 16,
+    "addressingRows": 6,
+    "notes": 4,
+    "permalink": "#/labs/multi-area-ospfv2",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "R1 Gi0/1 (10.0.12.1/30) \u2194 R2 Gi0/1 (.2), Area10. R2 Gi0/2 (10.0.23.1/30) \u2194 R3 Gi0/1 (.2), Area0. R3 Gi0/2 (10.0.34.1/30) \u2194 R4 Gi0/1 (.2), Area20. R1/R2/R4 Gi0/0 passive LANs 192.168.10/20/30.1/24 connect PC1/PC2/SRV1 at .10 with .1 gateways. R2 and R3 are ABRs. Separate area labels and an overview note accompany the diagram.",
+  "verificationNotes": [
+    "Adds the third ENCOR subsection, Layer3, with one lab while preserving three Virtualization and six Layer2 entries and separate CCNA OSPF labs. Practice begins at zero with addressed/enabled interfaces and host gateways but no static routes or OSPF. Four diagnostic pings are enabled. The completed reference executes all four real IOS configurations, saves startup policy and serializes empty runtime; it earns eleven live setup/adjacency/route/save tasks after new control packets, with no invented traffic or outage achievement.",
+    "Uses OSPFv2 process10, manual router IDs1.1.1.1 through4.4.4.4, exact Area10/0/20 interface activation, passive LANs, active point-to-point transits at cost10 and LAN cost1. Published commands retain default10/40 Hello/Dead timers. Six directed Full relationships are required. ABR criteria demand active expected areas plus a real Full neighbor in both backbone and non-backbone areas, rather than merely two configured area numbers.",
+    "Three required intra-area O LAN routes have AD110/metric11. Six inter-area O IA routes are checked by prefix, next hop, outgoing interface, AD and metric: R1\u2192backbone LAN11; R1\u2194R4 remote LAN31; R2/R3\u2192opposite non-backbone LAN21; R4\u2192backbone LAN21. Both ends configured with the same wrong nonzero backbone area can form Full neighbors but fail intended ABR/domain/inter-area goals. Dropping actual protocol89 control traffic prevents learned-state credit.",
+    "Fixes a real IOS database-display defect: an ABR summarizing a third area into a non-backbone area previously omitted the path across Area0 and showed metric1. Type3 views now derive cost through received backbone links and then the source area, prohibit re-entering the backbone after leaving it, and omit prefixes with no received path instead of assuming zero distance. Normal cross-backbone summaries show21; changing R2 outbound backbone cost to25 produces summary36 and R1 route46. Local Area0 summaries from the adjacent ABR remain11. Forwarding/SPF algorithms are unchanged.",
+    "The existing protocol uses acknowledged logical per-process link-state records. Area-scoped Router/Type3 CLI views are derived from that received model; this task does not introduce a binary LSA encoder or claim a full area-scoped wire database implementation or a new live CML capture. The normal-area routing, adjacency, metric and traffic scenarios in this lab are implemented and exercised. Stub/NSSA, virtual links, redistribution and manual range summarization are intentionally outside the exercise.",
+    "Normal-domain criteria require exactly the intended active areas, IPv4 forwarding and OSPF-only routing, without static/default router routes, redistribution, stub/no-summary settings or range aggregation. A static route that allows a ping cannot satisfy OSPF route or correlated traffic criteria. Area mismatch, passive transit, wrong network advertisement, changed cost and missing backbone faults are tested with restoration.",
+    "Four packet goals correlate source/target addresses, actual accepted requests and parent-linked successful replies, every expected router Frame-sent event on its selected forwarding port and the next-node receive event. Selected routes must be connected or learned O/O IA; the forward path must include an inter-area route. The reverse path can legitimately be intra-area on an ABR. Packet identity, missing transit hops or a wrong target cannot fabricate proof. Windows traceroute follows R1\u2192R2\u2192R3\u2192R4.",
+    "The backbone exercise shuts R2 Gi0/2 only after Full adjacency. A genuine Full\u2192Down protocol transition after the LINK-down timestamp, withdrawal of the SRV1 /24 and retention of the local R1 O route must be observed. The transition itself proves prior Full state even after older Full events age out of bounded history. No never-formed interface can earn the observation. PC1\u2194PC2 remains usable in the left component while all cross-backbone pairs fail. Restoring the link and all healthy live goals completes recovery; the guide instructs opening it during the outage.",
+    "Saved-policy checks compare OSPF settings, IPv4 forwarding, static routes and relevant interface addressing/OSPF/admin policy on all four routers. IOS reload restores an unsaved area override. Portable reopening retains genuine outage/traffic observations but rebuilds neighbors and routes from new control packets before all sixteen goals return. Stable-ID goals survive renaming. One existing adversarial RADIUS import fixture uses a Record<string,unknown> annotation to avoid TypeScript union-expansion limits after adding bounded lesson variants; its runtime cases are unchanged.",
+    "Final offline Chrome QA covers light/dark at1440,390,320px: all four real console configurations, route/ABR/summary inspection, four-hop Windows traceroute, four traffic tasks, genuine backbone withdrawal/local continuity and restoration, sixteen tasks, saved reload, configuration-only reference and cancel/save-copy protection. Host/path/query-relative permalinks select the singular Layer3 lab and preserve section state/workspace. All nodes and area notes fit, dialogs remain responsive and terminal golden styles are unchanged. Temporary localhost preview returned HTTP200.",
+    "The initial light320px headless file-origin reload returned empty browser storage before application startup despite a valid persisted document immediately before reload. No parser/page error was reported. The complete browser run was repeated on the same frozen artifact with no application persistence change or injected workspace state; the final passing run is recorded below. Initial before/after diagnostics remain under ignored .cache. The first full check was superseded after adding the history-eviction regression; this report uses the complete final2124-test run."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco: OSPF Inter-Area Routing",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/47864-ospfdb5.html"
+    },
+    {
+      "title": "Cisco IOS IP Routing OSPF Command Reference",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_ospf/command/iro-cr-book/m_ospf-a1.html"
+    },
+    {
+      "title": "Cisco: Configuring OSPFv2, Areas and ABRs",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/connectedgrid/cgr1000/1_0/software/configuration/guide/unicast/Unicast_Book/l3_ospfv2_cgr1000.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 20,
+    "focusedPassed": 20,
+    "fullCheck": "npm run check",
+    "typecheck": "passed",
+    "fullTests": 2124,
+    "fullPassed": 2124,
+    "fullFailed": 0,
+    "build": "passed",
+    "browserChecks": [
+      "light 320px: new Layer3 section with one lab; seven-node/16-task zero-credit practice; all four IOS configurations; Areas10/0/20, received Full peers and two live ABRs; exact O/O IA route metrics and corrected cross-backbone Type3 summary metric21; actual four-hop Windows traceroute and four bidirectional traffic tasks; real backbone loss withdraws remote routing while local Area10 traffic survives, then restored convergence earns sixteen tasks; saved offline reload rebuilds control state and retains earned achievements; configuration-only reference, cancel/save-copy protection, fitted area-labeled diagram and guide, unchanged terminal golden styles",
+      "dark 390px: new Layer3 section with one lab; seven-node/16-task zero-credit practice; all four IOS configurations; Areas10/0/20, received Full peers and two live ABRs; exact O/O IA route metrics and corrected cross-backbone Type3 summary metric21; actual four-hop Windows traceroute and four bidirectional traffic tasks; real backbone loss withdraws remote routing while local Area10 traffic survives, then restored convergence earns sixteen tasks; saved offline reload rebuilds control state and retains earned achievements; configuration-only reference, cancel/save-copy protection, fitted area-labeled diagram and guide, unchanged terminal golden styles",
+      "dark 1440px: new Layer3 section with one lab; seven-node/16-task zero-credit practice; all four IOS configurations; Areas10/0/20, received Full peers and two live ABRs; exact O/O IA route metrics and corrected cross-backbone Type3 summary metric21; actual four-hop Windows traceroute and four bidirectional traffic tasks; real backbone loss withdraws remote routing while local Area10 traffic survives, then restored convergence earns sixteen tasks; saved offline reload rebuilds control state and retains earned achievements; configuration-only reference, cancel/save-copy protection, fitted area-labeled diagram and guide, unchanged terminal golden styles",
+      "light 1440px: new Layer3 section with one lab; seven-node/16-task zero-credit practice; all four IOS configurations; Areas10/0/20, received Full peers and two live ABRs; exact O/O IA route metrics and corrected cross-backbone Type3 summary metric21; actual four-hop Windows traceroute and four bidirectional traffic tasks; real backbone loss withdraws remote routing while local Area10 traffic survives, then restored convergence earns sixteen tasks; saved offline reload rebuilds control state and retains earned achievements; configuration-only reference, cancel/save-copy protection, fitted area-labeled diagram and guide, unchanged terminal golden styles",
+      "light 390px: new Layer3 section with one lab; seven-node/16-task zero-credit practice; all four IOS configurations; Areas10/0/20, received Full peers and two live ABRs; exact O/O IA route metrics and corrected cross-backbone Type3 summary metric21; actual four-hop Windows traceroute and four bidirectional traffic tasks; real backbone loss withdraws remote routing while local Area10 traffic survives, then restored convergence earns sixteen tasks; saved offline reload rebuilds control state and retains earned achievements; configuration-only reference, cancel/save-copy protection, fitted area-labeled diagram and guide, unchanged terminal golden styles",
+      "dark 320px: new Layer3 section with one lab; seven-node/16-task zero-credit practice; all four IOS configurations; Areas10/0/20, received Full peers and two live ABRs; exact O/O IA route metrics and corrected cross-backbone Type3 summary metric21; actual four-hop Windows traceroute and four bidirectional traffic tasks; real backbone loss withdraws remote routing while local Area10 traffic survives, then restored convergence earns sixteen tasks; saved offline reload rebuilds control state and retains earned achievements; configuration-only reference, cancel/save-copy protection, fitted area-labeled diagram and guide, unchanged terminal golden styles",
+      "light: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with one lab, other sections remain independent and CCNA OSPF remains separate",
+      "dark: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with one lab, other sections remain independent and CCNA OSPF remains separate",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "6883c7c5dd6ff5af87404f2175ba3c1c22e10e00dce83129822ab1a30c5ea627",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop area-labeled topology",
+      "dark desktop area-labeled topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}

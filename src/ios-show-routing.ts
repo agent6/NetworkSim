@@ -317,6 +317,23 @@ function ospfDatabaseEntries(v: OspfView): DbLsa[] {
     for (let changed = true; changed;) { changed = false; for (const k of edges) { const base = dist.get(k.from.routerId); if (base === undefined) continue; const next = base + k.cost; if (next < (dist.get(k.to.routerId) ?? Infinity)) { dist.set(k.to.routerId, next); changed = true; } } }
     return dist;
   };
+  // A remote area's summary cost includes the path through Area 0 to its ABR.
+  // Retain the traversal phase so a path cannot leave and then re-enter the backbone.
+  const backboneDistances = (source: string, from: string) => {
+    const states = new Map<string, number>([[`0|${from}`, 0]]), edges = lsas.flatMap(l => l.links.filter(k => ['0', source].includes(areaKey(k.area))));
+    for (let changed = true; changed;) {
+      changed = false;
+      for (const k of edges) for (const phase of ['0', source]) {
+        const edgeArea = areaKey(k.area); if (phase !== '0' && edgeArea === '0') continue;
+        const base = states.get(`${phase}|${k.from.routerId}`); if (base === undefined) continue;
+        const key = `${edgeArea}|${k.to.routerId}`, next = base + k.cost;
+        if (next < (states.get(key) ?? Infinity)) { states.set(key, next); changed = true; }
+      }
+    }
+    const result = new Map<string, number>();
+    for (const [key, cost] of states) { const rid = key.slice(key.indexOf('|') + 1); result.set(rid, Math.min(cost, result.get(rid) ?? Infinity)); }
+    return result;
+  };
   for (const area of localAreas) {
     // Router LSAs (type 1)
     for (const l of lsas.filter(l => areasOf(l).has(area))) {
@@ -357,9 +374,10 @@ function ospfDatabaseEntries(v: OspfView): DbLsa[] {
       if (kind !== 'normal' && (cfgArea?.noSummary || areaConfig(abrConfig, area)?.noSummary)) continue;
       for (const source of [...new Set(lsas.flatMap(l => [...areasOf(l)]))].filter(x => x !== area && (area !== '0' || mineAreas.has(x)))) {
         if (area !== '0' && source !== '0' && !mineAreas.has(source) && !mineAreas.has('0')) continue;
-        const dist = distances(source, abr.routerId), ranges: any[] = areaConfig(abrConfig, source)?.ranges ?? [], emitted = new Set<string>();
+        const dist = mineAreas.has(source) ? distances(source, abr.routerId) : backboneDistances(source, abr.routerId), ranges: any[] = areaConfig(abrConfig, source)?.ranges ?? [], emitted = new Set<string>();
         for (const l of lsas) for (const x of l.prefixes.filter(x => x.kind === 'prefix' && areaKey(x.endpoint.area) === source)) {
-          const metric = (dist.get(l.routerId) ?? 0) + Number(x.cost ?? 1);
+          const distance = dist.get(l.routerId); if (distance === undefined) continue;
+          const metric = distance + Number(x.cost ?? 1);
           const range = ranges.find(r => prefixContains(r.network, Number(r.prefix), x.network) && x.prefix >= Number(r.prefix));
           if (range) { if (!range.notAdvertise && !emitted.has(range.network + '/' + range.prefix)) { emitted.add(range.network + '/' + range.prefix); add(range.network, Number(range.prefix), Number(range.cost ?? metric)); } continue; }
           add(x.network, x.prefix, metric);
