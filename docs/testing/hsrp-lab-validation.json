@@ -1,0 +1,103 @@
+{
+  "feature": {
+    "title": "HSRP Configuration and Failover",
+    "catalogId": "hsrp-configuration-and-failover",
+    "group": "CCNP ENCOR",
+    "section": "IP Services",
+    "sectionLabCount": 3,
+    "groupLabCount": 21,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6,
+      "Layer 3": 9
+    },
+    "devices": 6,
+    "links": 6,
+    "tasks": 19,
+    "addressingRows": 7,
+    "notes": 3,
+    "permalink": "#/labs/hsrp-configuration-and-failover",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.10.10/24 uses VIP192.168.10.1 on SW1's access LAN. R1/R2 Gi0/0 physical addresses192.168.10.2/.3. R1 Gi0/1 10.0.13.1/30 and R2 Gi0/1 10.0.23.1/30 face ISP1 .2 on each transit. ISP1 Gi0/2 198.51.100.1/24 faces HTTP server SRV1 .10. Prepared OSPF process10 uses passive LANs and point-to-point uplinks at costs10/20; ISP1 prefers R1 normally and uses R2 after R1 LAN or uplink loss. R1/R2 HSRPv2 group10, default3/10 timers, priorities110/100, preempt on both. R1 track1 monitors Gi0/1 line protocol with decrement20.",
+  "verificationNotes": [
+    "Adds the third ENCOR IP Services lab and accurate three-lab badge. The current-host/path/query share link opens the detail view without replacing an existing workspace. NAT/PAT and the other3/6/9 ENCOR section counts remain intact.",
+    "Practice starts0/19. Published IOS commands configure HSRPv2, VIP, priorities, preemption, local-interface object tracking and healthy startup saves. The completed reference contains saved configuration and empty protocol runtime; up to12 live goals follow fresh Hellos, role election, routed underlay convergence and actual gratuitous-ARP learning. No ping, TCP or fault evidence is preloaded.",
+    "Actual UDP1985 Hellos to224.0.0.102 populate per-observer compatible peer caches. Both virtual group rows use0000.0c9f.f00a. PC1 ARP and SW1 FDB must learn this MAC toward the current active gateway. Baseline and reverse tests correlate both routed paths, current CEF egress, virtual destination MAC and parent-linked replies.",
+    "The hold-expiry exercise shuts SW1 Gi0/1 facing R1. R1's LAN remains administratively enabled but loses carrier, avoiding a graceful router-side shutdown/Resign exchange. R2 retains its last received peer until advertised hold expiry, then takes over. Fresh ping through R2 is required. Restoring SW1's port lets priority110 R1 preempt; fresh restored-path ping is required.",
+    "The uplink exercise shuts only R1 Gi0/1 with both HSRP LAN interfaces up. Track1 goes Down, effective priority becomes90, R2 receives the lower-priority advertisement and preempts at100. Restoration returns track Up/priority110 and R1 preempts after fresh exchanges. Fault credit requires actual transitions and new successful traffic in the intended phase, not old packets or a matching role alone.",
+    "Prepared OSPF return routing prevents a false HSRP success with a broken return path. Both normal transits/learned routes are live requirements. The virtual-IP ping alone, a physical-router host gateway, missing intermediate frames, unrelated reply IDs, an isolated version mismatch or unavailable external routing cannot fabricate completion.",
+    "Optional comparisons prove peer-loss takeover without backup preempt and recovery that preserves an incumbent when the higher-priority router lacks preempt. These exposed and fixed a stale startup-listening deadline: inactive HSRP/VRRP group/interface state now cancels its startup/preemption timers so a returning non-preempting router hears the active incumbent before claiming Active. Existing FHRP packet regressions pass.",
+    "The application task requires a complete real TCP HTTP200 response with the expected body through the virtual gateway. HTTP404 and disabled service do not qualify. Final live saved-state goals reject unsaved changes and saved transient shutdown policy. All seven observed traffic/fault achievements persist across portable offline reopening while fresh HSRP, OSPF, tracking and GARP rebuild current live outcomes.",
+    "Focused tests cover both failure/recovery cycles, actual hold timing, GARP/FDB movement, non-preemptive recovery, tracking/preempt omissions, version isolation, routing loss, physical-gateway shortcuts, packet-proof tampering, application failure, save drift, IOS reload, portable reopening, every published verification command, contextual question-mark/Tab and bounded imported criteria.",
+    "Scope is IPv4 IOS HSRPv2 and local-interface tracking with a prepared OSPF underlay. The existing logical model does not implement the complete coup/resign state machine, cryptographic authentication, hardware-accurate startup timing or IPv6 HSRP. This lab deliberately uses switch-side loss for its hold-timer exercise. No new live CML capture or complete platform equivalence is claimed.",
+    "Offline browser persistence uses a genuine fresh Chrome session with the same persistent profile and same HTML path, without injecting saved workspace data. This avoids previously observed file-origin reload storage loss. CLI golden styles remain unchanged in both themes on desktop and mobile."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE: Configuring HSRP",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/network-services/network-services/m_fhp-hsrp-0.html",
+      "relevance": "HSRPv2, virtual gateway, preemption, timers, interface tracking and distinction between Hello/Coup/Resign; graceful shutdown differs from silent link failure."
+    },
+    {
+      "title": "Cisco: Use Standby Preempt and Standby Track Commands",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/hot-standby-router-protocol-hsrp/13780-6.html",
+      "relevance": "Priority decrement and preemption for a still-live lower-priority active router."
+    },
+    {
+      "title": "Cisco: Troubleshoot HSRP Common Issues",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/hot-standby-router-protocol-hsrp/10583-62.html",
+      "relevance": "Advertised hold expiry, real packet/state transitions and virtual MAC/ARP forwarding."
+    },
+    {
+      "title": "Cisco: Review HSRP FAQ",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/hot-standby-router-protocol-hsrp/9281-3.html",
+      "relevance": "LAN line-protocol loss, default3/10 timers and dependence on routing convergence."
+    }
+  ],
+  "validation": {
+    "typecheck": "passed",
+    "fullCheck": "npm run check passed, including deterministic offline build",
+    "tests": 2389,
+    "passed": 2389,
+    "failed": 0,
+    "focusedTests": 24,
+    "focusedWithExistingFHRPPacketRegressions": 27,
+    "browserScenarios": 15,
+    "browserFullFailoverCases": [
+      "light1440px",
+      "dark320px"
+    ],
+    "browserChecks": [
+      "light 320px: three ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS HSRPv2/priority/preempt/object-track reference; real compatible Hellos and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; baseline/application workflow earns15 with all four fault achievements still unearned; offline fresh-session reopening rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "dark 320px: three ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS HSRPv2/priority/preempt/object-track reference; real compatible Hellos and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; full switch-side LAN hold-expiry failover, preemptive recovery, tracked-uplink priority90 failover and priority110 recovery earn19; offline fresh-session reopening rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "light 1440px: three ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS HSRPv2/priority/preempt/object-track reference; real compatible Hellos and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; full switch-side LAN hold-expiry failover, preemptive recovery, tracked-uplink priority90 failover and priority110 recovery earn19; offline fresh-session reopening rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "dark 1440px: three ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS HSRPv2/priority/preempt/object-track reference; real compatible Hellos and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; baseline/application workflow earns15 with all four fault achievements still unearned; offline fresh-session reopening rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "light 390px: three ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS HSRPv2/priority/preempt/object-track reference; real compatible Hellos and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; baseline/application workflow earns15 with all four fault achievements still unearned; offline fresh-session reopening rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "dark 390px: three ENCOR IP Services labs/badge; six-node six-link nineteen-task zero-credit practice; seven-row addressing plan and executable IOS HSRPv2/priority/preempt/object-track reference; real compatible Hellos and gratuitous ARP; both routed baseline pings and complete TCP HTTP200 via stable virtual gateway; baseline/application workflow earns15 with all four fault achievements still unearned; offline fresh-session reopening rebuilds protocols and preserves earned observations; completed reference has12 live outcomes with no pre-earned traffic/fault achievements; cancel/save-copy protection; fitted topology and guide; unchanged golden CLI styling, show/Tab/question-mark checks",
+      "light: share permalink preserves current host/path/query/workspace and returns to three IP Services labs with NAT/PAT unchanged",
+      "dark: share permalink preserves current host/path/query/workspace and returns to three IP Services labs with NAT/PAT unchanged",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and fresh-session offline restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and fresh-session offline restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and fresh-session offline restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and fresh-session offline restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and fresh-session offline restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and fresh-session offline restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "offlineReopen": "Chrome fully closed and same persistent profile relaunched without injecting saved workspace state",
+    "artifactSha256": "ce7ee33ba5038c0d1a90bccbb9ad37cd38c1fcd662db3c26354f51218b73c665",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}
