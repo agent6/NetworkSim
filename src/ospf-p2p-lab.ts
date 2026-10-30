@@ -25,9 +25,9 @@ function echo(s:Simulator,source:Device,target:Device,address:string,path:Device
  };
  return s.events.some(e=>e.time>=since&&e.nodeId===target.id&&e.label==='Echo request accepted'&&e.packet?.protocol==='ICMP'&&e.packet.ipVersion===4&&sameAddress(e.packet.source,from)&&sameAddress(e.packet.destination,address)&&leg(e.packet.id,address,path,target)&&s.events.some(reply=>reply.time>=e.time&&reply.nodeId===source.id&&reply.label==='Echo reply received'&&reply.disposition==='success'&&reply.packet?.parentId===e.packet!.id&&sameAddress(reply.packet.source,address)&&sameAddress(reply.packet.destination,from)&&leg(reply.packet.id,from,[...path].reverse(),source)));
 }
-export function matchesOSPFP2PCriterion(s:Simulator,d:Device,c:OSPFP2PCriterion):boolean{
+export function matchesOSPFP2PCriterion(s:Simulator,d:Device,c:OSPFP2PCriterion,after=0):boolean{
  const target=s.getDevice(c.target),path=c.path.map(id=>s.getDevice(id));if(!target||path.some(d=>!d||d.kind!=='router'))return false;
- if(c.kind==='op2p-echo')return echo(s,d,target,c.address,path as Device[]);
+ if(c.kind==='op2p-echo')return echo(s,d,target,c.address,path as Device[],after);
  const source=s.getDevice(c.source),peer=s.getDevice(c.peer);if(!source||!peer||d.config.interfaces[c.interface]?.adminUp!==false||s.interfaceUp(d.id,c.interface))return false;
  const since=(d.runtime.features.logEntries??[]).reduce((t:number,e:any)=>e.message===`%LINK-3-UPDOWN: Interface ${c.interface}, changed state to down`?Math.max(t,e.time):t,-1);if(since<0)return false;
  if(!s.events.some(e=>e.time>=since&&e.protocol==='OSPF'&&e.label==='OSPF neighbor DOWN'&&e.detail.includes(': FULL → DOWN.')&&((e.nodeId===d.id&&e.peerId===peer.id)||(e.nodeId===peer.id&&e.peerId===d.id))))return false;

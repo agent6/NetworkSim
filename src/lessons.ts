@@ -1,3 +1,4 @@
+import {validOSPFPassiveCriterion,matchesOSPFPassiveCriterion,type OSPFPassiveCriterion} from './ospf-passive-lab.ts';
 import {validOSPFBroadcastCriterion,matchesOSPFBroadcastCriterion,type OSPFBroadcastCriterion} from './ospf-broadcast-lab.ts';
 import {validOSPFP2PCriterion,matchesOSPFP2PCriterion,type OSPFP2PCriterion} from './ospf-p2p-lab.ts';
 import {validMultiAreaOSPFCriterion,matchesMultiAreaOSPFCriterion,type MultiAreaOSPFCriterion} from './multi-area-ospf-lab.ts';
@@ -29,6 +30,7 @@ import {validFileTransferCriterion,matchesFileTransferCriterion,type FileTransfe
 import {validAAAClientCriterion,matchesAAAClientCriterion,type AAAClientCriterion} from './aaa-lab.ts';
 
 export type Criterion =
+  | OSPFPassiveCriterion
   | OSPFBroadcastCriterion
   | OSPFP2PCriterion
   | AAAClientCriterion
@@ -142,6 +144,10 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     if (v.kind === "link") return text(v.a, 128) && text(v.b, 128);
     if (!text(v.device, 128)) return false;
     switch (v.kind) {
+      case "opi-policy":
+      case "opi-quiet":
+      case "opi-incident":
+        return validOSPFPassiveCriterion(v);
       case "obc-network":
       case "obc-nonpreempt":
       case "obc-echo":
@@ -472,6 +478,7 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (['opi-policy','opi-quiet','opi-incident'].includes(criterion.kind))return matchesOSPFPassiveCriterion(sim,d,criterion as OSPFPassiveCriterion);
   if (['obc-network','obc-nonpreempt','obc-echo','obc-promote'].includes(criterion.kind))return matchesOSPFBroadcastCriterion(sim,d,criterion as OSPFBroadcastCriterion);
   if (criterion.kind==='op2p-echo'||criterion.kind==='op2p-failover')return matchesOSPFP2PCriterion(sim,d,criterion);
   if (['mao-domain','mao-abr','mao-saved','mao-outage','mao-echo'].includes(criterion.kind))return matchesMultiAreaOSPFCriterion(sim,d,criterion as MultiAreaOSPFCriterion);
@@ -695,7 +702,7 @@ export function lessonProgress(sim: Simulator):
       );
     }
     const result = matches(sim, c);
-    if (c.kind !== "obc-echo" && c.kind !== "obc-nonpreempt" && c.kind !== "obc-promote" && c.kind !== "op2p-echo" && c.kind !== "op2p-failover" && c.kind !== "mao-echo" && c.kind !== "mao-outage" && c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping" && c.kind !== "ra-block" && c.kind !== "ra-ping" && c.kind !== "ps-incident" && c.kind !== "ps-ping" && c.kind !== "vrf-traffic" && c.kind !== "vrf-global-drop" && c.kind !== "gre-ping" && c.kind !== "gre-traffic" && c.kind !== "gip-traffic" && c.kind !== "trunk-echo" && c.kind !== "ec-echo" && c.kind !== "rstp-echo") return result;
+    if (c.kind !== "opi-incident" && c.kind !== "obc-echo" && c.kind !== "obc-nonpreempt" && c.kind !== "obc-promote" && c.kind !== "op2p-echo" && c.kind !== "op2p-failover" && c.kind !== "mao-echo" && c.kind !== "mao-outage" && c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping" && c.kind !== "ra-block" && c.kind !== "ra-ping" && c.kind !== "ps-incident" && c.kind !== "ps-ping" && c.kind !== "vrf-traffic" && c.kind !== "vrf-global-drop" && c.kind !== "gre-ping" && c.kind !== "gre-traffic" && c.kind !== "gip-traffic" && c.kind !== "trunk-echo" && c.kind !== "ec-echo" && c.kind !== "rstp-echo") return result;
     validKeys.add(key);
     if (result) observations.add(key);
     return result || observations.has(key);
@@ -703,7 +710,7 @@ export function lessonProgress(sim: Simulator):
   const rows = lesson.objectives.map((objective) => {
     const observed = observe(objective.criterion, JSON.stringify(objective.id));
     // Traffic, login and fault observations record accomplishments; configuration stays live.
-    const historical=objective.criterion.kind === "obc-echo" || objective.criterion.kind === "obc-nonpreempt" || objective.criterion.kind === "obc-promote" || objective.criterion.kind === "op2p-echo" || objective.criterion.kind === "op2p-failover" || objective.criterion.kind === "mao-echo" || objective.criterion.kind === "mao-outage" || objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping" || objective.criterion.kind === "ra-block" || objective.criterion.kind === "ra-ping" || objective.criterion.kind === "ps-incident" || objective.criterion.kind === "ps-ping" || objective.criterion.kind === "vrf-traffic" || objective.criterion.kind === "vrf-global-drop" || objective.criterion.kind === "gre-ping" || objective.criterion.kind === "gre-traffic" || objective.criterion.kind === "gip-traffic" || objective.criterion.kind === "trunk-echo" || objective.criterion.kind === "ec-echo" || objective.criterion.kind === "rstp-echo";
+    const historical=objective.criterion.kind === "opi-incident" || objective.criterion.kind === "obc-echo" || objective.criterion.kind === "obc-nonpreempt" || objective.criterion.kind === "obc-promote" || objective.criterion.kind === "op2p-echo" || objective.criterion.kind === "op2p-failover" || objective.criterion.kind === "mao-echo" || objective.criterion.kind === "mao-outage" || objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping" || objective.criterion.kind === "ra-block" || objective.criterion.kind === "ra-ping" || objective.criterion.kind === "ps-incident" || objective.criterion.kind === "ps-ping" || objective.criterion.kind === "vrf-traffic" || objective.criterion.kind === "vrf-global-drop" || objective.criterion.kind === "gre-ping" || objective.criterion.kind === "gre-traffic" || objective.criterion.kind === "gip-traffic" || objective.criterion.kind === "trunk-echo" || objective.criterion.kind === "ec-echo" || objective.criterion.kind === "rstp-echo";
     if (historical && observed)
       completed.add(objective.id);
     return {

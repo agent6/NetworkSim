@@ -1,0 +1,99 @@
+{
+  "feature": {
+    "title": "OSPF Passive Interface",
+    "catalogId": "ospf-passive-interface",
+    "group": "CCNP ENCOR",
+    "section": "Layer 3",
+    "sectionLabCount": 5,
+    "groupLabCount": 14,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6
+    },
+    "devices": 6,
+    "links": 5,
+    "tasks": 15,
+    "addressingRows": 5,
+    "notes": 1,
+    "permalink": "#/labs/ospf-passive-interface",
+    "modes": [
+      "practice",
+      "completed"
+    ],
+    "independentCCNALab": "single-area-ospfv2"
+  },
+  "topology": "R1\u2013R2\u2013R3 form a chain. R1 Gi0/1 10.0.12.1/30 connects R2 Gi0/1 .2. R2 Gi0/2 10.0.23.1/30 connects R3 Gi0/1 .2. Gi0/0 passive LANs use 192.168.10/20/30.1/24 with PC1/PC2/SRV1 at .10 and .1 gateways. Process10, manual RIDs1.1.1.1 through3.3.3.3, normal Area0, passive default with only intended active transit exceptions, P2P transit cost10, LAN cost1 and default10/40 timers. Six remote LAN O routes use AD110; adjacent LAN metric11, edge-to-edge metric21 through R2.",
+  "verificationNotes": [
+    "Adds the fifth ENCOR Layer3 lab. The original CCNA single-area OSPFv2 triangle remains independent. Practice contains prepared addressing and gateways, but no router OSPF or static routes, and starts at zero of fifteen tasks. All four ping actions are available for diagnosis. The completed reference executes all three real IOS command sets, saves startup configuration and serializes empty runtime. Fresh received control state earns ten live setup/verification/save tasks, without invented traffic or passive-transit incident history.",
+    "Tasks cover all three router activations and exact prepared addressing, passive default with an exact active-interface whitelist, periodic quiet-LAN proof, live passive LAN and active P2P cost policy, four directed Full relationships, six exact learned LAN routes, a normal OSPF-only Area0, saved healthy configurations, four real traffic paths, and a genuinely observed passive-transit incident followed by healthy recovery.",
+    "Bounded declarative opi-policy criteria require passive-interface default and exactly the intended no-passive exceptions. opi-quiet is live rather than historical: a received Full-peer periodic Hello opportunity and actual transit OSPF transmission must coexist with no passive-LAN Hello timer or recent outbound LAN OSPF frames, an up LAN, and a received copy of that LAN prefix on another router. Configuration-only silence, empty event history or an unformed neighbor cannot satisfy it.",
+    "The guide differentiates passive-interface from OSPF membership, interface shutdown and filtering of user traffic. Existing received Router LSA records retain passive LAN stub prefixes, and actual user packets cross the passive LANs. Removing LAN OSPF membership withdraws the prefix while transit neighbors stay Full; temporarily activating a LAN preserves routing but fails intended policy and quiet-window checks until restored.",
+    "Four normal traffic tasks correlate actual IPv4 ICMP requests and parent-linked successful replies over R1/R2, R1/R2/R3, R2/R3 and the reverse three-router path. They reuse the existing physical send/receive and OSPF route proof rather than accepting a successful-looking counter. Windows trace from PC1 to SRV1 includes 10.0.12.2 and 10.0.23.2.",
+    "The required fault makes only R2 Gi0/2 passive under router ospf10 while Ethernet remains administratively enabled and up/up. R2 removes a previously Full R3 neighbor and loses the remote server LAN while retaining the R1 LAN O route. opi-incident needs a matching actual Full-to-Down local-configuration transition and rejects a physical-link transition during the incident. It requires a fresh PC1-to-SRV1 No route drop, the corresponding source Frame sent, and a delivered parent-linked ICMP type3/code0 with correct quoted source/destination, plus a fresh successful PC1-to-PC2 exchange during that same fault.",
+    "Adding an optional earliest-event time to the existing P2P packet matcher lets the incident reuse physical packet proof for new local traffic. All existing callers retain their default time0 behavior. A shutdown, never-formed neighbor, area/timer mismatch, stale successful traffic, static-route bypass, wrong ICMP parent/quoted address or missing source transmission cannot fabricate passive-incident credit. Old Full-event eviction does not invalidate a later authentic Full-to-Down transition.",
+    "The incident observation is retained, but its combined objective remains incomplete until all live healthy policy, received quiet advertisements, Full adjacencies and exact O routes return. The reference starts at ten tasks, four real normal pings bring fourteen, and a proved passive fault with repair brings fifteen. IOS write memory and reload restore the intended saved policy. Portable reopen retains earned packet and incident observations, while fresh OSPF control traffic rebuilds live evidence before fifteen tasks return. Stable IDs survive a hostname change; imported criterion bounds and missing endpoints fail closed.",
+    "Modern IOS XE repeated passive-interface default preserves existing no-passive exceptions and neighbor upSince values, matching the cited Cisco release guidance. The lab uses existing logical OSPF control records, SPF, forwarding, IOS commands and displays. No protocol/forwarding engine change, binary LSA encoder, broader IOS/NX-OS equivalence or new live CML capture is claimed.",
+    "Offline Chrome QA covers light/dark at1440/390/320px: zero-credit practice; all three actual console configurations; passive No Hellos output, received LAN advertisements, four Full relationships and exact six route metrics; real guide traffic and Windows trace; up/up passive transit, remote failure and successful local control traffic; repair and fifteen tasks; saved offline reload; configuration-only reference and cancel/save-copy protection; fitted topology, responsive guide and unchanged terminal golden styles. Two share-link checks preserve host/path/query and workspace, return to ENCOR Layer3 with five labs, and keep the CCNA lab and other sections separate. Generic catalog QA adds seven checks. All sixteen tested HTML copies match the final build. Desktop diagrams and both320px guides were visually inspected; the owned localhost preview returned HTTP200."
+  ],
+  "browserRerun": {
+    "initialResult": "Five of six scenarios passed; light390 timed out waiting for its saved workspace after reload.",
+    "diagnostic": "The pre-reload workspace was valid43197-character JSON with the intended lab; both startup-observed and current localStorage workspace values were null in the failed session. Diagnostics remain in ignored .cache/ospf-passive-interface-catalog-browser/first-run-diagnostics.",
+    "finalResult": "Full unchanged-build browser matrix repeated successfully; no application change or saved-state injection was used."
+  },
+  "primaryReferences": [
+    {
+      "title": "Cisco IOS XE17.x: Default Passive Interfaces",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_iri-default-passive-interface.html"
+    },
+    {
+      "title": "Cisco IOS XE: Default Passive Interfaces PDF",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-routing/b-ip-routing/m_iri-default-passive-interface.pdf"
+    },
+    {
+      "title": "Cisco Catalyst9000 OSPF Configuration Guide",
+      "url": "https://spg.xgslb-v3.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr3-fwd/ospf/ospf-configuration-guide/ospf.html"
+    },
+    {
+      "title": "Cisco IOS XE16.6: Default Passive Interfaces",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_pi/configuration/xe-16-6/iri-xe-16-6-book/iri-default-passive-interface.pdf"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 23,
+    "existingP2PCompatibilityTests": 22,
+    "focusedPassed": 45,
+    "fullCheck": "npm run check",
+    "typecheck": "passed",
+    "fullTests": 2220,
+    "fullPassed": 2220,
+    "fullFailed": 0,
+    "build": "passed",
+    "browserChecks": [
+      "light 320px: ENCOR Layer3 with five labs; six-node/five-link/15-task zero-credit practice and five-row plan; all three actual IOS configurations with passive default and selective transit exceptions; four Full/- relationships, passive LAN No Hellos output, received LAN advertisements and exact O/AD110/metric11 or21 routes; four real traffic tasks across passive LANs and three-router Windows trace; accidentally passive R2 transit stays up/up, withdraws server routing, returns actual failed remote and successful local probes; active exception repair restores all fifteen tasks; saved offline reload rebuilds live control/quiet evidence and retains genuine incident history; configuration-only reference and cancel/save-copy protection; responsive fitted topology/guide and unchanged terminal golden styles",
+      "dark 320px: ENCOR Layer3 with five labs; six-node/five-link/15-task zero-credit practice and five-row plan; all three actual IOS configurations with passive default and selective transit exceptions; four Full/- relationships, passive LAN No Hellos output, received LAN advertisements and exact O/AD110/metric11 or21 routes; four real traffic tasks across passive LANs and three-router Windows trace; accidentally passive R2 transit stays up/up, withdraws server routing, returns actual failed remote and successful local probes; active exception repair restores all fifteen tasks; saved offline reload rebuilds live control/quiet evidence and retains genuine incident history; configuration-only reference and cancel/save-copy protection; responsive fitted topology/guide and unchanged terminal golden styles",
+      "light 1440px: ENCOR Layer3 with five labs; six-node/five-link/15-task zero-credit practice and five-row plan; all three actual IOS configurations with passive default and selective transit exceptions; four Full/- relationships, passive LAN No Hellos output, received LAN advertisements and exact O/AD110/metric11 or21 routes; four real traffic tasks across passive LANs and three-router Windows trace; accidentally passive R2 transit stays up/up, withdraws server routing, returns actual failed remote and successful local probes; active exception repair restores all fifteen tasks; saved offline reload rebuilds live control/quiet evidence and retains genuine incident history; configuration-only reference and cancel/save-copy protection; responsive fitted topology/guide and unchanged terminal golden styles",
+      "light 390px: ENCOR Layer3 with five labs; six-node/five-link/15-task zero-credit practice and five-row plan; all three actual IOS configurations with passive default and selective transit exceptions; four Full/- relationships, passive LAN No Hellos output, received LAN advertisements and exact O/AD110/metric11 or21 routes; four real traffic tasks across passive LANs and three-router Windows trace; accidentally passive R2 transit stays up/up, withdraws server routing, returns actual failed remote and successful local probes; active exception repair restores all fifteen tasks; saved offline reload rebuilds live control/quiet evidence and retains genuine incident history; configuration-only reference and cancel/save-copy protection; responsive fitted topology/guide and unchanged terminal golden styles",
+      "dark 390px: ENCOR Layer3 with five labs; six-node/five-link/15-task zero-credit practice and five-row plan; all three actual IOS configurations with passive default and selective transit exceptions; four Full/- relationships, passive LAN No Hellos output, received LAN advertisements and exact O/AD110/metric11 or21 routes; four real traffic tasks across passive LANs and three-router Windows trace; accidentally passive R2 transit stays up/up, withdraws server routing, returns actual failed remote and successful local probes; active exception repair restores all fifteen tasks; saved offline reload rebuilds live control/quiet evidence and retains genuine incident history; configuration-only reference and cancel/save-copy protection; responsive fitted topology/guide and unchanged terminal golden styles",
+      "dark 1440px: ENCOR Layer3 with five labs; six-node/five-link/15-task zero-credit practice and five-row plan; all three actual IOS configurations with passive default and selective transit exceptions; four Full/- relationships, passive LAN No Hellos output, received LAN advertisements and exact O/AD110/metric11 or21 routes; four real traffic tasks across passive LANs and three-router Windows trace; accidentally passive R2 transit stays up/up, withdraws server routing, returns actual failed remote and successful local probes; active exception repair restores all fifteen tasks; saved offline reload rebuilds live control/quiet evidence and retains genuine incident history; configuration-only reference and cancel/save-copy protection; responsive fitted topology/guide and unchanged terminal golden styles",
+      "light: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with five labs, other sections remain independent and CCNA single-area OSPF remains separate",
+      "dark: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with five labs, other sections remain independent and CCNA single-area OSPF remains separate",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "35d0943bf7c1a3afbf95fe217dce35e6be2333a8e9fce74ae0e0cd2d075fad68",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}
