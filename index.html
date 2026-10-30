@@ -31104,6 +31104,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!Number.isSafeInteger(n) || n < min || n > max) return fail5(`% Value must be between ${min} and ${max}.`);
     return n;
   };
+  var ipv4ACLNumberType = (number7) => {
+    if (number7 >= 1 && number7 <= 99 || number7 >= 1300 && number7 <= 1999) return "standard";
+    if (number7 >= 100 && number7 <= 199 || number7 >= 2e3 && number7 <= 2699) return "extended";
+    return fail5("% IPv4 ACL numbers must be 1-199 or 1300-2699.");
+  };
   function ipv42(value) {
     if (value === void 0) return incomplete4();
     const a = value.split(".");
@@ -32459,7 +32464,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }, "<domain>"), this.c("ip route", "Install/remove static IPv4 route", (a, no) => this.staticRoute(a, no), "<network> <mask> <next-hop|interface> [distance]"), this.c("router", "Configure routing protocol", (a, no) => this.selectRouter(a, no), "ospf|eigrp|rip|bgp [process/AS]"), this.c("spanning-tree", "Configure spanning tree", (a, no) => this.stpConfig(a, no), "<mode|vlan|mst|portfast>"), this.c("vtp", "Configure VLAN distribution", (a, no) => this.vtpConfig(a, no), "<domain|mode|version|password> <value>"), this.c("ip access-list", "Create named ACL", (a, no) => {
         exactly(a, 2);
         const type = keyword(a[0], ["standard", "extended"]);
-        const name2 = a[1];
+        const numeric = /^\d+$/.test(a[1]);
+        const name2 = numeric ? String(Number(a[1])) : a[1];
+        if (numeric && ipv4ACLNumberType(integer2(a[1], 1, 2699)) !== type) fail5("% Access-list number does not match the requested IPv4 ACL type.");
         cfg.features.acls ??= {};
         if (no) delete cfg.features.acls[name2];
         else {
@@ -32471,13 +32478,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }, "standard|extended <name>"), this.c("access-list", "Configure numbered ACL", (a, no) => {
         if (!a.length) incomplete4();
         const num2 = integer2(a[0], 1, 2699), name2 = String(num2);
-        const type = num2 <= 99 || num2 >= 1300 && num2 <= 1999 ? "standard" : "extended";
+        const type = ipv4ACLNumberType(num2);
         cfg.features.acls ??= {};
         if (no && a.length === 1) {
           delete cfg.features.acls[name2];
           this.change();
           return;
         }
+        if (cfg.features.acls[name2] && cfg.features.acls[name2].type !== type) fail5("% ACL already has another type.");
         cfg.features.acls[name2] ??= { name: name2, type, entries: [] };
         const old = this.context;
         this.context = { mode: "acl", name: name2 };
@@ -53339,8 +53347,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "pat", group: "CCNA", section: "Services & Security", title: "PAT", description: "Share one outside IPv4 address between two inside PCs using NAT overload. Configure a scoped source ACL, prove distinct translated identifiers, test web access from both clients and troubleshoot missing translations.", devices: 6, links: 5, practice: true },
     { id: "standard-ipv4-acl", group: "CCNA", section: "Services & Security", title: "Standard IPv4 ACL", description: "Protect one server with a named source-only ACL while leaving another server reachable. Verify host and wildcard rules, correct outbound placement, explicit and implicit deny, counters and HTTP behavior.", devices: 7, links: 6, practice: true },
     { id: "extended-ipv4-acl", group: "CCNA", section: "Services & Security", title: "Extended IPv4 ACL", description: "Filter by source, destination, protocol and destination port. Allow selected HTTP, DNS and ICMP flows, verify explicit and implicit denies, and troubleshoot an inbound policy near the source.", devices: 6, links: 5, practice: true },
+    { id: "named-and-numbered-acl", group: "CCNA", section: "Services & Security", title: "Named and Numbered ACL", description: "Compare named and numbered standard and extended IPv4 lists on four server paths. Configure bindings, verify equivalent filtering, edit numbered sequences safely and diagnose missing or misapplied lists.", devices: 9, links: 8, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
+  var NAMED_NUMBERED_ACL_COMMANDS = {
+    R1: ["enable", "configure terminal", "access-list 10 permit host 192.168.10.10", "access-list 10 deny any", "ip access-list standard CLIENT-SOURCES", "10 permit host 192.168.10.10", "20 deny any", "exit", "interface GigabitEthernet0/1", "ip access-group 10 out", "interface GigabitEthernet0/2", "ip access-group CLIENT-SOURCES out", "end", "write memory"],
+    R2: ["enable", "configure terminal", "access-list 110 permit tcp host 192.168.10.10 host 192.168.40.10 eq 80", "access-list 110 deny ip any any", "ip access-list extended WEB-CLIENTS", "10 permit tcp host 192.168.10.10 host 192.168.50.10 eq 80", "20 deny ip any any", "exit", "interface GigabitEthernet0/1", "ip access-group 110 out", "interface GigabitEthernet0/2", "ip access-group WEB-CLIENTS out", "end", "write memory"]
+  };
+  var NAMED_NUMBERED_ACL_HEADINGS = ["SRV1: numbered standard ACL reached", "SRV2: named standard ACL reached", "SRV3: numbered extended ACL reached", "SRV4: named extended ACL reached"];
   var EXTENDED_IPV4_ACL_COMMANDS = { R1: [
     "enable",
     "configure terminal",
@@ -53834,6 +53848,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
   };
   var GUIDE_RESOURCES = {
+    "named-and-numbered-acl": { columns: ["Device", "Interface", "IPv4 address", "Purpose / gateway"], rows: [["PC1", "Gi0", "192.168.10.10 /24", "Permitted client; gateway 192.168.10.1"], ["PC2", "Gi0", "192.168.10.20 /24", "Denied client; gateway 192.168.10.1"], ["R1", "Gi0/0", "192.168.10.1 /24", "Client LAN"], ["R1", "Gi0/1", "192.168.20.1 /24", "SRV1; ACL 10 outbound"], ["R1", "Gi0/2", "192.168.30.1 /24", "SRV2; CLIENT-SOURCES outbound"], ["R1", "Gi0/3", "192.168.254.1 /30", "R2 transit"], ["R2", "Gi0/0", "192.168.254.2 /30", "R1 transit"], ["R2", "Gi0/1", "192.168.40.1 /24", "SRV3; ACL 110 outbound"], ["R2", "Gi0/2", "192.168.50.1 /24", "SRV4; WEB-CLIENTS outbound"], ["SRV1", "Gi0", "192.168.20.10 /24", "HTTP; gateway 192.168.20.1"], ["SRV2", "Gi0", "192.168.30.10 /24", "HTTP; gateway 192.168.30.1"], ["SRV3", "Gi0", "192.168.40.10 /24", "HTTP; gateway 192.168.40.1"], ["SRV4", "Gi0", "192.168.50.10 /24", "HTTP; gateway 192.168.50.1"]], commands: NAMED_NUMBERED_ACL_COMMANDS, verification: { R1: ["show ip interface brief", "show ip route", "show access-lists 10", "show ip access-lists CLIENT-SOURCES", "show ip interface GigabitEthernet0/1", "show ip interface GigabitEthernet0/2", "show running-config | section ip access-list"], R2: ["show ip route", "show access-lists 110", "show ip access-lists WEB-CLIENTS", "show ip interface GigabitEthernet0/1", "show ip interface GigabitEthernet0/2", "show running-config | section ip access-list"], PC1: ["ipconfig", "ping -n 3 192.168.20.10", "ping -n 3 192.168.30.10", "ping -n 3 192.168.40.10", "ping -n 3 192.168.50.10"], PC2: ["ipconfig", "ping -n 3 192.168.20.10", "ping -n 3 192.168.30.10"] }, setup: [
+      { title: "Names and numbers identify lists, not different filtering engines", instructions: ["R1 uses standard ACL 10 for SRV1 and named standard CLIENT-SOURCES for SRV2. Both permit host 192.168.10.10 before deny any. PC1 must ping both servers; PC2 must be denied by both.", "R2 uses extended ACL 110 for SRV3 and named extended WEB-CLIENTS for SRV4. Each permits PC1 TCP destination port 80 to its own server before deny ip any any. PC1 must open both pages; PC2 must be denied.", "Standard IPv4 ACL numbers are 1\u201399 and 1300\u20131999. Extended IPv4 ACL numbers are 100\u2013199 and 2000\u20132699. A descriptive name alone does not choose standard or extended: the ip access-list command supplies that type."] },
+      { title: "Bind each list to its intended server interface", instructions: ["Apply 10 outbound on R1 Gi0/1 and CLIENT-SOURCES outbound on R1 Gi0/2. Apply 110 outbound on R2 Gi0/1 and WEB-CLIENTS outbound on R2 Gi0/2.", "Separate server-facing bindings make the four policies independently observable. The standard lists are near their destinations. An extended list can also be placed near its source; this comparison uses separate outgoing server paths to avoid one filter hiding another.", "A number and a descriptive name refer to separate ACL objects. Replacing a binding changes which list is applied; it does not rename or copy either list. Creating an ACL alone does not attach it."] },
+      { title: "Verify matching behavior with traffic", instructions: ["Run the four guide ping checks for SRV1 and SRV2. PC1 must receive replies and PC2 must receive none. A denial task requires the intended ACL drop, so a cable or service outage cannot satisfy it.", "In each PC\u2019s Desktop \u2192 Web browser, test http://192.168.40.10/ and http://192.168.50.10/. PC1 must receive the corresponding SRV3 or SRV4 page with 200 OK; PC2 must be denied by the intended extended list.", "As additional checks, PC1 can open the SRV1 and SRV2 web pages too: a standard source permit is not limited to ICMP. PC1 cannot ping SRV3 or SRV4: their extended permits allow TCP 80 only."] },
+      { title: "Edit numbered sequences without rebuilding the list", instructions: ["Modern IOS supports ip access-list standard 10 and ip access-list extended 110 for sequence editing. Both named and numbered lists have ordered entries and first-match processing.", "Under ip access-list standard 10, remove sequence 10 with no 10. PC1 now hits deny any at sequence 20. A new global access-list 10 permit host 192.168.10.10 appends after that deny and cannot restore access.", "Repair in ACL submode: remove the appended entry with no 30, then restore 10 permit host 192.168.10.10 before sequence 20. Test again. On R2, remove and restore sequence 10 in WEB-CLIENTS to compare the named workflow.", "Use clear access-list counters 10, CLIENT-SOURCES, 110 or WEB-CLIENTS, then generate one flow and inspect that list. Counters belong to the individual ACL; clearing them does not change its policy or binding.", "Remove only an interface binding to see that the list remains defined but no longer filters that path. Restore it. Deleting an entire list is different from deleting one ACE; rebuild the intended list and verify its binding before saving."] }
+    ], note: "All addressing, SW1, static return routes and four HTTP services are ready. Configure R1 and R2 ACLs only. Practice begins at zero tasks; the completed reference earns four configuration tasks and requires eight new traffic checks. Progress survives reopening, while both pairs of policies and their operational interface bindings remain live." },
     "extended-ipv4-acl": { columns: ["Device", "Interface", "IPv4 address", "Purpose / gateway"], rows: [["PC1", "Gi0", "192.168.10.10 /24", "HTTP and DNS client; gateway 192.168.10.1"], ["PC2", "Gi0", "192.168.10.20 /24", "DNS client; gateway 192.168.10.1"], ["R1", "Gi0/0", "192.168.10.1 /24", "Client LAN; apply LAN-FILTER in"], ["R1", "Gi0/1", "192.168.20.1 /24", "SRV1 gateway"], ["R1", "Gi0/2", "192.168.30.1 /24", "SRV2 gateway"], ["SRV1", "Gi0", "192.168.20.10 /24", "HTTP server; gateway 192.168.20.1"], ["SRV2", "Gi0", "192.168.30.10 /24", "DNS server; gateway 192.168.30.1"]], commands: EXTENDED_IPV4_ACL_COMMANDS, verification: { R1: ["show ip interface brief", "show ip interface GigabitEthernet0/0", "show ip route", "show access-lists LAN-FILTER", "show ip access-lists LAN-FILTER", "show running-config | section ip access-list", "show running-config | section interface"], PC1: ["ipconfig", "nslookup web.acl.lab 192.168.30.10", "ping -n 3 192.168.20.10", "ping -n 3 192.168.30.10"], PC2: ["ipconfig", "nslookup web.acl.lab 192.168.30.10", "ping -n 3 192.168.20.10"] }, setup: [
       { title: "Match protocol and destination port", instructions: ["Sequence 10 permits only PC1 to SRV1 over TCP destination port 80. The eq 80 follows the destination address; placing it after the source would match a source port instead.", "Sequence 20 permits both clients to query SRV2 over UDP destination port 53. Sequence 30 separately permits ICMP echo requests to SRV2. UDP DNS permission does not permit TCP web traffic.", "Sequence 40 explicitly denies other client-LAN traffic to SRV1. Keep the specific HTTP permit before this broader IP deny. Traffic matching none of the four entries is implicitly denied."] },
       { title: "Place the policy near its source", instructions: ["Apply LAN-FILTER inbound on R1 Gi0/0, where the two clients enter the router. Leave the server-facing interfaces unfiltered. An ACL definition without an interface binding does not filter transit traffic.", "Return traffic leaves Gi0/0 and is not checked by this inbound list. This is a stateless interface ACL, not a stateful firewall. Changing the direction changes which packet addresses and ports are inspected."] },
@@ -53924,6 +53944,56 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createNamedNumberedACLLab(mode = "practice") {
+    const make = (name2, kind, x, y) => ({ id: "device-named-acl-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const pc1 = make("PC1", "pc", 140, 130), pc2 = make("PC2", "pc", 140, 420), sw = make("SW1", "switch", 320, 275), r1 = make("R1", "router", 520, 275), r2 = make("R2", "router", 740, 275), servers = [make("SRV1", "server", 520, 70), make("SRV2", "server", 520, 510), make("SRV3", "server", 950, 130), make("SRV4", "server", 950, 420)];
+    const ip2 = (d, port3, address2, mask3 = "255.255.255.0") => {
+      Object.assign(d.config.interfaces[port3], { adminUp: true, ip: address2, mask: mask3 });
+      d.config.interfaces[port3].features.dhcp = false;
+      d.config.interfaces[port3].features.proxyArp = false;
+    };
+    ip2(pc1, "GigabitEthernet0", "192.168.10.10");
+    ip2(pc2, "GigabitEthernet0", "192.168.10.20");
+    pc1.config.defaultGateway = pc2.config.defaultGateway = "192.168.10.1";
+    ip2(r1, "GigabitEthernet0/0", "192.168.10.1");
+    ip2(r1, "GigabitEthernet0/1", "192.168.20.1");
+    ip2(r1, "GigabitEthernet0/2", "192.168.30.1");
+    ip2(r1, "GigabitEthernet0/3", "192.168.254.1", "255.255.255.252");
+    ip2(r2, "GigabitEthernet0/0", "192.168.254.2", "255.255.255.252");
+    ip2(r2, "GigabitEthernet0/1", "192.168.40.1");
+    ip2(r2, "GigabitEthernet0/2", "192.168.50.1");
+    for (const [i, d] of servers.entries()) {
+      const subnet2 = (i + 2) * 10;
+      ip2(d, "GigabitEthernet0", `192.168.${subnet2}.10`);
+      d.config.defaultGateway = `192.168.${subnet2}.1`;
+      d.config.services.http = { enabled: true, port: 80, authentication: "none", content: `<!doctype html><html lang="en"><meta charset="utf-8"><title>ACL comparison server</title><body><h1>${NAMED_NUMBERED_ACL_HEADINGS[i]}</h1><p>PC1 is permitted; PC2 is denied by this server path\u2019s ACL.</p></body></html>` };
+    }
+    for (const subnet2 of [40, 50]) r1.config.staticRoutes.push({ network: `192.168.${subnet2}.0`, prefix: 24, nextHop: "192.168.254.2", ad: 1 });
+    for (const subnet2 of [10, 20, 30]) r2.config.staticRoutes.push({ network: `192.168.${subnet2}.0`, prefix: 24, nextHop: "192.168.254.1", ad: 1 });
+    for (const port3 of ["GigabitEthernet0/1", "GigabitEthernet0/2", "GigabitEthernet0/3"]) {
+      sw.config.interfaces[port3].mode = "access";
+      sw.config.interfaces[port3].features.portfast = true;
+    }
+    const devices = [pc1, pc2, sw, r1, r2, ...servers];
+    for (const d of devices) d.startupConfig = structuredClone(d.config);
+    const standard = (name2) => ({ kind: "standard-acl", device: r1.id, name: name2, entries: [{ sequence: 10, action: "permit", source: "192.168.10.10", wildcard: "0.0.0.0" }, { sequence: 20, action: "deny", source: "0.0.0.0", wildcard: "255.255.255.255" }] });
+    const extended = (name2, destination2) => ({ kind: "extended-acl", device: r2.id, name: name2, entries: [{ sequence: 10, action: "permit", protocol: "tcp", source: "192.168.10.10", wildcard: "0.0.0.0", destination: destination2, destinationWildcard: "0.0.0.0", destinationPort: 80 }, { sequence: 20, action: "deny", protocol: "ip", source: "0.0.0.0", wildcard: "255.255.255.255", destination: "0.0.0.0", destinationWildcard: "255.255.255.255" }] });
+    const binding = (device2, name2, port3) => ({ kind: "acl-binding", device: device2.id, name: name2, interface: "GigabitEthernet0/" + port3, direction: "out" });
+    const all = (...criteria) => ({ kind: "all", criteria });
+    const stdPolicy = all(standard("10"), standard("CLIENT-SOURCES")), stdBindings = all(binding(r1, "10", 1), binding(r1, "CLIENT-SOURCES", 2)), extPolicy = all(extended("110", "192.168.40.10"), extended("WEB-CLIENTS", "192.168.50.10")), extBindings = all(binding(r2, "110", 1), binding(r2, "WEB-CLIENTS", 2));
+    const traffic2 = (source, i) => ({ device: i < 2 ? r1.id : r2.id, name: ["10", "CLIENT-SOURCES", "110", "WEB-CLIENTS"][i], interface: "GigabitEthernet0/" + (i % 2 + 1), direction: "out", source: source.id, target: servers[i].id, action: source === pc1 ? "permit" : "deny", sequence: source === pc1 ? 10 : 20 });
+    const link = (id2, a, ap, b, bp) => ({ id: "link-named-acl-" + id2, a: { deviceId: a.id, port: ap }, b: { deviceId: b.id, port: bp }, enabled: true, delay: 0.1, loss: 0 });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "named-and-numbered-acl", name: "Named and Numbered ACL" + (mode === "completed" ? " \xB7 Completed" : ""), devices, links: [link("pc1", pc1, "GigabitEthernet0", sw, "GigabitEthernet0/1"), link("pc2", pc2, "GigabitEthernet0", sw, "GigabitEthernet0/2"), link("lan", sw, "GigabitEthernet0/3", r1, "GigabitEthernet0/0"), link("transit", r1, "GigabitEthernet0/3", r2, "GigabitEthernet0/0"), ...servers.map((server, i) => link("srv" + (i + 1), i < 2 ? r1 : r2, "GigabitEthernet0/" + (i % 2 + 1), server, "GigabitEthernet0"))], notes: [{ id: "note-named-acl", x: 610, y: 650, text: "Standard: SRV1 \xB7 10 / SRV2 \xB7 CLIENT-SOURCES\nExtended: SRV3 \xB7 110 / SRV4 \xB7 WEB-CLIENTS\nPC1 permitted \xB7 PC2 denied \xB7 TCP 80 on extended paths" }], lesson: { title: "Named and Numbered ACL", description: "All nine nodes are connected and addressed. PC1 and PC2 share 192.168.10.0/24. R1 serves SRV1 on 192.168.20.10 and SRV2 on 192.168.30.10. R2 serves SRV3 on 192.168.40.10 and SRV4 on 192.168.50.10. Static routes, host gateways, SW1 and all HTTP pages are ready. Configure only the four ACLs and their bindings on R1 and R2.\n\nOn R1, create numbered standard ACL 10 with access-list 10 permit host 192.168.10.10 followed by access-list 10 deny any. Create named standard CLIENT-SOURCES with the same rules at sequences 10 and 20. Apply 10 out on Gi0/1 toward SRV1 and CLIENT-SOURCES out on Gi0/2 toward SRV2. Run the four standard ping tasks: PC1 must reach both servers and PC2 must be denied by both.\n\nOn R2, create numbered extended ACL 110 permitting TCP from PC1 to host 192.168.40.10 eq 80, followed by deny ip any any. Create named extended WEB-CLIENTS permitting PC1 TCP 80 to host 192.168.50.10, followed by deny ip any any. Apply 110 out on Gi0/1 and WEB-CLIENTS out on Gi0/2. These separate outgoing paths keep the four policies independently observable. Standard lists are near their destinations; this comparison also places extended lists on separate server-facing paths. An extended list may instead be placed near its traffic source when designing a broader policy.\n\nA name or number identifies the list. Standard IPv4 numbers are 1\u201399 and 1300\u20131999; extended IPv4 numbers are 100\u2013199 and 2000\u20132699. With a descriptive name, ip access-list standard or extended explicitly chooses the type. Named does not mean extended, and numbered does not mean standard. The named and numbered forms use the same first-match filtering behavior. Creating a list alone does not bind it.\n\nOn each PC, open Desktop \u2192 Web browser and test http://192.168.40.10/ and http://192.168.50.10/. PC1 must receive 200 OK with the corresponding numbered or named extended ACL page; PC2 must be denied by that specific list. As additional checks, PC1 can open SRV1 and SRV2 over HTTP too, while pinging SRV3 or SRV4 fails because their extended permits cover TCP 80 only. A generic service outage does not prove ACL enforcement.\n\nUse show access-lists 10 and show ip access-lists CLIENT-SOURCES on R1, and inspect 110 and WEB-CLIENTS on R2. Verify each outbound binding with show ip interface. Clear one list\u2019s counters, generate traffic and compare its permit or deny hits with the other list. The counters are independent even when the rules express equivalent access.\n\nModern IOS lets you edit a numbered ACL in submode: ip access-list standard 10. Remove its specific permit with no 10 and PC1 hits the existing deny at sequence 20. Adding access-list 10 permit host 192.168.10.10 globally appends a later entry, so the earlier deny still wins. Repair in ACL submode with no 30 and 10 permit host 192.168.10.10. Remove and restore sequence 10 in WEB-CLIENTS to compare the named workflow.\n\nRemove an interface binding to observe an intact but unused list, then restore it. Deleting an entire ACL is different from deleting one ACE. Rebuild the correct list, confirm its binding and test before saving both routers and the lab. Practice begins with no tasks; the completed reference supplies four live configuration tasks and requires eight new traffic observations. Earned traffic survives reopening while policies and operational bindings remain live.", objectives: [
+      { id: "standard-policies", title: "Create equivalent numbered and named standard policies on R1", criterion: stdPolicy },
+      { id: "standard-bindings", title: "Bind 10 and CLIENT-SOURCES to their R1 server interfaces", criterion: stdBindings },
+      { id: "extended-policies", title: "Create numbered and named TCP 80 policies on R2", criterion: extPolicy },
+      { id: "extended-bindings", title: "Bind 110 and WEB-CLIENTS to their R2 server interfaces", criterion: extBindings },
+      ...[0, 1].flatMap((i) => [pc1, pc2].map((pc, j) => ({ id: "pc" + (j + 1) + "-srv" + (i + 1), title: (j === 0 ? "Permit " : "Deny ") + pc.config.hostname + " ping to SRV" + (i + 1) + " through " + (i === 0 ? "10" : "CLIENT-SOURCES"), criterion: { kind: "acl-ping", ...traffic2(pc, i) }, action: { kind: "ping", device: pc.id, target: "192.168." + (i + 2) * 10 + ".10", when: all(stdPolicy, stdBindings) } }))),
+      ...[2, 3].flatMap((i) => [pc1, pc2].map((pc, j) => ({ id: "pc" + (j + 1) + "-srv" + (i + 1) + "-http", title: (j === 0 ? "Permit " : "Deny ") + pc.config.hostname + " HTTP to SRV" + (i + 1) + " through " + (i === 2 ? "110" : "WEB-CLIENTS"), description: pc.config.hostname + " \u2192 Web browser \u2192 http://192.168." + (i + 2) * 10 + ".10/ \xB7 " + (j === 0 ? "expect 200 OK." : "expect an ACL denial."), criterion: { kind: "acl-http", ...traffic2(pc, i), ...j === 0 ? { content: NAMED_NUMBERED_ACL_HEADINGS[i] } : {} } })))
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, NAMED_NUMBERED_ACL_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createExtendedIPv4ACLLab(mode = "practice") {
     const make = (name2, kind, x, y) => ({ id: "device-extended-acl-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
     const pc1 = make("PC1", "pc", 150, 150), pc2 = make("PC2", "pc", 150, 400), sw = make("SW1", "switch", 380, 275), r1 = make("R1", "router", 600, 275), srv1 = make("SRV1", "server", 850, 150), srv2 = make("SRV2", "server", 850, 400);
@@ -55446,6 +55516,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "named-and-numbered-acl") return createNamedNumberedACLLab(mode);
     if (id2 === "extended-ipv4-acl") return createExtendedIPv4ACLLab(mode);
     if (id2 === "standard-ipv4-acl") return createStandardIPv4ACLLab(mode);
     if (id2 === "pat") return createPATLab(mode);

@@ -1,0 +1,91 @@
+{
+  "feature": {
+    "title": "Named and Numbered ACL",
+    "catalogId": "named-and-numbered-acl",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 9,
+    "devices": 9,
+    "links": 8,
+    "tasks": 12,
+    "addressingRows": 13,
+    "permalink": "#/labs/named-and-numbered-acl",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.10.10/24 and PC2 192.168.10.20/24 connect through SW1 to R1 Gi0/0. R1 Gi0/1 serves SRV1 192.168.20.10/24 through numbered standard ACL 10; Gi0/2 serves SRV2 192.168.30.10/24 through named standard CLIENT-SOURCES. R1 Gi0/3 and R2 Gi0/0 use 192.168.254.0/30. R2 Gi0/1 serves SRV3 192.168.40.10/24 through numbered extended ACL 110; Gi0/2 serves SRV4 192.168.50.10/24 through named extended WEB-CLIENTS. All gateways, bidirectional static routes and four HTTP services are ready.",
+  "verificationNotes": [
+    "Practice begins at zero credit; the completed reference provides four live configuration groups and no preloaded traffic. Four ICMP checks exercise standard ACLs and four HTTP checks exercise extended ACLs, for twelve tasks total.",
+    "Standard 10 and CLIENT-SOURCES both permit PC1 source 192.168.10.10 at sequence 10 before deny any at 20. Extended 110 and WEB-CLIENTS permit PC1 TCP80 to their respective server at 10 before deny ip any any at 20. Named versus numbered is an identifier choice, separate from standard versus extended matching.",
+    "Four outgoing server interfaces isolate each policy so one ACL cannot hide another. Standard lists remain near their destinations; the guide explicitly explains the destination-side extended comparison rather than presenting it as a general source-placement recommendation.",
+    "Existing packet-specific ACL criteria prove actual list identity, interface, direction, ACE sequence, delivery and denial. Equivalent standard rules swapped onto the wrong bindings still filter but cannot earn proof for the intended list. Advisory checks, fabricated hit counters, outages and unrelated packets cannot satisfy traffic tasks.",
+    "Standard policies permit both ICMP and HTTP from PC1 while denying PC2. Both extended paths permit PC1 HTTP and explicitly deny PC2; their TCP80 permits do not permit ICMP. Successful HTTP requires a completed expected 200 response, not an allowed SYN or a 404 page.",
+    "Modern numbered submode sequence edits work for both standard and extended lists. Removing the numbered permit exposes the earlier deny; appending a global permit after it cannot restore access. Sequence-specific insertion before the deny repairs actual forwarding. Named edits have the same first-match behavior.",
+    "Counters remain independent for 10, CLIENT-SOURCES, 110 and WEB-CLIENTS. Clearing one leaves its peer hits, policy and binding intact. Unbinding or deleting a numbered list opens only its path without renaming or removing the named peer.",
+    "IOS IPv4 ACL number handling now validates the four supported ranges: standard 1\u201399/1300\u20131999 and extended 100\u2013199/2000\u20132699. Unsupported numbers and numeric type conflicts reject atomically. Positive boundary and submode editing tests cover all four ranges; no other protocol ACL family is advertised.",
+    "Portable saves and both router startup configurations preserve live policies, bindings and earned traffic with fresh runtime counters and decisions. All published IOS and Windows verification commands execute. No fresh live CML validation is claimed."
+  ],
+  "sources": [
+    {
+      "title": "Cisco IOS XE: IP Access List Overview",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/security-vpn/security-vpn/m_sec-access-list-ov-0.html"
+    },
+    {
+      "title": "Cisco: Configure IP Access Lists",
+      "url": "https://www.cisco.com/c/en/us/support/docs/security/ios-firewall/23602-confaccesslists.html"
+    }
+  ],
+  "validation": {
+    "targetedTests": 72,
+    "targetedPassed": 72,
+    "typecheck": "passed",
+    "fullSuite": {
+      "tests": 1847,
+      "passed": 1847,
+      "failed": 0,
+      "command": "npm run check"
+    },
+    "build": "passed; generated root and dist HTML are identical",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: nine Services & Security labs, twelve-task guide and thirteen-row plan, zero-credit practice, four live configuration groups and gated ping tests, four independent named/numbered standard/extended list objects and outbound bindings, standard ICMP/HTTP equivalence, extended TCP80 permits and explicit PC2 denials, extended permits do not allow PC1 echo, Windows CLI, independent counters and single-list clear, numbered sequence removal plus shadowed append and successful sequence repair, named sequence removal/recovery, unbound numbered path opens without changing its named peer, saved achievements and fresh runtime after reopening, completed reference requires eight new traffic checks, save/cancel protection, all navigated node centers inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "light 390px: nine Services & Security labs, twelve-task guide and thirteen-row plan, zero-credit practice, four live configuration groups and gated ping tests, four independent named/numbered standard/extended list objects and outbound bindings, standard ICMP/HTTP equivalence, extended TCP80 permits and explicit PC2 denials, extended permits do not allow PC1 echo, Windows CLI, independent counters and single-list clear, numbered sequence removal plus shadowed append and successful sequence repair, named sequence removal/recovery, unbound numbered path opens without changing its named peer, saved achievements and fresh runtime after reopening, completed reference requires eight new traffic checks, save/cancel protection, all navigated node centers inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "light 320px: nine Services & Security labs, twelve-task guide and thirteen-row plan, zero-credit practice, four live configuration groups and gated ping tests, four independent named/numbered standard/extended list objects and outbound bindings, standard ICMP/HTTP equivalence, extended TCP80 permits and explicit PC2 denials, extended permits do not allow PC1 echo, Windows CLI, independent counters and single-list clear, numbered sequence removal plus shadowed append and successful sequence repair, named sequence removal/recovery, unbound numbered path opens without changing its named peer, saved achievements and fresh runtime after reopening, completed reference requires eight new traffic checks, save/cancel protection, all navigated node centers inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "dark 1440px: nine Services & Security labs, twelve-task guide and thirteen-row plan, zero-credit practice, four live configuration groups and gated ping tests, four independent named/numbered standard/extended list objects and outbound bindings, standard ICMP/HTTP equivalence, extended TCP80 permits and explicit PC2 denials, extended permits do not allow PC1 echo, Windows CLI, independent counters and single-list clear, numbered sequence removal plus shadowed append and successful sequence repair, named sequence removal/recovery, unbound numbered path opens without changing its named peer, saved achievements and fresh runtime after reopening, completed reference requires eight new traffic checks, save/cancel protection, all navigated node centers inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "dark 390px: nine Services & Security labs, twelve-task guide and thirteen-row plan, zero-credit practice, four live configuration groups and gated ping tests, four independent named/numbered standard/extended list objects and outbound bindings, standard ICMP/HTTP equivalence, extended TCP80 permits and explicit PC2 denials, extended permits do not allow PC1 echo, Windows CLI, independent counters and single-list clear, numbered sequence removal plus shadowed append and successful sequence repair, named sequence removal/recovery, unbound numbered path opens without changing its named peer, saved achievements and fresh runtime after reopening, completed reference requires eight new traffic checks, save/cancel protection, all navigated node centers inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "dark 320px: nine Services & Security labs, twelve-task guide and thirteen-row plan, zero-credit practice, four live configuration groups and gated ping tests, four independent named/numbered standard/extended list objects and outbound bindings, standard ICMP/HTTP equivalence, extended TCP80 permits and explicit PC2 denials, extended permits do not allow PC1 echo, Windows CLI, independent counters and single-list clear, numbered sequence removal plus shadowed append and successful sequence repair, named sequence removal/recovery, unbound numbered path opens without changing its named peer, saved achievements and fresh runtime after reopening, completed reference requires eight new traffic checks, save/cancel protection, all navigated node centers inside Fit, responsive guide/topology and unchanged terminal golden styles",
+        "light: permalink preserves current host/path/query and returns to nine Services & Security labs without replacing the workspace",
+        "dark: permalink preserves current host/path/query and returns to nine Services & Security labs without replacing the workspace"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches the existing desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology and guide",
+        "light 320px topology",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "canvasFit": "target node centers remain inside the workspace in every navigation step, including 320px",
+      "matchingArtifactCopies": 16,
+      "initialAttempt": "One initial dark 390px file-origin reload returned empty browser storage without an application error. The complete unchanged-build rerun passed every case. Twelve isolated persistent/incognito file-storage probes also passed; no storage-clearing application path was found."
+    },
+    "artifactSha256": "bc982a419f8a7a453dd40a274eda9f09c2ea2f25aadef5cdcb6a96ce0e063c76"
+  }
+}
