@@ -1,0 +1,136 @@
+{
+  "feature": {
+    "title": "RADIUS AAA Client",
+    "catalogId": "radius-aaa-client",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 3,
+    "devices": 3,
+    "links": 2,
+    "tasks": 10,
+    "addressingRows": 4,
+    "permalink": "#/labs/radius-aaa-client",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.0.2.10/24 \u2192 R1 Gi0/0 192.0.2.1/24; R1 Gi0/1 192.168.100.1/24 \u2192 SRV1 192.168.100.10/24. Both hosts have matching gateways. SRV1 supplies RADIUS authentication/EXEC attributes on UDP 1812 and accounting on UDP 1813 with netadmin privilege 15.",
+  "verificationNotes": [
+    "Practice starts at zero credit with addressed interfaces and a prepared RADIUS server, but no R1 AAA/SSH configuration or fabricated traffic, session, request or accounting evidence. The completed reference earns only eight live configuration goals. One actual ping and one remotely approved/acknowledged SSH lifecycle are needed for ten tasks.",
+    "The client defines RADIUS1 with explicit auth-port 1812 and acct-port 1813, matching key, timeout 2 and retransmit 1. RAD-GROUP membership and the named VTY-AUTH, VTY-EXEC and VTY-ACCT lists are checked independently of their SSH-only VTY bindings.",
+    "RADIUS authentication supplies the Access-Accept attributes used for EXEC permission and privilege. Successful remote login generates one authentication request and uses the returned attributes for EXEC authorization; it does not invent a separate authorization query. A denied EXEC attribute can close SSH after authentication was accepted, without a session Start.",
+    "The local rescue account and independent local CONSOLE list provide recovery. Wrong passwords and authoritative Access-Rejects stop authentication; an available server rejecting rescue must not fall through to the valid local account. An unavailable/error result permits local authentication and local EXEC fallback.",
+    "The required session achievement correlates a successful RADIUS authentication, NAS/PC addresses, intended initial privilege, matching receiver Start/Stop session IDs and acknowledged client delivery event IDs. A password prompt, test aaa response, stop-only configuration, mismatched IDs or received records with no returned ACK cannot finish it.",
+    "UDP authentication and accounting ports are independent. A wrong authentication port can still account a locally authenticated rescue user; this is not remote netadmin authentication credit. A wrong accounting port can leave remote authentication working while session accounting fails.",
+    "Lost UDP1813 acknowledgments trigger the configured retry while receiver deduplication preserves one committed event. Pending/failed deliveries cannot earn acknowledged-session credit. Shared-key mismatch, disabled accounting and unavailable service cannot fabricate received records.",
+    "EXEC attributes are cached per login: changing the server profile does not rewrite an established session privilege, while a new login receives the new attributes. Unsupported IOS RADIUS command authorization and command accounting are rejected atomically and do not appear in the reference configuration.",
+    "The named local CONSOLE list remains independent of server availability. Fresh console sessions use rescue, begin at privilege 1 with console EXEC authorization disabled, and use the enable secret for privileged EXEC. Startup reboot restores the saved client policy.",
+    "Saved reopening retains achieved traffic/session observations and enforces live client settings, while reconstructing fresh transient requests, receiver rows, delivery counters and sessions. A completed reference still requires genuine traffic and a new approved session.",
+    "The server AAA receiver log displays received RADIUS session records with NAS source, remote PC source, username, initial privilege, session ID and status, without credentials. Client counters and delivery diagnostics are separate from the server receiver log.",
+    "The existing responsive AAA controls and terminal styling are preserved. Browser cases inspect every RADIUS account control for overflow, compare CLI font/color/cursor/control styles against the established golden fixture, and verify both themes at desktop and mobile widths.",
+    "Browser workflows include published commands, wrong-password rejection, authoritative rejection without fallback, service-outage local recovery without fabricated accounting, denied EXEC attributes, restoration, saved reopening, console reauthentication, completed-reference save/cancel behavior and host/path/query-preserving links.",
+    "The existing TACACS lab keeps its original protocol behavior and default guide criteria. No AAA authentication/authorization/accounting decision logic or networking stack is changed; new RADIUS guide checks use existing packet-backed state. No new cryptography, external AAA integration or live CML validation is claimed."
+  ],
+  "unitChecks": [
+    "RADIUS client practice has three addressed nodes, a prepared server, independent identity and zero credit",
+    "published client configuration and completed reference earn eight live goals without invented AAA traffic",
+    "RADIUS Access-Accept supplies EXEC attributes while UDP1812 authentication and UDP1813 accounting use actual packets",
+    "wrong remote passwords are rejected and cannot create authorization, accounting or session credit",
+    "an explicit healthy-server rejection does not fall through to the valid local rescue account",
+    "an unavailable RADIUS service permits local authentication and EXEC fallback but cannot fabricate accounting",
+    "denied EXEC permission in Access-Accept closes SSH without a separate authorization request or accounting Start",
+    "a defined authorization list without its VTY binding does not grant the planned privileged EXEC session",
+    "a defined accounting list without its VTY binding cannot invent a delivered EXEC session",
+    "stop-only accounting is operational but cannot satisfy the required Start/Stop configuration or session pair",
+    "accounting rejection does not deny otherwise authorized SSH and remains a failed undelivered record",
+    "a mismatched RADIUS shared key discards responses and permits error fallback without remote session credit",
+    "the authentication and accounting ports are independent: a wrong authentication port can still account a local fallback user",
+    "method order, protocol-specific group membership and exact named VTY bindings remain live requirements",
+    "the named local console remains usable while RADIUS is unavailable and needs enable for privileged EXEC",
+    "a lost UDP1813 ACK retries without duplicate receiver rows and cannot complete the acknowledged session goal",
+    "receiver rows must correlate target, remote source, initial privilege, session ID and both delivery event IDs",
+    "a test aaa authentication response and local configuration alone cannot fabricate an accounted VTY session",
+    "saved reopening preserves achieved traffic/session observations while rebuilding fresh AAA state and enforcing live policy",
+    "startup reboot restores the saved client policy and requires a new remotely approved SSH session",
+    "published verification commands show actual AAA counters, accounted actions and receiver logs without retaining credentials",
+    "new imported AAA criteria validate bounded data and reject unknown services, oversized methods and invalid privileges",
+    "a wrong accounting port leaves remote authentication working but produces no delivered session accounting",
+    "RADIUS EXEC attributes are retained per authenticated session and a new login receives the updated privilege",
+    "unsupported IOS RADIUS command authorization and command accounting are rejected without storing configurations"
+  ],
+  "validation": {
+    "newRADIUSClientTests": 25,
+    "focusedTests": 87,
+    "npmRunCheck": {
+      "status": "passed",
+      "typecheck": "passed",
+      "tests": 1743,
+      "passed": 1743,
+      "failed": 0,
+      "build": "passed"
+    },
+    "browserChecks": 15,
+    "newLabBrowserChecks": 8,
+    "catalogBrowserChecks": 7,
+    "artifactSha256": "7e7066ad276438d6e5d6b462ddb350399a588224c0238a4ba1fe389643730dfa",
+    "stylesheetByteIdentical": true,
+    "stylesheetSha256": "088509abc7ef7c5e709a22fbff1015065a9aae26756eb32918b4232ff50c82a1",
+    "goldenCLIStyles": "passed in all six light/dark desktop/mobile cases",
+    "responsiveAAAControls": "all controls fit their row at 1440/390/320",
+    "goldenFixture": "tests/fixtures/console-theme-styles.json",
+    "byteIdenticalArtifactPaths": [
+      "index.html",
+      "dist/index.html",
+      ".cache/radius-aaa-client-catalog-browser/index-light-390.html",
+      ".cache/radius-aaa-client-catalog-browser/index-dark-1440.html",
+      ".cache/radius-aaa-client-catalog-browser/index.html",
+      ".cache/radius-aaa-client-catalog-browser/index-light-1440.html",
+      ".cache/radius-aaa-client-catalog-browser/index-dark-320.html",
+      ".cache/radius-aaa-client-catalog-browser/index-light-320.html",
+      ".cache/radius-aaa-client-catalog-browser/index-dark-390.html",
+      ".cache/lab-catalog/index-light-1440.html",
+      ".cache/lab-catalog/index-light-390.html",
+      ".cache/lab-catalog/index-light-320.html",
+      ".cache/lab-catalog/index-dark-1440.html",
+      ".cache/lab-catalog/index-dark-390.html",
+      ".cache/lab-catalog/index-dark-320.html",
+      ".cache/lab-catalog/index-prerequisites.html"
+    ]
+  },
+  "references": [
+    {
+      "title": "Cisco RADIUS Configuration Guide",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/sec-crypto/radius/radius-configuration-guide/radius.html",
+      "scope": "Named RADIUS servers/groups, independent authentication/accounting ports, method ordering and returned authorization attributes."
+    },
+    {
+      "title": "Cisco IOS: Configuring Authentication",
+      "url": "https://www.cisco.com/en/US/docs/ios-xml/ios/sec_usr_aaa/configuration/15-0sy/sec-cfg-authentifcn.html",
+      "scope": "RADIUS EXEC authorization uses saved authentication information; named lists and local fallback semantics."
+    }
+  ],
+  "browser": {
+    "radiusAAA": [
+      "light 1440px: three Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared RADIUS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and UDP1812 authentication with Access-Accept EXEC attributes, acknowledged UDP1813 paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, denied Access-Accept EXEC permission without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "light 390px: three Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared RADIUS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and UDP1812 authentication with Access-Accept EXEC attributes, acknowledged UDP1813 paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, denied Access-Accept EXEC permission without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "light 320px: three Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared RADIUS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and UDP1812 authentication with Access-Accept EXEC attributes, acknowledged UDP1813 paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, denied Access-Accept EXEC permission without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "dark 1440px: three Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared RADIUS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and UDP1812 authentication with Access-Accept EXEC attributes, acknowledged UDP1813 paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, denied Access-Accept EXEC permission without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "dark 390px: three Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared RADIUS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and UDP1812 authentication with Access-Accept EXEC attributes, acknowledged UDP1813 paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, denied Access-Accept EXEC permission without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "dark 320px: three Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared RADIUS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and UDP1812 authentication with Access-Accept EXEC attributes, acknowledged UDP1813 paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, denied Access-Accept EXEC permission without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "light: permalink preserves current host/path/query and returns to Services & Security with all three labs without replacing the workspace",
+      "dark: permalink preserves current host/path/query and returns to Services & Security with all three labs without replacing the workspace"
+    ],
+    "catalog": [
+      "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ]
+  },
+  "browserErrors": [],
+  "externalRequests": []
+}

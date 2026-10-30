@@ -107,10 +107,12 @@ export function validateLesson(value: unknown): asserts value is Lesson {
       case "device":
         return v.powered === undefined || typeof v.powered === "boolean";
       case "tacacs-server":
+      case "radius-server":
       case "aaa-group":
       case "aaa-method":
       case "aaa-line":
       case "tacacs-session":
+      case "radius-session":
         return validAAAClientCriterion(v);
       case "local-user":
       case "local-ssh-login":
@@ -322,7 +324,7 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
-  if (['tacacs-server','aaa-group','aaa-method','aaa-line','tacacs-session'].includes(criterion.kind))return matchesAAAClientCriterion(sim,d,criterion as AAAClientCriterion);
+  if (['tacacs-server','radius-server','aaa-group','aaa-method','aaa-line','tacacs-session','radius-session'].includes(criterion.kind))return matchesAAAClientCriterion(sim,d,criterion as AAAClientCriterion);
   if (criterion.kind === "local-user") {
     const user=ownRecordValue(d.config.features.users,criterion.username);
     return !!user && typeof user.secret==='string' && user.secret.length>0 && (user.privilege??1)===criterion.privilege;
@@ -526,7 +528,7 @@ export function lessonProgress(sim: Simulator):
       );
     }
     const result = matches(sim, c);
-    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session") return result;
+    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session") return result;
     validKeys.add(key);
     if (result) observations.add(key);
     return result || observations.has(key);
@@ -534,7 +536,7 @@ export function lessonProgress(sim: Simulator):
   const rows = lesson.objectives.map((objective) => {
     const observed = observe(objective.criterion, JSON.stringify(objective.id));
     // Traffic, login and fault observations record accomplishments; configuration stays live.
-    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session";
+    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session";
     if (historical && observed)
       completed.add(objective.id);
     return {

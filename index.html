@@ -52353,14 +52353,16 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const name2 = (value) => typeof value === "string" && value.length > 0 && value.length <= 128;
     switch (v.kind) {
       case "tacacs-server":
+      case "radius-server":
         return name2(v.server) && name2(v.name);
       case "aaa-group":
-        return name2(v.name) && name2(v.serverName);
+        return name2(v.name) && name2(v.serverName) && (v.protocol === void 0 || ["tacacs", "radius"].includes(v.protocol));
       case "aaa-method":
         return ["login", "exec", "exec-accounting"].includes(v.service) && name2(v.name) && Array.isArray(v.methods) && v.methods.length > 0 && v.methods.length <= 8 && v.methods.every(name2);
       case "aaa-line":
         return ["console 0", "vty 0 4"].includes(v.line) && name2(v.authentication) && (v.authorization === void 0 || name2(v.authorization)) && (v.accounting === void 0 || name2(v.accounting)) && (v.line !== "console 0" || v.authorization === void 0 && v.accounting === void 0);
       case "tacacs-session":
+      case "radius-session":
         return name2(v.server) && name2(v.source) && name2(v.username) && Number.isInteger(v.privilege) && v.privilege >= 0 && v.privilege <= 15;
       default:
         return false;
@@ -52370,13 +52372,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   var find = (sim2, name2) => sim2.lab.devices.find((d) => d.id === name2 || d.config.hostname === name2);
   function matchesAAAClientCriterion(sim2, d, c) {
     const aaa2 = d.config.features.aaa ?? {};
-    if (c.kind === "tacacs-server") {
-      const server = find(sim2, c.server), service = server?.config.services.tacacs, entry = ownRecordValue(aaa2.servers, c.name);
-      return !!entry && entry.protocol === "tacacs" && (entry.port ?? 49) === 49 && ownsAddress(server, entry.address) && typeof entry.key === "string" && entry.key.length > 0 && entry.key === service?.secret && service.enabled === true && service.accountingEnabled !== false;
+    if (c.kind === "tacacs-server" || c.kind === "radius-server") {
+      const protocol = c.kind === "radius-server" ? "radius" : "tacacs", server = find(sim2, c.server), service = server?.config.services[protocol], entry = ownRecordValue(aaa2.servers, c.name);
+      return !!entry && entry.protocol === protocol && (protocol === "radius" ? (entry.port ?? 1812) === 1812 && (entry.accountingPort ?? 1813) === 1813 : (entry.port ?? 49) === 49) && ownsAddress(server, entry.address) && typeof entry.key === "string" && entry.key.length > 0 && entry.key === service?.secret && service.enabled === true && service.accountingEnabled !== false;
     }
     if (c.kind === "aaa-group") {
-      const group = ownRecordValue(aaa2.groups, c.name);
-      return group?.protocol === "tacacs" && Array.isArray(group.servers) && group.servers.includes(c.serverName) && ownRecordValue(aaa2.servers, c.serverName)?.protocol === "tacacs";
+      const group = ownRecordValue(aaa2.groups, c.name), protocol = c.protocol ?? "tacacs";
+      return group?.protocol === protocol && Array.isArray(group.servers) && group.servers.includes(c.serverName) && ownRecordValue(aaa2.servers, c.serverName)?.protocol === protocol;
     }
     if (c.kind === "aaa-method") {
       const value = c.service === "login" ? ownRecordValue(aaa2.login, c.name) : c.service === "exec" ? ownRecordValue(aaa2.authorization?.exec, c.name) : ownRecordValue(aaa2.accounting, "exec " + c.name);
@@ -52393,13 +52395,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return safe(line2) && start <= n && n <= (end ?? start);
       }));
     }
-    if (c.kind === "tacacs-session") {
-      const server = find(sim2, c.server), source = find(sim2, c.source);
+    if (c.kind === "tacacs-session" || c.kind === "radius-session") {
+      const protocol = c.kind === "radius-session" ? "radius" : "tacacs", server = find(sim2, c.server), source = find(sim2, c.source);
       if (!server || !source) return false;
       const requests = server.runtime.features.aaaRequests ?? [], received = server.runtime.features.aaaAccountingReceived ?? [], deliveries = d.runtime.features.aaaAccountingEvents ?? [];
-      const rows2 = received.filter((row5) => row5.protocol === "tacacs" && row5.kind === "exec" && row5.username === c.username && row5.privilege === c.privilege && /^vty /.test(row5.line) && ownsAddress(d, row5.source) && ownsAddress(source, row5.remoteSource));
-      const acknowledged = (row5) => deliveries.some((delivery) => delivery.protocol === "tacacs" && delivery.status === "delivered" && delivery.eventId === row5.eventId && ownsAddress(server, delivery.server) && delivery.record?.sessionId === row5.sessionId && delivery.record?.status === row5.status);
-      return rows2.some((start) => start.status === "start" && acknowledged(start) && rows2.some((stop) => stop.status === "stop" && stop.sessionId === start.sessionId && stop.source === start.source && stop.remoteSource === start.remoteSource && stop.time >= start.time && acknowledged(stop)) && ["authenticate", "authorize"].every((operation) => requests.some((q) => q.protocol === "tacacs" && q.operation === operation && (operation !== "authorize" || q.kind === "exec") && q.accepted === true && q.username === c.username && q.source === start.source && q.time <= start.time)));
+      const rows2 = received.filter((row5) => row5.protocol === protocol && row5.kind === "exec" && row5.username === c.username && row5.privilege === c.privilege && /^vty /.test(row5.line) && ownsAddress(d, row5.source) && ownsAddress(source, row5.remoteSource));
+      const acknowledged = (row5) => deliveries.some((delivery) => delivery.protocol === protocol && delivery.status === "delivered" && delivery.eventId === row5.eventId && ownsAddress(server, delivery.server) && delivery.record?.sessionId === row5.sessionId && delivery.record?.status === row5.status);
+      return rows2.some((start) => start.status === "start" && acknowledged(start) && rows2.some((stop) => stop.status === "stop" && stop.sessionId === start.sessionId && stop.source === start.source && stop.remoteSource === start.remoteSource && stop.time >= start.time && acknowledged(stop)) && (protocol === "radius" ? ["authenticate"] : ["authenticate", "authorize"]).every((operation) => requests.some((q) => q.protocol === protocol && q.operation === operation && (operation !== "authorize" || q.kind === "exec") && q.accepted === true && q.username === c.username && q.source === start.source && q.time <= start.time)));
     }
     return false;
   }
@@ -52421,10 +52423,12 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         case "device":
           return v.powered === void 0 || typeof v.powered === "boolean";
         case "tacacs-server":
+        case "radius-server":
         case "aaa-group":
         case "aaa-method":
         case "aaa-line":
         case "tacacs-session":
+        case "radius-session":
           return validAAAClientCriterion(v);
         case "local-user":
         case "local-ssh-login":
@@ -52559,7 +52563,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!("device" in criterion)) return false;
     const d = device(sim2, criterion.device);
     if (!d) return false;
-    if (["tacacs-server", "aaa-group", "aaa-method", "aaa-line", "tacacs-session"].includes(criterion.kind)) return matchesAAAClientCriterion(sim2, d, criterion);
+    if (["tacacs-server", "radius-server", "aaa-group", "aaa-method", "aaa-line", "tacacs-session", "radius-session"].includes(criterion.kind)) return matchesAAAClientCriterion(sim2, d, criterion);
     if (criterion.kind === "local-user") {
       const user = ownRecordValue(d.config.features.users, criterion.username);
       return !!user && typeof user.secret === "string" && user.secret.length > 0 && (user.privilege ?? 1) === criterion.privilege;
@@ -52726,14 +52730,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return results.length > 0 && (c.kind === "all" ? results.every(Boolean) : results.some(Boolean));
       }
       const result = matches(sim2, c);
-      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session") return result;
+      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session") return result;
       validKeys.add(key4);
       if (result) observations.add(key4);
       return result || observations.has(key4);
     };
     const rows2 = lesson2.objectives.map((objective) => {
       const observed = observe(objective.criterion, JSON.stringify(objective.id));
-      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session";
+      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session";
       if (historical && observed)
         completed.add(objective.id);
       return {
@@ -53111,8 +53115,43 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "ospf-router-id", group: "CCNA", section: "Routing", title: "OSPF Router ID", description: "Compare manual router IDs, highest active loopback selection and highest up/up physical address selection. Verify operational IDs, restart pending changes, troubleshoot duplicates and prove routed traffic.", devices: 6, links: 5, practice: true },
     { id: "local-user-authentication", group: "CCNA", section: "Services & Security", title: "Local User Authentication", description: "Create local users with distinct privilege levels, protect privileged EXEC, secure console and SSH access, and verify real password-checked logins from a PC.", devices: 2, links: 1, practice: true },
     { id: "tacacs-aaa-client", group: "CCNA", section: "Services & Security", title: "TACACS+ AAA Client", description: "Configure an IOS TACACS+ client with named AAA lists, SSH, local recovery and acknowledged EXEC accounting. Test remote authorization, explicit rejection and server-unavailable fallback.", devices: 3, links: 2, practice: true },
+    { id: "radius-aaa-client", group: "CCNA", section: "Services & Security", title: "RADIUS AAA Client", description: "Configure an IOS RADIUS client with named AAA lists, SSH, Access-Accept EXEC attributes and acknowledged session accounting. Verify rejection, UDP retry behavior and local recovery.", devices: 3, links: 2, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
+  var RADIUS_AAA_CLIENT_COMMANDS = { R1: [
+    "enable",
+    "configure terminal",
+    "username rescue privilege 15 secret RescueLab123",
+    "enable secret EnableLab123",
+    "aaa new-model",
+    "aaa authentication login CONSOLE local",
+    "radius server RADIUS1",
+    "address ipv4 192.168.100.10 auth-port 1812 acct-port 1813",
+    "key RadiusLabKey",
+    "timeout 2",
+    "retransmit 1",
+    "exit",
+    "aaa group server radius RAD-GROUP",
+    "server name RADIUS1",
+    "exit",
+    "aaa authentication login VTY-AUTH group RAD-GROUP local",
+    "aaa authorization exec VTY-EXEC group RAD-GROUP local",
+    "aaa accounting exec VTY-ACCT start-stop group RAD-GROUP",
+    "ip domain-name lab.example",
+    "crypto key generate rsa modulus 2048",
+    "ip ssh version 2",
+    "line console 0",
+    "login authentication CONSOLE",
+    "exit",
+    "line vty 0 4",
+    "login authentication VTY-AUTH",
+    "authorization exec VTY-EXEC",
+    "accounting exec VTY-ACCT",
+    "transport input ssh",
+    "exec-timeout 10 0",
+    "end",
+    "write memory"
+  ] };
   var TACACS_AAA_CLIENT_COMMANDS = { R1: [
     "enable",
     "configure terminal",
@@ -53496,6 +53535,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
   };
   var GUIDE_RESOURCES = {
+    "radius-aaa-client": { columns: ["Device", "Interface", "IPv4 address", "Purpose / gateway"], rows: [["R1", "Gi0/0", "192.0.2.1 /24", "PC1 gateway and SSH target"], ["R1", "Gi0/1", "192.168.100.1 /24", "RADIUS source toward SRV1"], ["PC1", "Gi0", "192.0.2.10 /24", "Gateway 192.0.2.1"], ["SRV1", "Gi0", "192.168.100.10 /24", "Gateway 192.168.100.1"]], commands: RADIUS_AAA_CLIENT_COMMANDS, verification: { R1: ["show ip interface brief", "show running-config | section aaa", "show running-config | section radius", "show running-config | section line", "show aaa servers", "show radius statistics", "show ip ssh", "show users", "show accounting", "show logging"], PC1: ["ipconfig", "ping -n 3 192.168.100.10"] }, setup: [{ title: "SRV1 \xB7 Services \u2192 AAA \xB7 preconfigured RADIUS", instructions: ["The RADIUS service is enabled on UDP 1812 for authentication and UDP 1813 for accounting. Shared secret: RadiusLabKey.", "Remote account: netadmin, password RadiusAdmin123, IOS privilege 15 and EXEC authorization Allow shell. The local rescue account is absent from SRV1.", "The Access-Accept carries the EXEC permission and privilege used by R1. The accounting receiver log starts empty and must receive Start/Stop records for the same session."] }, { title: "PC1 \xB7 Command prompt \xB7 verify remote access", instructions: ["Run ssh -l netadmin 192.0.2.1. Try one wrong password, then RadiusAdmin123. Expect R1# and show privilege level 15.", "Inspect show radius statistics, show users and show accounting. Exit to Windows, then inspect SRV1 Services \u2192 AAA for acknowledged EXEC start and stop records.", "The records must identify NAS source 192.168.100.1, remote PC 192.0.2.10, netadmin, privilege 15 and a matching session ID. A password prompt or successful test aaa command alone cannot finish the session task."] }, { title: "Rejection, fallback and EXEC attribute exercises", instructions: ["While RADIUS is available, SSH as rescue with RescueLab123 must be rejected. An Access-Reject stops the method list even though the local rescue account is valid.", "Disable only the RADIUS service, keeping the server powered on. Ping remains usable. A new rescue SSH login should use local authentication and local EXEC authorization after the remote method is unavailable.", "Unavailable accounting stays pending or fails according to the configured UDP timeout/retry policy; it cannot create received records. Exit and restore the service before another netadmin login and logout.", "Separately set netadmin EXEC authorization to Deny shell on SRV1. Authentication can be accepted while its EXEC permission prevents opening a shell, with no accounting Start. Restore Allow shell."] }, { title: "R1 \xB7 local console recovery", instructions: ["Save the lab and reload NetworkSim to open a fresh console. Authenticate as rescue with RescueLab123 through the independent CONSOLE list.", "Console EXEC authorization is disabled in this lab; verify R1> and use enable with EnableLab123 for privilege 15.", "The VTY uses the named remote-first VTY-AUTH and VTY-EXEC lists with local fallback, plus VTY-ACCT Start/Stop accounting."] }], note: "Network addressing and SRV1 settings are ready; configure the AAA client on R1. Define RADIUS1 explicitly with auth-port 1812 and acct-port 1813, matching key, timeout 2 and retransmit 1. Add it to RAD-GROUP and apply VTY-AUTH, VTY-EXEC and VTY-ACCT to SSH-only VTY 0\u20134. RADIUS authentication supplies the attributes used for EXEC authorization. Session accounting uses separate UDP 1813 requests and acknowledgments. Keep the console on its local CONSOLE list, restore all server settings after fault exercises, then save R1 and the lab." },
     "tacacs-aaa-client": { columns: ["Device", "Interface", "IPv4 address", "Purpose / gateway"], rows: [["R1", "Gi0/0", "192.0.2.1 /24", "PC1 gateway and SSH target"], ["R1", "Gi0/1", "192.168.100.1 /24", "TACACS+ source toward SRV1"], ["PC1", "Gi0", "192.0.2.10 /24", "Gateway 192.0.2.1"], ["SRV1", "Gi0", "192.168.100.10 /24", "Gateway 192.168.100.1"]], commands: TACACS_AAA_CLIENT_COMMANDS, verification: { R1: ["show ip interface brief", "show running-config | section aaa", "show running-config | section tacacs", "show running-config | section line", "show aaa servers", "show tacacs", "show ip ssh", "show users", "show accounting", "show logging"], PC1: ["ipconfig", "ping -n 3 192.168.100.10"] }, setup: [{ title: "SRV1 \xB7 Services \u2192 AAA \xB7 preconfigured TACACS+", instructions: ["The TACACS+ service is already enabled on TCP 49. Shared secret: TacacsLabKey.", "Remote account: netadmin, password TacacsAdmin123, IOS privilege 15 and EXEC authorization Allow shell. The local rescue account deliberately does not exist on SRV1.", "The receiver accounting log starts empty. It must receive an EXEC start and stop for the same session, with client source 192.168.100.1 and remote PC source 192.0.2.10."] }, { title: "PC1 \xB7 Command prompt \xB7 remote AAA test", instructions: ["Run ssh -l netadmin 192.0.2.1. Try one incorrect password, then enter TacacsAdmin123. Expect R1# and show privilege level 15.", "Run show users and show accounting, then exit to Windows. Reopen SRV1 Services \u2192 AAA and inspect the received EXEC start/stop records. Client show accounting must report acknowledged delivery.", "A password prompt, successful test aaa authentication alone, a local console login or an unacknowledged accounting request cannot complete the session task."] }, { title: "Fallback and authorization exercises", instructions: ["While SRV1 is available, try SSH as rescue with RescueLab123. TACACS+ must reject that unknown remote account; a rejection must not continue to local authentication. Three rejected attempts close the connection.", "Disable only the TACACS+ service on SRV1, keeping the server powered on. Ping still works. A new SSH login as rescue should use local authentication and local EXEC authorization after the remote server is unavailable.", "Check that unavailable accounting is reported as failed, with no fabricated receiver records. Exit, re-enable TACACS+ and verify a new netadmin session and acknowledged accounting.", "For a separate test, change netadmin EXEC authorization to Deny shell on SRV1. Its password can authenticate, but EXEC must be denied and no session Start may be fabricated. Restore Allow shell."] }, { title: "R1 \xB7 local console recovery", instructions: ["Save the lab and reload NetworkSim to open a fresh console. Authenticate as rescue with RescueLab123 through the named local CONSOLE list.", "Console EXEC authorization is not enabled in this lab, so the fresh console begins at R1>. Use enable with EnableLab123 to reach R1#.", "The VTY lists remain separate: remote-first authentication, remote-first EXEC authorization with local fallback, and server-backed EXEC Start/Stop accounting."] }], note: "Network addressing, routes for the two connected networks and SRV1 TACACS+ settings are ready. Configure R1 only. Use the named TACACS1 server and TAC-GROUP, then bind VTY-AUTH, VTY-EXEC and VTY-ACCT explicitly to VTY 0\u20134 with SSH-only transport. Keep the console on its independent local CONSOLE list. This lab verifies authentication, EXEC authorization and VTY EXEC accounting through simulated TCP 49 exchanges. Only an unavailable/error result permits moving to the next authentication or authorization method; a server rejection stops the list. Restore all server settings after troubleshooting. Save R1 with write memory and save or export the lab." },
     "local-user-authentication": { columns: ["Device", "Interface", "IPv4 address", "Purpose"], rows: [["R1", "Gi0/0", "192.0.2.1 /24", "Local console and SSH target"], ["PC1", "Gi0", "192.0.2.10 /24", "Windows SSH client"]], commands: LOCAL_USER_AUTHENTICATION_COMMANDS, verification: { R1: ["show running-config | include ^username", "show running-config | include ^enable secret", "show running-config | section line", "show ip ssh", "show users", "show ssh", "show privilege", "show startup-config | include ^username"], PC1: ["ipconfig", "ping -n 3 192.0.2.1"] }, setup: [{ title: "PC1 \xB7 Command prompt \xB7 operator login", instructions: ["Run ssh -l operator 192.0.2.1. Enter an incorrect password once and confirm rejection, then enter OperatorLab123 at the Password prompt. Password input is hidden.", "Expect R1> and show privilege reporting level 1. configure terminal must be denied.", "Run enable. OperatorLab123 must not unlock privileged EXEC; enter EnableLab123 to reach R1# and verify show privilege reports level 15.", "Run show users and show ssh to inspect the real session. Run exit to return to the Windows C:\\> prompt."] }, { title: "PC1 \xB7 Command prompt \xB7 administrator login", instructions: ["Run ssh -l admin 192.0.2.1 and enter AdminLab123. Expect R1# and privilege level 15 immediately.", "Inspect show users and show ssh, then exit back to Windows. Successful operator and admin logins are recorded only after real local SSH authentication; configuration or a pending password prompt is not sufficient."] }, { title: "R1 \xB7 Fresh console session", instructions: ["Save the lab and reload NetworkSim to create a fresh console session, then open R1. Expect Username: followed by a hidden Password: prompt.", "Log in as operator with OperatorLab123. Verify level 1, use enable with EnableLab123, and verify level 15.", "The initial console remains usable while you configure login local. Configuring the line alone does not log out that existing session."] }], note: "Addressing and the Ethernet link are ready. Configure R1 only; no routing protocol or server is needed. Use local users without aaa new-model. The reference supplies admin/privilege 15, operator/privilege 1 and a separate enable secret. SSH requires a hostname, domain name, RSA keys, SSH version 2 and VTY login local with transport input ssh; a line password does not replace the local user database. The console and VTY use separate line configurations. Test actual PC logins for both users and a real ping. Login and echo achievements survive closing sessions and saving the lab; account and access settings remain live requirements. Passwords in the reference are lab examples, and you may use your own matching values. Save R1 with write memory and save or export the lab." },
     "ospf-router-id": { columns: ["Device", "Interface", "IPv4 address", "Purpose / selection"], rows: [["R1", "Gi0/0", "192.168.10.1 /24", "PC1 gateway"], ["R1", "Gi0/1", "10.0.12.1 /30", "Transit to R2"], ["R1", "Loopback0", "198.51.100.11 /32", "Up candidate; manual 1.1.1.1 wins"], ["R2", "Gi0/0", "192.168.20.1 /24", "SRV1 gateway; higher than loopbacks"], ["R2", "Gi0/1 \xB7 Gi0/2", "10.0.12.2 /30 \xB7 10.0.23.2 /30", "Router transits"], ["R2", "Loopback0 \xB7 Loopback1", "172.16.2.1 /32 \xB7 172.16.2.2 /32", "Up candidates; highest loopback wins"], ["R2", "Loopback99", "203.0.113.254 /32", "Administratively down; ineligible"], ["R3", "Gi0/0 \xB7 Gi0/1", "192.168.30.1 /24 \xB7 10.0.23.3 /30", "Up/up physical candidates"], ["R3", "Gi0/2", "203.0.113.254 /32", "No link; down despite no shutdown"], ["PC1", "Gi0", "192.168.10.10 /24", "Gateway 192.168.10.1"], ["SRV1", "Gi0", "192.168.20.10 /24", "Gateway 192.168.20.1"], ["PC2", "Gi0", "192.168.30.10 /24", "Gateway 192.168.30.1"]], commands: OSPF_ROUTER_ID_COMMANDS, verification: { "R1": ["show ip interface brief", "show ip ospf", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf database router", "show ip protocols", "show ip route ospf", "show running-config | section router ospf"], "R2": ["show ip interface brief", "show ip ospf", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf database router", "show ip protocols", "show ip route ospf", "show running-config | section router ospf"], "R3": ["show ip interface brief", "show ip ospf", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf database router", "show ip protocols", "show ip route ospf", "show running-config | section router ospf"], "PC1": ["ipconfig", "ping -n 3 192.168.30.10", "ping -n 3 192.168.20.10", "tracert -d 192.168.30.10"], "PC2": ["ping -n 3 192.168.10.10"], "SRV1": ["ping -n 3 192.168.30.10"] }, note: "All IPv4 addresses, candidate loopbacks and host gateways are ready; no OSPF or static routes are configured. R1 must use manual ID 1.1.1.1. R2 must have no manual override and select its highest up/up loopback 172.16.2.2, excluding shut Loopback99. R3 must have no manual override or loopbacks and select up/up physical address 192.168.30.1, excluding unconnected Gi0/2. Router IDs identify OSPF processes; they are not network statements or automatic destination routes. Configure Area 0, passive LANs, active point-to-point transits and cost 10. Verify active IDs in local process/interface output, peer tables and router LSAs; compare them with running-config. A manual ID changed after neighbors form is pending until clear ip ospf 10 process, confirmed with yes, or device reload. The default confirmation answer is no. A newly added higher-priority loopback also waits for process restart before replacing the selected automatic ID. Complete the pending-ID, automatic-ID and duplicate-ID exercises in the guide, restore intended IDs and remove the temporary R3 loopback. Verify all Full relationships, six AD 110 routes at metric 11 or 21 and all four real traffic checks. Save every router and save or export the lab." },
@@ -53558,6 +53598,36 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createRADIUSAAAClientLab(mode = "practice") {
+    const make = (name2, kind, x) => ({ id: "device-radius-aaa-" + name2.toLowerCase(), kind, x, y: 260, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const r1 = make("R1", "router", 600), pc1 = make("PC1", "pc", 250), server = make("SRV1", "server", 950);
+    for (const [name2, address] of [["GigabitEthernet0/0", "192.0.2.1"], ["GigabitEthernet0/1", "192.168.100.1"]]) {
+      Object.assign(r1.config.interfaces[name2], { adminUp: true, ip: address, mask: "255.255.255.0" });
+      r1.config.interfaces[name2].features.proxyArp = false;
+    }
+    for (const [d, address, gateway] of [[pc1, "192.0.2.10", "192.0.2.1"], [server, "192.168.100.10", "192.168.100.1"]]) {
+      Object.assign(d.config.interfaces.GigabitEthernet0, { ip: address, mask: "255.255.255.0" });
+      d.config.interfaces.GigabitEthernet0.features.dhcp = false;
+      d.config.defaultGateway = gateway;
+    }
+    server.config.services.radius = { enabled: true, accountingEnabled: true, secret: "RadiusLabKey", users: { netadmin: { password: "RadiusAdmin123", privilege: 15, role: "network-admin", authorization: true } } };
+    for (const d of [r1, pc1, server]) d.startupConfig = structuredClone(d.config);
+    const method = (service, name2, methods) => ({ kind: "aaa-method", device: r1.id, service, name: name2, methods });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "radius-aaa-client", name: "RADIUS AAA Client" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [r1, pc1, server], links: [{ id: "link-radius-aaa-client", a: { deviceId: r1.id, port: "GigabitEthernet0/0" }, b: { deviceId: pc1.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 }, { id: "link-radius-aaa-server", a: { deviceId: r1.id, port: "GigabitEthernet0/1" }, b: { deviceId: server.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 }], notes: [{ id: "note-radius-aaa", x: 600, y: 470, text: "RADIUS \xB7 UDP 1812 / 1813\nR1 \u2192 SRV1: authentication + EXEC attributes / session accounting\nConsole: local recovery \xB7 VTY: SSH + named AAA lists" }], lesson: { title: "RADIUS AAA Client", description: "R1, PC1 and SRV1 are already addressed across two connected LANs. SRV1 provides RADIUS on UDP 1812 for authentication and UDP 1813 for accounting, with shared secret RadiusLabKey and remote account netadmin / RadiusAdmin123. Its Access-Accept permits an EXEC shell at privilege 15. Configure R1 only; keep netadmin in the remote database.\n\nCreate local rescue privilege 15 secret RescueLab123 and enable secret EnableLab123. Enable aaa new-model and define aaa authentication login CONSOLE local, applying login authentication CONSOLE to console 0 for independent recovery. The initial provisioning console remains active while you configure access.\n\nDefine radius server RADIUS1 with address ipv4 192.168.100.10 auth-port 1812 acct-port 1813, key RadiusLabKey, timeout 2 and retransmit 1. Add server name RADIUS1 under aaa group server radius RAD-GROUP. Define VTY-AUTH login as group RAD-GROUP local, VTY-EXEC EXEC authorization with the same method order, and VTY-ACCT EXEC accounting as start-stop group RAD-GROUP.\n\nSet a domain, generate 2048-bit RSA keys and enable SSH version 2. Under VTY 0\u20134 apply login authentication VTY-AUTH, authorization exec VTY-EXEC, accounting exec VTY-ACCT and transport input ssh. Named lists must be bound to the line. RADIUS returns EXEC permission and privilege in the authentication response; the authorization list applies those received attributes.\n\nFrom PC1, ping 192.168.100.10 and SSH as netadmin to 192.0.2.1. Try one wrong password, then RadiusAdmin123. Verify R1# and show privilege level 15. Inspect show radius statistics, show aaa servers, show users and show accounting, then exit to Windows. SRV1 Services \u2192 AAA must receive and acknowledge EXEC start and stop for the same session. Check NAS source 192.168.100.1, remote source 192.0.2.10 and privilege 15. A password prompt or a successful test aaa command alone is insufficient.\n\nRejection exercise: while RADIUS is available, the local rescue account must be rejected by SRV1, which does not contain that user. An Access-Reject stops authentication; it does not continue to the local method. Outage exercise: disable only the RADIUS service while leaving the server interface up. Ping still works. After remote unavailability, a new rescue SSH login should use local authentication and local EXEC authorization. UDP accounting retries must not fabricate receiver records. Exit and restore RADIUS before repeating a netadmin login and logout.\n\nEXEC attribute exercise: separately set netadmin to Deny shell on SRV1. Its password can authenticate, but the returned EXEC permission must refuse a shell and prevent a session Start. Restore Allow shell. A wrong key or wrong authentication/accounting port is a client configuration fault even if error handling permits local recovery. Use real request counters and acknowledged records to verify the repair.\n\nFresh console test: write memory, save the lab and reload NetworkSim. Log in as rescue through CONSOLE, verify R1> and use EnableLab123 with enable for R1#. Finish with the server enabled, planned client lists and bindings restored, actual ping replies and an acknowledged netadmin session. Save R1 and the lab. Traffic/session achievements survive save and reopen, while configuration requirements remain live.", objectives: [
+      { id: "recovery", title: "Create a privilege-15 local rescue account and an enable secret", criterion: { kind: "all", criteria: [{ kind: "local-user", device: r1.id, username: "rescue", privilege: 15 }, { kind: "local-management", device: r1.id, setting: "enable-secret" }] } },
+      { id: "console-local", title: "Apply an independent local CONSOLE authentication list", criterion: { kind: "all", criteria: [method("login", "CONSOLE", ["local"]), { kind: "aaa-line", device: r1.id, line: "console 0", authentication: "CONSOLE" }] } },
+      { id: "radius-server", title: "Define RADIUS1 with the correct active server, UDP 1812/1813 and matching shared key", criterion: { kind: "radius-server", device: r1.id, server: server.id, name: "RADIUS1" } },
+      { id: "server-group", title: "Add RADIUS1 to RAD-GROUP", criterion: { kind: "aaa-group", device: r1.id, name: "RAD-GROUP", serverName: "RADIUS1", protocol: "radius" } },
+      { id: "authentication", title: "Define remote-first VTY-AUTH with local fallback", criterion: method("login", "VTY-AUTH", ["group", "RAD-GROUP", "local"]) },
+      { id: "authorization", title: "Apply Access-Accept EXEC attributes through VTY-EXEC with local fallback", criterion: method("exec", "VTY-EXEC", ["group", "RAD-GROUP", "local"]) },
+      { id: "accounting", title: "Define VTY-ACCT for server-backed EXEC Start/Stop accounting", criterion: method("exec-accounting", "VTY-ACCT", ["start-stop", "group", "RAD-GROUP"]) },
+      { id: "vty-ssh", title: "Enable SSHv2 and bind all three named lists to SSH-only VTY 0\u20134", criterion: { kind: "all", criteria: [{ kind: "local-management", device: r1.id, setting: "ssh-server" }, { kind: "aaa-line", device: r1.id, line: "vty 0 4", authentication: "VTY-AUTH", authorization: "VTY-EXEC", accounting: "VTY-ACCT" }] } },
+      { id: "pc1-server", title: "Verify PC1 can reach the RADIUS server LAN", criterion: { kind: "echo", device: pc1.id, from: "192.168.100.10" }, action: { kind: "ping", device: pc1.id, target: "192.168.100.10" } },
+      { id: "accounted-session", title: "Complete a remotely approved netadmin SSH session with acknowledged EXEC Start/Stop", description: "Use PC1\u2019s Command prompt, inspect show privilege and show accounting, then exit. SRV1 must receive and acknowledge both records for the same session.", criterion: { kind: "radius-session", device: r1.id, server: server.id, source: pc1.id, username: "netadmin", privilege: 15 } }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, RADIUS_AAA_CLIENT_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createTACACSAAAClientLab(mode = "practice") {
     const make = (name2, kind, x) => ({ id: "device-tacacs-aaa-" + name2.toLowerCase(), kind, x, y: 260, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
     const r1 = make("R1", "router", 600), pc1 = make("PC1", "pc", 250), server = make("SRV1", "server", 950);
@@ -54893,6 +54963,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "radius-aaa-client") return createRADIUSAAAClientLab(mode);
     if (id2 === "tacacs-aaa-client") return createTACACSAAAClientLab(mode);
     if (id2 === "local-user-authentication") return createLocalUserAuthenticationLab(mode);
     if (id2 === "ospf-router-id") return createOSPFRouterIdLab(mode);
