@@ -1,0 +1,86 @@
+{
+  "feature": {
+    "title": "VRF Configuration and Verification",
+    "catalogId": "vrf-configuration-and-verification",
+    "group": "CCNP ENCOR",
+    "section": "Virtualization",
+    "sectionLabCount": 1,
+    "devices": 7,
+    "links": 6,
+    "tasks": 12,
+    "addressingRows": 12,
+    "permalink": "#/labs/vrf-configuration-and-verification",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "R1 owns two routed ports in BLUE and two in RED. Each tenant reuses LAN 192.168.10.0/24, transit 10.0.0.0/30 and server LAN 192.168.20.0/24. PC-BLUE and PC-RED share .10 addresses and use R1 .1 gateways in their separate VRFs. CE-BLUE and CE-RED are prepared with .2 transits, .1 server gateways and static return routes. SRV-BLUE and SRV-RED both use 192.168.20.10 and serve distinct HTTP headings. Only R1 requires configuration.",
+  "verificationNotes": [
+    "Practice starts with zero credit and four unaddressed shut R1 interfaces. The completed reference has seven live configuration/startup goals; five traffic goals require actual new observations.",
+    "Definitions require an active IPv4 address family. Interface criteria check the exact VRF, address, mask, routed mode and operational state. Static-route goals require the correct configured and installed table plus actual CEF resolution on the intended transit.",
+    "Positive observations join a real server echo request to the matching reply ID. R1 probes additionally require an actual egress frame in the selected VRF and expected interface. Identical remote IP addresses do not allow the other server to satisfy a task.",
+    "Global isolation requires an actual local default-table No route drop after successful R1 replies in both VRFs, while both tables still resolve the server and the global IPv4 table remains empty. Early preconfiguration failures, a missing VRF or disconnected paths cannot substitute for this proof. The button is gated on the two successful VRF probes.",
+    "Guide ping actions carry a bounded optional VRF scope into the existing engine API. Packet summaries now retain the actual VRF used at each event and expose it in forwarding details. No forwarding algorithm changes were needed.",
+    "show vrf now handles the address-family object produced by real vrf definition CLI commands, while retaining legacy array support. Tests verify actual bindings and read-only output.",
+    "Startup goals compare the saved routing policy with running VRFs, interfaces and static routes. Actual IOS reload restores saved policy. Portable reopening retains running/startup separation and historical traffic achievements; current configuration/table goals remain live.",
+    "Catalog sections are selected and remembered per group. CCNA keeps its four sections and counts; ENCOR gains Virtualization with an accessible singular count. Direct links preserve the current domain, path and query, open the correct detail without replacing the workspace, and return to the correct group/section.",
+    "This IPv4 VRF-lite lab excludes MPLS transport, VPN route targets and inter-VRF route leaking."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco IOS XE 17.17.x: Configuring VRF-lite",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9600/software/release/17-17/configuration_guide/rtng/b_1717_rtng_9600_cg/configuring_vrf_lite.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 17,
+    "focusedAndRelatedTests": 30,
+    "focusedPassed": 30,
+    "typecheck": "passed",
+    "fullSuite": {
+      "command": "npm run check",
+      "tests": 1949,
+      "passed": 1949,
+      "failed": 0
+    },
+    "build": "passed; identical root and dist single-file offline artifacts",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: ENCOR Virtualization with one counted lab; 12 tasks/12 addressing rows; zero-credit practice; real IOS VRF definitions, interface bindings and independent static routes; four real traffic observations and ordered global No route proof; overlapping destinations reach distinct BLUE/RED HTTP servers; scoped show/CEF/CLI ping and packet inspector VRF evidence; full completed reference, cancel/save-copy protection, startup and persisted progress; fitted node icons and non-overlapping note; responsive guide and unchanged terminal golden styles",
+        "light 390px: ENCOR Virtualization with one counted lab; 12 tasks/12 addressing rows; zero-credit practice; real IOS VRF definitions, interface bindings and independent static routes; four real traffic observations and ordered global No route proof; overlapping destinations reach distinct BLUE/RED HTTP servers; scoped show/CEF/CLI ping and packet inspector VRF evidence; full completed reference, cancel/save-copy protection, startup and persisted progress; fitted node icons and non-overlapping note; responsive guide and unchanged terminal golden styles",
+        "light 320px: ENCOR Virtualization with one counted lab; 12 tasks/12 addressing rows; zero-credit practice; real IOS VRF definitions, interface bindings and independent static routes; four real traffic observations and ordered global No route proof; overlapping destinations reach distinct BLUE/RED HTTP servers; scoped show/CEF/CLI ping and packet inspector VRF evidence; full completed reference, cancel/save-copy protection, startup and persisted progress; fitted node icons and non-overlapping note; responsive guide and unchanged terminal golden styles",
+        "dark 1440px: ENCOR Virtualization with one counted lab; 12 tasks/12 addressing rows; zero-credit practice; real IOS VRF definitions, interface bindings and independent static routes; four real traffic observations and ordered global No route proof; overlapping destinations reach distinct BLUE/RED HTTP servers; scoped show/CEF/CLI ping and packet inspector VRF evidence; full completed reference, cancel/save-copy protection, startup and persisted progress; fitted node icons and non-overlapping note; responsive guide and unchanged terminal golden styles",
+        "dark 390px: ENCOR Virtualization with one counted lab; 12 tasks/12 addressing rows; zero-credit practice; real IOS VRF definitions, interface bindings and independent static routes; four real traffic observations and ordered global No route proof; overlapping destinations reach distinct BLUE/RED HTTP servers; scoped show/CEF/CLI ping and packet inspector VRF evidence; full completed reference, cancel/save-copy protection, startup and persisted progress; fitted node icons and non-overlapping note; responsive guide and unchanged terminal golden styles",
+        "dark 320px: ENCOR Virtualization with one counted lab; 12 tasks/12 addressing rows; zero-credit practice; real IOS VRF definitions, interface bindings and independent static routes; four real traffic observations and ordered global No route proof; overlapping destinations reach distinct BLUE/RED HTTP servers; scoped show/CEF/CLI ping and packet inspector VRF evidence; full completed reference, cancel/save-copy protection, startup and persisted progress; fitted node icons and non-overlapping note; responsive guide and unchanged terminal golden styles",
+        "light: permalink preserves host/path/query without replacing workspace and returns to ENCOR Virtualization with accurate singular count",
+        "dark: permalink preserves host/path/query without replacing workspace and returns to ENCOR Virtualization with accurate singular count"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, ENCOR Virtualization with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, ENCOR Virtualization with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, ENCOR Virtualization with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, ENCOR Virtualization with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, ENCOR Virtualization with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, ENCOR Virtualization with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches established desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology",
+        "light 320px topology",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "6adf2c66ad25e16c0baa0aeba568a0d4f545989092ccf244d658b4a08254ba7e"
+  }
+}

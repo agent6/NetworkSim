@@ -336,7 +336,7 @@ export class Simulator {
     if(kind!=='drops'&&destinationMac){const normalized=destinationMac.replace(/[^0-9a-f]/gi,'').toLowerCase(),category=normalized==='ffffffffffff'?'Broadcast':(parseInt(normalized.slice(0,2),16)&1)?'Multicast':'Unicast',field=`${kind}${category}` as 'txUnicast'|'txMulticast'|'txBroadcast'|'rxUnicast'|'rxMulticast'|'rxBroadcast';c[field]=(c[field]??0)+1;}
   }
   private packetSummary(p: IPPacket): PacketSummary {
-    const b = p.body ?? {}, v6 = isIPv6(p.destination), ports = ['tcp', 'udp'].includes(p.protocol), result: PacketSummary = { id: p.id, parentId: p.parentId, source: p.source, destination: p.destination, protocol: p.protocol.toUpperCase(), ipVersion: v6 ? 6 : 4, ttl: p.ttl, size: p.size, df: p.df, dscp: p.dscp ?? 0, ecn:p.ecn??0, sourcePort: ports ? p.sourcePort : undefined, destinationPort: ports ? p.destinationPort : undefined, messageType: b.kind };
+    const b = p.body ?? {}, v6 = isIPv6(p.destination), ports = ['tcp', 'udp'].includes(p.protocol), result: PacketSummary = { id: p.id, vrf:p.vrf, parentId: p.parentId, source: p.source, destination: p.destination, protocol: p.protocol.toUpperCase(), ipVersion: v6 ? 6 : 4, ttl: p.ttl, size: p.size, df: p.df, dscp: p.dscp ?? 0, ecn:p.ecn??0, sourcePort: ports ? p.sourcePort : undefined, destinationPort: ports ? p.destinationPort : undefined, messageType: b.kind };
     if(b.kind==='netflow-export')result.netflowVersion=b.version;
     if(b.kind==='control-plane'&&b.payload?.wireless)Object.assign(result,{messageType:'capwap-'+b.payload.type,innerFrameId:b.payload.frame?.id,vlan:b.payload.vlan,ssid:b.payload.wlan});
     if (p.fragment) Object.assign(result, { fragmentOffset: p.fragment.offset, moreFragments: p.fragment.more, fragmentId: p.fragment.id });

@@ -109,6 +109,7 @@ export interface Note { id: string; x: number; y: number; text: string; locked?:
 export interface Lab { id: string; name: string; devices: Device[]; links: Link[]; notes: Note[] }
 export interface PacketSummary {
   id: string;
+  vrf?: string;
   parentId?: string;
   source: string;
   destination: string;

@@ -54,6 +54,7 @@ export function packetGroups(packet: PacketSummary) {
     group("802.11 and wireless transport",["frameType","subtype","bssid","ssid","channel","band","rssi","snr","rate","eapType","keyMessage","replayCounter","micValidated","innerFrameId"]),
     group("Ethernet", ["sourceMac", "destinationMac", "vlan", "cos"]),
     group("Addresses and forwarding", [
+      "vrf",
       "source",
       "destination",
       "protocol",

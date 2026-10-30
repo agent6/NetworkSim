@@ -28918,7 +28918,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     only(a);
     const all = entries3(d.config.features.vrfs).filter(([n]) => !name2 || name2 === n);
     if (name2 && !all.length) return [`% VRF ${name2} does not exist`];
-    return detail ? all.flatMap(([n, c]) => [`VRF ${n} (VRF Id is not assigned by this model)`, `  RD ${c.rd ?? "<not set>"}`, `  Interfaces: ${Object.values(d.config.interfaces).filter((i) => i.vrf === n).map((i) => i.name).join(", ") || "none"}`, `  Import route targets: ${(c.routeTargets ?? []).filter((t) => ["import", "both"].includes(t.direction)).map((t) => t.value).join(", ") || "none"}`, `  Export route targets: ${(c.routeTargets ?? []).filter((t) => ["export", "both"].includes(t.direction)).map((t) => t.value).join(", ") || "none"}`]) : [line(["Name", "Default RD", "Protocols", "Interfaces"], [30, 22, 14]), ...all.map(([n, c]) => line([n, c.rd ?? "<not set>", (c.addressFamilies ?? ["ipv4"]).join(","), Object.values(d.config.interfaces).filter((i) => i.vrf === n).map((i) => short2(i.name)).join(" ")], [30, 22, 14]))];
+    return detail ? all.flatMap(([n, c]) => [`VRF ${n} (VRF Id is not assigned by this model)`, `  RD ${c.rd ?? "<not set>"}`, `  Interfaces: ${Object.values(d.config.interfaces).filter((i) => i.vrf === n).map((i) => i.name).join(", ") || "none"}`, `  Import route targets: ${(c.routeTargets ?? []).filter((t) => ["import", "both"].includes(t.direction)).map((t) => t.value).join(", ") || "none"}`, `  Export route targets: ${(c.routeTargets ?? []).filter((t) => ["export", "both"].includes(t.direction)).map((t) => t.value).join(", ") || "none"}`]) : [line(["Name", "Default RD", "Protocols", "Interfaces"], [30, 22, 14]), ...all.map(([n, c]) => line([n, c.rd ?? "<not set>", (Array.isArray(c.addressFamilies) ? c.addressFamilies : Object.keys(c.addressFamilies ?? { ipv4: {} })).join(","), Object.values(d.config.interfaces).filter((i) => i.vrf === n).map((i) => short2(i.name)).join(" ")], [30, 22, 14]))];
   }
   function monitor(d, a) {
     let selected2;
@@ -40966,6 +40966,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       group("802.11 and wireless transport", ["frameType", "subtype", "bssid", "ssid", "channel", "band", "rssi", "snr", "rate", "eapType", "keyMessage", "replayCounter", "micValidated", "innerFrameId"]),
       group("Ethernet", ["sourceMac", "destinationMac", "vlan", "cos"]),
       group("Addresses and forwarding", [
+        "vrf",
         "source",
         "destination",
         "protocol",
@@ -46297,7 +46298,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         const item = {};
         for (const leaf of entry.children) {
           if (leaf.ns === IP && leaf.name === "ipv4") {
-            const ipv43 = { address: [] };
+            const ipv44 = { address: [] };
             for (const address2 of leaf.children) {
               if (address2.name !== "address" || address2.ns !== IP) throw new ModelError("unknown-element", "Only ipv4 address entries are modeled.");
               const row5 = {};
@@ -46305,9 +46306,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
                 if (value.ns !== IP || !["ip", "netmask", "prefix-length"].includes(value.name)) throw new ModelError("unknown-element", "Unsupported IPv4 leaf.");
                 row5[value.name] = value.name === "prefix-length" ? Number(scalar(value)) : scalar(value);
               }
-              ipv43.address.push(row5);
+              ipv44.address.push(row5);
             }
-            item["ietf-ip:ipv4"] = ipv43;
+            item["ietf-ip:ipv4"] = ipv44;
           } else {
             if (leaf.ns !== IF || !["name", "description", "enabled", "type"].includes(leaf.name)) throw new ModelError("unknown-element", "Unsupported interface leaf.");
             const value = scalar(leaf);
@@ -46364,11 +46365,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         if (typeof item.enabled !== "boolean") throw new ModelError("invalid-value", "enabled must be boolean.");
         p.adminUp = item.enabled;
       }
-      const ipv43 = item["ietf-ip:ipv4"];
-      if (ipv43 !== void 0) {
-        if (!object(ipv43) || Object.keys(ipv43).some((key4) => key4 !== "address") || !Array.isArray(ipv43.address)) throw new ModelError("unknown-element", "Only the IPv4 address list is writable.");
-        if (p.switchport && ipv43.address.length) throw new ModelError("operation-not-supported", "Configure a routed interface or SVI before assigning IPv4.");
-        const incoming = ipv43.address.map((a) => {
+      const ipv44 = item["ietf-ip:ipv4"];
+      if (ipv44 !== void 0) {
+        if (!object(ipv44) || Object.keys(ipv44).some((key4) => key4 !== "address") || !Array.isArray(ipv44.address)) throw new ModelError("unknown-element", "Only the IPv4 address list is writable.");
+        if (p.switchport && ipv44.address.length) throw new ModelError("operation-not-supported", "Configure a routed interface or SVI before assigning IPv4.");
+        const incoming = ipv44.address.map((a) => {
           if (!object(a) || Object.keys(a).some((key4) => !["ip", "netmask", "prefix-length"].includes(key4)) || !isIPv4(a.ip) || a.netmask !== void 0 && a["prefix-length"] !== void 0) throw new ModelError("invalid-value", "Invalid IPv4 address entry.");
           let mask3;
           try {
@@ -49862,7 +49863,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }
     }
     packetSummary(p) {
-      const b = p.body ?? {}, v6 = isIPv6(p.destination), ports4 = ["tcp", "udp"].includes(p.protocol), result = { id: p.id, parentId: p.parentId, source: p.source, destination: p.destination, protocol: p.protocol.toUpperCase(), ipVersion: v6 ? 6 : 4, ttl: p.ttl, size: p.size, df: p.df, dscp: p.dscp ?? 0, ecn: p.ecn ?? 0, sourcePort: ports4 ? p.sourcePort : void 0, destinationPort: ports4 ? p.destinationPort : void 0, messageType: b.kind };
+      const b = p.body ?? {}, v6 = isIPv6(p.destination), ports4 = ["tcp", "udp"].includes(p.protocol), result = { id: p.id, vrf: p.vrf, parentId: p.parentId, source: p.source, destination: p.destination, protocol: p.protocol.toUpperCase(), ipVersion: v6 ? 6 : 4, ttl: p.ttl, size: p.size, df: p.df, dscp: p.dscp ?? 0, ecn: p.ecn ?? 0, sourcePort: ports4 ? p.sourcePort : void 0, destinationPort: ports4 ? p.destinationPort : void 0, messageType: b.kind };
       if (b.kind === "netflow-export") result.netflowVersion = b.version;
       if (b.kind === "control-plane" && b.payload?.wireless) Object.assign(result, { messageType: "capwap-" + b.payload.type, innerFrameId: b.payload.frame?.id, vlan: b.payload.vlan, ssid: b.payload.wlan });
       if (p.fragment) Object.assign(result, { fragmentOffset: p.fragment.offset, moreFragments: p.fragment.more, fragmentId: p.fragment.id });
@@ -52546,6 +52547,48 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   };
 
+  // src/vrf-lab.ts
+  function validVRFCriterion(c) {
+    const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
+    if (c.kind === "vrf-isolation" || c.kind === "vrf-saved") return Array.isArray(c.vrfs) && c.vrfs.length >= 2 && c.vrfs.length <= 16 && new Set(c.vrfs).size === c.vrfs.length && c.vrfs.every(name2);
+    if (c.kind === "vrf-global-drop") return typeof c.address === "string" && isIPv4(c.address) && Array.isArray(c.vrfs) && c.vrfs.length >= 2 && c.vrfs.length <= 16 && new Set(c.vrfs).size === c.vrfs.length && c.vrfs.every(name2);
+    if (c.kind === "vrf-traffic") return name2(c.target) && typeof c.address === "string" && isIPv4(c.address) && (c.interface === void 0 || name2(c.interface)) && (c.vrf === void 0 || name2(c.vrf) && name2(c.interface));
+    if (!name2(c.vrf)) return false;
+    if (c.kind === "vrf-definition") return true;
+    if (!name2(c.interface)) return false;
+    if (c.kind === "vrf-interface") {
+      if (typeof c.address !== "string" || !isIPv4(c.address) || typeof c.mask !== "string") return false;
+      try {
+        maskToPrefix(c.mask);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    return c.kind === "vrf-static" && typeof c.network === "string" && isIPv4(c.network) && Number.isInteger(c.prefix) && c.prefix >= 0 && c.prefix <= 32 && typeof c.nextHop === "string" && isIPv4(c.nextHop);
+  }
+  var ipv43 = (cfg, vrf2) => Object.hasOwn(cfg.features.vrfs ?? {}, vrf2) && !!cfg.features.vrfs[vrf2] && Object.hasOwn(cfg.features.vrfs[vrf2].addressFamilies ?? {}, "ipv4");
+  function projection(cfg, vrfs) {
+    const ports4 = Object.values(cfg.interfaces).filter((p) => p.vrf && vrfs.includes(p.vrf)).map((p) => [p.name, p.vrf, p.ip, p.mask, p.adminUp]);
+    const routes = cfg.staticRoutes.filter((r) => r.vrf && vrfs.includes(r.vrf)).map((r) => [r.vrf, r.network, r.prefix, r.nextHop, r.interface ?? "", r.ad ?? 1]);
+    return JSON.stringify([ports4.sort(), routes.sort()]);
+  }
+  function matchesVRFCriterion(s, d, c) {
+    if (c.kind === "vrf-definition") return ipv43(d.config, c.vrf);
+    if (c.kind === "vrf-interface") {
+      const p = d.config.interfaces[c.interface];
+      return !!p && ipv43(d.config, c.vrf) && p.vrf === c.vrf && p.ip === c.address && p.mask === c.mask && !p.switchport && s.interfaceUp(d.id, p.name);
+    }
+    if (c.kind === "vrf-static") return d.config.staticRoutes.some((r) => r.vrf === c.vrf && r.network === c.network && r.prefix === c.prefix && r.nextHop === c.nextHop && (r.ad ?? 1) === 1 && (!r.interface || r.interface === c.interface)) && d.runtime.routes.some((r) => r.vrf === c.vrf && r.network === c.network && r.prefix === c.prefix && r.nextHop === c.nextHop && r.protocol === "static") && s.cefLookup(d.id, c.network, c.vrf)?.port === c.interface;
+    if (c.kind === "vrf-isolation") return s.devicePowered(d.id) && c.vrfs.every((vrf2) => ipv43(d.config, vrf2) && d.runtime.routes.some((r) => r.vrf === vrf2 && r.protocol === "static")) && !d.runtime.routes.some((r) => !r.vrf && !r.network.includes(":"));
+    if (c.kind === "vrf-saved") return !!d.startupConfig && c.vrfs.every((vrf2) => ipv43(d.config, vrf2) && ipv43(d.startupConfig, vrf2) && Object.values(d.config.interfaces).filter((p) => p.vrf === vrf2 && p.ip && p.adminUp).length >= 2 && d.config.staticRoutes.some((r) => r.vrf === vrf2)) && projection(d.config, c.vrfs) === projection(d.startupConfig, c.vrfs);
+    if (c.kind === "vrf-global-drop") return s.events.some((e) => e.nodeId === d.id && e.label === "No route" && e.disposition === "drop" && e.port === void 0 && e.packet?.vrf === void 0 && e.packet?.messageType === "echo-request" && e.packet.destination === c.address && c.vrfs.every((vrf2) => ipv43(d.config, vrf2) && !!s.cefLookup(d.id, c.address, vrf2) && s.events.some((sent) => sent.nodeId === d.id && sent.label === "Frame sent" && sent.packet?.vrf === vrf2 && sent.packet.destination === c.address && s.events.some((reply) => reply.nodeId === d.id && reply.label === "Echo reply received" && reply.disposition === "success" && reply.time < e.time && reply.packet?.parentId === sent.packet?.id))));
+    const target = s.lab.devices.find((q) => q.id === c.target || q.config.hostname === c.target);
+    if (!target) return false;
+    if (c.vrf && d.config.interfaces[c.interface]?.vrf !== c.vrf) return false;
+    return s.events.some((e) => e.nodeId === target.id && e.label === "Echo request accepted" && e.packet?.destination === c.address && (!c.vrf || s.events.some((sent) => sent.nodeId === d.id && sent.port === c.interface && sent.packet?.id === e.packet?.id && sent.packet?.vrf === c.vrf && sent.label === "Frame sent")) && s.events.some((reply) => reply.nodeId === d.id && reply.label === "Echo reply received" && reply.disposition === "success" && reply.packet?.parentId === e.packet?.id));
+  }
+
   // src/port-security-lab.ts
   var find2 = (s, id2) => s.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   function validPortSecurityCriterion(c) {
@@ -52965,6 +53008,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (v.kind === "link") return text3(v.a, 128) && text3(v.b, 128);
       if (!text3(v.device, 128)) return false;
       switch (v.kind) {
+        case "vrf-definition":
+        case "vrf-interface":
+        case "vrf-static":
+        case "vrf-isolation":
+        case "vrf-saved":
+        case "vrf-traffic":
+        case "vrf-global-drop":
+          return validVRFCriterion(v);
         case "ps-config":
         case "ps-binding":
         case "ps-saved":
@@ -53142,7 +53193,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
           "A lab objective has an invalid ID, description, or condition."
         );
       ids.add(o.id);
-      if (o.action !== void 0 && (!record2(o.action) || !["ping", "dhcp", "arp", "traffic", "slaac"].includes(o.action.kind) || !text3(o.action.device, 128) || (o.action.kind === "ping" ? !address2(o.action.target) : !text3(o.action.interface, 128) || o.action.kind === "arp" && !isIPv4(o.action.address) || o.action.kind === "traffic" && !["broadcast", "multicast", "unicast"].includes(o.action.traffic)) || o.action.kind === "ping" && o.action.expect !== void 0 && o.action.expect !== "blocked" || o.action.when !== void 0 && !criterion(o.action.when)))
+      if (o.action !== void 0 && (!record2(o.action) || !["ping", "dhcp", "arp", "traffic", "slaac"].includes(o.action.kind) || !text3(o.action.device, 128) || (o.action.kind === "ping" ? !address2(o.action.target) : !text3(o.action.interface, 128) || o.action.kind === "arp" && !isIPv4(o.action.address) || o.action.kind === "traffic" && !["broadcast", "multicast", "unicast"].includes(o.action.traffic)) || o.action.kind === "ping" && o.action.vrf !== void 0 && (!text3(o.action.vrf, 128) || o.action.vrf.length === 0) || o.action.kind === "ping" && o.action.expect !== void 0 && o.action.expect !== "blocked" || o.action.when !== void 0 && !criterion(o.action.when)))
         throw Error("A lab objective action is invalid.");
     }
   }
@@ -53163,6 +53214,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!("device" in criterion)) return false;
     const d = device(sim2, criterion.device);
     if (!d) return false;
+    if (["vrf-definition", "vrf-interface", "vrf-static", "vrf-isolation", "vrf-saved", "vrf-traffic", "vrf-global-drop"].includes(criterion.kind)) return matchesVRFCriterion(sim2, d, criterion);
     if (["ps-config", "ps-binding", "ps-saved", "ps-incident", "ps-ping"].includes(criterion.kind)) return matchesPortSecurityCriterion(sim2, d, criterion);
     if (["ra-policy", "ra-attachment", "ra-block", "ra-client", "ra-ping", "ra-protected-gateway", "ra-neighbor"].includes(criterion.kind)) return matchesRAGuardCriterion(sim2, d, criterion);
     if (["storm-policy", "storm-recovery", "storm-drop", "storm-ping"].includes(criterion.kind)) return matchesStormCriterion(sim2, d, criterion);
@@ -53338,14 +53390,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return results.length > 0 && (c.kind === "all" ? results.every(Boolean) : results.some(Boolean));
       }
       const result = matches(sim2, c);
-      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping" && c.kind !== "ra-block" && c.kind !== "ra-ping" && c.kind !== "ps-incident" && c.kind !== "ps-ping") return result;
+      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping" && c.kind !== "ra-block" && c.kind !== "ra-ping" && c.kind !== "ps-incident" && c.kind !== "ps-ping" && c.kind !== "vrf-traffic" && c.kind !== "vrf-global-drop") return result;
       validKeys.add(key4);
       if (result) observations.add(key4);
       return result || observations.has(key4);
     };
     const rows2 = lesson2.objectives.map((objective) => {
       const observed = observe(objective.criterion, JSON.stringify(objective.id));
-      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping" || objective.criterion.kind === "ra-block" || objective.criterion.kind === "ra-ping" || objective.criterion.kind === "ps-incident" || objective.criterion.kind === "ps-ping";
+      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping" || objective.criterion.kind === "ra-block" || objective.criterion.kind === "ra-ping" || objective.criterion.kind === "ps-incident" || objective.criterion.kind === "ps-ping" || objective.criterion.kind === "vrf-traffic" || objective.criterion.kind === "vrf-global-drop";
       if (historical && observed)
         completed.add(objective.id);
       return {
@@ -53690,6 +53742,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   // src/lab-catalog.ts
   var LAB_GROUPS = ["CCNA", "CCNP ENCOR", "CCNP ENARSI", "Other"];
   var CCNA_SECTIONS = ["Fundamentals", "Switching", "Routing", "Services & Security"];
+  var ENCOR_SECTIONS = ["Virtualization"];
+  var catalogSections = (group) => group === "CCNA" ? CCNA_SECTIONS : group === "CCNP ENCOR" ? ENCOR_SECTIONS : [];
   var LAB_CATALOG = [
     { id: "ipv4-interface-configuration", group: "CCNA", section: "Fundamentals", title: "IPv4 interface configuration", description: "Address two directly connected router interfaces, enable the link, and verify IPv4 connectivity in both directions.", devices: 2, links: 1, practice: true },
     { id: "ipv4-addressing-troubleshooting", group: "CCNA", section: "Fundamentals", title: "IPv4 addressing troubleshooting", description: "Find and repair IPv4 address, subnet mask and default gateway faults across two LANs, then restore end-to-end connectivity.", devices: 3, links: 2, practice: true },
@@ -53735,8 +53789,19 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "storm-control", group: "CCNA", section: "Services & Security", title: "Storm Control", description: "Suppress broadcast, multicast and unknown-unicast bursts with rising/falling thresholds. Compare filtering with shutdown, verify unaffected traffic, and test automatic recovery.", devices: 5, links: 4, practice: true },
     { id: "ipv6-ra-guard", group: "CCNA", section: "Services & Security", title: "IPv6 RA Guard", description: "Protect SLAAC clients from a live rogue IPv6 advertiser. Apply host/router policies, verify legitimate prefixes and default routers, preserve Neighbor Discovery and prove routed connectivity.", devices: 6, links: 5, practice: true },
     { id: "port-security", group: "CCNA", section: "Services & Security", title: "Port Security", description: "Learn and save two sticky MAC addresses on a shared access port. Compare restrict, protect and shutdown using a third host, verify unaffected traffic and recover the secured interface.", devices: 7, links: 6, practice: true },
+    { id: "vrf-configuration-and-verification", group: "CCNP ENCOR", section: "Virtualization", title: "VRF Configuration and Verification", description: "Configure BLUE and RED VRFs with overlapping IPv4 addresses. Bind routed interfaces, install separate static routes and prove tenant forwarding and global-table isolation.", devices: 7, links: 6, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
+  var VRF_COMMANDS = { R1: [
+    "enable",
+    "configure terminal",
+    ...["BLUE", "RED"].flatMap((vrf2) => ["vrf definition " + vrf2, "address-family ipv4", "exit-address-family", "exit"]),
+    ...[["GigabitEthernet0/0", "BLUE", "192.168.10.1", "255.255.255.0"], ["GigabitEthernet0/2", "BLUE", "10.0.0.1", "255.255.255.252"], ["GigabitEthernet0/1", "RED", "192.168.10.1", "255.255.255.0"], ["GigabitEthernet0/3", "RED", "10.0.0.1", "255.255.255.252"]].flatMap(([port3, vrf2, address2, mask3]) => ["interface " + port3, "vrf forwarding " + vrf2, "ip address " + address2 + " " + mask3, "no shutdown", "exit"]),
+    "ip route vrf BLUE 192.168.20.0 255.255.255.0 10.0.0.2",
+    "ip route vrf RED 192.168.20.0 255.255.255.0 10.0.0.2",
+    "end",
+    "write memory"
+  ] };
   var PORT_SECURITY_COMMANDS = { SW1: [
     "enable",
     "configure terminal",
@@ -54329,6 +54394,18 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
   };
   var GUIDE_RESOURCES = {
+    "vrf-configuration-and-verification": { columns: ["Device", "Interface", "VRF / scope", "IPv4 address", "Gateway / next hop"], rows: [
+      ["R1", "Gi0/0", "BLUE", "192.168.10.1 /24", "Local BLUE LAN"],
+      ["R1", "Gi0/2", "BLUE", "10.0.0.1 /30", "CE-BLUE: 10.0.0.2"],
+      ["R1", "Gi0/1", "RED", "192.168.10.1 /24", "Local RED LAN"],
+      ["R1", "Gi0/3", "RED", "10.0.0.1 /30", "CE-RED: 10.0.0.2"],
+      ...["BLUE", "RED"].flatMap((vrf2) => [["PC-" + vrf2, "Gi0", vrf2 + " tenant", "192.168.10.10 /24", "192.168.10.1"], ["CE-" + vrf2, "Gi0/0", "Local global table", "10.0.0.2 /30", "Return route via 10.0.0.1"], ["CE-" + vrf2, "Gi0/1", "Local global table", "192.168.20.1 /24", "Connected server LAN"], ["SRV-" + vrf2, "Gi0", vrf2 + " tenant", "192.168.20.10 /24", "192.168.20.1"]])
+    ], commands: VRF_COMMANDS, verification: { R1: ["show vrf", "show vrf detail BLUE", "show vrf detail RED", "show ip interface brief", "show ip route vrf BLUE", "show ip route vrf RED", "show ip route", "show ip cef vrf BLUE 192.168.20.10", "show ip cef vrf RED 192.168.20.10", "ping vrf BLUE 192.168.20.10 repeat 3", "ping vrf RED 192.168.20.10 repeat 3", "ping 192.168.20.10 repeat 3", "show running-config | section vrf", "show startup-config"], "PC-BLUE": ["ipconfig", "ping -n 3 192.168.20.10"], "PC-RED": ["ipconfig", "ping -n 3 192.168.20.10"] }, setup: [
+      { title: "Create separate forwarding tables", instructions: ["Configure R1 only. Define BLUE and RED with vrf definition and activate address-family ipv4 in each. The PCs, customer-edge routers, return routes and server services are ready. R1 begins with four unaddressed, shut routed interfaces.", "Both tenants deliberately reuse 192.168.10.0/24, 10.0.0.0/30 and 192.168.20.0/24. The repeated IP labels are intentional. A VRF name is local to a router; the separate customer-edge routers use their own global tables."] },
+      { title: "Bind and address the interfaces", instructions: ["Place Gi0/0 and Gi0/2 in BLUE; place Gi0/1 and Gi0/3 in RED. Use vrf forwarding before assigning each IP address, then no shutdown. The LAN address is 192.168.10.1/24 and each transit is 10.0.0.1/30.", "Changing an interface\u2019s VRF removes its existing IPv4 address. Re-enter the address after moving it. Verify the bindings with show vrf and compare the two tables with show ip route vrf BLUE and show ip route vrf RED."] },
+      { title: "Route and verify the overlapping tenants", instructions: ["Install a separate ip route vrf BLUE and ip route vrf RED for 192.168.20.0/24 via 10.0.0.2. A global static route does not populate either VRF. The two identical next hops resolve through different transit interfaces.", "Run each PC connectivity task. PC-BLUE must reach SRV-BLUE and PC-RED must reach SRV-RED, even though both destination addresses are 192.168.20.10. Open that address in each PC\u2019s web browser and compare the BLUE and RED server headings.", "Run the two VRF-aware R1 ping tasks, or use ping vrf BLUE / RED with the destination. Compare show ip cef vrf BLUE / RED 192.168.20.10 and inspect packet events: forwarding on R1 must use the selected VRF and correct transit. A reply from the other tenant does not satisfy the task."] },
+      { title: "Prove isolation and save", instructions: ["With both tenants working, run the global-table blocked-traffic task. A plain ping from R1 to 192.168.20.10 must fail because the global table has no IPv4 route. The task requires an actual local No route event, not a disconnected server or arbitrary failed ping.", "Keep all four interfaces in their assigned VRFs. Do not add global routes or route leaking to make the global ping pass. Remove one VRF\u2019s static route to observe that only its tenant fails; restore it and verify both tenants again.", "Use write memory to save R1\u2019s VRF definitions, interface bindings and static routes. Confirm startup-config. The completed reference supplies seven configuration/save tasks and still requires five real traffic observations. Earned observations survive portable lab saves; current interface, route, isolation and startup goals remain live."] }
+    ], note: "This IPv4 VRF-lite lab uses implemented local VRFs and static routing. MPLS VPN transport, route-target import/export and inter-VRF route leaking are outside its tasks." },
     "port-security": { columns: ["Device", "IPv4 address", "MAC address", "Role"], rows: [["PC1", "192.168.10.11 /24", "0200.0010.0011", "Authorized; SW2 Gi0/2"], ["PC2", "192.168.10.12 /24", "0200.0010.0012", "Authorized; SW2 Gi0/3"], ["PC3", "192.168.10.13 /24", "0200.0010.0013", "Third-source test; SW2 Gi0/4"], ["PC4", "192.168.10.14 /24", "0200.0010.0014", "Unaffected client; SW1 Gi0/3"], ["SRV1", "192.168.10.100 /24", "0200.0010.0099", "Ping/HTTP server; SW1 Gi0/2"]], commands: PORT_SECURITY_COMMANDS, verification: { SW1: ["show port-security", "show port-security interface GigabitEthernet0/1", "show port-security address", "show mac address-table interface GigabitEthernet0/1", "show interfaces status err-disabled", "show running-config | section interface GigabitEthernet0/1", "show startup-config | section interface GigabitEthernet0/1", "show logging"], PC1: ["getmac", "ping -n 3 192.168.10.100"], PC2: ["getmac", "ping -n 3 192.168.10.100"], PC3: ["getmac", "ping -n 3 192.168.10.100"], PC4: ["ping -n 3 192.168.10.100"] }, setup: [
       { title: "Secure the shared access segment", instructions: ["All hosts use static /24 IPv4 addresses in VLAN 10. SW2 fans PC1, PC2 and PC3 into SW1 Gi0/1. SRV1 and PC4 connect directly to other SW1 ports. VLANs, static access mode, Rapid PVST+ and host-only PortFast are prepared. Allow the inter-switch link to converge. Configure SW1 only.", "On Gi0/1 enable switchport port-security, set maximum 2, enable mac-address sticky and choose violation restrict. The MAC limit applies to every source behind this port. This shared segment is used to make the limit observable without spoofing a NIC or inventing a test command."] },
       { title: "Learn the two authorized hosts, then save", instructions: ["Run the PC1 and PC2 connectivity tasks first. Both must receive real replies from SRV1, and show port-security address must list 0200.0010.0011 and 0200.0010.0012 as SecureSticky on Gi0/1 in VLAN 10. Do not run PC3 before those two bindings exist.", "Sticky learning changes the running configuration. After both addresses are learned, run write memory again. Verify the two sticky address lines in show startup-config. The initial write before learning does not save addresses that arrive later.", "If PC3 was learned by mistake, remove its sticky line with no switchport port-security mac-address sticky 0200.0010.0013, then generate PC2 traffic to learn the intended address. Check the table rather than disabling security to make a ping pass."] },
@@ -54455,6 +54532,40 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createVRFLab(mode = "practice") {
+    const make = (name2, kind, x, y) => ({ id: "device-vrf-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const r = make("R1", "router", 500, 330), pcb = make("PC-BLUE", "pc", 170, 150), pcr = make("PC-RED", "pc", 170, 510), ceb = make("CE-BLUE", "router", 820, 150), cer = make("CE-RED", "router", 820, 510), sb = make("SRV-BLUE", "server", 1120, 150), sr = make("SRV-RED", "server", 1120, 510), g = (n) => "GigabitEthernet0/" + n, p = "GigabitEthernet0";
+    for (const pc of [pcb, pcr]) {
+      Object.assign(pc.config.interfaces[p], { ip: "192.168.10.10", mask: "255.255.255.0", adminUp: true });
+      pc.config.interfaces[p].features.dhcp = false;
+      pc.config.defaultGateway = "192.168.10.1";
+    }
+    for (const [ce, server, vrf2] of [[ceb, sb, "BLUE"], [cer, sr, "RED"]]) {
+      Object.assign(ce.config.interfaces[g(0)], { ip: "10.0.0.2", mask: "255.255.255.252", adminUp: true });
+      Object.assign(ce.config.interfaces[g(1)], { ip: "192.168.20.1", mask: "255.255.255.0", adminUp: true });
+      ce.config.staticRoutes = [{ network: "192.168.10.0", prefix: 24, nextHop: "10.0.0.1", ad: 1 }];
+      Object.assign(server.config.interfaces[p], { ip: "192.168.20.10", mask: "255.255.255.0", adminUp: true });
+      server.config.interfaces[p].features.dhcp = false;
+      server.config.defaultGateway = "192.168.20.1";
+      server.config.services.http = { enabled: true, port: 80, authentication: "none", content: '<!doctype html><html lang="en"><meta charset="utf-8"><title>' + vrf2 + " tenant</title><h1>SRV-" + vrf2 + ": " + vrf2 + " VRF reached</h1></html>" };
+    }
+    const devices = [r, pcb, pcr, ceb, cer, sb, sr];
+    for (const d of devices) d.startupConfig = structuredClone(d.config);
+    const all = (criteria) => ({ kind: "all", criteria }), definition = (vrf2) => ({ kind: "vrf-definition", device: r.id, vrf: vrf2 }), ports4 = (vrf2) => all((vrf2 === "BLUE" ? [0, 2] : [1, 3]).map((n) => ({ kind: "vrf-interface", device: r.id, vrf: vrf2, interface: g(n), address: n < 2 ? "192.168.10.1" : "10.0.0.1", mask: n < 2 ? "255.255.255.0" : "255.255.255.252" }))), route2 = (vrf2) => ({ kind: "vrf-static", device: r.id, vrf: vrf2, network: "192.168.20.0", prefix: 24, nextHop: "10.0.0.2", interface: g(vrf2 === "BLUE" ? 2 : 3) }), ready = all(["BLUE", "RED"].flatMap((vrf2) => [definition(vrf2), ports4(vrf2), route2(vrf2)])), isolated = { kind: "vrf-isolation", device: r.id, vrfs: ["BLUE", "RED"] };
+    const probe = (vrf2) => ({ kind: "vrf-traffic", device: r.id, target: vrf2 === "BLUE" ? sb.id : sr.id, address: "192.168.20.10", vrf: vrf2, interface: g(vrf2 === "BLUE" ? 2 : 3) });
+    const link = (name2, a, ap, b, bp) => ({ id: "link-vrf-" + name2, a: { deviceId: a.id, port: ap }, b: { deviceId: b.id, port: bp }, enabled: true, delay: 0.1, loss: 0 });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "vrf-configuration-and-verification", name: "VRF Configuration and Verification" + (mode === "completed" ? " \xB7 Completed" : ""), devices, links: [link("bpc", pcb, p, r, g(0)), link("rpc", pcr, p, r, g(1)), link("bwan", r, g(2), ceb, g(0)), link("rwan", r, g(3), cer, g(0)), link("bsrv", ceb, g(1), sb, p), link("rsrv", cer, g(1), sr, p)], notes: [{ id: "note-vrf", x: 650, y: 680, text: "BLUE and RED reuse the same IPv4 subnets\nLAN 192.168.10.0/24 \xB7 transit 10.0.0.0/30\nServer 192.168.20.10 \xB7 configure R1 only" }], lesson: { title: "VRF Configuration and Verification", description: "Build two independent IPv4 forwarding tables on R1 and verify overlapping tenants reach their own servers.\n\n" + GUIDE_RESOURCES["vrf-configuration-and-verification"].setup.map((s) => s.title + "\n" + s.instructions.join("\n")).join("\n\n"), objectives: [
+      ...["BLUE", "RED"].map((vrf2) => ({ id: vrf2.toLowerCase() + "-definition", title: "Define " + vrf2 + " with an IPv4 address family", criterion: definition(vrf2) })),
+      ...["BLUE", "RED"].map((vrf2) => ({ id: vrf2.toLowerCase() + "-ports", title: "Bind and address the " + vrf2 + " LAN and transit interfaces", criterion: ports4(vrf2) })),
+      ...["BLUE", "RED"].map((vrf2) => ({ id: vrf2.toLowerCase() + "-route", title: "Install the remote server route in " + vrf2, criterion: route2(vrf2) })),
+      { id: "save-vrfs", title: "Save VRF definitions, interfaces and routes in startup-config", criterion: all([ready, { kind: "vrf-saved", device: r.id, vrfs: ["BLUE", "RED"] }]) },
+      ...[[pcb, sb, "BLUE"], [pcr, sr, "RED"]].map(([pc, server, vrf2]) => ({ id: "pc-" + String(vrf2).toLowerCase(), title: "Verify PC-" + vrf2 + " reaches only its own server", criterion: { kind: "vrf-traffic", device: pc.id, target: server.id, address: "192.168.20.10" }, action: { kind: "ping", device: pc.id, target: "192.168.20.10", when: ready } })),
+      ...[[sb, "BLUE"], [sr, "RED"]].map(([server, vrf2]) => ({ id: "r1-" + String(vrf2).toLowerCase(), title: "Verify R1 ping vrf " + vrf2 + " reaches the correct server", criterion: { kind: "vrf-traffic", device: r.id, target: server.id, address: "192.168.20.10", vrf: String(vrf2), interface: g(vrf2 === "BLUE" ? 2 : 3) }, action: { kind: "ping", device: r.id, target: "192.168.20.10", vrf: String(vrf2), when: ready } })),
+      { id: "global-isolation", title: "Verify the global table cannot reach either overlapping server", description: "A plain R1 ping must produce No route while both VRFs remain operational.", criterion: all([isolated, { kind: "vrf-global-drop", device: r.id, address: "192.168.20.10", vrfs: ["BLUE", "RED"] }]), action: { kind: "ping", device: r.id, target: "192.168.20.10", expect: "blocked", when: all([ready, isolated, probe("BLUE"), probe("RED")]) } }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, VRF_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createPortSecurityLab(mode = "practice") {
     const make = (name2, kind, x, y) => ({ id: "device-ps-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
     const pc1 = make("PC1", "pc", 130, 100), pc2 = make("PC2", "pc", 130, 300), pc3 = make("PC3", "pc", 130, 500), fan = make("SW2", "switch", 410, 300), sw = make("SW1", "switch", 710, 300), srv = make("SRV1", "server", 1020, 130), pc4 = make("PC4", "pc", 1020, 500), p = "GigabitEthernet0", securePort = "GigabitEthernet0/1";
@@ -56244,6 +56355,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "vrf-configuration-and-verification") return createVRFLab(mode);
     if (id2 === "port-security") return createPortSecurityLab(mode);
     if (id2 === "ipv6-ra-guard") return createIPv6RAGuardLab(mode);
     if (id2 === "storm-control") return createStormControlLab(mode);
@@ -56321,7 +56433,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
 
   // src/lab-catalog-ui.ts
   var selectedGroup = "CCNA";
-  var selectedSection = "Fundamentals";
+  var selectedSections = { CCNA: "Fundamentals", "CCNP ENCOR": "Virtualization" };
   var addressPlan = (resources) => `<div class="catalog-table-wrap"><table class="catalog-table"><caption>${escapeHTML(resources.planTitle ?? "Addressing plan")}</caption><thead><tr>${resources.columns.map((column) => `<th scope="col">${escapeHTML(column)}</th>`).join("")}</tr></thead><tbody>${resources.rows.map((row5) => `<tr>${row5.map((cell) => `<td>${escapeHTML(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
   var reference = (resources) => `<details class="catalog-reference"><summary>Reference configuration</summary><p>Use these configurations after attempting the lab. ${escapeHTML(resources.note)}</p>${(resources.setup ?? []).map((section2) => `<h4>${escapeHTML(section2.title)}</h4><ol class="catalog-tasks">${section2.instructions.map((line2) => `<li>${escapeHTML(line2)}</li>`).join("")}</ol>`).join("")}${Object.entries(resources.commands).map(([name2, commands]) => `<h4>${escapeHTML(name2)}</h4><pre>${escapeHTML(commands.join("\n"))}</pre>`).join("")}${Object.entries(resources.verification).map(([name2, commands]) => `<h4>Verify on ${escapeHTML(name2)}</h4><pre>${escapeHTML(commands.join("\n"))}</pre>`).join("")}</details>`;
   var decorate = (routed = false) => {
@@ -56383,16 +56495,22 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     dialog2("Lab catalog", `<p class="catalog-intro">Built-in labs, available offline. Choose a group to explore a topology or practice a configuration.</p><div class="catalog-layout"><nav class="catalog-groups" aria-label="Lab groups">${LAB_GROUPS.map((group) => `<button type="button" data-catalog-group="${group}" aria-pressed="${group === selectedGroup}"><span>${group}</span><span class="catalog-count">${LAB_CATALOG.filter((l) => l.group === group).length}</span></button>`).join("")}</nav><section class="catalog-results" aria-live="polite" data-catalog-results></section></div>`, '<button class="btn-primary" data-action="close-dialog">Done</button>');
     decorate(true);
     const results = document.querySelector("[data-catalog-results]");
-    results.innerHTML = `<h3 data-catalog-heading></h3><nav class="catalog-subsections" aria-label="CCNA sections" data-catalog-sections>${CCNA_SECTIONS.map((section2) => {
-      const count = LAB_CATALOG.filter((l) => l.group === "CCNA" && l.section === section2).length;
-      return `<button type="button" data-catalog-section="${section2}" aria-label="${escapeHTML(section2)}${count ? `, ${count} ${count === 1 ? "lab" : "labs"}` : ""}" aria-pressed="false"><span>${escapeHTML(section2)}</span>${count ? `<span class="catalog-count" aria-hidden="true">${count}</span>` : ""}</button>`;
-    }).join("")}</nav><div data-catalog-entries></div>`;
+    results.innerHTML = '<h3 data-catalog-heading></h3><nav class="catalog-subsections" data-catalog-sections></nav><div data-catalog-entries></div>';
     const render = () => {
-      const isCCNA = selectedGroup === "CCNA", entries4 = LAB_CATALOG.filter((l) => l.group === selectedGroup && (!isCCNA || "section" in l && l.section === selectedSection));
+      const sections = catalogSections(selectedGroup), selectedSection = selectedSections[selectedGroup] ?? sections[0], hasSections = sections.length > 0, entries4 = LAB_CATALOG.filter((l) => l.group === selectedGroup && (!hasSections || "section" in l && l.section === selectedSection));
       results.querySelector("[data-catalog-heading]").textContent = selectedGroup;
-      results.querySelector("[data-catalog-sections]").hidden = !isCCNA;
-      results.querySelectorAll("[data-catalog-section]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.catalogSection === selectedSection)));
-      results.querySelector("[data-catalog-entries]").innerHTML = `${isCCNA ? `<h4 class="catalog-subsection-heading">${escapeHTML(selectedSection)}</h4>` : ""}${entries4.length ? entries4.map((l) => `<article class="catalog-card"><div class="catalog-card-icon" aria-hidden="true">${icon(l.practice ? "router" : "datacenter", 32)}</div><div><h4>${escapeHTML(l.title)}</h4><p>${escapeHTML(l.description)}</p><div class="catalog-meta">${l.devices} devices \xB7 ${l.links} ${l.links === 1 ? "link" : "links"}${l.practice ? " \xB7 Practice + completed lab" : ""}</div><div class="catalog-card-actions"><a class="btn" href="${escapeHTML(catalogLabPermalink(l.id, location.href))}" data-catalog-lab="${l.id}">View lab</a><button type="button" class="btn" data-catalog-copy="${l.id}">${icon("copy", 14)} Copy link</button></div><div class="catalog-share-feedback" data-share-feedback="${l.id}" role="status"></div></div></article>`).join("") : `<p class="catalog-empty">No labs in this ${isCCNA ? "section" : "group"} yet.</p>`}`;
+      const navigation = results.querySelector("[data-catalog-sections]");
+      navigation.hidden = !hasSections;
+      navigation.setAttribute("aria-label", selectedGroup + " sections");
+      if (navigation.dataset.group !== selectedGroup) {
+        navigation.dataset.group = selectedGroup;
+        navigation.innerHTML = sections.map((section2) => {
+          const count = LAB_CATALOG.filter((l) => l.group === selectedGroup && "section" in l && l.section === section2).length;
+          return `<button type="button" data-catalog-section="${section2}" aria-label="${escapeHTML(section2)}${count ? `, ${count} ${count === 1 ? "lab" : "labs"}` : ""}" aria-pressed="${section2 === selectedSection}"><span>${escapeHTML(section2)}</span>${count ? `<span class="catalog-count" aria-hidden="true">${count}</span>` : ""}</button>`;
+        }).join("");
+      }
+      navigation.querySelectorAll("[data-catalog-section]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.catalogSection === selectedSection)));
+      results.querySelector("[data-catalog-entries]").innerHTML = `${hasSections ? `<h4 class="catalog-subsection-heading">${escapeHTML(selectedSection)}</h4>` : ""}${entries4.length ? entries4.map((l) => `<article class="catalog-card"><div class="catalog-card-icon" aria-hidden="true">${icon(l.practice ? "router" : "datacenter", 32)}</div><div><h4>${escapeHTML(l.title)}</h4><p>${escapeHTML(l.description)}</p><div class="catalog-meta">${l.devices} devices \xB7 ${l.links} ${l.links === 1 ? "link" : "links"}${l.practice ? " \xB7 Practice + completed lab" : ""}</div><div class="catalog-card-actions"><a class="btn" href="${escapeHTML(catalogLabPermalink(l.id, location.href))}" data-catalog-lab="${l.id}">View lab</a><button type="button" class="btn" data-catalog-copy="${l.id}">${icon("copy", 14)} Copy link</button></div><div class="catalog-share-feedback" data-share-feedback="${l.id}" role="status"></div></div></article>`).join("") : `<p class="catalog-empty">No labs in this ${hasSections ? "section" : "group"} yet.</p>`}`;
       document.querySelectorAll("[data-catalog-group]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.catalogGroup === selectedGroup)));
     };
     document.querySelectorAll("[data-catalog-group]").forEach((b) => b.onclick = () => {
@@ -56402,8 +56520,11 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     results.onclick = (event4) => {
       const target = event4.target, section2 = target.closest("[data-catalog-section]");
       if (section2) {
-        selectedSection = section2.dataset.catalogSection;
-        render();
+        const next = section2.dataset.catalogSection;
+        if (catalogSections(selectedGroup).includes(next)) {
+          selectedSections[selectedGroup] = next;
+          render();
+        }
         return;
       }
       const copy4 = target.closest("[data-catalog-copy]");
@@ -56423,7 +56544,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     const entry = LAB_CATALOG.find((l) => l.id === id2);
     if (!entry) return;
     selectedGroup = entry.group;
-    if ("section" in entry) selectedSection = entry.section;
+    if ("section" in entry) selectedSections[entry.group] = entry.section;
     if (navigate) setCatalogLocation(catalogLabHash(id2));
     const resources = catalogGuideResources(id2), practice = entry.practice, guide = practice ? createCatalogLab(id2).lab.lesson : void 0;
     dialog2(entry.title, `<div class="catalog-meta">${entry.group}${"section" in entry ? " \xB7 " + escapeHTML(entry.section) : ""} \xB7 ${entry.devices} devices \xB7 ${entry.links} ${entry.links === 1 ? "link" : "links"}</div><p class="catalog-intro">${escapeHTML(entry.description)}</p><div class="catalog-share"><button class="btn" data-catalog-copy="${entry.id}">${icon("copy", 14)} Copy link</button><div class="catalog-share-feedback" data-share-feedback role="status"></div></div>${guide ? `<p class="catalog-instructions">${escapeHTML(guide.description)}</p>${resources ? addressPlan(resources) : ""}<h3 class="catalog-section-heading">Your tasks</h3><ol class="catalog-tasks">${guide.objectives.map((o) => `<li>${escapeHTML(o.title)}${o.description ? `<small>${escapeHTML(o.description)}</small>` : ""}</li>`).join("")}</ol>${resources ? reference(resources) : ""}` : '<p class="catalog-instructions">Open the preconfigured vPC topology to inspect the peer-link, keepalive and downstream port-channel through the device consoles.</p>'}<p class="catalog-footnote">Opening a lab creates a fresh workspace. Your saved labs remain in My labs.</p>`, `<button class="btn" data-catalog-back>Back to catalog</button>${practice ? '<button class="btn" data-catalog-mode="completed">Open completed lab</button>' : ""}<button class="btn-primary" data-catalog-mode="${practice ? "practice" : "completed"}">${practice ? "Start lab" : "Open lab"}</button>`);
@@ -56511,7 +56632,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
         render();
         return;
       }
-      running.set(objective.id, action.kind === "dhcp" ? { kind: "dhcp", result: sim2.requestDHCP(action.device, action.interface) } : { kind: "ping", result: sim2.ping(action.device, action.target, { count: 3 }) });
+      running.set(objective.id, action.kind === "dhcp" ? { kind: "dhcp", result: sim2.requestDHCP(action.device, action.interface) } : { kind: "ping", result: sim2.ping(action.device, action.target, { count: 3, vrf: action.vrf }) });
       render();
     };
     render();
@@ -57487,8 +57608,8 @@ Inspect show power inline and the per-port detail and priority views. The full 3
         c2 = add(c2, normal, 80);
       }
       const exit = (control, socket) => {
-        const projection = (control.x - socket.point.x) * socket.outward.x + (control.y - socket.point.y) * socket.outward.y;
-        return add(control, socket.outward, Math.max(0, 48 - projection));
+        const projection2 = (control.x - socket.point.x) * socket.outward.x + (control.y - socket.point.y) * socket.outward.y;
+        return add(control, socket.outward, Math.max(0, 48 - projection2));
       };
       c1 = exit(c1, firstSocket);
       c2 = exit(c2, secondSocket);
