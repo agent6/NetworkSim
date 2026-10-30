@@ -1,0 +1,82 @@
+{
+  "feature": "CCNA Switching: Layer 2/Layer 3 CLI Troubleshooting",
+  "catalogId": "layer-2-layer-3-cli-troubleshooting",
+  "artifactSha256": "557074fac06bffeb5f6568a4d7230b7492f3c4c73f484627586f0996a69e5350",
+  "devices": 6,
+  "links": 5,
+  "tasks": 12,
+  "topology": {
+    "PC1": "192.168.10.10/24 via 192.168.10.1; intended SW1 Gi0/1 VLAN 10",
+    "PC2": "192.168.20.10/24 via 192.168.20.1; SW1 Gi0/2 VLAN 20",
+    "SW1": "Layer 2 access switch; Gi0/24 trunk; Vlan99 192.168.99.2/24 via 192.168.99.1",
+    "DSW1": "User gateways Vlan10/Vlan20 .1/24; Vlan99 .1/24; Gi0/1 routed 192.0.2.1/30",
+    "R1": "Gi0/0 192.0.2.2/30; Gi0/1 203.0.113.1/24; return routes through DSW1",
+    "SRV1": "203.0.113.10/24 via 203.0.113.1"
+  },
+  "initialFaults": [
+    "SW1 Gi0/1 is in parking VLAN 999 instead of VLAN 10",
+    "SW1 Gi0/24 permits only VLANs 10,99, pruning VLAN 20",
+    "DSW1 Vlan20 is administratively shut down",
+    "DSW1 IPv4 transit routing is disabled",
+    "DSW1 server-LAN static route has incorrect next hop 192.0.2.3 instead of 192.0.2.2",
+    "R1 has the VLAN 10 return route but lacks 192.168.20.0/24 via 192.0.2.1"
+  ],
+  "validation": {
+    "command": "npm run check",
+    "tests": 1445,
+    "passed": 1445,
+    "failed": 0,
+    "focusedTests": 38,
+    "newLabTests": 13,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "checks": [
+    "Independent portable practice attempts have correct endpoint addresses, live physical links, six configuration faults, zero task credit and no successful inter-VLAN/server tests",
+    "Progressive repairs separate local gateway reachability, SVI state, inter-VLAN routing, forward next-hop selection and the return path; published IOS repairs save all three device startup configurations",
+    "The reference earns seven configuration/operational goals before actual traffic; dynamic MAC evidence and four observed traffic tests complete all twelve tasks",
+    "Reintroducing each fault independently breaks its intended packet paths; repairing it restores traffic without changing endpoint addresses",
+    "A wrong access VLAN isolates PC1 while PC2 retains its gateway/server path",
+    "Remote trunk pruning can leave the physical trunk, local DSW1 SVI and connected route up while real VLAN 20 delivery fails; live guide checks detect the missing forwarding path",
+    "SVI shutdown produces an administrative fault distinct from pruning; VLAN 10 and its server traffic remain operational",
+    "Disabling IP routing preserves local gateway and router-originated transit replies but prevents PC transit between VLANs and toward the server",
+    "An incorrect server next hop breaks both server paths while inter-VLAN traffic and transit pings remain available",
+    "Removing only R1 VLAN 20 return routing lets the actual request reach SRV1 but drops its reply on R1; PC1 server and inter-VLAN paths still work",
+    "Actual inter-VLAN frames use VLAN 10 ingress and VLAN 20 egress with one TTL decrement; server-bound frames decrement TTL across both DSW1 and R1",
+    "MAC goals require real dynamic ingress learning in the correct VLAN and access port; clear mac address-table dynamic removes credit and fresh traffic restores it",
+    "All published interface, VLAN, trunk, STP, MAC, CDP, SVI, routing, ARP, config-filter, ping and Windows tracert commands work; diagnostics expose real faults and traceroute shows both routed hops and SRV1",
+    "Portable practice retains faults; saved repaired labs and startup power cycles retain repairs and echo observations while MAC evidence must be relearned",
+    "Reachable wrong-mask gateways fail planned SVI/connected-route goals, and a working default route cannot substitute for the specified server-LAN static route"
+  ],
+  "scope": "Adds the catalog lab using existing CLI, guided criteria and switching/routing packet engines. No simulation engine changes, new networking commands or backend dependencies. The return-route exercise uses existing CLI and traffic checks; restore the route before finishing. No CML validation is claimed for this catalog addition.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/support/docs/lan-switching/inter-vlan-routing/41260-189.html",
+    "https://www.cisco.com/c/en/us/support/docs/switches/catalyst-3750-series-switches/45002-intervlan3750-45002.html",
+    "https://www.cisco.com/c/en/us/support/docs/dial-access/floating-static-route/118263-technote-nexthop-00.html"
+  ],
+  "browserChecks": [
+    "light 1440px: eleven Switching entries, twelve-task troubleshooting guide and repair reference, six-fault zero-credit baseline, all three IOS device repairs, inter-VLAN and both server paths receive 3/3 replies, live MAC learning, operational gateways and installed routes, fresh learning after saved reload, safe reference replacement and unchanged CLI colors, plus visible access/trunk/SVI/next-hop fault evidence and isolated return-route failure/repair while other traffic remains working",
+    "light 390px: eleven Switching entries, twelve-task troubleshooting guide and repair reference, six-fault zero-credit baseline, all three IOS device repairs, inter-VLAN and both server paths receive 3/3 replies, live MAC learning, operational gateways and installed routes, fresh learning after saved reload, safe reference replacement and unchanged CLI colors",
+    "light 320px: eleven Switching entries, twelve-task troubleshooting guide and repair reference, six-fault zero-credit baseline, all three IOS device repairs, inter-VLAN and both server paths receive 3/3 replies, live MAC learning, operational gateways and installed routes, fresh learning after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 1440px: eleven Switching entries, twelve-task troubleshooting guide and repair reference, six-fault zero-credit baseline, all three IOS device repairs, inter-VLAN and both server paths receive 3/3 replies, live MAC learning, operational gateways and installed routes, fresh learning after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 390px: eleven Switching entries, twelve-task troubleshooting guide and repair reference, six-fault zero-credit baseline, all three IOS device repairs, inter-VLAN and both server paths receive 3/3 replies, live MAC learning, operational gateways and installed routes, fresh learning after saved reload, safe reference replacement and unchanged CLI colors",
+    "dark 320px: eleven Switching entries, twelve-task troubleshooting guide and repair reference, six-fault zero-credit baseline, all three IOS device repairs, inter-VLAN and both server paths receive 3/3 replies, live MAC learning, operational gateways and installed routes, fresh learning after saved reload, safe reference replacement and unchanged CLI colors",
+    "light: share link preserves current host/path/query and returns to eleven Switching labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to eleven Switching labs without replacing the workspace"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "verificationNotes": [
+    "An initial catalog run concurrent with the final rebuild timed out waiting for the guide after a mobile reload. After the build completed, a complete diagnostic run and a complete standard catalog rerun both passed all seven checks without saved-state errors. No app restore code changes were needed."
+  ],
+  "errors": [],
+  "externalRequests": []
+}
