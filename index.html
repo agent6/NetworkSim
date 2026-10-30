@@ -41040,7 +41040,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
 
   // src/simulation-ui.ts
   function showSimulation(sim2, dialog2, controls) {
-    dialog2("Simulation \xB7 Packet inspection", `<div class="flex flex-wrap items-center justify-between gap-3"><div class="flex gap-2"><button class="btn" type="button" data-sim-toggle></button><button class="btn" type="button" data-sim-step>Step one event</button><button class="btn" type="button" data-sim-clear>Clear event list</button></div><span class="text-[10px] text-slate-400" data-sim-time></span></div><label class="field mt-3">Protocol<select data-sim-filter>${["all", "drop", "PoE", "802.11", "CAPWAP", "EAPOL", "EAP", "DHCP", "ARP", "NDP", "ICMP", "DNS", "TCP", "HTTP", "FTP", "RADIUS", "SNMP", "STP", "DTP", "LACP", "PAGP", "VTP", "OSPF", "EIGRP", "BGP"].map((p) => `<option value="${p}">${p === "all" ? "All events" : p === "drop" ? "Dropped packets" : p}</option>`).join("")}</select></label><div class="mt-3 wireless-table-wrap" style="max-height:280px"><table class="wireless-table"><thead><tr><th>Time</th><th>Device</th><th>Protocol</th><th>Event</th><th>Result</th></tr></thead><tbody data-sim-events></tbody></table></div><section class="mt-4" aria-label="Selected packet"><div class="flex justify-between items-center"><span class="section-label">Packet details</span><button class="btn" type="button" data-sim-trace hidden>Trace related packets</button></div><div class="mt-2 space-y-2" data-sim-details><p class="text-xs text-slate-400">Select an event to inspect its modeled fields.</p></div></section>`, `<button class="btn-primary" data-action="close-dialog">Done</button>`);
+    dialog2("Simulation \xB7 Packet inspection", `<div class="flex flex-wrap items-center justify-between gap-3"><div class="flex gap-2"><button class="btn" type="button" data-sim-toggle></button><button class="btn" type="button" data-sim-step>Step one event</button><button class="btn" type="button" data-sim-clear>Clear event list</button></div><span class="text-[10px] text-slate-400" data-sim-time></span></div><label class="field mt-3">Protocol<select data-sim-filter>${["all", "drop", "PoE", "802.11", "CAPWAP", "EAPOL", "EAP", "DHCP", "ARP", "NDP", "ICMP", "GRE", "DNS", "TCP", "HTTP", "FTP", "RADIUS", "SNMP", "STP", "DTP", "LACP", "PAGP", "VTP", "OSPF", "EIGRP", "BGP"].map((p) => `<option value="${p}">${p === "all" ? "All events" : p === "drop" ? "Dropped packets" : p}</option>`).join("")}</select></label><div class="mt-3 wireless-table-wrap" style="max-height:280px"><table class="wireless-table"><thead><tr><th>Time</th><th>Device</th><th>Protocol</th><th>Event</th><th>Result</th></tr></thead><tbody data-sim-events></tbody></table></div><section class="mt-4" aria-label="Selected packet"><div class="flex justify-between items-center"><span class="section-label">Packet details</span><button class="btn" type="button" data-sim-trace hidden>Trace related packets</button></div><div class="mt-2 space-y-2" data-sim-details><p class="text-xs text-slate-400">Select an event to inspect its modeled fields.</p></div></section>`, `<button class="btn-primary" data-action="close-dialog">Done</button>`);
     document.querySelector(".dialog")?.classList.add("simulation-dialog");
     const root = document.querySelector("[data-sim-events]");
     let selected2 = "", trace, last2 = -Infinity;
@@ -52547,6 +52547,58 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   };
 
+  // src/gre-lab.ts
+  function validGRECriterion(c) {
+    const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128, ip2 = (v) => typeof v === "string" && isIPv4(v);
+    if (c.kind === "gre-carrier") return Array.isArray(c.addresses) && c.addresses.length >= 1 && c.addresses.length <= 16 && c.addresses.every(ip2);
+    if (!name2(c.interface)) return false;
+    if (c.kind === "gre-underlay") return ip2(c.destination);
+    if (c.kind === "gre-ping") return name2(c.target) && ip2(c.address);
+    if (c.kind === "gre-traffic") return name2(c.target) && ip2(c.address) && name2(c.localRouter) && name2(c.remoteRouter) && name2(c.transit);
+    if (c.kind === "gre-tunnel") {
+      if (!name2(c.sourceInterface) || !ip2(c.sourceAddress) || !ip2(c.destination) || !ip2(c.address) || typeof c.mask !== "string") return false;
+      try {
+        maskToPrefix(c.mask);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    return ["gre-route", "gre-saved"].includes(c.kind) && ip2(c.network) && Number.isInteger(c.prefix) && c.prefix >= 0 && c.prefix <= 32 && (c.kind === "gre-saved" || ip2(c.nextHop));
+  }
+  var find2 = (s, id2) => s.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  function savedProjection(cfg, port3, network2, prefix2) {
+    const p = cfg.interfaces[port3];
+    if (!p) return void 0;
+    const f = p.features;
+    return JSON.stringify([[p.adminUp, p.ip, p.mask, p.vrf ?? "", f.tunnelSource, f.tunnelDestination, f.tunnelMode ?? "gre", f.tunnelKey, f.tunnelProtection, p.mtu], cfg.staticRoutes.filter((r) => !r.vrf && r.network === network2 && r.prefix === prefix2).map((r) => [r.network, r.prefix, r.nextHop, r.interface ?? "", r.ad ?? 1]).sort()]);
+  }
+  function greLeg(s, local, remote, tunnel, transit, innerId) {
+    const a = local.config.interfaces[tunnel], b = remote.config.interfaces[tunnel];
+    if (!a || !b) return false;
+    const source = tunnelNbma(local, a), destination2 = tunnelNbma(remote, b);
+    return s.events.some((e) => e.nodeId === local.id && e.port === tunnel && e.label === "GRE encapsulation" && e.packet?.protocol === "GRE" && e.packet.parentId === innerId && e.packet.source === source && e.packet.destination === destination2 && s.events.some((decap) => decap.nodeId === remote.id && decap.port === tunnel && decap.label === "GRE decapsulation" && decap.packet?.id === e.packet?.id) && s.events.some((hop) => hop.nodeId === transit.id && hop.label === "Frame sent" && hop.packet?.id === e.packet?.id && hop.packet?.protocol === "GRE"));
+  }
+  function matchesGRECriterion(s, d, c) {
+    if (c.kind === "gre-underlay") {
+      const path = s.cefLookup(d.id, c.destination);
+      return s.devicePowered(d.id) && s.interfaceUp(d.id, c.interface) && !!path && path.port === c.interface && !/^Tunnel/i.test(path.port);
+    }
+    if (c.kind === "gre-carrier") return s.devicePowered(d.id) && c.addresses.every((address2) => !s.cefLookup(d.id, address2)) && !Object.keys(d.config.interfaces).some((p) => /^Tunnel/i.test(p));
+    if (c.kind === "gre-tunnel") {
+      const p = d.config.interfaces[c.interface], source = d.config.interfaces[c.sourceInterface];
+      return !!p && !!source && /^Tunnel\d+$/.test(p.name) && !p.vrf && !p.switchport && p.ip === c.address && p.mask === c.mask && s.interfaceUp(d.id, p.name) && source.ip === c.sourceAddress && s.interfaceUp(d.id, source.name) && [c.sourceInterface, c.sourceAddress].includes(p.features.tunnelSource) && p.features.tunnelDestination === c.destination && ["gre", "gre ip", "gre ipv4"].includes(p.features.tunnelMode ?? "gre");
+    }
+    if (c.kind === "gre-route") return d.config.staticRoutes.some((r) => !r.vrf && r.network === c.network && r.prefix === c.prefix && r.nextHop === c.nextHop && (r.ad ?? 1) === 1 && (!r.interface || r.interface === c.interface)) && d.runtime.routes.some((r) => !r.vrf && r.network === c.network && r.prefix === c.prefix && r.protocol === "static") && s.cefLookup(d.id, c.network)?.port === c.interface;
+    if (c.kind === "gre-saved") return !!d.startupConfig && !!d.config.interfaces[c.interface] && d.config.staticRoutes.some((r) => !r.vrf && r.network === c.network && r.prefix === c.prefix) && savedProjection(d.config, c.interface, c.network, c.prefix) === savedProjection(d.startupConfig, c.interface, c.network, c.prefix);
+    const target = find2(s, c.target);
+    if (!target) return false;
+    return s.events.some((request2) => request2.nodeId === target.id && request2.label === "Echo request accepted" && request2.packet?.destination === c.address && s.events.some((reply) => reply.nodeId === d.id && reply.label === "Echo reply received" && reply.disposition === "success" && reply.packet?.parentId === request2.packet?.id && (c.kind === "gre-ping" ? s.events.some((sent) => sent.nodeId === d.id && sent.port === c.interface && sent.label === "Frame sent" && sent.packet?.id === request2.packet?.id && sent.packet?.protocol === "ICMP") : (() => {
+      const local = find2(s, c.localRouter), remote = find2(s, c.remoteRouter), transit = find2(s, c.transit);
+      return !!local && !!remote && !!transit && greLeg(s, local, remote, c.interface, transit, request2.packet.id) && greLeg(s, remote, local, c.interface, transit, reply.packet.id);
+    })())));
+  }
+
   // src/vrf-lab.ts
   function validVRFCriterion(c) {
     const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
@@ -52590,7 +52642,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
 
   // src/port-security-lab.ts
-  var find2 = (s, id2) => s.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find3 = (s, id2) => s.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   function validPortSecurityCriterion(c) {
     const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
     if (!name2(c.interface)) return false;
@@ -52618,21 +52670,21 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       return !!f && (f.violation ?? "shutdown") === c.value;
     }
     if (c.kind === "ps-binding") {
-      const source2 = find2(s, c.source);
+      const source2 = find3(s, c.source);
       return !!source2 && binding(s, d, c.interface, c.vlan, source2, c.sourceInterface);
     }
     if (c.kind === "ps-saved") {
       const saved = d.startupConfig?.interfaces[c.interface], f = saved?.features.portSecurity;
       if (!saved?.switchport || saved.mode !== "access" || saved.vlan !== c.vlan || !f || f.enabled === false || f.maximum !== 2 || !f.sticky || f.violation !== "restrict") return false;
-      const expected = c.sources.map((id2) => find2(s, id2));
+      const expected = c.sources.map((id2) => find3(s, id2));
       return expected.every((source2) => !!source2 && binding(s, d, c.interface, c.vlan, source2, c.sourceInterface)) && (f.stickyMacs ?? []).length === 2 && expected.every((source2) => (f.stickyMacs ?? []).some((m) => secureMac(m) === secureMac(s.macOf(source2.id, c.sourceInterface))));
     }
     if (c.kind === "ps-incident") {
-      const source2 = find2(s, c.source);
+      const source2 = find3(s, c.source);
       if (!source2) return false;
       return incidents(s, d, c.interface).some((r) => r.mode === c.mode && r.vlan === c.vlan && secureMac(r.sourceMac) === secureMac(s.macOf(source2.id, c.sourceInterface)) && (c.mode === "protect" ? r.afterCount === r.beforeCount && !r.logged && !r.disabled : c.mode === "restrict" ? r.afterCount > r.beforeCount && r.logged && !r.disabled : r.afterCount > r.beforeCount && r.disabled && r.reason === "psecure-violation"));
     }
-    const target = find2(s, c.target), sw = find2(s, c.protection), port3 = sw?.config.interfaces[c.interface], source = Object.values(d.config.interfaces).find((p) => p.ip)?.ip, address2 = target && Object.values(target.config.interfaces).find((p) => p.ip)?.ip;
+    const target = find3(s, c.target), sw = find3(s, c.protection), port3 = sw?.config.interfaces[c.interface], source = Object.values(d.config.interfaces).find((p) => p.ip)?.ip, address2 = target && Object.values(target.config.interfaces).find((p) => p.ip)?.ip;
     if (!target || !sw || !port3 || !source || !address2) return false;
     let after2 = -Infinity;
     if (c.phase === "learned") {
@@ -52648,7 +52700,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
 
   // src/storm-control-lab.ts
-  var find3 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find4 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   function validStormCriterion(c) {
     const name2 = (s) => typeof s === "string" && s.length > 0 && s.length <= 128;
     if (c.kind === "storm-recovery") return Number.isInteger(c.interval) && c.interval >= 30 && c.interval <= 86400;
@@ -52665,11 +52717,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
     if (c.kind === "storm-recovery") return !!d.powered && d.config.features.errdisable?.interval === c.interval && (d.config.features.errdisable.causes ?? []).some((x) => x === "storm-control" || x === "all") && d.config.features.errdisable.detect?.["storm-control"] !== false;
     if (c.kind === "storm-drop") {
-      const source2 = find3(sim2, c.source);
+      const source2 = find4(sim2, c.source);
       if (!source2?.config.interfaces[c.sourceInterface]) return false;
       return (d.runtime.features.stormControlEvents ?? []).some((r) => r.port === c.interface && r.kind === c.traffic && r.source === source2.config.interfaces[c.sourceInterface].ip && r.sourceMac === sim2.macOf(source2.id, c.sourceInterface) && r.action === c.action && r.rising === 0.1 && r.falling === 0.05 && r.percent > r.rising && (c.action !== "shutdown" || r.errDisabled) && sim2.events.some((e) => e.nodeId === d.id && e.port === c.interface && e.label === "Storm control drop" && e.disposition === "drop" && e.packet?.id === r.packetId));
     }
-    const target = find3(sim2, c.target), sw = find3(sim2, c.protection);
+    const target = find4(sim2, c.target), sw = find4(sim2, c.protection);
     if (!target || !sw) return false;
     const source = Object.values(d.config.interfaces).find((p) => p.ip)?.ip, address2 = Object.values(target.config.interfaces).find((p) => p.ip)?.ip;
     if (!source || !address2) return false;
@@ -52688,7 +52740,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   // src/arp-inspection-lab.ts
   var mac5 = (s) => s.replace(/[^a-f0-9]/gi, "").toLowerCase();
   var exactRule = (r, address2, sourceMac) => r?.action === "permit" && !r.kind && r.ip === address2 && (!r.ipWild || r.ipWild === "0.0.0.0") && mac5(r.mac) === mac5(sourceMac) && (!r.macWild || mac5(r.macWild) === "000000000000");
-  var find4 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find5 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   function validARPInspectionCriterion(c) {
     const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
     const vlan = (v) => Number.isInteger(v) && Number(v) > 0 && Number(v) < 4095;
@@ -52705,10 +52757,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "dai-trust") return sim2.interfaceUp(d.id, c.interface) && d.config.interfaces[c.interface]?.features.arpInspectionTrust === true && Object.entries(d.config.interfaces).every(([name2, p]) => name2 === c.interface || !p.features.arpInspectionTrust);
     if (c.kind === "dai-rate") return c.interfaces.every((name2) => sim2.interfaceUp(d.id, name2) && d.config.interfaces[name2]?.features.arpInspectionRate === c.rate);
     if (c.kind === "arp-neighbor") {
-      const owner = find4(sim2, c.owner), entry = d.runtime.arp[c.interface + "|" + c.address];
+      const owner = find5(sim2, c.owner), entry = d.runtime.arp[c.interface + "|" + c.address];
       return !!owner && sim2.interfaceUp(d.id, c.interface) && sim2.interfaceUp(owner.id, c.ownerInterface) && owner.config.interfaces[c.ownerInterface]?.ip === c.address && !!entry && !entry.static && entry.expires > sim2.clock.now() && mac5(entry.mac) === mac5(sim2.macOf(owner.id, c.ownerInterface));
     }
-    const source = find4(sim2, c.source);
+    const source = find5(sim2, c.source);
     if (!source) return false;
     const sourceMac = sim2.macOf(source.id, c.sourceInterface);
     if (!source.config.interfaces[c.sourceInterface]) return false;
@@ -52718,7 +52770,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const rules = d.config.features.arpAcls?.[c.acl] ?? [];
       return source.config.interfaces[c.sourceInterface].ip === c.address && rules.length === 1 && exactRule(rules[0], c.address, sourceMac);
     }
-    const receiver = find4(sim2, c.receiver);
+    const receiver = find5(sim2, c.receiver);
     if (!receiver) return false;
     return (d.runtime.features.arpInspectionEvents ?? []).some((r) => r.port === c.interface && r.vlan === c.vlan && r.source === c.address && mac5(r.sourceMac) === mac5(sourceMac) && r.operation === "reply" && (c.decision === "deny" ? r.action === "deny" && sim2.events.some((e) => e.nodeId === d.id && e.port === c.interface && e.disposition === "drop" && e.packet?.id === r.frameId && e.packet?.source === c.address && e.packet?.arpOperation === "reply") : r.action === "permit" && r.basis === "acl" && exactRule(r.rule, c.address, sourceMac) && sim2.events.some((e) => e.nodeId === receiver.id && e.label === "Frame received" && e.packet?.id === r.frameId && e.packet?.source === c.address) && Object.values(receiver.runtime.arp).some((entry) => entry.ip === c.address && entry.expires > sim2.clock.now() && mac5(entry.mac) === mac5(sourceMac))));
   }
@@ -52734,10 +52786,10 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "snooping-rogue-drop") return true;
     return name2(c.clientInterface) && isIPv4(c.network) && Number.isInteger(c.prefix) && c.prefix >= 0 && c.prefix <= 32 && isIPv4(c.gateway) && isIPv4(c.dnsServer) && (c.kind !== "snooping-ping" || name2(c.target));
   }
-  var find5 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find6 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   var mac6 = (value) => value.replace(/[^a-f0-9]/gi, "").toLowerCase();
   function bindingProof(sim2, d, c) {
-    const source = find5(sim2, c.source), server = find5(sim2, c.server), port3 = d.config.interfaces[c.interface], settings = d.config.features.dhcpSnooping, now = sim2.clock.now();
+    const source = find6(sim2, c.source), server = find6(sim2, c.server), port3 = d.config.interfaces[c.interface], settings = d.config.features.dhcpSnooping, now = sim2.clock.now();
     if (!source || !server || !settings?.enabled || !settings.vlans?.includes(c.vlan) || !port3?.switchport || port3.vlan !== c.vlan || port3.features.dhcpSnoopingTrust || !sim2.interfaceUp(d.id, c.interface) || !sim2.interfaceUp(source.id, c.clientInterface)) return;
     const client = source.config.interfaces[c.clientInterface], lease = source.runtime.features.dhcpClientLeases?.[c.clientInterface];
     if (!client?.features.dhcp || !isIPv4(client.ip ?? "") || !client.mask || !lease || !["BOUND", "RENEWING", "REBINDING"].includes(lease.state) || lease.expires <= now || lease.serverId !== server.id || lease.address !== client.ip || source.config.defaultGateway !== c.gateway || !source.config.dnsServers.includes(c.dnsServer)) return;
@@ -52758,7 +52810,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "snooping-trust") return sim2.interfaceUp(d.id, c.interface) && d.config.interfaces[c.interface]?.features.dhcpSnoopingTrust === true && (!c.exclusive || Object.entries(d.config.interfaces).every(([name2, p]) => name2 === c.interface || !p.features.dhcpSnoopingTrust));
     if (c.kind === "snooping-rate") return c.interfaces.every((name2) => sim2.interfaceUp(d.id, name2) && d.config.interfaces[name2]?.features.dhcpSnoopingRate === c.rate);
     if (c.kind === "snooping-rogue-drop") {
-      const source = find5(sim2, c.source), server = find5(sim2, c.server);
+      const source = find6(sim2, c.source), server = find6(sim2, c.server);
       if (!source || !server) return false;
       return (d.runtime.features.dhcpSnoopingEvents ?? []).some((r) => r.reason === "untrusted-server" && r.clientId === source.id && r.serverId === server.id && r.port === c.interface && r.vlan === c.vlan && ["offer", "ack", "nak"].includes(r.operation) && sim2.events.some((e) => e.nodeId === d.id && e.port === c.interface && e.label === "DHCP snooping drop" && e.disposition === "drop" && e.packet?.id === r.frameId && e.packet?.dhcpOperation === r.operation));
     }
@@ -52769,7 +52821,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const expected = { circuitId: c.vlan + ":" + c.interface, remoteId: d.id };
       return d.config.features.dhcpSnooping.option82 === true && [proof.lease.option82, proof.serverLease.option82].every((v) => v?.circuitId === expected.circuitId && v.remoteId === expected.remoteId);
     }
-    const target = find5(sim2, c.target);
+    const target = find6(sim2, c.target);
     if (!target) return false;
     const address2 = Object.values(target.config.interfaces).find((p) => p.ip)?.ip;
     if (!address2) return false;
@@ -52794,7 +52846,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "acl-dns") return c.action === "permit" && typeof c.query === "string" && c.query.length > 0 && c.query.length <= 253 && c.query.split(".").every((part) => part.length > 0 && part.length <= 63 && /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i.test(part)) && isIPv4(c.answer);
     return c.kind !== "acl-http" || (c.content === void 0 || typeof c.content === "string" && c.content.length > 0 && c.content.length <= 1e3) && (c.action === "deny" || typeof c.content === "string");
   }
-  var find6 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find7 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   var address = (d) => Object.values(d.config.interfaces).find((p) => !!p.ip)?.ip;
   function matchesACLLabCriterion(sim2, d, c) {
     if (c.kind === "standard-acl" || c.kind === "extended-acl") {
@@ -52808,7 +52860,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const field3 = c.direction === "in" ? "aclIn" : "aclOut";
       return d.config.interfaces[c.interface]?.features[field3] === c.name && sim2.interfaceUp(d.id, c.interface) && (!c.exclusive || Object.entries(d.config.interfaces).every(([port3, p]) => ["aclIn", "aclOut"].every((key4) => !p.features[key4] || port3 === c.interface && key4 === field3 && p.features[key4] === c.name)));
     }
-    const source = find6(sim2, c.source), target = find6(sim2, c.target);
+    const source = find7(sim2, c.source), target = find7(sim2, c.target);
     if (!source || !target) return false;
     const src = address(source), dst = address(target);
     if (!src || !dst) return false;
@@ -52848,11 +52900,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (c.kind === "nat-static") return true;
     return name2(c.inside) && name2(c.outside) && isIPv4(c.outsideAddress) && (c.kind === "nat-ping" ? ["inside-out", "outside-in"].includes(c.direction) : ["nat-http", "nat-outbound-http"].includes(c.kind) && typeof c.content === "string" && c.content.length > 0 && c.content.length <= 1e3);
   }
-  var find7 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  var find8 = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
   var natEvent = (d, e, label) => e.nodeId === d.id && e.label === label && e.disposition === "forward";
   var overloadRule = (d, c) => (d.config.features.nat?.rules ?? []).find((r) => r.acl === c.acl && r.interface === c.interface && r.overload === true && !r.pool);
   function deliveredPing(sim2, d, c, direction, identifiers) {
-    const inside = find7(sim2, c.inside), outside = find7(sim2, c.outside);
+    const inside = find8(sim2, c.inside), outside = find8(sim2, c.outside);
     if (!inside || !outside) return false;
     const events = sim2.events, outbound = direction === "inside-out", sender = outbound ? inside : outside, receiver = outbound ? outside : inside;
     const translated = (label, packet) => !!packet && events.some((e) => natEvent(d, e, label) && e.packet?.id === packet.id && e.packet.source === packet.source && e.packet.destination === packet.destination && e.packet.icmpIdentifier === packet.icmpIdentifier);
@@ -52876,14 +52928,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (!rule) return false;
       const rows2 = d.runtime.features.natTranslations ?? [], key4 = natRuleKey(rule);
       const choices2 = c.inside.map((name2) => {
-        const host2 = find7(sim2, name2);
+        const host2 = find8(sim2, name2);
         return rows2.filter((row5) => host2 && Object.values(host2.config.interfaces).some((p) => p.ip === row5.inside) && row5.overload === true && row5.rule === key4 && row5.protocol === "icmp" && row5.outside === c.insideGlobal && row5.remote === c.outsideAddress && row5.expires > sim2.clock.now() && deliveredPing(sim2, d, { device: d.id, inside: host2.id, outside: c.outside, insideLocal: row5.inside, insideGlobal: c.insideGlobal, outsideAddress: c.outsideAddress }, "inside-out", { inside: row5.insidePort, outside: row5.outsidePort }));
       });
       const distinct = (index, used) => index === choices2.length || choices2[index].some((row5) => !used.has(row5.outsidePort) && distinct(index + 1, /* @__PURE__ */ new Set([...used, row5.outsidePort])));
       return distinct(0, /* @__PURE__ */ new Set());
     }
     if (c.kind === "nat-ping") return deliveredPing(sim2, d, c, c.direction);
-    const inside = find7(sim2, c.inside), outside = find7(sim2, c.outside);
+    const inside = find8(sim2, c.inside), outside = find8(sim2, c.outside);
     if (!inside || !outside) return false;
     const outbound = c.kind === "nat-outbound-http", client = outbound ? inside : outside, server = outbound ? outside : inside;
     const target = outbound ? c.outsideAddress : c.insideGlobal, serverLocal = outbound ? c.outsideAddress : c.insideLocal, remoteSource = outbound ? c.insideGlobal : c.outsideAddress;
@@ -52957,11 +53009,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   }
   var ownsAddress = (d, address2) => typeof address2 === "string" && !!d && Object.values(d.config.interfaces).some((p) => !!p.ip && sameAddress(p.ip, address2));
-  var find8 = (sim2, name2) => sim2.lab.devices.find((d) => d.id === name2 || d.config.hostname === name2);
+  var find9 = (sim2, name2) => sim2.lab.devices.find((d) => d.id === name2 || d.config.hostname === name2);
   function matchesAAAClientCriterion(sim2, d, c) {
     const aaa2 = d.config.features.aaa ?? {};
     if (c.kind === "tacacs-server" || c.kind === "radius-server") {
-      const protocol = c.kind === "radius-server" ? "radius" : "tacacs", server = find8(sim2, c.server), service = server?.config.services[protocol], entry = ownRecordValue(aaa2.servers, c.name);
+      const protocol = c.kind === "radius-server" ? "radius" : "tacacs", server = find9(sim2, c.server), service = server?.config.services[protocol], entry = ownRecordValue(aaa2.servers, c.name);
       return !!entry && entry.protocol === protocol && (protocol === "radius" ? (entry.port ?? 1812) === 1812 && (entry.accountingPort ?? 1813) === 1813 : (entry.port ?? 49) === 49) && ownsAddress(server, entry.address) && typeof entry.key === "string" && entry.key.length > 0 && entry.key === service?.secret && service.enabled === true && service.accountingEnabled !== false;
     }
     if (c.kind === "aaa-group") {
@@ -52984,7 +53036,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }));
     }
     if (c.kind === "tacacs-session" || c.kind === "radius-session") {
-      const protocol = c.kind === "radius-session" ? "radius" : "tacacs", server = find8(sim2, c.server), source = find8(sim2, c.source);
+      const protocol = c.kind === "radius-session" ? "radius" : "tacacs", server = find9(sim2, c.server), source = find9(sim2, c.source);
       if (!server || !source) return false;
       const requests = server.runtime.features.aaaRequests ?? [], received = server.runtime.features.aaaAccountingReceived ?? [], deliveries = d.runtime.features.aaaAccountingEvents ?? [];
       const rows2 = received.filter((row5) => row5.protocol === protocol && row5.kind === "exec" && row5.username === c.username && row5.privilege === c.privilege && /^vty /.test(row5.line) && ownsAddress(d, row5.source) && ownsAddress(source, row5.remoteSource));
@@ -53008,6 +53060,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (v.kind === "link") return text3(v.a, 128) && text3(v.b, 128);
       if (!text3(v.device, 128)) return false;
       switch (v.kind) {
+        case "gre-underlay":
+        case "gre-tunnel":
+        case "gre-route":
+        case "gre-saved":
+        case "gre-ping":
+        case "gre-traffic":
+        case "gre-carrier":
+          return validGRECriterion(v);
         case "vrf-definition":
         case "vrf-interface":
         case "vrf-static":
@@ -53214,6 +53274,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     if (!("device" in criterion)) return false;
     const d = device(sim2, criterion.device);
     if (!d) return false;
+    if (["gre-underlay", "gre-tunnel", "gre-route", "gre-saved", "gre-ping", "gre-traffic", "gre-carrier"].includes(criterion.kind)) return matchesGRECriterion(sim2, d, criterion);
     if (["vrf-definition", "vrf-interface", "vrf-static", "vrf-isolation", "vrf-saved", "vrf-traffic", "vrf-global-drop"].includes(criterion.kind)) return matchesVRFCriterion(sim2, d, criterion);
     if (["ps-config", "ps-binding", "ps-saved", "ps-incident", "ps-ping"].includes(criterion.kind)) return matchesPortSecurityCriterion(sim2, d, criterion);
     if (["ra-policy", "ra-attachment", "ra-block", "ra-client", "ra-ping", "ra-protected-gateway", "ra-neighbor"].includes(criterion.kind)) return matchesRAGuardCriterion(sim2, d, criterion);
@@ -53390,14 +53451,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return results.length > 0 && (c.kind === "all" ? results.every(Boolean) : results.some(Boolean));
       }
       const result = matches(sim2, c);
-      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping" && c.kind !== "ra-block" && c.kind !== "ra-ping" && c.kind !== "ps-incident" && c.kind !== "ps-ping" && c.kind !== "vrf-traffic" && c.kind !== "vrf-global-drop") return result;
+      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping" && c.kind !== "ra-block" && c.kind !== "ra-ping" && c.kind !== "ps-incident" && c.kind !== "ps-ping" && c.kind !== "vrf-traffic" && c.kind !== "vrf-global-drop" && c.kind !== "gre-ping" && c.kind !== "gre-traffic") return result;
       validKeys.add(key4);
       if (result) observations.add(key4);
       return result || observations.has(key4);
     };
     const rows2 = lesson2.objectives.map((objective) => {
       const observed = observe(objective.criterion, JSON.stringify(objective.id));
-      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping" || objective.criterion.kind === "ra-block" || objective.criterion.kind === "ra-ping" || objective.criterion.kind === "ps-incident" || objective.criterion.kind === "ps-ping" || objective.criterion.kind === "vrf-traffic" || objective.criterion.kind === "vrf-global-drop";
+      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping" || objective.criterion.kind === "ra-block" || objective.criterion.kind === "ra-ping" || objective.criterion.kind === "ps-incident" || objective.criterion.kind === "ps-ping" || objective.criterion.kind === "vrf-traffic" || objective.criterion.kind === "vrf-global-drop" || objective.criterion.kind === "gre-ping" || objective.criterion.kind === "gre-traffic";
       if (historical && observed)
         completed.add(objective.id);
       return {
@@ -53790,8 +53851,24 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "ipv6-ra-guard", group: "CCNA", section: "Services & Security", title: "IPv6 RA Guard", description: "Protect SLAAC clients from a live rogue IPv6 advertiser. Apply host/router policies, verify legitimate prefixes and default routers, preserve Neighbor Discovery and prove routed connectivity.", devices: 6, links: 5, practice: true },
     { id: "port-security", group: "CCNA", section: "Services & Security", title: "Port Security", description: "Learn and save two sticky MAC addresses on a shared access port. Compare restrict, protect and shutdown using a third host, verify unaffected traffic and recover the secured interface.", devices: 7, links: 6, practice: true },
     { id: "vrf-configuration-and-verification", group: "CCNP ENCOR", section: "Virtualization", title: "VRF Configuration and Verification", description: "Configure BLUE and RED VRFs with overlapping IPv4 addresses. Bind routed interfaces, install separate static routes and prove tenant forwarding and global-table isolation.", devices: 7, links: 6, practice: true },
+    { id: "gre-tunnel-configuration-and-verification", group: "CCNP ENCOR", section: "Virtualization", title: "GRE Tunnel Configuration and Verification", description: "Build a point-to-point GRE tunnel over a routed ISP underlay. Configure tunnel endpoints and LAN routes, verify inner and outer packets, and prove bidirectional traffic and saved policy.", devices: 5, links: 4, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
+  var GRE_COMMANDS = Object.fromEntries(["R1", "R2"].map((name2, index) => [name2, [
+    "enable",
+    "configure terminal",
+    "interface Tunnel0",
+    "description GRE to " + (index ? "R1" : "R2"),
+    "ip address 10.255.0." + (index + 1) + " 255.255.255.252",
+    "tunnel source GigabitEthernet0/0",
+    "tunnel destination " + (index ? "192.0.2.2" : "198.51.100.2"),
+    "tunnel mode gre ip",
+    "no shutdown",
+    "exit",
+    "ip route 192.168." + (index ? "10" : "20") + ".0 255.255.255.0 10.255.0." + (index ? 1 : 2),
+    "end",
+    "write memory"
+  ]]));
   var VRF_COMMANDS = { R1: [
     "enable",
     "configure terminal",
@@ -54394,6 +54471,23 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
   };
   var GUIDE_RESOURCES = {
+    "gre-tunnel-configuration-and-verification": { columns: ["Device", "Interface", "IPv4 address", "Role / gateway"], rows: [
+      ["R1", "Gi0/0", "192.0.2.2 /30", "WAN; tunnel source; ISP 192.0.2.1"],
+      ["ISP", "Gi0/0", "192.0.2.1 /30", "R1-facing underlay"],
+      ["ISP", "Gi0/1", "198.51.100.1 /30", "R2-facing underlay"],
+      ["R2", "Gi0/0", "198.51.100.2 /30", "WAN; tunnel source; ISP 198.51.100.1"],
+      ["R1", "Tunnel0", "10.255.0.1 /30", "GRE overlay"],
+      ["R2", "Tunnel0", "10.255.0.2 /30", "GRE overlay"],
+      ["R1", "Gi0/1", "192.168.10.1 /24", "PC1 default gateway"],
+      ["R2", "Gi0/1", "192.168.20.1 /24", "PC2 default gateway"],
+      ["PC1", "Gi0", "192.168.10.10 /24", "Gateway 192.168.10.1"],
+      ["PC2", "Gi0", "192.168.20.10 /24", "Gateway 192.168.20.1"]
+    ], commands: GRE_COMMANDS, verification: { R1: ["show ip interface brief", "show interfaces Tunnel0", "show ip route 198.51.100.2", "show ip route 192.168.20.0", "show ip cef 192.168.20.10", "show running-config interface Tunnel0", "show startup-config", "ping 198.51.100.2 repeat 3", "ping 10.255.0.2 repeat 3", "traceroute 192.168.20.10"], R2: ["show ip interface brief", "show interfaces Tunnel0", "show ip route 192.0.2.2", "show ip route 192.168.10.0", "show ip cef 192.168.10.10", "show running-config interface Tunnel0", "show startup-config", "ping 192.0.2.2 repeat 3", "ping 10.255.0.1 repeat 3"], ISP: ["show ip interface brief", "show ip route"], PC1: ["ipconfig", "ping -n 3 192.168.20.10", "tracert -d 192.168.20.10"], PC2: ["ipconfig", "ping -n 3 192.168.10.10"] }, setup: [
+      { title: "Verify the underlay first", instructions: ["Configure R1 and R2 only. WAN and LAN interfaces, PC addressing and underlay static routes are ready. ISP has routes only to its directly connected WANs. Practice starts without tunnel interfaces or remote LAN routes.", "Use the two underlay tasks to prove that R1 reaches R2\u2019s WAN address 198.51.100.2 and R2 reaches 192.0.2.2. Those destinations must resolve through Gi0/0 and ISP, independently of Tunnel0. Keep this physical path working throughout the lab."] },
+      { title: "Build the GRE overlay", instructions: ["Create Tunnel0 on each endpoint. Use 10.255.0.1/30 on R1 and 10.255.0.2/30 on R2. Set tunnel source GigabitEthernet0/0, the opposite WAN address as tunnel destination, tunnel mode gre ip and no shutdown. Use show interfaces Tunnel0 to verify the source, destination and GRE/IP transport.", "A basic point-to-point GRE tunnel without keepalives can show up/up using local configuration even when the peer cannot decapsulate. The guide requires real encapsulation, peer decapsulation and matching replies in both directions. The tunnel IPs and WAN endpoint IPs serve different purposes."] },
+      { title: "Route and inspect real traffic", instructions: ["On R1, route 192.168.20.0/24 through 10.255.0.2. On R2, route 192.168.10.0/24 through 10.255.0.1. Verify that CEF selects Tunnel0 for each remote LAN while the WAN endpoint route still selects Gi0/0.", "Run both tunnel-address pings, then both PC connectivity tasks. A complete path needs the remote LAN route and the return route. PC1 must reach 192.168.20.10 and PC2 must reach 192.168.10.10 through GRE in both directions.", "In Simulation \u2192 Packet inspection select GRE. Inspect GRE encapsulation on the sending endpoint, outer packet forwarding through ISP and GRE decapsulation on the peer. Switch to All events, select a GRE event and use Trace related packets to compare inner LAN addresses with outer WAN addresses. Basic IPv4 GRE without a key adds 24 bytes. ISP needs the WAN routes and forwards outer GRE; it does not need routes to either LAN."] },
+      { title: "Troubleshoot and save", instructions: ["If a tunnel ping fails while the WAN ping works, check the tunnel source, opposite WAN destination, mode and both tunnel addresses. Removing the peer tunnel or using mismatched GRE keys can leave the local interface up while traffic fails.", "If tunnel pings work but PC traffic fails, verify both remote LAN routes and host gateways. Keep the route to the tunnel destination on the physical underlay; pointing it back into Tunnel0 creates a recursive path that cannot carry the outer packet.", "Shut Tunnel0 to compare overlay failure with still-working WAN reachability, then issue no shutdown and verify traffic again. Save R1 and R2 with write memory and confirm their startup configurations.", "The completed reference begins with five configuration/save tasks and still requires real underlay and overlay traffic. Saved observations survive portable reopening; current tunnel, route, carrier and startup goals remain live."] }
+    ], note: "This lab uses IPv4 point-to-point GRE with static routing. Its traffic is in cleartext. GRE keepalives, IPsec protection and multipoint GRE are separate exercises." },
     "vrf-configuration-and-verification": { columns: ["Device", "Interface", "VRF / scope", "IPv4 address", "Gateway / next hop"], rows: [
       ["R1", "Gi0/0", "BLUE", "192.168.10.1 /24", "Local BLUE LAN"],
       ["R1", "Gi0/2", "BLUE", "10.0.0.1 /30", "CE-BLUE: 10.0.0.2"],
@@ -54532,6 +54626,39 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createGRELab(mode = "practice") {
+    const make = (name2, kind, x, y) => ({ id: "device-gre-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const pc1 = make("PC1", "pc", 140, 340), r1 = make("R1", "router", 380, 340), isp = make("ISP", "router", 650, 150), r2 = make("R2", "router", 920, 340), pc2 = make("PC2", "pc", 1160, 340), g = (n) => "GigabitEthernet0/" + n, p = "GigabitEthernet0";
+    for (const [router, wan, lan, network2, gateway] of [[r1, "192.0.2.2", "192.168.10.1", "198.51.100.0", "192.0.2.1"], [r2, "198.51.100.2", "192.168.20.1", "192.0.2.0", "198.51.100.1"]]) {
+      Object.assign(router.config.interfaces[g(0)], { ip: wan, mask: "255.255.255.252", adminUp: true });
+      Object.assign(router.config.interfaces[g(1)], { ip: lan, mask: "255.255.255.0", adminUp: true });
+      router.config.staticRoutes = [{ network: network2, prefix: 30, nextHop: gateway, ad: 1 }];
+    }
+    Object.assign(isp.config.interfaces[g(0)], { ip: "192.0.2.1", mask: "255.255.255.252", adminUp: true });
+    Object.assign(isp.config.interfaces[g(1)], { ip: "198.51.100.1", mask: "255.255.255.252", adminUp: true });
+    for (const [pc, address2, gateway] of [[pc1, "192.168.10.10", "192.168.10.1"], [pc2, "192.168.20.10", "192.168.20.1"]]) {
+      Object.assign(pc.config.interfaces[p], { ip: address2, mask: "255.255.255.0", adminUp: true });
+      pc.config.interfaces[p].features.dhcp = false;
+      pc.config.defaultGateway = gateway;
+    }
+    const devices = [pc1, r1, isp, r2, pc2];
+    for (const d of devices) d.startupConfig = structuredClone(d.config);
+    const all = (criteria) => ({ kind: "all", criteria }), underlay = (router, peer, destination2) => all([{ kind: "gre-underlay", device: router.id, destination: destination2, interface: g(0) }, { kind: "gre-ping", device: router.id, target: peer.id, address: destination2, interface: g(0) }]), tunnel = (router) => ({ kind: "gre-tunnel", device: router.id, interface: "Tunnel0", sourceInterface: g(0), sourceAddress: router === r1 ? "192.0.2.2" : "198.51.100.2", destination: router === r1 ? "198.51.100.2" : "192.0.2.2", address: router === r1 ? "10.255.0.1" : "10.255.0.2", mask: "255.255.255.252" }), route2 = (router) => ({ kind: "gre-route", device: router.id, network: router === r1 ? "192.168.20.0" : "192.168.10.0", prefix: 24, nextHop: router === r1 ? "10.255.0.2" : "10.255.0.1", interface: "Tunnel0" }), tunnels = all([tunnel(r1), tunnel(r2)]), ready = all([tunnels, route2(r1), route2(r2)]);
+    const traffic2 = (source, target, address2, local, remote) => ({ kind: "gre-traffic", device: source.id, target: target.id, address: address2, localRouter: local.id, remoteRouter: remote.id, interface: "Tunnel0", transit: isp.id }), pcProof = traffic2(pc1, pc2, "192.168.20.10", r1, r2);
+    const link = (name2, a, ap, b, bp) => ({ id: "link-gre-" + name2, a: { deviceId: a.id, port: ap }, b: { deviceId: b.id, port: bp }, enabled: true, delay: 0.1, loss: 0 });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "gre-tunnel-configuration-and-verification", name: "GRE Tunnel Configuration and Verification" + (mode === "completed" ? " \xB7 Completed" : ""), devices, links: [link("lan1", pc1, p, r1, g(1)), link("wan1", r1, g(0), isp, g(0)), link("wan2", isp, g(1), r2, g(0)), link("lan2", r2, g(1), pc2, p)], notes: [{ id: "note-gre", x: 650, y: 550, text: "GRE overlay: R1 Tunnel0 \u2194 R2 Tunnel0\n10.255.0.1/30 \u2194 10.255.0.2/30\nPhysical underlay via ISP \xB7 configure R1 and R2" }], lesson: { title: "GRE Tunnel Configuration and Verification", description: "Build an IPv4 GRE overlay between two LANs across a routed ISP underlay.\n\n" + GUIDE_RESOURCES["gre-tunnel-configuration-and-verification"].setup.map((s) => s.title + "\n" + s.instructions.join("\n")).join("\n\n"), objectives: [
+      ...[[r1, r2, "198.51.100.2"], [r2, r1, "192.0.2.2"]].map(([router, peer, address2]) => ({ id: router === r1 ? "r1-underlay" : "r2-underlay", title: "Verify " + router.config.hostname + " reaches the peer WAN over the physical underlay", criterion: underlay(router, peer, address2), action: { kind: "ping", device: router.id, target: address2, when: { kind: "gre-underlay", device: router.id, destination: address2, interface: g(0) } } })),
+      ...[r1, r2].map((router) => ({ id: router === r1 ? "r1-tunnel" : "r2-tunnel", title: "Configure " + router.config.hostname + " Tunnel0 source, destination and overlay address", criterion: tunnel(router) })),
+      ...[r1, r2].map((router) => ({ id: router === r1 ? "r1-route" : "r2-route", title: "Install " + router.config.hostname + "\u2019s remote LAN route through Tunnel0", criterion: route2(router) })),
+      { id: "save-tunnels", title: "Save both GRE endpoints and LAN routes in startup-config", criterion: all([ready, ...[r1, r2].map((router) => ({ kind: "gre-saved", device: router.id, interface: "Tunnel0", network: router === r1 ? "192.168.20.0" : "192.168.10.0", prefix: 24 }))]) },
+      ...[[r1, r2, "10.255.0.2"], [r2, r1, "10.255.0.1"]].map(([local, remote, address2]) => ({ id: local === r1 ? "r1-overlay" : "r2-overlay", title: "Verify " + local.config.hostname + " reaches the peer tunnel address through GRE", criterion: traffic2(local, remote, address2, local, remote), action: { kind: "ping", device: local.id, target: address2, when: tunnels } })),
+      { id: "pc1-gre", title: "Verify PC1 reaches PC2 with GRE in both traffic directions", criterion: pcProof, action: { kind: "ping", device: pc1.id, target: "192.168.20.10", when: ready } },
+      { id: "pc2-gre", title: "Verify PC2 reaches PC1 with GRE in both traffic directions", criterion: traffic2(pc2, pc1, "192.168.10.10", r2, r1), action: { kind: "ping", device: pc2.id, target: "192.168.10.10", when: ready } },
+      { id: "isp-carrier", title: "Verify ISP forwards outer GRE while both LANs remain outside its routing table", criterion: all([{ kind: "gre-carrier", device: isp.id, addresses: ["192.168.10.10", "192.168.20.10"] }, pcProof]) }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, GRE_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createVRFLab(mode = "practice") {
     const make = (name2, kind, x, y) => ({ id: "device-vrf-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
     const r = make("R1", "router", 500, 330), pcb = make("PC-BLUE", "pc", 170, 150), pcr = make("PC-RED", "pc", 170, 510), ceb = make("CE-BLUE", "router", 820, 150), cer = make("CE-RED", "router", 820, 510), sb = make("SRV-BLUE", "server", 1120, 150), sr = make("SRV-RED", "server", 1120, 510), g = (n) => "GigabitEthernet0/" + n, p = "GigabitEthernet0";
@@ -56355,6 +56482,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "gre-tunnel-configuration-and-verification") return createGRELab(mode);
     if (id2 === "vrf-configuration-and-verification") return createVRFLab(mode);
     if (id2 === "port-security") return createPortSecurityLab(mode);
     if (id2 === "ipv6-ra-guard") return createIPv6RAGuardLab(mode);

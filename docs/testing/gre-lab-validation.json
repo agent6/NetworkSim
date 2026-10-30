@@ -1,0 +1,85 @@
+{
+  "feature": {
+    "title": "GRE Tunnel Configuration and Verification",
+    "catalogId": "gre-tunnel-configuration-and-verification",
+    "group": "CCNP ENCOR",
+    "section": "Virtualization",
+    "sectionLabCount": 2,
+    "devices": 5,
+    "links": 4,
+    "tasks": 12,
+    "addressingRows": 10,
+    "permalink": "#/labs/gre-tunnel-configuration-and-verification",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.10.10/24 and PC2 192.168.20.10/24 use R1 and R2 LAN gateways. WAN endpoints 192.0.2.2 and 198.51.100.2 connect through ISP on two /30s. WAN/LAN addressing and independent underlay routes are prepared; ISP has only connected WAN routes. Learners configure R1/R2 Tunnel0 at 10.255.0.1/30 and .2/30, source Gi0/0, opposite WAN destinations and remote LAN static routes through the overlay. The physical diagram includes four actual cables; the virtual GRE overlay is described in its note.",
+  "verificationNotes": [
+    "Practice starts without Tunnel0 or remote LAN routes at zero credit; only the two physical underlay tests are initially enabled. The completed reference supplies five live configuration/startup goals and requires actual new traffic for the remaining goals.",
+    "Underlay tasks require physical CEF resolution and a matching actual WAN request/reply. Tunnel goals check exact source, destination, address, mask, point-to-point mode and operational source. Overlay route goals require configured/installed static routes and actual Tunnel0 CEF resolution.",
+    "GRE traffic joins each delivered inner request and reply to separate outer packet IDs. Each direction requires local encapsulation, actual ISP transmission of that same outer packet and peer decapsulation of that same ID. A normal routed bypass, unrelated event label or fabricated counter cannot satisfy the tunnel proof.",
+    "The carrier task requires genuine PC1 round-trip GRE proof while ISP still has no CEF path to either LAN and has no tunnel interface. A directly routed workaround fails both overlay and carrier goals even when ordinary ICMP succeeds.",
+    "Focused tests cover wrong destinations, a deleted peer tunnel, mismatched/matching keys, lost underlay routes, a recursive destination route, missing return LAN routing and administrative shutdown/recovery. Local no-keepalive GRE can remain up/up when a peer is missing or misconfigured; delivered traffic is checked separately.",
+    "The basic unkeyed IPv4 envelope carries the actual WAN addresses and adds 24 bytes to the inner packet. The existing forwarding engine was used without modification. Packet inspection now offers a GRE filter, and All events plus Trace related packets exposes the linked inner/outer traffic.",
+    "Both endpoint startup policies must match the running tunnel/route configuration. Actual IOS reload restores a saved endpoint after unsaved damage. Portable reopening retains running/startup separation and observations while current tunnel, route, carrier and startup goals remain live.",
+    "All reference and verification commands execute through the existing IOS/Windows CLIs, including interface state, CEF, route and startup output, actual pings and traceroutes. ENCOR Virtualization now shows two labs and an accessible plural count; CCNA sections and counts remain intact.",
+    "This lab covers cleartext IPv4 point-to-point GRE with static routing. It does not require GRE keepalive operation, IPsec protection or multipoint GRE."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco IOS XE 17.x: Implementing Tunnels",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_ir-impl-tun-xe.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 19,
+    "focusedPassed": 19,
+    "typecheck": "passed",
+    "fullSuite": {
+      "command": "npm run check",
+      "tests": 1968,
+      "passed": 1968,
+      "failed": 0
+    },
+    "build": "passed; identical root and dist single-file offline artifacts",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: ENCOR Virtualization has two counted labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS tunnel/source/destination/mode and independent overlay routes; six actual ping observations including both GRE legs and ISP carrier evidence; CEF separates WAN and tunnel paths; GRE filter, outer WAN addresses, related inner LAN packets and peer decapsulation inspected; Windows CLI pings; full completed reference, cancel/save-copy protection, both startup policies and persisted progress; fitted complete node icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light 390px: ENCOR Virtualization has two counted labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS tunnel/source/destination/mode and independent overlay routes; six actual ping observations including both GRE legs and ISP carrier evidence; CEF separates WAN and tunnel paths; GRE filter, outer WAN addresses, related inner LAN packets and peer decapsulation inspected; Windows CLI pings; full completed reference, cancel/save-copy protection, both startup policies and persisted progress; fitted complete node icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light 320px: ENCOR Virtualization has two counted labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS tunnel/source/destination/mode and independent overlay routes; six actual ping observations including both GRE legs and ISP carrier evidence; CEF separates WAN and tunnel paths; GRE filter, outer WAN addresses, related inner LAN packets and peer decapsulation inspected; Windows CLI pings; full completed reference, cancel/save-copy protection, both startup policies and persisted progress; fitted complete node icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 1440px: ENCOR Virtualization has two counted labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS tunnel/source/destination/mode and independent overlay routes; six actual ping observations including both GRE legs and ISP carrier evidence; CEF separates WAN and tunnel paths; GRE filter, outer WAN addresses, related inner LAN packets and peer decapsulation inspected; Windows CLI pings; full completed reference, cancel/save-copy protection, both startup policies and persisted progress; fitted complete node icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 390px: ENCOR Virtualization has two counted labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS tunnel/source/destination/mode and independent overlay routes; six actual ping observations including both GRE legs and ISP carrier evidence; CEF separates WAN and tunnel paths; GRE filter, outer WAN addresses, related inner LAN packets and peer decapsulation inspected; Windows CLI pings; full completed reference, cancel/save-copy protection, both startup policies and persisted progress; fitted complete node icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 320px: ENCOR Virtualization has two counted labs; 12 tasks/10 addressing rows; zero-credit practice with two ready underlay actions; real IOS tunnel/source/destination/mode and independent overlay routes; six actual ping observations including both GRE legs and ISP carrier evidence; CEF separates WAN and tunnel paths; GRE filter, outer WAN addresses, related inner LAN packets and peer decapsulation inspected; Windows CLI pings; full completed reference, cancel/save-copy protection, both startup policies and persisted progress; fitted complete node icons, non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light: permalink preserves host/path/query without replacing workspace and returns to ENCOR Virtualization with two labs and accurate plural count",
+        "dark: permalink preserves host/path/query without replacing workspace and returns to ENCOR Virtualization with two labs and accurate plural count"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, ENCOR Virtualization with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, ENCOR Virtualization with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, ENCOR Virtualization with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, ENCOR Virtualization with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, ENCOR Virtualization with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, ENCOR Virtualization with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches established desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology",
+        "light 320px topology",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "d61dff65619f04ebfa5d5dc34385e7292b9e724e696cca4a4a5ec97cf64b5f7c"
+  }
+}
