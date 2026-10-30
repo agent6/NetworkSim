@@ -1,0 +1,86 @@
+{
+  "feature": {
+    "title": "NAT Configuration",
+    "catalogId": "nat-configuration",
+    "group": "CCNP ENCOR",
+    "section": "IP Services",
+    "sectionLabCount": 1,
+    "groupLabCount": 19,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6,
+      "Layer 3": 9
+    },
+    "devices": 7,
+    "links": 6,
+    "tasks": 18,
+    "addressingRows": 8,
+    "notes": 3,
+    "permalink": "#/labs/nat-configuration",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "Inside VLAN1 access LAN on SW1: PC1 192.168.10.10/24, PC2 .20, WEB1 .50, gateway R1 Gi0/0 192.168.10.1. R1 Gi0/1 203.0.113.1/24 faces ISP1 Gi0/0 .2; ISP1 Gi0/1 198.51.100.1/24 faces SRV1 .10 with gateway .1. Static WEB1 global203.0.113.10, one-address PUBLIC pool203.0.113.20/24, final interface PAT203.0.113.1. ISP1 has no private-LAN return route. Host/switch addressing and both HTTP pages are prepared; R1 NAT and default route are absent from practice.",
+  "verificationNotes": [
+    "Adds first IP Services subsection entry under CCNP ENCOR without changing CCNA Static NAT or PAT. The new subsection has an accessible singular1-lab badge; all three prior ENCOR subsection counts remain3/6/9.",
+    "Practice starts0/18. One actual R1 baseline command set configures NAT roles, default route, exact /24 standard classifier, static server publication, one-address pool and basic dynamic rule, earning six live goals. PC1 actual translated ping earns allocation; PC2 actual failed allocation with correlated returned ICMP error earns exhaustion; clear removes dynamic state while preserving the static mapping; PC2 then really reuses the released public address.",
+    "Dynamic failure proof requires live PC1 ownership and correlated successful PC1 traffic, real PC2 source send and R1 ingress receipt, actual NAT-pool-exhaustion drop and a parent-correlated quoted ICMP error at PC2. Failed preconfiguration, missing routing, shutdown and NAT-direction faults do not substitute for exhaustion. Per-attempt configuration epochs reject stale probes.",
+    "Actual clear-and-replace commands remove the basic pool rule and install outside-interface overload. Two live ICMP bindings share203.0.113.1 with unique translated identifiers and matching replies. Separate complete TCP/HTTP200 deliveries are required for both inside clients. An outside ping and actual outside browser HTTP200 verify inbound destination translation and the static server's reverse source translation.",
+    "Static WEB1 precedence over the matching /24 classifier is tested even with the basic pool occupied. Dynamic NAT keeps one address binding per inside host, with separate ICMP/TCP child entries that preserve ports/identifiers; PAT distinguishes clients with translated identifiers/ports. In-use rule/pool edits reject before mutation until clearing state.",
+    "Completed reference contains final saved static+PAT configuration, retained previously exercised PUBLIC definition and empty runtime; initially8/18 live tasks with no invented allocations, failures, pings or HTTP. Dedicated reverse-transition commands revisit dynamic stages without reapplying the source ACL, then final PAT and traffic complete18.",
+    "Tests cover routing/role faults, private-return-route shortcuts, classifier exclusion, stale and tampered packet evidence, missing/404 HTTP service, per-client application evidence, healthy startup equality, extra-rule rejection, IOS reload, portable reopening, contextual question-mark/Tab help and every published verification command. Existing TCP/NAT/packet engine unchanged.",
+    "Packet achievements persist across offline reopen, while dynamic translation/flow state rebuilds from actual new traffic and current configuration/routing/save checks remain live. Existing terminal layout/colors/fonts and general UI preserved.",
+    "Scope is IOS IPv4 inside-source static NAT, basic pool dynamic NAT and interface PAT, not outside-source NAT, hairpin, NAT64, ALG behavior or complete platform parity. Checked against Cisco primary documentation and existing CML NAT replay contracts in the full suite; no new live CML capture is claimed."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE17: Configuring NAT for IP Address Conservation",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-addressing/b-ip-addressing/m_iadnat-addr-consv-xe.html",
+      "relevance": "Static/dynamic inside-source mapping, classification, pools, overload and address-conservation configuration."
+    },
+    {
+      "title": "Existing reviewed CML NAT observations and regression contracts",
+      "path": "scripts/cml/fixtures/nat-observations.json",
+      "tests": "tests/cml-nat-validation.test.ts",
+      "relevance": "Existing IOS dynamic exhaustion/reuse, static/PAT behavior and native output contracts; replayed in the full suite rather than a new capture."
+    }
+  ],
+  "validation": {
+    "typecheck": "passed",
+    "fullCheck": "npm run check passed, including deterministic offline build",
+    "tests": 2341,
+    "passed": 2341,
+    "failed": 0,
+    "focusedTests": 24,
+    "browserScenarios": 15,
+    "browserChecks": [
+      "light 320px: new ENCOR IP Services section with singular1-lab badge; independent seven-node six-link18-task zero-credit practice and eight-row plan; actual IOS static mapping, /24 classifier, roles/default and one-address pool; PC1 one-to-one success, actual PC2 exhaustion failure earns observation, clear preserves permanent static and PC2 reuses released global; migration to interface overload; both real PAT pings with distinct ICMP identifiers, inbound static ping and three real HTTP200 browser pages complete18; tables/stats/ACL/verbose plus question-mark/Tab; golden CLI styles unchanged; saved offline reload rebuilds dynamic state and retains achievements; completed reference starts8 and requires actual stages/traffic, cancel/save-copy protection, fitted responsive topology and guide",
+      "dark 390px: new ENCOR IP Services section with singular1-lab badge; independent seven-node six-link18-task zero-credit practice and eight-row plan; actual IOS static mapping, /24 classifier, roles/default and one-address pool; PC1 one-to-one success, actual PC2 exhaustion failure earns observation, clear preserves permanent static and PC2 reuses released global; migration to interface overload; both real PAT pings with distinct ICMP identifiers, inbound static ping and three real HTTP200 browser pages complete18; tables/stats/ACL/verbose plus question-mark/Tab; golden CLI styles unchanged; saved offline reload rebuilds dynamic state and retains achievements; completed reference starts8 and requires actual stages/traffic, cancel/save-copy protection, fitted responsive topology and guide",
+      "light 390px: new ENCOR IP Services section with singular1-lab badge; independent seven-node six-link18-task zero-credit practice and eight-row plan; actual IOS static mapping, /24 classifier, roles/default and one-address pool; PC1 one-to-one success, actual PC2 exhaustion failure earns observation, clear preserves permanent static and PC2 reuses released global; migration to interface overload; both real PAT pings with distinct ICMP identifiers, inbound static ping and three real HTTP200 browser pages complete18; tables/stats/ACL/verbose plus question-mark/Tab; golden CLI styles unchanged; saved offline reload rebuilds dynamic state and retains achievements; completed reference starts8 and requires actual stages/traffic, cancel/save-copy protection, fitted responsive topology and guide",
+      "dark 320px: new ENCOR IP Services section with singular1-lab badge; independent seven-node six-link18-task zero-credit practice and eight-row plan; actual IOS static mapping, /24 classifier, roles/default and one-address pool; PC1 one-to-one success, actual PC2 exhaustion failure earns observation, clear preserves permanent static and PC2 reuses released global; migration to interface overload; both real PAT pings with distinct ICMP identifiers, inbound static ping and three real HTTP200 browser pages complete18; tables/stats/ACL/verbose plus question-mark/Tab; golden CLI styles unchanged; saved offline reload rebuilds dynamic state and retains achievements; completed reference starts8 and requires actual stages/traffic, cancel/save-copy protection, fitted responsive topology and guide",
+      "light 1440px: new ENCOR IP Services section with singular1-lab badge; independent seven-node six-link18-task zero-credit practice and eight-row plan; actual IOS static mapping, /24 classifier, roles/default and one-address pool; PC1 one-to-one success, actual PC2 exhaustion failure earns observation, clear preserves permanent static and PC2 reuses released global; migration to interface overload; both real PAT pings with distinct ICMP identifiers, inbound static ping and three real HTTP200 browser pages complete18; tables/stats/ACL/verbose plus question-mark/Tab; golden CLI styles unchanged; saved offline reload rebuilds dynamic state and retains achievements; completed reference starts8 and requires actual stages/traffic, cancel/save-copy protection, fitted responsive topology and guide",
+      "dark 1440px: new ENCOR IP Services section with singular1-lab badge; independent seven-node six-link18-task zero-credit practice and eight-row plan; actual IOS static mapping, /24 classifier, roles/default and one-address pool; PC1 one-to-one success, actual PC2 exhaustion failure earns observation, clear preserves permanent static and PC2 reuses released global; migration to interface overload; both real PAT pings with distinct ICMP identifiers, inbound static ping and three real HTTP200 browser pages complete18; tables/stats/ACL/verbose plus question-mark/Tab; golden CLI styles unchanged; saved offline reload rebuilds dynamic state and retains achievements; completed reference starts8 and requires actual stages/traffic, cancel/save-copy protection, fitted responsive topology and guide",
+      "light: permalink preserves current host/path/query and workspace, returns to new IP Services section with singular1 badge, preserves nine Layer3/six Layer2 labs and separate CCNA Static NAT/PAT with independent section choices",
+      "dark: permalink preserves current host/path/query and workspace, returns to new IP Services section with singular1 badge, preserves nine Layer3/six Layer2 labs and separate CCNA Static NAT/PAT with independent section choices",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "6223582ef0edf9b54e49bc4e9fcf74a9b7abf462914a2d1959bc1eda72ed161e",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}
