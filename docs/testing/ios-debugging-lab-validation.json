@@ -1,0 +1,107 @@
+{
+  "feature": {
+    "title": "IOS Debugging and Troubleshooting",
+    "catalogId": "ios-debugging-and-troubleshooting",
+    "group": "CCNP ENCOR",
+    "section": "Network Assurance",
+    "sectionLabCount": 1,
+    "groupLabCount": 23,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6,
+      "Layer 3": 9,
+      "IP Services": 4
+    },
+    "devices": 6,
+    "links": 5,
+    "tasks": 22,
+    "addressingRows": 8,
+    "notes": 3,
+    "permalink": "#/labs/ios-debugging-and-troubleshooting",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.10.10/24 (gateway .1) crosses SW1, R1 Gi0/0 192.168.10.1/24, R1 Gi0/1 10.0.12.1/30, R2 Gi0/1 10.0.12.2/30, R2 Gi0/0 192.168.20.1/24, SW2 and SRV1 192.168.20.10/24 (gateway .1). OSPF process 10 uses RIDs 1.1.1.1/2.2.2.2, passive LANs, point-to-point transit cost 10 and LAN cost 1. Practice R2 transit starts in area 1 instead of area 0, SERVER-FILTER sequence 10 denies PC1-to-SRV1 ICMP, and HTTP is stopped. R1 Loopback99 192.0.2.99/32 is unadvertised and used only for controlled Down/Up logs.",
+  "verificationNotes": [
+    "Adds Network Assurance as the fifth ENCOR section, with one lab, an accurate singular badge and current-host/path/query share links. The other four ENCOR section counts remain 3/6/9/4; group total is 23.",
+    "Practice starts at 0 of 22. Ten goals remain live configuration/state checks; twelve preserve earned diagnostic/traffic observations. The completed reference has healthy saved router configurations and enabled HTTP, empty runtime, ten live outcomes and no pre-earned packet, debug or failure history.",
+    "Prepare both routers with millisecond datetime log/debug timestamps, sequence numbers, enabled console/monitor debugging severity, a 32768-byte debug buffer and synchronous console input. These settings do not enable any protocol debug.",
+    "Received mismatched OSPF Hellos are now observable before adjacency formation. Bounded logical-message reassembly accepts known live source interfaces on an active receiver even when the initial area/timer compatibility check prevents a neighbor candidate. Complete parsing still rejects incompatible Hellos; it does not form an adjacency from them.",
+    "R1 debug ip ospf adj/hello must capture the actual area rejection and subsequent FULL exchange. Correct only R2 Gi0/1 to OSPF 10 area 0; both opposite LANs must be learned OSPF routes at AD 110, metric 11. Static shortcuts do not qualify.",
+    "An ACL-fault goal requires actual PC1 frames to reach R2 with working routing and hit inbound SERVER-FILTER sequence 10. Repair removes only that deny and retains sequence 20 permit ip any any and the original inbound binding. Both successful ICMP directions correlate all Ethernet hops, current CEF egress and parent-linked replies.",
+    "HTTP troubleshooting separates a real delivered SYN/returned RST on TCP 80 from an ACL failure or timeout. Enabling HTTP through SRV1 Services and receiving the complete expected 200 response is independently verified; wrong content and 404 responses do not qualify.",
+    "Scoped local debug condition interface Gi0/0, debug arp and debug ip packet detail require actual ARP request/reply and local ICMP type 8/type 0 traffic after clearing dynamic ARP. IP packet debugging excludes ordinary CEF-forwarded transit traffic while retaining local packets and forwarding exceptions. The guide leaves CEF enabled.",
+    "Debug records now share the real byte-limited logging buffer, severity filtering, sequence numbering and appropriate debug timestamps. Runtime debug metadata and command observations are bounded. Existing NAT debug formatting is preserved.",
+    "Console and monitor debug delivery now honor logging enablement, destination enablement and severity. no logging console stops streaming while active flags and buffered debugging continue. VTY-style sessions require terminal monitor; enabling monitor does not replay older debug records. terminal no monitor only suppresses that session's display.",
+    "Controlled Loopback99 Down/Up must produce timestamped actual LINK messages. Cleanup requires undebug all on both routers, removal of the R1 interface condition, normal console logging, healthy routing/filtering/HTTP and a fresh local request/reply after the actual undebug command without new debug captures. Both healthy configurations must then be saved.",
+    "Native regressions execute the entire 22-task practice workflow and deliberately recreate all faults from the completed reference, then earn all 22. Negative cases cover missing events, unrelated replies, incomplete forwarding paths, static/binding shortcuts, false HTTP failures/successes, absent ARP/debug evidence, severity/size limits, stale undebug commands, save drift, reload and bounded imports.",
+    "Scope is implemented IOS IPv4 troubleshooting. Per-device CPU telemetry, hardware packet capture, ACL-selective packet debugging and platform-perfect debug formatting are not introduced or advertised by this lab. No new live CML capture or full hardware equivalence is claimed.",
+    "Browser QA walks all 22 tasks on light1440px and dark320px, with four additional healthy-path cases at both themes/desktop/mobile widths. All six offline cases verify actual export/import in a separate empty profile, restored progress, fresh forwarding, accurate sections, reference modes and unchanged golden CLI styles. Two arbitrary-origin permalink cases and seven existing catalog checks also pass with no page errors or external requests."
+  ],
+  "references": [
+    {
+      "title": "Cisco: Important Information on Debug Commands",
+      "url": "https://www.cisco.com/c/en/us/support/docs/dial-access/integrated-services-digital-networks-isdn-channel-associated-signaling-cas/10374-debug.html",
+      "relevance": "Debug logging destinations, buffered diagnostics, stopping debug and limitations of process-switched IP packet debugging with CEF."
+    },
+    {
+      "title": "Cisco: Understand the Ping and Traceroute Commands",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ios-nx-os-software/ios-software-releases-121-mainline/12778-ping-traceroute.html",
+      "relevance": "Locally originated probes, IP/ICMP type 8/type 0 debug output and separating source/path issues."
+    },
+    {
+      "title": "Cisco IOS Debug Command Reference: debug ip ospf",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/debug/command/i1/db-i1-cr-book/db-i2.html",
+      "relevance": "OSPF adjacency and Hello diagnostics."
+    },
+    {
+      "title": "Cisco IOS Basic System Management: Troubleshooting",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/bsm/configuration/15-mt/bsm-15-mt-book/bsm-troubleshooting.html",
+      "relevance": "Conditional debugging, interface scoping and condition removal."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "fullCheck": "Full native suite passed with two isolated workers, followed by npm run build; same complete test-file set used by npm run check",
+    "nativeCommand": "node --test --test-concurrency=2 tests/*.test.ts",
+    "tests": 2449,
+    "passed": 2449,
+    "failed": 0,
+    "focusedTests": 30,
+    "browserFullWorkflowCases": [
+      "light1440px",
+      "dark320px"
+    ],
+    "offlineReopen": "Actual application YAML export then normal file import into a separate empty offline browser profile. Same-session autosave JSON also parsed and router startup/running configurations compared. No workspace injection or assumption of file-origin storage retention across Chrome relaunches.",
+    "artifactSha256": "2027f3e0ecc9789fef6e4bd184341cc38afe5feb6201ac7a25e4ce2563b0a297",
+    "identicalArtifactCopies": 16,
+    "browserScenarios": 15,
+    "browserChecks": [
+      "light 320px: fifth ENCOR section Network Assurance with accurate singular badge; six-node five-link22-task zero-credit ticket and eight-row plan; healthy reference configuration plus actual server Services edit, both ping paths and HTTP200 earn13 while nine diagnostic/fault observations remain unearned; source/router saves verified; actual YAML export and import into an empty offline profile preserves completion and rebuilds OSPF; completed reference has ten live goals with zero pre-earned observations; cancel/save-copy protection; fitted diagram and responsive guide; unchanged golden CLI styling; working show output and question-mark/Tab",
+      "dark 320px: fifth ENCOR section Network Assurance with accurate singular badge; six-node five-link22-task zero-credit ticket and eight-row plan; all22 via actual timestamped OSPF mismatch/FULL debug, real ACL sequence10 denial and retained-binding repair, both ping paths, TCP refusal then HTTP200 after actual server Services edit, scoped ARP/ICMP8/0 debug, console suppression with continuing buffer, loopback logs, undebug/condition cleanup and fresh quiet probe; source/router saves verified; actual YAML export and import into an empty offline profile preserves completion and rebuilds OSPF; completed reference has ten live goals with zero pre-earned observations; cancel/save-copy protection; fitted diagram and responsive guide; unchanged golden CLI styling; working show output and question-mark/Tab",
+      "light 1440px: fifth ENCOR section Network Assurance with accurate singular badge; six-node five-link22-task zero-credit ticket and eight-row plan; all22 via actual timestamped OSPF mismatch/FULL debug, real ACL sequence10 denial and retained-binding repair, both ping paths, TCP refusal then HTTP200 after actual server Services edit, scoped ARP/ICMP8/0 debug, console suppression with continuing buffer, loopback logs, undebug/condition cleanup and fresh quiet probe; source/router saves verified; actual YAML export and import into an empty offline profile preserves completion and rebuilds OSPF; completed reference has ten live goals with zero pre-earned observations; cancel/save-copy protection; fitted diagram and responsive guide; unchanged golden CLI styling; working show output and question-mark/Tab",
+      "dark 1440px: fifth ENCOR section Network Assurance with accurate singular badge; six-node five-link22-task zero-credit ticket and eight-row plan; healthy reference configuration plus actual server Services edit, both ping paths and HTTP200 earn13 while nine diagnostic/fault observations remain unearned; source/router saves verified; actual YAML export and import into an empty offline profile preserves completion and rebuilds OSPF; completed reference has ten live goals with zero pre-earned observations; cancel/save-copy protection; fitted diagram and responsive guide; unchanged golden CLI styling; working show output and question-mark/Tab",
+      "light 390px: fifth ENCOR section Network Assurance with accurate singular badge; six-node five-link22-task zero-credit ticket and eight-row plan; healthy reference configuration plus actual server Services edit, both ping paths and HTTP200 earn13 while nine diagnostic/fault observations remain unearned; source/router saves verified; actual YAML export and import into an empty offline profile preserves completion and rebuilds OSPF; completed reference has ten live goals with zero pre-earned observations; cancel/save-copy protection; fitted diagram and responsive guide; unchanged golden CLI styling; working show output and question-mark/Tab",
+      "dark 390px: fifth ENCOR section Network Assurance with accurate singular badge; six-node five-link22-task zero-credit ticket and eight-row plan; healthy reference configuration plus actual server Services edit, both ping paths and HTTP200 earn13 while nine diagnostic/fault observations remain unearned; source/router saves verified; actual YAML export and import into an empty offline profile preserves completion and rebuilds OSPF; completed reference has ten live goals with zero pre-earned observations; cancel/save-copy protection; fitted diagram and responsive guide; unchanged golden CLI styling; working show output and question-mark/Tab",
+      "light: permalink preserves current host/path/query/workspace and returns to Network Assurance; four IP Services labs remain intact",
+      "dark: permalink preserves current host/path/query/workspace and returns to Network Assurance; four IP Services labs remain intact",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}

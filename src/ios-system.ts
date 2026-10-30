@@ -38,6 +38,13 @@ export function iosLogLine(device: Device, entry: { time: number; message: strin
   if(kind==='debug')return prefix+entry.message;
   return prefix + (/^%[A-Z0-9_]+-\d-[A-Z0-9_]+:/.test(entry.message) ? entry.message : `%SYS-${entry.severity}-USERLOG: ${entry.message}`);
 }
+/** The logging buffer shares byte/severity limits for syslog and debug records. */
+export function bufferIOSMessage(device:Device,entry:{time:number;message:string;severity:number;sequence?:number},kind:'log'|'debug'='log'):boolean{
+ const f=device.config.features.logging??{};if(f.enabled===false||f.buffered===false||entry.severity>(f.bufferedLevel??(device.kind==='datacenter'?5:7)))return false;
+ const counts=device.runtime.features.logSinkCounts??={console:0,monitor:0,buffer:0,trap:0};counts.buffer++;
+ device.runtime.logs.push(iosLogLine(device,entry,kind));let bytes=device.runtime.logs.reduce((n,line)=>n+new TextEncoder().encode(line).length+1,0);const limit=Math.max(0,f.bufferSize??16384);
+ while(device.runtime.logs.length&&(bytes>limit||device.runtime.logs.length>500))bytes-=new TextEncoder().encode(device.runtime.logs.shift()!).length+1;device.runtime.features.logBufferBytes=bytes;return true;
+}
 export function iosLogging(device: Device): string[] {
   const f = device.config.features.logging ?? {}, counts=device.runtime.features.logSinkCounts??{};
   const level = (n: number) => severityNames[n] ?? String(n), logged = (name:string) => Number(counts[name]??0);

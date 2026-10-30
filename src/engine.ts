@@ -25,7 +25,7 @@ import {WirelessEngine} from './wireless.ts';
 import {syncIPv6GeneralPrefixes} from './ipv6-general-prefix.ts';
 import { captureDebugEvent } from './ios-debug.ts';
 import { ntpAuthenticator } from './ntp-auth.ts';
-import { iosLogLine } from './ios-system.ts';
+import { bufferIOSMessage } from './ios-system.ts';
 import { SimulationClock, type AdvanceResult, type TimerHandle } from './clock.ts';
 import { emptyRuntime, defaultInterface, factoryDeviceConfig, type Device, type DeviceKind, type Endpoint, type InterfaceConfig, type Lab, type LabDocument, type Link, type NewSimEvent, type PacketSummary, type PingOptions, type PingResult, type ProbeReply, type Route, type SimEvent, type TraceResult } from './model.ts';
 import { bigIntToIPv6, ipv6ToBigInt, broadcastAddress, inSubnet, intToIp, ipToInt, isIPv4, isIPv6, maskToPrefix, networkAddress, parseCidr, prefixContains, sameAddress } from './ip.ts';
@@ -1375,11 +1375,7 @@ export class Simulator {
     if(config.console!==false&&severity<=(config.consoleLevel??(d.kind==='datacenter'?2:7)))sinks.console++;
     if(config.trapEnabled!==false&&severity<=(config.trap??6))sinks.trap++;
     entries.push(entry); if (entries.length > 500) entries.splice(0, entries.length - 500);
-    if (config.buffered !== false && severity <= (config.bufferedLevel ?? (d.kind==='datacenter'?5:7))) {
-      sinks.buffer++;
-      d.runtime.logs.push(iosLogLine(d, entry)); let bytes = d.runtime.logs.reduce((sum, line) => sum + new TextEncoder().encode(line).length + 1, 0); const limit = Math.max(0, config.bufferSize ?? 16384);
-      while (d.runtime.logs.length && (bytes > limit || d.runtime.logs.length > 500)) bytes -= new TextEncoder().encode(d.runtime.logs.shift()!).length + 1; d.runtime.features.logBufferBytes = bytes;
-    }
+    bufferIOSMessage(d,entry);
     if (config.trapEnabled === false || severity > (config.trap ?? 6)) return;
     for (const address of config.hosts ?? []) {
       const iface = config.source ? d.config.interfaces[config.source] : undefined, source = config.source ? this.addressFor(d, config.source, isIPv6(address) ? 6 : 4) : '';
