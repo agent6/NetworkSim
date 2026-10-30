@@ -1,0 +1,87 @@
+{
+  "feature": {
+    "title": "Static NAT",
+    "catalogId": "static-nat",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 5,
+    "devices": 4,
+    "links": 3,
+    "tasks": 7,
+    "addressingRows": 6,
+    "permalink": "#/labs/static-nat",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "SRV1 192.168.10.10/24 \u2014 R1 Gi0/0 192.168.10.1/24; R1 Gi0/1 203.0.113.1/24 \u2014 ISP1 Gi0/0 203.0.113.2/24; ISP1 Gi0/1 198.51.100.1/24 \u2014 PC1 198.51.100.10/24. Both hosts have gateways. SRV1 serves the prepared HTTP page; ISP1 has no route to the private LAN.",
+  "verificationNotes": [
+    "Practice starts at zero credit with addressing, ISP1 and HTTP ready. R1 has no NAT roles, mapping or default. The completed reference applies only published R1 commands and earns four configuration goals; two real translated pings and one delivered HTTP response are required for all seven tasks.",
+    "Static NAT maps the entire inside local address 192.168.10.10 to the inside global address 203.0.113.10. The public alias is unassigned to physical interfaces; R1 answers ISP1 ARP on its outside interface. No NAT allocation ACL, pool or overload is needed.",
+    "Translated ICMP achievements correlate the actual NAT router event, delivered request packet identity and successful translated return. Router-originated probes, untranslated private reachability, a permanent static row or aggregate hit counters cannot fabricate them.",
+    "HTTP credit requires a corresponding TCP transaction at PC1 and SRV1, a completed 200 response with the actual page content and NAT events matching its endpoint ports. A wrong path, disabled service, missing returned data, SYN or ICMP success cannot finish that task.",
+    "Each missing role, wrong inside mapping and missing default is exercised. A partial configuration can return ICMP from an untranslated private address; it does not prove the intended public mapping. R1\u2019s default is separate from NAT. NAT is not a firewall.",
+    "Clearing dynamic NAT state preserves the permanent static entry. Active static deletion uses IOS confirmation or prior child-flow clearing. Fresh traffic recreates real protocol entries.",
+    "Packet achievements survive portable saves and browser reopening, while current NAT roles, static mapping and usable upstream route remain live. Reopening rebuilds fresh runtime state.",
+    "The lab uses the existing simulated IPv4 NAT, ARP, routing, ICMP, TCP and HTTP implementations. It does not claim new live CML validation and does not add PAT, port forwarding, outside source NAT or firewall policy."
+  ],
+  "sources": [
+    {
+      "title": "Cisco: Configure Network Address Translation",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/network-address-translation-nat/13772-12.html"
+    },
+    {
+      "title": "Cisco: Use Local and Global NAT Terms",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/network-address-translation-nat/4606-8.html"
+    }
+  ],
+  "validation": {
+    "targetedTests": 41,
+    "targetedPassed": 41,
+    "typecheck": "passed",
+    "fullSuite": {
+      "tests": 1773,
+      "passed": 1773,
+      "failed": 0,
+      "command": "npm run check"
+    },
+    "build": "passed; generated root and dist HTML are identical",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: five Services & Security labs, seven-task guide and six-row plan, zero-credit practice, published IOS roles/mapping/default route, actual translated outbound/inbound ping and HTTP200 public website, real ICMP/TCP table entries and statistics, question-mark help and Tab, clearing child flows preserves the static entry, missing-default and NAT-role failures with real failed traffic, repairs and saved live configuration, persisted achievements after reopening with fresh NAT runtime, completed reference requiring new traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "light 390px: five Services & Security labs, seven-task guide and six-row plan, zero-credit practice, published IOS roles/mapping/default route, actual translated outbound/inbound ping and HTTP200 public website, real ICMP/TCP table entries and statistics, question-mark help and Tab, clearing child flows preserves the static entry, missing-default and NAT-role failures with real failed traffic, repairs and saved live configuration, persisted achievements after reopening with fresh NAT runtime, completed reference requiring new traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "light 320px: five Services & Security labs, seven-task guide and six-row plan, zero-credit practice, published IOS roles/mapping/default route, actual translated outbound/inbound ping and HTTP200 public website, real ICMP/TCP table entries and statistics, question-mark help and Tab, clearing child flows preserves the static entry, missing-default and NAT-role failures with real failed traffic, repairs and saved live configuration, persisted achievements after reopening with fresh NAT runtime, completed reference requiring new traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "dark 1440px: five Services & Security labs, seven-task guide and six-row plan, zero-credit practice, published IOS roles/mapping/default route, actual translated outbound/inbound ping and HTTP200 public website, real ICMP/TCP table entries and statistics, question-mark help and Tab, clearing child flows preserves the static entry, missing-default and NAT-role failures with real failed traffic, repairs and saved live configuration, persisted achievements after reopening with fresh NAT runtime, completed reference requiring new traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "dark 390px: five Services & Security labs, seven-task guide and six-row plan, zero-credit practice, published IOS roles/mapping/default route, actual translated outbound/inbound ping and HTTP200 public website, real ICMP/TCP table entries and statistics, question-mark help and Tab, clearing child flows preserves the static entry, missing-default and NAT-role failures with real failed traffic, repairs and saved live configuration, persisted achievements after reopening with fresh NAT runtime, completed reference requiring new traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "dark 320px: five Services & Security labs, seven-task guide and six-row plan, zero-credit practice, published IOS roles/mapping/default route, actual translated outbound/inbound ping and HTTP200 public website, real ICMP/TCP table entries and statistics, question-mark help and Tab, clearing child flows preserves the static entry, missing-default and NAT-role failures with real failed traffic, repairs and saved live configuration, persisted achievements after reopening with fresh NAT runtime, completed reference requiring new traffic, save/cancel protection, responsive guide/topology and unchanged CLI golden styles",
+        "light: permalink preserves current host/path/query and returns to five Services & Security labs without replacing the workspace",
+        "dark: permalink preserves current host/path/query and returns to five Services & Security labs without replacing the workspace"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches the existing desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology and guide",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "7ce0753d8c22ba455692b47295fd3deb978d6f1766b1c55e5e6049f9de4807af"
+  }
+}

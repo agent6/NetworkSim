@@ -52368,6 +52368,48 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   };
 
+  // src/nat-lab.ts
+  function validNATCriterion(c) {
+    const name2 = (v) => typeof v === "string" && v.length > 0 && v.length <= 128;
+    if (c.kind === "nat-interface") return name2(c.interface) && ["inside", "outside"].includes(c.role);
+    if (!isIPv4(c.insideLocal) || !isIPv4(c.insideGlobal)) return false;
+    if (c.kind === "nat-static") return true;
+    return name2(c.inside) && name2(c.outside) && isIPv4(c.outsideAddress) && (c.kind === "nat-ping" ? ["inside-out", "outside-in"].includes(c.direction) : c.kind === "nat-http" && typeof c.content === "string" && c.content.length > 0 && c.content.length <= 1e3);
+  }
+  var find = (sim2, id2) => sim2.lab.devices.find((d) => d.id === id2 || d.config.hostname === id2);
+  function matchesNATCriterion(sim2, d, c) {
+    if (c.kind === "nat-interface") return d.config.interfaces[c.interface]?.features.nat === c.role && sim2.interfaceUp(d.id, c.interface);
+    if (c.kind === "nat-static") return (d.config.features.nat?.static ?? []).some((row5) => row5.inside === c.insideLocal && row5.outside === c.insideGlobal);
+    const inside = find(sim2, c.inside), outside = find(sim2, c.outside);
+    if (!inside || !outside) return false;
+    const events = sim2.events;
+    const nat2 = (e, label) => e.nodeId === d.id && e.label === label && e.disposition === "forward";
+    if (c.kind === "nat-ping") {
+      const outbound = c.direction === "inside-out", sender = outbound ? inside : outside, receiver = outbound ? outside : inside;
+      const translated = (label, packet) => !!packet && events.some((e) => nat2(e, label) && e.packet?.id === packet.id && e.packet.source === packet.source && e.packet.destination === packet.destination);
+      return events.some((reply) => {
+        const packet = reply.packet;
+        if (reply.nodeId !== sender.id || reply.label !== "Echo reply received" || reply.disposition !== "success" || packet?.icmpType !== 0 || packet.source !== (outbound ? c.outsideAddress : c.insideGlobal) || packet.destination !== (outbound ? c.insideLocal : c.outsideAddress)) return false;
+        const request2 = events.find((e) => e.nodeId === receiver.id && e.label === "Echo request accepted" && e.packet?.id === packet.parentId && e.packet?.icmpType === 8 && e.packet.source === (outbound ? c.insideGlobal : c.outsideAddress) && e.packet.destination === (outbound ? c.outsideAddress : c.insideLocal));
+        return !!request2 && translated(outbound ? "Source NAT" : "Destination NAT", request2.packet) && translated(outbound ? "Destination NAT" : "Source NAT", packet);
+      });
+    }
+    for (const [transaction2, conn] of Object.entries(outside.runtime.features.tcpConnections ?? {})) {
+      if (conn.remoteAddress !== c.insideGlobal || conn.remotePort !== 80 || conn.payload?.application !== "http" || (conn.payload.method ?? "GET") !== "GET" || conn.payload.path !== "/" || !Number.isInteger(conn.expected) || conn.expected < 1 || conn.expected > 2048 || conn.received !== conn.expected) continue;
+      const server = ownRecordValue(inside.runtime.features.tcpConnections, transaction2);
+      if (server?.source !== c.outsideAddress || server.localAddress !== c.insideLocal || server.destinationPort !== 80 || server.response?.statusCode !== 200) continue;
+      let response;
+      try {
+        response = JSON.parse(Array.from({ length: conn.expected }, (_, i) => conn.segments[i]).join(""));
+      } catch {
+        continue;
+      }
+      if (response.error || response.statusCode !== 200 || typeof response.content !== "string" || !response.content.includes(c.content) || response.content !== server.response.content) continue;
+      if (events.some((e) => nat2(e, "Destination NAT") && e.packet?.protocol === "TCP" && e.packet.source === c.outsideAddress && e.packet.destination === c.insideLocal && e.packet.sourcePort === conn.localPort && e.packet.destinationPort === 80) && events.some((e) => nat2(e, "Source NAT") && e.packet?.protocol === "TCP" && e.packet.source === c.insideGlobal && e.packet.destination === c.outsideAddress && e.packet.sourcePort === 80 && e.packet.destinationPort === conn.localPort)) return true;
+    }
+    return false;
+  }
+
   // src/file-transfer-lab.ts
   function validFileTransferCriterion(v) {
     const name2 = (s) => typeof s === "string" && s.length > 0 && s.length <= 128;
@@ -52417,11 +52459,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
   }
   var ownsAddress = (d, address) => typeof address === "string" && !!d && Object.values(d.config.interfaces).some((p) => !!p.ip && sameAddress(p.ip, address));
-  var find = (sim2, name2) => sim2.lab.devices.find((d) => d.id === name2 || d.config.hostname === name2);
+  var find2 = (sim2, name2) => sim2.lab.devices.find((d) => d.id === name2 || d.config.hostname === name2);
   function matchesAAAClientCriterion(sim2, d, c) {
     const aaa2 = d.config.features.aaa ?? {};
     if (c.kind === "tacacs-server" || c.kind === "radius-server") {
-      const protocol = c.kind === "radius-server" ? "radius" : "tacacs", server = find(sim2, c.server), service = server?.config.services[protocol], entry = ownRecordValue(aaa2.servers, c.name);
+      const protocol = c.kind === "radius-server" ? "radius" : "tacacs", server = find2(sim2, c.server), service = server?.config.services[protocol], entry = ownRecordValue(aaa2.servers, c.name);
       return !!entry && entry.protocol === protocol && (protocol === "radius" ? (entry.port ?? 1812) === 1812 && (entry.accountingPort ?? 1813) === 1813 : (entry.port ?? 49) === 49) && ownsAddress(server, entry.address) && typeof entry.key === "string" && entry.key.length > 0 && entry.key === service?.secret && service.enabled === true && service.accountingEnabled !== false;
     }
     if (c.kind === "aaa-group") {
@@ -52444,7 +52486,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       }));
     }
     if (c.kind === "tacacs-session" || c.kind === "radius-session") {
-      const protocol = c.kind === "radius-session" ? "radius" : "tacacs", server = find(sim2, c.server), source = find(sim2, c.source);
+      const protocol = c.kind === "radius-session" ? "radius" : "tacacs", server = find2(sim2, c.server), source = find2(sim2, c.source);
       if (!server || !source) return false;
       const requests = server.runtime.features.aaaRequests ?? [], received = server.runtime.features.aaaAccountingReceived ?? [], deliveries = d.runtime.features.aaaAccountingEvents ?? [];
       const rows2 = received.filter((row5) => row5.protocol === protocol && row5.kind === "exec" && row5.username === c.username && row5.privilege === c.privilege && /^vty /.test(row5.line) && ownsAddress(d, row5.source) && ownsAddress(source, row5.remoteSource));
@@ -52468,6 +52510,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (v.kind === "link") return text3(v.a, 128) && text3(v.b, 128);
       if (!text3(v.device, 128)) return false;
       switch (v.kind) {
+        case "nat-interface":
+        case "nat-static":
+        case "nat-ping":
+        case "nat-http":
+          return validNATCriterion(v);
         case "scp-server":
         case "ssh-file-client":
         case "file-transfer":
@@ -52617,6 +52664,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     const d = device(sim2, criterion.device);
     if (!d) return false;
     if (["tacacs-server", "radius-server", "aaa-group", "aaa-method", "aaa-line", "tacacs-session", "radius-session"].includes(criterion.kind)) return matchesAAAClientCriterion(sim2, d, criterion);
+    if (["nat-interface", "nat-static", "nat-ping", "nat-http"].includes(criterion.kind)) return matchesNATCriterion(sim2, d, criterion);
     if (["scp-server", "ssh-file-client", "file-transfer", "file-copy"].includes(criterion.kind)) return matchesFileTransferCriterion(sim2, d, criterion);
     if (criterion.kind === "local-user") {
       const user = ownRecordValue(d.config.features.users, criterion.username);
@@ -52784,14 +52832,14 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         return results.length > 0 && (c.kind === "all" ? results.every(Boolean) : results.some(Boolean));
       }
       const result = matches(sim2, c);
-      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer") return result;
+      if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http") return result;
       validKeys.add(key4);
       if (result) observations.add(key4);
       return result || observations.has(key4);
     };
     const rows2 = lesson2.objectives.map((objective) => {
       const observed = observe(objective.criterion, JSON.stringify(objective.id));
-      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer";
+      const historical = objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http";
       if (historical && observed)
         completed.add(objective.id);
       return {
@@ -53171,8 +53219,23 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "tacacs-aaa-client", group: "CCNA", section: "Services & Security", title: "TACACS+ AAA Client", description: "Configure an IOS TACACS+ client with named AAA lists, SSH, local recovery and acknowledged EXEC accounting. Test remote authorization, explicit rejection and server-unavailable fallback.", devices: 3, links: 2, practice: true },
     { id: "radius-aaa-client", group: "CCNA", section: "Services & Security", title: "RADIUS AAA Client", description: "Configure an IOS RADIUS client with named AAA lists, SSH, Access-Accept EXEC attributes and acknowledged session accounting. Verify rejection, UDP retry behavior and local recovery.", devices: 3, links: 2, practice: true },
     { id: "scp-sftp-file-transfer", group: "CCNA", section: "Services & Security", title: "SCP/SFTP File Transfer", description: "Configure an IOS SCP server and an SSH file client. Download reference files, back up startup configurations with SCP and SFTP, verify content and diagnose rejected or interrupted transfers.", devices: 3, links: 2, practice: true },
+    { id: "static-nat", group: "CCNA", section: "Services & Security", title: "Static NAT", description: "Publish an inside server through a permanent one-to-one IPv4 mapping. Configure NAT roles and an upstream default route, prove bidirectional translations and access the server\u2019s website from outside.", devices: 4, links: 3, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
+  var STATIC_NAT_COMMANDS = { R1: [
+    "enable",
+    "configure terminal",
+    "interface GigabitEthernet0/0",
+    "ip nat inside",
+    "interface GigabitEthernet0/1",
+    "ip nat outside",
+    "exit",
+    "ip nat inside source static 192.168.10.10 203.0.113.10",
+    "ip route 0.0.0.0 0.0.0.0 203.0.113.2",
+    "end",
+    "write memory"
+  ] };
+  var STATIC_NAT_PAGE = '<!doctype html><html lang="en"><meta charset="utf-8"><title>Static NAT lab</title><body><h1>Static NAT: SRV1 reached</h1><p>This page is served by the inside server at 192.168.10.10.</p><p>PC1 accesses its public mapping at 203.0.113.10.</p></body></html>';
   var SCP_SFTP_FILE_TRANSFER_COMMANDS = {
     R1: ["enable", "configure terminal", "ip domain-name lab.example", "crypto key generate rsa modulus 2048", "ip ssh version 2", "ip ssh source-interface GigabitEthernet0/0", "end", "write memory"],
     R2: ["enable", "configure terminal", "username backup privilege 15 secret ScpLab123", "enable secret EnableLab123", "aaa new-model", "aaa authentication login default local", "aaa authorization exec default local", "line console 0", "login authentication default", "exit", "ip domain-name lab.example", "crypto key generate rsa modulus 2048", "ip ssh version 2", "line vty 0 4", "login authentication default", "authorization exec default", "transport input ssh", "exit", "ip scp server enable", "end", "write memory"]
@@ -53600,6 +53663,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
   };
   var GUIDE_RESOURCES = {
+    "static-nat": { columns: ["Device", "Interface", "IPv4 address", "Role / gateway"], rows: [["SRV1", "Gi0", "192.168.10.10 /24", "Inside local; gateway 192.168.10.1"], ["R1", "Gi0/0", "192.168.10.1 /24", "NAT inside"], ["R1", "Gi0/1", "203.0.113.1 /24", "NAT outside; next hop 203.0.113.2"], ["ISP1", "Gi0/0", "203.0.113.2 /24", "Transit toward R1"], ["ISP1", "Gi0/1", "198.51.100.1 /24", "Outside client gateway"], ["PC1", "Gi0", "198.51.100.10 /24", "Outside host; gateway 198.51.100.1"]], commands: STATIC_NAT_COMMANDS, verification: { R1: ["show ip interface brief", "show ip route", "show running-config | include ip nat", "show ip nat translations", "show ip nat translations verbose", "show ip nat statistics"], ISP1: ["show ip interface brief", "show ip route", "show ip arp"], SRV1: ["ipconfig", "ping -n 3 198.51.100.10"], PC1: ["ipconfig", "ping -n 3 203.0.113.10"] }, setup: [
+      { title: "Address roles", instructions: ["Inside local: SRV1\u2019s actual address 192.168.10.10. Inside global: the public mapping 203.0.113.10. PC1\u2019s outside local and outside global are both 198.51.100.10; this lab does not translate the outside host.", "203.0.113.10 is an unused address on R1\u2019s outside subnet. Do not assign it to an interface. The static mapping supplies an ARP alias so ISP1 can reach it."] },
+      { title: "PC1 \xB7 Desktop \u2192 Web browser", instructions: ["Browse to http://203.0.113.10/ and expect 200 OK with the heading Static NAT: SRV1 reached. The HTTP service and page on SRV1 are prepared.", "The application task requires a complete delivered HTTP response from SRV1 through R1\u2019s translation. A TCP SYN, an ICMP reply or a translation-table entry alone cannot finish it."] },
+      { title: "Inspect and troubleshoot the real translations", instructions: ["Before traffic, show ip nat translations lists the permanent --- mapping. After the pings and HTTP request, inspect ICMP and TCP extended entries and show ip nat statistics.", "Run clear ip nat translation * and inspect the table again. Dynamic child flows disappear; the configured static mapping remains. Generate new traffic and verify its entries return.", "Remove one interface\u2019s NAT role or the default route, test traffic and diagnose the fault, then restore the setting. A mapping row can exist while forwarding is broken. Read ICMP reply addresses: a private-source reply is not proof of the intended public translation.", "To edit a static mapping with active children, clear them first or answer the IOS deletion confirmation. Correctly restore 192.168.10.10 \u2192 203.0.113.10, save R1 and repeat the tests."] }
+    ], note: "All interfaces, host gateways, ISP1 and the inside HTTP service are ready. Configure R1 only. This is a whole-address static mapping: no NAT pool, allocation ACL or overload is required. ISP1 has no route to the private LAN, making translation and the return path observable. NAT does not supply routing or firewall policy. The completed reference configures R1 but still requires actual ICMP and HTTP traffic. Packet achievements survive reopening; NAT roles, mapping and default route stay live." },
     "scp-sftp-file-transfer": { columns: ["Device", "Interface", "IPv4 address", "Role / gateway"], rows: [["R1", "Gi0/0", "192.0.2.1 /24", "SSH client source toward R2"], ["R1", "Gi0/1", "192.168.100.1 /24", "PC1 gateway"], ["R2", "Gi0/0", "192.0.2.2 /24", "Configure IOS SCP server"], ["PC1", "Gi0", "192.168.100.10 /24", "Prepared SFTP host; gateway 192.168.100.1"]], commands: SCP_SFTP_FILE_TRANSFER_COMMANDS, verification: { R1: ["show ip interface brief", "show ip ssh", "show running-config | include ip ssh", "show startup-config", "dir flash:", "more flash:scp-readme.txt", "more flash:sftp-readme.txt"], R2: ["show ip ssh", "show running-config | section aaa", "show running-config | section line", "show running-config | include ip scp", "dir flash:", "more flash:r1-startup.cfg"] }, setup: [
       { title: "R1 \xB7 privileged EXEC \xB7 perform all four transfers", instructions: SCP_SFTP_TRANSFER_STEPS.map((step) => step.command + " \u2014 enter " + step.password + " only at the Password: prompt.") },
       { title: "Verify backups by reading them back", instructions: ["On R2, inspect dir flash: and more flash:r1-startup.cfg. Compare its hostname and interface/SSH settings with R1 show startup-config.", "On R1, run copy sftp://archive@192.168.100.10/r1-startup.cfg flash:sftp-backup-check.cfg, enter SftpLab123, then more flash:sftp-backup-check.cfg. Downloading to flash inspects the backup without applying configuration.", "PC1 is a prepared workstation file endpoint, not an IOS SFTP server. It starts with archive / SftpLab123 and sftp-readme.txt; no Server service administration page is needed."] },
@@ -53668,6 +53736,31 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createStaticNATLab(mode = "practice") {
+    const make = (name2, kind, x) => ({ id: "device-static-nat-" + name2.toLowerCase(), kind, x, y: 260, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const srv = make("SRV1", "server", 180), r1 = make("R1", "router", 500), isp = make("ISP1", "router", 820), pc = make("PC1", "pc", 1140);
+    for (const [d, port3, ip2] of [[srv, "GigabitEthernet0", "192.168.10.10"], [r1, "GigabitEthernet0/0", "192.168.10.1"], [r1, "GigabitEthernet0/1", "203.0.113.1"], [isp, "GigabitEthernet0/0", "203.0.113.2"], [isp, "GigabitEthernet0/1", "198.51.100.1"], [pc, "GigabitEthernet0", "198.51.100.10"]]) {
+      Object.assign(d.config.interfaces[port3], { adminUp: true, ip: ip2, mask: "255.255.255.0" });
+      d.config.interfaces[port3].features.dhcp = false;
+      d.config.interfaces[port3].features.proxyArp = false;
+    }
+    srv.config.defaultGateway = "192.168.10.1";
+    pc.config.defaultGateway = "198.51.100.1";
+    srv.config.services.http = { enabled: true, port: 80, authentication: "none", content: STATIC_NAT_PAGE };
+    for (const d of [srv, r1, isp, pc]) d.startupConfig = structuredClone(d.config);
+    const endpoints = { device: r1.id, inside: srv.id, outside: pc.id, insideLocal: "192.168.10.10", insideGlobal: "203.0.113.10", outsideAddress: "198.51.100.10" };
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "static-nat", name: "Static NAT" + (mode === "completed" ? " \xB7 Completed" : ""), devices: [srv, r1, isp, pc], links: [{ id: "link-static-nat-inside", a: { deviceId: srv.id, port: "GigabitEthernet0" }, b: { deviceId: r1.id, port: "GigabitEthernet0/0" }, enabled: true, delay: 0.1, loss: 0 }, { id: "link-static-nat-transit", a: { deviceId: r1.id, port: "GigabitEthernet0/1" }, b: { deviceId: isp.id, port: "GigabitEthernet0/0" }, enabled: true, delay: 0.1, loss: 0 }, { id: "link-static-nat-outside", a: { deviceId: isp.id, port: "GigabitEthernet0/1" }, b: { deviceId: pc.id, port: "GigabitEthernet0" }, enabled: true, delay: 0.1, loss: 0 }], notes: [{ id: "note-static-nat-mapping", x: 500, y: 470, text: "Static NAT \xB7 inside local \u2192 inside global\n192.168.10.10 \u2192 203.0.113.10\nPC1 Web browser: http://203.0.113.10/" }], lesson: { title: "Static NAT", description: "SRV1, R1, ISP1 and PC1 are already addressed. Both hosts have default gateways, ISP1 routes its two connected networks and SRV1 serves a prepared HTTP page. Configure R1 only. Start by identifying the inside and outside interfaces from the diagram and addressing plan.\n\nMark R1 GigabitEthernet0/0 with ip nat inside and GigabitEthernet0/1 with ip nat outside. Create the whole-address mapping ip nat inside source static 192.168.10.10 203.0.113.10. The first address is SRV1\u2019s inside local address; the second is its inside global address as seen by PC1. No allocation ACL, pool or overload is required.\n\nInstall R1\u2019s default route through 203.0.113.2 and save with write memory. NAT does not create this route. The public mapping is an unused address on the transit subnet; do not assign it to a physical interface or a secondary address. R1 responds to ISP1\u2019s ARP for the static alias. ISP1 has no route to the private LAN.\n\nBefore generating traffic, show ip nat translations should list the permanent --- entry. Then use the two connectivity buttons or the hosts\u2019 Command prompts: SRV1 pings 198.51.100.10 and PC1 pings 203.0.113.10. Each task requires a correlated translated request delivered to its destination and a successful translated return. Router-originated pings and an untranslated private-address ping do not prove host NAT.\n\nOn PC1, open Desktop \u2192 Web browser and visit http://203.0.113.10/. Expect 200 OK and the heading Static NAT: SRV1 reached. This task requires an actual complete HTTP response from the inside server, not just a TCP connection or a translation row. The external PC remains 198.51.100.10 on both sides of the mapping.\n\nInspect show ip nat translations verbose and show ip nat statistics after the tests. ICMP and TCP child entries describe real flows beneath the permanent static entry. Run clear ip nat translation *: it clears dynamic child state but preserves the configured static mapping. Generate new traffic to rebuild the entries.\n\nTroubleshoot by removing one NAT role or R1\u2019s default route, testing again and restoring the missing setting. A static row can remain visible while packets fail. To change a live mapping, clear its child flows first or respond to IOS\u2019s deletion confirmation. Restore the intended mapping and roles, verify traffic again and save R1 and the lab.\n\nPacket achievements survive saving and reopening. Current interface roles, the permanent mapping and the usable default route remain live requirements. The completed reference applies configuration only, so you must still generate both pings and the HTTP request. This lab models basic IPv4 one-to-one inside source NAT; it does not configure PAT, port forwarding, outside source translation or a firewall policy.", objectives: [
+      { id: "inside-role", title: "Mark R1 Gi0/0 as NAT inside", criterion: { kind: "nat-interface", device: r1.id, interface: "GigabitEthernet0/0", role: "inside" } },
+      { id: "outside-role", title: "Mark R1 Gi0/1 as NAT outside", criterion: { kind: "nat-interface", device: r1.id, interface: "GigabitEthernet0/1", role: "outside" } },
+      { id: "static-mapping", title: "Map inside local 192.168.10.10 to inside global 203.0.113.10", criterion: { kind: "nat-static", device: r1.id, insideLocal: "192.168.10.10", insideGlobal: "203.0.113.10" } },
+      { id: "default-route", title: "Install R1\u2019s usable default route through ISP1 at 203.0.113.2", criterion: { kind: "all", criteria: [{ kind: "route", device: r1.id, network: "0.0.0.0", prefix: 0, protocol: "static", nextHop: "203.0.113.2", ad: 1 }, { kind: "interface-up", device: r1.id, interface: "GigabitEthernet0/1" }] } },
+      { id: "inside-out", title: "Prove SRV1 can ping PC1 with its source translated to 203.0.113.10", criterion: { kind: "nat-ping", ...endpoints, direction: "inside-out" }, action: { kind: "ping", device: srv.id, target: "198.51.100.10" } },
+      { id: "outside-in", title: "Prove PC1 can ping the public mapping and receive a reply from it", criterion: { kind: "nat-ping", ...endpoints, direction: "outside-in" }, action: { kind: "ping", device: pc.id, target: "203.0.113.10" } },
+      { id: "published-http", title: "Open SRV1\u2019s published website from PC1", description: "PC1 \u2192 Desktop \u2192 Web browser \u2192 http://203.0.113.10/ \xB7 verify 200 OK and Static NAT: SRV1 reached.", criterion: { kind: "nat-http", ...endpoints, content: "Static NAT: SRV1 reached" } }
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261030, lab };
+    return mode === "completed" ? completedDocument(doc, STATIC_NAT_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createSCPSFTPFileTransferLab(mode = "practice") {
     const make = (name2, kind, x) => ({ id: "device-scp-sftp-" + name2.toLowerCase(), kind, x, y: 260, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
     const r1 = make("R1", "router", 600), r2 = make("R2", "router", 250), lap = make("PC1", "pc", 950);
@@ -55062,6 +55155,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "static-nat") return createStaticNATLab(mode);
     if (id2 === "scp-sftp-file-transfer") return createSCPSFTPFileTransferLab(mode);
     if (id2 === "radius-aaa-client") return createRADIUSAAAClientLab(mode);
     if (id2 === "tacacs-aaa-client") return createTACACSAAAClientLab(mode);
