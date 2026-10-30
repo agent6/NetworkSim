@@ -1,0 +1,102 @@
+{
+  "feature": "CCNA Routing: Floating Static Route",
+  "catalogId": "floating-static-route",
+  "devices": 5,
+  "links": 5,
+  "tasks": 8,
+  "topology": {
+    "R1": "Branch LAN 192.168.10.0/24 and 2001:db8:10::/64. Gi0/2 primary to R3: 10.0.13.1/30 and 2001:db8:13::1/64, fe80::1. Gi0/1 backup to R2: 10.0.12.1/30 and 2001:db8:12::1/64, fe80::1.",
+    "R2": "Preconfigured IPv4/IPv6 transit and return routes. Gi0/1 to R1: 10.0.12.2/30 and 2001:db8:12::2/64. Gi0/2 to R3: 10.0.23.1/30 and 2001:db8:23::2/64. fe80::2.",
+    "R3": "Server LAN 192.168.30.0/24 and 2001:db8:30::/64. Gi0/2 primary to R1: 10.0.13.2/30 and 2001:db8:13::3/64, fe80::3. Gi0/1 backup to R2: 10.0.23.2/30 and 2001:db8:23::3/64, fe80::3.",
+    "PC1": "192.168.10.10/24 and 2001:db8:10::10/64; manual gateways 192.168.10.1 and interface-scoped fe80::1.",
+    "SRV1": "192.168.30.10/24 and 2001:db8:30::10/64; manual gateways 192.168.30.1 and interface-scoped fe80::3."
+  },
+  "checks": [
+    "floating-static practice has independent zero-credit attempts, ready manual gateways and only preconfigured R2 transit routes",
+    "published commands and completed reference earn four configuration goals, with real echo required for all eight tasks",
+    "matching-prefix AD 10 backups remain configured but inactive while all four AD 1 primaries forward directly",
+    "primary failure withdraws both directions, installs four AD 10 backups, carries real traffic through R2 and automatically recovers",
+    "shutting the far end of the primary link also drives real bidirectional IPv4 and IPv6 failover and restoration",
+    "a missing return backup breaks only its address family during failure despite the correctly installed forward backup",
+    "equal AD is not a floating backup, and AD 255 never supplies connectivity after the primary disappears",
+    "a more-specific host route preempts the primary by prefix length and cannot earn the matching-network floating-route task",
+    "an incorrectly scoped IPv6 backup cannot earn credit or deliver after primary failure, while the IPv4 backup still works",
+    "losing both paths stops remote traffic; restoring the primary repairs it without inventing another backup",
+    "untracked static primaries do not withdraw merely because an otherwise-up direct link drops packets",
+    "all published verification commands work on primary and backup paths, including actual traceroutes and route/config distance differences",
+    "saved reload rebuilds active floating routes during a failed primary, and startup reboot restores the saved preferred path and progress"
+  ],
+  "verificationNotes": [
+    "The guide has four live configuration goals and four retained echo observations. Its failure/recovery exercise requires repeating route lookups, real traffic and traceroutes in both states; configuration goals require restored primaries at completion.",
+    "The completed reference contains four configuration goals with no fabricated traffic credit. All eight tasks require four actual echo tests.",
+    "All primary/backup pairs match the same prefix. AD 10 backups stay configured but inactive while the AD 1 primary is installed; local primary-link failure installs AD 10 in both directions and recovery automatically reinstalls AD 1.",
+    "Ethernet routes specify exit interface plus next hop. Link-local IPv6 addresses are interface-scoped. The lab tests local link failure; it does not claim remote-reachability monitoring without IP SLA or tracking.",
+    "Configured backup scoring is independent of current installation. A missing return backup, wrong prefix, wrong distance or wrong IPv6 interface cannot earn the required backup goal.",
+    "Browser test profiles and their local file URLs are isolated per theme/viewport. Startup storage and toast diagnostics are retained on a failed reload.",
+    "Overlapping file-based Chrome runs intermittently reopened with empty localStorage before application code. Their saved documents replayed correctly with active AD 10 routes and six completed goals; twelve consecutive isolated browser reloads also passed. File scenarios are now serialized and use fresh persistent profiles. Five successful viewport/theme runs are retained, with the failed dark-320 case rerun in isolation. This changes the QA harness, not application storage or simulation logic.",
+    "All six complete viewport/theme workflows and both permalink checks passed across the recorded runs; successful unchanged cases were retained and the failed case alone was rerun. Seven general catalog checks also passed. Final root/dist HTML and every frozen browser input match byte for byte. Light desktop topology and light/dark 320px guides were visually reviewed."
+  ],
+  "scope": "Adds a focused dual-stack Floating Static Route catalog lab, guide resources, completed reference, documentation and regression/browser coverage. Uses the existing IPv4/IPv6 forwarding, route selection and lesson criteria. No simulation engine, terminal, theme, dependency or backend changes. No live CML validation is claimed.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/support/docs/dial-access/floating-static-route/118263-technote-nexthop-00.html",
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_pi/configuration/15-mt/iri-15-mt-book/ip6-route-static.html",
+    "https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context"
+  ],
+  "artifactSha256": "0a2d224bb7364ea69d3f7d3dfafde42f998a0079fd6ccd17b52d8a320c80dba1",
+  "validation": {
+    "command": "npm run check",
+    "tests": 1583,
+    "newLabTests": 13,
+    "focusedTests": 28,
+    "passed": 1583,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "browserChecks": [
+    "light 390px: six Routing labs, eight-task floating-static guide and ten-row address plan, independent zero-credit practice, both published IOS configurations, configured inactive AD 10 backups and installed AD 1 primaries, real traffic and IPv4/IPv6 traceroutes before failure, four active AD 10 routes and bidirectional traffic through R2 after failure, missing return-backup fault and repair, reload while backups are active, restored AD 1 routes and direct paths, retained progress after healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "light 1440px: six Routing labs, eight-task floating-static guide and ten-row address plan, independent zero-credit practice, both published IOS configurations, configured inactive AD 10 backups and installed AD 1 primaries, real traffic and IPv4/IPv6 traceroutes before failure, four active AD 10 routes and bidirectional traffic through R2 after failure, missing return-backup fault and repair, reload while backups are active, restored AD 1 routes and direct paths, retained progress after healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "light 320px: six Routing labs, eight-task floating-static guide and ten-row address plan, independent zero-credit practice, both published IOS configurations, configured inactive AD 10 backups and installed AD 1 primaries, real traffic and IPv4/IPv6 traceroutes before failure, four active AD 10 routes and bidirectional traffic through R2 after failure, missing return-backup fault and repair, reload while backups are active, restored AD 1 routes and direct paths, retained progress after healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "dark 390px: six Routing labs, eight-task floating-static guide and ten-row address plan, independent zero-credit practice, both published IOS configurations, configured inactive AD 10 backups and installed AD 1 primaries, real traffic and IPv4/IPv6 traceroutes before failure, four active AD 10 routes and bidirectional traffic through R2 after failure, missing return-backup fault and repair, reload while backups are active, restored AD 1 routes and direct paths, retained progress after healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "dark 1440px: six Routing labs, eight-task floating-static guide and ten-row address plan, independent zero-credit practice, both published IOS configurations, configured inactive AD 10 backups and installed AD 1 primaries, real traffic and IPv4/IPv6 traceroutes before failure, four active AD 10 routes and bidirectional traffic through R2 after failure, missing return-backup fault and repair, reload while backups are active, restored AD 1 routes and direct paths, retained progress after healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "dark 320px: six Routing labs, eight-task floating-static guide and ten-row address plan, independent zero-credit practice, both published IOS configurations, configured inactive AD 10 backups and installed AD 1 primaries, real traffic and IPv4/IPv6 traceroutes before failure, four active AD 10 routes and bidirectional traffic through R2 after failure, missing return-backup fault and repair, reload while backups are active, restored AD 1 routes and direct paths, retained progress after healthy reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "light: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to six Routing labs",
+    "dark: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to six Routing labs"
+  ],
+  "browserRuns": [
+    {
+      "mode": "parallel persistent profiles",
+      "passedCases": [
+        "light-390",
+        "light-1440",
+        "light-320",
+        "dark-390",
+        "dark-1440"
+      ],
+      "retryRequired": [
+        "dark-320"
+      ],
+      "note": "The failed case had empty browser storage before application startup."
+    },
+    {
+      "mode": "isolated persistent profile, serialized file workflow",
+      "passedCases": [
+        "dark-320",
+        "light permalink",
+        "dark permalink"
+      ]
+    }
+  ],
+  "errors": [],
+  "externalRequests": []
+}
