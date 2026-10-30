@@ -1,0 +1,72 @@
+{
+  "feature": "CCNA Routing: Default Route",
+  "catalogId": "default-route",
+  "devices": 4,
+  "links": 3,
+  "tasks": 10,
+  "topology": {
+    "R1": "Branch LAN 10.10.10.1/24 and 2001:db8:10::1/64; upstream 192.0.2.1/30 and 2001:db8:12::1/64; fe80::1",
+    "ISP1": "Upstream 192.0.2.2/30 and 2001:db8:12::2/64; server LAN 203.0.113.1/24 and 2001:db8:20::1/64; fe80::2; Loopback0 198.51.100.1/32 and 2001:db8:100::1/128",
+    "PC1": "10.10.10.10/24 and 2001:db8:10::10/64; manual gateways 10.10.10.1 and interface-scoped fe80::1",
+    "SRV1": "203.0.113.10/24 and 2001:db8:20::10/64; manual gateways 203.0.113.1 and interface-scoped fe80::2"
+  },
+  "checks": [
+    "Fresh independent practice attempts start with zero credit, ready manual addressing and local gateways, disabled router IPv6 forwarding, and no router static routes or dynamic protocols.",
+    "Both published IOS configuration sets and the completed reference earn four configuration goals; six real IPv4/IPv6 echo tests are required to earn all ten tasks.",
+    "R1 has only IPv4 and IPv6 defaults. The same defaults reach both the upstream server LAN and loopback; packet events prove the selected upstream egress.",
+    "ip default-gateway does not install a routed IPv4 default or enable transit forwarding while IPv4 routing is enabled.",
+    "Removing either R1 default breaks both remote networks only in that address family; local connected gateway access and the other family remain operational.",
+    "Each missing upstream return route prevents replies despite the correct R1 default and requests being forwarded onto the server LAN; restoration repairs real traffic.",
+    "Disabling IPv6 forwarding on either router prevents IPv6 transit without affecting IPv4.",
+    "Uplink shutdown withdraws both defaults and upstream return routes, while connected branch gateway access continues. Restoring the uplink rebuilds routes and neighbors.",
+    "Connected branch LAN prefixes take precedence over defaults on the actual return-packet egress.",
+    "Unknown IPv4 and IPv6 destinations stop at ISP1; no reciprocal defaults create a forwarding loop.",
+    "A more-specific route, wrong default distance or incorrectly scoped IPv6 next hop cannot earn the intended default configuration task.",
+    "All published verification commands execute, including route lookup, Neighbor Discovery verification, route print, ping and traceroute. IPv4 output shows S* and a gateway of last resort; IPv6 shows S ::/0 and its scoped next hop.",
+    "Portable YAML save/reload and startup power cycles retain manual endpoint gateways, route configuration and previously earned traffic while active tables rebuild."
+  ],
+  "scope": "Adds a dual-stack default-routing catalog lab, guide resources, completed reference, documentation and regression/browser coverage. Uses existing routing, Neighbor Discovery and packet forwarding. No simulation engine, terminal, theme, dependency or backend changes. No live CML validation is claimed.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/support/docs/ip/routing-information-protocol-rip/16448-default.html",
+    "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_pi/configuration/15-mt/iri-15-mt-book/ip6-route-static.html"
+  ],
+  "artifactSha256": "3dc8106581d7296e71d30346459da8a560ba114c25ac6fb67f181f03a7647ea0",
+  "validation": {
+    "command": "npm run check",
+    "tests": 1557,
+    "newLabTests": 13,
+    "focusedTests": 28,
+    "passed": 1557,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "verificationNotes": [
+    "IPv4 next-hop-only static routes are recursively resolved; their installed RIB row need not carry an explicit exit-interface field. Packet-event assertions verify the actual upstream egress. IPv6 link-local defaults explicitly require Gi0/1.",
+    "A freshly reopened IPv6 interface performs Duplicate Address Detection. Browser reload verification runs a real IPv4 connectivity check before requiring all three IPv6 replies, rather than assuming IPv6 forwarding is ready at the first rendered frame.",
+    "All lab addressing and traffic remain simulated inside the offline browser; the upstream router does not provide real Internet access.",
+    "All eight new-lab browser checks and seven catalog checks passed. The artifact SHA matches the final rebuild, root index.html, dist/index.html and the frozen offline browser input. Light desktop topology and light/dark 320px guides were visually reviewed."
+  ],
+  "browserChecks": [
+    "light 390px: four Routing labs, ten-task dual-stack default-route guide and seven-row address plan, independent zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, IPv4/IPv6 default removal isolated to its family, missing upstream return route and repair, installed S* and S defaults, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "light 1440px: four Routing labs, ten-task dual-stack default-route guide and seven-row address plan, independent zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, IPv4/IPv6 default removal isolated to its family, missing upstream return route and repair, installed S* and S defaults, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "light 320px: four Routing labs, ten-task dual-stack default-route guide and seven-row address plan, independent zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, IPv4/IPv6 default removal isolated to its family, missing upstream return route and repair, installed S* and S defaults, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "dark 1440px: four Routing labs, ten-task dual-stack default-route guide and seven-row address plan, independent zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, IPv4/IPv6 default removal isolated to its family, missing upstream return route and repair, installed S* and S defaults, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "dark 390px: four Routing labs, ten-task dual-stack default-route guide and seven-row address plan, independent zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, IPv4/IPv6 default removal isolated to its family, missing upstream return route and repair, installed S* and S defaults, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "dark 320px: four Routing labs, ten-task dual-stack default-route guide and seven-row address plan, independent zero-credit practice, both published IOS configurations, six real 3/3 traffic tests, IPv4/IPv6 default removal isolated to its family, missing upstream return route and repair, installed S* and S defaults, retained progress after offline reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+    "light: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to four Routing labs",
+    "dark: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to four Routing labs"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

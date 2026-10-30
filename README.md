@@ -50,6 +50,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **IPv6 Static Routing** under Routing starts with IPv6 forwarding disabled and manual global/link-local addressing ready. Enable forwarding on all routers, configure /64 network, /128 host, ::/0 default and floating routes, and use interface-scoped link-local next hops. Verify real Neighbor Discovery, return paths and primary-link failover through R2; the guide includes a completed reference and an unscoped next-hop rejection exercise.
 
+**Default Route** under Routing focuses on dual-stack branch forwarding through one upstream router. Configure IPv4 and interface-scoped IPv6 defaults, install explicit upstream return routes, and verify two remote networks in both families. Troubleshoot removed defaults, missing return routes and uplink failure while connected gateway access continues; the guide has ten tasks and a completed reference.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.
