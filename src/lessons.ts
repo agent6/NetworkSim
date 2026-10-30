@@ -7,6 +7,7 @@ import {endpointVoicePolicy, endpointNetworkPort} from './endpoint.ts';
 import {ospfLiveDetail} from './ospf-packets.ts';
 import {localSSHLoginSnapshot} from './management.ts';
 import {ownRecordValue} from './record-map.ts';
+import {validPortSecurityCriterion,matchesPortSecurityCriterion,type PortSecurityCriterion} from './port-security-lab.ts';
 import {validRAGuardCriterion,matchesRAGuardCriterion,type RAGuardCriterion} from './ra-guard-lab.ts';
 import {validStormCriterion,matchesStormCriterion,type StormCriterion} from './storm-control-lab.ts';
 import {validARPInspectionCriterion,matchesARPInspectionCriterion,type ARPInspectionCriterion} from './arp-inspection-lab.ts';
@@ -25,6 +26,7 @@ export type Criterion =
   | ARPInspectionCriterion
   | StormCriterion
   | RAGuardCriterion
+  | PortSecurityCriterion
   | { kind: "all" | "any"; criteria: Criterion[] }
   | { kind: "local-user"; device: string; username: string; privilege: number }
   | { kind: "local-management"; device: string; setting: "enable-secret" | "console-login" | "ssh-server" | "vty-login" }
@@ -84,7 +86,7 @@ export interface Objective {
   title: string;
   description?: string;
   criterion: Criterion;
-  action?: {kind:"slaac";device:string;interface:string;when?:Criterion} | {kind:"traffic";device:string;interface:string;traffic:"broadcast"|"multicast"|"unicast";when?:Criterion} | {kind:"arp";device:string;interface:string;address:string;when?:Criterion} | { kind: "ping"; device: string; target: string; when?: Criterion } | { kind: "dhcp"; device: string; interface: string; when?: Criterion };
+  action?: {kind:"slaac";device:string;interface:string;when?:Criterion} | {kind:"traffic";device:string;interface:string;traffic:"broadcast"|"multicast"|"unicast";when?:Criterion} | {kind:"arp";device:string;interface:string;address:string;when?:Criterion} | { kind: "ping"; device: string; target: string; expect?:"blocked"; when?: Criterion } | { kind: "dhcp"; device: string; interface: string; when?: Criterion };
 }
 export interface Lesson {
   title: string;
@@ -118,6 +120,12 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     if (v.kind === "link") return text(v.a, 128) && text(v.b, 128);
     if (!text(v.device, 128)) return false;
     switch (v.kind) {
+      case "ps-config":
+      case "ps-binding":
+      case "ps-saved":
+      case "ps-incident":
+      case "ps-ping":
+        return validPortSecurityCriterion(v);
       case "ra-policy":
       case "ra-attachment":
       case "ra-block":
@@ -339,6 +347,7 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         !["ping","dhcp","arp","traffic","slaac"].includes(o.action.kind) ||
         !text(o.action.device, 128) ||
         (o.action.kind === "ping" ? !address(o.action.target) : !text(o.action.interface,128) || (o.action.kind === "arp" && !isIPv4(o.action.address)) || (o.action.kind === "traffic" && !["broadcast","multicast","unicast"].includes(o.action.traffic))) ||
+        (o.action.kind === "ping" && o.action.expect !== undefined && o.action.expect !== "blocked") ||
         (o.action.when !== undefined && !criterion(o.action.when)))
     )
       throw Error("A lab objective action is invalid.");
@@ -387,6 +396,7 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (['ps-config','ps-binding','ps-saved','ps-incident','ps-ping'].includes(criterion.kind))return matchesPortSecurityCriterion(sim,d,criterion as PortSecurityCriterion);
   if (['ra-policy','ra-attachment','ra-block','ra-client','ra-ping','ra-protected-gateway','ra-neighbor'].includes(criterion.kind))return matchesRAGuardCriterion(sim,d,criterion as RAGuardCriterion);
   if (['storm-policy','storm-recovery','storm-drop','storm-ping'].includes(criterion.kind))return matchesStormCriterion(sim,d,criterion as StormCriterion);
   if (['dai-vlan','dai-trust','dai-rate','dai-static-acl','dai-frame','arp-neighbor'].includes(criterion.kind))return matchesARPInspectionCriterion(sim,d,criterion as ARPInspectionCriterion);
@@ -598,7 +608,7 @@ export function lessonProgress(sim: Simulator):
       );
     }
     const result = matches(sim, c);
-    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping" && c.kind !== "ra-block" && c.kind !== "ra-ping") return result;
+    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session" && c.kind !== "radius-session" && c.kind !== "file-transfer" && c.kind !== "nat-ping" && c.kind !== "nat-http" && c.kind !== "nat-outbound-http" && c.kind !== "pat-sharing" && c.kind !== "acl-ping" && c.kind !== "acl-http" && c.kind !== "acl-dns" && c.kind !== "snooping-ping" && c.kind !== "snooping-rogue-drop" && c.kind !== "dai-frame" && c.kind !== "storm-drop" && c.kind !== "storm-ping" && c.kind !== "ra-block" && c.kind !== "ra-ping" && c.kind !== "ps-incident" && c.kind !== "ps-ping") return result;
     validKeys.add(key);
     if (result) observations.add(key);
     return result || observations.has(key);
@@ -606,7 +616,7 @@ export function lessonProgress(sim: Simulator):
   const rows = lesson.objectives.map((objective) => {
     const observed = observe(objective.criterion, JSON.stringify(objective.id));
     // Traffic, login and fault observations record accomplishments; configuration stays live.
-    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping" || objective.criterion.kind === "ra-block" || objective.criterion.kind === "ra-ping";
+    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session" || objective.criterion.kind === "radius-session" || objective.criterion.kind === "file-transfer" || objective.criterion.kind === "nat-ping" || objective.criterion.kind === "nat-http" || objective.criterion.kind === "nat-outbound-http" || objective.criterion.kind === "pat-sharing" || objective.criterion.kind === "acl-ping" || objective.criterion.kind === "acl-http" || objective.criterion.kind === "acl-dns" || objective.criterion.kind === "snooping-ping" || objective.criterion.kind === "snooping-rogue-drop" || objective.criterion.kind === "dai-frame" || objective.criterion.kind === "storm-drop" || objective.criterion.kind === "storm-ping" || objective.criterion.kind === "ra-block" || objective.criterion.kind === "ra-ping" || objective.criterion.kind === "ps-incident" || objective.criterion.kind === "ps-ping";
     if (historical && observed)
       completed.add(objective.id);
     return {

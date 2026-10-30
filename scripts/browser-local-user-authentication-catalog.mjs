@@ -27,8 +27,8 @@ async function openNode(page,name){
 async function detail(page){
   await page.locator('.header-actions [data-action=lab-catalog]').click();
   const section=page.locator('[data-catalog-section="Services & Security"]');
-  assert.equal(await section.getAttribute('aria-label'),'Services & Security, 13 labs');
-  assert.equal(await section.locator('.catalog-count').textContent(),'13');
+  assert.equal(await section.getAttribute('aria-label'),'Services & Security, 14 labs');
+  assert.equal(await section.locator('.catalog-count').textContent(),'14');
   await section.click();await page.locator(`[data-catalog-lab="${id}"]`).click();
 }
 async function guide(page,n){await page.locator('#lab-guide-button').click();await progress(page,n);}
@@ -131,8 +131,8 @@ try{
     await page.addInitScript(t=>{localStorage.setItem('network-sim.theme.v1',t);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copiedLabURL=text;}}});},theme);
     await page.goto(base+hash);await page.getByRole('heading',{name:title,exact:true}).waitFor();assert.equal(await page.locator('#world .device').count(),0);
     await page.locator('[data-catalog-copy]').click();await page.waitForFunction(expected=>window.copiedLabURL===expected,base+hash);await page.locator('[data-catalog-back]').click();
-    const section=page.locator('[data-catalog-section="Services & Security"]');assert.equal(await section.getAttribute('aria-pressed'),'true');assert.equal(await section.locator('.catalog-count').textContent(),'13');assert.equal(await page.locator(`[data-catalog-lab="${id}"]`).getAttribute('href'),base+hash);
-    checks.push(`${theme}: permalink preserves current host/path/query, previews without replacing workspace, and returns to Services & Security with thirteen labs`);process.stdout.write(`PASS ${theme} permalink\n`);await page.close();
+    const section=page.locator('[data-catalog-section="Services & Security"]');assert.equal(await section.getAttribute('aria-pressed'),'true');assert.equal(await section.locator('.catalog-count').textContent(),'14');assert.equal(await page.locator(`[data-catalog-lab="${id}"]`).getAttribute('href'),base+hash);
+    checks.push(`${theme}: permalink preserves current host/path/query, previews without replacing workspace, and returns to Services & Security with fourteen labs`);process.stdout.write(`PASS ${theme} permalink\n`);await page.close();
   }
   assert.deepEqual(errors,[]);assert.deepEqual(externalRequests,[]);
   await writeFile(folder+'/validation.json',JSON.stringify({artifactSha256:createHash('sha256').update(html).digest('hex'),checks,errors,externalRequests},null,2)+'\n');

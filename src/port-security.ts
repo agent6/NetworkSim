@@ -59,6 +59,7 @@ export function inspectPortSecurity(e:Simulator,d:Device,p:InterfaceConfig,vlan:
   (state.portSecurityLastSource??={})[p.name]={mac:f.sourceMac,vlan};
   if(moved||!known&&entries.length>=(c.maximum??1)){
     const nx=d.kind==='datacenter',mode=moved&&nx?'shutdown':c.violation??'shutdown';
+    const beforeCount=state.portSecurityPortViolations?.[p.name]??0;let logged=false;
     const rejected: string[]=(state.portSecurityRejected??={})[p.name]??=[];
     if(mode!=='protect'&&(!nx||!rejected.includes(mac))){
       (state.portSecurityPortViolations??={})[p.name]=(state.portSecurityPortViolations[p.name]??0)+1;
@@ -71,13 +72,17 @@ export function inspectPortSecurity(e:Simulator,d:Device,p:InterfaceConfig,vlan:
         if(nx)notified[notificationKey]=true;
         logs[p.name]=e.clock.now();
         e.log(d.id,nx?`%DAEMON-2-SYSTEM_MSG: <<%ETH-PORT-SEC-2-ETH_PORT_SEC_SECURITY_MAX_ADDR_COUNT_VIOLATION>> Triggered max address count violation ${mode.toUpperCase()} on port ${p.name} - eth_port_sec`:`%PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address ${secureDotted(mac)} on port ${p.name}.`,2);
+        logged=true;
       }
     }
     if(mode==='shutdown'&&disableInterface(e,d,p.name,'psecure-violation')){
       e.log(d.id,`%PM-4-ERR_DISABLE: psecure-violation error detected on ${p.name.replace('GigabitEthernet','Gi').replace('Ethernet','Eth')}, putting ${p.name.replace('GigabitEthernet','Gi').replace('Ethernet','Eth')} in err-disable state`,4);e.changed();
     }
     state.portSecurityViolations=(state.portSecurityViolations??0)+1;
-    e.emit({nodeId:d.id,port:p.name,protocol:'ETHERNET',label:moved?'Secure MAC move violation':'Port security violation',detail:moved?'This source MAC belongs to a different secure port in the same VLAN.':'The secure MAC limit was exceeded on '+p.name+'.',disposition:'drop'});return false;
+    const payload=f.payload,packetId='kind' in payload?f.id:payload.id;
+    const packet={id:packetId,source:'kind' in payload?('source' in payload?payload.source:''):payload.source,destination:'kind' in payload?('target' in payload?payload.target:''):payload.destination,protocol:'kind' in payload?(payload.kind==='arp'?(payload.family===6?'NDP':'ARP'):payload.kind==='dhcp'?'DHCP':payload.protocol):payload.protocol.toUpperCase(),sourceMac:f.sourceMac,destinationMac:f.destinationMac,vlan,...'kind' in payload&&payload.kind==='arp'?{arpOperation:payload.operation}:{}};
+    const rows=state.portSecurityEvents??=[];rows.push({time:e.clock.now(),frameId:f.id,packetId,port:p.name,vlan,sourceMac:f.sourceMac,mode,beforeCount,afterCount:state.portSecurityPortViolations?.[p.name]??0,logged,disabled:p.features.errDisabled===true,reason:state.errdisableCauses?.[p.name],moved});if(rows.length>1000)rows.shift();
+    e.emit({nodeId:d.id,port:p.name,protocol:'ETHERNET',packet,label:moved?'Secure MAC move violation':'Port security violation',detail:moved?'This source MAC belongs to a different secure port in the same VLAN.':'The secure MAC limit was exceeded on '+p.name+'.',disposition:'drop'});return false;
   }
   if(!known){
     if(c.sticky){c.stickyMacs.push(colon(mac));if(d.kind==='datacenter')(d.secureSticky??={})[p.name]=[...c.stickyMacs];}else(state.secureMacs??={})[p.name]=[...(state.secureMacs?.[p.name]??[]),colon(mac)];

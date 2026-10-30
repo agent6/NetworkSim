@@ -1,0 +1,90 @@
+{
+  "feature": {
+    "title": "Port Security",
+    "catalogId": "port-security",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 14,
+    "devices": 7,
+    "links": 6,
+    "tasks": 12,
+    "addressingRows": 5,
+    "permalink": "#/labs/port-security",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.10.11, PC2 .12 and test source PC3 .13 connect through SW2 to secured SW1 Gi0/1, all in VLAN 10. SRV1 .100 connects to SW1 Gi0/2 and unaffected PC4 .14 connects to Gi0/3. Static addresses and MACs, access VLANs and Rapid PVST+ are prepared. PortFast is used only on host links, not the inter-switch connection.",
+  "verificationNotes": [
+    "Practice is genuinely unprotected at zero credit. The completed reference has four configuration goals and no learned MAC or violation evidence. Real PC1/PC2 pings learn two SecureSticky bindings; a later write memory saves them and earns the startup goal.",
+    "The shared access ingress uses maximum 2, sticky learning and restrict as its intended final mode. PC3 remains physically connected. Restrict drops actual PC3 frames while increasing the native per-port counter and emitting syslog; authorized hosts remain usable.",
+    "Protect drops the same unknown source with no increase in the native counter and no violation log. Previously accumulated restrict counts remain visible. Shutdown really err-disables the shared interface for psecure-violation, interrupting both authorized hosts behind it.",
+    "PC4 must receive actual server replies while the protected interface is currently err-disabled. Recovery requires the intended restrict mode, restored forwarding and a successful PC1 request/reply after the observed shutdown. Sticky bindings remain intact; raising the limit or disabling security is not a valid repair.",
+    "Bounded 1000-row decision telemetry records actual source, packet identity, mode, native counter before/after, logging and err-disable state. The packet inspector receives the offending frame metadata. The enforcement algorithm and existing IOS/NX-OS counter semantics are preserved.",
+    "Expected-block ping controls explain that no replies require verification against the task and packet trace. An unrelated outage, fabricated counter, wrong packet identity or disconnected source cannot create the required violation observation.",
+    "Focused tests cover learning the wrong host first, removing a mistaken sticky entry, maximum constraints, dynamic versus static versus sticky entries, save timing, temporary-mode saves, startup versus running configuration, bounded telemetry and persistent observations. Actual IOS reload loses unsaved learned sticky addresses and retains saved ones.",
+    "Portable lab reopening retains the running sticky configuration separately from startup configuration and remembers actual mode/traffic achievements. The final restrict configuration and saved bindings remain live goals. Both practice and completed modes traverse the full sequence in all six browser cases."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco Catalyst 2960-L IOS 15.2(7)Ex: Port Security",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst2960l/software/15-2_7_e/configuration_guide/sec/b_1527e_security_2960l_cg/port_security.html"
+    },
+    {
+      "title": "Cisco Catalyst 2960 Command Reference: switchport port-security",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst2960/software/release/12-2_55_se/command/reference/2960_cr/cli3.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 18,
+    "focusedAndExistingPortSecurityTests": 35,
+    "focusedPassed": 35,
+    "typecheck": "passed",
+    "fullSuite": {
+      "command": "npm run check",
+      "tests": 1932,
+      "passed": 1932,
+      "failed": 0
+    },
+    "build": "passed; root and dist single-file artifacts match",
+    "browser": {
+      "checks": 15,
+      "matrix": [
+        "light / dark",
+        "1440 / 390 / 320 px"
+      ],
+      "labChecks": [
+        "light 1440px: fourteen Services & Security labs, twelve tasks/five addressing rows, unprotected PC3 forwarding with zero credit, four IOS policy goals, real PC1/PC2 sticky learning and later startup save, restrict counter/syslog with live interface, protect unchanged native count and live interface, shutdown psecure-violation and retained bindings, PC4 ping/HTTP during isolation, actual packet inspector source evidence, manual recovery and restored restrict/PC1 traffic, saved bindings and progress after reload, full completed reference/cancel/save-copy protection, fit-visible complete node icons/non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light 390px: fourteen Services & Security labs, twelve tasks/five addressing rows, unprotected PC3 forwarding with zero credit, four IOS policy goals, real PC1/PC2 sticky learning and later startup save, restrict counter/syslog with live interface, protect unchanged native count and live interface, shutdown psecure-violation and retained bindings, PC4 ping/HTTP during isolation, actual packet inspector source evidence, manual recovery and restored restrict/PC1 traffic, saved bindings and progress after reload, full completed reference/cancel/save-copy protection, fit-visible complete node icons/non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light 320px: fourteen Services & Security labs, twelve tasks/five addressing rows, unprotected PC3 forwarding with zero credit, four IOS policy goals, real PC1/PC2 sticky learning and later startup save, restrict counter/syslog with live interface, protect unchanged native count and live interface, shutdown psecure-violation and retained bindings, PC4 ping/HTTP during isolation, actual packet inspector source evidence, manual recovery and restored restrict/PC1 traffic, saved bindings and progress after reload, full completed reference/cancel/save-copy protection, fit-visible complete node icons/non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 1440px: fourteen Services & Security labs, twelve tasks/five addressing rows, unprotected PC3 forwarding with zero credit, four IOS policy goals, real PC1/PC2 sticky learning and later startup save, restrict counter/syslog with live interface, protect unchanged native count and live interface, shutdown psecure-violation and retained bindings, PC4 ping/HTTP during isolation, actual packet inspector source evidence, manual recovery and restored restrict/PC1 traffic, saved bindings and progress after reload, full completed reference/cancel/save-copy protection, fit-visible complete node icons/non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 390px: fourteen Services & Security labs, twelve tasks/five addressing rows, unprotected PC3 forwarding with zero credit, four IOS policy goals, real PC1/PC2 sticky learning and later startup save, restrict counter/syslog with live interface, protect unchanged native count and live interface, shutdown psecure-violation and retained bindings, PC4 ping/HTTP during isolation, actual packet inspector source evidence, manual recovery and restored restrict/PC1 traffic, saved bindings and progress after reload, full completed reference/cancel/save-copy protection, fit-visible complete node icons/non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "dark 320px: fourteen Services & Security labs, twelve tasks/five addressing rows, unprotected PC3 forwarding with zero credit, four IOS policy goals, real PC1/PC2 sticky learning and later startup save, restrict counter/syslog with live interface, protect unchanged native count and live interface, shutdown psecure-violation and retained bindings, PC4 ping/HTTP during isolation, actual packet inspector source evidence, manual recovery and restored restrict/PC1 traffic, saved bindings and progress after reload, full completed reference/cancel/save-copy protection, fit-visible complete node icons/non-overlapping note, responsive guide and unchanged terminal golden styles",
+        "light: permalink preserves current host/path/query and returns to fourteen Services & Security labs without replacing the workspace",
+        "dark: permalink preserves current host/path/query and returns to fourteen Services & Security labs without replacing the workspace"
+      ],
+      "generalCatalogChecks": [
+        "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+        "Imported guide actions respect declared prerequisites and source power"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cliAppearance": "matches the existing desktop/mobile light/dark golden styles",
+      "visualInspection": [
+        "light desktop topology",
+        "light 320px topology",
+        "dark desktop topology",
+        "dark 320px guide"
+      ],
+      "canvasFit": "Fit keeps every node icon and the note inside the workspace; note does not overlap node addressing",
+      "matchingArtifactCopies": 16
+    },
+    "artifactSha256": "7c7567c55f471c5400261c70657673960f88578f48bba487e305c2d321a67c82"
+  }
+}

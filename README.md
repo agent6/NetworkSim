@@ -92,6 +92,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **IPv6 RA Guard** under Services & Security protects two SLAAC clients from a live rogue advertiser. Its twelve tasks apply named host/router policies, prove actual rogue RA drops, verify legitimate prefixes and link-local default routers, preserve Neighbor Discovery and test remote IPv6 forwarding. Reset and request IPv6 clears automatic adapter state for recovery while retaining manual addresses and routes. Includes a completed reference and `#/labs/ipv6-ra-guard`.
 
+**Port Security** under Services & Security learns and saves two authorized sticky MAC addresses on a shared access port. Its twelve tasks compare restrict, protect and shutdown with real third-host traffic, verify the native counter and syslog differences, preserve an independent client’s service and restore forwarding with the saved bindings intact. Includes a completed reference and `#/labs/port-security`.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.
