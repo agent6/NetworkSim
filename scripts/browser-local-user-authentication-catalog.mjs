@@ -27,8 +27,8 @@ async function openNode(page,name){
 async function detail(page){
   await page.locator('.header-actions [data-action=lab-catalog]').click();
   const section=page.locator('[data-catalog-section="Services & Security"]');
-  assert.equal(await section.getAttribute('aria-label'),'Services & Security, 1 lab');
-  assert.equal(await section.locator('.catalog-count').textContent(),'1');
+  assert.equal(await section.getAttribute('aria-label'),'Services & Security, 2 labs');
+  assert.equal(await section.locator('.catalog-count').textContent(),'2');
   await section.click();await page.locator(`[data-catalog-lab="${id}"]`).click();
 }
 async function guide(page,n){await page.locator('#lab-guide-button').click();await progress(page,n);}
@@ -115,7 +115,7 @@ async function scenario(theme,width){
     await detail(page);await page.locator('[data-catalog-mode=completed]').click();await page.locator('#cancel-lab-import').click();assert.equal(await page.locator('#lab-name').textContent(),title);
     await detail(page);await page.locator('[data-catalog-mode=completed]').click();await page.locator('#lab-import-save').click();await page.waitForFunction(()=>document.querySelector('#lab-name')?.textContent.includes('Completed'));
     await guide(page,6);await ping(page);await close(page);await login(page,'operator');await login(page,'admin');await guide(page,9);
-    checks.push(`${theme} ${width}px: first Services & Security lab and singular accessible count, nine-task guide and two-row plan, zero-credit practice, published IOS configuration and six live goals, real ping and two locally authenticated SSH users with distinct initial privileges, wrong-password rejection and hidden inputs, privilege-1 command denial and independent enable-secret elevation, actual show users/ssh, blocked transport and recovery with live grading, saved achievements and fresh console authentication after reload, completed reference with no fabricated logins, cancel/save-copy protection, responsive layout and unchanged CLI colors`);
+    checks.push(`${theme} ${width}px: Services & Security labs and accurate accessible count, nine-task guide and two-row plan, zero-credit practice, published IOS configuration and six live goals, real ping and two locally authenticated SSH users with distinct initial privileges, wrong-password rejection and hidden inputs, privilege-1 command denial and independent enable-secret elevation, actual show users/ssh, blocked transport and recovery with live grading, saved achievements and fresh console authentication after reload, completed reference with no fabricated logins, cancel/save-copy protection, responsive layout and unchanged CLI colors`);
     process.stdout.write(`PASS ${theme} ${width}\n`);
   }catch(error){
     await writeFile(`${folder}/failure-${theme}-${width}.json`,JSON.stringify(await page.evaluate(()=>({name:document.querySelector('#lab-name')?.textContent,prompt:document.querySelector('#terminal-prompt')?.textContent,terminal:document.querySelector('#terminal-output')?.textContent,toasts:window.qaToasts})),null,2));
@@ -131,8 +131,8 @@ try{
     await page.addInitScript(t=>{localStorage.setItem('network-sim.theme.v1',t);Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copiedLabURL=text;}}});},theme);
     await page.goto(base+hash);await page.getByRole('heading',{name:title,exact:true}).waitFor();assert.equal(await page.locator('#world .device').count(),0);
     await page.locator('[data-catalog-copy]').click();await page.waitForFunction(expected=>window.copiedLabURL===expected,base+hash);await page.locator('[data-catalog-back]').click();
-    const section=page.locator('[data-catalog-section="Services & Security"]');assert.equal(await section.getAttribute('aria-pressed'),'true');assert.equal(await section.locator('.catalog-count').textContent(),'1');assert.equal(await page.locator(`[data-catalog-lab="${id}"]`).getAttribute('href'),base+hash);
-    checks.push(`${theme}: permalink preserves current host/path/query, previews without replacing workspace, and returns to Services & Security with one lab`);process.stdout.write(`PASS ${theme} permalink\n`);await page.close();
+    const section=page.locator('[data-catalog-section="Services & Security"]');assert.equal(await section.getAttribute('aria-pressed'),'true');assert.equal(await section.locator('.catalog-count').textContent(),'2');assert.equal(await page.locator(`[data-catalog-lab="${id}"]`).getAttribute('href'),base+hash);
+    checks.push(`${theme}: permalink preserves current host/path/query, previews without replacing workspace, and returns to Services & Security with two labs`);process.stdout.write(`PASS ${theme} permalink\n`);await page.close();
   }
   assert.deepEqual(errors,[]);assert.deepEqual(externalRequests,[]);
   await writeFile(folder+'/validation.json',JSON.stringify({artifactSha256:createHash('sha256').update(html).digest('hex'),checks,errors,externalRequests},null,2)+'\n');

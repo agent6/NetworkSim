@@ -1,0 +1,140 @@
+{
+  "feature": {
+    "title": "TACACS+ AAA Client",
+    "catalogId": "tacacs-aaa-client",
+    "group": "CCNA",
+    "section": "Services & Security",
+    "sectionLabCount": 2,
+    "devices": 3,
+    "links": 2,
+    "tasks": 10,
+    "addressingRows": 4,
+    "permalink": "#/labs/tacacs-aaa-client",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.0.2.10/24 \u2192 R1 Gi0/0 192.0.2.1/24; R1 Gi0/1 192.168.100.1/24 \u2192 SRV1 192.168.100.10/24. Hosts have matching gateways. SRV1 provides an enabled TACACS+ service on TCP 49, a shared key and netadmin privilege 15 with EXEC access allowed. R1 starts without AAA or SSH configuration.",
+  "verificationNotes": [
+    "The original three-node practice has addressed interfaces and a prepared server, but no configured client, remote session, request log, received accounting or completion credit. Both modes are independent saved-lab attempts. The completed reference configures R1 through IOSSession and earns eight live goals only.",
+    "R1 uses named TACACS1 and TAC-GROUP definitions, VTY-AUTH remote-first login with local fallback, VTY-EXEC remote-first EXEC authorization with local fallback, and VTY-ACCT server-backed EXEC Start/Stop accounting. VTY 0\u20134 explicitly bind all three lists and permit SSH only, with SSHv2, a domain and 2048-bit RSA keys.",
+    "The local rescue account and enable secret provide recovery. The independent CONSOLE authentication list uses local credentials and is applied only to console 0. Fresh console sessions begin at privilege 1 because console EXEC authorization is not enabled, then use the enable secret for privilege 15. Server outages do not disable this recovery path.",
+    "The final two achievements require a genuine routed PC-to-server ping and a remotely approved netadmin SSH lifecycle. The session check correlates accepted TACACS authentication and EXEC authorization requests, server-received Start/Stop rows for the same session, NAS and remote-PC addresses, initial privilege 15, and matching acknowledged client delivery event IDs.",
+    "An open password prompt, a successful test aaa authentication command, a missing VTY binding, stop-only accounting, wrong initial privilege or unmatched receiver/client event IDs cannot complete the lifecycle achievement. Received records with a missing ACK remain unearned while pending and after failure.",
+    "Tests distinguish wrong passwords and explicit healthy-server rejection from unavailable/error results. The valid local rescue account must still be rejected by an available server that does not know it. Disabling only the TACACS service leaves routed ping working and permits local authentication and local EXEC authorization fallback, while accounting remains failed without fabricated receiver records.",
+    "EXEC authorization Deny shell can follow successful remote authentication, closes the SSH connection and creates no accounting Start. Restoring Allow shell recovers the planned workflow. A wrong shared key or wrong endpoint can permit error fallback, but cannot earn the working-server or remotely approved-session requirements.",
+    "Live checks cover the active server, matching key/TCP 49, TACACS-specific group membership, exact method order, enabled AAA, safe local console policy, and all named SSH-only VTY bindings. Traffic/session achievements use the existing bounded observations format and survive exit and save/reopen; configuration requirements remain live.",
+    "Portable reopening discards transient AAA requests, receiver rows, client deliveries and ready sessions, while retaining earned guide observations and configuration. Startup reboot selects the saved client policy. Published show, SSH and traffic commands are checked against actual simulator state.",
+    "The server receiver log now displays the existing remote-PC address and privilege fields alongside NAS source, username, line, session ID and status. The displayed records exclude credentials and escape user-supplied text. Client delivery diagnostics remain separate from received records.",
+    "Mobile visual review found the existing four-column AAA account row clipped privilege controls. It now uses two columns on narrow screens and four columns on larger screens. Browser geometry checks verify every account control stays within the row, including at 320 pixels.",
+    "The original terminal stylesheet source is unchanged. Six browser viewport/theme cases compare terminal font, colors, cursor, borders, focus and controls against the existing console-theme golden fixture; the responsive AAA utility changes do not alter CLI appearance.",
+    "Final browser cases run serially in isolated persistent Chrome profiles using identical offline HTML copies. They cover provisioning, hidden password input, remote approval, acknowledged accounting, rejection versus fallback, authorization denial, server/policy restoration, saved reopening, fresh console authentication, and completed-reference save/cancel flows.",
+    "Permalink cases preserve the current host, path and query and return to Services & Security with two labs. Generic catalog checks preserve existing groups/sections, counts, lab save/cancel behavior, routing guide progress and declared action prerequisites.",
+    "No networking or AAA authentication/authorization/accounting decision logic is changed. New guide criteria inspect existing packet-backed state. This lab exercises the existing logical TACACS+/SSH model; no new cryptography, command-authorization feature set or live CML validation is claimed."
+  ],
+  "unitChecks": [
+    "TACACS client practice has three addressed nodes, a prepared server, independent identity and zero credit",
+    "published client configuration and completed reference earn eight live goals without invented AAA traffic",
+    "remote SSH authenticates and authorizes EXEC through TCP49 and commits acknowledged paired Start/Stop records",
+    "wrong remote passwords are rejected and cannot create authorization, accounting or session credit",
+    "an explicit healthy-server rejection does not fall through to the valid local rescue account",
+    "an unavailable TACACS service permits local authentication and EXEC fallback but cannot fabricate accounting",
+    "EXEC authorization denial after accepted authentication closes SSH without accounting Start or local authorization bypass",
+    "a defined authorization list without its VTY binding does not grant the planned privileged EXEC session",
+    "a defined accounting list without its VTY binding cannot invent a delivered EXEC session",
+    "stop-only accounting is operational but cannot satisfy the required Start/Stop configuration or session pair",
+    "accounting rejection does not deny otherwise authorized SSH and remains a failed undelivered record",
+    "a mismatched shared key can permit error fallback but never earns working server or remote session credit",
+    "wrong TACACS address or TCP port cannot substitute for the planned reachable server binding",
+    "method order, protocol-specific group membership and exact named VTY bindings remain live requirements",
+    "the named local console remains usable while TACACS is unavailable and needs enable for privileged EXEC",
+    "a received accounting Stop with no delivered ACK cannot complete the paired-session achievement",
+    "receiver rows must correlate target, remote source, initial privilege, session ID and both delivery event IDs",
+    "a test aaa authentication response and local configuration alone cannot fabricate an accounted VTY session",
+    "saved reopening preserves achieved traffic/session observations while rebuilding fresh AAA state and enforcing live policy",
+    "startup reboot restores the saved client policy and requires a new remotely approved SSH session",
+    "published verification commands show actual AAA counters, accounted actions and receiver logs without retaining credentials",
+    "new imported AAA criteria validate bounded data and reject unknown services, oversized methods and invalid privileges"
+  ],
+  "validation": {
+    "newTACACSClientTests": 22,
+    "focusedTests": 89,
+    "npmRunCheck": {
+      "status": "passed",
+      "typecheck": "passed",
+      "tests": 1718,
+      "passed": 1718,
+      "failed": 0,
+      "build": "passed"
+    },
+    "browserChecks": 15,
+    "newLabBrowserChecks": 8,
+    "catalogBrowserChecks": 7,
+    "artifactSha256": "52e7fbfe4f03e12f122b79f3fa5df076f36023d61e41bd0295de897def042756",
+    "terminalStylesheetSourceUnchanged": true,
+    "responsiveAAAControls": "passed at 1440/390/320 in light and dark",
+    "goldenCLIStyles": "passed in all six viewport/theme cases",
+    "goldenFixture": "tests/fixtures/console-theme-styles.json",
+    "goldenFixtureSha256": "1ba8e253727b399574c9202475fd665a3d873d76cd44c686e76b97adc1acd367",
+    "byteIdenticalArtifactPaths": [
+      "index.html",
+      "dist/index.html",
+      ".cache/tacacs-aaa-client-catalog-browser/index-light-390.html",
+      ".cache/tacacs-aaa-client-catalog-browser/index-dark-1440.html",
+      ".cache/tacacs-aaa-client-catalog-browser/index.html",
+      ".cache/tacacs-aaa-client-catalog-browser/index-light-1440.html",
+      ".cache/tacacs-aaa-client-catalog-browser/index-dark-320.html",
+      ".cache/tacacs-aaa-client-catalog-browser/index-light-320.html",
+      ".cache/tacacs-aaa-client-catalog-browser/index-dark-390.html",
+      ".cache/lab-catalog/index-light-1440.html",
+      ".cache/lab-catalog/index-light-390.html",
+      ".cache/lab-catalog/index-light-320.html",
+      ".cache/lab-catalog/index-dark-1440.html",
+      ".cache/lab-catalog/index-dark-390.html",
+      ".cache/lab-catalog/index-dark-320.html",
+      ".cache/lab-catalog/index-prerequisites.html"
+    ],
+    "browserFinalBuildStatus": "passed"
+  },
+  "browser": {
+    "tacacsAAA": [
+      "light 1440px: two Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared TACACS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and remote SSH authentication/EXEC authorization, acknowledged paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, EXEC denial without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "light 390px: two Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared TACACS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and remote SSH authentication/EXEC authorization, acknowledged paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, EXEC denial without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "light 320px: two Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared TACACS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and remote SSH authentication/EXEC authorization, acknowledged paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, EXEC denial without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "dark 1440px: two Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared TACACS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and remote SSH authentication/EXEC authorization, acknowledged paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, EXEC denial without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "dark 390px: two Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared TACACS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and remote SSH authentication/EXEC authorization, acknowledged paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, EXEC denial without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "dark 320px: two Services & Security labs, ten-task guide and four-row plan, zero-credit practice with prepared TACACS server, published named IOS AAA/SSH configuration and eight live goals, real routed ping and remote SSH authentication/EXEC authorization, acknowledged paired server accounting with NAS/PC addresses and privilege, hidden input and wrong-password rejection, healthy-server rejection without local fallback, unavailable-service local authentication/authorization fallback without fabricated accounting, EXEC denial without new Start, service/policy restoration, saved achievements and fresh console/receiver state after reload, completed reference requiring new traffic/session evidence, save/cancel protection, responsive AAA controls/guide and unchanged CLI fonts, colors, cursor and controls against the established golden styles",
+      "light: permalink preserves current host/path/query and returns to Services & Security with both labs without replacing the workspace",
+      "dark: permalink preserves current host/path/query and returns to Services & Security with both labs without replacing the workspace"
+    ],
+    "catalog": [
+      "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ]
+  },
+  "browserErrors": [],
+  "externalRequests": [],
+  "references": [
+    {
+      "title": "Cisco IOS AAA: Configuring Authentication",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios/sec_user_services/configuration/guide/convert/aaa/sec_cfg_authentifcn.html",
+      "scope": "Named method lists, group selection, line application and ordered fallback."
+    },
+    {
+      "title": "Cisco IOS AAA: Configuring Authorization",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios/sec_user_services/configuration/guide/convert/aaa/sec_cfg_authorizatn.html",
+      "scope": "Separate EXEC authorization and fallback only after an unavailable/error result rather than a denial."
+    },
+    {
+      "title": "Cisco IOS Security Command Reference: aaa accounting",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/security/a1/sec-a1-cr-book/sec-cr-a1.html",
+      "scope": "Named EXEC Start/Stop accounting and server group methods."
+    }
+  ]
+}

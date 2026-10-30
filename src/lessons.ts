@@ -7,8 +7,10 @@ import {endpointVoicePolicy, endpointNetworkPort} from './endpoint.ts';
 import {ospfLiveDetail} from './ospf-packets.ts';
 import {localSSHLoginSnapshot} from './management.ts';
 import {ownRecordValue} from './record-map.ts';
+import {validAAAClientCriterion,matchesAAAClientCriterion,type AAAClientCriterion} from './aaa-lab.ts';
 
 export type Criterion =
+  | AAAClientCriterion
   | { kind: "all" | "any"; criteria: Criterion[] }
   | { kind: "local-user"; device: string; username: string; privilege: number }
   | { kind: "local-management"; device: string; setting: "enable-secret" | "console-login" | "ssh-server" | "vty-login" }
@@ -104,6 +106,12 @@ export function validateLesson(value: unknown): asserts value is Lesson {
     switch (v.kind) {
       case "device":
         return v.powered === undefined || typeof v.powered === "boolean";
+      case "tacacs-server":
+      case "aaa-group":
+      case "aaa-method":
+      case "aaa-line":
+      case "tacacs-session":
+        return validAAAClientCriterion(v);
       case "local-user":
       case "local-ssh-login":
         return text(v.username,128) && v.username!=="" && Number.isInteger(v.privilege) && v.privilege>=0 && v.privilege<=15 && (v.kind!=="local-ssh-login" || text(v.source,128) && v.source!=="");
@@ -314,6 +322,7 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (['tacacs-server','aaa-group','aaa-method','aaa-line','tacacs-session'].includes(criterion.kind))return matchesAAAClientCriterion(sim,d,criterion as AAAClientCriterion);
   if (criterion.kind === "local-user") {
     const user=ownRecordValue(d.config.features.users,criterion.username);
     return !!user && typeof user.secret==='string' && user.secret.length>0 && (user.privilege??1)===criterion.privilege;
@@ -517,15 +526,15 @@ export function lessonProgress(sim: Simulator):
       );
     }
     const result = matches(sim, c);
-    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login") return result;
+    if (c.kind !== "echo" && c.kind !== "bpdu-guard-trip" && c.kind !== "root-guard-block" && c.kind !== "loop-guard-block" && c.kind !== "local-ssh-login" && c.kind !== "tacacs-session") return result;
     validKeys.add(key);
     if (result) observations.add(key);
     return result || observations.has(key);
   };
   const rows = lesson.objectives.map((objective) => {
     const observed = observe(objective.criterion, JSON.stringify(objective.id));
-    // Traffic and fault observations record accomplishments; configuration stays live.
-    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login";
+    // Traffic, login and fault observations record accomplishments; configuration stays live.
+    const historical=objective.criterion.kind === "echo" || objective.criterion.kind === "bpdu-guard-trip" || objective.criterion.kind === "root-guard-block" || objective.criterion.kind === "loop-guard-block" || objective.criterion.kind === "local-ssh-login" || objective.criterion.kind === "tacacs-session";
     if (historical && observed)
       completed.add(objective.id);
     return {
