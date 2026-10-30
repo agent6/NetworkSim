@@ -10,7 +10,7 @@ export const LAB_GROUPS=['CCNA','CCNP ENCOR','CCNP ENARSI','Other'] as const;
 export type LabGroup=typeof LAB_GROUPS[number];
 export const CCNA_SECTIONS=['Fundamentals','Switching','Routing','Services & Security'] as const;
 export type CCNASection=typeof CCNA_SECTIONS[number];
-export const ENCOR_SECTIONS=['Virtualization'] as const;
+export const ENCOR_SECTIONS=['Virtualization','Layer 2'] as const;
 export type CatalogSection=CCNASection|typeof ENCOR_SECTIONS[number];
 export const catalogSections=(group:LabGroup):readonly CatalogSection[]=>group==='CCNA'?CCNA_SECTIONS:group==='CCNP ENCOR'?ENCOR_SECTIONS:[];
 export type CatalogLab=GuidedLab & {catalogId?:string};
@@ -64,6 +64,7 @@ export const LAB_CATALOG=[
  {id:'vrf-configuration-and-verification',group:'CCNP ENCOR',section:'Virtualization',title:'VRF Configuration and Verification',description:'Configure BLUE and RED VRFs with overlapping IPv4 addresses. Bind routed interfaces, install separate static routes and prove tenant forwarding and global-table isolation.',devices:7,links:6,practice:true},
  {id:'gre-tunnel-configuration-and-verification',group:'CCNP ENCOR',section:'Virtualization',title:'GRE Tunnel Configuration and Verification',description:'Build a point-to-point GRE tunnel over a routed ISP underlay. Configure tunnel endpoints and LAN routes, verify inner and outer packets, and prove bidirectional traffic and saved policy.',devices:5,links:4,practice:true},
  {id:'gre-over-ipsec-tunnel-configuration-and-verification',group:'CCNP ENCOR',section:'Virtualization',title:'GRE over IPsec Tunnel Configuration and Verification',description:'Protect a point-to-point GRE overlay with IKEv1 and an IPsec transport-mode profile. Verify peer authentication, negotiated SAs, ESP on the WAN, bidirectional LAN traffic and fresh negotiation after reload.',devices:5,links:4,practice:true},
+ {id:'802-1q-trunk-troubleshooting',group:'CCNP ENCOR',section:'Layer 2',title:'802.1Q Trunk Troubleshooting',description:'Diagnose six faults across a three-switch topology. Restore static trunks, native and allowed VLANs, VLAN state and access membership; prove tagging, STP forwarding and dynamic MAC learning.',devices:9,links:8,practice:true},
  {id:'datacenter-vpc',group:'Other',title:'Datacenter Switch vPC',description:'Explore the existing NX-OS-style vPC pair and its downstream port-channel.',devices:datacenterExample.lab.devices.length,links:datacenterExample.lab.links.length,practice:false},
 ] as const satisfies readonly CatalogEntry[];
 export const GRE_IPSEC_PSK='ENCOR-Lab-PSK';
@@ -357,6 +358,7 @@ export const OSPF_ROUTER_ID_COMMANDS:Readonly<Record<string,readonly string[]>>=
  R2:['enable','configure terminal','router ospf 10','passive-interface default','no passive-interface GigabitEthernet0/1','no passive-interface GigabitEthernet0/2','interface GigabitEthernet0/0','ip ospf 10 area 0','interface GigabitEthernet0/1','ip ospf 10 area 0','ip ospf network point-to-point','ip ospf cost 10','interface GigabitEthernet0/2','ip ospf 10 area 0','ip ospf network point-to-point','ip ospf cost 10','end','write memory'],
  R3:['enable','configure terminal','router ospf 10','passive-interface default','no passive-interface GigabitEthernet0/1','interface GigabitEthernet0/0','ip ospf 10 area 0','interface GigabitEthernet0/1','ip ospf 10 area 0','ip ospf network point-to-point','ip ospf cost 10','end','write memory'],
 };
+export const TRUNK_TROUBLESHOOTING_COMMANDS:Readonly<Record<string,readonly string[]>>=Object.fromEntries(['SW1','SW2','SW3'].map((name,i)=>[name,['enable','configure terminal','vlan 99','state active','exit',...(i===2?['interface GigabitEthernet0/1','switchport mode access','switchport access vlan 10']:[]),...(i===1?[23,24]:[24]).flatMap(n=>['interface GigabitEthernet0/'+n,'switchport mode trunk','switchport trunk native vlan 99','switchport trunk allowed vlan 10,20,99','switchport nonegotiate','no spanning-tree portfast','no shutdown']),'end','write memory']]));
 export interface CatalogGuideResources {
  planTitle?:string;
  columns:readonly string[];
@@ -367,6 +369,11 @@ export interface CatalogGuideResources {
  setup?:readonly {title:string;instructions:readonly string[]}[];
 }
 const GUIDE_RESOURCES:Readonly<Record<string,CatalogGuideResources>>={
+ '802-1q-trunk-troubleshooting':{planTitle:'VLAN and addressing plan',columns:['Device pair','VLAN','IPv4 addresses /24','Expected trunk traffic'],rows:[['PC1 ↔ PC2','10','192.168.10.11 ↔ 192.168.10.12','802.1Q tagged'],['PC3 ↔ PC4','20','192.168.20.11 ↔ 192.168.20.12','802.1Q tagged'],['PC5 ↔ PC6','99','192.168.99.11 ↔ 192.168.99.12','Native, untagged']],commands:TRUNK_TROUBLESHOOTING_COMMANDS,verification:Object.fromEntries(['SW1','SW2','SW3'].map((n,i)=>[n,['show interfaces status','show interfaces trunk',...(i===1?[23,24]:[24]).map(p=>'show interfaces GigabitEthernet0/'+p+' switchport'),'show vlan brief','show spanning-tree vlan 10','show spanning-tree vlan 20','show spanning-tree vlan 99','show mac address-table dynamic','show logging','show startup-config']])),setup:[
+ {title:'Diagnose from the physical link upward',instructions:['Use the diagram to identify both ends of each link. Six independent faults are present. A shutdown interface masks negotiation and forwarding faults, so compare administrative and operational state before changing VLANs.','SW1 Gi0/24 and SW2 Gi0/23 must be static trunks with DTP disabled. Dynamic auto at both ends does not negotiate a trunk. Preserve normal spanning tree on all inter-switch ports; do not enable PortFast.']},
+ {title:'Compare VLAN policy at every hop',instructions:['Both links must have native VLAN 99 and allow exactly VLANs 10,20,99 at both ends. Compare the allowed, active and STP-forwarding lists in show interfaces trunk; a VLAN can be allowed but locally inactive.','Restore VLAN 99 to active on SW3. Verify SW3 Gi0/1 is an access port in VLAN 10. All other host addressing and access assignments are prepared. Do not add routers, default gateways or alternate links to bypass the faults.']},
+ {title:'Prove the repair and preserve it',instructions:['Use all three PC tests while troubleshooting; failed attempts remain available and earn no traffic credit. Successful requests and replies must cross both physical trunks with tags for VLANs 10/20 and without tags for native VLAN 99.','Inspect VLAN-scoped MAC learning on all three switches and STP forwarding for every required trunk/VLAN. Save the repaired configuration with write memory on all three switches.','Saving or reopening preserves earned traffic observations. Dynamic MAC entries are learned at runtime: after reopening, run all three pair tests again to restore that live task.']}],note:'There is no inter-VLAN routing: cross-VLAN pings should fail. The completed reference contains the repairs and saved startup configurations, but no pre-earned traffic or dynamic MAC evidence. Cisco reference: Configure VLAN Trunking, Cisco IOS XE 17.'},
+
  'gre-over-ipsec-tunnel-configuration-and-verification':{columns:['Device','Interface','IPv4 address','Role / gateway'],rows:[
  ['R1','Gi0/0','192.0.2.2 /30','WAN; IKE/IPsec endpoint'],['ISP','Gi0/0','192.0.2.1 /30','R1-facing underlay'],['ISP','Gi0/1','198.51.100.1 /30','R2-facing underlay'],['R2','Gi0/0','198.51.100.2 /30','WAN; IKE/IPsec endpoint'],['R1','Tunnel0','10.255.0.1 /30','GRE protected by GRE-IPSEC'],['R2','Tunnel0','10.255.0.2 /30','GRE protected by GRE-IPSEC'],['R1','Gi0/1','192.168.10.1 /24','PC1 default gateway'],['R2','Gi0/1','192.168.20.1 /24','PC2 default gateway'],['PC1','Gi0','192.168.10.10 /24','Gateway 192.168.10.1'],['PC2','Gi0','192.168.20.10 /24','Gateway 192.168.20.1'],
  ],commands:GRE_IPSEC_COMMANDS,verification:{R1:['show ip interface brief','show interfaces Tunnel0','show crypto isakmp policy','show crypto isakmp sa','show crypto ipsec transform-set GRE-TS','show crypto ipsec profile GRE-IPSEC','show crypto ipsec sa','show crypto session detail','show ip cef 198.51.100.2','show ip cef 192.168.20.10','show running-config | section crypto','show startup-config','ping 198.51.100.2 repeat 3','ping 10.255.0.2 repeat 3'],R2:['show interfaces Tunnel0','show crypto isakmp sa','show crypto ipsec sa','show crypto ipsec profile GRE-IPSEC','show ip cef 192.168.10.10','show startup-config'],ISP:['show ip interface brief','show ip route'],PC1:['ipconfig','ping -n 3 192.168.20.10'],PC2:['ipconfig','ping -n 3 192.168.10.10']},setup:[
@@ -1435,6 +1442,40 @@ export function createSVILab(mode:CatalogMode='practice'):LabDocument{
  const doc:LabDocument={format:'netsim-lab',version:1,seed:20261029,lab};
  return mode==='completed'?completedDocument(doc,SVI_COMMANDS):parseDocument(JSON.stringify(doc));
 }
+export function createTrunkTroubleshootingLab(mode:CatalogMode='practice'):LabDocument{
+ const make=(name:string,kind:Device['kind'],x:number,y:number):Device=>({id:'device-ett-'+name.toLowerCase(),kind,x,y,powered:true,config:factoryDeviceConfig(kind,name),runtime:emptyRuntime()});
+ const switches=[make('SW1','switch',380,330),make('SW2','switch',650,330),make('SW3','switch',920,330)];
+ const pcs=[1,2,3,4,5,6].map(n=>{const side=(n-1)%2,pair=Math.floor((n-1)/2),vlan=[10,20,99][pair],pc=make('PC'+n,'pc',side?1160:140,100+pair*230);Object.assign(pc.config.interfaces.GigabitEthernet0,{ip:`192.168.${vlan}.${11+side}`,mask:'255.255.255.0'});pc.config.interfaces.GigabitEthernet0.features.dhcp=false;delete pc.config.defaultGateway;return pc;});
+ const ports=switches.flatMap((sw,i)=>(i===1?[23,24]:[24]).map(n=>({sw,name:'GigabitEthernet0/'+n})));
+ for(const[side,sw]of switches.entries()){for(const[id,name]of [[10,'USERS'],[20,'GUESTS'],[99,'NATIVE']] as const)sw.config.vlans[id]={id,name,active:true};sw.config.features.stp={mode:'rapid-pvst',vlanPriorities:{10:side*8192,20:side*8192,99:side*8192}};for(const[n,vlan]of [[1,10],[2,20],[3,99]]){Object.assign(sw.config.interfaces['GigabitEthernet0/'+n],{mode:'access',vlan});sw.config.interfaces['GigabitEthernet0/'+n].features.portfast=true;}}
+ for(const{sw,name}of ports){const p=sw.config.interfaces[name];Object.assign(p,{mode:'trunk',nativeVlan:99,allowedVlans:[10,20,99],adminUp:true});p.features.nonegotiate=true;p.features.portfast=false;}
+ for(const sw of switches.slice(0,2)){const p=sw.config.interfaces[sw===switches[0]?'GigabitEthernet0/24':'GigabitEthernet0/23'];p.mode='dynamic-auto';p.features.nonegotiate=false;}
+ switches[0].config.interfaces['GigabitEthernet0/24'].adminUp=false;switches[1].config.interfaces['GigabitEthernet0/24'].allowedVlans=[10,99];switches[2].config.interfaces['GigabitEthernet0/24'].nativeVlan=1;switches[2].config.vlans[99].active=false;switches[2].config.interfaces['GigabitEthernet0/1'].vlan=20;
+ for(const d of [...switches,...pcs])d.startupConfig=structuredClone(d.config);
+ const property=(sw:Device,name:string,property:any,value:any):Criterion=>({kind:'interface',device:sw.id,interface:name,property,value});
+ const staticTrunks:Criterion={kind:'all',criteria:ports.flatMap(({sw,name})=>[property(sw,name,'switchport',true),property(sw,name,'mode','trunk'),property(sw,name,'nonegotiate',true),property(sw,name,'portfast',false)])};
+ const allowed:Criterion={kind:'all',criteria:ports.map(({sw,name})=>({kind:'trunk-allowed',device:sw.id,interface:name,vlans:[10,20,99]}))};
+ const native:Criterion={kind:'all',criteria:ports.map(({sw,name})=>property(sw,name,'nativeVlan',99))};
+ const active:Criterion={kind:'all',criteria:switches.flatMap(sw=>[10,20,99].map(id=>({kind:'vlan',device:sw.id,id})))};
+ const access:Criterion={kind:'all',criteria:[property(switches[2],'GigabitEthernet0/1','switchport',true),property(switches[2],'GigabitEthernet0/1','mode','access'),property(switches[2],'GigabitEthernet0/1','vlan',10),property(switches[2],'GigabitEthernet0/1','adminUp',true)]};
+ const enabled:Criterion={kind:'all',criteria:ports.map(({sw,name})=>property(sw,name,'adminUp',true))};
+ const ready:Criterion={kind:'all',criteria:[staticTrunks,allowed,native,active,access,enabled]};
+ const path=[{aDevice:switches[0].id,aPort:'GigabitEthernet0/24',bDevice:switches[1].id,bPort:'GigabitEthernet0/23'},{aDevice:switches[1].id,aPort:'GigabitEthernet0/24',bDevice:switches[2].id,bPort:'GigabitEthernet0/24'}];
+ const resources=GUIDE_RESOURCES['802-1q-trunk-troubleshooting'];
+ const lab:CatalogLab={id:'lab-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)),catalogId:'802-1q-trunk-troubleshooting',name:'802.1Q Trunk Troubleshooting'+(mode==='completed'?' · Completed':''),devices:[...switches,...pcs],links:[...path.map((p,i)=>({id:'link-ett-'+(i?'b':'a'),a:{deviceId:p.aDevice,port:p.aPort},b:{deviceId:p.bDevice,port:p.bPort},enabled:true,delay:.1,loss:0})),...pcs.map((pc,i)=>({id:'link-ett-pc'+(i+1),a:{deviceId:switches[i%2?2:0].id,port:'GigabitEthernet0/'+(Math.floor(i/2)+1)},b:{deviceId:pc.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0}))],notes:[{id:'note-ett',x:650,y:720,text:'Required on both trunks: native 99 · allowed 10,20,99\nPC1 ↔ PC2: VLAN 10 · PC3 ↔ PC4: VLAN 20\nPC5 ↔ PC6: native VLAN 99 · normal STP'}],lesson:{title:'802.1Q Trunk Troubleshooting',description:'Restore end-to-end Layer 2 connectivity through SW1, SW2 and SW3. Six deliberately incorrect settings interrupt the three VLANs.\n\n'+resources.setup!.map(s=>s.title+'\n'+s.instructions.join('\n')).join('\n\n'),objectives:[
+ {id:'static-trunks',title:'Repair static trunk mode and disable DTP',description:'Both ends of both links must use static trunk mode and nonegotiate, with PortFast disabled.',criterion:staticTrunks},
+ {id:'allowed',title:'Restore the allowed VLAN lists',description:'Allow exactly VLANs 10,20,99 at every trunk endpoint.',criterion:allowed},
+ {id:'native',title:'Match native VLAN 99 at both ends of each link',criterion:native},
+ {id:'active-vlans',title:'Restore active VLANs 10,20,99 on all switches',description:'Compare the VLAN database with the allowed and active trunk lists.',criterion:active},
+ {id:'access',title:'Correct PC2’s access VLAN',description:'SW3 Gi0/1 must be an enabled access port in VLAN 10.',criterion:access},
+ {id:'enabled',title:'Enable every trunk interface',description:'Find the administratively disabled uplink and restore it.',criterion:enabled},
+ {id:'saved',title:'Save the repaired configuration on all three switches',description:'Use write memory after all six repairs. Inspect startup-config.',criterion:{kind:'all',criteria:[ready,...switches.map((sw,i)=>({kind:'trunk-saved' as const,device:sw.id,interfaces:[...(i===1?[23,24]:[24]).map(n=>'GigabitEthernet0/'+n),...(i===2?['GigabitEthernet0/1']:[])],vlans:[10,20,99]}))]}},
+ {id:'forwarding',title:'Verify STP forwarding for all three VLANs across both trunks',criterion:{kind:'all',criteria:[ready,...ports.map(({sw,name})=>({kind:'stp-forwarding' as const,device:sw.id,interface:name,vlans:[10,20,99]}))]}},
+ ...[10,20,99].map((vlan,i)=>({id:'vlan'+vlan+'-ping',title:`Verify PC${2*i+1} reaches PC${2*i+2} in VLAN ${vlan}`,description:`192.168.${vlan}.11 → 192.168.${vlan}.12; ${vlan===99?'untagged native':'802.1Q tagged'} traffic must cross both trunks in both directions.`,criterion:{kind:'trunk-echo' as const,device:pcs[2*i].id,target:pcs[2*i+1].id,address:`192.168.${vlan}.12`,vlan,nativeVlan:99,path},action:{kind:'ping' as const,device:pcs[2*i].id,target:`192.168.${vlan}.12`}})),
+ {id:'remote-macs',title:'Verify VLAN-scoped dynamic MAC learning on all three switches',description:'Edge switches learn remote PCs through Gi0/24; SW2 learns left PCs through Gi0/23 and right PCs through Gi0/24.',criterion:{kind:'all',criteria:switches.flatMap((sw,side)=>[10,20,99].flatMap((vlan,pair)=>(side===1?[0,1]:[side===0?1:0]).map(remote=>({kind:'mac-learned' as const,device:sw.id,interface:'GigabitEthernet0/'+(side===1&&remote===0?23:24),source:pcs[2*pair+remote].id,sourceInterface:'GigabitEthernet0',vlan}))))}},
+ ]}};
+ const doc:LabDocument={format:'netsim-lab',version:1,seed:20261030,lab};return mode==='completed'?completedDocument(doc,TRUNK_TROUBLESHOOTING_COMMANDS):parseDocument(JSON.stringify(doc));
+}
 export function createDot1QTrunkingLab(mode:CatalogMode='practice'):LabDocument{
  const make=(name:string,kind:Device['kind'],x:number,y:number):Device=>({id:'device-dot1q-'+name.toLowerCase(),kind,x,y,powered:true,config:factoryDeviceConfig(kind,name),runtime:emptyRuntime()});
  const switches=[make('SW1','switch',260,160),make('SW2','switch',780,160)];
@@ -1689,6 +1730,7 @@ export function createRouterOnAStickLab(mode:CatalogMode='practice'):LabDocument
  return completedDocument(doc,ROAS_COMMANDS);
 }
 export function createCatalogLab(id:string,mode:CatalogMode='practice'):LabDocument{
+ if(id==='802-1q-trunk-troubleshooting')return createTrunkTroubleshootingLab(mode);
  if(id==='gre-over-ipsec-tunnel-configuration-and-verification')return createGREIPsecLab(mode);
  if(id==='gre-tunnel-configuration-and-verification')return createGRELab(mode);
  if(id==='vrf-configuration-and-verification')return createVRFLab(mode);

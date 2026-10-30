@@ -1,0 +1,85 @@
+{
+  "feature": {
+    "title": "802.1Q Trunk Troubleshooting",
+    "catalogId": "802-1q-trunk-troubleshooting",
+    "group": "CCNP ENCOR",
+    "section": "Layer 2",
+    "sectionLabCount": 1,
+    "devices": 9,
+    "links": 8,
+    "tasks": 12,
+    "addressingRows": 3,
+    "permalink": "#/labs/802-1q-trunk-troubleshooting",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "SW1 Gi0/24 ↔ SW2 Gi0/23, then SW2 Gi0/24 ↔ SW3 Gi0/24. Six prepared PCs form three pairs in VLANs 10,20,99 at 192.168.<VLAN>.11/.12 /24. Access ports Gi0/1, Gi0/2, Gi0/3 carry those VLANs on each edge switch. No inter-VLAN routing or default gateways are required.",
+  "preparedFaults": [
+    "SW1 Gi0/24 administratively shut",
+    "SW1 Gi0/24 and SW2 Gi0/23 both dynamic auto, with DTP enabled",
+    "SW2 Gi0/24 allowed list omits VLAN 20",
+    "SW3 Gi0/24 native VLAN 1 rather than 99",
+    "SW3 VLAN 99 suspended",
+    "SW3 Gi0/1 assigned VLAN 20 rather than 10"
+  ],
+  "verificationNotes": [
+    "Practice starts at zero tasks with three real diagnosis actions enabled. The completed reference starts with eight configuration/save/forwarding tasks and empty runtime; traffic and MAC accomplishments are never prefilled.",
+    "Six repair goals remain live. Static trunk/nonegotiate, exact VLAN lists, matched native VLANs, active VLANs, correct access membership and administrative state are checked independently. The startup-save goal requires all six repairs plus matching relevant running/startup Layer 2 policy on all three switches.",
+    "The forwarding task requires normal STP, no inter-switch PortFast, and forwarding for VLANs 10,20,99 on all four trunk endpoints. Actual delivery is tested after shutdown, auto/auto, pruning, native mismatch, VLAN suspension, access-VLAN and cable faults.",
+    "Historical traffic predicates correlate accepted destination echo requests with source replies via parent packet ID, then require those request/reply IDs at both send and receive ends of both physical trunk segments. VLAN10/20 require tags; native99 requires no tag in both directions. Unrelated replies, missing transit events, wrong targets and incorrect tags fail direct evidence checks.",
+    "The live MAC goal requires twelve current dynamic entries: three remote sources per edge switch and six direction-correct entries on SW2. Clearing or expiration loses the goal. Reopening retains eleven goals and requires fresh pair traffic to relearn MACs. Actual IOS reload restores saved allowed-list policy after unsaved damage.",
+    "All advertised IOS repair and verification commands run against the simulator. This task adds no networking-engine commands or success stubs. Cisco trunk documentation informed the lab design; no new CML capture was claimed or required for this catalog addition.",
+    "New ENCOR Layer 2 section navigation, singular lab count, independent group section memory and base-URL-preserving permalinks are tested. Three existing Virtualization labs remain in their section. Prior VRF/GRE/IPsec catalog expectations are scoped to the appropriate section.",
+    "Chrome file:// matrix covers light/dark at 1440,390,320px, real console entry, real failed and successful traffic, all twelve tasks, live regression/repair, saved progress, completed reference, cancel/save-copy protection and exact terminal golden styles. Two additional permalink checks preserve host, path and query without replacing the current workspace."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco IOS XE 17: Configure VLAN Trunking",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr2-fwd/vlan/vlan-configuration-guide/configure-vlan-trunks.html"
+    },
+    {
+      "title": "Cisco IOS 15.2(7)E: Configuring VLAN Trunks",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst_digital_building_series_switches/software/15-2_7_e/configuration_guide/b_1527e_consolidated_cdb_cg/m_vlan_trunk_cg_2960-x.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 17,
+    "focusedAndRelatedTests": 85,
+    "focusedPassed": 85,
+    "typecheck": "passed",
+    "fullCheck": "npm run check",
+    "fullTests": 2007,
+    "fullPassed": 2007,
+    "fullFailed": 0,
+    "build": "passed",
+    "browserChecks": [
+      "light 1440px: ENCOR Layer 2 count and section navigation; 12 tasks/3 VLAN-plan rows; nine-node six-fault practice starts at zero with three enabled diagnosis actions and a real failed ping; all published IOS repairs through the console; three delivered VLAN-pair tests and dynamic MAC evidence; allowed-list regression loses live policy, save and forwarding tasks then recovers; trunk/STP/VLAN/MAC show commands; Windows CLI pings; exact terminal golden styles; fitted node icons and non-overlapping note; startup-save verification, offline reload preserves 11 tasks and requires fresh MAC learning; responsive guide; completed reference and cancel/save-copy protection",
+      "light 390px: ENCOR Layer 2 count and section navigation; 12 tasks/3 VLAN-plan rows; nine-node six-fault practice starts at zero with three enabled diagnosis actions and a real failed ping; all published IOS repairs through the console; three delivered VLAN-pair tests and dynamic MAC evidence; allowed-list regression loses live policy, save and forwarding tasks then recovers; trunk/STP/VLAN/MAC show commands; Windows CLI pings; exact terminal golden styles; fitted node icons and non-overlapping note; startup-save verification, offline reload preserves 11 tasks and requires fresh MAC learning; responsive guide; completed reference and cancel/save-copy protection",
+      "light 320px: ENCOR Layer 2 count and section navigation; 12 tasks/3 VLAN-plan rows; nine-node six-fault practice starts at zero with three enabled diagnosis actions and a real failed ping; all published IOS repairs through the console; three delivered VLAN-pair tests and dynamic MAC evidence; allowed-list regression loses live policy, save and forwarding tasks then recovers; trunk/STP/VLAN/MAC show commands; Windows CLI pings; exact terminal golden styles; fitted node icons and non-overlapping note; startup-save verification, offline reload preserves 11 tasks and requires fresh MAC learning; responsive guide; completed reference and cancel/save-copy protection",
+      "dark 1440px: ENCOR Layer 2 count and section navigation; 12 tasks/3 VLAN-plan rows; nine-node six-fault practice starts at zero with three enabled diagnosis actions and a real failed ping; all published IOS repairs through the console; three delivered VLAN-pair tests and dynamic MAC evidence; allowed-list regression loses live policy, save and forwarding tasks then recovers; trunk/STP/VLAN/MAC show commands; Windows CLI pings; exact terminal golden styles; fitted node icons and non-overlapping note; startup-save verification, offline reload preserves 11 tasks and requires fresh MAC learning; responsive guide; completed reference and cancel/save-copy protection",
+      "dark 390px: ENCOR Layer 2 count and section navigation; 12 tasks/3 VLAN-plan rows; nine-node six-fault practice starts at zero with three enabled diagnosis actions and a real failed ping; all published IOS repairs through the console; three delivered VLAN-pair tests and dynamic MAC evidence; allowed-list regression loses live policy, save and forwarding tasks then recovers; trunk/STP/VLAN/MAC show commands; Windows CLI pings; exact terminal golden styles; fitted node icons and non-overlapping note; startup-save verification, offline reload preserves 11 tasks and requires fresh MAC learning; responsive guide; completed reference and cancel/save-copy protection",
+      "dark 320px: ENCOR Layer 2 count and section navigation; 12 tasks/3 VLAN-plan rows; nine-node six-fault practice starts at zero with three enabled diagnosis actions and a real failed ping; all published IOS repairs through the console; three delivered VLAN-pair tests and dynamic MAC evidence; allowed-list regression loses live policy, save and forwarding tasks then recovers; trunk/STP/VLAN/MAC show commands; Windows CLI pings; exact terminal golden styles; fitted node icons and non-overlapping note; startup-save verification, offline reload preserves 11 tasks and requires fresh MAC learning; responsive guide; completed reference and cancel/save-copy protection",
+      "light: permalink preserves host/path/query and workspace, returns to ENCOR Layer 2 with one lab; group sections remember choices independently",
+      "dark: permalink preserves host/path/query and workspace, returns to ENCOR Layer 2 with one lab; group sections remember choices independently",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "2054f9ad9b56ca6f60c410a935b6225493f1b3e36887fbab0f4e9cb7cee5d5c0",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light 320px guide",
+      "dark 320px guide"
+    ]
+  }
+}
