@@ -1,0 +1,76 @@
+{
+  "feature": "CCNA Routing: IPv4 Static Routing",
+  "catalogId": "ipv4-static-routing",
+  "artifactSha256": "ec168ceaecfd345748d1386aa24b1815779a8b51d236ea07fa15c70db0c18e70",
+  "devices": 6,
+  "links": 6,
+  "tasks": 10,
+  "topology": {
+    "R1": "LAN 192.168.10.0/24; transit 10.0.12.1/30 to R2; primary 10.0.13.1/30 to R3",
+    "R2": "LAN 192.168.20.0/24; 10.0.12.2/30 to R1; 10.0.23.1/30 to R3",
+    "R3": "LAN 192.168.30.0/24; 10.0.23.2/30 to R2; primary 10.0.13.2/30 to R1; Loopback0 203.0.113.33/32 and Loopback1 198.51.100.3/32",
+    "PC1": "192.168.10.10/24, gateway 192.168.10.1",
+    "PC2": "192.168.20.10/24, gateway 192.168.20.1",
+    "SRV1": "192.168.30.10/24, gateway 192.168.30.1"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1528,
+    "focusedTests": 29,
+    "newLabTests": 14,
+    "browserChecks": 15,
+    "passed": 1528,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed"
+  },
+  "checks": [
+    "IPv4 static practice has independent valid attempts, ready addressing and gateways, no remote routes and zero earned tasks",
+    "published commands install all required routes, save all three startup configurations and require real traffic to complete the guide",
+    "floating routes remain configured but inactive while the same-prefix AD 1 primary is installed",
+    "primary-link shutdown withdraws fully specified routes, installs both AD 10 backups and preserves actual bidirectional server traffic through R2",
+    "the backup criterion checks the configured distance and cannot be earned by an ordinary AD 1 or incorrectly bound backup",
+    "a /32 with AD 200 uses the direct link while a destination covered only by AD 1 defaults actually traverses R2",
+    "removing the host route allows default forwarding but revokes host-route configuration credit",
+    "removing a default breaks only destinations that depend on it while more-specific network and host routes remain usable",
+    "a missing R3 return route breaks PC2-to-server echo even with the correct forward route, and repair restores both directions",
+    "unknown destinations stop at R3 rather than circulating around a default-routing loop",
+    "matching a destination and next hop is insufficient when the required exit interface or administrative distance is wrong",
+    "all published verification commands work and show S, S*, primary distance 1, host distance 200 and a real gateway of last resort",
+    "saved reloads and startup power cycles preserve addressing, route intent and earned traffic while active routes are rebuilt",
+    "imported route distance/interface and static-configuration criteria reject malformed data and preserve existing route goals"
+  ],
+  "scope": "Adds a static-routing catalog lab, optional administrative-distance/explicit-interface checks on installed-route criteria, and a configured-static-route criterion for inactive floating backups. Uses the existing IOS parser and route/packet engine without adding networking commands or modifying forwarding behavior. All addressing is preconfigured. No dependency, backend or live CML validation is claimed.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/support/docs/dial-access/floating-static-route/118263-technote-nexthop-00.html",
+    "https://www.cisco.com/c/en/us/support/docs/ip/routing-information-protocol-rip/16448-default.html"
+  ],
+  "verificationNotes": [
+    "Network routes, host routes, defaults and floating backups are checked separately. Configuration goals stay live while actual echo observations persist. A successful ping alone cannot prove the intended route.",
+    "Fully specified primary routes bind the intended Ethernet interface and next hop, so losing the R1/R3 link withdraws the primaries. Both sides install AD 10 /24 backups through R2. This does not claim detection of a remote failure while a local interface remains up.",
+    "R1 host /32 AD 200 wins by longest-prefix match over its AD 1 default. Removing the /32 still permits default forwarding but revokes the host-route goal.",
+    "Return-path troubleshooting removes R3 LAN 20 routing, where no default can mask the missing route. R2 forward routing remains valid but PC2/server echo fails until repair.",
+    "All eight new-lab browser checks and seven general catalog checks passed, including both themes at 1440, 390 and 320 pixels and host/path/query-preserving permalinks. The frozen offline artifact and final index.html/dist/index.html match byte for byte. General catalog checks ran after the final build. No page errors or external requests were observed."
+  ],
+  "browserChecks": [
+    "light 1440px: two Routing labs, ten-task static-routing guide and addressing plan, zero-credit practice, all three published IOS configurations, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S* default output, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "light 320px: two Routing labs, ten-task static-routing guide and addressing plan, zero-credit practice, all three published IOS configurations, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S* default output, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "light 390px: two Routing labs, ten-task static-routing guide and addressing plan, zero-credit practice, all three published IOS configurations, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S* default output, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 320px: two Routing labs, ten-task static-routing guide and addressing plan, zero-credit practice, all three published IOS configurations, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S* default output, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 390px: two Routing labs, ten-task static-routing guide and addressing plan, zero-credit practice, all three published IOS configurations, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S* default output, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "dark 1440px: two Routing labs, ten-task static-routing guide and addressing plan, zero-credit practice, all three published IOS configurations, five real 3/3 traffic tests, primary-interface failure with AD 10 routes on both routers and live bidirectional server replies through R2, AD 1 primary restoration and AD 200 host route, S* default output, live criteria and retained traffic after saved reload, completed reference, safe workspace replacement and unchanged CLI colors",
+    "light: share link preserves current host/path/query and returns to the two Routing labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to the two Routing labs without replacing the workspace"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

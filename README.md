@@ -46,6 +46,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **Loop Guard** under Switching protects a root port and an alternate port in a redundant triangle. Use the cable editor’s directional loss controls to interrupt BPDU reception after normal convergence. Verify loop-inconsistent blocking, live traffic over the surviving path and automatic recovery when reception returns. Both observed incidents persist through saved reload; a completed reference exercises the real fault and repair sequence.
 
+**IPv4 Static Routing** under Routing uses three routers, two PCs and a server to practice network, host, default and floating static routes. Check installed prefixes, next hops, exit interfaces and administrative distances, prove host-route preference over a default, and test primary-link failover with a backup in each direction. All addressing is ready; the guide includes return-path troubleshooting and a completed reference.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.

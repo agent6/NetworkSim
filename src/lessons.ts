@@ -23,7 +23,10 @@ export type Criterion =
       prefix: number;
       protocol?: string;
       nextHop?: string;
+      interface?: string;
+      ad?: number;
     }
+  | { kind: "static-route"; device: string; network: string; prefix: number; nextHop: string; interface: string; ad: number }
   | { kind: "neighbor"; device: string; protocol: string; state?: string }
   | { kind: "discovery-settings"; device: string; protocol: "CDP" | "LLDP"; enabled: boolean; interval?: number; holdtime?: number }
   | { kind: "discovery-neighbor"; device: string; protocol: "CDP" | "LLDP"; interface: string; peer: string; peerInterface: string }
@@ -126,8 +129,12 @@ export function validateLesson(value: unknown): asserts value is Lesson {
           v.prefix >= 0 &&
           v.prefix <= (v.network.includes(":") ? 128 : 32) &&
           (v.protocol === undefined || text(v.protocol, 40)) &&
-          (v.nextHop === undefined || address(v.nextHop))
+          (v.nextHop === undefined || address(v.nextHop)) &&
+          (v.interface === undefined || text(v.interface,128) && v.interface!=="") &&
+          (v.ad === undefined || Number.isInteger(v.ad) && v.ad>=0 && v.ad<=255)
         );
+      case "static-route":
+        return typeof v.network==="string" && isIPv4(v.network) && Number.isInteger(v.prefix) && v.prefix>=0 && v.prefix<=32 && typeof v.nextHop==="string" && isIPv4(v.nextHop) && text(v.interface,128) && v.interface!=="" && Number.isInteger(v.ad) && v.ad>=1 && v.ad<=255;
       case "neighbor":
         return (
           text(v.protocol, 40) && (v.state === undefined || text(v.state, 40))
@@ -347,6 +354,8 @@ export function matches(
         (!!p.ip && sameAddress(p.ip, criterion.address)) ||
         p.ipv6.some((ip) => sameAddress(ip.split("/")[0], criterion.address)),
     );
+  if (criterion.kind === "static-route")
+    return d.config.staticRoutes.some(r=>!r.vrf && sameAddress(r.network,criterion.network) && r.prefix===criterion.prefix && !!r.nextHop && sameAddress(r.nextHop,criterion.nextHop) && r.interface===criterion.interface && (r.ad??1)===criterion.ad);
   if (criterion.kind === "route")
     return d.runtime.routes.some(
       (r) =>
@@ -354,7 +363,9 @@ export function matches(
         r.prefix === criterion.prefix &&
         (!criterion.protocol ||
           r.protocol.toLowerCase() === criterion.protocol.toLowerCase()) &&
-        (criterion.nextHop === undefined || !!r.nextHop && sameAddress(r.nextHop,criterion.nextHop)),
+        (criterion.nextHop === undefined || !!r.nextHop && sameAddress(r.nextHop,criterion.nextHop)) &&
+        (criterion.interface === undefined || r.interface===criterion.interface) &&
+        (criterion.ad === undefined || r.ad===criterion.ad),
     );
   if (criterion.kind === "neighbor")
     return d.runtime.neighbors.some(
