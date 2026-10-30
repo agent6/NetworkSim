@@ -1,0 +1,61 @@
+{
+  "feature": "CCNA Switching: PoE Interface",
+  "catalogId": "poe-interface",
+  "artifactSha256": "b0411e408b7bfd804f1be7fb320b6b8937f0f64b7c24115fe464aa20c8d93a32",
+  "devices": 5,
+  "links": 4,
+  "tasks": 8,
+  "topology": {
+    "PSW1": "40 W preconfigured budget; Gi0/1 AP1, Gi0/2 PHONE1, Gi0/3 SRV1; unused Gi0/4 data-only",
+    "AP1": "15.4 W reduced 802.3af class 3 profile with 2x2 radios and USB off",
+    "PHONE1": "15.4 W 802.3af class 3; Network uplink and PC passthrough",
+    "PC1": "192.168.10.11/24 behind PHONE1",
+    "SRV1": "192.168.10.10/24; same preconfigured access VLAN 10"
+  },
+  "validation": {
+    "command": "npm run check",
+    "tests": 1378,
+    "passed": 1378,
+    "failed": 0,
+    "focusedTests": 42,
+    "newLabTests": 8,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "checks": [
+    "Practice starts without task credit or AP/phone supply; two access ports are shut with inline power disabled",
+    "Published IOS commands configure power limits, priorities, unused port power mode and startup configuration",
+    "Operational goals require matching live switch port and endpoint allocations, source identity, watts, standard and class; AP goal also requires reduced radios and USB off",
+    "30.8 W total leaves 9.2 W; 30 W AP mode exceeds available budget and is denied while high-priority phone retains power",
+    "Power removal disables phone Network and PC passthrough; restoring correct settings recovers actual packets",
+    "Shutdown, disabled cable, insufficient per-port limit and wrong source port cannot earn operational credit",
+    "PoE supply remains independent of data VLAN state; manual endpoint power cannot bypass electrical delivery",
+    "Portable saves and simulated switch reload rebuild supply from saved settings; previously earned echo observations persist",
+    "Imported PoE criteria reject unsupported modes, invalid priorities, limits, standards, classes and malformed optional fields",
+    "Completed reference earns configuration/power tasks only; both reachability tasks require real replies"
+  ],
+  "scope": "Uses existing PoE and packet engines. No new engine configurations, external server, wireless controller joining, wireless clients or telephone call registration added.",
+  "source": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3650/software/release/3se/int_hw_components/command_reference/b_int_3se_3650_cr/b_int_3se_3650_cr_chapter_010.pdf",
+  "browserChecks": [
+    "light 1440px: Switching count/entry, eight-task guide, offline IOS configuration, live 30.8 W allocation and reduced AP profile, phone and PC 3/3 replies, budget denial with phone priority, power loss/repair, saved reload, completed-reference protection and unchanged terminal colors",
+    "light 390px: Switching count/entry, eight-task guide, offline IOS configuration, live 30.8 W allocation and reduced AP profile, phone and PC 3/3 replies, budget denial with phone priority, power loss/repair, saved reload, completed-reference protection and unchanged terminal colors",
+    "light 320px: Switching count/entry, eight-task guide, offline IOS configuration, live 30.8 W allocation and reduced AP profile, phone and PC 3/3 replies, budget denial with phone priority, power loss/repair, saved reload, completed-reference protection and unchanged terminal colors",
+    "dark 1440px: Switching count/entry, eight-task guide, offline IOS configuration, live 30.8 W allocation and reduced AP profile, phone and PC 3/3 replies, budget denial with phone priority, power loss/repair, saved reload, completed-reference protection and unchanged terminal colors",
+    "dark 390px: Switching count/entry, eight-task guide, offline IOS configuration, live 30.8 W allocation and reduced AP profile, phone and PC 3/3 replies, budget denial with phone priority, power loss/repair, saved reload, completed-reference protection and unchanged terminal colors",
+    "dark 320px: Switching count/entry, eight-task guide, offline IOS configuration, live 30.8 W allocation and reduced AP profile, phone and PC 3/3 replies, budget denial with phone priority, power loss/repair, saved reload, completed-reference protection and unchanged terminal colors",
+    "light: share link preserves current host/path/query and returns to five Switching labs without replacing the workspace",
+    "dark: share link preserves current host/path/query and returns to five Switching labs without replacing the workspace"
+  ],
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "errors": [],
+  "externalRequests": []
+}

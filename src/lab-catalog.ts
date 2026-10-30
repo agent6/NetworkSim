@@ -21,6 +21,7 @@ export const LAB_CATALOG=[
  {id:'layer-3-routed-interfaces',group:'CCNA',section:'Switching',title:'Layer 3 routed interfaces',description:'Convert multilayer switch ports to routed interfaces, address two subnets, enable IPv4 routing, and verify end-to-end forwarding.',devices:3,links:2,practice:true},
  {id:'vlan-and-access-ports',group:'CCNA',section:'Switching',title:'VLAN and access ports',description:'Create two VLANs, assign four access ports, and verify same-VLAN connectivity, VLAN isolation and dynamic MAC learning.',devices:5,links:4,practice:true},
  {id:'voice-vlan',group:'CCNA',section:'Switching',title:'Voice VLAN',description:'Provision PoE phones and PC passthrough on shared access ports. Separate voice and data VLANs, learn phone policy, obtain voice DHCP leases, and verify real traffic.',devices:7,links:6,practice:true},
+ {id:'poe-interface',group:'CCNA',section:'Switching',title:'PoE Interface',description:'Restore power to an AP and phone, configure per-port limits and priorities within a constrained power budget, and verify real delivery and phone PC passthrough.',devices:5,links:4,practice:true},
  {id:'router-on-a-stick',group:'CCNA',section:'Routing',title:'Router on a stick',description:'Route between two VLANs over one 802.1Q trunk. Configure access ports, router subinterfaces and default gateways.',devices:4,links:3,practice:true},
  {id:'datacenter-vpc',group:'Other',title:'Datacenter Switch vPC',description:'Explore the existing NX-OS-style vPC pair and its downstream port-channel.',devices:datacenterExample.lab.devices.length,links:datacenterExample.lab.links.length,practice:false},
 ] as const satisfies readonly CatalogEntry[];
@@ -67,6 +68,12 @@ export const VOICE_VLAN_COMMANDS:Readonly<Record<string,readonly string[]>>={PSW
  'enable','configure terminal','vlan 10','name DATA','vlan 20','name VOICE','exit','cdp run',
  'interface range GigabitEthernet0/1 - 2','switchport mode access','switchport access vlan 10','switchport voice vlan 20','spanning-tree portfast','cdp enable','power inline auto','no shutdown','end','write memory',
 ]};
+export const POE_INTERFACE_COMMANDS:Readonly<Record<string,readonly string[]>>={PSW1:[
+ 'enable','configure terminal','interface range GigabitEthernet0/1 - 2','no shutdown',
+ 'interface GigabitEthernet0/2','power inline auto max 15400','power inline port priority high',
+ 'interface GigabitEthernet0/1','power inline auto max 15400','power inline port priority low',
+ 'interface GigabitEthernet0/4','power inline never','no shutdown','end','write memory',
+]};
 export interface CatalogGuideResources {
  columns:readonly string[];
  rows:readonly (readonly string[])[];
@@ -76,6 +83,7 @@ export interface CatalogGuideResources {
  setup?:readonly {title:string;instructions:readonly string[]}[];
 }
 const GUIDE_RESOURCES:Readonly<Record<string,CatalogGuideResources>>={
+ 'poe-interface':{columns:['Device','Interface','IPv4 address','Subnet mask'],rows:[['AP1','GigabitEthernet0','192.168.10.21','255.255.255.0'],['PHONE1','Network','192.168.10.20','255.255.255.0'],['PC1','GigabitEthernet0','192.168.10.11','255.255.255.0'],['SRV1','GigabitEthernet0','192.168.10.10','255.255.255.0']],commands:POE_INTERFACE_COMMANDS,verification:{PSW1:['show power inline','show power inline GigabitEthernet0/1 detail','show power inline GigabitEthernet0/2 detail','show power inline priority','show interfaces status','show running-config interface GigabitEthernet0/1','show running-config interface GigabitEthernet0/2'],PC1:['ipconfig','ping -n 3 192.168.10.10']},note:'PSW1 has a preconfigured 40 W budget. Limits use milliwatts: 15400 mW = 15.4 W. The simulator’s full AP profile allocates 30 W; its reduced 802.3af profile allocates 15.4 W with 2×2 radios and USB off. The phone allocates 15.4 W. Both reduced allocations total 30.8 W, leaving 9.2 W. Keep the phone at high priority and the AP at low priority. To explore budget denial after completing the lab, temporarily raise Gi0/1 to 30000 mW: PHONE1 retains power, AP1 is denied. Restore 15400 mW afterward. Inspect the live budget and port reasons by opening PSW1. Gi0/4 remains enabled for data with inline power disabled. All IP addresses and VLAN 10 access ports are preconfigured; no default gateway is needed within this subnet. The AP exercise checks electrical power and its reduced profile; controller joining and wireless clients are outside this lab. The phone uses the untagged access VLAN, with no call registration. Save PSW1 with write memory.'},
  'voice-vlan':{columns:['Device','Interface','VLAN','IPv4 address','Default gateway'],rows:[
   ['R1','GigabitEthernet0/0.10','10 · DATA','192.168.10.1 /24','—'],['R1','GigabitEthernet0/0.20','20 · VOICE','192.168.20.1 /24','—'],['R1','GigabitEthernet0/0.100','100 · SERVICES','192.168.100.1 /24','—'],
   ['SRV1','GigabitEthernet0','100 · SERVICES','192.168.100.10 /24','192.168.100.1'],['PHONE1 / PHONE2','Network','20 · VOICE','DHCP · 192.168.20.21–254 /24','192.168.20.1'],['PC1','GigabitEthernet0','10 · DATA','192.168.10.11 /24','192.168.10.1'],['PC2','GigabitEthernet0','10 · DATA','192.168.10.12 /24','192.168.10.1'],
@@ -99,6 +107,37 @@ const ipv4InterfaceCriterion=(device:string,address:string,port='GigabitEthernet
  {kind:'interface',device,interface:port,property:'mask',value:'255.255.255.0'},
  {kind:'interface',device,interface:port,property:'adminUp',value:true},
 ]});
+export function createPoEInterfaceLab(mode:CatalogMode='practice'):LabDocument{
+ const make=(name:string,kind:Device['kind'],x:number,y:number):Device=>({id:'device-poe-'+name.toLowerCase(),kind,x,y,powered:true,config:factoryDeviceConfig(kind,name),runtime:emptyRuntime()});
+ const sw=make('PSW1','poeswitch',500,180),ap=make('AP1','ap',200,420),phone=make('PHONE1','phone',500,420),pc=make('PC1','pc',500,650),server=make('SRV1','server',800,420);
+ sw.config.features.poe.budget=40;sw.config.vlans[10]={id:10,name:'LAB',active:true};
+ for(const[n,name]of [[1,'TO_AP1'],[2,'TO_PHONE1'],[3,'TO_SRV1']] as const){const port=sw.config.interfaces[`GigabitEthernet0/${n}`];Object.assign(port,{description:name,mode:'access',vlan:10});port.features.portfast=true;if(n<3){port.adminUp=false;port.features.powerInline={mode:'never',max:30000};}}
+ for(const[d,port,address]of [[ap,'GigabitEthernet0','192.168.10.21'],[phone,'Network','192.168.10.20'],[pc,'GigabitEthernet0','192.168.10.11'],[server,'GigabitEthernet0','192.168.10.10']] as const){Object.assign(d.config.interfaces[port],{ip:address,mask:'255.255.255.0'});d.config.interfaces[port].features.dhcp=false;delete d.config.defaultGateway;}
+ for(const d of [sw,ap,phone,pc,server])d.startupConfig=structuredClone(d.config);
+ const supply=(d:Device,n:number):Criterion=>({kind:'poe-supply',device:d.id,switch:sw.id,interface:`GigabitEthernet0/${n}`,watts:15.4,standard:'802.3af',class:3,...d.kind==='ap'?{spatialStreams:2 as const,usb:false}:{}});
+ const lab:CatalogLab={id:'lab-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)),catalogId:'poe-interface',name:'PoE Interface'+(mode==='completed'?' · Completed':''),devices:[sw,ap,phone,pc,server],links:[
+  {id:'link-poe-ap',a:{deviceId:sw.id,port:'GigabitEthernet0/1'},b:{deviceId:ap.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0},
+  {id:'link-poe-phone',a:{deviceId:sw.id,port:'GigabitEthernet0/2'},b:{deviceId:phone.id,port:'Network'},enabled:true,delay:.1,loss:0},
+  {id:'link-poe-pc',a:{deviceId:phone.id,port:'PC'},b:{deviceId:pc.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0},
+  {id:'link-poe-server',a:{deviceId:sw.id,port:'GigabitEthernet0/3'},b:{deviceId:server.id,port:'GigabitEthernet0'},enabled:true,delay:.1,loss:0},
+ ],notes:[{id:'note-poe-budget',x:500,y:790,text:`PSW1 · 40 W available
+Target: AP1 15.4 W + PHONE1 15.4 W = 30.8 W`}],lesson:{title:'PoE Interface',description:`AP1 and PHONE1 begin without power: PSW1 Gi0/1–2 are shut down and inline power is disabled. PC1 connects through the phone’s PC passthrough port. All IPv4 settings and VLAN 10 access ports are already configured.
+
+Open PSW1 and choose Open console. Enable Gi0/1–2, set both power limits to 15400 mW, give PHONE1 high power priority and AP1 low priority, and disable inline power on unused Gi0/4 while leaving that port enabled for data. Keep the switch’s 40 W budget.
+
+Inspect show power inline and the per-port detail and priority views. The full 30 W AP profile and the 15.4 W phone cannot share this budget. AP1 must use its reduced 15.4 W profile so both devices receive power. The completed allocation is 30.8 W used and 9.2 W remaining. Open PHONE1 to inspect power and passthrough, then run the real packet checks below. Save PSW1 with write memory, then save or export the lab.`,objectives:[
+  {id:'ports',title:'Enable both powered-device interfaces',description:'Gi0/1 connects AP1; Gi0/2 connects PHONE1. Use no shutdown.',criterion:{kind:'all',criteria:[1,2].map(n=>({kind:'interface',device:sw.id,interface:`GigabitEthernet0/${n}`,property:'adminUp',value:true}))}},
+  {id:'phone-config',title:'Configure PHONE1’s power limit and high priority',description:'Gi0/2: inline power auto, maximum 15400 mW, priority high.',criterion:{kind:'poe-interface',device:sw.id,interface:'GigabitEthernet0/2',mode:'auto',max:15400,priority:'high'}},
+  {id:'ap-config',title:'Configure AP1’s reduced power limit and low priority',description:'Gi0/1: inline power auto, maximum 15400 mW, priority low.',criterion:{kind:'poe-interface',device:sw.id,interface:'GigabitEthernet0/1',mode:'auto',max:15400,priority:'low'}},
+  {id:'unused',title:'Leave unused Gi0/4 enabled for data with inline power disabled',description:'Use power inline never; keep the interface administratively up.',criterion:{kind:'all',criteria:[{kind:'poe-interface',device:sw.id,interface:'GigabitEthernet0/4',mode:'never',max:30000,priority:'low'},{kind:'interface',device:sw.id,interface:'GigabitEthernet0/4',property:'adminUp',value:true}]}},
+  {id:'phone-power',title:'Verify PHONE1 receives 15.4 W from PSW1 Gi0/2',description:'Requires a live 802.3af class 3 allocation on the connected switch port.',criterion:supply(phone,2)},
+  {id:'ap-power',title:'Verify AP1 receives its reduced 15.4 W allocation',description:'Gi0/1: 802.3af class 3, 2×2 radios and USB disabled.',criterion:supply(ap,1)},
+  {id:'phone-ping',title:'Verify PHONE1 can reach SRV1',description:'192.168.10.20 → 192.168.10.10 over the powered Network uplink.',criterion:{kind:'echo',device:phone.id,from:'192.168.10.10'},action:{kind:'ping',device:phone.id,target:'192.168.10.10',when:supply(phone,2)}},
+  {id:'pc-ping',title:'Verify PC1 reaches SRV1 through the powered phone',description:'192.168.10.11 → 192.168.10.10. The phone’s PC passthrough requires PoE.',criterion:{kind:'echo',device:pc.id,from:'192.168.10.10'},action:{kind:'ping',device:pc.id,target:'192.168.10.10',when:supply(phone,2)}},
+ ]}};
+ const doc:LabDocument={format:'netsim-lab',version:1,seed:20261029,lab};
+ return mode==='completed'?completedDocument(doc,POE_INTERFACE_COMMANDS):parseDocument(JSON.stringify(doc));
+}
 export function createVoiceVLANLab(mode:CatalogMode='practice'):LabDocument{
  const make=(name:string,kind:Device['kind'],x:number,y:number):Device=>({id:'device-voice-'+name.toLowerCase(),kind,x,y,powered:true,config:factoryDeviceConfig(kind,name),runtime:emptyRuntime()});
  const sw=make('PSW1','poeswitch',500,300),router=make('R1','router',250,100),server=make('SRV1','server',750,100),phones=[make('PHONE1','phone',300,510),make('PHONE2','phone',700,510)],pcs=[make('PC1','pc',300,720),make('PC2','pc',700,720)];
@@ -295,6 +334,7 @@ export function createRouterOnAStickLab(mode:CatalogMode='practice'):LabDocument
  return completedDocument(doc,ROAS_COMMANDS);
 }
 export function createCatalogLab(id:string,mode:CatalogMode='practice'):LabDocument{
+ if(id==='poe-interface')return createPoEInterfaceLab(mode);
  if(id==='voice-vlan')return createVoiceVLANLab(mode);
  if(id==='vlan-and-access-ports')return createVLANAccessLab(mode);
  if(id==='layer-3-routed-interfaces')return createL3InterfaceLab(mode);

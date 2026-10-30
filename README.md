@@ -22,6 +22,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **Voice VLAN** under Switching uses two PoE phones with a PC behind each phone. Open PSW1 and choose **Open console** to configure data VLAN 10, voice VLAN 20, PortFast, CDP and inline power. R1 and SRV1 are preconfigured. The guide checks received phone policy, real DHCP leases, voice/data MAC learning, PC passthrough and phone gateway reachability. This is a network provisioning exercise; telephone registration and calls are outside its scope.
 
+**PoE Interface** under Switching restores power to an AP and a phone on a switch with a 40 W budget. Configure inline power, per-port limits and priority, inspect the AP’s reduced power profile, and verify the phone’s network uplink and PC passthrough with real traffic. The guide checks live switch-to-device allocations and includes a completed reference.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.

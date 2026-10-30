@@ -1,6 +1,7 @@
 import type { Lab, Device } from "./model.ts";
 import type { Simulator } from "./engine.ts";
 import { isIPv4, isIPv6, ipToInt, inSubnet, maskToPrefix, sameAddress } from "./ip.ts";
+import {poeSettings,poePort} from './poe.ts';
 import {endpointVoicePolicy, endpointNetworkPort} from './endpoint.ts';
 
 export type Criterion =
@@ -23,6 +24,8 @@ export type Criterion =
   | { kind: "neighbor"; device: string; protocol: string; state?: string }
   | { kind: "echo"; device: string; from: string }
   | { kind: "vlan"; device: string; id: number }
+  | { kind: "poe-interface"; device: string; interface: string; mode: "auto" | "never"; max: number; priority: "high" | "low" }
+  | { kind: "poe-supply"; device: string; switch: string; interface: string; watts: number; standard: "802.3af" | "802.3at"; class: 3 | 4; spatialStreams?: 2 | 4; usb?: boolean }
   | { kind: "voice-policy"; device: string; vlan: number }
   | { kind: "mac-learned"; device: string; interface: string; source: string; sourceInterface: string; vlan: number }
   | {
@@ -105,6 +108,10 @@ export function validateLesson(value: unknown): asserts value is Lesson {
         );
       case "vlan":
         return Number.isInteger(v.id) && v.id >= 1 && v.id <= 4094;
+      case "poe-interface":
+        return text(v.interface,128) && ["auto","never"].includes(v.mode) && Number.isInteger(v.max) && v.max>=4000 && v.max<=30000 && ["high","low"].includes(v.priority);
+      case "poe-supply":
+        return text(v.switch,128) && text(v.interface,128) && Number.isFinite(v.watts) && v.watts>0 && v.watts<=30 && ["802.3af","802.3at"].includes(v.standard) && [3,4].includes(v.class) && (v.spatialStreams===undefined || [2,4].includes(v.spatialStreams)) && (v.usb===undefined || typeof v.usb==="boolean");
       case "voice-policy":
         return Number.isInteger(v.vlan) && v.vlan >= 1 && v.vlan <= 4094;
       case "mac-learned":
@@ -226,6 +233,17 @@ export function matches(
   if (!("device" in criterion)) return false;
   const d = device(sim, criterion.device);
   if (!d) return false;
+  if (criterion.kind === "poe-interface") {
+    const port=d.config.interfaces[criterion.interface];
+    if (d.kind!=="poeswitch" || !port || !poePort(criterion.interface)) return false;
+    const settings=poeSettings(port);
+    return settings.mode===criterion.mode && settings.max===criterion.max && settings.priority===criterion.priority;
+  }
+  if (criterion.kind === "poe-supply") {
+    const sw=device(sim,criterion.switch),supply=d.runtime.features.poePower;
+    const row=sw?.runtime.features.poe?.ports?.find((p:any)=>p.port===criterion.interface);
+    return !!sw && sw.kind==="poeswitch" && sim.devicePowered(d.id) && supply?.available===true && supply.source==="poe" && supply.switchId===sw.id && supply.port===criterion.interface && supply.watts===criterion.watts && supply.standard===criterion.standard && supply.class===criterion.class && row?.deviceId===d.id && row.state==="on" && row.watts===criterion.watts && (criterion.spatialStreams===undefined || supply.spatialStreams===criterion.spatialStreams) && (criterion.usb===undefined || supply.usb===criterion.usb);
+  }
   if (criterion.kind === "ip-routing") return d.config.ipRouting === criterion.enabled;
   if (criterion.kind === "default-gateway")
     return d.config.defaultGateway === criterion.address;
