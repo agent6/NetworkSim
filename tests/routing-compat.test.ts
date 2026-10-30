@@ -63,7 +63,7 @@ test('routing clears reset measured state, require protocol recovery, and retain
   run(a.cli,'clear ip eigrp traffic');assert.deepEqual(a.d.runtime.features.eigrpTraffic,{});run(a.cli,'clear ip eigrp neighbors');assert.ok(!a.d.runtime.routes.some(r=>r.protocol==='D'));s.advance(5500);assert.ok(a.d.runtime.routes.some(r=>r.protocol==='D'));assert.equal(renderConfig(a.d).join('\n'),before);
   run(a.cli,'clear ip route 192.0.2.2 255.255.255.255');assert.ok(!a.d.runtime.routes.some(r=>r.network==='192.0.2.2'));s.advance(1);assert.ok(a.d.runtime.routes.some(r=>r.network==='192.0.2.2'));
   for(const r of[a,b])run(r.cli,'configure terminal','no router eigrp 100','router ospf 1','network 0.0.0.0 255.255.255.255 area 0','end');s.advance(12000);assert.ok(a.d.runtime.features.ospfTraffic.received.hello>0);run(a.cli,'clear ip ospf traffic');assert.equal(a.d.runtime.features.ospfTraffic,undefined);run(a.cli,'clear ip ospf events');assert.deepEqual(a.d.runtime.features.ospfEvents,[]);
-  run(a.cli,'clear ip ospf 1 process');assert.ok(!a.d.runtime.routes.some(r=>r.protocol==='O'));s.advance(12000);assert.ok(a.d.runtime.routes.some(r=>r.protocol==='O'));
+  run(a.cli,'clear ip ospf 1 process','yes');assert.ok(!a.d.runtime.routes.some(r=>r.protocol==='O'));s.advance(12000);assert.ok(a.d.runtime.routes.some(r=>r.protocol==='O'));
 });
 
 test('unimplemented EIGRP bandwidth reservation and imports reject without retaining configuration',()=>{
@@ -107,7 +107,7 @@ test('OSPF TTL security verifies delivered hop limits and discard controls prese
   run(a.cli,'router ospf 1','ttl-security all-interfaces','event-log size 1','end');run(b.cli,'ip route 172.16.1.0 255.255.255.0 Null0','router ospf 1','redistribute static','summary-address 172.16.0.0 255.255.0.0','end');link(s,a.d,b.d);s.advance(12000);assert.ok(!a.d.runtime.routes.some(r=>r.network==='172.16.0.0'));
   run(b.cli,'configure terminal','router ospf 1','ttl-security all-interfaces','end');s.advance(12000);assert.ok(a.d.runtime.routes.some(r=>r.network==='172.16.0.0'));assert.ok(s.events.some(e=>e.packet?.protocol==='OSPF'&&e.packet.ttl===255));assert.equal(a.d.runtime.features.ospfEvents.length,1);
   run(b.cli,'configure terminal','router ospf 1','no discard-route external','end');s.advance(100);assert.ok(!b.d.runtime.routes.some(r=>r.protocol==='O summary'));assert.ok(a.d.runtime.routes.some(r=>r.network==='172.16.0.0'));
-  run(a.cli,'clear ip ospf events','configure terminal','router ospf 1','event-log pause','end','clear ip ospf process');s.advance(12000);assert.equal(a.d.runtime.features.ospfEvents.length,0);
+  run(a.cli,'clear ip ospf events','configure terminal','router ospf 1','event-log pause','end','clear ip ospf process','yes');s.advance(12000);assert.equal(a.d.runtime.features.ospfEvents.length,0);
 });
 
 test('EIGRP summary-metric changes the advertised vector and conditional local discard metric',()=>{

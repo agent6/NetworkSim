@@ -1,3 +1,4 @@
+import {activeIOSOSPFRouterId} from './ospf-router-id.ts';
 /**
  * Cisco IOS (IOSv 15.9) presentation of routing-protocol show commands: OSPF, EIGRP, BGP, RIP,
  * "show ip protocols" and the first-hop redundancy protocols. Values come from simulator state;
@@ -83,7 +84,7 @@ function interfaceState(e: Simulator, d: Device, p: InterfaceConfig) {
   return { status: !p.adminUp ? 'administratively down' : p.features.errDisabled ? 'down' : up ? 'up' : 'down', protocol: up ? 'up' : 'down', up };
 }
 function highestRouterId(d: Device, protocol: string): string {
-  return routingConfig(d, protocol)?.routerId || ports(d).filter(p => p.ip && !p.vrf).sort((a, b) => Number(/^Loopback/i.test(b.name)) - Number(/^Loopback/i.test(a.name)) || ipToInt(b.ip!) - ipToInt(a.ip!))[0]?.ip || '0.0.0.0';
+  return (protocol==='ospf'?activeIOSOSPFRouterId(d):undefined) || routingConfig(d, protocol)?.routerId || ports(d).filter(p => p.ip && !p.vrf).sort((a, b) => Number(/^Loopback/i.test(b.name)) - Number(/^Loopback/i.test(a.name)) || ipToInt(b.ip!) - ipToInt(a.ip!))[0]?.ip || '0.0.0.0';
 }
 function filterName(entry: any): string { return entry.acl ?? entry.prefixList ?? entry.routeMap ?? entry.name ?? ''; }
 function updateFilterLines(config: any, indent = '  '): string[] {
@@ -148,7 +149,7 @@ function ospfPorts(e: Simulator, d: Device, protocol: OspfProtocol, config: any)
 }
 function ospfView(e: Simulator, d: Device, protocol: OspfProtocol, config: any): OspfView {
   const live = ospfLiveDetail(e, d.id, protocol);
-  const rid = live?.interfaces[0]?.routerId ?? config.routerId ?? highestRouterId(d, protocol === 'ospf' ? 'ospf' : protocol);
+  const rid = (protocol==='ospf'?activeIOSOSPFRouterId(d,config):undefined) ?? live?.interfaces[0]?.routerId ?? config.routerId ?? highestRouterId(d, protocol === 'ospf' ? 'ospf' : protocol);
   return { e, d, protocol, config, v3: protocol !== 'ospf', pid: Number(config.processId ?? 1), rid, now: e.clock.now(), live, ports: ospfPorts(e, d, protocol, config), neighbors: (live?.neighbors ?? []).filter(n => n.state !== 'DOWN') };
 }
 function areaLabel(v: OspfView, key: string): string { return v.ports.find(p => p.area === key)?.areaLabel ?? (key.includes('.') ? key : String(key)); }

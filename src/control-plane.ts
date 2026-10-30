@@ -1,3 +1,4 @@
+import {activeIOSOSPFRouterId,syncIOSOSPFRouterIds} from './ospf-router-id.ts';
 import {stpInterfaces, stpMembers, stpPortName, stpPortState, stpMemberActive, stpPortNumber, stpDefaultCost,stpRegion as mstRegion} from './stp-ports.ts';
 import {switchVoiceVlan} from './endpoint.ts';
 import { syncSwitchingMessages, switchingPeer, receiveSwitchingMessage } from './switching-messages.ts';
@@ -438,7 +439,7 @@ function config(d: Device, protocol: string): RoutingConfig | undefined {
   const c = d.config.protocols[protocol]; return c && !c.placeholder && c.enabled !== false ? c : undefined;
 }
 function routerId(d: Device, protocol: string): string {
-  return config(d, protocol)?.routerId || Object.values(d.config.interfaces).filter(i => i.ip).sort((a,b) => Number(/^loopback/i.test(b.name))-Number(/^loopback/i.test(a.name))||ipNumber(b.ip!) - ipNumber(a.ip!))[0]?.ip || '0.0.0.0';
+  return (protocol==='ospf'?activeIOSOSPFRouterId(d):undefined) || config(d, protocol)?.routerId || Object.values(d.config.interfaces).filter(i => i.ip).sort((a,b) => Number(/^loopback/i.test(b.name))-Number(/^loopback/i.test(a.name))||ipNumber(b.ip!) - ipNumber(a.ip!))[0]?.ip || '0.0.0.0';
 }
 function port(engine: Simulator, id: string, name: string): Port | undefined {
   const device = engine.getDevice(id), iface = device?.config.interfaces[name];
@@ -1876,6 +1877,7 @@ export function recomputeControlPlane(engine:Simulator):void {
   syncDiscovery(engine);
   synchronizeNhrp(engine);
   const endpoints=routedPorts(engine);
+  for(const d of engine.lab.devices)syncIOSOSPFRouterIds(d,p=>engine.interfaceUp(d.id,p.name));
   const peers=new Map(endpoints.map(p=>[endpointKey(p),broadcastPeers(engine,ws,p,endpoints)]));
   synchronizeBfd(engine,endpoints,peers);syncFhrpPackets(engine);
   const graphs=new Map<string,Adj[]>();dualContext(engine).candidates.clear();

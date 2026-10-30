@@ -958,8 +958,8 @@ THIS SOFTWARE.
     };
     if (!request2 || request2.application !== "snmp" || !Array.isArray(request2.oids) || request2.oids.length < 1 || request2.oids.length > 100 || !["get", "get-next", "get-bulk", "set"].includes(request2.operation)) return reject("malformed");
     if (request2.operation === "get-bulk" && [request2.nonRepeaters ?? 0, request2.maxRepetitions ?? 10].some((v) => !Number.isInteger(v) || v < 0 || v > 100)) return reject("malformed");
-    const identity2 = authenticate(engine, device2, request2, source, destination2);
-    if (!identity2.accepted) return reject(identity2.reason ?? "identity");
+    const identity3 = authenticate(engine, device2, request2, source, destination2);
+    if (!identity3.accepted) return reject(identity3.reason ?? "identity");
     const oids = [];
     try {
       for (const oid of request2.oids) oids.push(normalizeOID(oid));
@@ -976,10 +976,10 @@ THIS SOFTWARE.
     if (request2.operation === "get") stats.getRequests++;
     else if (request2.operation === "get-bulk") stats.getBulkRequests++;
     else stats.getNextRequests++;
-    const mib = snmpMIB(engine, device2), accessible = mib.filter((r) => viewAllows(device2.config.features.snmp, identity2.view, r.oid)).sort((a, b) => compareOID(a.oid, b.oid));
+    const mib = snmpMIB(engine, device2), accessible = mib.filter((r) => viewAllows(device2.config.features.snmp, identity3.view, r.oid)).sort((a, b) => compareOID(a.oid, b.oid));
     let varbinds = oids.map((oid) => {
       if (request2.operation === "get-next") return accessible.find((r) => compareOID(r.oid, oid) > 0) ?? { oid, type: "Exception", exception: "endOfMibView" };
-      if (!viewAllows(device2.config.features.snmp, identity2.view, oid)) return { oid, type: "Exception", exception: "noSuchObject" };
+      if (!viewAllows(device2.config.features.snmp, identity3.view, oid)) return { oid, type: "Exception", exception: "noSuchObject" };
       const row5 = mib.find((r) => r.oid === oid);
       if (row5) return row5;
       const base = oid.split(".").slice(0, -1).join("."), knownInstance = mib.some((r) => r.oid.startsWith(base + "."));
@@ -1152,9 +1152,9 @@ THIS SOFTWARE.
     for (const host of config4.hosts ?? []) {
       const options3 = host.options ?? [], at = options3.indexOf("version"), version2 = options3[at + 1], isInform = options3.includes("informs");
       if (at < 0 || !["2c", "3"].includes(version2)) continue;
-      const identity2 = version2 === "2c" ? { community: options3[at + 2] } : v3NotificationIdentity(device2, options3[at + 3], options3[at + 2], oid);
-      if (!identity2 || !allows(options3.slice(at + (version2 === "3" ? 4 : 3)))) continue;
-      const source = config4["trap-source"] ?? config4["source-interface"], variables2 = [{ oid: "1.3.6.1.2.1.1.3.0", type: "TimeTicks", value: Math.floor(Math.max(0, engine.clock.now() - (device2.runtime.features.bootTime ?? 0)) / 10) }, { oid: "1.3.6.1.6.3.1.1.4.1.0", type: "ObjectIdentifier", value: oid }, ...varbinds], state4 = informs(engine), notificationId = `${device2.id}:${++state4.sequence}`, payload = { application: "snmp-notification", version: version2, kind: isInform ? "inform" : "trap", notificationId, ...identity2, varbinds: variables2 };
+      const identity3 = version2 === "2c" ? { community: options3[at + 2] } : v3NotificationIdentity(device2, options3[at + 3], options3[at + 2], oid);
+      if (!identity3 || !allows(options3.slice(at + (version2 === "3" ? 4 : 3)))) continue;
+      const source = config4["trap-source"] ?? config4["source-interface"], variables2 = [{ oid: "1.3.6.1.2.1.1.3.0", type: "TimeTicks", value: Math.floor(Math.max(0, engine.clock.now() - (device2.runtime.features.bootTime ?? 0)) / 10) }, { oid: "1.3.6.1.6.3.1.1.4.1.0", type: "ObjectIdentifier", value: oid }, ...varbinds], state4 = informs(engine), notificationId = `${device2.id}:${++state4.sequence}`, payload = { application: "snmp-notification", version: version2, kind: isInform ? "inform" : "trap", notificationId, ...identity3, varbinds: variables2 };
       if (!isInform) {
         const result2 = engine.udpNotify(deviceId, host.address, 162, payload, { source, timeout: 1e3 });
         results.push(result2);
@@ -7638,6 +7638,73 @@ ${end.comment}` : end.comment;
     return new Document(value, _replacer, options3).toString(options3);
   }
 
+  // src/routing-scope.ts
+  var scoped = /* @__PURE__ */ new WeakMap();
+  function routingDevice(device2, vrf2) {
+    const previous = scoped.get(device2), base = previous?.base ?? device2;
+    if (!vrf2) return base;
+    if (previous?.vrf === vrf2) return device2;
+    const protocols3 = { ...base.config.protocols };
+    for (const name2 of ["eigrp", "eigrp6", "rip", "ripng", "ospf", "ospfv3", "ospfv3ipv4"]) {
+      const child2 = base.config.protocols[name2]?.vrfs?.[vrf2];
+      if (child2) protocols3[name2] = child2;
+      else delete protocols3[name2];
+    }
+    const view = { ...base, config: { ...base.config, protocols: protocols3 } };
+    scoped.set(view, { base, vrf: vrf2 });
+    return view;
+  }
+  function routingConfig(device2, protocol, vrf2) {
+    if (vrf2) return routingDevice(device2, vrf2).config.protocols[protocol];
+    return device2.config.protocols[protocol];
+  }
+
+  // src/ospf-router-id.ts
+  var processes = /* @__PURE__ */ new WeakMap();
+  var aliases = /* @__PURE__ */ new WeakMap();
+  function identity(d, c) {
+    if (d.kind === "datacenter" || !c) return;
+    const entry = aliases.get(c);
+    return entry?.runtime === d.runtime && processes.get(d.runtime)?.get(entry.scope) === entry ? entry : void 0;
+  }
+  function activeIOSOSPFRouterId(d, c = d.config.protocols.ospf) {
+    return identity(d, c)?.id;
+  }
+  function iosOSPFRouterIdEstablished(d, c = d.config.protocols.ospf) {
+    return !!identity(d, c)?.established;
+  }
+  function syncIOSOSPFRouterIds(d, up) {
+    if (d.kind === "datacenter") return;
+    let slots = processes.get(d.runtime);
+    if (!slots) {
+      slots = /* @__PURE__ */ new Map();
+      processes.set(d.runtime, slots);
+    }
+    const scopes = [void 0, ...Object.keys(d.config.protocols.ospf?.vrfs ?? {})], wanted = new Set(scopes.map((v) => v ?? ""));
+    for (const key4 of slots.keys()) if (!wanted.has(key4)) slots.delete(key4);
+    for (const vrf2 of scopes) {
+      const scope = vrf2 ?? "", c = routingDevice(d, vrf2).config.protocols.ospf;
+      if (!c || c.placeholder || c.enabled === false) {
+        slots.delete(scope);
+        continue;
+      }
+      const select5 = () => c.routerId || Object.values(d.config.interfaces).filter((p) => p.ip && isIPv4(p.ip) && p.ip !== "0.0.0.0" && !p.switchport && (p.vrf ?? "") === scope && up(p)).sort((a, b) => Number(/^Loopback/i.test(b.name)) - Number(/^Loopback/i.test(a.name)) || ipToInt(b.ip) - ipToInt(a.ip))[0]?.ip || "0.0.0.0";
+      let entry = slots.get(scope);
+      if (!entry || entry.processId !== Number(c.processId ?? 1)) {
+        entry = { runtime: d.runtime, scope, processId: Number(c.processId ?? 1), id: select5(), configured: c.routerId, established: false };
+        slots.set(scope, entry);
+      }
+      aliases.set(c, entry);
+      const peers = d.runtime.features.ospfPackets?.["ospf" + (vrf2 ? ":" + vrf2 : "")]?.neighbors ?? [];
+      entry.established ||= peers.some((n) => n.state !== "DOWN");
+      if (entry.id === "0.0.0.0" || !entry.established && entry.configured !== c.routerId) entry.id = select5();
+      entry.configured = c.routerId;
+    }
+  }
+  function resetIOSOSPFRouterId(d) {
+    processes.delete(d.runtime);
+  }
+
   // src/nat-state.ts
   var natRuleKey = (rule) => JSON.stringify([rule.acl ?? "", rule.interface ?? "", rule.pool ?? "", !!rule.overload]);
   function natLive(d, now) {
@@ -8892,10 +8959,10 @@ ${end.comment}` : end.comment;
         const version2 = keyword2(a[i++], ["2c", "3"]);
         let level;
         if (version2 === "3") level = keyword2(a[i++], ["noauth", "auth", "priv"]);
-        const identity2 = name2(a[i++]);
+        const identity3 = name2(a[i++]);
         const categories = a.slice(i);
         if (categories.some((x) => !["snmp", "linkdown", "linkup", "coldstart", "warmstart", "authentication"].includes(x.toLowerCase()))) fail7("% This SNMP notification category is not implemented.");
-        const options3 = [...kind === "informs" ? ["informs"] : [], "version", version2, ...level ? [level] : [], identity2, ...categories.map((x) => x.toLowerCase())];
+        const options3 = [...kind === "informs" ? ["informs"] : [], "version", version2, ...level ? [level] : [], identity3, ...categories.map((x) => x.toLowerCase())];
         next.hosts = next.hosts.filter((host) => host.address !== address);
         next.hosts.push({ address, options: options3 });
         if (version2 === "3") notice = [];
@@ -10589,7 +10656,7 @@ ${end.comment}` : end.comment;
 
   // src/ios-help.ts
   var IOS_UNRECOGNIZED = "% Unrecognized command";
-  var iosInformational = (line2) => /^%[A-Z][A-Z0-9_]*-\d-[A-Z0-9_]+:/.test(line2) || /^% (?:The key modulus size is|Generating \d+ bit RSA keys|You already have RSA keys defined|They will be replaced|All keys will be removed|All router certs issued)/.test(line2);
+  var iosInformational = (line2) => /^% OSPF: Reload or use "clear ip ospf process" command, for this to take effect$/.test(line2) || /^%[A-Z][A-Z0-9_]*-\d-[A-Z0-9_]+:/.test(line2) || /^% (?:The key modulus size is|Generating \d+ bit RSA keys|You already have RSA keys defined|They will be replaced|All keys will be removed|All router certs issued)/.test(line2);
   var iosRejected = (line2) => line2.startsWith("%") && !iosInformational(line2) || line2.trim() === "Area mismatch" || /^\s*ERROR:/i.test(line2);
   var iosAmbiguous = (input5) => `% Ambiguous command:  "${input5.trim()}"`;
   function iosHelpScope(mode, protocol) {
@@ -12492,9 +12559,9 @@ ${end.comment}` : end.comment;
     const rows2 = natStatics(d, e.clock.now()), dynamic = natLive(d, e.clock.now()), stats = natStats(d), nat2 = d.config.features.nat ?? {};
     if (topic === "running-config nat") return [...nsosFeature(d, "nat") ? ["feature nat"] : [], ...nsosNATConfig(d), ...Object.values(d.config.interfaces).filter((p) => p.features.nat).flatMap((p) => ["interface " + p.name, "  ip nat " + p.features.nat])];
     if (topic === "ip nat-alias") {
-      const aliases = [...new Set([...rows2, ...dynamic].map((x) => x.outside))].filter((address) => !Object.values(d.config.interfaces).some((p) => p.ip === address));
-      if (!aliases.length) return [];
-      return ["Alias Information for Context: default", "Address         Interface", ...aliases.map((address) => address.padEnd(16) + (Object.values(d.config.interfaces).find((p) => p.features.nat === "outside")?.name ?? "---"))];
+      const aliases2 = [...new Set([...rows2, ...dynamic].map((x) => x.outside))].filter((address) => !Object.values(d.config.interfaces).some((p) => p.ip === address));
+      if (!aliases2.length) return [];
+      return ["Alias Information for Context: default", "Address         Interface", ...aliases2.map((address) => address.padEnd(16) + (Object.values(d.config.interfaces).find((p) => p.features.nat === "outside")?.name ?? "---"))];
     }
     if (topic.startsWith("ip nat translations")) return ["Pro Inside global      Inside local       Outside local      Outside global", ...[...rows2, ...dynamic].flatMap((x) => {
       const tuple = (address, port3) => address + (port3 === void 0 ? "" : ":" + port3), left = x.static ? -1 : Math.max(0, Math.floor(((x.expires ?? e.clock.now() + natTimeout(d, x)) - e.clock.now()) / 1e3));
@@ -14879,27 +14946,6 @@ ${end.comment}` : end.comment;
     return port3.features.bpduguard ?? (!!device2.config.features.stp?.bpduguardDefault && portfastConfigured(device2, port3));
   }
 
-  // src/routing-scope.ts
-  var scoped = /* @__PURE__ */ new WeakMap();
-  function routingDevice(device2, vrf2) {
-    const previous = scoped.get(device2), base = previous?.base ?? device2;
-    if (!vrf2) return base;
-    if (previous?.vrf === vrf2) return device2;
-    const protocols3 = { ...base.config.protocols };
-    for (const name2 of ["eigrp", "eigrp6", "rip", "ripng", "ospf", "ospfv3", "ospfv3ipv4"]) {
-      const child2 = base.config.protocols[name2]?.vrfs?.[vrf2];
-      if (child2) protocols3[name2] = child2;
-      else delete protocols3[name2];
-    }
-    const view = { ...base, config: { ...base.config, protocols: protocols3 } };
-    scoped.set(view, { base, vrf: vrf2 });
-    return view;
-  }
-  function routingConfig(device2, protocol, vrf2) {
-    if (vrf2) return routingDevice(device2, vrf2).config.protocols[protocol];
-    return device2.config.protocols[protocol];
-  }
-
   // src/ospf-packets.ts
   var contexts = /* @__PURE__ */ new WeakMap();
   var copy = (value) => structuredClone(value);
@@ -15143,6 +15189,8 @@ ${end.comment}` : end.comment;
     }
   }
   function resetOSPF(engine, deviceId, protocol = "ospf") {
+    const d = engine.getDevice(deviceId);
+    if (d && protocol === "ospf") resetIOSOSPFRouterId(d);
     const c = context(engine);
     for (const node of c.nodes.values()) if (node.deviceId === deviceId && node.protocol === protocol) {
       dispose(engine, node);
@@ -15159,6 +15207,7 @@ ${end.comment}` : end.comment;
       node.originTimer = void 0;
       node.arrivals = void 0;
       node.helloSent = void 0;
+      node.started = engine.clock.now();
       delete node.runtime.features.ospfPackets?.[protocol + (node.vrf ? ":" + node.vrf : "")];
     }
     for (const [key4, assembly] of c.fragments) if (key4.startsWith(deviceId + "|")) {
@@ -17319,7 +17368,7 @@ ${end.comment}` : end.comment;
     engine.emit({ nodeId: d.id, protocol: policy?.protocol ?? "SYSTEM", label: policy ? "Phone voice policy learned" : "Phone voice policy expired", detail: policy ? `Received ${policy.protocol} voice VLAN ${policy.vlan}, CoS ${policy.cos}${policy.dscp !== void 0 ? ", DSCP " + policy.dscp : ""}.` : "No current received voice policy; endpoint uses untagged traffic.", disposition: "info" });
     engine.endpointPolicyChanged?.(d.id);
   }
-  function identity(engine, d, port3, protocol) {
+  function identity2(engine, d, port3, protocol) {
     const p = d.config.interfaces[port3], phone = (d.kind === "pc" || d.kind === "phone") && endpointProfile(d).role === "phone";
     const management = Object.values(d.config.interfaces).find((i) => i.name === "mgmt0" && i.ip) || Object.values(d.config.interfaces).find((i) => /^Vlan/.test(i.name) && i.ip) || Object.values(d.config.interfaces).find((i) => i.ip);
     const local6 = p.ipv6.map((a) => a.split("/")[0]), ll = d.runtime.features.linkLocalAddresses?.[port3];
@@ -17342,7 +17391,7 @@ ${end.comment}` : end.comment;
     if (!enabled2(d, port3, protocol, "send") || !engine.interfaceUp(d.id, port3)) return;
     const p = d.config.interfaces[port3], cfg = configuration(d, protocol), phone = (d.kind === "pc" || d.kind === "phone") && endpointProfile(d).role === "phone", voicePolicy = advertisedVoice(d, port3, protocol, engine.clock.now()), medCapabilities = protocol === "LLDP" && (phone || Object.values(table(d)).some((row5) => row5.interface === port3 && row5.protocol === "LLDP" && row5.medCapabilities && row5.expires > engine.clock.now()));
     const kind = phone ? "phone" : d.kind;
-    engine.sendLinkControl?.(d.id, port3, { kind: "link-control", protocol, body: { deviceId: d.id, port: port3, hostname: d.config.hostname, ...identity(engine, d, port3, protocol), platform: "NetSim " + platformIdentity(kind).model, software: platformSoftware(kind), description: p.description || "", holdtime: cfg.holdtime, ...protocol === "CDP" ? { duplex: engine.ethernetState?.(d.id, port3)?.duplex } : {}, ...medCapabilities ? { medCapabilities: true } : {}, ...voicePolicy ? { voicePolicy } : {} } });
+    engine.sendLinkControl?.(d.id, port3, { kind: "link-control", protocol, body: { deviceId: d.id, port: port3, hostname: d.config.hostname, ...identity2(engine, d, port3, protocol), platform: "NetSim " + platformIdentity(kind).model, software: platformSoftware(kind), description: p.description || "", holdtime: cfg.holdtime, ...protocol === "CDP" ? { duplex: engine.ethernetState?.(d.id, port3)?.duplex } : {}, ...medCapabilities ? { medCapabilities: true } : {}, ...voicePolicy ? { voicePolicy } : {} } });
     const traffic2 = (d.runtime.features.discoveryTraffic ??= {})[protocol] ??= { out: 0, in: 0, aged: 0 };
     traffic2.out++;
   }
@@ -17363,7 +17412,7 @@ ${end.comment}` : end.comment;
           continue;
         }
         retained.add(key4);
-        const p = d.config.interfaces[port3], cfg = configuration(d, protocol), signature2 = JSON.stringify([cfg, d.config.hostname, identity(engine, d, port3, protocol), p.description, engine.ethernetState?.(d.id, port3)?.duplex, endpointProfile(d), p.features.voiceVlan, p.features.networkPolicy, p.features.lldpMedNetworkPolicy, d.config.features.networkPolicies, Object.values(table(d)).some((row5) => row5.interface === port3 && row5.protocol === "LLDP" && row5.medCapabilities)]);
+        const p = d.config.interfaces[port3], cfg = configuration(d, protocol), signature2 = JSON.stringify([cfg, d.config.hostname, identity2(engine, d, port3, protocol), p.description, engine.ethernetState?.(d.id, port3)?.duplex, endpointProfile(d), p.features.voiceVlan, p.features.networkPolicy, p.features.lldpMedNetworkPolicy, d.config.features.networkPolicies, Object.values(table(d)).some((row5) => row5.interface === port3 && row5.protocol === "LLDP" && row5.medCapabilities)]);
         if (old?.runtime === d.runtime && old.signature === signature2) continue;
         if (old) engine.clock.cancel(old.timer);
         const record2 = { runtime: d.runtime, signature: signature2 };
@@ -18387,7 +18436,7 @@ ${end.comment}` : end.comment;
     return c && !c.placeholder && c.enabled !== false ? c : void 0;
   }
   function routerId(d, protocol) {
-    return config2(d, protocol)?.routerId || Object.values(d.config.interfaces).filter((i) => i.ip).sort((a, b) => Number(/^loopback/i.test(b.name)) - Number(/^loopback/i.test(a.name)) || ipNumber(b.ip) - ipNumber(a.ip))[0]?.ip || "0.0.0.0";
+    return (protocol === "ospf" ? activeIOSOSPFRouterId(d) : void 0) || config2(d, protocol)?.routerId || Object.values(d.config.interfaces).filter((i) => i.ip).sort((a, b) => Number(/^loopback/i.test(b.name)) - Number(/^loopback/i.test(a.name)) || ipNumber(b.ip) - ipNumber(a.ip))[0]?.ip || "0.0.0.0";
   }
   function port(engine, id2, name2) {
     const device2 = engine.getDevice(id2), iface2 = device2?.config.interfaces[name2];
@@ -20976,6 +21025,7 @@ ${end.comment}` : end.comment;
     syncDiscovery(engine);
     synchronizeNhrp(engine);
     const endpoints = routedPorts(engine);
+    for (const d of engine.lab.devices) syncIOSOSPFRouterIds(d, (p) => engine.interfaceUp(d.id, p.name));
     const peers = new Map(endpoints.map((p) => [endpointKey(p), broadcastPeers(engine, ws, p, endpoints)]));
     synchronizeBfd(engine, endpoints, peers);
     syncFhrpPackets(engine);
@@ -21158,8 +21208,20 @@ ${end.comment}` : end.comment;
         if (i !== a.length) h.fail();
         if (process && h.device.config.protocols[target]?.processId !== process) return;
         const protocol2 = target;
-        if (action === "process") resetOSPF(h.engine, h.device.id, protocol2);
-        else clearOSPFState(h.engine, h.device.id, protocol2, action);
+        if (action === "process") {
+          if (protocol2 === "ospf" && h.prompt) {
+            const ask = () => h.prompt(process ? `Reset OSPF process ${process}? [no]: ` : "Reset ALL OSPF processes? [no]: ", (value) => {
+              if (/^y(?:es)?$/i.test(value.trim())) {
+                resetOSPF(h.engine, h.device.id, protocol2);
+                return [];
+              }
+              if (!value.trim() || /^n(?:o)?$/i.test(value.trim())) return [];
+              ask();
+              return ["% Please answer yes or no."];
+            });
+            ask();
+          } else resetOSPF(h.engine, h.device.id, protocol2);
+        } else clearOSPFState(h.engine, h.device.id, protocol2, action);
       }, "[process-id] [ipv4|ipv6] process|counters|events|force-spf|redistribution|rib|traffic");
       for (const [family, protocol2] of [["ip", "eigrp"], ["ipv6", "eigrp6"]]) add2(`clear ${family} eigrp`, "Clear EIGRP learned operational state", (a) => {
         let i = 0;
@@ -26940,7 +27002,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     return { status: !p.adminUp ? "administratively down" : p.features.errDisabled ? "down" : up ? "up" : "down", protocol: up ? "up" : "down", up };
   }
   function highestRouterId(d, protocol) {
-    return routingConfig(d, protocol)?.routerId || ports2(d).filter((p) => p.ip && !p.vrf).sort((a, b) => Number(/^Loopback/i.test(b.name)) - Number(/^Loopback/i.test(a.name)) || ipToInt(b.ip) - ipToInt(a.ip))[0]?.ip || "0.0.0.0";
+    return (protocol === "ospf" ? activeIOSOSPFRouterId(d) : void 0) || routingConfig(d, protocol)?.routerId || ports2(d).filter((p) => p.ip && !p.vrf).sort((a, b) => Number(/^Loopback/i.test(b.name)) - Number(/^Loopback/i.test(a.name)) || ipToInt(b.ip) - ipToInt(a.ip))[0]?.ip || "0.0.0.0";
   }
   function filterName(entry) {
     return entry.acl ?? entry.prefixList ?? entry.routeMap ?? entry.name ?? "";
@@ -27021,7 +27083,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
   }
   function ospfView(e, d, protocol, config4) {
     const live2 = ospfLiveDetail(e, d.id, protocol);
-    const rid2 = live2?.interfaces[0]?.routerId ?? config4.routerId ?? highestRouterId(d, protocol === "ospf" ? "ospf" : protocol);
+    const rid2 = (protocol === "ospf" ? activeIOSOSPFRouterId(d, config4) : void 0) ?? live2?.interfaces[0]?.routerId ?? config4.routerId ?? highestRouterId(d, protocol === "ospf" ? "ospf" : protocol);
     return { e, d, protocol, config: config4, v3: protocol !== "ospf", pid: Number(config4.processId ?? 1), rid: rid2, now: e.clock.now(), live: live2, ports: ospfPorts(e, d, protocol, config4), neighbors: (live2?.neighbors ?? []).filter((n) => n.state !== "DOWN") };
   }
   function areaLabel(v, key4) {
@@ -29004,7 +29066,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     return /^\d+$/.test(value) && Number.isInteger(n) && n >= min && n <= max ? n : invalid3();
   }
   function rid(d, protocol) {
-    return d.config.protocols[protocol]?.routerId || ports3(d).filter((p) => p.ip).sort((a, b) => Number(/^Loopback/i.test(b.name)) - Number(/^Loopback/i.test(a.name)) || ipToInt(b.ip) - ipToInt(a.ip))[0]?.ip || "0.0.0.0";
+    return (protocol === "ospf" ? activeIOSOSPFRouterId(d) : void 0) || d.config.protocols[protocol]?.routerId || ports3(d).filter((p) => p.ip).sort((a, b) => Number(/^Loopback/i.test(b.name)) - Number(/^Loopback/i.test(a.name)) || ipToInt(b.ip) - ipToInt(a.ip))[0]?.ip || "0.0.0.0";
   }
   function state2(e, d, p) {
     const up = e.interfaceUp(d.id, p.name);
@@ -31612,8 +31674,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     }
     dispatch(input5) {
       if (["user", "priv"].includes(this.mode)) {
-        const match = /^(\S+)([\s\S]*)$/.exec(input5), aliases = { h: "help", lo: "logout", p: "ping", r: "resume", s: "show", w: "where" };
-        if (match && aliases[match[1].toLowerCase()]) input5 = aliases[match[1].toLowerCase()] + match[2];
+        const match = /^(\S+)([\s\S]*)$/.exec(input5), aliases2 = { h: "help", lo: "logout", p: "ping", r: "resume", s: "show", w: "where" };
+        if (match && aliases2[match[1].toLowerCase()]) input5 = aliases2[match[1].toLowerCase()] + match[2];
       }
       const pipe = input5.indexOf("|");
       if (pipe >= 0 && /^(?:s(?:h(?:o(?:w)?)?)?|mo(?:r(?:e)?)?)\s/i.test(input5)) {
@@ -31906,7 +31968,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const system = ["user", "priv"].includes(this.mode) ? systemExecCommands({ engine: this.engine, device: this.device, privileged: this.mode === "priv" && this.privilege === 15, identity: this.identity, activeSessionId: this.management.sessionIdFor(this), interfaceName: (name2) => this.getInterface(name2), dispatch: (line2) => this.dispatch(line2), testAuthentication: (group, user, password) => this.management.testAuthentication(this.deviceId, group, user, password), prompt: (text3, answer) => {
         this.confirmPrompt = { text: text3, answer };
       }, reload: (reason) => this.restartIOS(reason), fail: fail5 }) : [];
-      const compatibility = [...endpointCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name2) => this.getInterface(name2), ports: () => this.ports(), fail: fail5 }), ...poeCommands({ engine: this.engine, device: this.device, context: this.context, ports: () => this.ports(), interfaceName: (name2) => this.getInterface(name2), changed: () => this.change(), fail: fail5 }), ...wirelessCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name2) => this.getInterface(name2), fail: fail5 }), ...system, ...switchingCompatibilityCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name2) => this.getInterface(name2), ports: () => this.ports(), fail: fail5 }), ...platformCompatibilityCommands({ device: this.device, mode: this.mode, now: () => this.engine.clock.now(), ports: () => this.ports(), changed: () => this.change(), fail: fail5 }), ...this.mode === "priv" ? maintenanceCommands({ engine: this.engine, device: this.device, interfaceName: (name2) => this.getInterface(name2), fail: fail5 }) : [], ...routingCompatibilityCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name2) => this.getInterface(name2), ports: () => this.ports(), fail: fail5 })];
+      const compatibility = [...endpointCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name2) => this.getInterface(name2), ports: () => this.ports(), fail: fail5 }), ...poeCommands({ engine: this.engine, device: this.device, context: this.context, ports: () => this.ports(), interfaceName: (name2) => this.getInterface(name2), changed: () => this.change(), fail: fail5 }), ...wirelessCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name2) => this.getInterface(name2), fail: fail5 }), ...system, ...switchingCompatibilityCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name2) => this.getInterface(name2), ports: () => this.ports(), fail: fail5 }), ...platformCompatibilityCommands({ device: this.device, mode: this.mode, now: () => this.engine.clock.now(), ports: () => this.ports(), changed: () => this.change(), fail: fail5 }), ...this.mode === "priv" ? maintenanceCommands({ engine: this.engine, device: this.device, interfaceName: (name2) => this.getInterface(name2), fail: fail5 }) : [], ...routingCompatibilityCommands({ engine: this.engine, device: this.device, context: this.context, enter: (mode, fields) => this.enter(mode, fields), changed: () => this.change(), interfaceName: (name2) => this.getInterface(name2), ports: () => this.ports(), fail: fail5, prompt: (text3, answer) => {
+        this.confirmPrompt = { text: text3, answer };
+      } })];
       const replaced = new Set(compatibility.map((command) => command.words.join(" ")));
       const base = [...compatibility.filter((command) => !(local && command.inherited)), ...this.modeCommands(!local).filter((command) => !replaced.has(command.words.join(" ")))];
       if (local || ["user", "priv", "config"].includes(this.mode)) return this.expandCommands(base);
@@ -32295,10 +32359,6 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         exactly(a2, 0);
         resetOSPF(this.engine, this.deviceId, "ospfv3");
         return ["OSPFv3 process cleared; waiting for neighbor database exchange."];
-      }), this.c("clear ip ospf process", "Restart OSPF convergence", (args) => {
-        exactly(args, 0);
-        resetOSPF(this.engine, this.deviceId);
-        return ["OSPF process cleared; waiting for neighbor database exchange."];
       })];
     }
     globalCommands() {
@@ -36681,9 +36741,15 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         if (!no) p.networks.push({ network: net, prefix: prefix2, ...area === void 0 ? {} : { area } });
         this.change();
       }, kind === "ospf" ? "<network> <wildcard> area <area>" : kind === "bgp" ? "<network> [mask subnet-mask]" : "<network> [wildcard]"), this.c("router-id", "Set router ID", (a, no) => {
-        exactly(a, no ? 0 : 1);
-        p.routerId = no ? void 0 : ipv42(a[0]);
+        if (no) {
+          if (a.length > 1) fail5();
+          if (a[0]) ipv42(a[0]);
+        } else exactly(a, 1);
+        const active3 = kind === "ospf" ? activeIOSOSPFRouterId(this.device, p) : void 0, pending = kind === "ospf" && iosOSPFRouterIdEstablished(this.device, p), previous = p.routerId, next = no ? void 0 : ipv42(a[0]);
+        if (kind === "ospf" && next === "0.0.0.0") fail5("% OSPF: Invalid router-id 0.0.0.0");
+        p.routerId = next;
         this.change();
+        if (previous !== next && pending && active3 !== p.routerId) return ['% OSPF: Reload or use "clear ip ospf process" command, for this to take effect'];
       }, "<IPv4 address>"), this.c("passive-interface", "Suppress protocol adjacency", (a, no) => {
         exactly(a, 1);
         const name2 = a[0] === "default" ? "default" : this.getInterface(a[0]);
@@ -38532,11 +38598,11 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       ...d.runtime.logs
     ];
   }
-  function nsosUsers(engine, d, identity2) {
+  function nsosUsers(engine, d, identity3) {
     const rows2 = ["NAME     LINE         TIME         IDLE          PID COMMENT"];
-    if (identity2.localConsole) rows2.push(`${(identity2.username ?? "-").padEnd(9)}${"console".padEnd(13)}${"-".padEnd(13)}${".".padEnd(10)}${"-".padStart(5)} *`);
+    if (identity3.localConsole) rows2.push(`${(identity3.username ?? "-").padEnd(9)}${"console".padEnd(13)}${"-".padEnd(13)}${".".padEnd(10)}${"-".padStart(5)} *`);
     for (const s of managementSessionSnapshot(engine, d.id).filter((s2) => s2.phase === "ready")) {
-      const current2 = s.id === identity2.sessionId;
+      const current2 = s.id === identity3.sessionId;
       rows2.push(`${(s.username ?? "-").padEnd(9)}${("vty " + s.lineNumber).padEnd(13)}${"-".padEnd(13)}${iosDuration(engine.clock.now() - s.lastActivity).padEnd(10)}${"-".padStart(5)}${current2 ? " *" : ""}`);
     }
     return rows2;
@@ -46141,9 +46207,9 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
               if (!["true", "false"].includes(value.trim())) throw new ModelError("invalid-value", "enabled must be boolean.");
               item.enabled = value.trim() === "true";
             } else if (leaf.name === "type") {
-              const identity2 = value.split(":");
-              if (identity2.length !== 2 || leaf.namespaces[identity2[0]] !== "urn:ietf:params:xml:ns:yang:iana-if-type") throw new ModelError("unknown-namespace", "Interface type requires the IANA interface-type namespace.");
-              item.type = "iana-if-type:" + identity2[1];
+              const identity3 = value.split(":");
+              if (identity3.length !== 2 || leaf.namespaces[identity3[0]] !== "urn:ietf:params:xml:ns:yang:iana-if-type") throw new ModelError("unknown-namespace", "Interface type requires the IANA interface-type namespace.");
+              item.type = "iana-if-type:" + identity3[1];
             } else item[leaf.name] = value;
           }
         }
@@ -46552,13 +46618,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       const bindings = state4.ipv6Bindings ??= [], enabled4 = !!iface2.features.ndInspection || !!ndName, trusted = !!ndPolicy.trusted || ndPolicy.deviceRole === "switch";
       const address = payload.source === "::" ? payload.target : payload.source;
       const binding = bindings.find((x) => x.vlan === vlan && sameAddress(x.ip, address) && x.expires > engine.clock.now());
-      const identity2 = binding && binding.port === port3 && cleanMac(binding.mac) === cleanMac(frame2.sourceMac) && cleanMac(payload.mac) === cleanMac(frame2.sourceMac);
+      const identity3 = binding && binding.port === port3 && cleanMac(binding.mac) === cleanMac(frame2.sourceMac) && cleanMac(payload.mac) === cleanMac(frame2.sourceMac);
       let violation;
       if (enabled4 && !trusted && !binding && ndPolicy.limit !== void 0 && bindings.filter((x) => x.port === port3 && x.expires > engine.clock.now()).length >= ndPolicy.limit) violation = "The ND inspection address-count limit was reached.";
       if (enabled4 && !trusted && ndPolicy.securityLevel !== "glean") {
         if (ndPolicy.dropUnsecure && !payload.securityLevel || typeof ndPolicy.securityLevel === "number" && Number(payload.securityLevel ?? 0) < ndPolicy.securityLevel) violation = "The neighbor-discovery message does not meet the configured security level.";
         else if (ndPolicy.validateSourceMac && cleanMac(payload.mac) !== cleanMac(frame2.sourceMac)) violation = "Ethernet and neighbor-discovery source MAC addresses disagree.";
-        else if (binding && !identity2 && payload.source !== "::") violation = "The neighbor advertisement conflicts with the IPv6 binding table.";
+        else if (binding && !identity3 && payload.source !== "::") violation = "The neighbor advertisement conflicts with the IPv6 binding table.";
         else if (!binding && payload.source !== "::" && !prefixContains("fe80::", 10, payload.source)) violation = "No IPv6 binding or preceding DAD exchange permits this neighbor source.";
       }
       if (violation) {
@@ -46569,7 +46635,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (!tracking) {
         if (payload.source === "::") {
           if (!binding) bindings.push({ port: port3, vlan, mac: frame2.sourceMac, ip: payload.target, prefix: 128, state: "tentative", source: "NDP", expires: engine.clock.now() + 5e3 });
-        } else if (identity2) {
+        } else if (identity3) {
           binding.state = "reachable";
           if (binding.source !== "DHCPv6" && binding.source !== "static") binding.expires = engine.clock.now() + 3e5;
         } else if (!binding && (!enabled4 || trusted || ndPolicy.monitor || ndPolicy.securityLevel === "glean" || prefixContains("fe80::", 10, payload.source))) bindings.push({ port: port3, vlan, mac: frame2.sourceMac, ip: payload.source, prefix: 128, state: "reachable", source: "NDP", expires: engine.clock.now() + 3e5 });
@@ -48810,8 +48876,8 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         conn.handlers = { ...conn.handlers, ...handlers };
       }, setTTL: (ttl) => {
         conn.ttl = this.ttl(ttl);
-      }, setAuthentication: (identity2) => {
-        conn.authentication = identity2;
+      }, setAuthentication: (identity3) => {
+        conn.authentication = identity3;
       }, send: (payload) => this.enqueue(conn, payload), close: (reason) => this.close(conn, reason) };
       this.connections.set(conn.deviceId + "|" + conn.id, conn);
       this.snapshot(conn);
@@ -52319,7 +52385,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
         case "neighbor":
           return text3(v.protocol, 40) && (v.state === void 0 || text3(v.state, 40)) && (v.peer === void 0 || text3(v.peer, 128) && v.peer !== "") && (v.interface === void 0 || text3(v.interface, 128) && v.interface !== "");
         case "ospf-interface":
-          return (v.protocol === void 0 || ["ospf", "ospfv3"].includes(v.protocol)) && text3(v.interface, 128) && v.interface !== "" && (v.processId === void 0 || Number.isInteger(v.processId) && v.processId >= 1 && v.processId <= 65535) && (v.routerId === void 0 || typeof v.routerId === "string" && isIPv4(v.routerId)) && (v.area === void 0 || Number.isInteger(v.area) && v.area >= 0 && v.area <= 4294967295) && (v.passive === void 0 || typeof v.passive === "boolean") && (v.networkType === void 0 || ["broadcast", "point-to-point"].includes(v.networkType)) && (v.configuredCost === void 0 || Number.isInteger(v.configuredCost) && v.configuredCost >= 1 && v.configuredCost <= 65535) && (v.configuredPriority === void 0 || Number.isInteger(v.configuredPriority) && v.configuredPriority >= 0 && v.configuredPriority <= 255) && (v.role === void 0 || ["DR", "BDR", "DROTHER", "POINT-TO-POINT"].includes(v.role));
+          return (v.protocol === void 0 || ["ospf", "ospfv3"].includes(v.protocol)) && text3(v.interface, 128) && v.interface !== "" && (v.configuredRouterId === void 0 || v.configuredRouterId === null || typeof v.configuredRouterId === "string" && isIPv4(v.configuredRouterId) && v.configuredRouterId !== "0.0.0.0") && (v.processId === void 0 || Number.isInteger(v.processId) && v.processId >= 1 && v.processId <= 65535) && (v.routerId === void 0 || typeof v.routerId === "string" && isIPv4(v.routerId)) && (v.area === void 0 || Number.isInteger(v.area) && v.area >= 0 && v.area <= 4294967295) && (v.passive === void 0 || typeof v.passive === "boolean") && (v.networkType === void 0 || ["broadcast", "point-to-point"].includes(v.networkType)) && (v.configuredCost === void 0 || Number.isInteger(v.configuredCost) && v.configuredCost >= 1 && v.configuredCost <= 65535) && (v.configuredPriority === void 0 || Number.isInteger(v.configuredPriority) && v.configuredPriority >= 0 && v.configuredPriority <= 255) && (v.role === void 0 || ["DR", "BDR", "DROTHER", "POINT-TO-POINT"].includes(v.role));
         case "discovery-settings":
           return ["CDP", "LLDP"].includes(v.protocol) && typeof v.enabled === "boolean" && (v.interval === void 0 || Number.isInteger(v.interval) && v.interval >= 5 && v.interval <= (v.protocol === "CDP" ? 255 : 65535)) && (v.holdtime === void 0 || Number.isInteger(v.holdtime) && v.holdtime >= 1 && v.holdtime <= (v.protocol === "CDP" ? 255 : 65535));
         case "discovery-neighbor":
@@ -52494,7 +52560,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
       if (!sim2.devicePowered(d.id) || !sim2.interfaceUp(d.id, criterion.interface)) return false;
       const protocol = criterion.protocol ?? "ospf";
       const row5 = ospfLiveDetail(sim2, d.id, protocol)?.interfaces.find((p) => p.name === criterion.interface && !p.vrf);
-      return !!row5 && (criterion.processId === void 0 || Number(d.config.protocols[protocol]?.processId) === criterion.processId) && (criterion.routerId === void 0 || sameAddress(row5.routerId, criterion.routerId)) && (criterion.area === void 0 || Number(row5.area) === criterion.area) && (criterion.passive === void 0 || !!row5.passive === criterion.passive) && (criterion.networkType === void 0 || (row5.networkType ?? "broadcast") === criterion.networkType) && (criterion.configuredCost === void 0 || d.config.interfaces[criterion.interface]?.features[protocol]?.cost === criterion.configuredCost) && (criterion.configuredPriority === void 0 || d.config.interfaces[criterion.interface]?.features[protocol]?.priority === criterion.configuredPriority) && (criterion.role === void 0 || row5.role === criterion.role);
+      return !!row5 && (criterion.configuredRouterId === void 0 || (criterion.configuredRouterId === null ? !d.config.protocols[protocol]?.routerId : sameAddress(d.config.protocols[protocol]?.routerId ?? "", criterion.configuredRouterId))) && (criterion.processId === void 0 || Number(d.config.protocols[protocol]?.processId) === criterion.processId) && (criterion.routerId === void 0 || sameAddress(row5.routerId, criterion.routerId)) && (criterion.area === void 0 || Number(row5.area) === criterion.area) && (criterion.passive === void 0 || !!row5.passive === criterion.passive) && (criterion.networkType === void 0 || (row5.networkType ?? "broadcast") === criterion.networkType) && (criterion.configuredCost === void 0 || d.config.interfaces[criterion.interface]?.features[protocol]?.cost === criterion.configuredCost) && (criterion.configuredPriority === void 0 || d.config.interfaces[criterion.interface]?.features[protocol]?.priority === criterion.configuredPriority) && (criterion.role === void 0 || row5.role === criterion.role);
     }
     if (criterion.kind === "neighbor")
       return d.runtime.neighbors.some(
@@ -52940,6 +53006,7 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     { id: "single-area-ospfv3", group: "CCNA", section: "Routing", title: "Single-Area OSPFv3", description: "Build IPv6 Area 0 with interface-based activation, unique router IDs, passive LANs and point-to-point transits. Verify link-local neighbors, learned routes and cost-based failover.", devices: 6, links: 6, practice: true },
     { id: "ospf-point-to-point", group: "CCNA", section: "Routing", title: "OSPF Point-to-Point", description: "Configure a two-router OSPFv2 Ethernet transit as point-to-point. Verify Full adjacency without DR/BDR election, passive LANs, learned routes and recovery from adjacency faults.", devices: 4, links: 3, practice: true },
     { id: "ospf-dr-bdr-election", group: "CCNA", section: "Routing", title: "OSPF DR/BDR Election", description: "Elect a DR and BDR on shared Ethernet using interface priorities and router IDs. Inspect Full and 2WAY peers, test non-preemption and BDR promotion, and verify routed traffic between DROTHER LANs.", devices: 7, links: 6, practice: true },
+    { id: "ospf-router-id", group: "CCNA", section: "Routing", title: "OSPF Router ID", description: "Compare manual router IDs, highest active loopback selection and highest up/up physical address selection. Verify operational IDs, restart pending changes, troubleshoot duplicates and prove routed traffic.", devices: 6, links: 5, practice: true },
     { id: "datacenter-vpc", group: "Other", title: "Datacenter Switch vPC", description: "Explore the existing NX-OS-style vPC pair and its downstream port-channel.", devices: datacenter_vpc_netsim_default.lab.devices.length, links: datacenter_vpc_netsim_default.lab.links.length, practice: false }
   ];
   var ROAS_ADDRESS_PLAN = [
@@ -53267,7 +53334,13 @@ Address: ${v.value}` : `${v.name}	${v.type} = ${value(v)}`) : [`No ${type} answe
     R3: ["enable", "configure terminal", "router ospf 10", "router-id 3.3.3.3", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network broadcast", "ip ospf cost 10", "ip ospf priority 0", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "end", "write memory"],
     R4: ["enable", "configure terminal", "router ospf 10", "router-id 4.4.4.4", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network broadcast", "ip ospf cost 10", "ip ospf priority 0", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "end", "write memory"]
   };
+  var OSPF_ROUTER_ID_COMMANDS = {
+    R1: ["enable", "configure terminal", "router ospf 10", "router-id 1.1.1.1", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"],
+    R2: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "no passive-interface GigabitEthernet0/2", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "interface GigabitEthernet0/2", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"],
+    R3: ["enable", "configure terminal", "router ospf 10", "passive-interface default", "no passive-interface GigabitEthernet0/1", "interface GigabitEthernet0/0", "ip ospf 10 area 0", "interface GigabitEthernet0/1", "ip ospf 10 area 0", "ip ospf network point-to-point", "ip ospf cost 10", "end", "write memory"]
+  };
   var GUIDE_RESOURCES = {
+    "ospf-router-id": { columns: ["Device", "Interface", "IPv4 address", "Purpose / selection"], rows: [["R1", "Gi0/0", "192.168.10.1 /24", "PC1 gateway"], ["R1", "Gi0/1", "10.0.12.1 /30", "Transit to R2"], ["R1", "Loopback0", "198.51.100.11 /32", "Up candidate; manual 1.1.1.1 wins"], ["R2", "Gi0/0", "192.168.20.1 /24", "SRV1 gateway; higher than loopbacks"], ["R2", "Gi0/1 \xB7 Gi0/2", "10.0.12.2 /30 \xB7 10.0.23.2 /30", "Router transits"], ["R2", "Loopback0 \xB7 Loopback1", "172.16.2.1 /32 \xB7 172.16.2.2 /32", "Up candidates; highest loopback wins"], ["R2", "Loopback99", "203.0.113.254 /32", "Administratively down; ineligible"], ["R3", "Gi0/0 \xB7 Gi0/1", "192.168.30.1 /24 \xB7 10.0.23.3 /30", "Up/up physical candidates"], ["R3", "Gi0/2", "203.0.113.254 /32", "No link; down despite no shutdown"], ["PC1", "Gi0", "192.168.10.10 /24", "Gateway 192.168.10.1"], ["SRV1", "Gi0", "192.168.20.10 /24", "Gateway 192.168.20.1"], ["PC2", "Gi0", "192.168.30.10 /24", "Gateway 192.168.30.1"]], commands: OSPF_ROUTER_ID_COMMANDS, verification: { "R1": ["show ip interface brief", "show ip ospf", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf database router", "show ip protocols", "show ip route ospf", "show running-config | section router ospf"], "R2": ["show ip interface brief", "show ip ospf", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf database router", "show ip protocols", "show ip route ospf", "show running-config | section router ospf"], "R3": ["show ip interface brief", "show ip ospf", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf database router", "show ip protocols", "show ip route ospf", "show running-config | section router ospf"], "PC1": ["ipconfig", "ping -n 3 192.168.30.10", "ping -n 3 192.168.20.10", "tracert -d 192.168.30.10"], "PC2": ["ping -n 3 192.168.10.10"], "SRV1": ["ping -n 3 192.168.30.10"] }, note: "All IPv4 addresses, candidate loopbacks and host gateways are ready; no OSPF or static routes are configured. R1 must use manual ID 1.1.1.1. R2 must have no manual override and select its highest up/up loopback 172.16.2.2, excluding shut Loopback99. R3 must have no manual override or loopbacks and select up/up physical address 192.168.30.1, excluding unconnected Gi0/2. Router IDs identify OSPF processes; they are not network statements or automatic destination routes. Configure Area 0, passive LANs, active point-to-point transits and cost 10. Verify active IDs in local process/interface output, peer tables and router LSAs; compare them with running-config. A manual ID changed after neighbors form is pending until clear ip ospf 10 process, confirmed with yes, or device reload. The default confirmation answer is no. A newly added higher-priority loopback also waits for process restart before replacing the selected automatic ID. Complete the pending-ID, automatic-ID and duplicate-ID exercises in the guide, restore intended IDs and remove the temporary R3 loopback. Verify all Full relationships, six AD 110 routes at metric 11 or 21 and all four real traffic checks. Save every router and save or export the lab." },
     "ospf-dr-bdr-election": { columns: ["Device", "Interface", "IPv4 address", "Identity / gateway", "Role / priority"], rows: [["R1", "Gi0/1", "10.0.123.1 /24", "RID 1.1.1.1", "DR \xB7 100"], ["R2", "Gi0/1", "10.0.123.2 /24", "RID 2.2.2.2", "BDR \xB7 50"], ["R3", "Gi0/1", "10.0.123.3 /24", "RID 3.3.3.3", "DROTHER \xB7 0"], ["R4", "Gi0/1", "10.0.123.4 /24", "RID 4.4.4.4", "DROTHER \xB7 0"], ["R3", "Gi0/0", "192.168.30.1 /24", "PC1 gateway", "Passive LAN"], ["R4", "Gi0/0", "192.168.40.1 /24", "PC2 gateway", "Passive LAN"], ["PC1", "Gi0", "192.168.30.10 /24", "Gateway 192.168.30.1", "Client behind R3"], ["PC2", "Gi0", "192.168.40.10 /24", "Gateway 192.168.40.1", "Client behind R4"]], commands: OSPF_DR_BDR_COMMANDS, verification: { "R1": ["show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip route ospf", "show running-config interface GigabitEthernet0/1"], "R2": ["show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip route ospf", "show running-config interface GigabitEthernet0/1"], "R3": ["show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip route ospf", "show running-config interface GigabitEthernet0/1", "show ip ospf interface GigabitEthernet0/0", "show ip route 192.168.40.10"], "R4": ["show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip route ospf", "show running-config interface GigabitEthernet0/1", "show ip ospf interface GigabitEthernet0/0", "show ip route 192.168.30.10"], "SW1": ["show interfaces status", "show vlan brief"], "PC1": ["ipconfig", "ping -n 3 192.168.40.10", "tracert -d 192.168.40.10"], "PC2": ["ping -n 3 192.168.30.10", "tracert -d 192.168.30.10"] }, note: "The switch, shared /24 transit and both PC LANs are addressed and enabled; routers start without OSPF or static routes. Use the R1\u2192R2\u2192R3\u2192R4 reference order. Configure all Gi0/1 ends in Area 0 as active broadcast interfaces, cost 10, with priorities 100/50/0/0 and unique router IDs. Keep R3/R4 Gi0/0 passive and advertised. The normal roles are R1 DR, R2 BDR and R3/R4 DROTHER. Each DR/BDR peer relationship is Full; the two DROTHERs normally remain 2WAY with each other. Show output suffixes describe peer roles. The DR originates the shared Network LSA; it need not forward PC data traffic. Verify all learned remote LAN routes at AD 110 and metric 11 and both real PC directions. Raising R2 priority to 200 must not preempt R1; restore 50. Shut R1 Gi0/1 to promote R2 to DR while PC traffic between R3/R4 continues. Returning R1 becomes BDR rather than reclaiming DR. For a controlled reset, shut every Gi0/1, enable R1 first and verify DR, then enable R2/R3/R4. A fresh saved-lab restart with equal R1/R2 priorities at 100 demonstrates R2 winning the router-ID tie; restore 100/50 and the intended roles before completing. This lab uses IPv4 OSPFv2 broadcast Ethernet, not point-to-point or NBMA. Save all routers and save or export the lab." },
     "ospf-point-to-point": { columns: ["Device", "Interface", "IPv4 address", "Purpose / gateway"], rows: [["R1", "Gi0/0", "192.168.10.1 /24", "PC1 gateway \xB7 passive"], ["R1", "Gi0/1", "10.0.12.1 /30", "R2 \xB7 point-to-point \xB7 cost 10"], ["R2", "Gi0/0", "192.168.20.1 /24", "PC2 gateway \xB7 passive"], ["R2", "Gi0/1", "10.0.12.2 /30", "R1 \xB7 point-to-point \xB7 cost 10"], ["PC1", "Gi0", "192.168.10.10 /24", "Gateway 192.168.10.1"], ["PC2", "Gi0", "192.168.20.10 /24", "Gateway 192.168.20.1"]], commands: OSPF_POINT_TO_POINT_COMMANDS, verification: { "R1": ["show ip interface brief", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface GigabitEthernet0/0", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip protocols", "show ip route ospf", "show ip route 192.168.20.10", "show running-config | section router ospf", "show running-config interface GigabitEthernet0/1"], "R2": ["show ip interface brief", "show ip ospf neighbor", "show ip ospf interface GigabitEthernet0/1", "show ip ospf interface GigabitEthernet0/0", "show ip ospf interface brief", "show ip ospf database router", "show ip ospf database network", "show ip protocols", "show ip route ospf", "show ip route 192.168.10.10", "show running-config | section router ospf", "show running-config interface GigabitEthernet0/1"], "PC1": ["ipconfig", "ping -n 3 192.168.20.10", "tracert -d 192.168.20.10"], "PC2": ["ping -n 3 192.168.10.10", "tracert -d 192.168.10.10"] }, note: "Addressing and local gateways are ready; routers start without static routes or OSPF. Use interface-based OSPFv2 activation in Area 0, unique router IDs and passive LANs. Configure both Gi0/1 ends as point-to-point with cost 10. Expect one FULL/- peer per router, POINT_TO_POINT interface state and no DR/BDR election. Both remote /24 routes must be O with AD 110 and metric 11. Inspect the actual outgoing interface, next hop, router LSAs and both PC directions. A Full neighbor does not guarantee LAN advertisements or return routing. Shut R1 Gi0/1 to withdraw adjacency and routes; both remote PC tests should fail while local gateways remain reachable. Restore it and repeat both tests after convergence. For the optional comparison, set both transit priorities to 0: point-to-point still forms Full, but changing both ends to broadcast leaves 2WAY/DROTHER with no eligible DR/BDR. Restore point-to-point on both ends and no ip ospf priority. Test one fault at a time and repair it before moving on. Keep default 10/40 Hello/Dead timers and save both routers with write memory, then save or export the lab." },
     "single-area-ospfv3": { columns: ["Device", "Interface", "IPv6 address", "Link-local address", "Purpose / gateway"], rows: [["R1", "Gi0/0", "2001:db8:10::1 /64", "FE80::1", "PC1 gateway \xB7 passive"], ["R1", "Gi0/1", "2001:db8:12::1 /64", "FE80::1", "R2 \xB7 point-to-point \xB7 cost 10"], ["R1", "Gi0/2", "2001:db8:13::1 /64", "FE80::1", "R3 \xB7 point-to-point \xB7 cost 5"], ["R2", "Gi0/0", "2001:db8:20::1 /64", "FE80::2", "PC2 gateway \xB7 passive"], ["R2", "Gi0/1", "2001:db8:12::2 /64", "FE80::2", "R1 \xB7 point-to-point \xB7 cost 10"], ["R2", "Gi0/2", "2001:db8:23::2 /64", "FE80::2", "R3 \xB7 point-to-point \xB7 cost 10"], ["R3", "Gi0/0", "2001:db8:30::1 /64", "FE80::3", "SRV1 gateway \xB7 passive"], ["R3", "Gi0/1", "2001:db8:23::3 /64", "FE80::3", "R2 \xB7 point-to-point \xB7 cost 10"], ["R3", "Gi0/2", "2001:db8:13::3 /64", "FE80::3", "R1 \xB7 point-to-point \xB7 cost 5"], ["PC1", "Gi0", "2001:db8:10::10 /64", "FE80::101", "Gateway FE80::1 via Gi0"], ["PC2", "Gi0", "2001:db8:20::10 /64", "FE80::102", "Gateway FE80::2 via Gi0"], ["SRV1", "Gi0", "2001:db8:30::10 /64", "FE80::103", "Gateway FE80::3 via Gi0"]], commands: SINGLE_AREA_OSPFV3_COMMANDS, verification: { "R1": ["show ipv6 interface brief", "show ipv6 ospf", "show ipv6 ospf neighbor", "show ipv6 ospf interface brief", "show ipv6 ospf interface GigabitEthernet0/0", "show ipv6 ospf database", "show ipv6 protocols", "show ipv6 route ospf", "show ipv6 route 2001:db8:30::10", "show running-config | section ipv6 router ospf"], "R2": ["show ipv6 ospf neighbor", "show ipv6 route ospf"], "R3": ["show ipv6 ospf neighbor", "show ipv6 route 2001:db8:10::10", "show ipv6 ospf interface GigabitEthernet0/0"], "PC1": ["ipconfig /all", "ping -6 -n 3 2001:db8:20::10", "ping -6 -n 3 2001:db8:30::10", "tracert -6 -d 2001:db8:30::10"], "PC2": ["ping -6 -n 3 2001:db8:30::10"], "SRV1": ["ping -6 -n 3 2001:db8:10::10", "tracert -6 -d 2001:db8:10::10"] }, note: "IPv6 addressing and fixed host gateways are ready, but all routers need ipv6 unicast-routing and OSPFv3 configuration. Use the supplied classic IOS IPv6 commands on all three routers. Enable process 10 on each interface in Area 0 and set the planned 32-bit router IDs; no IPv4 interface addresses or wildcard network statements are needed. Keep Gi0/0 passive and Gi0/1\u20132 active, point-to-point and cost 10, except both R1\u2013R3 ends at cost 5. The normal remote-LAN metrics are 6 over R1\u2013R3 and 11 over the other adjacent paths. Check Full neighbors, received LSAs, AD 110 and link-local next hops with their outgoing interfaces. Hosts use interface-scoped link-local default gateways; RA and SLAAC are disabled in this lab. Run all four traffic tests; success requires forward and return routing. Shut R1 Gi0/2, wait for convergence, and verify metric 21 via R2 on both R1 and R3, then repeat traffic and traceroute. Restore the link and confirm Full adjacency and direct metric 6 before completing. For faults, test a passive transit, one-sided area mismatch or withdrawal of only the server LAN interface from OSPFv3; repair each before moving on. This lab covers IPv6 unicast with the classic IOS syntax, not IPv4 address families or broadcast DR/BDR elections. Save all router configurations and save or export the lab." },
@@ -53327,6 +53400,56 @@ ${output.join("\n")}`);
     { kind: "interface", device: device2, interface: port3, property: "mask", value: "255.255.255.0" },
     { kind: "interface", device: device2, interface: port3, property: "adminUp", value: true }
   ] });
+  function createOSPFRouterIdLab(mode = "practice") {
+    const g = (n) => `GigabitEthernet0/${n}`;
+    const make = (name2, kind, x, y) => ({ id: "device-ospf-rid-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
+    const r1 = make("R1", "router", 330, 260), r2 = make("R2", "router", 650, 260), r3 = make("R3", "router", 970, 260), pc1 = make("PC1", "pc", 100, 260), server = make("SRV1", "server", 650, 540), pc2 = make("PC2", "pc", 1200, 260), routers2 = [r1, r2, r3], hosts = [pc1, server, pc2];
+    const address = (d, n, ip2, mask3, description) => {
+      const p = d.config.interfaces[g(n)];
+      Object.assign(p, { adminUp: true, switchport: false, ip: ip2, mask: mask3, description });
+      p.features.proxyArp = false;
+    };
+    for (const [i, r] of routers2.entries()) {
+      address(r, 0, `192.168.${(i + 1) * 10}.1`, "255.255.255.0", "PASSIVE_LAN");
+      const h = hosts[i];
+      Object.assign(h.config.interfaces.GigabitEthernet0, { ip: `192.168.${(i + 1) * 10}.10`, mask: "255.255.255.0" });
+      h.config.interfaces.GigabitEthernet0.features.dhcp = false;
+      h.config.defaultGateway = `192.168.${(i + 1) * 10}.1`;
+    }
+    address(r1, 1, "10.0.12.1", "255.255.255.252", "TO_R2");
+    address(r2, 1, "10.0.12.2", "255.255.255.252", "TO_R1");
+    address(r2, 2, "10.0.23.2", "255.255.255.252", "TO_R3");
+    address(r3, 1, "10.0.23.3", "255.255.255.252", "TO_R2");
+    address(r3, 2, "203.0.113.254", "255.255.255.255", "UNCONNECTED_NOT_UP_UP");
+    const loop = (d, n, ip2, up = true) => {
+      d.config.interfaces["Loopback" + n] = { ...defaultInterface("Loopback" + n), adminUp: up, ip: ip2, mask: "255.255.255.255", description: up ? "ROUTER_ID_CANDIDATE" : "SHUT_NOT_ELIGIBLE" };
+    };
+    loop(r1, 0, "198.51.100.11");
+    loop(r2, 0, "172.16.2.1");
+    loop(r2, 1, "172.16.2.2");
+    loop(r2, 99, "203.0.113.254", false);
+    const devices = [...routers2, ...hosts];
+    for (const d of devices) d.startupConfig = structuredClone(d.config);
+    const ospf2 = (d, n, fields) => ({ kind: "ospf-interface", device: d.id, interface: g(n), ...fields });
+    const link = (name2, a, ap, b, bp) => ({ id: "link-ospf-rid-" + name2, a: { deviceId: a.id, port: ap }, b: { deviceId: b.id, port: bp }, enabled: true, delay: 0.1, loss: 0 });
+    const route2 = (d, subnet2, hop, n, metric) => ({ kind: "route", device: d.id, network: `192.168.${subnet2}.0`, prefix: 24, protocol: "O", nextHop: hop, interface: g(n), ad: 110, metric });
+    const neighbor = (d, peer, n) => ({ kind: "neighbor", device: d.id, protocol: "OSPF", state: "FULL", peer: peer.id, interface: g(n) });
+    const ping = (goal, from, to, target) => ({ id: goal, title: `Verify ${from.config.hostname} reaches ${to.config.hostname}`, description: "Requires actual routed echo replies and the return path; a router ID alone is not a destination route.", criterion: { kind: "echo", device: from.id, from: target }, action: { kind: "ping", device: from.id, target } });
+    const lab = { id: "lab-" + (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)), catalogId: "ospf-router-id", name: "OSPF Router ID" + (mode === "completed" ? " \xB7 Completed" : ""), devices, links: [link("r1-r2", r1, g(1), r2, g(1)), link("r2-r3", r2, g(2), r3, g(1)), ...hosts.map((h, i) => link("lan" + (i + 1), routers2[i], g(0), h, "GigabitEthernet0"))], notes: [{ id: "note-ospf-rid", x: 1050, y: 540, text: "OSPFv2 \xB7 Area 0\nR1 manual: 1.1.1.1\nR2 loopback: 172.16.2.2\nR3 up/up physical: 192.168.30.1" }], lesson: { title: "OSPF Router ID", description: "All LANs, transit interfaces, host gateways and router-ID candidate addresses are ready. Routers have no OSPF process or static routes. Configure one Area 0 with process 10 and compare three IPv4 OSPF router-ID selection methods.\n\nR1: configure router-id 1.1.1.1. An explicit ID takes precedence over its higher Loopback0 address 198.51.100.11. The ID is a 32-bit OSPF identifier; R1 does not need an interface with address 1.1.1.1.\n\nR2: leave router-id unconfigured. Its highest eligible loopback, Loopback1 172.16.2.2, should be selected ahead of Loopback0 172.16.2.1 and the numerically higher physical LAN address 192.168.20.1. Loopback99 203.0.113.254 is shut and must not participate. Candidate loopbacks do not need OSPF enabled.\n\nR3: leave router-id unconfigured and create no loopbacks. Its highest up/up physical address, Gi0/0 192.168.30.1, should win over transit Gi0/1 10.0.23.3. Gi0/2 203.0.113.254 is administratively enabled but has no cable and is operationally down, so it is ineligible.\n\nEnable ip ospf 10 area 0 on every LAN and router transit. Use passive-interface default and enable Hellos only on transit Gi0/1, plus R2 Gi0/2. Set all four transit ends to point-to-point and cost 10. Verify the active ID with show ip ospf, show ip ospf interface and the peer neighbor tables, then inspect router LSAs and learned O routes. Remote LAN metrics are 11 over one transit and 21 across both; AD is 110. Run all four traffic checks. IDs and interface addresses are different fields in neighbor output, and choosing an ID does not automatically advertise an IP route to it.\n\nPending manual-ID exercise: after neighbors are Full, change only R1 to router-id 9.9.9.9. Running-config changes, but the active process and peer tables retain 1.1.1.1 until restart. From privileged EXEC issue clear ip ospf 10 process and answer yes to the default-no confirmation. Allow database exchange to recover, then verify 9.9.9.9 locally and at R2 and repeat traffic. Restore router-id 1.1.1.1 and confirm another process restart. An empty answer or no must cancel without clearing neighbors.\n\nAutomatic-ID exercise: add R3 Loopback1 3.3.3.3 after convergence. Its active physical ID should remain until process restart. Clear process 10 and confirm yes; the loopback now takes precedence even though it is numerically lower than the physical LAN address. Remove Loopback1, clear again, and verify the physical ID returns. A full device reload also starts a new ID selection from the startup configuration; a saved lab reopened with fresh runtimes uses its saved configuration.\n\nDuplicate-ID exercise: change R1 to R2\u2019s 172.16.2.2 and restart R1. R1/R2 must not form Full adjacency and the affected remote traffic should fail. Restore R1 1.1.1.1 and restart it; do not try to repair a duplicate by changing the shared process ID. Finish with the three intended IDs, no R2/R3 manual overrides, Full neighbors and all LAN routes. Save every router with write memory and save or export the lab.", objectives: [
+      { id: "manual-id", title: "Verify R1\u2019s configured and active manual ID is 1.1.1.1", description: "The explicit ID overrides the higher eligible loopback and need not be a local interface address.", criterion: { kind: "all", criteria: [0, 1].map((n) => ospf2(r1, n, { processId: 10, area: 0, routerId: "1.1.1.1", configuredRouterId: "1.1.1.1" })) } },
+      { id: "loopback-id", title: "Verify R2 automatically selects its highest active loopback", description: "Active ID 172.16.2.2; no manual override. A shut loopback must not win.", criterion: { kind: "all", criteria: [...[0, 1, 2].map((n) => ospf2(r2, n, { processId: 10, area: 0, routerId: "172.16.2.2", configuredRouterId: null })), { kind: "interface", device: r2.id, interface: "Loopback1", property: "ip", value: "172.16.2.2" }, { kind: "interface-up", device: r2.id, interface: "Loopback1" }] } },
+      { id: "physical-id", title: "Verify R3 automatically selects its highest up/up physical address", description: "Active ID 192.168.30.1; no manual override. Unconnected Gi0/2 must not win.", criterion: { kind: "all", criteria: [0, 1].map((n) => ospf2(r3, n, { processId: 10, area: 0, routerId: "192.168.30.1", configuredRouterId: null })) } },
+      { id: "interface-policy", title: "Keep LANs passive and all four transit ends point-to-point at cost 10", criterion: { kind: "all", criteria: [...routers2.map((d) => ospf2(d, 0, { passive: true })), ...[r1, r2, r3].map((d) => ospf2(d, 1, { passive: false, networkType: "point-to-point", configuredCost: 10 })), ospf2(r2, 2, { passive: false, networkType: "point-to-point", configuredCost: 10 })] } },
+      { id: "full-neighbors", title: "Verify all four intended directed neighbor relationships are Full", criterion: { kind: "all", criteria: [neighbor(r1, r2, 1), neighbor(r2, r1, 1), neighbor(r2, r3, 2), neighbor(r3, r2, 1)] } },
+      { id: "learned-lans", title: "Verify all six remote LAN routes with the intended next hop and metric", description: "AD 110, metric 11 across one transit and 21 across both. Candidate loopbacks are not advertised in this lab.", criterion: { kind: "all", criteria: [route2(r1, 20, "10.0.12.2", 1, 11), route2(r1, 30, "10.0.12.2", 1, 21), route2(r2, 10, "10.0.12.1", 1, 11), route2(r2, 30, "10.0.23.3", 2, 11), route2(r3, 10, "10.0.23.2", 1, 21), route2(r3, 20, "10.0.23.2", 1, 11)] } },
+      ping("pc1-pc2", pc1, pc2, "192.168.30.10"),
+      ping("pc2-pc1", pc2, pc1, "192.168.10.10"),
+      ping("pc1-server", pc1, server, "192.168.20.10"),
+      ping("server-pc2", server, pc2, "192.168.30.10")
+    ] } };
+    const doc = { format: "netsim-lab", version: 1, seed: 20261103, lab };
+    return mode === "completed" ? completedDocument(doc, OSPF_ROUTER_ID_COMMANDS) : parseDocument2(JSON.stringify(doc));
+  }
   function createOSPFDRBDRElectionLab(mode = "practice") {
     const g = (n) => `GigabitEthernet0/${n}`;
     const make = (name2, kind, x, y) => ({ id: "device-ospf-election-" + name2.toLowerCase(), kind, x, y, powered: true, config: factoryDeviceConfig(kind, name2), runtime: emptyRuntime() });
@@ -54559,6 +54682,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     return completedDocument(doc, ROAS_COMMANDS);
   }
   function createCatalogLab(id2, mode = "practice") {
+    if (id2 === "ospf-router-id") return createOSPFRouterIdLab(mode);
     if (id2 === "ospf-dr-bdr-election") return createOSPFDRBDRElectionLab(mode);
     if (id2 === "ospf-point-to-point") return createOSPFPointToPointLab(mode);
     if (id2 === "single-area-ospfv3") return createSingleAreaOSPFv3Lab(mode);
@@ -54915,7 +55039,7 @@ Inspect show power inline and the per-port detail and priority views. The full 3
     const s = typeof raw === "string" ? { access: raw } : raw;
     return row3("SNMP community", input2("Community \xB7 lab credential", "admin-community-name", name2, "password") + select3("MIB access", "admin-community-access", s.access ?? "ro", [["ro", "Read only"], ["rw", "RW configuration; modeled MIB rejects SET"]]) + input2("Read view \xB7 optional", "admin-community-view", s.view) + input2("Manager ACL \xB7 optional", "admin-community-acl", s.acl));
   };
-  var trapRow = (address = "", identity2 = "") => row3("SNMP destination", input2("Collector IP address", "admin-trap-address", address) + input2("v2c community", "admin-trap-community", identity2, "password"));
+  var trapRow = (address = "", identity3 = "") => row3("SNMP destination", input2("Collector IP address", "admin-trap-address", address) + input2("v2c community", "admin-trap-community", identity3, "password"));
   var authorizationRow = (name2 = "", value = { method: "local" }) => row3("AP authorization list", input2("Method-list name", "admin-ap-list-name", name2) + select3("Database", "admin-ap-list-method", value.method, [["local", "Local MAC records"], ["radius", "RADIUS group"]]) + input2("RADIUS group \xB7 remote method", "admin-ap-list-group", value.group));
   var factories = { "AAA server": () => serverRow(), "AAA group": () => groupRow(), "802.1X list": () => dot1xRow(), "Local account": () => userRow(), "SNMP community": () => communityRow(), "SNMP destination": () => trapRow(), "AP authorization list": () => authorizationRow() };
   function renderWLCAdministration(d) {

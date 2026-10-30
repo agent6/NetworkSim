@@ -1,3 +1,4 @@
+import {resetIOSOSPFRouterId} from './ospf-router-id.ts';
 import {routingConfig} from './routing-scope.ts';
 import {prefixContains,sameAddress,isIPv6} from './ip.ts';
 import type { Device, NewSimEvent } from './model.ts';
@@ -116,7 +117,8 @@ function dispose(engine: OSPFHost, node: NodeState): void { engine.clock.cancel(
 
 /** Restart only this process's learned state; preserve the origin sequence so peers accept the new self record. */
 export function resetOSPF(engine:OSPFHost,deviceId:string,protocol:OSPFProtocol='ospf'):void {
- const c=context(engine);for(const node of c.nodes.values())if(node.deviceId===deviceId&&node.protocol===protocol){dispose(engine,node);node.neighbors.clear();node.database.clear();node.floors.clear();node.helloTimers.clear();node.timers=[];node.signature='';node.refresh=undefined;node.serial++;node.spfTimer=undefined;node.spfDatabase=undefined;node.originTimer=undefined;node.arrivals=undefined;node.helloSent=undefined;delete node.runtime.features.ospfPackets?.[protocol+(node.vrf?':'+node.vrf:'')];}
+ const d=engine.getDevice(deviceId);if(d&&protocol==='ospf')resetIOSOSPFRouterId(d);
+ const c=context(engine);for(const node of c.nodes.values())if(node.deviceId===deviceId&&node.protocol===protocol){dispose(engine,node);node.neighbors.clear();node.database.clear();node.floors.clear();node.helloTimers.clear();node.timers=[];node.signature='';node.refresh=undefined;node.serial++;node.spfTimer=undefined;node.spfDatabase=undefined;node.originTimer=undefined;node.arrivals=undefined;node.helloSent=undefined;node.started=engine.clock.now();delete node.runtime.features.ospfPackets?.[protocol+(node.vrf?':'+node.vrf:'')];}
  for(const[key,assembly]of c.fragments)if(key.startsWith(deviceId+'|')){engine.clock.cancel(assembly.timer);c.fragments.delete(key);}
  engine.emit({nodeId:deviceId,protocol:protocol.toUpperCase(),label:'OSPF process cleared',detail:'Neighbor and learned database state removed; local sequence retained for re-exchange.',disposition:'info'});engine.recompute();engine.notify();
 }

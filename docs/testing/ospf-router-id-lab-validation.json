@@ -1,0 +1,139 @@
+{
+  "feature": {
+    "title": "OSPF Router ID",
+    "catalogId": "ospf-router-id",
+    "group": "CCNA",
+    "section": "Routing",
+    "devices": 6,
+    "links": 5,
+    "tasks": 10,
+    "addressingRows": 12,
+    "routingLabCount": 11,
+    "permalink": "#/labs/ospf-router-id",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.10.10/24 behind R1; SRV1 192.168.20.10/24 behind R2; PC2 192.168.30.10/24 behind R3. R1/R2 transit 10.0.12.0/30; R2/R3 transit 10.0.23.0/30. Area 0, locally configured process 10, passive LANs, active point-to-point transit ends at cost 10.",
+  "selectionCases": [
+    "R1 manual router-id 1.1.1.1 overrides its higher eligible Loopback0 address 198.51.100.11; the identifier need not be an interface address.",
+    "R2 has no manual override and selects highest active Loopback1 172.16.2.2 before Loopback0 172.16.2.1 or higher physical 192.168.20.1; shut Loopback99 203.0.113.254 is excluded.",
+    "R3 has no manual override or loopbacks and selects highest up/up physical address 192.168.30.1; enabled but unconnected Gi0/2 203.0.113.254 is excluded."
+  ],
+  "verificationNotes": [
+    "Original practice starts at zero credit with addressed hosts and gateways, but no router OSPF process or static routes. Published commands execute through IOSSession. Neighbors, router LSAs, routes and replies come from delivered simulator packets, not preloaded completion state.",
+    "Six live configuration/operational goals plus four genuine routed echo checks complete ten tasks. Exact peers/interfaces, passive LANs, all four transit settings and all six remote LAN routes are checked. O routes require AD 110, metric 11 across one transit or 21 across both, and the intended next hop and outgoing interface.",
+    "Configured router ID and active process identity are separate. After neighbors have formed, changing the R1 manual ID leaves operational process/interface/protocol output and peer tables on the old ID until confirmed process restart. Configuration object replacement, process-mode re-entry and interface bounce cannot apply a pending ID.",
+    "The IOS IPv4 clear-process command now has a default-no confirmation; empty, no and Ctrl-C cancel. Yes resets learned state and process uptime, preserves origin sequence continuity, reselects the ID and requires actual Hello/database exchange before recovery. Clearing counters/events or forcing SPF cannot apply a pending ID.",
+    "A new R3 loopback takes precedence only after restart, even when its numerical address is below the retained physical ID. Removal and another restart recover the intended physical ID. R2 tests also cover enabling and shutting a higher loopback.",
+    "A duplicate R1/R2 ID prevents the affected Full adjacency and remote PC traffic after restart. R2/R3 adjacency and server-to-PC2 traffic remain usable. Repairing the unique R1 ID and restarting restores the intended topology.",
+    "Router-ID candidate loopbacks need not run OSPF. This lab does not advertise them, and an identifier alone does not install a destination route. All published show, ping and traceroute commands are exercised.",
+    "The runtime identity cache is keyed by runtime, VRF scope and local process ID, survives configuration object replacement, and is never serialized. Startup reboot and saved-lab cold reopen select from their respective configurations and reconstruct packet state.",
+    "The selection lifecycle change targets IOS IPv4 OSPF. NX-OS and OSPFv3 router-ID selection are not changed. The lab uses one default-VRF process per router; it does not claim new per-VRF or multiple-process targeted clear support beyond the existing restart API.",
+    "Browser cases run serially using isolated persistent Chrome profiles and byte-identical local HTML copies. Startup/reload diagnostics retain workspace and toast evidence on failure. Both themes and widths 1440, 390 and 320 pass with the published commands, failure/recovery exercises, reload, completed reference, cancel/save-copy protection and host/path/query-preserving permalinks.",
+    "Desktop topology and light/dark mobile guide screenshots were visually reviewed. The generated stylesheet is byte-for-byte unchanged, preserving the existing UI and console appearance. No live CML validation is claimed for this lab."
+  ],
+  "unitChecks": [
+    "router-ID practice is independent, addressed and zero-credit with no OSPF or static routes",
+    "published IOS commands and completed reference earn six live goals and require four real echo checks for ten tasks",
+    "selection honors manual precedence, highest active loopback and highest up/up physical address, excluding shut or unconnected candidates",
+    "received Hello/database packets form all intended Full peers and three router LSAs while IDs alone create no destination route",
+    "passive LANs advertise their prefixes without sending Hellos toward PCs or the server",
+    "manual changes after neighbors form remain pending in running-config while process, interface, protocols and peer output retain the active ID",
+    "re-entering the process or replacing the running configuration object cannot apply a pending ID without restart",
+    "empty, no and Ctrl-C answers cancel the default-no clear prompt without changing active ID or Full neighbors",
+    "confirmed process restart applies the pending ID, restarts uptime, withdraws learned state and requires delivered exchange to recover",
+    "a new loopback does not replace an established automatic physical ID until process restart",
+    "enabling a higher loopback keeps the selected ID until restart, and shutting it before another restart restores the lower eligible loopback",
+    "a manual override equal to an automatic ID cannot earn the no-manual-override guide goal",
+    "a duplicate ID is pending first, then prevents the affected adjacency after restart until a unique ID is restored",
+    "unknown process IDs and malformed clear commands do not clear a different process or install a pending ID",
+    "clearing counters, events or forcing SPF does not act as a process restart for pending router IDs",
+    "removing and recreating the process starts a fresh automatic selection rather than reusing deleted process identity",
+    "device reboot selects the startup configuration ID and rebuilds genuine adjacency and traffic",
+    "portable reload reselects from saved configuration and does not serialize a stale active-ID cache",
+    "automatic identity selection is isolated across default and named VRFs even when process IDs are equal",
+    "an address on a down physical interface cannot supply an ID; a later eligible loopback allows selection",
+    "invalid and zero manual IDs are rejected atomically without changing the active process",
+    "configured-ID criteria validate bounded IPv4 or null and distinguish configured versus operational state",
+    "all published verification commands show active IDs, actual peers/routes and successful Windows traffic",
+    "transit interface bounce cannot replace an automatic ID with a newly introduced higher loopback",
+    "a manual ID configured before any neighbor exists becomes active without an unnecessary restart notice"
+  ],
+  "validation": {
+    "focusedTests": 121,
+    "newRouterIdTests": 25,
+    "npmRunCheck": {
+      "typecheck": "passed",
+      "tests": 1677,
+      "passed": 1677,
+      "failed": 0,
+      "build": "passed"
+    },
+    "browserChecks": 15,
+    "routerIdBrowserChecks": 8,
+    "catalogBrowserChecks": 7,
+    "artifactSha256": "665be114a761dd094d1add1042249ce6e74d1272a6db4380eb40bfdfc96fd0ac",
+    "stylesheetUnchanged": true,
+    "stylesheetSha256": "bbf8a3ad99c8e30bf65894fc7950b66920fa7a15433c21bfdd9cffe484eaab9d",
+    "byteIdenticalArtifactPaths": [
+      "index.html",
+      "dist/index.html",
+      ".cache/ospf-router-id-catalog-browser/index-light-390.html",
+      ".cache/ospf-router-id-catalog-browser/index-dark-1440.html",
+      ".cache/ospf-router-id-catalog-browser/index.html",
+      ".cache/ospf-router-id-catalog-browser/index-light-1440.html",
+      ".cache/ospf-router-id-catalog-browser/index-dark-320.html",
+      ".cache/ospf-router-id-catalog-browser/index-light-320.html",
+      ".cache/ospf-router-id-catalog-browser/index-dark-390.html",
+      ".cache/lab-catalog/index-light-1440.html",
+      ".cache/lab-catalog/index-light-390.html",
+      ".cache/lab-catalog/index-light-320.html",
+      ".cache/lab-catalog/index-dark-1440.html",
+      ".cache/lab-catalog/index-dark-390.html",
+      ".cache/lab-catalog/index-dark-320.html",
+      ".cache/lab-catalog/index-prerequisites.html"
+    ]
+  },
+  "browser": {
+    "routerId": [
+      "light 1440px: eleven Routing labs, ten-task router-ID guide and twelve-row plan, zero-credit practice, three published IOS configurations, actual manual/loopback/up-up physical IDs in local and peer output, LSDB and learned routes, four real 3/3 traffic checks and traceroute, pending manual ID with unchanged active ID, default-no cancellation and confirmed restart, R3 loopback addition/reselection/removal, duplicate-ID adjacency failure with unaffected R2/R3 traffic and unique-ID recovery, restored IDs and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors, pending-ID saved reload selects from saved configuration rather than serializing active identity",
+      "light 390px: eleven Routing labs, ten-task router-ID guide and twelve-row plan, zero-credit practice, three published IOS configurations, actual manual/loopback/up-up physical IDs in local and peer output, LSDB and learned routes, four real 3/3 traffic checks and traceroute, pending manual ID with unchanged active ID, default-no cancellation and confirmed restart, R3 loopback addition/reselection/removal, duplicate-ID adjacency failure with unaffected R2/R3 traffic and unique-ID recovery, restored IDs and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "light 320px: eleven Routing labs, ten-task router-ID guide and twelve-row plan, zero-credit practice, three published IOS configurations, actual manual/loopback/up-up physical IDs in local and peer output, LSDB and learned routes, four real 3/3 traffic checks and traceroute, pending manual ID with unchanged active ID, default-no cancellation and confirmed restart, R3 loopback addition/reselection/removal, duplicate-ID adjacency failure with unaffected R2/R3 traffic and unique-ID recovery, restored IDs and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "dark 1440px: eleven Routing labs, ten-task router-ID guide and twelve-row plan, zero-credit practice, three published IOS configurations, actual manual/loopback/up-up physical IDs in local and peer output, LSDB and learned routes, four real 3/3 traffic checks and traceroute, pending manual ID with unchanged active ID, default-no cancellation and confirmed restart, R3 loopback addition/reselection/removal, duplicate-ID adjacency failure with unaffected R2/R3 traffic and unique-ID recovery, restored IDs and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "dark 390px: eleven Routing labs, ten-task router-ID guide and twelve-row plan, zero-credit practice, three published IOS configurations, actual manual/loopback/up-up physical IDs in local and peer output, LSDB and learned routes, four real 3/3 traffic checks and traceroute, pending manual ID with unchanged active ID, default-no cancellation and confirmed restart, R3 loopback addition/reselection/removal, duplicate-ID adjacency failure with unaffected R2/R3 traffic and unique-ID recovery, restored IDs and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "dark 320px: eleven Routing labs, ten-task router-ID guide and twelve-row plan, zero-credit practice, three published IOS configurations, actual manual/loopback/up-up physical IDs in local and peer output, LSDB and learned routes, four real 3/3 traffic checks and traceroute, pending manual ID with unchanged active ID, default-no cancellation and confirmed restart, R3 loopback addition/reselection/removal, duplicate-ID adjacency failure with unaffected R2/R3 traffic and unique-ID recovery, restored IDs and healthy saved reload, completed reference, cancel/save-copy protection, responsive guide and unchanged CLI colors",
+      "light: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to eleven Routing labs",
+      "dark: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to eleven Routing labs"
+    ],
+    "catalog": [
+      "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ]
+  },
+  "browserErrors": [],
+  "externalRequests": [],
+  "references": [
+    {
+      "title": "Cisco IOS OSPF command reference: router-id",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_ospf/command/iro-cr-book/ospf-i1.html",
+      "scope": "Explicit unique identifier; an active process with neighbors adopts a changed ID at reload or manual process restart."
+    },
+    {
+      "title": "Cisco: Troubleshooting Duplicate Router IDs with OSPF",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/23862-duplicate-router-id-ospf.html",
+      "scope": "Automatic loopback preference, highest-address selection, retained identity until restart and duplicate-ID troubleshooting."
+    },
+    {
+      "title": "Cisco: What Does the show ip ospf interface Command Reveal",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13689-17.html",
+      "scope": "Operational process/router-ID, interface-address, network-type, cost and neighbor fields."
+    }
+  ]
+}

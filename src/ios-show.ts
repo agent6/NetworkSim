@@ -1,3 +1,4 @@
+import {activeIOSOSPFRouterId} from './ospf-router-id.ts';
 import {natLive,natStatics,natRuleKey,natTimeout} from './nat-state.ts';
 import {interfaceRates} from './interface-telemetry.ts';
 import {stpPortName,stpPortState} from './stp-ports.ts';
@@ -39,7 +40,7 @@ function takePort(d: Device, args: string[]): string { let value = args.shift();
 function duration(milliseconds: number | undefined): string { if (milliseconds === undefined || !Number.isFinite(milliseconds)) return '?'; const seconds = Math.max(0, Math.floor(milliseconds / 1000)); return seconds < 86400 ? [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60].map(n => String(n).padStart(2, '0')).join(':') : `${Math.floor(seconds / 86400)}d${String(Math.floor(seconds / 3600) % 24).padStart(2, '0')}h`; }
 const remaining = (deadline: number | undefined, now: number) => deadline === undefined ? '?' : Math.max(0, Math.ceil((deadline - now) / 1000));
 function number(value: string | undefined, min: number, max: number): number { if (!value) return incomplete(); const n = Number(value); return /^\d+$/.test(value) && Number.isInteger(n) && n >= min && n <= max ? n : invalid(); }
-function rid(d: Device, protocol: string): string { return d.config.protocols[protocol]?.routerId || ports(d).filter(p => p.ip).sort((a, b) => Number(/^Loopback/i.test(b.name)) - Number(/^Loopback/i.test(a.name)) || ipToInt(b.ip!) - ipToInt(a.ip!))[0]?.ip || '0.0.0.0'; }
+function rid(d: Device, protocol: string): string { return (protocol==='ospf'?activeIOSOSPFRouterId(d):undefined) || d.config.protocols[protocol]?.routerId || ports(d).filter(p => p.ip).sort((a, b) => Number(/^Loopback/i.test(b.name)) - Number(/^Loopback/i.test(a.name)) || ipToInt(b.ip!) - ipToInt(a.ip!))[0]?.ip || '0.0.0.0'; }
 function state(e: Simulator, d: Device, p: InterfaceConfig) { const up = e.interfaceUp(d.id, p.name); return { status: !p.adminUp ? 'administratively down' : p.features.errDisabled ? 'down' : up ? 'up' : 'down', protocol: up ? 'up' : 'down', up }; }
 const ipv4Code = (r: Route): string => ({ connected: 'C', local: 'L', static: 'S', ospf: 'O', eigrp: 'D', rip: 'R', bgp: 'B', dhcp: 'S', hsrp: 'L' }[r.protocol.toLowerCase()] ?? r.protocol.replace(/ summary$/, ''));
 function protocolName(r: Route) { const code = ipv4Code(r); return code.startsWith('O') ? 'ospf' : code.startsWith('D') ? 'eigrp' : code === 'R' ? 'rip' : code === 'B' ? 'bgp' : code === 'C' ? 'connected' : code === 'L' ? 'local' : code === 'S' ? 'static' : r.protocol; }
