@@ -1,0 +1,102 @@
+{
+  "feature": {
+    "title": "SNMP and Syslog Troubleshooting",
+    "catalogId": "snmp-and-syslog-troubleshooting",
+    "group": "CCNP ENCOR",
+    "section": "Network Assurance",
+    "sectionLabCount": 3,
+    "groupLabCount": 25,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6,
+      "Layer 3": 9,
+      "IP Services": 4
+    },
+    "devices": 4,
+    "links": 3,
+    "tasks": 27,
+    "addressingRows": 7,
+    "notes": 3,
+    "permalink": "#/labs/snmp-and-syslog-troubleshooting",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "NMS1 172.16.100.10/24 (gateway .1) connects to R1 Gi0/0 172.16.100.1/24. R1 Gi0/1 172.16.10.1/24 faces SW1 Gi0/1 access VLAN10. SW1 Vlan10 is 172.16.10.2/24, default gateway .1. SW1 Gi0/2 faces PC1 172.16.10.10/24, gateway .1. R1 Loopback0 10.255.0.1/32 is the polled identity and intended syslog/inform source. R1 Loopback99 192.0.2.99/32, persistent ifIndex6, provides harmless local state transitions. Both monitoring paths remain active while Loopback99 or SW1's client-facing port is exercised.",
+  "verificationNotes": [
+    "Adds the third Network Assurance lab with an accurate three-lab accessible badge and current-host/path/query share links. Previous IOS Debugging and Ping/Traceroute entries remain available. ENCOR now has25 labs; other section counts remain3/6/9/4.",
+    "Practice starts at0/27. Ten goals remain live configuration/save checks; seventeen record actual diagnostic and protocol observations. Completed reference supplies ten healthy saved outcomes, empty runtime and no pre-earned polls, logs or notifications. Its initial faults can be reproduced and all27 outcomes earned.",
+    "NMS1 first pings R1's loopback and polls the already working SW1 SVI as a control. R1 NETOPS requests initially fail because only OLDOPS is configured; after repairing the community, the wrong NMS-ONLY permitted host still rejects the real manager source. A transport packet drop cannot impersonate either received agent decision. PC1 remains denied even when its IP ping succeeds.",
+    "After the manager ACL is repaired, system identity is returned while ifNumber receives noSuchObject from the system-only read view. Restoring the interfaces subtree allows an actual identity/location/count GET and six-index GETBULK walk. Broad iso access, writable/unrestricted communities, stale replies and missing packet hops do not substitute for the intended policy.",
+    "SNMPv3 ASSURANCE/monitor uses the implemented logical priv policy, SHA/AES128 credential choices, the same read view and manager ACL. Wrong privacy is distinguished from wrong authentication; correct credentials must return real data. BER/USM cryptography is not emulated or claimed.",
+    "R1 Loopback99 Down/Up events initially enter the timestamped local buffer while the critical remote threshold excludes severity3. After informational severity is restored, genuine remote attempts to wrong host .20 fail neighbor resolution. Correcting the destination then exposes the stopped NMS1 collector through delivered UDP514 and returned ICMP Port Unreachable.",
+    "Syslog and SNMP notification receiver settings are independent. Both actual visible forms must be enabled, with NETOPS restricted on the notification receiver. After collector startup, actual R1 logs from physical source172.16.100.1 are observed before restoring Loopback0 identity10.255.0.1. Final R1 and SW1 logs must arrive from their distinct intended identities at facility20/local4 and severity3.",
+    "R1 informs use one-second timeout, two retries, selected linkdown/linkup categories and Loopback0 source. The goal requires delivered notifications for the actual Loopback99 index and matching returned UDP162 acknowledgements. Traps without ACKs, missing receiver records and lost ACKs cannot qualify. ACK-loss testing warms ARP first so the fault isolates the notification return path.",
+    "Actual SNMP ifOperStatus Down2 and subsequent Up1 responses are independently correlated. An initial Up response cannot replace recovery. SW1's separate client-port exercise retains its management uplink and proves routed collector delivery through its Vlan10 identity.",
+    "Added bounded, credential-redacted SNMP PDU metadata and syslog payload metadata to actual packet summaries, allowing request/response/notification correlation without exposing community or v3 passwords in that metadata. Captured varbinds are limited to64 with bounded strings. Existing protocol behavior and CLI styling are preserved.",
+    "Real device log entries now snapshot the remote threshold/eligibility/destinations/source used at creation, distinguishing a suppressed message from merely absent collector data. Received syslog records retain the actual packet ID for correlation. Runtime evidence is never preloaded or serialized into a ready state.",
+    "Healthy save checks verify both agents' startup configurations, intended addressing, operational monitoring links, management VLAN and client port, active receivers and restored Loopback99. A saved monitoring-link outage is rejected. Portable reopening retains seventeen earned achievements, discards transient poll/log/notification runtime and rebuilds live reachability.",
+    "Scope is IPv4 SNMP/syslog troubleshooting using existing read-only v2c, logical v3 and notification implementations. Syslog collector timestamps use simulation time; local IOS formatting uses configured timestamps/sequence numbers. No new live CML capture, cryptographic interoperability or hardware-clock accuracy is claimed.",
+    "Fifteen browser scenarios passed without page errors or external requests. Full27 workflows ran on light1440px and dark320px using actual SNMP query and independent receiver forms. Four other theme/viewport cases earned19 while all eight fault observations stayed unearned. Every offline case verified actual YAML export/import into an empty browser profile, restored progress and fresh reachability. Two arbitrary-origin permalink cases and seven existing catalog scenarios also passed."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE17: Configuring SNMP Support",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/snmp/configuration/xe-17-x/snmp-xe-17-book/nm-snmp-cfg-snmp-support.html",
+      "relevance": "Agent/manager roles, read views, community access controls, v3 groups/users, traps versus acknowledged informs and source configuration."
+    },
+    {
+      "title": "Cisco: Secure Simple Network Management Protocol",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/simple-network-management-protocol-snmp/20370-snmpsecurity-20370.html",
+      "relevance": "Restricting the actual manager source, read-only access, scoped views and separating packet ACL enforcement from agent policy."
+    },
+    {
+      "title": "Cisco IOS15M&T: Troubleshooting and Fault Management",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/bsm/configuration/15-mt/bsm-15-mt-book/bsm-troubleshooting.html",
+      "relevance": "Local buffering versus remote destinations, timestamp/sequence configuration, syslog severity/facility and source-interface selection."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=2 tests/*.test.ts",
+    "focusedTests": 30,
+    "browserFullWorkflowCases": [
+      "light1440px",
+      "dark320px"
+    ],
+    "offlineReopen": "Actual application YAML export followed by normal file import into a separate empty offline browser profile. Same-session autosave and both agents' running/startup configurations are also checked.",
+    "artifactSha256": "6c43a4b523f27bf362235927443b28dcf626f0c1ba6605afb8da9e8ab9a5c93f",
+    "identicalArtifactCopies": 16,
+    "browserScenarios": 15,
+    "browserChecks": [
+      "light 320px: three Network Assurance labs and badge; four-node three-link27-task zero-credit ticket and seven-row plan; healthy CLI configuration and real receiver forms earn ten live outcomes; actual polling, GETBULK, v3, local-interface Down/Up, received logs from both agents and acknowledged informs earn19 while eight fault observations stay unearned; real SNMP manager form and independent Syslog/UDP162 receiver forms; actual CLI/collector outputs and returned MIB states; router/switch startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh reachability; completed reference has ten live outcomes without pre-earned observations; cancel/save-copy protection; fitted diagram/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "dark 320px: three Network Assurance labs and badge; four-node three-link27-task zero-credit ticket and seven-row plan; all27 through actual community/manager-ACL/view/v3-privacy faults and repairs, critical filtering, wrong destination, stopped receiver and wrong source diagnosis; real SNMP manager form and independent Syslog/UDP162 receiver forms; actual CLI/collector outputs and returned MIB states; router/switch startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh reachability; completed reference has ten live outcomes without pre-earned observations; cancel/save-copy protection; fitted diagram/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "light 1440px: three Network Assurance labs and badge; four-node three-link27-task zero-credit ticket and seven-row plan; all27 through actual community/manager-ACL/view/v3-privacy faults and repairs, critical filtering, wrong destination, stopped receiver and wrong source diagnosis; real SNMP manager form and independent Syslog/UDP162 receiver forms; actual CLI/collector outputs and returned MIB states; router/switch startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh reachability; completed reference has ten live outcomes without pre-earned observations; cancel/save-copy protection; fitted diagram/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "dark 1440px: three Network Assurance labs and badge; four-node three-link27-task zero-credit ticket and seven-row plan; healthy CLI configuration and real receiver forms earn ten live outcomes; actual polling, GETBULK, v3, local-interface Down/Up, received logs from both agents and acknowledged informs earn19 while eight fault observations stay unearned; real SNMP manager form and independent Syslog/UDP162 receiver forms; actual CLI/collector outputs and returned MIB states; router/switch startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh reachability; completed reference has ten live outcomes without pre-earned observations; cancel/save-copy protection; fitted diagram/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "light 390px: three Network Assurance labs and badge; four-node three-link27-task zero-credit ticket and seven-row plan; healthy CLI configuration and real receiver forms earn ten live outcomes; actual polling, GETBULK, v3, local-interface Down/Up, received logs from both agents and acknowledged informs earn19 while eight fault observations stay unearned; real SNMP manager form and independent Syslog/UDP162 receiver forms; actual CLI/collector outputs and returned MIB states; router/switch startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh reachability; completed reference has ten live outcomes without pre-earned observations; cancel/save-copy protection; fitted diagram/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "dark 390px: three Network Assurance labs and badge; four-node three-link27-task zero-credit ticket and seven-row plan; healthy CLI configuration and real receiver forms earn ten live outcomes; actual polling, GETBULK, v3, local-interface Down/Up, received logs from both agents and acknowledged informs earn19 while eight fault observations stay unearned; real SNMP manager form and independent Syslog/UDP162 receiver forms; actual CLI/collector outputs and returned MIB states; router/switch startup saves; actual YAML export/import into a separate empty offline profile preserves completion and fresh reachability; completed reference has ten live outcomes without pre-earned observations; cancel/save-copy protection; fitted diagram/responsive guide; unchanged golden CLI styles and working show/Tab/question-mark",
+      "light: permalink preserves current host/path/query/workspace and returns to all three Network Assurance labs with previous two retained",
+      "dark: permalink preserves current host/path/query/workspace and returns to all three Network Assurance labs with previous two retained",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ],
+    "tests": 2510,
+    "passed": 2510,
+    "failed": 0,
+    "fullCheck": "Full native suite passed with two isolated workers, followed by npm run build; same complete test-file set used by npm run check"
+  }
+}

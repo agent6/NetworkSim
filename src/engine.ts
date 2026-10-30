@@ -338,6 +338,12 @@ export class Simulator {
   }
   private packetSummary(p: IPPacket): PacketSummary {
     const b = p.body ?? {}, v6 = isIPv6(p.destination), ports = ['tcp', 'udp'].includes(p.protocol), result: PacketSummary = { id: p.id, vrf:p.vrf, parentId: p.parentId, source: p.source, destination: p.destination, protocol: p.protocol.toUpperCase(), ipVersion: v6 ? 6 : 4, ttl: p.ttl, size: p.size, df: p.df, dscp: p.dscp ?? 0, ecn:p.ecn??0, sourcePort: ports ? p.sourcePort : undefined, destinationPort: ports ? p.destinationPort : undefined, messageType: b.kind };
+    const management=b.payload??b.result;
+    if(management&&['snmp','snmp-notification','snmp-response'].includes(management.application)){
+      const m=management,short=(v:any)=>typeof v==='string'?v.slice(0,512):v;
+      result.snmp={application:m.application,version:m.version,operation:m.operation,username:m.username,securityLevel:m.securityLevel,kind:m.kind,notificationId:m.notificationId,...Array.isArray(m.oids)?{oids:m.oids.slice(0,64).map(short)}:{},...m.errorStatus?{errorStatus:m.errorStatus}:{},...Array.isArray(m.varbinds)?{varbinds:m.varbinds.slice(0,64).map((v:any)=>({oid:short(v.oid),type:short(v.type),...v.exception?{exception:short(v.exception)}:{value:short(v.value)}}))}:{}};
+    }
+    if(b.kind==='syslog-message')result.syslog={hostname:b.hostname,message:String(b.message).slice(0,1024),severity:b.severity,facility:b.facility,timestamp:b.timestamp};
     if(b.kind==='esp')Object.assign(result,{espSpi:b.spi,espSequence:b.sequence,protectedProtocol:b.inner?.protocol?.toUpperCase()});
     if(b.kind==='ike')Object.assign(result,{ikeStage:b.stage,ikeExchangeId:b.id});
     if(b.kind==='netflow-export')result.netflowVersion=b.version;
@@ -1384,7 +1390,7 @@ export class Simulator {
     const d = this.getDevice(deviceId); if (!d) return;
     const config = d.config.features.logging ?? {}, facility = config.facility ?? 23, time = this.clock.now(), entries = d.runtime.features.logEntries ??= [];
     if (config.enabled === false) return;
-    const entry = { id: this.id('log'), time, message, severity, facility, sequence: d.runtime.features.logSequence = (d.runtime.features.logSequence ?? 0) + 1 };
+    const entry = { id: this.id('log'), time, message, severity, facility, sequence: d.runtime.features.logSequence = (d.runtime.features.logSequence ?? 0) + 1, remote: {enabled:config.trapEnabled!==false,level:config.trap??6,eligible:config.trapEnabled!==false&&severity<=(config.trap??6),hosts:[...(config.hosts??[])],source:config.source} };
     const sinks=d.runtime.features.logSinkCounts??={console:0,monitor:0,buffer:0,trap:0};
     if(config.console!==false&&severity<=(config.consoleLevel??(d.kind==='datacenter'?2:7)))sinks.console++;
     if(config.trapEnabled!==false&&severity<=(config.trap??6))sinks.trap++;
@@ -1490,7 +1496,7 @@ export class Simulator {
       const receivedAt = row.lastReply; this.clock.schedule(Math.max(1, config.holdoverSeconds ?? (config.pollInterval ?? row.poll ?? 64) * 3) * 1000, () => { if (row.lastReply === receivedAt) { this.selectNTP(d); this.notify(); } }, { owner: d.id, label: 'NTP peer validity' });
       this.finishService(b.transaction, { peer: p.source, stratum: b.stratum, offset, delay: row.delay }, error);
     }
-    else if (b.kind === 'syslog-message') { if (!d.config.services.syslog?.enabled) { this.icmpError(d, p, 'Port unreachable'); return; } const logs = d.runtime.features.syslogReceived ??= []; logs.push({ source: p.source, hostname: b.hostname, message: b.message, severity: b.severity, facility: b.facility ?? 23, timestamp: b.timestamp, received: this.clock.now() }); if (logs.length > 500) logs.shift(); }
+    else if (b.kind === 'syslog-message') { if (!d.config.services.syslog?.enabled) { this.icmpError(d, p, 'Port unreachable'); return; } const logs = d.runtime.features.syslogReceived ??= []; logs.push({ packetId:p.id, source: p.source, hostname: b.hostname, message: b.message, severity: b.severity, facility: b.facility ?? 23, timestamp: b.timestamp, received: this.clock.now() }); if (logs.length > 500) logs.shift(); }
     else if (b.kind === 'netflow-export') { if (!d.config.services.netflow?.enabled) { this.icmpError(d, p, 'Port unreachable'); return; } const records = d.runtime.features.netflowReceived ??= []; records.push(...b.records.map((record: any) => ({ ...record, exporter: p.source, received: this.clock.now() }))); if (records.length > 2000) records.splice(0, records.length - 2000); }
     else if (b.kind === 'dns-query') {
       const dns=d.config.services.dns;if(!dns?.enabled||p.destinationPort!==53){this.icmpError(d,p,'Port unreachable');return;}
