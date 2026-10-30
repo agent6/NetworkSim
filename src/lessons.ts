@@ -31,7 +31,7 @@ export type Criterion =
     }
   | { kind: "static-route"; device: string; network: string; prefix: number; nextHop: string; interface: string; ad: number }
   | { kind: "neighbor"; device: string; protocol: string; state?: string; peer?: string; interface?: string }
-  | { kind: "ospf-interface"; device: string; interface: string; processId?: number; routerId?: string; area?: number; passive?: boolean; networkType?: "broadcast" | "point-to-point"; configuredCost?: number }
+  | { kind: "ospf-interface"; device: string; interface: string; protocol?: "ospf" | "ospfv3"; processId?: number; routerId?: string; area?: number; passive?: boolean; networkType?: "broadcast" | "point-to-point"; configuredCost?: number }
   | { kind: "discovery-settings"; device: string; protocol: "CDP" | "LLDP"; enabled: boolean; interval?: number; holdtime?: number }
   | { kind: "discovery-neighbor"; device: string; protocol: "CDP" | "LLDP"; interface: string; peer: string; peerInterface: string }
   | { kind: "echo"; device: string; from: string }
@@ -148,7 +148,7 @@ export function validateLesson(value: unknown): asserts value is Lesson {
           (v.interface === undefined || text(v.interface,128) && v.interface!=="")
         );
       case "ospf-interface":
-        return text(v.interface,128) && v.interface!=="" &&
+        return (v.protocol===undefined || ["ospf","ospfv3"].includes(v.protocol)) && text(v.interface,128) && v.interface!=="" &&
           (v.processId===undefined || Number.isInteger(v.processId) && v.processId>=1 && v.processId<=65535) &&
           (v.routerId===undefined || typeof v.routerId==='string' && isIPv4(v.routerId)) &&
           (v.area===undefined || Number.isInteger(v.area) && v.area>=0 && v.area<=4294967295) &&
@@ -387,14 +387,15 @@ export function matches(
     );
   if (criterion.kind === "ospf-interface") {
     if(!sim.devicePowered(d.id) || !sim.interfaceUp(d.id,criterion.interface))return false;
-    const row=ospfLiveDetail(sim,d.id,'ospf')?.interfaces.find(p=>p.name===criterion.interface && !p.vrf);
+    const protocol=criterion.protocol??'ospf';
+    const row=ospfLiveDetail(sim,d.id,protocol)?.interfaces.find(p=>p.name===criterion.interface && !p.vrf);
     return !!row &&
-      (criterion.processId===undefined || Number(d.config.protocols.ospf?.processId)===criterion.processId) &&
+      (criterion.processId===undefined || Number(d.config.protocols[protocol]?.processId)===criterion.processId) &&
       (criterion.routerId===undefined || sameAddress(row.routerId,criterion.routerId)) &&
       (criterion.area===undefined || Number(row.area)===criterion.area) &&
       (criterion.passive===undefined || !!row.passive===criterion.passive) &&
       (criterion.networkType===undefined || (row.networkType??'broadcast')===criterion.networkType) &&
-      (criterion.configuredCost===undefined || d.config.interfaces[criterion.interface]?.features.ospf?.cost===criterion.configuredCost);
+      (criterion.configuredCost===undefined || d.config.interfaces[criterion.interface]?.features[protocol]?.cost===criterion.configuredCost);
   }
   if (criterion.kind === "neighbor")
     return d.runtime.neighbors.some(

@@ -1,0 +1,88 @@
+{
+  "feature": "CCNA Routing: Single-Area OSPFv3",
+  "catalogId": "single-area-ospfv3",
+  "devices": 6,
+  "links": 6,
+  "tasks": 10,
+  "topology": {
+    "R1": "LAN 2001:db8:10::/64; 2001:db8:12::1/64 to R2 on Gi0/1; direct 2001:db8:13::1/64 to R3 on Gi0/2. Link-local FE80::1 on each link, router ID 1.1.1.1.",
+    "R2": "LAN 2001:db8:20::/64; 2001:db8:12::2/64 to R1 on Gi0/1; 2001:db8:23::2/64 to R3 on Gi0/2. Link-local FE80::2 on each link, router ID 2.2.2.2.",
+    "R3": "LAN 2001:db8:30::/64; 2001:db8:23::3/64 to R2 on Gi0/1; direct 2001:db8:13::3/64 to R1 on Gi0/2. Link-local FE80::3 on each link, router ID 3.3.3.3.",
+    "PC1": "2001:db8:10::10/64; interface-scoped gateway FE80::1 via GigabitEthernet0.",
+    "PC2": "2001:db8:20::10/64; interface-scoped gateway FE80::2 via GigabitEthernet0.",
+    "SRV1": "2001:db8:30::10/64; interface-scoped gateway FE80::3 via GigabitEthernet0."
+  },
+  "checks": [
+    "single-area practice is independent, IPv6-only and zero-credit, with no OSPFv3 or router static routes but ready local gateways",
+    "published IOS commands and completed reference converge to six configuration/operational goals, then four genuine echoes complete ten tasks",
+    "all six Full adjacencies require real OSPF exchange and each router learns three Area 0 router LSAs and both remote LANs",
+    "passive LANs advertise their connected /64s while OSPF Hellos stay on the six point-to-point transit interfaces",
+    "physical direct-link failure floods new LSAs and selects cost 21 via R2, then Full adjacency and cost 6 return on recovery",
+    "making one transit passive removes its intended peer while the alternate path preserves replies and cannot earn full-topology credit",
+    "withdrawing the server LAN advertisement removes learned routes without tearing down the transit adjacencies",
+    "a one-sided transit area mismatch blocks that adjacency despite an otherwise reachable remote LAN",
+    "Hello/Dead timer mismatch prevents the direct adjacency and restoring default 10/40 timers recovers it",
+    "changing one outbound cost changes real SPF forwarding without losing Full adjacency, and the cost task remains live",
+    "a changed passive-LAN cost alters real learned metrics and cannot earn planned-route credit despite successful traffic",
+    "an otherwise functional OSPF process with the wrong planned router ID cannot earn that router’s configuration task",
+    "OSPF dead-timer expiry detects packet loss on an up link and reconverges through R2 without a static-route shortcut",
+    "published show, ping and traceroute commands expose actual Full/P2P, passive, LSDB and intra-area metric behavior in both paths",
+    "portable reload and startup reboot rebuild packet-driven IPv6 adjacencies and preserve earned traffic",
+    "IPv6 forwarding is required for each router’s configuration goal and for actual transit traffic",
+    "OSPFv3 interface criteria reject invalid protocol selectors and retain OSPFv2 and generic-neighbor compatibility",
+    "OSPFv3 process summaries accept /64 LANs and a /128 loopback without invoking IPv4 mask formatting"
+  ],
+  "verificationNotes": [
+    "Routers start without IPv6 forwarding, routing protocols or static routes. Endpoints have fixed IPv6 addresses and interface-scoped link-local default routes; SLAAC and router advertisements are suppressed. IPv4 addresses are absent from all devices.",
+    "Published original classic IOS commands enable ipv6 unicast-routing, ipv6 router ospf 10, explicit 32-bit router IDs and per-interface ipv6 ospf 10 area 0. All commands are executed through IOSSession and rejected output fails validation.",
+    "The packet-driven engine exchanges OSPFv3 Hello/database packets, floods LSAs and computes SPF. Expected Full peers are bound to both device and local interface. LANs remain passive and advertise their /64 prefixes; no Hello is sent toward an endpoint.",
+    "Transit network type is point-to-point. Each transit end costs 10 except both direct R1/R3 ends at 5; LAN cost remains 1. Installed intra-area O routes must have AD 110, the intended link-local next hop, outgoing interface and metric 6 or 11.",
+    "Direct-link shutdown withdraws adjacency and selects metric 21 through R2 in both directions. Actual packet-event assertions and IPv6 traceroute prove alternate forwarding. Restoration recovers Full adjacency and metric 6. Loss on a physically up link waits for the default 40-second Dead interval.",
+    "Negative tests cover passive transit, one-sided area mismatch, Hello/Dead mismatch, removed LAN membership, wrong router ID, disabled IPv6 forwarding and wrong transit/passive-LAN costs. Alternate-path connectivity cannot substitute for the required live configuration or planned routes.",
+    "The completed reference earns six configuration/operational tasks after convergence; four real endpoint echo tests are required to complete all ten. Saved reload and startup reboot reconstruct protocol state and retain previously observed traffic, with fresh packets confirming current connectivity.",
+    "OSPF-interface criteria now accept a bounded optional ospf/ospfv3 selector. The default remains OSPFv2 for existing guides. Explicit compatibility tests cover legacy criteria, scoped peers, invalid selectors and normalized IPv6 addresses.",
+    "Fixed an existing show ipv6 ospf process-summary exception: IPv6 /64 and /128 prefixes bypass the IPv4 dotted-mask formatter. A regression case exercises the process and database displays on all three routers and confirms IPv4 Router-LSA masks and show ip ospf remain intact.",
+    "All six file:// browser scenarios run sequentially with isolated persistent profiles: light/dark at 1440, 390 and 320 pixels. They configure all routers through the real terminal, verify Full neighbors/passive LAN/received database, all four 3/3 traffic checks, direct/alternate metrics and traceroutes, failure-state reload, restored-state reload, completed reference and safe cancel/save-copy behavior.",
+    "Two permalink cases preserve the current origin, path and query string without replacing an open workspace; the Routing subsection displays eight labs. Seven generic catalog regression checks passed. No page errors or external application requests were observed.",
+    "The frozen offline HTML and all viewport copies match final root index.html and dist/index.html byte for byte. Desktop topology and light/dark mobile guide screenshots were visually reviewed. Existing terminal colors were checked in every new-lab browser scenario."
+  ],
+  "scope": "Adds the Single-Area OSPFv3 catalog lab, guide, command resources, completed reference, README and validation. Extends existing bounded OSPF lesson predicates with a protocol selector and repairs an IPv6 process-summary formatting crash. Uses existing protocol and forwarding logic; no simulation engine, networking behavior, theme, terminal styling, backend or dependency changes. Classic IOS IPv6 unicast only; no new claim for IPv4 OSPFv3 address families, broadcast DR/BDR labs or live CML validation.",
+  "sources": [
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_ip6-route-ospfv3-xe.html",
+    "https://www.cisco.com/c/en/us/td/docs/ios/ipv6/command/reference/ipv6_book/ipv6_01.html",
+    "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_ip6-route-ospfv3-add-fam-xe.html"
+  ],
+  "artifactSha256": "3c2032b66516cdd9fd9741e637d73603caf37687b1f0a5f3c325ed72d6452f4f",
+  "validation": {
+    "command": "npm run check",
+    "tests": 1617,
+    "newLabTests": 18,
+    "focusedTests": 38,
+    "passed": 1617,
+    "failed": 0,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "browserChecks": 15
+  },
+  "catalogRegression": [
+    "light 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "light 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 1440px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 390px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "dark 320px: catalog order, four groups, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+    "Imported guide actions respect declared prerequisites and source power"
+  ],
+  "browser": [
+    "light 1440px: eight Routing labs, ten-task OSPFv3 guide and twelve-row IPv6/link-local plan, zero-credit practice, all three published IOS configurations, six Full link-local point-to-point adjacencies, passive LAN verification and received LSDB, intra-area AD 110 metric-6 routes and direct traceroute, four real 3/3 traffic tests, physical failure with metric-21 alternate routes and real traffic through R2, reload and OSPF reconvergence while the direct link is down, restored adjacency/cost/path and retained progress after healthy reload, completed reference, safe cancel/save-copy handling, responsive guide and unchanged CLI colors",
+    "light 390px: eight Routing labs, ten-task OSPFv3 guide and twelve-row IPv6/link-local plan, zero-credit practice, all three published IOS configurations, six Full link-local point-to-point adjacencies, passive LAN verification and received LSDB, intra-area AD 110 metric-6 routes and direct traceroute, four real 3/3 traffic tests, physical failure with metric-21 alternate routes and real traffic through R2, reload and OSPF reconvergence while the direct link is down, restored adjacency/cost/path and retained progress after healthy reload, completed reference, safe cancel/save-copy handling, responsive guide and unchanged CLI colors",
+    "light 320px: eight Routing labs, ten-task OSPFv3 guide and twelve-row IPv6/link-local plan, zero-credit practice, all three published IOS configurations, six Full link-local point-to-point adjacencies, passive LAN verification and received LSDB, intra-area AD 110 metric-6 routes and direct traceroute, four real 3/3 traffic tests, physical failure with metric-21 alternate routes and real traffic through R2, reload and OSPF reconvergence while the direct link is down, restored adjacency/cost/path and retained progress after healthy reload, completed reference, safe cancel/save-copy handling, responsive guide and unchanged CLI colors",
+    "dark 1440px: eight Routing labs, ten-task OSPFv3 guide and twelve-row IPv6/link-local plan, zero-credit practice, all three published IOS configurations, six Full link-local point-to-point adjacencies, passive LAN verification and received LSDB, intra-area AD 110 metric-6 routes and direct traceroute, four real 3/3 traffic tests, physical failure with metric-21 alternate routes and real traffic through R2, reload and OSPF reconvergence while the direct link is down, restored adjacency/cost/path and retained progress after healthy reload, completed reference, safe cancel/save-copy handling, responsive guide and unchanged CLI colors",
+    "dark 390px: eight Routing labs, ten-task OSPFv3 guide and twelve-row IPv6/link-local plan, zero-credit practice, all three published IOS configurations, six Full link-local point-to-point adjacencies, passive LAN verification and received LSDB, intra-area AD 110 metric-6 routes and direct traceroute, four real 3/3 traffic tests, physical failure with metric-21 alternate routes and real traffic through R2, reload and OSPF reconvergence while the direct link is down, restored adjacency/cost/path and retained progress after healthy reload, completed reference, safe cancel/save-copy handling, responsive guide and unchanged CLI colors",
+    "dark 320px: eight Routing labs, ten-task OSPFv3 guide and twelve-row IPv6/link-local plan, zero-credit practice, all three published IOS configurations, six Full link-local point-to-point adjacencies, passive LAN verification and received LSDB, intra-area AD 110 metric-6 routes and direct traceroute, four real 3/3 traffic tests, physical failure with metric-21 alternate routes and real traffic through R2, reload and OSPF reconvergence while the direct link is down, restored adjacency/cost/path and retained progress after healthy reload, completed reference, safe cancel/save-copy handling, responsive guide and unchanged CLI colors",
+    "light: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to eight Routing labs",
+    "dark: permalink preserves the current host/path/query, previews without replacing the workspace, and returns to eight Routing labs"
+  ],
+  "browserErrors": [],
+  "externalRequests": []
+}

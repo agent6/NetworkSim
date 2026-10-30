@@ -301,6 +301,9 @@ interface DbLsa {
 const seqHex = (seq: number) => '0x' + hex((0x80000000 + Math.max(1, seq)) >>> 0, 8);
 function ospfDatabaseEntries(v: OspfView): DbLsa[] {
   const lsas = v.live?.lsas ?? [], result: DbLsa[] = [];
+  // The process summary also consumes these entries for OSPFv3. IPv6 prefix
+  // lengths must not pass through the IPv4 dotted-mask formatter.
+  const prefixData = (prefix: number) => v.v3 ? String(prefix) : prefixToMask(prefix);
   const localAreas = new Set(v.ports.filter(p => p.up).map(p => p.area));
   const areasOf = (l: typeof lsas[number]) => new Set([...l.links.map(k => areaKey(k.area)), ...l.prefixes.filter(x => x.kind === 'prefix').map(x => areaKey(x.endpoint.area))]);
   const deviceOf = (l: typeof lsas[number]) => l.links[0]?.from.deviceId ?? l.prefixes[0]?.endpoint.deviceId;
@@ -323,7 +326,7 @@ function ospfDatabaseEntries(v: OspfView): DbLsa[] {
         if (isP2p(mine[0])) {
           for (const k of mine) entries.push({ kind: 'p2p', id: k.to.routerId, data: k.from.address, metric: k.cost });
           const stub = prefixes.find(x => x.endpoint.name === name);
-          if (stub) entries.push({ kind: 'stub', id: stub.network, data: prefixToMask(stub.prefix), metric: Number(stub.cost ?? mine[0].cost) });
+          if (stub) entries.push({ kind: 'stub', id: stub.network, data: prefixData(stub.prefix), metric: Number(stub.cost ?? mine[0].cost) });
         } else {
           const endpoints = [...mine.map(k => k.from), ...mine.map(k => k.to)];
           const dr = endpoints.find(x => roleOf(x.deviceId, x.name) === 'DR') ?? endpoints.find(x => (x as any).role === 'DR');
@@ -331,7 +334,7 @@ function ospfDatabaseEntries(v: OspfView): DbLsa[] {
         }
         withTransit.add(name);
       }
-      for (const x of prefixes.filter(x => !withTransit.has(x.endpoint.name))) entries.push({ kind: 'stub', id: x.network, data: prefixToMask(x.prefix), metric: Number(x.cost ?? 1) });
+      for (const x of prefixes.filter(x => !withTransit.has(x.endpoint.name))) entries.push({ kind: 'stub', id: x.network, data: prefixData(x.prefix), metric: Number(x.cost ?? 1) });
       const external = l.prefixes.some(x => x.kind !== 'prefix'), abr = areasOf(l).size > 1;
       result.push({ type: 1, area, linkId: l.routerId, adv: l.routerId, age: l.age, seq: l.sequence, checksum: checksum(1, area, l.routerId, l.sequence, entries.length), routerLinks: entries, bits: { abr, asbr: external } });
     }
