@@ -300,6 +300,16 @@ interface DbLsa {
   mask?: number; attached?: string[]; metric?: number; metricType?: number; tag?: number; forward?: string;
 }
 const seqHex = (seq: number) => '0x' + hex((0x80000000 + Math.max(1, seq)) >>> 0, 8);
+function ospfAreaDistances(lsas: NonNullable<OspfView['live']>['lsas'], area: string, from: string): Map<string, number> {
+  const dist = new Map<string, number>([[from, 0]]), edges = lsas.flatMap(l => l.links.filter(k => areaKey(k.area) === area));
+  for (let changed = true; changed;) { changed = false; for (const k of edges) { const base = dist.get(k.from.routerId); if (base === undefined) continue; const next = base + k.cost; if (next < (dist.get(k.to.routerId) ?? Infinity)) { dist.set(k.to.routerId, next); changed = true; } } }
+  return dist;
+}
+function ospfRangeMetric(v: OspfView, area: string, range: any): number | undefined {
+  const lsas = v.live?.lsas ?? [], dist = ospfAreaDistances(lsas, area, v.rid), metrics: number[] = [];
+  for (const l of lsas) for (const p of l.prefixes) if (p.kind === 'prefix' && areaKey(p.endpoint.area) === area && p.prefix >= Number(range.prefix) && prefixContains(range.network, Number(range.prefix), p.network) && dist.has(l.routerId)) metrics.push(dist.get(l.routerId)! + Number(p.cost ?? 1));
+  return metrics.length ? Number(range.cost ?? Math.max(...metrics)) : undefined;
+}
 function ospfDatabaseEntries(v: OspfView): DbLsa[] {
   const lsas = v.live?.lsas ?? [], result: DbLsa[] = [];
   // The process summary also consumes these entries for OSPFv3. IPv6 prefix
@@ -311,12 +321,7 @@ function ospfDatabaseEntries(v: OspfView): DbLsa[] {
   const checksum = (...parts: unknown[]) => fold16(parts.join('|'));
   const isP2p = (link: OSPFLink) => String((link.from as any).networkType ?? '').includes('point-to-point') || (link.from as any).role === 'POINT-TO-POINT';
   const roleOf = (deviceId: string, name: string) => v.e.getDevice(deviceId)?.runtime.features[v.protocol + 'Interfaces']?.[name]?.role;
-  // Shortest path cost between router IDs inside one area (for summary metrics).
-  const distances = (area: string, from: string) => {
-    const dist = new Map<string, number>([[from, 0]]), edges = lsas.flatMap(l => l.links.filter(k => areaKey(k.area) === area));
-    for (let changed = true; changed;) { changed = false; for (const k of edges) { const base = dist.get(k.from.routerId); if (base === undefined) continue; const next = base + k.cost; if (next < (dist.get(k.to.routerId) ?? Infinity)) { dist.set(k.to.routerId, next); changed = true; } } }
-    return dist;
-  };
+  const distances = (area: string, from: string) => ospfAreaDistances(lsas, area, from);
   // A remote area's summary cost includes the path through Area 0 to its ABR.
   // Retain the traversal phase so a path cannot leave and then re-enter the backbone.
   const backboneDistances = (source: string, from: string) => {
@@ -373,20 +378,21 @@ function ospfDatabaseEntries(v: OspfView): DbLsa[] {
     // Summary LSAs (type 3/4) originated by area border routers attached to this area
     const kind = areaKind(v, area), cfgArea = areaConfig(v.config, area);
     for (const abr of lsas.filter(l => areasOf(l).size > 1 && areasOf(l).has(area))) {
-      const abrDevice = v.e.getDevice(deviceOf(abr) ?? ''), abrConfig = abrDevice ? routingConfig(abrDevice, v.protocol) : undefined, mineAreas = areasOf(abr);
+      const abrDevice = v.e.getDevice(deviceOf(abr) ?? ''), received = [...abr.links.map(k => k.from), ...abr.prefixes.map(p => p.endpoint)].find(p => p.deviceId === abrDevice?.id && p.snapshot)?.snapshot?.deviceConfig, abrConfig = abrDevice ? routingConfig(received ? { ...abrDevice, config: received } : abrDevice, v.protocol) : undefined, mineAreas = areasOf(abr);
       const add = (linkId: string, mask: number, metric: number) => { if (!result.some(r => r.type === 3 && r.area === area && r.linkId === linkId && r.mask === mask && r.adv === abr.routerId)) result.push({ type: 3, area, linkId, adv: abr.routerId, age: abr.age, seq: abr.sequence, checksum: checksum(3, area, linkId, mask, abr.routerId, abr.sequence), mask, metric }); };
       if (kind !== 'normal') add(v.protocol === 'ospfv3' ? '::' : '0.0.0.0', 0, Number(areaConfig(abrConfig, area)?.defaultCost ?? 1));
       if (kind !== 'normal' && (cfgArea?.noSummary || areaConfig(abrConfig, area)?.noSummary)) continue;
       for (const source of [...new Set(lsas.flatMap(l => [...areasOf(l)]))].filter(x => x !== area && (area !== '0' || mineAreas.has(x)))) {
         if (area !== '0' && source !== '0' && !mineAreas.has(source) && !mineAreas.has('0')) continue;
-        const dist = mineAreas.has(source) ? distances(source, abr.routerId) : backboneDistances(source, abr.routerId), ranges: any[] = areaConfig(abrConfig, source)?.ranges ?? [], emitted = new Set<string>();
+        const dist = mineAreas.has(source) ? distances(source, abr.routerId) : backboneDistances(source, abr.routerId), ranges: any[] = [...areaConfig(abrConfig, source)?.ranges ?? []].sort((a, b) => Number(b.prefix) - Number(a.prefix)), aggregates = new Map<string, { network: string; prefix: number; metric: number }>();
         for (const l of lsas) for (const x of l.prefixes.filter(x => x.kind === 'prefix' && areaKey(x.endpoint.area) === source)) {
           const distance = dist.get(l.routerId); if (distance === undefined) continue;
           const metric = distance + Number(x.cost ?? 1);
           const range = ranges.find(r => prefixContains(r.network, Number(r.prefix), x.network) && x.prefix >= Number(r.prefix));
-          if (range) { if (!range.notAdvertise && !emitted.has(range.network + '/' + range.prefix)) { emitted.add(range.network + '/' + range.prefix); add(range.network, Number(range.prefix), Number(range.cost ?? metric)); } continue; }
+          if (range) { if (!range.notAdvertise) { const key = range.network + '/' + range.prefix, previous = aggregates.get(key); aggregates.set(key, { network: range.network, prefix: Number(range.prefix), metric: Math.max(previous?.metric ?? 0, Number(range.cost ?? metric)) }); } continue; }
           add(x.network, x.prefix, metric);
         }
+        for (const r of aggregates.values()) add(r.network, r.prefix, r.metric);
       }
       if (kind === 'normal') for (const asbr of lsas.filter(l => l.prefixes.some(x => x.kind !== 'prefix') && !areasOf(l).has(area) && l.routerId !== abr.routerId)) {
         const shared = [...areasOf(asbr)].find(x => mineAreas.has(x)); if (shared === undefined) continue;
@@ -560,8 +566,8 @@ function ospfProcess(v: OspfView): string[] {
     if (!v.v3) lines.push(auth === 'message-digest' ? '\tArea has message digest authentication' : auth ? '\tArea has simple password authentication' : '\tArea has no authentication');
     lines.push(`\tSPF algorithm last executed ${hmsMillis(v.now - lastSpf)} ago`, `\tSPF algorithm executed ${v.live?.spfRuns ?? 0} times`, '\tArea ranges are');
     for (const r of ac.ranges ?? []) {
-      const active = entries.some(x => x.type === 1 && x.area === area && x.routerLinks!.some(k => k.kind === 'stub' && prefixContains(r.network, Number(r.prefix), k.id)));
-      lines.push(`\t   ${r.network}/${r.prefix} ${active ? `Active(${Number(r.cost ?? 1)})` : 'Passive'} ${r.notAdvertise ? 'DoNotAdvertise' : 'Advertise'} `);
+      const metric = ospfRangeMetric(v, area, r);
+      lines.push(`\t   ${r.network}/${r.prefix} ${metric !== undefined ? `Active(${metric})` : 'Passive'} ${r.notAdvertise ? 'DoNotAdvertise' : 'Advertise'} `);
     }
     const inArea = entries.filter(r => r.area === area);
     lines.push(`\tNumber of LSA ${inArea.length}. Checksum Sum ${sum(inArea)}`);

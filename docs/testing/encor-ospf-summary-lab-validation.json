@@ -1,0 +1,99 @@
+{
+  "feature": {
+    "title": "OSPF Route Summarization",
+    "catalogId": "ospf-route-summarization",
+    "group": "CCNP ENCOR",
+    "section": "Layer 3",
+    "sectionLabCount": 6,
+    "groupLabCount": 15,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6
+    },
+    "devices": 6,
+    "links": 5,
+    "tasks": 17,
+    "addressingRows": 6,
+    "notes": 1,
+    "permalink": "#/labs/ospf-route-summarization",
+    "modes": [
+      "practice",
+      "completed"
+    ],
+    "preservedLabs": [
+      "multi-area-ospfv2",
+      "multi-area-ospfv3",
+      "ospf-passive-interface"
+    ]
+  },
+  "topology": "Three-router chain: R1 Area10, R2 ABR Areas10/0, R3 Area0. R1 Gi0/1 10.0.12.1/30 connects R2 Gi0/1 .2; R2 Gi0/2 10.0.23.1/30 connects R3 Gi0/1 .2. R1 Gi0/0 passive cost1 LAN172.16.0.1/24 connects PC1 .10; Gi0/2 passive cost5 LAN172.16.1.1/24 connects PC2 .10. R3 Gi0/0 passive cost1 LAN192.168.30.1/24 connects SRV1 .10. Host gateways are .1. All transits are P2P cost10 with default10/40 timers. Process10 uses RIDs1.1.1.1/2.2.2.2/3.3.3.3 and passive default with exact transit exceptions. R2 area10 range172.16.0.0/22 has default maximum-component cost15; R3 receives O IA /22 AD110/metric25 via10.0.23.1. R2 retains O /24 components11/15 and a conditional Null0 O summary. R1/R2 server-LAN return metrics are21/11.",
+  "verificationNotes": [
+    "Adds a sixth ENCOR Layer3 lab without replacing the existing multi-area, passive or CCNA lessons. Practice has prepared addresses/gateways but no OSPF/static router routes, starts at zero of seventeen tasks and exposes five diagnostic ping actions. The completed reference executes three real IOS command sets, saves startup configuration and serializes empty runtime. It earns twelve live configuration/verification/save tasks after fresh received control state, with no invented traffic or discard evidence.",
+    "The guide first omits the range to compare R3\u2019s two unsummarized /24 O IA routes at21/25 against the resulting single /22 at25. It explains source-area ABR placement, preservation of intra-area specifics, maximum-component cost, unused addresses inside a larger aggregate, longest-prefix forwarding and conditional Null0 discard. It distinguishes area range from external summary-address, and explicitly scopes the lab to IPv4 inter-area summarization.",
+    "Seventeen tasks cover three router activations with intended addressing/areas/RIDs, passive LAN and P2P cost policy, four Full relationships, the backbone-connected R2 ABR, exact source-area range in a normal OSPF-only domain, retained internal component routes, the remote aggregate without hidden specifics, conditional discard, server return routes, saved healthy policy, four actual ICMP traffic paths and a proved expected failure to an unused address.",
+    "A real CLI projection defect selected the first component metric11 for a range instead of maximum15, even though the routing engine correctly installed R3\u2019s metric25. The display now aggregates every matching component, honors explicit cost and most-specific range selection, and reports the received ABR policy snapshot rather than immediately reading changed remote configuration. show ip ospf now derives Active(15), or Passive without reachable components, from received intra-area costs instead of inventing Active(1). These are formatter fixes; the forwarding/SPF engine was already operational and is unchanged.",
+    "A regression blocks new protocol89 datagrams after R2 changes its range cost to40. R3 retains its previously received default summary display15 and route25 until delivery resumes; then both update to40/50. Interface enumeration reversal preserves maximum15. Existing OSPFv2/v3 multi-area tests remain compatible with the received-policy projection.",
+    "Bounded declarative osum-domain criteria require the intended live areas, passive default, exact active exceptions, normal areas, IPv4 forwarding, only OSPF, no static routes/redistribution/default origination, enabled internal discard and exactly the intended R2 source-area /22 without an explicit cost or suppression option. osum-summary requires the exact selected O IA aggregate, AD110/metric25/next hop/interface, no more-specific route inside the range, and a received ABR router record carrying that range.",
+    "Four traffic tasks reuse existing inter-area proof correlating source/target IPv4 ICMP identities, parent-linked replies, every actual forwarding send/receive and currently selected O/O IA routes across the three routers. The expected-failure task requires SRV1\u2019s actual sent request, R3 forwarding via its O IA /22 to R2, R2 receiving and dropping that same request at Null0 using its O summary route, and a delivered ICMP type3 error with the matching parent and quoted addresses. A generic timeout, absent route, disabled discard, bad packet identity, wrong source or wrong quote cannot fabricate this proof. The original request never bounces back toward the backbone.",
+    "Tests exercise unsummarized baseline, range on an internal router or wrong source area, a different /23, explicit cost40, not-advertise, static shortcuts, blocked OSPF control and disabled internal discard. Withdrawing only the higher-cost LAN preserves /22 with ABR11/R3 metric21; withdrawing both LAN memberships removes the advertised aggregate and conditional Null0 while transit neighbors remain Full. Restoring membership, intended policy and saved configurations returns healthy traffic and full completion.",
+    "IOS write memory and reload restore an unsaved range-cost change. Portable reopening retains genuine traffic and discard observations but requires fresh neighbors, received range policy and aggregate routes before seventeen tasks return. Stable IDs tolerate a hostname change. Imported range/area/identity bounds and missing endpoints fail closed. Existing logical OSPF router records underpin SPF and the Type3 CLI projection; no full scoped binary LSA database, new wire encoder or new live CML capture is claimed.",
+    "Final offline Chrome QA covers light/dark at1440/390/320px: actual baseline and summary CLI configuration, unsummarized and aggregate route comparisons, ABR Active15/Type3 metric15, components11/15, four live traffic paths and Windows trace, correlated expected Null0 failure, seventeen tasks, saved offline reload, configuration-only reference, cancel/save-copy protection, responsive fitted topology/guide and unchanged terminal golden styles. Both permalink checks preserve the current host/path/query and workspace and return to ENCOR Layer3 with six labs. Generic catalog QA adds seven checks. All sixteen HTML copies match the final artifact; both desktop diagrams and320px guides were visually inspected. Owned preview returned HTTP200."
+  ],
+  "browserStorageDiagnostic": {
+    "initialResult": "Initial general-catalog run passed the three light cases but dark1440 lost localStorage before application startup on file reload.",
+    "evidence": "Valid Router on a stick completed workspace before reload; startup-observed and current workspace values null afterward; no page errors. Evidence preserved under ignored .cache/osum-generic-first-run.",
+    "resolution": "Direct repeat passed; the final-build catalog and new-lab matrices passed. No application storage-policy change or saved-state injection was used."
+  },
+  "primaryReferences": [
+    {
+      "title": "Cisco IOS OSPF Command Reference: area range and discard-route",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_ospf/command/iro-cr-book/m_ospf-a1.html"
+    },
+    {
+      "title": "Cisco High Availability Campus Design: OSPF summarization and maximum component cost",
+      "url": "https://www.cisco.com/c/en/us/td/docs/solutions/Enterprise/Campus/routed-ex.html"
+    },
+    {
+      "title": "Cisco IOS XE17 OSPF Configuration Guide",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr3-fwd/ospf/ospf-configuration-guide/ospf.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 24,
+    "existingMultiAreaCompatibilityTests": 46,
+    "focusedPassed": 70,
+    "fullCheck": "npm run check",
+    "typecheck": "passed",
+    "fullTests": 2244,
+    "fullPassed": 2244,
+    "fullFailed": 0,
+    "build": "passed",
+    "browserChecks": [
+      "light 320px: ENCOR Layer3 with six labs; six-node/five-link/17-task zero-credit practice and six-row plan; three actual IOS baseline configurations; unsummarized /24 routes at21/25; source-area /22 range on ABR R2; four Full relationships; internal component O routes11/15 retained; R3 only O IA /22 atAD110/25 with Type3 metric15 and ABR Active(15) display; four actual traffic tasks and Windows trace; expected hole failure follows aggregate to actual ABR Null0 discard and completes seventeen tasks; saved offline reload rebuilds live received state while retaining packet evidence; configuration-only reference, cancel/save-copy protection, fitted responsive topology/guide and unchanged terminal golden styles",
+      "dark 390px: ENCOR Layer3 with six labs; six-node/five-link/17-task zero-credit practice and six-row plan; three actual IOS baseline configurations; unsummarized /24 routes at21/25; source-area /22 range on ABR R2; four Full relationships; internal component O routes11/15 retained; R3 only O IA /22 atAD110/25 with Type3 metric15 and ABR Active(15) display; four actual traffic tasks and Windows trace; expected hole failure follows aggregate to actual ABR Null0 discard and completes seventeen tasks; saved offline reload rebuilds live received state while retaining packet evidence; configuration-only reference, cancel/save-copy protection, fitted responsive topology/guide and unchanged terminal golden styles",
+      "dark 320px: ENCOR Layer3 with six labs; six-node/five-link/17-task zero-credit practice and six-row plan; three actual IOS baseline configurations; unsummarized /24 routes at21/25; source-area /22 range on ABR R2; four Full relationships; internal component O routes11/15 retained; R3 only O IA /22 atAD110/25 with Type3 metric15 and ABR Active(15) display; four actual traffic tasks and Windows trace; expected hole failure follows aggregate to actual ABR Null0 discard and completes seventeen tasks; saved offline reload rebuilds live received state while retaining packet evidence; configuration-only reference, cancel/save-copy protection, fitted responsive topology/guide and unchanged terminal golden styles",
+      "light 1440px: ENCOR Layer3 with six labs; six-node/five-link/17-task zero-credit practice and six-row plan; three actual IOS baseline configurations; unsummarized /24 routes at21/25; source-area /22 range on ABR R2; four Full relationships; internal component O routes11/15 retained; R3 only O IA /22 atAD110/25 with Type3 metric15 and ABR Active(15) display; four actual traffic tasks and Windows trace; expected hole failure follows aggregate to actual ABR Null0 discard and completes seventeen tasks; saved offline reload rebuilds live received state while retaining packet evidence; configuration-only reference, cancel/save-copy protection, fitted responsive topology/guide and unchanged terminal golden styles",
+      "dark 1440px: ENCOR Layer3 with six labs; six-node/five-link/17-task zero-credit practice and six-row plan; three actual IOS baseline configurations; unsummarized /24 routes at21/25; source-area /22 range on ABR R2; four Full relationships; internal component O routes11/15 retained; R3 only O IA /22 atAD110/25 with Type3 metric15 and ABR Active(15) display; four actual traffic tasks and Windows trace; expected hole failure follows aggregate to actual ABR Null0 discard and completes seventeen tasks; saved offline reload rebuilds live received state while retaining packet evidence; configuration-only reference, cancel/save-copy protection, fitted responsive topology/guide and unchanged terminal golden styles",
+      "light 390px: ENCOR Layer3 with six labs; six-node/five-link/17-task zero-credit practice and six-row plan; three actual IOS baseline configurations; unsummarized /24 routes at21/25; source-area /22 range on ABR R2; four Full relationships; internal component O routes11/15 retained; R3 only O IA /22 atAD110/25 with Type3 metric15 and ABR Active(15) display; four actual traffic tasks and Windows trace; expected hole failure follows aggregate to actual ABR Null0 discard and completes seventeen tasks; saved offline reload rebuilds live received state while retaining packet evidence; configuration-only reference, cancel/save-copy protection, fitted responsive topology/guide and unchanged terminal golden styles",
+      "light: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with six labs, other sections remain independent and CCNA single-area OSPF remains separate",
+      "dark: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with six labs, other sections remain independent and CCNA single-area OSPF remains separate",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "1bcb839d1ddecc54980100ce062dd5af5d4c1ab679165928cc4364eb7ae142c1",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}
