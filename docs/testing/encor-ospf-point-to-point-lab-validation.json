@@ -1,0 +1,87 @@
+{
+  "feature": {
+    "title": "OSPF Point-to-Point Network",
+    "catalogId": "ospf-point-to-point-network",
+    "group": "CCNP ENCOR",
+    "section": "Layer 3",
+    "sectionLabCount": 3,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6
+    },
+    "devices": 5,
+    "links": 5,
+    "tasks": 12,
+    "addressingRows": 5,
+    "notes": 1,
+    "permalink": "#/labs/ospf-point-to-point-network",
+    "modes": [
+      "practice",
+      "completed"
+    ],
+    "independentCCNALab": "ospf-point-to-point"
+  },
+  "topology": "R1 Gi0/1 10.0.12.0/31 ↔ R2 Gi0/1 10.0.12.1/31, cost10 each way. R2 Gi0/2 10.0.23.0/31 ↔ R3 Gi0/1 10.0.23.1/31, cost10. Preferred R1 Gi0/2 10.0.13.0/31 ↔ R3 Gi0/2 10.0.13.1/31, cost5. R1/R3 Gi0/0 passive cost1 LANs 192.168.10/30.1/24 connect PC1/PC2 at .10 with .1 gateways. One overview note explains the direct and alternate paths.",
+  "verificationNotes": [
+    "Adds a separate ENCOR Layer3 exercise, leaving the existing four-node CCNA point-to-point lab and its permalink intact. Practice starts at zero with prepared IPv4 addresses, enabled routed ports and host gateways, but no OSPF or static router routes. Both diagnostic ping actions are enabled. The completed reference executes all three actual IOS configurations, saves startup policy and serializes empty runtime; it earns nine live goals only after fresh control packets, with no manufactured echoes or failover history.",
+    "Uses OSPFv2 process10 and manual router IDs1.1.1.1/2.2.2.2/3.3.3.3, interface activation in Area0, passive LANs and six explicit point-to-point Ethernet ends. Every router has two received FULL/- peers. POINT_TO_POINT state has no DR/BDR; Router LSAs describe point-to-point router links, and there is no Type2 Network LSA. Both .0 and .1 are valid /31 endpoints. A /31 mask does not select the OSPF network type; exact prepared addresses/masks are graded independently.",
+    "All selected LAN routes are intra-area O at AD110. R1→LAN30 and R3→LAN10 use Gi0/2 at metric6 through 10.0.13.1 and 10.0.13.0. R2 learns both LANs at metric11 through its two alternate-link neighbors. Shutting R1 Gi0/2 moves both edge remote-LAN routes to metric21 through R2; primary restoration returns them to6. Windows traceroute verifies the direct versus R1→R2→R3 paths. Outbound cost changes affect that direction without imposing a false symmetric-metric requirement.",
+    "Twelve tasks cover three router activations, point-to-point policy, passive LANs, six Full relationships, four exact learned LAN routes, a normal OSPF-only domain, healthy saved policy, two actual preferred-path traffic proofs and proved failover followed by healthy restoration. Reference Hello/Dead timers are10/40; mismatched timer faults are tested. Matched alternative timer settings are not a separately graded configuration requirement. Static routes, another routing protocol, redistribution or non-normal area settings cannot satisfy the normal-domain goal.",
+    "New bounded declarative op2p-echo and op2p-failover lesson criteria inspect actual packet history and selected forwarding paths. Normal echoes require the intended direct router sequence, IPv4 ICMP identities, addresses, parent-linked successful replies, every routed send and subsequent next-node receive, with only connected/O selected routes and AD110 on learned O routes. Wrong identities, missing hops, family/target tampering, static shortcuts and missing endpoints fail. Imported paths are unique and bounded to six routers; malformed IDs, addresses, metrics and repeated/source-inclusive paths are rejected.",
+    "Failover requires the explicit R1 Gi0/2 shutdown log, a matching genuine OSPF Full-to-Down transition after that timestamp, selected O/AD110/metric21 routes at both edge routers and new successful ICMP requests in both directions over R1/R2/R3 after the same shutdown. Restoring only configuration without outage packets cannot earn it. A never-formed direct adjacency, physically-up packet loss or a broadcast network-type experiment cannot fabricate this specific outage proof. Eviction of older Full events does not invalidate the later Full-to-Down transition. The historical outage observation is combined with live healthy conditions, so recovery completes only after all normal checks return.",
+    "Fault tests cover blocked protocol89 datagrams, passive transit, one-sided area mismatch, Hello/Dead mismatch, actual Dead-timer expiry on a lossy but up link, LAN advertisement withdrawal, incorrect cost, alternate local process ID, incorrect /31 mask and static-route bypass. Priority0 remains irrelevant to P2P Full adjacency; both priority0 broadcast endpoints stay2WAY/DROTHER and routing falls back through R2. A functioning broadcast Full adjacency and successful traffic cannot replace the required P2P role. All referenced IOS and Windows verification commands execute without rejection.",
+    "Shared existing normal-domain and saved-policy criteria are reused. IOS reload restores an unsaved primary-cost change. Portable reopening retains genuine earned traffic/outage observations but reconstructs neighbors and routes from new control packets before all12 goals return. Running/startup equality on all three routers and empty serialized neighbor state are checked. Stable device IDs survive a hostname change. The existing received logical OSPF model, SPF and packet-forwarding algorithms are unchanged; this task adds no new binary LSA implementation or live CML capture.",
+    "Final offline Chrome QA covers light/dark at1440/390/320px, all three actual console configurations, P2P/no-DR/LSA views, direct metric6 and R2 metric11 routes, both genuine traffic actions, alternate metric21 failover with traceroute, healthy recovery to12 tasks, saved offline reopening, configuration-only reference and cancel/save-copy protection. Both share-link checks preserve the current host/path/query and workspace, select ENCOR Layer3 with three labs and retain the independent CCNA entry. Generic catalog checks preserve all other groups and section counts. All16 HTML copies match the final build. Desktop diagrams and both320px guides were visually inspected; terminal golden styles remain unchanged. The owned temporary localhost preview returned HTTP200."
+  ],
+  "primaryReferences": [
+    {
+      "title": "Cisco: OSPF Frequently Asked Questions",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/9237-9.html"
+    },
+    {
+      "title": "Cisco: Configure IP Addresses and Unique Subnets (/31 point-to-point endpoints)",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/routing-information-protocol-rip/13788-3.html"
+    },
+    {
+      "title": "Cisco IOS XE: Configuring OSPF",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-routing/b-ip-routing/m_iro-cfg-0.html"
+    }
+  ],
+  "validation": {
+    "focusedLabTests": 22,
+    "focusedPassed": 22,
+    "fullCheck": "npm run check",
+    "typecheck": "passed",
+    "fullTests": 2172,
+    "fullPassed": 2172,
+    "fullFailed": 0,
+    "build": "passed",
+    "browserChecks": [
+      "light 320px: ENCOR Layer3 with three labs and independent CCNA entry; five-node/12-task zero-credit practice; all three published IOS configurations on dedicated /31 transits; six Full/- peers, POINT_TO_POINT states, Router LSAs and no Type2 Network LSA; correct O / AD110 / metric6 preferred routes and metric11 R2 routes; both real traffic tasks and direct Windows traceroute; genuine Full-to-Down primary outage, metric21 routing and new bidirectional traffic through R2 with alternate traceroute, healthy recovery earns twelve tasks; saved offline reload with actual OSPF running/startup equality rebuilds live control state and retains history; configuration-only reference and cancel/save-copy protection; fitted topology and responsive guide; unchanged terminal golden styles",
+      "dark 320px: ENCOR Layer3 with three labs and independent CCNA entry; five-node/12-task zero-credit practice; all three published IOS configurations on dedicated /31 transits; six Full/- peers, POINT_TO_POINT states, Router LSAs and no Type2 Network LSA; correct O / AD110 / metric6 preferred routes and metric11 R2 routes; both real traffic tasks and direct Windows traceroute; genuine Full-to-Down primary outage, metric21 routing and new bidirectional traffic through R2 with alternate traceroute, healthy recovery earns twelve tasks; saved offline reload with actual OSPF running/startup equality rebuilds live control state and retains history; configuration-only reference and cancel/save-copy protection; fitted topology and responsive guide; unchanged terminal golden styles",
+      "light 390px: ENCOR Layer3 with three labs and independent CCNA entry; five-node/12-task zero-credit practice; all three published IOS configurations on dedicated /31 transits; six Full/- peers, POINT_TO_POINT states, Router LSAs and no Type2 Network LSA; correct O / AD110 / metric6 preferred routes and metric11 R2 routes; both real traffic tasks and direct Windows traceroute; genuine Full-to-Down primary outage, metric21 routing and new bidirectional traffic through R2 with alternate traceroute, healthy recovery earns twelve tasks; saved offline reload with actual OSPF running/startup equality rebuilds live control state and retains history; configuration-only reference and cancel/save-copy protection; fitted topology and responsive guide; unchanged terminal golden styles",
+      "dark 390px: ENCOR Layer3 with three labs and independent CCNA entry; five-node/12-task zero-credit practice; all three published IOS configurations on dedicated /31 transits; six Full/- peers, POINT_TO_POINT states, Router LSAs and no Type2 Network LSA; correct O / AD110 / metric6 preferred routes and metric11 R2 routes; both real traffic tasks and direct Windows traceroute; genuine Full-to-Down primary outage, metric21 routing and new bidirectional traffic through R2 with alternate traceroute, healthy recovery earns twelve tasks; saved offline reload with actual OSPF running/startup equality rebuilds live control state and retains history; configuration-only reference and cancel/save-copy protection; fitted topology and responsive guide; unchanged terminal golden styles",
+      "light 1440px: ENCOR Layer3 with three labs and independent CCNA entry; five-node/12-task zero-credit practice; all three published IOS configurations on dedicated /31 transits; six Full/- peers, POINT_TO_POINT states, Router LSAs and no Type2 Network LSA; correct O / AD110 / metric6 preferred routes and metric11 R2 routes; both real traffic tasks and direct Windows traceroute; genuine Full-to-Down primary outage, metric21 routing and new bidirectional traffic through R2 with alternate traceroute, healthy recovery earns twelve tasks; saved offline reload with actual OSPF running/startup equality rebuilds live control state and retains history; configuration-only reference and cancel/save-copy protection; fitted topology and responsive guide; unchanged terminal golden styles",
+      "dark 1440px: ENCOR Layer3 with three labs and independent CCNA entry; five-node/12-task zero-credit practice; all three published IOS configurations on dedicated /31 transits; six Full/- peers, POINT_TO_POINT states, Router LSAs and no Type2 Network LSA; correct O / AD110 / metric6 preferred routes and metric11 R2 routes; both real traffic tasks and direct Windows traceroute; genuine Full-to-Down primary outage, metric21 routing and new bidirectional traffic through R2 with alternate traceroute, healthy recovery earns twelve tasks; saved offline reload with actual OSPF running/startup equality rebuilds live control state and retains history; configuration-only reference and cancel/save-copy protection; fitted topology and responsive guide; unchanged terminal golden styles",
+      "light: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with three labs, other sections remain independent and CCNA point-to-point remains separate",
+      "dark: permalink preserves host/path/query and workspace; returns to ENCOR Layer3 with three labs, other sections remain independent and CCNA point-to-point remains separate",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "browserErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "ebb965ffd2fbfa7a8f7dfea40adde92c58a55fbde72e823c4d9b414fc650cbdc",
+    "identicalArtifactCopies": 16,
+    "visuallyInspected": [
+      "light desktop topology",
+      "dark desktop topology",
+      "light320px guide",
+      "dark320px guide"
+    ]
+  }
+}
