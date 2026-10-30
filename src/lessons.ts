@@ -4,6 +4,7 @@ import { isIPv4, isIPv6, ipToInt, inSubnet, maskToPrefix, sameAddress } from "./
 import {switchingPeer} from './switching-messages.ts';
 import {poeSettings,poePort} from './poe.ts';
 import {endpointVoicePolicy, endpointNetworkPort} from './endpoint.ts';
+import {ospfLiveDetail} from './ospf-packets.ts';
 
 export type Criterion =
   | { kind: "all" | "any"; criteria: Criterion[] }
@@ -26,9 +27,11 @@ export type Criterion =
       nextHop?: string;
       interface?: string;
       ad?: number;
+      metric?: number;
     }
   | { kind: "static-route"; device: string; network: string; prefix: number; nextHop: string; interface: string; ad: number }
-  | { kind: "neighbor"; device: string; protocol: string; state?: string }
+  | { kind: "neighbor"; device: string; protocol: string; state?: string; peer?: string; interface?: string }
+  | { kind: "ospf-interface"; device: string; interface: string; processId?: number; routerId?: string; area?: number; passive?: boolean; networkType?: "broadcast" | "point-to-point"; configuredCost?: number }
   | { kind: "discovery-settings"; device: string; protocol: "CDP" | "LLDP"; enabled: boolean; interval?: number; holdtime?: number }
   | { kind: "discovery-neighbor"; device: string; protocol: "CDP" | "LLDP"; interface: string; peer: string; peerInterface: string }
   | { kind: "echo"; device: string; from: string }
@@ -133,14 +136,25 @@ export function validateLesson(value: unknown): asserts value is Lesson {
           (v.protocol === undefined || text(v.protocol, 40)) &&
           (v.nextHop === undefined || address(v.nextHop)) &&
           (v.interface === undefined || text(v.interface,128) && v.interface!=="") &&
-          (v.ad === undefined || Number.isInteger(v.ad) && v.ad>=0 && v.ad<=255)
+          (v.ad === undefined || Number.isInteger(v.ad) && v.ad>=0 && v.ad<=255) &&
+          (v.metric === undefined || Number.isSafeInteger(v.metric) && v.metric>=0)
         );
       case "static-route":
         return address(v.network) && Number.isInteger(v.prefix) && v.prefix>=0 && v.prefix<=(v.network.includes(':')?128:32) && address(v.nextHop) && v.network.includes(':')===v.nextHop.includes(':') && text(v.interface,128) && v.interface!=="" && Number.isInteger(v.ad) && v.ad>=1 && v.ad<=255;
       case "neighbor":
         return (
-          text(v.protocol, 40) && (v.state === undefined || text(v.state, 40))
+          text(v.protocol, 40) && (v.state === undefined || text(v.state, 40)) &&
+          (v.peer === undefined || text(v.peer,128) && v.peer!=="") &&
+          (v.interface === undefined || text(v.interface,128) && v.interface!=="")
         );
+      case "ospf-interface":
+        return text(v.interface,128) && v.interface!=="" &&
+          (v.processId===undefined || Number.isInteger(v.processId) && v.processId>=1 && v.processId<=65535) &&
+          (v.routerId===undefined || typeof v.routerId==='string' && isIPv4(v.routerId)) &&
+          (v.area===undefined || Number.isInteger(v.area) && v.area>=0 && v.area<=4294967295) &&
+          (v.passive===undefined || typeof v.passive==='boolean') &&
+          (v.networkType===undefined || ['broadcast','point-to-point'].includes(v.networkType)) &&
+          (v.configuredCost===undefined || Number.isInteger(v.configuredCost) && v.configuredCost>=1 && v.configuredCost<=65535);
       case "discovery-settings":
         return ["CDP","LLDP"].includes(v.protocol) && typeof v.enabled==="boolean" && (v.interval===undefined || Number.isInteger(v.interval) && v.interval>=5 && v.interval<=(v.protocol==="CDP"?255:65535)) && (v.holdtime===undefined || Number.isInteger(v.holdtime) && v.holdtime>=1 && v.holdtime<=(v.protocol==="CDP"?255:65535));
       case "discovery-neighbor":
@@ -368,14 +382,28 @@ export function matches(
           r.protocol.toLowerCase() === criterion.protocol.toLowerCase()) &&
         (criterion.nextHop === undefined || !!r.nextHop && sameAddress(r.nextHop,criterion.nextHop)) &&
         (criterion.interface === undefined || r.interface===criterion.interface) &&
-        (criterion.ad === undefined || r.ad===criterion.ad),
+        (criterion.ad === undefined || r.ad===criterion.ad) &&
+        (criterion.metric === undefined || r.metric===criterion.metric),
     );
+  if (criterion.kind === "ospf-interface") {
+    if(!sim.devicePowered(d.id) || !sim.interfaceUp(d.id,criterion.interface))return false;
+    const row=ospfLiveDetail(sim,d.id,'ospf')?.interfaces.find(p=>p.name===criterion.interface && !p.vrf);
+    return !!row &&
+      (criterion.processId===undefined || Number(d.config.protocols.ospf?.processId)===criterion.processId) &&
+      (criterion.routerId===undefined || sameAddress(row.routerId,criterion.routerId)) &&
+      (criterion.area===undefined || Number(row.area)===criterion.area) &&
+      (criterion.passive===undefined || !!row.passive===criterion.passive) &&
+      (criterion.networkType===undefined || (row.networkType??'broadcast')===criterion.networkType) &&
+      (criterion.configuredCost===undefined || d.config.interfaces[criterion.interface]?.features.ospf?.cost===criterion.configuredCost);
+  }
   if (criterion.kind === "neighbor")
     return d.runtime.neighbors.some(
       (n) =>
         n.protocol.toLowerCase() === criterion.protocol.toLowerCase() &&
         (!criterion.state ||
-          n.state.toLowerCase() === criterion.state.toLowerCase()),
+          n.state.toLowerCase() === criterion.state.toLowerCase()) &&
+        (criterion.peer===undefined || n.deviceId===device(sim,criterion.peer)?.id) &&
+        (criterion.interface===undefined || n.interface===criterion.interface),
     );
   if (criterion.kind === "link-loss") {
     const link=sim.linkAt(d.id,criterion.interface);if(!link?.enabled)return false;

@@ -56,6 +56,8 @@ Open **Lab catalog** for guided practice or a completed reference topology. **CC
 
 **Floating Static Route** under Routing focuses on matching-prefix IPv4 and IPv6 backups in both directions. Configure AD 1 primaries and AD 10 floating routes, compare configured and installed entries, fail the direct link, verify real traffic through R2, and restore the preferred path. The eight-task guide includes return-backup troubleshooting, the limits of untracked static routes, and a completed reference.
 
+**Single-Area OSPFv2** under Routing builds Area 0 across three IPv4 routers. Configure unique router IDs, wildcard-based interface selection, passive LANs, point-to-point transits and explicit costs. Verify all intended Full adjacencies, intra-area routes and real traffic, then fail the lower-cost direct link and observe LSA/SPF recovery through R2. The ten-task guide includes troubleshooting and a completed reference.
+
 Finishing every task in a guide celebrates the completed lab with a short confetti burst and a completion message. Each saved lab attempt celebrates once, including when its last task finishes with the guide closed. Reopening or repairing that attempt does not replay the effect; starting a fresh catalog lab creates a new attempt. Reduced-motion preferences keep the completion message and skip the animation.
 
 1. Use **New** for an empty workspace, **Import lab** for a file, or **My labs** to open a browser-saved lab. Add devices from the palette. New clears an unchanged saved lab immediately; unsaved work offers **Save**, **Don't save**, or **Cancel**. Save updates the existing lab, or asks for a name on its first save, before clearing the workspace.
