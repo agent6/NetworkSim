@@ -189,7 +189,7 @@ export function applyQos(engine: Simulator, device: Device, port: string, direct
     const counters = device.runtime.features.qosCounters ??= {};
     const counter = counters[key] ??= { matched: 0, transmitted: 0, dropped: 0, bytes: 0 };
     counter.matched++; counter.bytes += packet.size;
-    let drop = !!policyClass.drop, reason = 'class drop action';
+    let drop = !!policyClass.drop, reason = 'class drop action', policeColor: 'conform' | 'exceed' | 'violate' | undefined;
     if (policyClass.police) {
       const p = policyClass.police, bytesPerSecond = Math.max(1, Number(p.rate)) / 8;
       const committed = Math.max(1, Number(p.burst ?? Math.max(1500, Math.round(bytesPerSecond / 4))));
@@ -205,11 +205,22 @@ export function applyQos(engine: Simulator, device: Device, port: string, direct
       if (meter.tokens >= packet.size) { meter.tokens -= packet.size; color = 'conform'; }
       else if (threeColor && meter.excessTokens >= packet.size) { meter.excessTokens -= packet.size; color = 'exceed'; }
       else color = threeColor ? 'violate' : 'exceed';
+      policeColor = color;
       const tally = (counter.colors ??= {})[color] ??= { packets: 0, bytes: 0 }; tally.packets++; tally.bytes += packet.size;
       const action = p[color] ?? { kind: color === 'conform' ? 'transmit' : 'drop' };
       if (action.kind === 'drop') { drop = true; reason = color + ' policer action'; }
       else if (action.kind === 'set-dscp') { packet.dscp = action.value; counter.remarked = (counter.remarked ?? 0) + 1; }
       else if (action.kind === 'set-precedence') { packet.dscp = (action.value << 3) | ((packet.dscp ?? 0) & 7); counter.remarked = (counter.remarked ?? 0) + 1; }
+    }
+    // Keep bounded packet evidence separate from cumulative show counters. This also
+    // distinguishes an ACL classifier miss from a forwarding ACL denial.
+    if(port==='control-plane'||direction==='in'&&policyClass.police){
+      const decisions = device.runtime.features.qosDecisions ??= [];
+      const fields=['sequence','action','protocol','source','wildcard','destination','destinationWildcard','sourcePort','destinationPort','icmpType','icmpCode','timeRange'];
+      const candidates=ordered.filter(c=>c.name!=='class-default');
+      const classifiers=candidates.slice(0,8).map(c=>{const map=device.config.features.classMaps?.[c.name],entries=map?.acl?device.config.features.acls?.[map.acl]?.entries??[]:[];return {name:c.name,match:map?.match,dscp:map?.dscp?.slice(0,8),acl:map?.acl,entries:entries.slice(0,8).map((e:any)=>Object.fromEntries(fields.filter(k=>e[k]!==undefined).map(k=>[k,e[k]]))),entriesTruncated:entries.length>8};});
+      decisions.push({time:engine.clock.now(),policy:policyName,className:policyClass.name,port,direction,packetId:packet.id,source:packet.source,destination:packet.destination,protocol:packet.protocol,size:packet.size,kind:packet.body?.kind,probeId:packet.body?.probeId,sequence:packet.body?.sequence,transaction:packet.body?.transaction,channelId:packet.body?.channelId,destinationPort:packet.destinationPort,action:drop?'drop':'transmit',color:policeColor,police:policyClass.police?structuredClone(policyClass.police):undefined,classifiers:structuredClone(classifiers),classifiersTruncated:candidates.length>8});
+      if(decisions.length>1000)decisions.shift();
     }
     if (drop) {
       counter.dropped++;

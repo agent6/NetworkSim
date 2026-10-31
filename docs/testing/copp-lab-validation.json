@@ -1,0 +1,87 @@
+{
+  "lab": "Control Plane Policing (CoPP)",
+  "catalogId": "control-plane-policing",
+  "group": "CCNP ENCOR",
+  "section": "Security",
+  "date": "2026-10-30",
+  "nodes": 5,
+  "links": 4,
+  "tasks": 16,
+  "topology": "Two clients reach R1 through distinct physical input ports. R1 Loopback0 is the control-plane test destination; the remote HTTP server is reached through R1 and R2 using prepared single-area OSPF. Addresses, host gateways, SSH and server HTTP are prepared; the learner configures R1 CoPP.",
+  "implemented": [
+    "Sixth ENCOR Security lab and38 ENCOR entries. Other-section counts and original CCNA ACL/AAA labs remain available. Permalinks retain the current site domain, path and query.",
+    "Two named IPv4 ACLs and match-any class maps classify OSPF and ICMP echo. COPP-IN orders the routing class, ICMP class and class-default; its only policer is single-rate two-color ICMP policing at8000 bit/s with1500-byte committed burst, conform/transmit and exceed/drop.",
+    "Only R1 aggregate control-plane input is attached. Router-bound echo is policed while transit server traffic bypasses CoPP. Separate physical ingress ports use the same aggregate meter, including a native simultaneous-client test proving that the clients do not get independent buckets.",
+    "Three small conforming echoes, complete12-request large probe groups with both actual replies and silent exceeded drops, independent PC2 traffic and real color counters prove operational policing. Windows1400-byte payloads produce1428-byte IPv4 datagrams; each source probe group retains its actual packet IDs.",
+    "Actual OSPF packet admission, Full adjacency and learned forward/return routes remain healthy. Authenticated SSH uses the permitted default class; the test runs a remote OSPF route query and logs out. Both client/server echo paths and complete remote HTTP200 delivery prove transit forwarding.",
+    "Five troubleshooting observations exercise classifier ACL deny fallthrough, wrong classifier protocol, physical input placement affecting transit, a one-byte committed burst that cannot admit a normal echo, and an intact but unbound policy. Required repairs need new correctly delivered/policed traffic after the incident.",
+    "ACL deny is a classification exclusion, not an interface packet drop. The intended fallback class transmits all12 real requests; the exact final classifier must still be restored for live configuration/save goals.",
+    "Bounded QoS decision evidence records actual aggregate control-plane and physical input-policer outcomes. It retains packet/probe/transaction IDs, actual actions and colors, policer settings and small classifier snapshots; histories cap at1000 rows, eight classes and eight entries per classifier, flag truncation and omit free-form ACL remarks. Cumulative counters remain separate and classifier/query calls alone cannot fabricate packet credit.",
+    "Question-mark help and Tab now expose the implemented show policy-map control-plane path and inline police rate/burst/color actions. Policy output includes actual ACL classifier matches and class-default Match:any, with no fabricated five-minute rates.",
+    "Practice starts0/16. Completed reference has four live configuration/save goals and no invented traffic or fault achievements. All16 earned observations survive YAML while operational meters, sessions and counters rebuild. Final save requires exact restored classifier/policy/attachment, R1/R2 startup equality, healthy addressing/gateways, OSPF routes, SSH/HTTP and closed management sessions."
+  ],
+  "scope": [
+    "IOS IPv4 aggregate input CoPP lab. Existing packet classification and token-bucket forwarding semantics are preserved; changes add lab content, graded observations, bounded evidence, CLI help/completion and match display.",
+    "Routing and default classes deliberately pass their traffic; this exercise targets ICMP policing and is not a complete production hardening policy.",
+    "CPU utilization, hardware punt queues, distributed/output CoPP, NX-OS system CoPP profiles and hardware-specific rate rounding are not modeled or configured by this lab.",
+    "Primary Cisco IOS and IOS XE CoPP documentation reviewed. No new live CML capture was performed; existing IOS/NX-OS CML regression contracts pass in the full suite.",
+    "No theme/layout, terminal styling, node artwork, dependency or backend/server changes."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS15M&T: Control Plane Policing, classification exclusions and aggregate verification",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/qos_plcshp/configuration/15-mt/qos-plcshp-15-mt-book/qos-plcshp-ctrl-pln-plc.html"
+    },
+    {
+      "title": "Cisco IOS XE17.x: Control Plane Policing",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/qos/b-quality-of-service/m_qos-plcshp-ctrl-pln-plc-0.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "nativeTests": 2862,
+    "nativePassed": 2862,
+    "nativeFailed": 0,
+    "nativeDurationMs": 317917.8475,
+    "newLabTests": 24,
+    "focusedFinalTests": 78,
+    "browserChecks": [
+      "light 320px: Security=6; five nodes/four links/16 tasks and five-row plan; baseline router/server paths from two PCs, exact classifier and three-class policy, aggregate input placement, real conform/exceed outcomes from both clients, preserved OSPF/SSH/HTTP/transit; 11 configuration/traffic tasks with five incident outcomes left unearned; offline YAML export/import, four live tasks only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: Security=6; five nodes/four links/16 tasks and five-row plan; baseline router/server paths from two PCs, exact classifier and three-class policy, aggregate input placement, real conform/exceed outcomes from both clients, preserved OSPF/SSH/HTTP/transit; all16 with classifier-deny fallthrough, wrong-protocol repair, physical placement incident, one-byte burst repair and unbound bypass; offline YAML export/import, four live tasks only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: Security=6; five nodes/four links/16 tasks and five-row plan; baseline router/server paths from two PCs, exact classifier and three-class policy, aggregate input placement, real conform/exceed outcomes from both clients, preserved OSPF/SSH/HTTP/transit; all16 with classifier-deny fallthrough, wrong-protocol repair, physical placement incident, one-byte burst repair and unbound bypass; offline YAML export/import, four live tasks only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: Security=6; five nodes/four links/16 tasks and five-row plan; baseline router/server paths from two PCs, exact classifier and three-class policy, aggregate input placement, real conform/exceed outcomes from both clients, preserved OSPF/SSH/HTTP/transit; 11 configuration/traffic tasks with five incident outcomes left unearned; offline YAML export/import, four live tasks only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: Security=6; five nodes/four links/16 tasks and five-row plan; baseline router/server paths from two PCs, exact classifier and three-class policy, aggregate input placement, real conform/exceed outcomes from both clients, preserved OSPF/SSH/HTTP/transit; 11 configuration/traffic tasks with five incident outcomes left unearned; offline YAML export/import, four live tasks only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: Security=6; five nodes/four links/16 tasks and five-row plan; baseline router/server paths from two PCs, exact classifier and three-class policy, aggregate input placement, real conform/exceed outcomes from both clients, preserved OSPF/SSH/HTTP/transit; 11 configuration/traffic tasks with five incident outcomes left unearned; offline YAML export/import, four live tasks only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "696b7da52fa3930360789280013d2f6d71dd5efec9c5b8f6765ad7d67d7d5c5d",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Root, dist and all browser-tested copies have identical bytes.",
+    "terminal": "Golden fixtures match existing fonts, colors, cursor and terminal controls in both themes and desktop/mobile modes.",
+    "visualInspection": [
+      ".cache/copp-catalog-browser/topology-light-1440.png",
+      ".cache/copp-catalog-browser/guide-light-1440.png",
+      ".cache/copp-catalog-browser/console-light-1440.png",
+      ".cache/copp-catalog-browser/guide-dark-320.png",
+      ".cache/copp-catalog-browser/console-dark-320.png",
+      ".cache/copp-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "All16 tasks complete through normal UI controls at1440px/light and320px/dark. Four other theme/viewport cases earn11 baseline/configuration/traffic tasks and leave five incident outcomes unearned.",
+    "Six file:// cases block HTTP(S), export/import into fresh profiles and preserve earned progress. Two sharing cases preserve current domain/path/query/workspace. Seven generic catalog checks confirm accessible Security6 counts and retain the other categories.",
+    "Browser clocks advance normal application frames. No simulator state, packet outcomes, counters or earned achievements are injected. SSH uses ordinary hidden password entry and terminal length0 for unpaginated verification.",
+    "Router console access remains available during each fault; temporary unbound evidence is checked before reattaching the required aggregate input policy."
+  ]
+}

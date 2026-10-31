@@ -174,6 +174,23 @@ function optionGraph(options: Form[], complete = true): SyntaxGraph {
 
 function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): SyntaxGraph | undefined {
   const done = graph(true), area = argument('AREA', 'Area ID, integer or dotted decimal', value => ipv4(value) || /^\d+$/.test(value));
+  if(path==='show policy-map'){
+    const classes=union(done,chain([word('class','Class name'),text('Class-map name')],done));
+    const directions=union(classes,...['input','output'].map(d=>chain([word(d,d+' policy')],classes)));
+    const interfaces=union(directions,chain([iface(context)],directions));
+    const name=argument('WORD','Policy-map name',value=>!['interface','control-plane'].some(k=>k.startsWith(value.toLowerCase())));
+    return union(done,chain([name],done),chain([word('interface','Show Policy Interface')],interfaces),chain([word('control-plane','Control plane service policy')],directions));
+  }
+  if(path==='police'&&['policy-class','policy-police'].includes(context.mode??'')){
+    if(no)return done;
+    const names=['default','ef',...Array.from({length:7},(_,i)=>'cs'+(i+1)),...Array.from({length:4},(_,c)=>Array.from({length:3},(_,d)=>`af${c+1}${d+1}`)).flat()];
+    const actions:Form[]=[[word('transmit')],[word('drop')],[word('set-prec-transmit'),number(0,7,'IP precedence')],[word('set-dscp-transmit'),number(0,63,'Differentiated Services Code Point')],...names.map(n=>[word('set-dscp-transmit'),word(n)])];
+    const tail=optionGraph(['conform-action','exceed-action','violate-action'].flatMap(c=>actions.map(a=>[word(c,c),...a]))),bytes=number(1,100000000,'Burst bytes');
+    const excess=union(tail,chain([word('be'),bytes],tail),chain([bytes],tail));
+    const burst=union(tail,chain([word('bc'),bytes],excess),chain([bytes],excess),chain([word('be'),bytes],tail));
+    const rate=chain([number(1,10000000000,'Bits per second')],burst);
+    return union(rate,chain([word('cir','Committed information rate')],rate));
+  }
   const slaId=()=>number(1,2147483647,'IP SLAs operation number');
   if(path==='ip sla schedule'){
     if(no)return chain([slaId()],done);

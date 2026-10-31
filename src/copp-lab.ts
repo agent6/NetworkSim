@@ -1,0 +1,61 @@
+import type {Simulator} from './engine.ts';
+import type {Device} from './model.ts';
+import {ospfLiveDetail} from './ospf-packets.ts';
+import {localSSHLoginSnapshot,managementSessionSnapshot} from './management.ts';
+import {deviceAccessSnapshot} from './device-access.ts';
+
+export const coppId=(name:string)=>'device-copp-'+name.toLowerCase();
+type Live='classifier'|'policy'|'binding'|'saved';
+type Observation='baseline'|'normal'|'burst'|'peer-burst'|'transit'|'routing'|'ssh'|'acl-deny'|'classifier-repair'|'placement'|'rate-repair'|'unbound';
+export type CoPPCriterion={kind:'copp-live';device:string;check:Live}|{kind:'copp-observe';device:string;check:Observation};
+export function validCoPPCriterion(c:any):boolean{
+ return !!c&&typeof c.device==='string'&&c.device.length>0&&c.device.length<=128&&(c.kind==='copp-live'?['classifier','policy','binding','saved'].includes(c.check):c.kind==='copp-observe'&&['baseline','normal','burst','peer-burst','transit','routing','ssh','acl-deny','classifier-repair','placement','rate-repair','unbound'].includes(c.check));
+}
+const id=coppId,g=(n:number)=>'GigabitEthernet0/'+n,get=(s:Simulator,n:string)=>s.getDevice(id(n)),address=(n:string)=>n==='PC1'?'192.168.10.10':n==='PC2'?'192.168.20.10':n==='SRV1'?'192.168.30.10':'10.255.0.1';
+const rows=(d:Device):any[]=>d.runtime.features.qosDecisions??[],equal=(a:unknown,b:unknown)=>JSON.stringify(a)===JSON.stringify(b);
+function ace(e:any,protocol='icmp'){
+ return e?.sequence===10&&e.action==='permit'&&e.protocol===protocol&&e.source==='0.0.0.0'&&e.wildcard==='255.255.255.255'&&e.destination==='0.0.0.0'&&e.destinationWildcard==='255.255.255.255'&&e.icmpType===(protocol==='icmp'?'echo':undefined)&&['sourcePort','destinationPort','icmpCode','timeRange','log'].every(k=>e[k]===undefined);
+}
+function classifier(d:Device){return ['ICMP','ROUTING'].every(n=>{const name='COPP-'+n,a=d.config.features.acls?.[name],m=d.config.features.classMaps?.[name];return a?.type==='extended'&&a.entries?.length===1&&ace(a.entries[0],n==='ICMP'?'icmp':'ospf')&&m?.match==='any'&&m.acl===name&&!m.dscp?.length;});}
+const policeman=(p:any)=>p?.rate===8000&&p.burst===1500&&p.conform?.kind==='transmit'&&p.exceed?.kind==='drop'&&p.excessBurst===undefined&&!p.threeColor&&p.violate===undefined;
+function policy(d:Device){const c=d.config.features.policyMaps?.['COPP-IN']?.classes;return Array.isArray(c)&&c.length===3&&c.every((x:any,i:number)=>x.name===['COPP-ROUTING','COPP-ICMP','class-default'][i]&&['drop','dscp','bandwidth','bandwidthPercent','priority','shape','fairQueue','queueLimit','randomDetect'].every(k=>x[k]===undefined)&&(i===1?policeman(x.police):x.police===undefined));}
+function noInterfacePolicies(s:Simulator){return s.lab.devices.every(d=>Object.values(d.config.interfaces).every(p=>!p.features.servicePolicyIn&&!p.features.servicePolicyOut&&!p.features.aclIn&&!p.features.aclOut&&!p.features.ipv6AclIn&&!p.features.ipv6AclOut));}
+function binding(s:Simulator,d:Device){return d.config.features.controlPlanePolicyIn==='COPP-IN'&&noInterfacePolicies(s)&&s.lab.devices.filter(x=>x!==d).every(x=>!x.config.features.controlPlanePolicyIn);}
+function routing(s:Simulator){const a=get(s,'R1')!,b=get(s,'R2')!;return [a,b].every(d=>d.config.ipRouting&&!d.config.staticRoutes.length)&&[[a,b,g(2),'192.168.30.0','10.0.12.2'],[b,a,g(1),'192.168.10.0','10.0.12.1'],[b,a,g(1),'192.168.20.0','10.0.12.1']].every(([local,peer,port,network,next])=>{const d=local as Device,p=peer as Device;return ospfLiveDetail(s,d.id,'ospf')?.neighbors.some(n=>n.deviceId===p.id&&n.interface===port&&n.state==='FULL')&&d.runtime.routes.some(r=>r.network===network&&r.prefix===24&&r.protocol==='O'&&r.nextHop===next&&r.interface===port);});}
+function healthy(s:Simulator,d:Device){
+ const f=d.config.features,h=get(s,'SRV1')!.config.services.http;
+ return routing(s)&&d.config.interfaces.Loopback0.ip==='10.255.0.1'&&d.config.interfaces.Loopback0.mask==='255.255.255.255'&&s.interfaceUp(d.id,'Loopback0')&&[[d,0,'192.168.10.1','255.255.255.0'],[d,1,'192.168.20.1','255.255.255.0'],[d,2,'10.0.12.1','255.255.255.252'],[get(s,'R2')!,1,'10.0.12.2','255.255.255.252'],[get(s,'R2')!,0,'192.168.30.1','255.255.255.0']].every(([device,n,ip,mask])=>{const x=device as Device,p=x.config.interfaces[g(n as number)];return p?.ip===ip&&p.mask===mask&&!p.switchport&&s.interfaceUp(x.id,p.name);})&&['PC1','PC2','SRV1'].every(n=>{const x=get(s,n)!,p=x.config.interfaces.GigabitEthernet0;return p.ip===address(n)&&p.mask==='255.255.255.0'&&x.config.defaultGateway===address(n).replace(/\.\d+$/,'.1')&&!p.features.dhcp&&s.interfaceUp(x.id,p.name);})&&f.users?.admin?.secret==='Copp-Lab-Admin'&&f.users.admin.privilege===15&&f.ssh?.version===2&&f.ssh.keys?.modulus>=2048&&!f.aaa?.enabled&&['vty 0 4','vty 5 15'].every(n=>f.lines?.[n]?.login==='local'&&f.lines[n].transport==='ssh'&&f.lines[n].exec!==false)&&h?.enabled&&(h.port??80)===80&&(h.authentication??'none')==='none'&&h.content?.includes('ENCOR CoPP: transit HTTP service')&&s.lab.links.length===4&&s.lab.links.every(l=>l.enabled&&l.loss===0)&&managementSessionSnapshot(s,d.id).length===0;
+}
+const received=(s:Simulator,source:string,target:string,after=-Infinity)=>s.events.filter(e=>e.nodeId===id(source)&&e.time>after&&e.label==='Echo reply received'&&e.packet?.source===address(target)&&e.packet.destination===address(source));
+function echoes(s:Simulator,source:string,target:string,after=-Infinity,unpoliced=false){return new Set(received(s,source,target,after).filter(e=>!unpoliced||!rows(get(s,'R1')!).some(r=>r.packetId===e.packet!.parentId)).map(e=>e.packet!.parentId)).size>=3;}
+function dropped(s:Simulator,r:any){return s.events.some(e=>e.nodeId===id('R1')&&e.port===r.port&&e.label==='QoS policer drop'&&e.disposition==='drop'&&e.packet?.id===r.packetId);}
+function classifierEntries(r:any){return r.classifiers?.find((c:any)=>c.name==='COPP-ICMP')?.entries??[];}
+/** Every train is a complete, real12-request probe group. No counter-only credit. */
+function trains(s:Simulator,source='PC1',target='R1',after=-Infinity){
+ const sent=s.events.filter(e=>e.nodeId===id(source)&&e.time>after&&e.label==='Frame sent'&&e.packet?.messageType==='echo-request'&&e.packet.destination===address(target)&&(e.packet.size??0)>=1400),groups=new Map<string,typeof sent>();
+ for(const e of sent){const key=e.packet!.probeId;if(!key)continue;const a=groups.get(key)??[];if(!a.some(x=>x.packet!.id===e.packet!.id))a.push(e);groups.set(key,a);}
+ return [...groups.values()].filter(a=>a.length===12).map(a=>{const packets=new Set(a.map(e=>e.packet!.id));return {at:a.at(-1)!.time,packets,rows:rows(get(s,'R1')!).filter(r=>packets.has(r.packetId)),replies:new Set(received(s,source,target,after).filter(e=>packets.has(e.packet!.parentId!)).map(e=>e.packet!.parentId)).size};});
+}
+function limited(s:Simulator,source='PC1',after=-Infinity){return trains(s,source,'R1',after).some(t=>t.replies>0&&t.replies<12&&t.rows.length===12&&t.rows.every(r=>r.policy==='COPP-IN'&&r.className==='COPP-ICMP'&&r.port==='control-plane'&&r.direction==='in'&&policeman(r.police))&&t.rows.some(r=>r.action==='transmit'&&r.color==='conform')&&t.rows.some(r=>r.action==='drop'&&r.color==='exceed'&&dropped(s,r)));}
+function normal(s:Simulator,after=-Infinity){const permits=new Set(rows(get(s,'R1')!).filter(r=>r.time>after&&r.policy==='COPP-IN'&&r.port==='control-plane'&&r.direction==='in'&&r.className==='COPP-ICMP'&&r.source===address('PC1')&&r.destination===address('R1')&&r.kind==='echo-request'&&r.size<200&&r.action==='transmit'&&r.color==='conform'&&policeman(r.police)).map(r=>r.packetId));return new Set(received(s,'PC1','R1',after).filter(e=>permits.has(e.packet!.parentId)).map(e=>e.packet!.parentId)).size>=3;}
+function web(s:Simulator,after=-Infinity){const a=get(s,'PC1')!,b=get(s,'SRV1')!;for(const [t,c]of Object.entries<any>(a.runtime.features.tcpConnections??{})){if(c.remoteAddress!==address('SRV1')||c.remotePort!==80||c.payload?.application!=='http'||c.payload.path!=='/'||!Number.isInteger(c.expected)||c.expected<1||c.expected>2048||c.received!==c.expected)continue;const r=b.runtime.features.tcpConnections?.[t];if(r?.source!==address('PC1')||r.response?.statusCode!==200)continue;try{const body=JSON.parse(Array.from({length:c.expected},(_,i)=>c.segments[i]).join(''));if(body.statusCode!==200||body.content!==r.response.content||!body.content.includes('ENCOR CoPP: transit HTTP service'))continue;}catch{continue;}if(rows(get(s,'R1')!).some(r=>r.transaction===t))continue;if(['R1','R2'].every(n=>s.events.some(e=>e.nodeId===id(n)&&e.time>after&&e.label==='Frame received'&&e.packet?.serviceTransaction===t&&e.packet.source===address('PC1'))))return true;}return false;}
+export function matchesCoPPCriterion(s:Simulator,d:Device,c:CoPPCriterion):boolean{
+ if(d.id!==id('R1')||d.kind!=='router'||get(s,'R2')?.kind!=='router'||!d.config.interfaces.Loopback0||[0,1,2].some(n=>!d.config.interfaces[g(n)])||[0,1].some(n=>!get(s,'R2')?.config.interfaces[g(n)])||['PC1','PC2','SRV1'].some(n=>!get(s,n)?.config.interfaces.GigabitEthernet0))return false;
+ if(c.kind==='copp-live')switch(c.check){case'classifier':return classifier(d);case'policy':return policy(d);case'binding':return binding(s,d)&&s.interfaceUp(d.id,g(0))&&s.interfaceUp(d.id,g(1));case'saved':return classifier(d)&&policy(d)&&binding(s,d)&&healthy(s,d)&&equal(d.config,d.startupConfig)&&equal(get(s,'R2')!.config,get(s,'R2')!.startupConfig);}
+ const actual=rows(d),restored=()=>classifier(d)&&policy(d)&&binding(s,d);
+ switch(c.check){
+ case'baseline':return ['PC1','PC2'].every(pc=>['R1','SRV1'].every(target=>echoes(s,pc,target,-Infinity,true)));
+ case'normal':return normal(s);
+ case'burst':return limited(s);
+ case'peer-burst':return limited(s,'PC2');
+ case'transit':{const start=actual.find(r=>r.policy==='COPP-IN'&&r.port==='control-plane')?.time;if(start===undefined)return false;return binding(s,d)&&['PC1','PC2'].every(pc=>echoes(s,pc,'SRV1',start,true))&&web(s,start);}
+ case'routing':return limited(s)&&routing(s)&&actual.some(r=>r.policy==='COPP-IN'&&r.port==='control-plane'&&r.direction==='in'&&r.className==='COPP-ROUTING'&&r.protocol==='ospf'&&r.source==='10.0.12.2'&&r.action==='transmit'&&s.events.some(e=>e.nodeId===d.id&&e.label==='Frame received'&&e.packet?.id===r.packetId&&e.protocol==='OSPF'));
+ case'ssh':return localSSHLoginSnapshot(s,d.id).some(l=>l.username==='admin'&&l.source===address('PC1')&&l.privilege===15&&deviceAccessSnapshot(s,d.id).some(a=>a.kind==='logout'&&a.success&&a.source===l.source&&a.username===l.username&&a.time>=l.time&&actual.some(r=>r.policy==='COPP-IN'&&r.port==='control-plane'&&r.className==='class-default'&&r.protocol==='tcp'&&r.source===l.source&&r.destinationPort===22&&r.action==='transmit'&&r.time>=l.time&&r.time<=a.time)));
+ case'acl-deny':return trains(s).some(t=>t.replies===12&&t.rows.length===12&&t.rows.every(r=>r.port==='control-plane'&&r.policy==='COPP-IN'&&r.className==='class-default'&&r.action==='transmit'&&classifierEntries(r).some((e:any)=>e.sequence===5&&e.action==='deny'&&e.protocol==='icmp'&&e.source===address('PC1')&&e.wildcard==='0.0.0.0')));
+ case'classifier-repair':return restored()&&trains(s).some(t=>t.replies===12&&t.rows.length===12&&t.rows.every(r=>r.port==='control-plane'&&r.className==='class-default'&&r.action==='transmit'&&classifierEntries(r).length===1&&classifierEntries(r)[0].protocol==='udp')&&limited(s,'PC1',t.at));
+ case'placement':return restored()&&trains(s,'PC1','SRV1').some(t=>t.replies>0&&t.replies<12&&t.rows.some(r=>r.port===g(0)&&r.className==='COPP-ICMP'&&r.policy==='COPP-IN'&&r.color==='exceed'&&r.action==='drop'&&dropped(s,r))&&trains(s,'PC1','SRV1',t.at).some(a=>a.replies===12&&a.rows.length===0&&[...a.packets].every(packetId=>s.events.some(e=>e.nodeId===id('SRV1')&&e.label==='Echo request accepted'&&e.packet?.id===packetId)))&&limited(s,'PC1',t.at));
+ case'rate-repair':return restored()&&actual.some(r=>r.port==='control-plane'&&r.className==='COPP-ICMP'&&r.source===address('PC1')&&r.destination===address('R1')&&r.size<200&&r.police?.burst===1&&r.action==='drop'&&dropped(s,r)&&normal(s,r.time)&&limited(s,'PC1',r.time));
+ case'unbound':return classifier(d)&&policy(d)&&!d.config.features.controlPlanePolicyIn&&noInterfacePolicies(s)&&trains(s).some(t=>t.replies===12&&t.rows.length===0);
+ }
+ return false;
+}
