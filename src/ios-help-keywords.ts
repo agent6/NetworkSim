@@ -905,6 +905,7 @@ export const IOS_KEYWORD_HELP: Record<string, string> = {
   'router:bgp:neighbor|activate': 'Enable the Address Family for this Neighbor', 'router:bgp:neighbor|description': 'Neighbor specific description',
   'router:bgp:neighbor|ebgp-multihop': 'Allow EBGP neighbors not on directly connected networks', 'router:bgp:neighbor|fall-over': 'session fall on peer route lost',
   'router:bgp:neighbor|maximum-prefix': 'Maximum number of prefixes accepted from this peer',
+  'router:bgp:neighbor|password': 'Set a password for the peer',
   'router:bgp:neighbor|next-hop-self': 'Disable the next hop calculation for this neighbor', 'router:bgp:neighbor|prefix-list': 'Filter updates to/from this neighbor',
   'router:bgp:neighbor|remote-as': 'Specify a BGP neighbor', 'router:bgp:neighbor|route-map': 'Apply route map to neighbor',
   'router:bgp:neighbor|route-reflector-client': 'Configure a neighbor as Route Reflector client',

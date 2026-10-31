@@ -463,6 +463,8 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
       [peer, word('remote-as'), number(1, 4294967295, 'AS of remote neighbor')],
       ...combine([[peer]], choices(['shutdown', 'next-hop-self', 'activate', 'route-reflector-client'])),
       [peer, word('description'), tail('Up to 80 characters describing this neighbor')],
+      [peer, word('password'), text('The peer authentication password')],
+      ...combine([[peer, word('password')]], combine(choices(['0','7']), [[text('The peer authentication password')]])),
       [peer, word('update-source'), iface(context)],
       [peer, word('ebgp-multihop'), number(1, 255, 'maximum hop count')],
       ...[...combine([[peer, word('route-map'), text('Name of route map')]], [[word('in', 'Apply map to incoming routes')], [word('out', 'Apply map to outbound routes')]]), ...combine([[peer, word('prefix-list'), text('Name of a prefix list')]], [[word('in', 'Filter incoming updates')], [word('out', 'Filter outgoing updates')]])],
