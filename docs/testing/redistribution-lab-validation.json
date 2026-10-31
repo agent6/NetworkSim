@@ -1,0 +1,81 @@
+{
+  "lab": "Route Redistribution Troubleshooting",
+  "catalogId": "route-redistribution-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 5,
+  "links": 4,
+  "tasks": 14,
+  "topology": "PC1 \u2192 R1 (OSPF10) \u2192 R2 (OSPF10/EIGRP100 boundary) \u2192 R3 (EIGRP100) \u2192 SRV1. R3 also advertises a diagnostic Loopback0 /32 into EIGRP. Addresses, passive LAN membership, exact source prefix lists and tagging maps are prepared. Initial faults select static instead of EIGRP for the OSPF export and omit the EIGRP seed metric for the OSPF return export.",
+  "implemented": [
+    "Fifth ENARSI Layer3 lab with independent practice/completed variants, five-row addressing/role plan, staged troubleshooting guide, working reference, accessible section counts and current-site domain/path/query permalinks. Existing ENARSI labs,39 ENCOR entries and other categories remain available.",
+    "Initial diagnosis correlates three real client No route drops at R1 with healthy OSPF/EIGRP adjacencies and installed source routes on R2. Repairing only EIGRP-to-OSPF export produces a received service Type5 LSA and O E2 route tagged100, but no EIGRP return route. Three requests reach SRV1 and their parent-linked echo replies are dropped at R3, proving one-way forwarding rather than treating a timeout as sufficient evidence.",
+    "The exact EIGRP default metric100000/100/255/1/1500 restores received D EX client reachability on R3: AD170, metric53760, tag200, next hop10.0.23.1. Forward O E2 remains AD110, metric20, tag100 via10.0.12.2. Actual destination acceptance, router sends and parent-linked replies prove three successful pings in each direction.",
+    "Export scope compares successful R2-originated diagnostic pings against three real R1 No route drops for PC1, with no diagnostic external LSA on R1. Exact prefix-list/route-map permits exclude unrelated source routes through implicit deny while tagging only the intended service and client exports.",
+    "Controlled seed removal and client-prefix denial independently withdraw the EIGRP return route while preserving the OSPF service route. Each incident requires three actual request-delivery/reply-drop failures and fresh three-reply proofs in both directions after repair.",
+    "A service interface shutdown on R3 withdraws its connected source, R2 learned EIGRP route and remote R1 external advertisement. Three actual No route drops precede restoration and new service replies. Server power loss or interface toggles without observed failure cannot impersonate the prescribed incident.",
+    "A working E1 stage receives external seed20 and installs metric21 after internal OSPF cost1; actual service replies are required before restoration to E2 metric20 and new replies. HTTP completion requires the complete real200 response with the expected page, matching server transaction and routed request.",
+    "Fourteen tasks combine five live policy/state/save goals with nine observations. Practice starts0/14; the completed reference supplies5/14 without fabricated traffic. Per-attempt epochs and normal simulator notifications capture synchronous CLI evidence with a closed guide. Earned observations survive portable export/import; live state and startup equality revoke on drift.",
+    "Native negative-delivery tests block R2 OSPF advertisements or reliable EIGRP UPDATE datagrams and prove remote external routes cannot appear before delivery. Broad policies, wrong tags, static shortcuts, altered memberships, broken gateways and unsaved changes fail the appropriate live goals.",
+    "No simulation engine, network protocol implementation, global UI, terminal styling or node artwork changed. The exercise uses existing packet-driven OSPF/EIGRP, route maps, seed metrics, route withdrawal, ping, traceroute and HTTP."
+  ],
+  "scope": "IOS IPv4 troubleshooting at a single OSPF/EIGRP redistribution boundary. This new lab has native and browser validation, not a fresh CML capture. It does not claim multiple-ASBR feedback prevention, arbitrary process-ID fault fidelity, IPv6 redistribution or NX-OS.",
+  "references": [
+    {
+      "title": "Cisco: Configure Routing Protocol Redistribution",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/8606-redist.html",
+      "use": "Source/target protocols, seed metrics and external-route behavior."
+    },
+    {
+      "title": "Cisco: Configure Route Maps Applied with Redistribution Command",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/border-gateway-protocol-bgp/49111-route-map-bestp.html",
+      "use": "Prefix selection, implicit denial and supported route attributes in redistribution policies."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 22,
+    "nativeTests": 2996,
+    "nativeFailures": 0,
+    "nativeDurationMs": 292191.43725,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=5; five nodes/four links/14 tasks and five-row plan; real wrong-source loss, one-way request/reply failure, received tagged O E2/D EX routes, bidirectional host pings, diagnostic scope and HTTP; ten setup/state/traffic tasks with four staged outcomes left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=5; five nodes/four links/14 tasks and five-row plan; real wrong-source loss, one-way request/reply failure, received tagged O E2/D EX routes, bidirectional host pings, diagnostic scope and HTTP; all14 including seed loss/repair, client-filter loss/repair, dynamic-source withdrawal/recovery and E1/E2 metric comparison; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=5; five nodes/four links/14 tasks and five-row plan; real wrong-source loss, one-way request/reply failure, received tagged O E2/D EX routes, bidirectional host pings, diagnostic scope and HTTP; all14 including seed loss/repair, client-filter loss/repair, dynamic-source withdrawal/recovery and E1/E2 metric comparison; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=5; five nodes/four links/14 tasks and five-row plan; real wrong-source loss, one-way request/reply failure, received tagged O E2/D EX routes, bidirectional host pings, diagnostic scope and HTTP; ten setup/state/traffic tasks with four staged outcomes left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=5; five nodes/four links/14 tasks and five-row plan; real wrong-source loss, one-way request/reply failure, received tagged O E2/D EX routes, bidirectional host pings, diagnostic scope and HTTP; ten setup/state/traffic tasks with four staged outcomes left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=5; five nodes/four links/14 tasks and five-row plan; real wrong-source loss, one-way request/reply failure, received tagged O E2/D EX routes, bidirectional host pings, diagnostic scope and HTTP; ten setup/state/traffic tasks with four staged outcomes left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "d5dc52bc08a1ea4649d7a9030960c2b1a8d9571016db9ad076e76396f8d616ee",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Root, dist and every browser-tested copy have identical bytes.",
+    "terminal": "Golden console fixtures match existing fonts, background, foreground, cursor, tabs and controls in both themes and desktop/mobile modes.",
+    "verificationCommands": "Every published IOS/Windows command and reference configuration executes. Assertions cover received tag100 LSA, D EX metric53760, bidirectional host success, diagnostic exclusion, completed service traceroute and working reference reapplication.",
+    "visualInspection": [
+      ".cache/rd-catalog-browser/topology-light-1440.png",
+      ".cache/rd-catalog-browser/guide-light-1440.png",
+      ".cache/rd-catalog-browser/console-light-1440.png",
+      ".cache/rd-catalog-browser/guide-dark-320.png",
+      ".cache/rd-catalog-browser/console-dark-320.png",
+      ".cache/rd-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full14-task normal UI workflows complete at1440px/light and320px/dark. Four other theme/viewport cases complete ten setup/state/traffic tasks and leave four staged outcomes unearned. Every case exports/imports actual YAML into a fresh offline profile, then loads a reference with five live tasks only.",
+    "Six file:// cases block HTTP(S), use embedded assets and preserve earned progress. Two shared-link cases retain current domain/path/query and do not replace the active workspace merely by opening the guide. Seven generic catalog checks retain categories, prerequisites, save/cancel protection and existing lab workflows.",
+    "Browser clock advancement drives normal application frames; no simulator route, packet result, protocol database or completion outcome is injected. Clipboard stubbing is limited to share-link verification."
+  ]
+}
