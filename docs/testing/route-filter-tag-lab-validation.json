@@ -1,0 +1,89 @@
+{
+  "lab": "Route Filtering and Tagging",
+  "catalogId": "route-filtering-and-tagging",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 6,
+  "links": 5,
+  "tasks": 14,
+  "topology": "PC1 reaches the two R3 server LANs through R1 and the R2 ASBR. R1/R2 run point-to-point OSPF area0. R2 has three fully specified static source routes through R3; R3 has an explicit static return route and a diagnostic loopback. Addressing, OSPF, unfiltered initial redistribution, return routing and allowed HTTP are prepared.",
+  "implemented": [
+    "Third ENARSI Layer 3 Technologies lab with accessible counts, six-row addressing/role plan, portable practice/completed variants and current-site permalinks. Both earlier ENARSI labs,39 ENCOR entries, CCNA and Other remain available.",
+    "The initial baseline proves actual client replies from both servers and the diagnostic loopback, with three received/installed O E2 routes at metric20 and default tag0. The learner then filters redistribution by exact service/restricted prefix lists and sets tags100/200 while retaining all three original static source routes on R2.",
+    "R1 receives two actual tagged external advertisements; the unmatched diagnostic prefix is excluded at the ASBR by the export map implicit deny. Fresh replies from both servers and actual diagnostic No route drops distinguish configured policy from operational export filtering.",
+    "R1 FT-IN deny10 matches tag200 and permit100 preserves other eligible routes. The installed restricted route disappears while its received external LSA remains tagged200 and the OSPF adjacency stays Full. New service replies, restricted No route drops and real R2-originated replies prove that the install filter is local to R1.",
+    "Four incident repairs cover a source prefix-list denial that withdraws the service LSA, a source retag to201 that misses the local deny200 and leaks traffic, a local match999 that leaks the correctly advertised tag200, and a missing final permit that rejects the service route through implicit deny despite its retained tag100 LSA.",
+    "Each repair requires a genuine prior fault and fresh operational traffic. Retag/filter repairs also require new restricted-destination loss after restoration. A native packet-delivery test blocks R2 OSPF datagrams and proves that the updated tag cannot appear remotely until the advertisement is actually delivered.",
+    "Fourteen graded tasks combine five live policy/state/save requirements and nine observations. Per-attempt epochs and normal simulator notifications retain synchronous CLI results with a closed guide. Successful outcomes correlate real destination acceptance, router sends and delivered replies; negative outcomes require actual R1 No route drops in the corresponding phase.",
+    "The complete prepared HTTP response must traverse the permitted route. Final health validates exact source/export/import policies, tag100/200 and metric20/type2, received versus installed state, original addresses/gateways, installed static sources and return route, working links and HTTP. Final save checks all three routers against startup.",
+    "Practice starts0/14; the completed reference provides five live goals without invented traffic, scope or repair evidence. Earned observations survive offline YAML while OSPF databases, routes and transient observer state rebuild. New attempts on the same simulator discard prior incident evidence."
+  ],
+  "scope": [
+    "IPv4 IOS static redistribution into OSPF with source prefix filtering and local inbound route-map tag filtering. Multi-ASBR feedback prevention, mutual protocol redistribution, area filtering, PBR and IPv6 are not configured or certified by this lab.",
+    "Tags are simulated routing metadata carried with received external advertisements, not VLAN tags or packet-header markings. The local OSPF install filter preserves the received LSA and does not provide a universal interface security policy.",
+    "Existing redistribution, OSPF packet delivery, RIB and forwarding engines are unchanged. This update adds catalog content, grading and validation without changing themes, terminal styling, layout, artwork, dependencies or server requirements.",
+    "Primary Cisco IOS/IOS XE filtering and redistribution documentation reviewed. No new live CML capture was performed; existing IOS/NX-OS contracts pass in the full regression suite."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE: OSPF Inbound Filtering Using Route Maps with a Distribute List",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-routing/b-ip-routing/m_iro-inbound-0.html"
+    },
+    {
+      "title": "Cisco: Configure Routing Protocol Redistribution",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/8606-redist.html"
+    },
+    {
+      "title": "Cisco IOS XE: IP Routing Protocol-Independent Features",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-routing/b-ip-routing/m_iri-ip-prot-indep-0.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "nativeTests": 2954,
+    "nativePassed": 2954,
+    "nativeFailed": 0,
+    "nativeDurationMs": 242409.120958,
+    "newLabTests": 20,
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=3; six nodes/five links/14 tasks and six-row plan; real unfiltered baseline, source prefix filtering with received tags100/200, retained LSDB versus local RIB exclusion, restricted-server reachability from R2 and permitted HTTP; ten setup/state/traffic tasks with four staged fault-repair outcomes left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=3; six nodes/five links/14 tasks and six-row plan; real unfiltered baseline, source prefix filtering with received tags100/200, retained LSDB versus local RIB exclusion, restricted-server reachability from R2 and permitted HTTP; all14 with source-prefix withdrawal/repair, changed-tag leak/repair, wrong local matcher leak/repair and implicit-deny service repair; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=3; six nodes/five links/14 tasks and six-row plan; real unfiltered baseline, source prefix filtering with received tags100/200, retained LSDB versus local RIB exclusion, restricted-server reachability from R2 and permitted HTTP; all14 with source-prefix withdrawal/repair, changed-tag leak/repair, wrong local matcher leak/repair and implicit-deny service repair; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=3; six nodes/five links/14 tasks and six-row plan; real unfiltered baseline, source prefix filtering with received tags100/200, retained LSDB versus local RIB exclusion, restricted-server reachability from R2 and permitted HTTP; ten setup/state/traffic tasks with four staged fault-repair outcomes left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=3; six nodes/five links/14 tasks and six-row plan; real unfiltered baseline, source prefix filtering with received tags100/200, retained LSDB versus local RIB exclusion, restricted-server reachability from R2 and permitted HTTP; ten setup/state/traffic tasks with four staged fault-repair outcomes left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=3; six nodes/five links/14 tasks and six-row plan; real unfiltered baseline, source prefix filtering with received tags100/200, retained LSDB versus local RIB exclusion, restricted-server reachability from R2 and permitted HTTP; ten setup/state/traffic tasks with four staged fault-repair outcomes left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "f99c735b68f73e26da594b77f65e336208869d66400940a337b81bf82355f26f",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Root, dist and every browser-tested copy have identical bytes.",
+    "terminal": "Golden fixtures match existing fonts, colors, cursor and terminal controls in both themes and desktop/mobile modes.",
+    "verificationCommands": "Every published IOS and Windows command executes. Tests assert external tag200 output, allowed and excluded client pings, actual R2 repeat3 success, completed traceroute and reapplication of the working reference.",
+    "visualInspection": [
+      ".cache/ft-catalog-browser/topology-light-1440.png",
+      ".cache/ft-catalog-browser/guide-light-1440.png",
+      ".cache/ft-catalog-browser/console-light-1440.png",
+      ".cache/ft-catalog-browser/guide-dark-320.png",
+      ".cache/ft-catalog-browser/console-dark-320.png",
+      ".cache/ft-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "All14 tasks complete through normal UI controls at1440px/light and320px/dark. Four other theme/viewport cases earn ten setup/state/traffic tasks and leave four fault-repair outcomes unearned.",
+    "Six file:// cases block HTTP(S), export/import into fresh profiles and preserve earned progress. Two sharing checks retain domain/path/query/workspace; seven generic catalog checks confirm three ENARSI labs and preserve other categories.",
+    "Browser clocks advance normal application frames. No simulator state, tags, routes, packet outcomes or earned results are injected. Imports/completed reference wait for actual OSPF convergence.",
+    "The negative HTTP-return-path test waits for the simulated connection timeout rather than treating a still-running request as an immediate failure."
+  ]
+}
