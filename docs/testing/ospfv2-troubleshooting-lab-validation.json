@@ -1,0 +1,85 @@
+{
+  "lab": "OSPFv2 Troubleshooting",
+  "catalogId": "ospfv2-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 6,
+  "links": 6,
+  "tasks": 15,
+  "topology": "Three-router area0 P2P triangle with PC1 behind R1, PC2 behind R2 and SRV1 behind R3. Direct R1\u2013R3 transit cost5 plus LAN1 gives service cost6; backup R1\u2013R2\u2013R3 costs21. PC2 server path costs11. Practice begins with R1 Gi0/2 in area1 while R3 Gi0/2 remains area0, so working backup traffic hides the primary fault.",
+  "implemented": [
+    "Eighteenth ENARSI Layer3 Technologies entry with independent practice/completed documents, six-row addressing/cost plan, staged instructions, executable reference/verification commands and current-origin/path/query permalinks. Existing engine, UI layout, artwork and terminal styling are preserved.",
+    "Initial diagnosis requires three accepted requests and parent-linked replies in four host/server directions, using the actual R2 backup for PC1 and the independent R2\u2013R3 control for PC2. The primary pair is not Full despite working pings; area0 repair must restore direct cost6 forwarding.",
+    "Live OSPF checks require intended interface activation, configured and operational router IDs, explicit costs, passive LANs, P2P transits, default timers, matching lab authentication keys, MTU1500 and no mtu-ignore. All three Full pairs, three received router LSAs with LAN prefixes, intra-area O routes at AD110 and exact next hops/costs6/11 are required.",
+    "Actual four-way host traffic and a complete PC1 HTTP200 service body are observed after repair. Traffic goals correlate accepted requests, delivered parent-linked replies and expected router egresses; configuring routes or reading show output cannot fabricate the observations.",
+    "Hello/dead mismatch, passive transit and wrong authentication key each remove the primary Full relationship while physical links stay up and backup traffic remains working. Each exercise requires actual bidirectional PC1 backup requests and independent bidirectional PC2 control requests before restoration and fresh four-way primary traffic.",
+    "MTU1400 on R1 primary produces actual local ExStart and a database-description MTU diagnostic, with cost21 backup routes in both directions. R1 must return to MTU1500 and the direct Full pair; mtu-ignore may permit forwarding but cannot satisfy intended health or recovery. MTU state checks target the local R1 state; peer displays may be asymmetric during the modeled negotiation.",
+    "Removing only R3 server-LAN OSPF activation keeps every transit Full but withdraws the /24 from remote routes/received LSAs. Both PCs must experience actual No route drops while PC1 and PC2 exchange successful control probes. Restoring the LAN advertisement needs fresh replies in all four service directions.",
+    "Increasing only R1 primary cost to30 preserves all Full pairs but makes forward service requests use R2 at21 while reverse server requests stay on the direct R3\u2013R1 path at6. Actual asymmetric requests and independent PC2 traffic must be observed, then cost5 and fresh symmetric primary traffic restored.",
+    "Six live and nine historical criteria produce practice0/15, original diagnosis1/15, baseline9/15 and full15/15. Per-attempt configuration/route epochs reject stale traffic and config-only toggles. YAML retains earned history while dropping runtime; new practice starts fresh. Rendered config replay uses a real IOS OSPF process restart to apply router IDs that appear after interface activation, and saved reload repairs unsaved timer changes."
+  ],
+  "scope": "IOS IPv4 single-area OSPF troubleshooting with a deliberately mismatched primary area, P2P transit, timer/passive/key/MTU/advertisement/cost faults and actual simulated control/data-plane delivery. No new engine commands were required. No fresh CML capture, complete bilateral RFC state/timing equivalence, wire-format interoperability, cryptographic MD5 digest generation, multi-area type/filter exercise, duplicate-router-ID incident or OSPFv3 exercise is claimed. Authentication uses the existing modeled key compatibility behavior.",
+  "references": [
+    {
+      "title": "Cisco: Troubleshoot OSPF Neighbor Problems",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13699-29.html",
+      "use": "Neighbor states, valid Hello parameters, area/timer/authentication checks and operational interface/adjacency diagnosis."
+    },
+    {
+      "title": "Cisco: OSPF Neighbors Stuck in Exstart/Exchange",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13684-12.html",
+      "use": "Database-description MTU validation and restoring compatible MTUs."
+    },
+    {
+      "title": "Cisco IOS XE17 OSPF configuration guide",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr3-fwd/ospf/ospf-configuration-guide/ospf.html",
+      "use": "Passive interfaces retain prefix advertisement while suppressing Hello exchange."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 24,
+    "nativeTests": 3288,
+    "nativeFailures": 0,
+    "nativeDurationMs": 394088.584834,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=18; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB, intra-area AD110 costs6/11 and four delivered host/server directions plus HTTP; nine baseline tasks with six controlled repairs unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 390px: ENARSI Layer 3 Technologies=18; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB, intra-area AD110 costs6/11 and four delivered host/server directions plus HTTP; nine baseline tasks with six controlled repairs unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=18; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB, intra-area AD110 costs6/11 and four delivered host/server directions plus HTTP; all15 including timer mismatch, passive transit, authentication key, local MTU ExStart, LAN withdrawal and directional cost repairs with fresh restored traffic; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=18; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB, intra-area AD110 costs6/11 and four delivered host/server directions plus HTTP; all15 including timer mismatch, passive transit, authentication key, local MTU ExStart, LAN withdrawal and directional cost repairs with fresh restored traffic; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=18; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB, intra-area AD110 costs6/11 and four delivered host/server directions plus HTTP; nine baseline tasks with six controlled repairs unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=18; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB, intra-area AD110 costs6/11 and four delivered host/server directions plus HTTP; nine baseline tasks with six controlled repairs unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with eighteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with eighteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with eighteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with eighteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with eighteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with eighteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "a5c1e1686dcddaef535ef85e2e9d9b799e452976a0dab831a29d69bbb1468fb7",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist HTML and all browser-tested copies match byte for byte with offline assets embedded.",
+    "terminal": "Golden fixture matches unchanged fonts/background/foreground/cursor/tabs/controls in both themes and mobile/desktop.",
+    "verificationCommands": "All published IOS/Windows queries, probes, traces and reference commands execute through normal CLI. Native cases also block actual protocol89 datagrams, test partial probe counts, verify received LSAs and exercise real process-reset/reload behavior.",
+    "visualInspection": [
+      ".cache/ot2-catalog-browser/topology-light-1440.png",
+      ".cache/ot2-catalog-browser/guide-light-1440.png",
+      ".cache/ot2-catalog-browser/console-light-1440.png",
+      ".cache/ot2-catalog-browser/guide-dark-320.png",
+      ".cache/ot2-catalog-browser/console-dark-320.png",
+      ".cache/ot2-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full15-task ordinary UI workflows complete at320px/dark and1440px/light. Four other theme/viewport cases complete9 baseline tasks and leave six controlled repairs unearned. All export/import actual YAML in an empty offline profile and load a reference with six live goals only.",
+    "Six file:// cases block external HTTP(S). Two permalink checks preserve domain/path/query without replacing the workspace; seven generic catalog checks cover categories/counts, original labs, prerequisites and save/cancel/import behavior.",
+    "Browser clock advances ordinary application frames; no routes, neighbors, LSAs, traffic results or task completions are injected. Native negative cases reject protocol89 loss, server-power substitutes, static shortcuts, insufficient directions, unobserved incidents and nondefault-timer or mtu-ignore workarounds."
+  ]
+}
