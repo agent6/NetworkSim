@@ -835,7 +835,8 @@ function adjacency(engine:Simulator,endpoints:RoutedPort[],peers:Map<string,Rout
       from.device.runtime.neighbors.push({protocol:protocol.toUpperCase(),deviceId:to.device.id,interface:from.name,peerInterface:to.name,address:to.ip,state:neighborState,area,asn:b.asn,routerId:routerId(to.device,protocol)});
       if(eigrpProtocol(protocol)&&dualContext(engine).blocked.has(`${from.device.id}|${protocol}|${from.name}|${to.ip}`)){from.device.runtime.neighbors.at(-1)!.state='SIA-DOWN';continue;}
       if(neighborState==='EXSTART'||neighborState==='BFD-DOWN'||neighborState==='AUTH-FAILED')continue;
-      if(ospfProtocol(protocol)&&neighborState==='2WAY'&&!from.device.runtime.features[`${protocol}Interfaces`]?.[from.name]?.drDeviceId)continue;
+      // OSPF's graph supplies Hello discovery candidates. Even without a DR,
+      // 2-Way peers must keep receiving Hellos; only received LSAs supply SPF links.
       edges.push({from,to,area,cost:ospfProtocol(protocol)?String(from.iface.features[protocol]?.networkType??'').startsWith('point-to-multipoint')?Number(configuredOSPFNeighbors(engine,from.device.id,protocol as OSPFProtocol,from.iface.vrf,from.name).find((n:any)=>sameAddress(n.address,to.ip))?.cost??ospfCost(from,false,protocol)):ospfCost(from,false,protocol):1,bandwidth:Math.max(1,interfaceBandwidth(from.device,from.iface)),delay:Math.max(1,Number(from.iface.features.delay??10))*10});
     }
   }

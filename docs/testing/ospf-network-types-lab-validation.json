@@ -1,0 +1,80 @@
+{
+  "lab": "OSPF Network Types Troubleshooting",
+  "catalogId": "ospf-network-types-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 8,
+  "links": 8,
+  "tasks": 16,
+  "topology": "Four area0 routers share 10.0.123.0/24 through SW1. R1 priority200 is DR, R2 priority100 is BDR and R3/R4 priority0 are DROTHERs. A separate R3–R4 Gi0/2 primary joins 10.0.34.0/30. PC1 is behind R3, PC2 behind R2 and HTTP SRV1 behind R4. Primary cost5 plus LAN1 gives service cost6; shared cost10 plus LAN1 gives backup/control cost11. Initially the primary is broadcast with both priorities0, so it cannot elect a DR or exchange its database.",
+  "implemented": [
+    "Twenty-first ENARSI Layer 3 Technologies entry, independent practice/reference documents, eight-row interface/address/role plan, detailed staged guide, ordinary IOS/Windows commands and current-domain/path/query permalinks. Existing UI, artwork, offline delivery and terminal styles are preserved.",
+    "Initial diagnosis requires actual three-request/three-reply exchanges in four directions: PC1/server and PC2/server, both ways. Initial PC1 traffic must cross the shared switch directly between DROTHERs; the DR must not become an obligatory data-forwarding hop. Shared 2-Way between DROTHERs is normal, whereas no eligible primary DR prevents primary Full adjacency.",
+    "Repair both primary interfaces to point-to-point. Live checks require intended interface policies, shared DR/BDR and ten directed Full plus two directed 2-Way relationships, two primary Full relationships without primary DR/BDR, four received router LSAs and shared network advertisement, exact AD110 costs6/11 with next hops and CEF egresses, HTTP service and saved R1–R4 configs.",
+    "Observed fresh four-way ICMP requires accepted requests, parent-linked replies and intended router/switch egresses after configuration/route epochs. HTTP requires an actually completed TCP-backed200 response and expected body. Configuration-only changes, insufficient directions, two replies, stale traffic, static shortcuts and missing control delivery cannot earn the corresponding proof.",
+    "A one-sided point-to-multipoint change exposes default30/120 versus point-to-point10/40 mismatch and working shared fallback. An operational broadcast comparison uses primary priority1, DR/BDR, Full adjacency and an additional network advertisement before restoring P2P. The guide explicitly avoids claiming every network-type mismatch prevents Full.",
+    "NBMA and point-to-multipoint nonbroadcast each require observed missing-static-neighbor fallback and four delivered directions, followed by reciprocal router-level neighbor configuration, actual unicast control delivery and cost6 forwarding. NBMA elects DR/BDR; point-to-multipoint does not. Multicast point-to-multipoint uses default30/120, actual multicast control delivery and Full without a primary DR/BDR. Every exercise ends with removal of temporary neighbors, restoration of P2P/priority0 and fresh four-way proof.",
+    "Point-to-point priority255 leaves the primary Full without DR/BDR; the exercise restores priority0 and proves fresh traffic. Six controlled exercises plus diagnosis, traffic and HTTP yield nine historical checks; seven live checks remain live. Practice starts0/16, diagnosis1/16, repaired baseline10/16 and full16/16. Completed reference provides seven live checks only. YAML retains earned history while clearing runtime and a fresh attempt starts over.",
+    "Fixed an engine discovery/SPF conflation: no-DR 2-Way relationships were omitted from the Hello candidate graph, so actual received Hellos could not maintain the peer. They now remain discovery candidates while only received LSAs supply SPF links. A regression advances300 simulated seconds, checks fresh received Hellos and persistent2WAY, forbids a primary network advertisement/shortcut and proves shared cost11 traffic.",
+    "Question-mark and Tab now include the optional non-broadcast suffix after ip ospf network point-to-multipoint, matching the already implemented parser form."
+  ],
+  "scope": "IOS OSPFv2 network-type discovery, timers, adjacency roles and routed forwarding using existing simulated logical control/data-plane delivery. Router LSAs are received logical records; Type-2 show output is projected from received topology, not a native wire-format Type-2 encoder. Unicast/multicast checks inspect actual OSPF frames and endpoints, not a decoded wire Hello subtype. No fresh CML capture, Frame Relay/PVC implementation, P2MP transit-host-/32 route semantics, exhaustive mismatch behavior or complete RFC state/timing/wire interoperability is claimed.",
+  "references": [
+    {
+      "title": "Cisco IOS OSPF command reference: ip ospf network",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_ospf/command/iro-cr-book/ospf-i1.html",
+      "use": "Supported network-type forms, neighbor discovery and default network-type timers."
+    },
+    {
+      "title": "Cisco: Troubleshoot OSPF Neighbor Problems",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13699-29.html",
+      "use": "Network-type-dependent adjacency expectations, normal DROTHER2WAY and neighbor diagnosis."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "newFocusedTests": 30,
+    "nativeTests": 3378,
+    "nativeFailures": 0,
+    "nativeDurationMs": 599788.159291,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=21; eight nodes/eight links/16 tasks/eight-row plan; initial no-eligible-DR 2WAY primary diagnosis with actual shared cost11 backup and independent PC2 control; shared R1 DR/R2 BDR and legitimate R3/R4 2WAY, Full P2P primary, four-router LSDB/shared Type2, AD110 costs6/11 and four delivered directions plus HTTP; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=21; eight nodes/eight links/16 tasks/eight-row plan; initial no-eligible-DR 2WAY primary diagnosis with actual shared cost11 backup and independent PC2 control; shared R1 DR/R2 BDR and legitimate R3/R4 2WAY, Full P2P primary, four-router LSDB/shared Type2, AD110 costs6/11 and four delivered directions plus HTTP; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=21; eight nodes/eight links/16 tasks/eight-row plan; initial no-eligible-DR 2WAY primary diagnosis with actual shared cost11 backup and independent PC2 control; shared R1 DR/R2 BDR and legitimate R3/R4 2WAY, Full P2P primary, four-router LSDB/shared Type2, AD110 costs6/11 and four delivered directions plus HTTP; all16 including default-timer mismatch, operational broadcast comparison, NBMA missing/configured unicast discovery, multicast P2MP, P2MP nonbroadcast missing/configured discovery and P2P priority independence with fresh restored traffic; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=21; eight nodes/eight links/16 tasks/eight-row plan; initial no-eligible-DR 2WAY primary diagnosis with actual shared cost11 backup and independent PC2 control; shared R1 DR/R2 BDR and legitimate R3/R4 2WAY, Full P2P primary, four-router LSDB/shared Type2, AD110 costs6/11 and four delivered directions plus HTTP; all16 including default-timer mismatch, operational broadcast comparison, NBMA missing/configured unicast discovery, multicast P2MP, P2MP nonbroadcast missing/configured discovery and P2P priority independence with fresh restored traffic; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=21; eight nodes/eight links/16 tasks/eight-row plan; initial no-eligible-DR 2WAY primary diagnosis with actual shared cost11 backup and independent PC2 control; shared R1 DR/R2 BDR and legitimate R3/R4 2WAY, Full P2P primary, four-router LSDB/shared Type2, AD110 costs6/11 and four delivered directions plus HTTP; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=21; eight nodes/eight links/16 tasks/eight-row plan; initial no-eligible-DR 2WAY primary diagnosis with actual shared cost11 backup and independent PC2 control; shared R1 DR/R2 BDR and legitimate R3/R4 2WAY, Full P2P primary, four-router LSDB/shared Type2, AD110 costs6/11 and four delivered directions plus HTTP; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "780273189f0f4042d7f33f69bd1801ddfb0028b0741e9b1eb5a5e619df90435e",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist HTML and all browser-tested copies match byte for byte with embedded offline assets.",
+    "terminal": "Golden fixture matches unchanged fonts/background/foreground/cursor/tabs/controls in both themes at mobile and desktop sizes.",
+    "verificationCommands": "All published IOS/Windows verification queries, probes, traces and reference commands run through ordinary CLI. Native cases verify actual protocol89 denial/recovery, received LSAs, no-DR discovery beyond multiple dead intervals, actual unicast/multicast transport, configuration-only/stale/partial proof rejection, rendered-config replay, OSPF process reset and saved reload.",
+    "visualInspection": [
+      ".cache/ont-catalog-browser/topology-light-1440.png",
+      ".cache/ont-catalog-browser/guide-light-1440.png",
+      ".cache/ont-catalog-browser/console-light-1440.png",
+      ".cache/ont-catalog-browser/guide-dark-320.png",
+      ".cache/ont-catalog-browser/console-dark-320.png",
+      ".cache/ont-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full16-task ordinary UI workflows complete at320px/dark and1440px/light. Four additional theme/viewport cases complete ten baseline tasks with six exercises unearned. Every case exports/imports actual YAML into an empty offline profile and loads the seven-live-check reference.",
+    "Six file:// cases block external HTTP(S). Two mocked-host permalink checks preserve domain/path/query/workspace. Seven generic catalog checks cover category counts, existing labs, prerequisites and save/cancel/import behavior.",
+    "Browser clock advances ordinary application frames; no routes, neighbors, LSAs, traffic results or objective completions are injected."
+  ]
+}

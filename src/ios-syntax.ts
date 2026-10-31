@@ -387,7 +387,7 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   if(path==='ip ftp source-interface')return [[iface(context)]];
   if(path==='ip ftp passive')return [[]];
   if(path==='ospfv3'&&['interface','range'].includes(context.mode??''))return combine([[number(1,65535,'OSPFv3 process ID')]],[[word('ipv4'),word('area'),text('Area ID')],[word('ipv6'),word('area'),text('Area ID')],...choices(['broadcast','non-broadcast','point-to-point','point-to-multipoint']).map(form=>[word('network'),...form]),[word('network'),word('point-to-multipoint'),word('non-broadcast')]]);
-  if(path==='ipv6 ospf network'||path==='ospfv3 network')return [...choices(['broadcast','non-broadcast','point-to-point','point-to-multipoint']),[word('point-to-multipoint'),word('non-broadcast')]];
+  if(path==='ip ospf network'||path==='ipv6 ospf network'||path==='ospfv3 network')return [...choices(['broadcast','non-broadcast','point-to-point','point-to-multipoint']),[word('point-to-multipoint'),word('non-broadcast')]];
   if(path==='ipv6 ospf neighbor')return combine([[argument('X:X:X:X::X','Link-local neighbor IPv6 address',value=>isIPv6(value)&&/^fe[89ab]/i.test(value))]],combine(optional(word('poll-interval'),number(1,65535,'Down neighbor poll interval')),optional(word('cost'),number(1,65535,'Point-to-multipoint neighbor cost'))));
   if(path==='ipv6 ospf hello-interval'||path==='ipv6 ospf dead-interval'||path==='ipv6 ospf cost')return [[number(1,65535,'OSPF interface value')]];
   if(path==='ipv6 ospf priority')return [[number(0,255,'DR election interface priority')]];
