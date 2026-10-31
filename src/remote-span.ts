@@ -57,6 +57,7 @@ function captured(
       delete outgoing.vlan;
       if(outgoing.span)outgoing.span.rspan={vlan:session.sourceVlan!,destinationDevice:device.id,destinationSession:id};
     }
+    if(session.type==='erspan-destination'&&outgoing.span?.erspan)Object.assign(outgoing.span.erspan,{destinationDevice:device.id,destinationSession:id});
     engine.mirrorFrame(device.id, session.destination, outgoing);
   } else stats.drops = (stats.drops || 0) + 1;
 }
@@ -126,7 +127,9 @@ export function observeRemoteSpan(
         continue;
       }
       const sequence = (stats.sequence = ((stats.sequence || 0) + 1) >>> 0);
-      engine.sendRemoteSpanPacket(
+      const mirrored=copy(frame);
+      mirrored.span={sourceDevice:device.id,session:id,sourceInterface:port,direction,configuredDirection:session.sources!.find(s=>s.interface===port)!.direction??'both',sourceFrame:frame.id,erspan:{id:session.erspanId!,sequence,origin:source,destination:session.ipAddress}};
+      if(!engine.sendRemoteSpanPacket(
         device.id,
         source,
         session.ipAddress,
@@ -135,10 +138,10 @@ export function observeRemoteSpan(
           sessionId: session.erspanId,
           sequence,
           sourceDevice: device.id,
-          frame: copy(frame),
+          frame: mirrored,
         },
         session.vrf,
-      );
+      ))stats.drops++;
     }
   }
 }
@@ -148,7 +151,7 @@ export function receiveRemoteSpan(
   device: Device,
   packet: IPPacket,
   input: string,
-): void {
+): boolean {
   const body = packet.body;
   if (
     body?.kind !== "remote-span" ||
@@ -156,18 +159,22 @@ export function receiveRemoteSpan(
     typeof body.frame.sourceMac !== "string" ||
     typeof body.frame.destinationMac !== "string"
   )
-    return;
+    return false;
   let matched = false;
   for (const [id, session] of sessions(device)) {
     if (
       session.shutdown ||
       session.type !== "erspan-destination" ||
+      !Number.isInteger(session.erspanId) || session.erspanId! < 1 || session.erspanId! > 1023 ||
+      !isIPv4(session.ipAddress??'') ||
       session.erspanId !== body.sessionId ||
+      (session.vrf??'') !== (packet.vrf??'') ||
       (session.ipAddress && session.ipAddress !== packet.destination) ||
       (session.originIp && session.originIp !== packet.source)
     )
       continue;
     matched = true;
+    if(body.frame.span?.erspan)Object.assign(body.frame.span.erspan,{packetId:packet.id,ttl:packet.ttl});
     captured(
       engine,
       device,
@@ -182,6 +189,7 @@ export function receiveRemoteSpan(
   if (!matched)
     device.runtime.features.remoteSpanUnmatched =
       (device.runtime.features.remoteSpanUnmatched || 0) + 1;
+  return matched;
 }
 
 /** Called on validated RSPAN VLAN ingress; the engine then bridges the frame. */

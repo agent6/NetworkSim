@@ -345,6 +345,7 @@ export class Simulator {
       result.snmp={application:m.application,version:m.version,operation:m.operation,username:m.username,securityLevel:m.securityLevel,kind:m.kind,notificationId:m.notificationId,...Array.isArray(m.oids)?{oids:m.oids.slice(0,64).map(short)}:{},...m.errorStatus?{errorStatus:m.errorStatus}:{},...Array.isArray(m.varbinds)?{varbinds:m.varbinds.slice(0,64).map((v:any)=>({oid:short(v.oid),type:short(v.type),...v.exception?{exception:short(v.exception)}:{value:short(v.value)}}))}:{}};
     }
     if(b.kind==='syslog-message')result.syslog={hostname:b.hostname,message:String(b.message).slice(0,1024),severity:b.severity,facility:b.facility,timestamp:b.timestamp};
+    if(b.kind==='remote-span')result.erspan={id:b.sessionId,sequence:b.sequence,sourceDevice:b.sourceDevice,sourceFrame:b.frame?.span?.sourceFrame};
     if(b.kind==='esp')Object.assign(result,{espSpi:b.spi,espSequence:b.sequence,protectedProtocol:b.inner?.protocol?.toUpperCase()});
     if(b.kind==='ike')Object.assign(result,{ikeStage:b.stage,ikeExchangeId:b.id});
     if(b.kind==='netflow-export'){result.netflowVersion=b.version;result.netflow={monitor:b.monitor,record:b.record,version:b.version,sequence:b.sequence,records:clone(b.records.slice(0,20))};}
@@ -492,7 +493,7 @@ export class Simulator {
   sendWirelessEthernet(deviceId:string,port:string,frame:Frame):void{const d=this.getDevice(deviceId);if(d&&frame.hops>0)this.sendWire(d,port,frame);}
   receiveWirelessEthernet(deviceId:string,frame:Frame):void{const d=this.getDevice(deviceId);if(d?.powered&&this.interfaceUp(d.id,'Wireless0')){this.count(d,'Wireless0','rx','size' in frame.payload?frame.payload.size+18:64,frame.destinationMac);this.event(d,'Wireless0',frame,'Frame received',d.config.hostname+' received a frame on Wireless0','receive',this.wireless.association(d.id)?.apId);this.receiveFrame(d,'Wireless0',frame);}}
   mirrorFrame(deviceId: string, destination: string, frame: Frame,span?:import('./span.ts').SpanCopy): void { const d = this.getDevice(deviceId); if (d) this.sendWire(d, destination, { ...clone(frame), id: this.id('mirror'), hops:1, mirrored: true,...span?{span}:{} }); }
-  sendRemoteSpanPacket(deviceId: string, source: string, destination: string, body: any, vrf?: string): void { const d = this.getDevice(deviceId); if (!d) return; const p = this.makePacket(source, destination, 'gre', 44 + ('size' in body.frame.payload ? body.frame.payload.size : 64), { ...clone(body), kind: 'remote-span' }); p.vrf = vrf; this.originate(d, p); }
+  sendRemoteSpanPacket(deviceId: string, source: string, destination: string, body: any, vrf?: string): boolean { const d = this.getDevice(deviceId); if (!d) return false; const p = this.makePacket(source, destination, 'gre', 44 + ('size' in body.frame.payload ? body.frame.payload.size : 64), { ...clone(body), kind: 'remote-span' }); p.vrf = vrf;if(p.body.frame.span?.erspan)p.body.frame.span.erspan.packetId=p.id;if(!this.localInterface(d,source,vrf)){this.packetEvent(d,p,'Invalid ERSPAN origin','The origin must be an operational local address in the selected routing table.','drop');return false;} this.originate(d, p);return true; }
   sendRemoteSpanVlan(deviceId: string, vlan: number, frame: Frame): void {
     const d = this.getDevice(deviceId); if (!d?.powered || !d.config.vlans[vlan] || !(d.config.features.rspanVlans ?? []).includes(vlan)) return; const groups = new Set<string>();
     for (const [port, cfg] of Object.entries(d.config.interfaces)) { if (!cfg.switchport || !this.interfaceUp(d.id, port) || !this.carriesVlan(d, port, vlan) || !this.stpAllows(d, port, vlan)) continue; if (spanDestination(d,port)) continue;
@@ -1464,7 +1465,7 @@ export class Simulator {
   private deliverService(d: Device, p: IPPacket, input?: string): void {
     const b = p.body; if (!b) return;
     if (b.kind === 'ike' || b.kind === 'esp') this.cryptoServices.receive(d, p,input);
-    else if (b.kind === 'remote-span') receiveRemoteSpan(this, d, p, input ?? '');
+    else if (b.kind === 'remote-span') {const matched=receiveRemoteSpan(this,d,p,input??'');const packet=this.packetSummary(p);packet.erspan.receiverIds=Object.values<any>(d.config.features.spanSessions??{}).filter(s=>s.type==='erspan-destination'&&!s.shutdown).map(s=>s.erspanId);this.emit({nodeId:d.id,port:input,protocol:'GRE',label:matched?'ERSPAN decapsulated':'ERSPAN session unmatched',detail:matched?'The matching ERSPAN destination session received this GRE copy.':'No enabled destination session matches the ERSPAN ID, local address and routing table.',disposition:matched?'info':'drop',packet});}
     else if (b.kind === 'control-plane') {if(!this.wireless.receiveDatagram(d,p))receiveControlDatagram(this, d.id, p.source, p.destination, b.payload, p.ttl, input);}
     else if(b.kind==='trace-probe'){
       const port=p.destinationPort,services=d.config.services,ntp=d.config.features.ntp??{};

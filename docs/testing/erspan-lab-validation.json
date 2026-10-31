@@ -1,0 +1,88 @@
+{
+  "lab": "ERSPAN Configuration",
+  "catalogId": "erspan-configuration",
+  "group": "CCNP ENCOR",
+  "section": "Network Assurance",
+  "date": "2026-10-30",
+  "nodes": 6,
+  "links": 5,
+  "tasks": 19,
+  "topology": "PC1 and SRV1 use separate directly attached R1 LANs. R1 mirrors Gi0/0 to GRE origin10.0.12.1 and destination10.0.23.2 through R2; R3 decapsulates to dedicated Gi0/1 and AN1. Source session1 and destination session7 share ERSPAN ID42.",
+  "implemented": [
+    "Source and termination CLI hierarchies with Cisco src/dst/src-dst/dst-src prompts, nested no shutdown and role checks",
+    "Actual IPv4 GRE forwarding over both routed links, outer TTL64\u219263, preserved observed inner addresses/MAC/TTL and individual packet/frame identifiers",
+    "Passive analyzer shows source/session/direction, ERSPAN ID, sequence, outer IPs/TTL, destination device/session and filtered JSON exports",
+    "Completed reference has five live saved goals and zero fabricated observations; practice has zero earned tasks",
+    "Observed Rx/Tx/both, gateway ARP, successful HTTP200 and DNS, source-to-collector ICMP and actual routed transport",
+    "ID88 mismatch, GRE-only outbound ACL with passing ICMP, route withdrawal, analyzer outage and passive ingress isolation with fresh capture recovery",
+    "Fault scoring correlates the actual original request/reply during a GRE failure and requires subsequent received copies",
+    "Invalid origins, incomplete local termination addresses, wrong receiver VRFs, incompatible endpoint roles and shutdown sessions cannot deliver copies",
+    "All three router startup configurations, historical guide achievements and real offline YAML reopening"
+  ],
+  "scope": [
+    "IPv4 outer transport and physical-interface Ethernet sources",
+    "No claim of pcap/ERSPAN Type II/III wire-format interoperability, ASIC truncation/rate limits, source-VLAN/session ACL filtering or IPv6 outer transport",
+    "Cisco primary documentation reviewed; no new live CML run was performed for this change",
+    "No terminal theme or node artwork changes"
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE17 LAN/WAN: Configuring ERSPAN",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/lan-wan/b-lan-wan/m_lnsw-conf-erspan.html",
+      "usedFor": [
+        "Source/destination hierarchy, origin and local termination address, activation, separate local session identifiers and shared ERSPAN ID",
+        "Routable GRE transport, independent original traffic, direction and dedicated analyzer-port semantics"
+      ]
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "focusedCommand": "node --test tests/erspan-catalog.test.ts tests/remote-span.test.ts tests/rspan-catalog.test.ts tests/span-catalog.test.ts",
+    "focusedTests": 102,
+    "newTests": 34,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "artifactSha256": "634707afcf94a8b4e9863ed831d7d1c9b24d757dea0456161c2e2dc96231d067",
+    "browserScenarios": 15,
+    "browserChecks": [
+      "light 320px: seven Network Assurance labs/badge; six nodes/five links/19 tasks and zero-credit practice; six-row plan; three working CLI references; fourteen healthy routing/configuration/actual capture outcomes without pre-earned fault observations; Rx/Tx/both, gateway ARP, HTTP200 and DNS; routed outer TTL63, source1/ERSPAN42/destination7, real filtered JSON downloads and stable expanded capture rows; all three startup saves; offline YAML import preserves achievements and discards runtime; completed reference five live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden terminal appearance; correct nested prompts, question-mark and Tab",
+      "dark 320px: seven Network Assurance labs/badge; six nodes/five links/19 tasks and zero-credit practice; six-row plan; three working CLI references; all19 including ID mismatch, GRE ACL with successful ICMP, route withdrawal, analyzer outage and passive isolation; Rx/Tx/both, gateway ARP, HTTP200 and DNS; routed outer TTL63, source1/ERSPAN42/destination7, real filtered JSON downloads and stable expanded capture rows; all three startup saves; offline YAML import preserves achievements and discards runtime; completed reference five live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden terminal appearance; correct nested prompts, question-mark and Tab",
+      "light 1440px: seven Network Assurance labs/badge; six nodes/five links/19 tasks and zero-credit practice; six-row plan; three working CLI references; all19 including ID mismatch, GRE ACL with successful ICMP, route withdrawal, analyzer outage and passive isolation; Rx/Tx/both, gateway ARP, HTTP200 and DNS; routed outer TTL63, source1/ERSPAN42/destination7, real filtered JSON downloads and stable expanded capture rows; all three startup saves; offline YAML import preserves achievements and discards runtime; completed reference five live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden terminal appearance; correct nested prompts, question-mark and Tab",
+      "dark 1440px: seven Network Assurance labs/badge; six nodes/five links/19 tasks and zero-credit practice; six-row plan; three working CLI references; fourteen healthy routing/configuration/actual capture outcomes without pre-earned fault observations; Rx/Tx/both, gateway ARP, HTTP200 and DNS; routed outer TTL63, source1/ERSPAN42/destination7, real filtered JSON downloads and stable expanded capture rows; all three startup saves; offline YAML import preserves achievements and discards runtime; completed reference five live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden terminal appearance; correct nested prompts, question-mark and Tab",
+      "light 390px: seven Network Assurance labs/badge; six nodes/five links/19 tasks and zero-credit practice; six-row plan; three working CLI references; fourteen healthy routing/configuration/actual capture outcomes without pre-earned fault observations; Rx/Tx/both, gateway ARP, HTTP200 and DNS; routed outer TTL63, source1/ERSPAN42/destination7, real filtered JSON downloads and stable expanded capture rows; all three startup saves; offline YAML import preserves achievements and discards runtime; completed reference five live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden terminal appearance; correct nested prompts, question-mark and Tab",
+      "dark 390px: seven Network Assurance labs/badge; six nodes/five links/19 tasks and zero-credit practice; six-row plan; three working CLI references; fourteen healthy routing/configuration/actual capture outcomes without pre-earned fault observations; Rx/Tx/both, gateway ARP, HTTP200 and DNS; routed outer TTL63, source1/ERSPAN42/destination7, real filtered JSON downloads and stable expanded capture rows; all three startup saves; offline YAML import preserves achievements and discards runtime; completed reference five live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden terminal appearance; correct nested prompts, question-mark and Tab",
+      "light: permalink preserves current host/path/query/workspace and returns to all seven Network Assurance labs",
+      "dark: permalink preserves current host/path/query/workspace and returns to all seven Network Assurance labs",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with seven labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "identicalArtifactCopies": 16,
+    "terminal": "Golden fixtures match both themes and responsive mobile full-screen console behavior.",
+    "visualInspection": [
+      ".cache/erspan-catalog-browser/topology-light-1440.png",
+      ".cache/erspan-catalog-browser/topology-dark-1440.png",
+      ".cache/erspan-catalog-browser/guide-light-320.png",
+      ".cache/erspan-catalog-browser/guide-dark-320.png",
+      ".cache/erspan-catalog-browser/analyzer-light-1440.png",
+      ".cache/erspan-catalog-browser/analyzer-dark-320.png"
+    ],
+    "tests": 2638,
+    "passed": 2638,
+    "failed": 0,
+    "skipped": 0,
+    "durationMs": 262428.396916,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging assertions; final rebuilt bytes match every browser-tested copy.",
+    "fullCheck": "The complete native test-file set used by npm run check passed with four isolated workers after typecheck, followed by a successful identical rebuild."
+  },
+  "verificationNotes": [
+    "The final complete run passed all2,638 cases. A stale aggregate catalog-count assertion was updated from28 to29; its17-test file passed independently before the final complete rerun.",
+    "The initial generic catalog browser launch timed out before a page opened. After the ERSPAN browser process completed, the generic suite passed all seven cases without application changes. All final15 scenarios used the same offline artifact.",
+    "No temporary protocol setup is silently pre-earned: practice starts0/19, the completed reference starts5/19, the healthy interactive baseline reaches14/19 and the full fault-recovery exercise reaches19/19."
+  ]
+}
