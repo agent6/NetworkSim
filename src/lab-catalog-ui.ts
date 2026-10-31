@@ -8,7 +8,7 @@ import {icon,escapeHTML as esc} from './icons.ts';
 type Dialog=(title:string,body:string,footer?:string)=>void;
 type OpenLab=(document:LabDocument,source:string)=>void;
 let selectedGroup:LabGroup='CCNA';
-const selectedSections:Partial<Record<LabGroup,CatalogSection>>={CCNA:'Fundamentals','CCNP ENCOR':'Virtualization'};
+const selectedSections:Partial<Record<LabGroup,CatalogSection>>={CCNA:'Fundamentals','CCNP ENCOR':'Virtualization','CCNP ENARSI':'Layer 3 Technologies'};
 const addressPlan=(resources:CatalogGuideResources)=>`<div class="catalog-table-wrap"><table class="catalog-table"><caption>${esc(resources.planTitle??'Addressing plan')}</caption><thead><tr>${resources.columns.map(column=>`<th scope="col">${esc(column)}</th>`).join('')}</tr></thead><tbody>${resources.rows.map(row=>`<tr>${row.map(cell=>`<td>${esc(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 const reference=(resources:CatalogGuideResources)=>`<details class="catalog-reference"><summary>Reference configuration</summary><p>Use these configurations after attempting the lab. ${esc(resources.note)}</p>${(resources.setup??[]).map(section=>`<h4>${esc(section.title)}</h4><ol class="catalog-tasks">${section.instructions.map(line=>`<li>${esc(line)}</li>`).join('')}</ol>`).join('')}${Object.entries(resources.commands).map(([name,commands])=>`<h4>${esc(name)}</h4><pre>${esc(commands.join('\n'))}</pre>`).join('')}${Object.entries(resources.verification).map(([name,commands])=>`<h4>Verify on ${esc(name)}</h4><pre>${esc(commands.join('\n'))}</pre>`).join('')}</details>`;
 const decorate=(routed=false)=>{const root=document.querySelector<HTMLElement>('.dialog');root?.classList.add('lab-catalog-dialog');if(root&&routed)root.dataset.catalogRoute='';};

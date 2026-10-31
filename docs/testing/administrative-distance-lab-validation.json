@@ -1,0 +1,88 @@
+{
+  "lab": "Administrative Distance Troubleshooting",
+  "catalogId": "administrative-distance-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 5,
+  "links": 5,
+  "tasks": 13,
+  "topology": "PC1 and SRV1 attach to R1 and R3. EIGRP AS100 learns the remote LAN through R2; OSPF process10 learns the same exact prefix over the direct R1\u2013R3 link. IPv4 addressing, gateways, advertisements, passive LANs and server HTTP are prepared. Practice starts with an AD1 discard static and R1 internal EIGRP distance120.",
+  "implemented": [
+    "First ENARSI lab and Layer 3 Technologies section, with accessible singular lab counts, a five-row addressing/path plan and portable practice/completed variants. ENCOR retains39 entries and seven sections; CCNA and Other remain available. Sharing retains the current domain, path and query.",
+    "Initial real client probes fail on the installed static discard route while OSPF and EIGRP adjacencies are healthy. Removing the discard exposes OSPF110 over the misconfigured EIGRP120; clearing the override restores internal EIGRP90 and real request forwarding through R2.",
+    "A fully specified static200 route to the same /24 stays configured but non-active behind both IGPs. Shutting R1 Gi0/1 withdraws EIGRP and installs OSPF110, with actual delivered client replies before the next stage.",
+    "Setting OSPF intra-area distance255 excludes the learned route from the installed RIB while the adjacency remains Full. Static200 then provides the usable forwarding path. Raising that static to255 leaves no eligible route; actual No route drops must precede repaired static200 traffic.",
+    "Removing the OSPF override restores OSPF110 before static200, and restoring Gi0/1 returns traffic to EIGRP90 via R2. Both transitions require fresh parent-linked delivered replies after the corresponding route-selection epoch.",
+    "A temporary discard host route at AD250 coexists with the installed EIGRP /24 AD90 and wins the forwarding lookup by prefix length. Actual Null route loss and fresh repaired forwarding distinguish this from same-prefix administrative source selection.",
+    "Thirteen graded tasks combine three live configuration/save checks and ten observed outcomes. Ordinary simulator notifications capture synchronous CLI outcomes even between UI frames, so closed guides do not miss quick fault/repair probes. Per-attempt epochs and incident marks require actual new packets through the intended router ports, server acceptance and matching delivered replies. Queries, stale packets, disabled services and configuration alone cannot fabricate incident completion.",
+    "The final HTTP goal requires the complete prepared page with HTTP200 over the primary path. Final health checks validate original addresses/gateways, link status, the intended protocol advertisements and passive/active interfaces, default distances, no redistribution/filter shortcuts, only the exact static backup and all three routers saved.",
+    "Practice starts0/13; the completed reference supplies three live goals without invented failure, failover or traffic achievements. All earned goals survive offline YAML export/import while RIBs, adjacencies and transient grading epochs rebuild."
+  ],
+  "scope": [
+    "IPv4 IOS lab for static, internal EIGRP and intra-area OSPF administrative distances. BGP, external routes, redistribution, per-source distance rules and IPv6 are outside this exercise; this does not claim complete ENARSI exam coverage.",
+    "Existing RIB installation, longest-prefix forwarding, neighbor exchange and packet engines already implement the required behavior and are unchanged. This update adds catalog organization, topology, instructions, grading and verification.",
+    "Primary Cisco route-selection and administrative-distance references reviewed. No new live CML capture was performed; existing IOS/NX-OS CML contracts pass in the full regression suite.",
+    "No terminal styling, theme/layout, node artwork, dependencies or backend/server changes."
+  ],
+  "references": [
+    {
+      "title": "Cisco: Understand Administrative Distance",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/border-gateway-protocol-bgp/15986-admin-distance.html"
+    },
+    {
+      "title": "Cisco: Configure Route Selection for Routers",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/8651-21.html"
+    },
+    {
+      "title": "Cisco IOS XE: IP Routing Protocol-Independent Features",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-routing/b-ip-routing/m_iri-ip-prot-indep-0.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "nativeTests": 2914,
+    "nativePassed": 2914,
+    "nativeFailed": 0,
+    "nativeDurationMs": 314838.875208,
+    "newLabTests": 19,
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=1; five nodes/five links/13 tasks and five-row plan; real initial discard loss, OSPF110 over EIGRP120, repaired EIGRP90 forwarding through R2 and non-active static200; seven initial-repair/configuration/HTTP goals with six staged incident outcomes left unearned; offline YAML export/import, three live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=1; five nodes/five links/13 tasks and five-row plan; real initial discard loss, OSPF110 over EIGRP120, repaired EIGRP90 forwarding through R2 and non-active static200; all13 with OSPF and static failover, AD255 exclusion/repair, dynamic failback and more-specific discard repair; offline YAML export/import, three live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=1; five nodes/five links/13 tasks and five-row plan; real initial discard loss, OSPF110 over EIGRP120, repaired EIGRP90 forwarding through R2 and non-active static200; all13 with OSPF and static failover, AD255 exclusion/repair, dynamic failback and more-specific discard repair; offline YAML export/import, three live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=1; five nodes/five links/13 tasks and five-row plan; real initial discard loss, OSPF110 over EIGRP120, repaired EIGRP90 forwarding through R2 and non-active static200; seven initial-repair/configuration/HTTP goals with six staged incident outcomes left unearned; offline YAML export/import, three live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=1; five nodes/five links/13 tasks and five-row plan; real initial discard loss, OSPF110 over EIGRP120, repaired EIGRP90 forwarding through R2 and non-active static200; seven initial-repair/configuration/HTTP goals with six staged incident outcomes left unearned; offline YAML export/import, three live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=1; five nodes/five links/13 tasks and five-row plan; real initial discard loss, OSPF110 over EIGRP120, repaired EIGRP90 forwarding through R2 and non-active static200; seven initial-repair/configuration/HTTP goals with six staged incident outcomes left unearned; offline YAML export/import, three live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with one lab, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with one lab, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with one lab, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with one lab, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with one lab, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with one lab, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "5ff00f85b5cce42e297ff2c57b0df0d7e802e7788819195ec31d6d938c57dfd8",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Root, dist and all browser-tested copies have identical bytes.",
+    "terminal": "Golden fixtures match existing fonts, colors, cursor and terminal controls in both themes and desktop/mobile modes.",
+    "visualInspection": [
+      ".cache/ad-catalog-browser/topology-light-1440.png",
+      ".cache/ad-catalog-browser/guide-light-1440.png",
+      ".cache/ad-catalog-browser/console-light-1440.png",
+      ".cache/ad-catalog-browser/guide-dark-320.png",
+      ".cache/ad-catalog-browser/console-dark-320.png",
+      ".cache/ad-catalog-browser/topology-dark-320.png"
+    ],
+    "windowsVerification": "Published PC1 ping and tracert commands passed through the Windows CLI. The actual trace completed over192.168.10.1,10.0.12.2,10.0.23.2 and192.168.30.10."
+  },
+  "verificationNotes": [
+    "All13 tasks complete through normal UI controls at1440px/light and320px/dark. Four other theme/viewport cases earn seven initial-repair/configuration/HTTP goals and leave six staged incident outcomes unearned.",
+    "Six file:// cases block HTTP(S), export/import into fresh profiles and preserve earned progress. Two sharing checks preserve domain/path/query/workspace, and seven generic catalog checks retain other categories while verifying ENARSI singular counts.",
+    "Browser clocks advance normal application frames. No simulator state, routes, packet outcomes or earned achievements are injected. Fresh import/completed reference waits for real routing convergence before live goals are checked."
+  ]
+}
