@@ -1,0 +1,82 @@
+{
+  "lab": "OSPF NSSA",
+  "catalogId": "ospf-nssa",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 8,
+  "links": 7,
+  "tasks": 16,
+  "topology": "R1 backbone ASBR and R2 ABR share area0; R2 attaches R3 NSSA ASBR and R4 leaf in area10. PC2 is behind R1, PC1 behind R4. R1 external203.0.113.0/24 hosts upstream SRV1; R3 external198.51.100.0/24 hosts local SRV2. Prefix-list/route-map EXTERNAL on each ASBR redistributes only its connected external prefix at metric20. Transits cost10 and passive LANs1. Initially area10 is incorrectly stub; intended design is NSSA on R2/R3/R4 with explicit ABR Type7 default.",
+  "implemented": [
+    "Twenty-third ENARSI Layer 3 Technologies entry with independent practice/reference documents, eight-row addressing and role plan, staged guide, verified IOS/Windows commands and current-origin/path/query permalinks. Existing layout, themes, artwork, terminal styling and offline single-HTML delivery are preserved.",
+    "Initial diagnosis proves four actual failed local-service directions (PC1/SRV2 and PC2/SRV2) with two working upstream PC1/SRV1 control directions. The initial stub has Full peers and an automatic summary default but cannot export the NSSA ASBR external prefix. This distinguishes connected service reachability from OSPF external advertisement.",
+    "Consistent area10 NSSA membership permits R3’s local198.51.100.0/24 Type7/N2 advertisement. R4 and R2 install N2 at AD110/metric20; R1 installs translated E2 at20 through the single ABR2.2.2.2. The ABR translator runtime, received topology and database views identify R3 as Type7 advertiser and R2 as Type5 translator. Upstream203.0.113.0 Type5 stays outside the NSSA.",
+    "Explicit area10 nssa default-information-originate on R2 supplies a Type7/O N2 default at metric1 to R3/R4 without requiring a default at R2 itself. Plain NSSA retains IA specifics. Removing just the option preserves NSSA, removes default RIB and database entries, breaks only upstream-service directions and leaves local N2 and core E2 service paths working.",
+    "Totally-NSSA comparison explicitly removes the Type7-default option before enabling no-summary on the ABR. The Type3/O IA default costs11, nondefault IA specifics disappear and local Type7/N2 plus translated E2 remain. Restoration explicitly removes no-summary before restoring the intended Type7 default.",
+    "Six observed exercises cover missing explicit default, totally-NSSA comparison, actual membership mismatch, withdrawal/recovery of R3 connected redistribution, ABR no-redistribution scope and backbone attachment loss/recovery. The ABR scope option does not suppress another ASBR’s prefix. During backbone loss, local NSSA N2 traffic remains operational while translated backbone access and upstream default access fail. Physical carrier remains up during configuration faults.",
+    "Success requires three unique original requests, accepted destinations, parent-linked replies and expected router egresses in all six directions. Failure correlates original requests with actual No route drops of requests or their replies at the expected router and excludes received success. Configuration/RIB epochs reject stale or configuration-only proof. PC2 must receive the complete translated-service HTTP response, and PC1 the upstream-default HTTP response.",
+    "Seven live checks cover policy, received neighbors, NSSA routes, backbone translation, database, service health and saved configs. Nine historical checks cover diagnosis, actual traffic, two-service HTTP and six exercises. Practice0/16, diagnosis1/16, repaired baseline10/16 and full16/16; reference seven live checks only. Portable YAML retains observed work while dropping/rebuilding runtime; new practice starts fresh.",
+    "Fixed the database display’s NSSA default classification: it previously invented a Type3 default for plain NSSA and omitted the configured Type7 default. Plain NSSA without explicit default now shows neither, configured explicit default is Type7 and never appears as translated Type5, and totally NSSA uses the summary Type3 default. The default’s Options text correctly says No Type 7/5 translation, while the local nondefault Type7 prefix remains eligible. Stub defaults remain unchanged."
+  ],
+  "scope": "IOS OSPFv2 single-ABR NSSA external redistribution, plain/explicit-default/totally-NSSA comparison, logical Type7-to-Type5 translation and actual simulated control/data-plane delivery. The engine exchanges segmented logical router records; Type3/5/7 database views are projected from received records rather than individually scoped binary LSAs. No fresh CML capture, binary E/N/P-bit interoperability, full forwarding-address resolution rules, multiple-ABR election/grace-period FSM, translator policy commands or complete RFC timing/flooding conformance is claimed.",
+  "references": [
+    {
+      "title": "Cisco: Configure the OSPF Not-So-Stubby Area (NSSA)",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/6208-nssa.html",
+      "use": "Local Type7 redistribution, ABR translation, Type5 exclusion, plain/totally NSSA defaults and ABR no-redistribution scope."
+    },
+    {
+      "title": "Cisco: How Does OSPF Generate Default Routes?",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13692-21.html",
+      "use": "Distinguishing normal, stub, NSSA and totally-NSSA default mechanisms."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "newFocusedTests": 28,
+    "nativeTests": 3433,
+    "nativeFailures": 0,
+    "nativeDurationMs": 1026847.177375,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "defaultFlagRegression": "Focused explicit-default regression passes with No Type 7/5 translation on the default and eligible translation on the nondefault local prefix.",
+    "familyRegression": "Extended OSPFv3 stub/NSSA default regression passes: IPv6 default RIB stays ::/0 and plain/explicit NSSA never invents an inter-area summary default. The shared default entry also uses an IPv6 forwarding address for IPv6 views.",
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=23; eight nodes/seven links/16 tasks/eight-row plan; initial stub-ASBR diagnosis with actual four failed local-service directions and two working upstream controls; three Full pairs, local N2 and translated backbone E2 metric20, ABR translator, explicit Type7 N2 default1, no invented Type3 default, upstream Type5 filtering, six delivered directions and complete translated/upstream HTTP services; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=23; eight nodes/seven links/16 tasks/eight-row plan; initial stub-ASBR diagnosis with actual four failed local-service directions and two working upstream controls; three Full pairs, local N2 and translated backbone E2 metric20, ABR translator, explicit Type7 N2 default1, no invented Type3 default, upstream Type5 filtering, six delivered directions and complete translated/upstream HTTP services; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=23; eight nodes/seven links/16 tasks/eight-row plan; initial stub-ASBR diagnosis with actual four failed local-service directions and two working upstream controls; three Full pairs, local N2 and translated backbone E2 metric20, ABR translator, explicit Type7 N2 default1, no invented Type3 default, upstream Type5 filtering, six delivered directions and complete translated/upstream HTTP services; all16 including missing explicit default, totally-NSSA comparison, membership mismatch, redistribution withdrawal, ABR no-redistribution scope and backbone recovery with working local N2 control and fresh restored traffic; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=23; eight nodes/seven links/16 tasks/eight-row plan; initial stub-ASBR diagnosis with actual four failed local-service directions and two working upstream controls; three Full pairs, local N2 and translated backbone E2 metric20, ABR translator, explicit Type7 N2 default1, no invented Type3 default, upstream Type5 filtering, six delivered directions and complete translated/upstream HTTP services; all16 including missing explicit default, totally-NSSA comparison, membership mismatch, redistribution withdrawal, ABR no-redistribution scope and backbone recovery with working local N2 control and fresh restored traffic; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=23; eight nodes/seven links/16 tasks/eight-row plan; initial stub-ASBR diagnosis with actual four failed local-service directions and two working upstream controls; three Full pairs, local N2 and translated backbone E2 metric20, ABR translator, explicit Type7 N2 default1, no invented Type3 default, upstream Type5 filtering, six delivered directions and complete translated/upstream HTTP services; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=23; eight nodes/seven links/16 tasks/eight-row plan; initial stub-ASBR diagnosis with actual four failed local-service directions and two working upstream controls; three Full pairs, local N2 and translated backbone E2 metric20, ABR translator, explicit Type7 N2 default1, no invented Type3 default, upstream Type5 filtering, six delivered directions and complete translated/upstream HTTP services; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "4e8306103ee275eb1e2371fa069839854e629178fff4ebac9a08305f23a4daf5",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist and every browser-tested copy match byte for byte with embedded offline assets.",
+    "terminal": "Golden fixture matches unchanged fonts/background/foreground/cursor/tabs/controls in both themes and mobile/desktop.",
+    "verificationCommands": "All published IOS/Windows queries, traces, probes and reference configurations execute through ordinary CLI. Native cases deny actual protocol89 delivery, check N2/E2/default classification and received state, reject configuration-only/partial/stale proof, and exercise rendered-config replay, OSPF process reset, saved reload and portable history.",
+    "visualInspection": [
+      ".cache/on-catalog-browser/topology-light-1440.png",
+      ".cache/on-catalog-browser/guide-light-1440.png",
+      ".cache/on-catalog-browser/console-light-1440.png",
+      ".cache/on-catalog-browser/guide-dark-320.png",
+      ".cache/on-catalog-browser/console-dark-320.png",
+      ".cache/on-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full16-task ordinary UI workflows complete at320px/dark and1440px/light. Four other theme/viewport cases earn ten baseline tasks with six exercises unearned. All export/import real YAML into empty offline profiles and load seven-live-check-only references.",
+    "Six file:// cases block external HTTP(S). Two mocked-host permalink checks preserve domain/path/query/workspace. Seven generic catalog checks cover counts, original labs, prerequisites and save/cancel/import protection.",
+    "Browser clocks advance ordinary application frames; routes, neighbors, LSAs, traffic results and task completions are not injected."
+  ]
+}

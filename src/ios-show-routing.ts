@@ -371,7 +371,11 @@ function ospfDatabaseEntries(v: OspfView): DbLsa[] {
     for (const abr of lsas.filter(l => areasOf(l).size > 1 && areasOf(l).has(area))) {
       const abrDevice = v.e.getDevice(deviceOf(abr) ?? ''), received = [...abr.links.map(k => k.from), ...abr.prefixes.map(p => p.endpoint)].find(p => p.deviceId === abrDevice?.id && p.snapshot)?.snapshot?.deviceConfig, abrConfig = abrDevice ? routingConfig(received ? { ...abrDevice, config: received } : abrDevice, v.protocol) : undefined, mineAreas = areasOf(abr);
       const add = (linkId: string, mask: number, metric: number) => { if (!result.some(r => r.type === 3 && r.area === area && r.linkId === linkId && r.mask === mask && r.adv === abr.routerId)) result.push({ type: 3, area, linkId, adv: abr.routerId, age: abr.age, seq: abr.sequence, checksum: checksum(3, area, linkId, mask, abr.routerId, abr.sequence), mask, metric }); };
-      if (kind !== 'normal' && mineAreas.has('0')) add(v.protocol === 'ospfv3' ? '::' : '0.0.0.0', 0, Number(areaConfig(abrConfig, area)?.defaultCost ?? 1));
+      const settings = areaConfig(abrConfig, area), defaultId = v.protocol === 'ospfv3' ? '::' : '0.0.0.0';
+      if (mineAreas.has('0')) {
+        if (kind === 'stub' || kind === 'nssa' && settings?.noSummary) add(defaultId, 0, Number(settings?.defaultCost ?? 1));
+        else if (kind === 'nssa' && settings?.defaultOriginate) result.push({ type: 7, area, linkId: defaultId, adv: abr.routerId, age: abr.age, seq: abr.sequence, checksum: checksum(7, area, defaultId, abr.routerId, abr.sequence), mask: 0, metric: Number(settings.defaultCost ?? 1), metricType: 2, forward: v.v3 ? '::' : '0.0.0.0' });
+      }
       if (kind !== 'normal' && areaConfig(abrConfig, area)?.noSummary) continue;
       for (const source of [...new Set(lsas.flatMap(l => [...areasOf(l)]))].filter(x => x !== area && (area !== '0' || mineAreas.has(x)))) {
         if (area !== '0' && source !== '0' && !mineAreas.has(source) && !mineAreas.has('0')) continue;
@@ -457,7 +461,7 @@ function ospfDatabase(v: OspfView, args: string[]): string[] {
 function ospfLsaDetail(v: OspfView, r: DbLsa): string[] {
   const own = r.adv === v.rid, lines = [...(own ? [] : ['  Routing Bit Set on this LSA in topology Base with MTID 0']), `  LS age: ${r.age}`];
   const upward = r.type >= 3 ? ', Upward' : '';
-  lines.push(`  Options: (No TOS-capability, ${r.type === 7 ? 'Type 7/5 translation, ' : ''}DC${upward})`);
+  lines.push(`  Options: (No TOS-capability, ${r.type === 7 ? `${r.mask === 0 ? 'No ' : ''}Type 7/5 translation, ` : ''}DC${upward})`);
   const typeName: Record<number, string> = { 1: 'Router Links', 2: 'Network Links', 3: 'Summary Links(Network)', 4: 'Summary Links(AS Boundary Router)', 5: 'AS External Link', 7: 'AS External Link' };
   const idNote: Record<number, string> = { 1: '', 2: ' (address of Designated Router)', 3: ' (summary Network Number)', 4: ' (AS Boundary Router address)', 5: ' (External Network Number )', 7: ' (External Network Number )' };
   const length = r.type === 1 ? 24 + 12 * r.routerLinks!.length : r.type === 2 ? 24 + 4 * r.attached!.length : r.type >= 5 ? 36 : 28;
