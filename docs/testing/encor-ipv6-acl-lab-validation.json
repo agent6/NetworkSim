@@ -1,0 +1,92 @@
+{
+  "lab": "IPv6 ACL Configuration and Verification",
+  "catalogId": "ipv6-acl-configuration-and-verification",
+  "group": "CCNP ENCOR",
+  "section": "Security",
+  "date": "2026-10-30",
+  "nodes": 6,
+  "links": 5,
+  "tasks": 20,
+  "topology": "PC1 and PC2 share a prepared VLAN1 access switch and R1 client LAN. R1 has separate SRV1 HTTP and SRV2 DNS/HTTP LANs. Manual dual-stack addressing, scoped IPv6 default gateways and services are prepared; R1 IPv6 forwarding initially starts disabled.",
+  "implemented": [
+    "Fifth ENCOR Security lab and37 ENCOR entries. Existing CCNA ACL and AAA labs remain available; shared links retain the current domain, path and query.",
+    "Native IOS named IPv6 ACL trailing sequence syntax, no sequence editing, seven ordered EDGE-V6 entries, exclusive Gi0/0 inbound ipv6 traffic-filter and visible interface binding output.",
+    "IPv6 TCP destination80 host exception, UDP53 client-prefix permission, ICMPv6 echo permission, broader server deny and explicit terminal deny. Full HTTP200 responses, fresh receiver-confirmed AAAA answers and three correlated ACL-permitted echo replies prove the actual services and forwarding.",
+    "Incoming logical IPv6 Neighbor Solicitation/Advertisement now pass through the applied interface ACL before cache learning and DAD observation. Explicit nd-ns/nd-na permissions preserve resolution; a terminal deny overrides the classic IOS implicit ND exception. Unsolicited advertisements map to the all-nodes multicast destination.",
+    "The positive neighbor exercise requires a real PC1 gateway solicitation and a separately solicited advertisement, with actual received NDP frame IDs; background DAD and gratuitous announcements alone cannot earn it.",
+    "Cold gateway failure requires an actual denied solicitation for fe80::1, followed by a newly permitted solicitation and three fresh successfully filtered replies after restoring both ND entries. Warm cache success cannot substitute.",
+    "Explicit versus implicit deny, first-match shadowing, wrong HTTP source/destination ports, wrong DNS protocol/port, returning echo-reply egress filtering and temporarily unbound access are verified with actual packet evidence. Repair requires new traffic after the fault.",
+    "A fresh PC2 IPv4 HTTP success after the corresponding IPv6 denial proves address-family independence.",
+    "clear ipv6 access-list [name] clears IPv6 counters while retaining IPv4 counts. A bounded reset history records actual pre-clear counts. Lab credit requires the populated named list and fresh permitted/denied traffic after clearing; empty, unrelated and all-list clears cannot substitute.",
+    "Final live save checks exact restored IPv6 policy/binding, IPv4/IPv6 forwarding, startup equality, original addresses and both host gateway families, services/AAAA data, operational access VLAN1 paths and five healthy links without extra filters.",
+    "Practice begins0/20. Completed reference has four live tasks with empty serialized runtime; boot-time DAD/ND rebuilds naturally and cannot invent traffic, repair or reset achievements. All20 earned outcomes survive YAML export/import while runtime sessions and counters rebuild.",
+    "Bounded imported criteria reject unknown checks, foreign roots and missing required interfaces. Cached DNS, fabricated counters and advisory ACL queries alone do not create traffic evidence."
+  ],
+  "scope": [
+    "Working IOS routed IPv6 interface ACLs and logical incoming NS/NA decisions. The seven-entry reference explicitly permits ND before its terminal deny so the exercise does not depend on platform-specific implicit ND defaults.",
+    "Binary ND wire encoding, outgoing locally generated NDP ACL filtering, fragmentation matching, ACL log aggregation, scheduled ACLs and stateful inspection are not configured or certified by this lab.",
+    "Primary Cisco documentation reviewed. No new live CML capture was performed. Existing IOS/NX-OS CML regression contracts pass within the full suite.",
+    "No UI layout/theme, terminal styling, artwork, dependency or server/backend changes."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS IPv6 command reference: IPv6 commands",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipv6/command/ipv6-cr-book/ipv6-i1.html"
+    },
+    {
+      "title": "Catalyst3650 IOS XE16.12: Configuring IPv6 ACLs",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3650/software/release/16-12/configuration_guide/sec/b_1612_sec_3650_cg/configuring_ipv6_acls.html"
+    },
+    {
+      "title": "IOS XE16.12: IPv6 access control lists and platform restrictions",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/sec_data_acl/configuration/xe-16-12/sec-data-acl-xe-16-12-book/ip6-acls-xe.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "nativeTests": 2838,
+    "nativePassed": 2838,
+    "nativeFailed": 0,
+    "nativeDurationMs": 256890.810834,
+    "newLabTests": 26,
+    "browserChecks": [
+      "light 320px: Security=5, six nodes/five links/20 tasks and six-row plan; IPv6 forwarding, four-path baseline, native-sequence named ACL, ingress ND solicitation/advertisement, actual IPv6 HTTP/AAAA DNS/ICMP permits and drops plus independent IPv4 HTTP; 13 configuration and traffic tasks with seven fault/reset outcomes left unearned; offline YAML export/import, four live tasks only in completed reference, responsive guide, fitted topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: Security=5, six nodes/five links/20 tasks and six-row plan; IPv6 forwarding, four-path baseline, native-sequence named ACL, ingress ND solicitation/advertisement, actual IPv6 HTTP/AAAA DNS/ICMP permits and drops plus independent IPv4 HTTP; all20 with explicit/implicit deny, cold gateway ND repair, first-match shadow, wrong HTTP port, reversed reply filtering, unbound bypass and populated IPv6 counter reset/rebuild; offline YAML export/import, four live tasks only in completed reference, responsive guide, fitted topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: Security=5, six nodes/five links/20 tasks and six-row plan; IPv6 forwarding, four-path baseline, native-sequence named ACL, ingress ND solicitation/advertisement, actual IPv6 HTTP/AAAA DNS/ICMP permits and drops plus independent IPv4 HTTP; all20 with explicit/implicit deny, cold gateway ND repair, first-match shadow, wrong HTTP port, reversed reply filtering, unbound bypass and populated IPv6 counter reset/rebuild; offline YAML export/import, four live tasks only in completed reference, responsive guide, fitted topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: Security=5, six nodes/five links/20 tasks and six-row plan; IPv6 forwarding, four-path baseline, native-sequence named ACL, ingress ND solicitation/advertisement, actual IPv6 HTTP/AAAA DNS/ICMP permits and drops plus independent IPv4 HTTP; 13 configuration and traffic tasks with seven fault/reset outcomes left unearned; offline YAML export/import, four live tasks only in completed reference, responsive guide, fitted topology, golden terminal styles and save/cancel protection.",
+      "light 390px: Security=5, six nodes/five links/20 tasks and six-row plan; IPv6 forwarding, four-path baseline, native-sequence named ACL, ingress ND solicitation/advertisement, actual IPv6 HTTP/AAAA DNS/ICMP permits and drops plus independent IPv4 HTTP; 13 configuration and traffic tasks with seven fault/reset outcomes left unearned; offline YAML export/import, four live tasks only in completed reference, responsive guide, fitted topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: Security=5, six nodes/five links/20 tasks and six-row plan; IPv6 forwarding, four-path baseline, native-sequence named ACL, ingress ND solicitation/advertisement, actual IPv6 HTTP/AAAA DNS/ICMP permits and drops plus independent IPv4 HTTP; 13 configuration and traffic tasks with seven fault/reset outcomes left unearned; offline YAML export/import, four live tasks only in completed reference, responsive guide, fitted topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "de54e287bfe9e0fabbbb4f6e5d1aeeaf03e539b02db006705a2219ec9670a1c8",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks; root, dist and all browser-tested copies have identical bytes.",
+    "terminal": "Golden fixtures match fonts, colors, cursor and terminal controls across both themes and desktop/mobile modes.",
+    "additionalSmoke": "IPv6 ACL Tab completion for trailing sequence and clear ipv6 access-list, ambiguous partial nd-n retention and partial question-mark help passed.",
+    "visualInspection": [
+      ".cache/encor-ipv6-acl-catalog-browser/topology-light-1440.png",
+      ".cache/encor-ipv6-acl-catalog-browser/guide-light-1440.png",
+      ".cache/encor-ipv6-acl-catalog-browser/console-light-1440.png",
+      ".cache/encor-ipv6-acl-catalog-browser/guide-dark-320.png",
+      ".cache/encor-ipv6-acl-catalog-browser/console-dark-320.png",
+      ".cache/encor-ipv6-acl-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "All20 tasks complete through normal UI controls on1440px/light and320px/dark. Four other theme/viewport cases earn13 baseline/configuration/traffic tasks with seven fault/reset outcomes left unearned.",
+    "Six file:// cases block HTTP(S); two sharing cases preserve current domain/path/query/workspace. Seven generic catalog checks retain other-section counts and original CCNA entries.",
+    "Browser clock advances normal application frames; no simulator state, packet decisions or earned achievements are injected. Initial boot and power cycles wait for DAD; pings allow2000ms so negative neighbor-resolution retries settle before the repair attempt.",
+    "The unbound observation is checked while the list is actually unbound, before restoring the required final inbound binding."
+  ]
+}

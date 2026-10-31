@@ -117,6 +117,7 @@ function aclGraph(type: string): SyntaxGraph {
   const flags = graph(true);
   flags.edges.push({ atom: word('log', 'Log matches against this entry'), next: flags }, { atom: word('time-range', 'Specify a time-range'), next: chain([text('Time-range entry name')], flags) });
   const ipv6 = type === 'ipv6';
+  if(ipv6)flags.edges.push({atom:word('sequence','Sequence number'),next:chain([number(1,2147483647,'Sequence number')],graph(true))});
   // IOS words source and destination help differently (`Source wildcard bits`, `Any destination host`).
   const endpoint = (next: SyntaxGraph, role: 'standard' | 'source' | 'destination'): SyntaxGraph => {
     const side = role === 'destination' ? 'destination' : 'source', Side = role === 'destination' ? 'Destination' : 'Source';
@@ -144,7 +145,7 @@ function aclGraph(type: string): SyntaxGraph {
   else {
     const source = (next: SyntaxGraph) => endpoint(next, 'source'), destination = (next: SyntaxGraph) => endpoint(next, 'destination');
     const plain = source(destination(flags)), transport = (protocol: 'tcp' | 'udp') => source(portMatch(protocol, destination(portMatch(protocol, flags)))), tcp = transport('tcp'), udp = transport('udp');
-    const icmpTypes: Record<string, string> = { echo: 'Echo (ping)', 'echo-request': 'Echo request', 'echo-reply': 'Echo reply', unreachable: 'All unreachables', 'time-exceeded': 'All time exceededs', 'packet-too-big': 'Packet too big' };
+    const icmpTypes: Record<string, string> = { echo: 'Echo (ping)', 'echo-request': 'Echo request', 'echo-reply': 'Echo reply', unreachable: 'All unreachables', 'time-exceeded': 'All time exceededs', 'packet-too-big': 'Packet too big',...(ipv6?{'nd-ns':'Neighbor solicitation','nd-na':'Neighbor advertisement'}:{}) };
     const icmpTail = union(flags, ...Object.entries(icmpTypes).map(([name, help]) => chain([word(name, help)], union(flags, chain([number(0, 255, 'ICMP message code')], flags)))), chain([number(0, 255, 'ICMP message type')], union(flags, chain([number(0, 255, 'ICMP message code')], flags))));
     const icmp=source(destination(icmpTail)),numeric=(valid:(value:number)=>boolean)=>({...number(0,255,'An IP protocol number'),valid:(value:string)=>/^\d+$/.test(value)&&+value<=255&&valid(+value)});
     const protocols: Record<string, string> = { ip: 'Any Internet Protocol', ipv6: 'Any IPv6 protocol', igmp: 'Internet Gateway Message Protocol', gre: "Cisco's GRE tunneling", esp: 'Encapsulation Security Payload', ah: 'Authentication Header Protocol', ospf: 'OSPF routing protocol', eigrp: "Cisco's EIGRP routing protocol", pim: 'Protocol Independent Multicast' };
@@ -603,6 +604,7 @@ function specialPosition(path: string, tokens: IosToken[], context: IosSyntaxCon
   if (path === 'access-list' || path === 'sequence') {
     if (!tokens.length) return { atoms: [number(1, path === 'sequence' ? 2147483647 : 2699, path === 'sequence' ? 'Sequence number' : 'Access list number')], complete: false };
     if (!/^\d+$/.test(tokens[0].text)) return { atoms: [], complete: false, bad: 0 };
+    if(path==='sequence'&&no)return tokens.length===1?{atoms:[],complete:true}:{atoms:[],complete:false,bad:1};
     if (tokens.length === 1) return { atoms: ['permit', 'deny', 'remark'].map(value => word(value, 'Access list entry')), complete: no };
     const action = tokens[1].text.toLowerCase();
     if (action === 'remark') return { atoms: [tail('Comment')], complete: tokens.length > 2 };

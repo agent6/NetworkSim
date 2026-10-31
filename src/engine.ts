@@ -361,6 +361,7 @@ export class Simulator {
       if (b.kind === 'tcp-channel') { const phaseFlags: Record<string, string> = { syn: 'SYN', 'syn-ack': 'SYN ACK', ack: 'ACK', data: 'PSH ACK', 'data-ack': 'ACK', fin: 'FIN ACK', 'fin-ack': 'FIN ACK', rst: 'RST' }; result.tcpFlags = phaseFlags[b.phase]; result.tcpChannelId = b.channelId; result.messageType = 'tcp-channel-' + b.phase; if (b.phase === 'data') Object.assign(result, { tcpMessageSequence: b.sequence, tcpSegmentIndex: b.segment, tcpSegmentCount: b.total }); if (b.phase === 'data-ack') Object.assign(result, { tcpMessageSequence: b.sequence, tcpAckSegmentIndex: b.segment }); }
     }
     if (['icmp', 'icmpv6'].includes(p.protocol)) {
+      if(b.kind==='nd-ns'||b.kind==='nd-na')Object.assign(result,{icmpType:b.kind==='nd-ns'?135:136,icmpCode:0,ndTarget:b.target});
       if (b.kind === 'echo-request' || b.kind === 'echo-reply') Object.assign(result, { icmpType: b.kind === 'echo-request' ? v6 ? 128 : 8 : v6 ? 129 : 0, icmpCode: 0, icmpIdentifier: p.sourcePort, icmpSequence: b.sequence });
       if(b.kind==='icmp-redirect')Object.assign(result,{icmpType:5,icmpCode:1});
       if (b.kind === 'icmp-error') { const reason = String(b.error ?? ''); const type = /Time exceeded/i.test(reason) ? v6 ? 3 : 11 : /Packet too big/i.test(reason) && v6 ? 2 : v6 ? 1 : 3; const code = /Time exceeded|Packet too big/i.test(reason) ? 0 : /Fragmentation needed/i.test(reason) ? 4 : /Administratively prohibited/i.test(reason) ? v6 ? 1 : 13 : /Port unreachable/i.test(reason) ? v6 ? 4 : 3 : /host unreachable/i.test(reason) ? v6 ? 3 : 1 : 0; Object.assign(result, { icmpType: type, icmpCode: code, icmpError: reason,...b.original?{icmpQuoted:{source:b.original.source,destination:b.original.destination,protocol:b.original.protocol,sourcePort:b.original.sourcePort,destinationPort:b.original.destinationPort}}:{} }); }
@@ -483,7 +484,7 @@ export class Simulator {
     if(!('kind'in payload)){if(isDatacenter(d))payload.vpcIngress={deviceId:d.id,peerLink:vpcPeerLink(d,port)};else delete payload.vpcIngress;}
     if ('kind' in payload && payload.kind === 'dhcp') this.receiveDHCP(d, port, vlan, frame, payload);
     if ('kind' in payload && payload.kind === 'link-control') for (const name of logical) this.ipv6Services.receive(d, name, payload);
-    if ('kind' in payload && payload.kind === 'arp') for (const name of logical) this.receiveArp(d, name, payload);
+    if ('kind' in payload && payload.kind === 'arp') for (const name of logical) this.receiveArp(d, name, payload, frame.id);
     let delivered = false;
     if (!('kind' in payload)) {
       for (const name of logical) {
@@ -714,7 +715,7 @@ export class Simulator {
   private receiveIP(d: Device, input: string, packet: IPPacket, ingressQosHandled = false, tunnelPeer?:string): void {
     const c = d.config.interfaces[input]; packet.vrf = c.vrf;
     if (!ingressQosHandled && !applyQos(this, d, input, 'in', packet, (name, p) => this.aclAllows(d, name, p))) return;
-    if (!this.aclAllows(d, isIPv6(packet.destination) ? c.features.ipv6AclIn : c.features.aclIn, packet,{port:input,direction:'in'})) { this.packetEvent(d, packet, 'Ingress ACL denied', 'Access list ' + c.features.aclIn, 'drop', input); this.icmpError(d, packet, 'Administratively prohibited', input); return; }
+    if (!this.aclAllows(d, isIPv6(packet.destination) ? c.features.ipv6AclIn : c.features.aclIn, packet,{port:input,direction:'in'})) { this.packetEvent(d, packet, 'Ingress ACL denied', 'Access list ' + (isIPv6(packet.destination)?c.features.ipv6AclIn:c.features.aclIn), 'drop', input); this.icmpError(d, packet, 'Administratively prohibited', input); return; }
     if(c.features.urpf&&isIPv4(packet.source)&&packet.source!=='0.0.0.0'){
       const policy=c.features.urpf,paths=resolveForwardingPaths(d,packet.source,c.vrf,port=>this.interfaceUp(d.id,port)),pass=paths.some(path=>!/^Null/i.test(path.port)&&(path.route.prefix>0||policy.allowDefault)&&(policy.mode==='any'||path.port===input));
       if(!pass&&!(policy.acl&&this.aclAllows(d,policy.acl,packet))){const counters=d.runtime.features.urpfDrops??={};counters[input]=(counters[input]??0)+1;this.packetEvent(d,packet,'uRPF verification failed','Source address has no permitted reverse forwarding path.','drop',input);return;}
@@ -759,7 +760,7 @@ export class Simulator {
     if(packet.protocol==='tcp'&&((packet.body?.kind==='tcp-channel'&&['syn','syn-ack'].includes(packet.body.phase))||['tcp-syn','tcp-syn-ack'].includes(packet.body?.kind))){const limits=[d.config.interfaces[route.port]?.features.tcpMss,input?d.config.interfaces[input]?.features.tcpMss:undefined].filter((value):value is number=>typeof value==='number');if(limits.length)packet.body.mss=Math.min(packet.body.mss??1024,...limits);}
     const translated = this.translateOutbound(d, input, route.port, packet); if (!translated) { if (input) this.icmpError(d, packet, 'NAT address pool exhausted', input); return; } packet = translated;
     if (!applyQos(this, d, route.port, 'out', packet, (name, p) => this.aclAllows(d, name, p))) return;
-    if (egressAclRequired(d,input) && !this.aclAllows(d, isIPv6(packet.destination) ? c.features.ipv6AclOut : c.features.aclOut, packet,{port:route.port,direction:'out'})) { this.packetEvent(d, packet, 'Egress ACL denied', 'Access list ' + c.features.aclOut, 'drop', route.port); if (input) this.icmpError(d, packet, 'Administratively prohibited', input); else this.failLocal(d.id, packet, 'Administratively prohibited'); return; }
+    if (egressAclRequired(d,input) && !this.aclAllows(d, isIPv6(packet.destination) ? c.features.ipv6AclOut : c.features.aclOut, packet,{port:route.port,direction:'out'})) { this.packetEvent(d, packet, 'Egress ACL denied', 'Access list ' + (isIPv6(packet.destination)?c.features.ipv6AclOut:c.features.aclOut), 'drop', route.port); if (input) this.icmpError(d, packet, 'Administratively prohibited', input); else this.failLocal(d.id, packet, 'Administratively prohibited'); return; }
     if (this.cryptoServices.protect(d, route.port, packet)) return;
     const mtu = Math.max(68, Number(c.features.ipMtu ?? c.mtu));
     recordFlow(this, d, input, route.port, packet);
@@ -862,8 +863,9 @@ export class Simulator {
       else { this.pendingArp.delete(this.arpKey(d, wait.port, wait.target)); for (const packet of wait.packets) { this.packetEvent(d, packet, 'Neighbor unresolved', 'No reply for ' + wait.target, 'drop', wait.port); if (this.localInterface(d, packet.source, packet.vrf)) this.failLocal(d.id, packet, 'Destination host unreachable'); else this.icmpError(d, packet, 'Destination host unreachable', wait.port); } }
     }, { owner: d.id, label: 'neighbor resolution timeout' });
   }
-  private receiveArp(d: Device, port: string, arp: ArpMessage): void {
+  private receiveArp(d: Device, port: string, arp: ArpMessage, frameId?:string): void {
     const c = d.config.interfaces[port]; if (!c) return;
+    if(arp.family===6&&c.features.ipv6AclIn){const ns=arp.operation==='request',destination=ns?bigIntToIPv6(ipv6ToBigInt('ff02::1:ff00:0')|(ipv6ToBigInt(arp.target)&0xffffffn)):arp.target===arp.source||arp.target==='::'?'ff02::1':arp.target,packet:IPPacket={id:frameId??this.id('nd-acl'),source:arp.source,destination,protocol:'icmpv6',ttl:255,size:72,df:false,body:{kind:ns?'nd-ns':'nd-na',target:arp.target}};if(!this.aclAllows(d,c.features.ipv6AclIn,packet,{port,direction:'in'})){this.packetEvent(d,packet,'Ingress ACL denied','Access list '+c.features.ipv6AclIn,'drop',port);return;}}
     this.ipv4LinkLocal.observe(d, port, arp);
     if (arp.family === 6) this.ipv6Services.observeNeighbor(d, port, arp);
     const checking = d.runtime.features.dhcpAddressChecks?.[port];
@@ -1011,6 +1013,7 @@ export class Simulator {
       if (d.kind !== 'datacenter' || acl.statistics) { const hits = d.runtime.features.aclHits ??= {}; hits[name + ':' + entry.sequence] = (hits[name + ':' + entry.sequence] ?? 0) + 1; }
       return decision(entry.action,entry.sequence);
     }
+    if(acl.type==='ipv6'&&packet.protocol==='icmpv6'&&['nd-ns','nd-na'].includes(packet.body?.kind))return decision('permit',undefined,true);
     return decision('deny',undefined,true);
   }
   private addressMatches(address: string, rule?: string, wildcard?: string): boolean {

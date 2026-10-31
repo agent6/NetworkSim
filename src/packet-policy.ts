@@ -291,6 +291,8 @@ export function icmpMessageFields(packet: IPPacket): { type: number; code: numbe
   let type: number | undefined, code = 0;
   if (body.kind === 'echo-request') type = v6 ? 128 : 8;
   else if (body.kind === 'echo-reply') type = v6 ? 129 : 0;
+  else if (v6&&body.kind==='nd-ns') type=135;
+  else if(v6&&body.kind==='nd-na') type=136;
   else if (body.kind === 'icmp-error') {
     const reason = String(body.error ?? '');
     type = /Time exceeded/i.test(reason) ? v6 ? 3 : 11 : /Packet too big/i.test(reason) && v6 ? 2 : v6 ? 1 : 3;
@@ -304,7 +306,7 @@ export function aclIcmpMatches(entry: { icmpType?: string | number; icmpCode?: n
   if (entry.icmpType === undefined && entry.icmpCode === undefined) return true;
   const message = icmpMessageFields(packet); if (!message) return false;
   const v6 = packet.protocol === 'icmpv6';
-  const names: Record<string, number> = { echo: v6 ? 128 : 8, 'echo-request': v6 ? 128 : 8, 'echo-reply': v6 ? 129 : 0, unreachable: v6 ? 1 : 3, 'time-exceeded': v6 ? 3 : 11, 'packet-too-big': 2 };
+  const names: Record<string, number> = { echo: v6 ? 128 : 8, 'echo-request': v6 ? 128 : 8, 'echo-reply': v6 ? 129 : 0, unreachable: v6 ? 1 : 3, 'time-exceeded': v6 ? 3 : 11, 'packet-too-big': 2, 'nd-ns':135, 'nd-na':136 };
   const wanted = typeof entry.icmpType === 'string' ? names[entry.icmpType] ?? (/^\d+$/.test(entry.icmpType) ? Number(entry.icmpType) : NaN) : entry.icmpType;
   return (wanted === undefined || message.type === wanted) && (entry.icmpCode === undefined || message.code === entry.icmpCode);
 }

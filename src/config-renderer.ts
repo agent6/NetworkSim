@@ -308,7 +308,7 @@ export function renderConfig(device: Device, config: DeviceConfig = device.confi
   lines.push('!');
   for (const [name, acl] of Object.entries<any>(c.features.acls || {})) {
     lines.push(acl.type==='ipv6'?`ipv6 access-list ${name}`:`ip access-list ${acl.type || 'extended'} ${name}`);
-    for (const e of acl.entries || []) lines.push(` ${e.sequence} ${e.text}`);
+    for (const e of acl.entries || []) lines.push(acl.type==='ipv6'?` ${e.text} sequence ${e.sequence}`:` ${e.sequence} ${e.text}`);
     lines.push('!');
   }
   for(const [name,chain]of Object.entries<any>(c.features.keychains||{})){lines.push(`key chain ${name}`);for(const [id,key]of Object.entries<any>(chain.keys||{})){lines.push(` key ${id}`);if(key.keyString)lines.push(`  key-string ${key.keyString}`);if(key.algorithm)lines.push(`  cryptographic-algorithm ${key.algorithm}`);const date=(t:number)=>{const d=new Date(t);return `${d.toISOString().slice(11,19)} ${['January','February','March','April','May','June','July','August','September','October','November','December'][d.getUTCMonth()]} ${d.getUTCDate()} ${d.getUTCFullYear()}`;};for(const kind of ['accept','send'])if(key[kind+'Lifetime']){const life=key[kind+'Lifetime'];lines.push(`  ${kind}-lifetime ${date(life.start||Date.UTC(1970,0,1))} ${life.end!==undefined?date(life.end):'infinite'}`);}lines.push(' exit');}lines.push('!');}
