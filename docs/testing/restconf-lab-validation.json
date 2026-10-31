@@ -1,0 +1,88 @@
+{
+  "lab": "RESTCONF Configuration and Verification",
+  "catalogId": "restconf-configuration-and-verification",
+  "group": "CCNP ENCOR",
+  "section": "Network Assurance",
+  "date": "2026-10-30",
+  "nodes": 4,
+  "links": 3,
+  "tasks": 20,
+  "topology": "PC1 and PC2 reach R1 through independent management LANs. R1 Gi0/1 routes server data separately from HTTPS TCP 443; Loopback10 is created, edited, deleted and restored through actual API requests.",
+  "implemented": [
+    "Local privilege-15 operator and privilege-1 observer, RESTCONF, local HTTP authentication, HTTPS enabled and plaintext HTTP disabled.",
+    "The browser client now exposes GET, HEAD, POST, PUT, PATCH and DELETE, editable guided JSON examples, media headers and a bounded downloadable credential-free transaction transcript.",
+    "GET root and encoded interface key return actual YANG JSON, addresses, operational state and counters. Hostname PATCH/readback/restoration shares IOS and diagram state.",
+    "POST creates a real Loopback10 route, returns201 with Location and requires fresh delivered ping replies. Duplicate POST returns409 resource-denied without mutation.",
+    "PATCH merges a description while preserving IP; PUT replaces the selected interface, clears omitted description and requires GET plus fresh ICMP verification.",
+    "Invalid multi-interface edits reject atomically, preserving data-interface state and real routed connectivity.",
+    "PUT enabled=false withdraws actual server forwarding; PATCH enabled=true and fresh delivered replies prove recovery over the separate management path.",
+    "DELETE with an empty body now works; removed virtual interfaces return404 on GET and lose their route. Recreate/restore requires fresh IP replies.",
+    "Unsupported Accept and Content-Type produce406/415. Wrong credentials and the observer produce401 with the Basic challenge.",
+    "HTTP access-class returns403 for PC1 while PC2 HTTPS and PC1 data pings work; an ingress TCP443 ACL instead fails transport without an HTTP status. Both repairs require a fresh successful PC1 GET.",
+    "Request outcomes are correlated to actual matching TCP request/reply events, and before/after interface-only snapshots never contain account credentials. Runtime retains at most100 requests and is cleared on portable save/load.",
+    "Practice starts0/20; completed reference contains six live configuration tasks without pre-earned observations. Historical achievements survive YAML, live policy and saved configuration remain required, and missing imported roots/interfaces fail closed."
+  ],
+  "scope": [
+    "Bounded IOS XE teaching models: modeled HTTPS, HTTP Basic authentication, ietf-interfaces/ietf-ip and native hostname JSON.",
+    "No TLS cryptography or certificate validation, full YANG library, arbitrary queries, ETags/conditional requests, YANG Patch, subscriptions or external API interoperability. No startup capability is advertised; save startup through IOS.",
+    "Primary Cisco documentation and RFC8040 reviewed; no new live CML capture was performed.",
+    "Existing terminal styling, general theme and node artwork are unchanged."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE17.18: RESTCONF Protocol",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/prog/configuration/1718/b-1718-programmability-cg/restconf_protocol.html"
+    },
+    {
+      "title": "RFC8040: RESTCONF Protocol",
+      "url": "https://www.rfc-editor.org/rfc/rfc8040.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "nativeTests": 2716,
+    "nativePassed": 2716,
+    "nativeFailed": 0,
+    "nativeDurationMs": 230111.602125,
+    "newLabTests": 24,
+    "existingModelDrivenTests": 18,
+    "browserChecks": [
+      "light 320px: ten Network Assurance labs; four nodes/three links/20 tasks; five-row plan; actual authenticated JSON reads, POST201/Location, duplicate409, PATCH merge, PUT replacement and atomic400; thirteen initial running-resource and forwarding tasks without pre-earned incidents; responsive editor preserves focus/body; no saved auth password; golden unchanged terminal; YAML preserves achievements and clears HTTP runtime; six live tasks only in completed reference; cancel/save-copy protection.",
+      "dark 320px: ten Network Assurance labs; four nodes/three links/20 tasks; five-row plan; actual authenticated JSON reads, POST201/Location, duplicate409, PATCH merge, PUT replacement and atomic400; all20 with actual data loss/recovery, DELETE404/recreation, media406/415, HTTP access-class403 and independent TCP443 ACL failure/recovery; responsive editor preserves focus/body; no saved auth password; golden unchanged terminal; YAML preserves achievements and clears HTTP runtime; six live tasks only in completed reference; cancel/save-copy protection.",
+      "light 1440px: ten Network Assurance labs; four nodes/three links/20 tasks; five-row plan; actual authenticated JSON reads, POST201/Location, duplicate409, PATCH merge, PUT replacement and atomic400; all20 with actual data loss/recovery, DELETE404/recreation, media406/415, HTTP access-class403 and independent TCP443 ACL failure/recovery; responsive editor preserves focus/body; no saved auth password; golden unchanged terminal; YAML preserves achievements and clears HTTP runtime; six live tasks only in completed reference; cancel/save-copy protection.",
+      "dark 1440px: ten Network Assurance labs; four nodes/three links/20 tasks; five-row plan; actual authenticated JSON reads, POST201/Location, duplicate409, PATCH merge, PUT replacement and atomic400; thirteen initial running-resource and forwarding tasks without pre-earned incidents; responsive editor preserves focus/body; no saved auth password; golden unchanged terminal; YAML preserves achievements and clears HTTP runtime; six live tasks only in completed reference; cancel/save-copy protection.",
+      "light 390px: ten Network Assurance labs; four nodes/three links/20 tasks; five-row plan; actual authenticated JSON reads, POST201/Location, duplicate409, PATCH merge, PUT replacement and atomic400; thirteen initial running-resource and forwarding tasks without pre-earned incidents; responsive editor preserves focus/body; no saved auth password; golden unchanged terminal; YAML preserves achievements and clears HTTP runtime; six live tasks only in completed reference; cancel/save-copy protection.",
+      "dark 390px: ten Network Assurance labs; four nodes/three links/20 tasks; five-row plan; actual authenticated JSON reads, POST201/Location, duplicate409, PATCH merge, PUT replacement and atomic400; thirteen initial running-resource and forwarding tasks without pre-earned incidents; responsive editor preserves focus/body; no saved auth password; golden unchanged terminal; YAML preserves achievements and clears HTTP runtime; six live tasks only in completed reference; cancel/save-copy protection.",
+      "light: permalink preserves current domain/path/query/workspace and returns to all ten Network Assurance labs",
+      "dark: permalink preserves current domain/path/query/workspace and returns to all ten Network Assurance labs",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "bbc168968fc2c162b983def6e452627ed1097ea16810b58f55d71513161ecf3d",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks; final rebuilt bytes match all browser-tested copies.",
+    "terminal": "Golden fixtures match both themes and desktop/mobile console behavior.",
+    "visualInspection": [
+      ".cache/restconf-catalog-browser/client-light-1440.png",
+      ".cache/restconf-catalog-browser/topology-dark-1440.png",
+      ".cache/restconf-catalog-browser/client-light-320.png",
+      ".cache/restconf-catalog-browser/client-dark-320.png",
+      ".cache/restconf-catalog-browser/guide-light-320.png",
+      ".cache/restconf-catalog-browser/guide-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full20-task workflow passed through normal UI controls at1440px/light and320px/dark. Four other theme/viewport cases reached13 initial resource/forwarding tasks without pre-earned incident credit.",
+    "Six file:// cases block external HTTP(S) requests; two permalink cases preserve the current domain/path/query/workspace; seven generic catalog regression cases passed.",
+    "Browser clock advancement runs normal application animation frames; no simulator state, HTTP responses, traffic outcomes or achievements were injected.",
+    "HEAD metadata, empty-body DELETE, create Location, duplicate conflict, atomic validation, authentication, stateless request evidence, bounded history, imported criteria and persistence are covered by native tests."
+  ]
+}
