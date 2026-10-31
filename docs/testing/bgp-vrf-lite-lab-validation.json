@@ -1,0 +1,81 @@
+{
+  "lab": "BGP VRF-Lite Troubleshooting",
+  "catalogId": "bgp-vrf-lite-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 6,
+  "links": 5,
+  "tasks": 18,
+  "topology": "PC-BLUE and PC-RED attach to PE1 AS65001. SRV-BLUE and SRV-RED attach to PE2 AS65002. Tenants deliberately reuse client192.168.10.10, server192.168.20.10 and transit10.0.0.1/.2. One unnumbered physical transit carries tag110 BLUE and tag120 RED, each with independently scoped eBGP. PE2 originates tenant-specific loopback controls198.51.100.110/.120. Unique local RDs are65001:110/120 on PE1 and65002:110/120 on PE2. Initial PE2 BLUE remote AS65009 rejects the expected PE1 OPEN, while RED forwards normally. Both VRFs explicitly use neighbor timers5/15 and connect-retry1 for short, real failure observations.",
+  "implemented": [
+    "Thirty-sixth ENARSI entry in Layer 3 Technologies, with independent practice/reference attempts, six-row addressing plan, eighteen typed goals, IOS/Windows verification, current-domain/path/query permalinks and offline single HTML. Existing layout, icons and terminal styles are preserved.",
+    "Initial remote-AS diagnosis requires three actual BLUE service failures and successful bidirectional RED controls. Repair is scoped to PE2 BLUE, preserving the existing RED TCP channel and establishment time. All four healthy directed peer views require delivered OPEN, KEEPALIVE and UPDATE, negotiated IPv4 and a15-second hold timer.",
+    "Seven reversible BLUE-only incidents: neighbor deactivation, one-sided authentication key, network statement with unmatched/25 mask, inbound service-prefix rejection, dot1Q tag mismatch, access VRF removal with address clearing, and loopback update-source where a transit peer is expected. Each needs delivered BLUE failure with both RED controls, then fresh restored traffic in all four tenant directions. Selective origination/filter incidents require the working BLUE loopback; access binding requires working router-originated BLUE core traffic.",
+    "Healthy remote BGP paths carry exactly one external AS, weight0, LOCAL_PREF100, origin i, MED0 and AD20 in the intended VRF FIB. Locally originated paths retain weight32768 and an empty AS_PATH. The unmatched/25 is not originated from the connected/24. The filtered/24 remains in raw Adj-RIB-In but is absent from eligible candidates and RIB. Overlapping peer IPs use distinct transport channels, scoped ARP entries and tagged subinterfaces.",
+    "Traffic observations require three unique original request IDs per direction, accepted destination identity and correlated successful replies. Both request and reply must be delivered across the expected physical tag; overlapping address text alone is insufficient. Global-table and cross-tenant isolation need actual No route drops alongside positive own-tenant and explicit router VRF probes.",
+    "Two complete HTTP responses at the identical service URL must contain the distinct BLUE/RED tenant pages, match the serving endpoint and show tagged request/response traffic. Wrong tenant content, incomplete histories, two probes instead of three, stale packets, configuration-only toggles, unrelated server outages and wrong-tenant filters do not earn observations.",
+    "Seven live and eleven observed goals: practice0, diagnosed1, core11, full18 and reference7 without fabricated history. Earned observations survive YAML export/import while runtime is rebuilt; new practice clears history. Epochs and stable-state guards keep observations fresh without repeatedly scanning completed stages.",
+    "Added the IOS operational form show ip bgp vpnv4 vrf NAME for existing IPv4 VRF BGP tables, including summary, prefix detail, neighbor detail and received/advertised routes. Help and Tab expose supported forms. Unsupported all/rd/labels operations are not advertised. The command does not enable VPNv4 signaling, labels or route leaking. Added validated 2-byte-AS, 4-byte-AS and IPv4-admin RD forms with per-router uniqueness, persistence and show output. RD changes reset only that local BGP transport context; RED is preserved when BLUE changes. Existing RD-less saved documents retain compatibility, while this IOS lab prepares explicit unique RDs on both routers.",
+    "Rendered configuration replay, saved reload, startup equality, all guide verification commands, read-only operational views, help/Tab, bounded criteria, foreign-device rejection and static/topology shortcut rejection are tested. A loss-injected startup demonstrates that accepted configuration alone cannot populate BGP routes before actual TCP delivery resumes."
+  ],
+  "scope": "IPv4 VRF-Lite with independent IOS eBGP sessions and existing modeled authentication behavior. No MPLS, VPNv4 wire signaling, route-target import/export, route leaks or real cryptographic TCP-MD5 implementation is added or claimed. Cisco primary documentation reviewed; no fresh CML capture or universal IOS/NX-OS equivalence is claimed.",
+  "references": [
+    {
+      "title": "Cisco IOS XE17 BGP4: IPv4 VRF peers and troubleshooting",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_irg-bgp4.html"
+    },
+    {
+      "title": "Cisco MPLS Multi-VRF (VRF-lite): interface and forwarding separation; operational BGP VRF commands",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios/12_2sb/12_2sba/feature/guide/vrflite.html"
+    }
+  ],
+  "validation": {
+    "newTests": 32,
+    "nativeTests": 3778,
+    "nativePassed": 3778,
+    "nativeFailed": 0,
+    "nativeCancelled": 0,
+    "nativeSkipped": 0,
+    "nativeTodo": 0,
+    "nativeDurationMs": 819549.302083,
+    "commands": [
+      "npm run typecheck",
+      "node --test --test-concurrency=4 tests/*.test.ts",
+      "npm run build",
+      "NETWORKSIM_BROWSER_CASE=THEME-WIDTH node scripts/browser-bgp-vrf-lite-catalog.mjs (six cases)",
+      "node scripts/browser-lab-catalog.mjs"
+    ],
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=36; six nodes/five links/18 tasks/six-row plan; BLUE remote-AS rejection with bidirectional RED control; scoped eBGP repair, AD20 paths and CEF over distinct tags with overlapping addresses; four real host directions, distinct complete tenant HTTP pages, router VRF probes and cross-tenant/global isolation; eleven core tasks with seven controlled exercises unearned; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 390px: ENARSI Layer 3 Technologies=36; six nodes/five links/18 tasks/six-row plan; BLUE remote-AS rejection with bidirectional RED control; scoped eBGP repair, AD20 paths and CEF over distinct tags with overlapping addresses; four real host directions, distinct complete tenant HTTP pages, router VRF probes and cross-tenant/global isolation; eleven core tasks with seven controlled exercises unearned; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=36; six nodes/five links/18 tasks/six-row plan; BLUE remote-AS rejection with bidirectional RED control; scoped eBGP repair, AD20 paths and CEF over distinct tags with overlapping addresses; four real host directions, distinct complete tenant HTTP pages, router VRF probes and cross-tenant/global isolation; all18 including activation, authentication, exact-mask origination, inbound filtering, tag, binding/address and transport-source recovery with RED preserved; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=36; six nodes/five links/18 tasks/six-row plan; BLUE remote-AS rejection with bidirectional RED control; scoped eBGP repair, AD20 paths and CEF over distinct tags with overlapping addresses; four real host directions, distinct complete tenant HTTP pages, router VRF probes and cross-tenant/global isolation; all18 including activation, authentication, exact-mask origination, inbound filtering, tag, binding/address and transport-source recovery with RED preserved; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=36; six nodes/five links/18 tasks/six-row plan; BLUE remote-AS rejection with bidirectional RED control; scoped eBGP repair, AD20 paths and CEF over distinct tags with overlapping addresses; four real host directions, distinct complete tenant HTTP pages, router VRF probes and cross-tenant/global isolation; eleven core tasks with seven controlled exercises unearned; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=36; six nodes/five links/18 tasks/six-row plan; BLUE remote-AS rejection with bidirectional RED control; scoped eBGP repair, AD20 paths and CEF over distinct tags with overlapping addresses; four real host directions, distinct complete tenant HTTP pages, router VRF probes and cross-tenant/global isolation; eleven core tasks with seven controlled exercises unearned; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "301be4494ec91cd03b3993e8d5c4aada63ee1ee1501866001d2d1780b8da0292",
+    "identicalArtifactCopies": 16,
+    "build": "TypeScript and build passed. Root/dist and all final tested offline copies match byte for byte.",
+    "terminal": "Golden terminal fixture matches both themes at mobile and desktop sizes.",
+    "visualInspection": [
+      ".cache/bvl-catalog-browser/topology-light-1440.png",
+      ".cache/bvl-catalog-browser/guide-light-1440.png",
+      ".cache/bvl-catalog-browser/console-light-1440.png",
+      ".cache/bvl-catalog-browser/topology-dark-320.png",
+      ".cache/bvl-catalog-browser/guide-dark-320.png",
+      ".cache/bvl-catalog-browser/console-dark-320.png"
+    ]
+  }
+}

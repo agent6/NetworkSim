@@ -16,7 +16,7 @@ test('unsupported retained-only configuration is rejected atomically on IOS node
     for(const [setup,command] of [
       [[], 'redundancy'],
       [['line console 0'], 'speed 9600'],
-      [['end','configure terminal','vrf definition BLUE'], 'rd 65000:10'],
+      [['end','configure terminal','vrf definition BLUE'], 'route-target both 65000:10'],
       [['end','configure terminal','router ospf 1'], 'timers pacing flood 25'],
     ] as [string[],string][]){
       for(const line of setup)cli.execute(line);

@@ -527,7 +527,11 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
   }
   if (path === 'show ip ospf') return [[], ...choices(['neighbor', 'interface', 'database', 'virtual-links'])];
   if (path === 'show ip eigrp' || path === 'show ipv6 eigrp') return [[], ...choices(['neighbors', 'topology', 'interfaces'])];
-  if (path === 'show ip bgp') return [[], ...choices(['summary', 'neighbors'])];
+  if (path === 'rd') return [[argument('ASN:NN or A.B.C.D:NN', 'Route distinguisher')]];
+  if (path === 'show ip bgp') {
+    const views: Form[] = [[], [argument('A.B.C.D[/LEN]', 'IPv4 network', value=>{try{return parseCidr(value).family===4;}catch{return false;}})], [word('summary')], [word('neighbors')], [word('neighbors'), ip('Neighbor address')], ...combine([[word('neighbors'), ip('Neighbor address')]], choices(['received-routes', 'advertised-routes', 'routes']))];
+    return [...views, ...combine([[word('vpnv4', 'VRF IPv4 BGP information'), word('vrf'), text('VRF name')]], views)];
+  }
   if (path === 'show ip dhcp') return choices(['pool', 'binding', 'conflict']);
   if (path === 'show ip nat') return combine(choices(['translations']),[[],[word('verbose')],[word('tcp')],[word('udp')],[word('icmp')],[word('tcp'),word('verbose')],[word('udp'),word('verbose')],[word('icmp'),word('verbose')]]).concat(choices(['statistics']));
   if(/^ip nat translation (?:timeout|(?:icmp|udp|tcp)-timeout)$/.test(path))return [[number(1,2147483647,'Idle timeout in seconds')]];

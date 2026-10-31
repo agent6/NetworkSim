@@ -12,7 +12,7 @@ export interface BgpTransportHost {
 }
 export interface BgpPeerConfig {
   deviceId:string;peerAddress:string;remoteDeviceId?:string;localAs:number;remoteAs:number;routerId:string;source?:string;vrf?:string;ttl:number;minimumTTL?:number;initiate:boolean;
-  keepalive:number;hold:number;connectRetry:number;maximumPrefix?:number;enabled:boolean;password?:string;families?:(4|6)[];
+  keepalive:number;hold:number;connectRetry:number;maximumPrefix?:number;enabled:boolean;password?:string;families?:(4|6)[];routeDistinguisher?:string;
 }
 export interface BgpSession {
   key:string;config:BgpPeerConfig;runtime:Device['runtime'];state:string;channel?:TCPChannel;remoteRouterId?:string;negotiatedHold?:number;
@@ -89,7 +89,7 @@ function connect(engine:BgpTransportHost,s:BgpSession):void {
 export function synchronizeBgpSessions(engine:BgpTransportHost,configs:BgpPeerConfig[]):BgpSession[] {
   const c=context(engine);for(const s of c.sessions.values())s.wanted=false;
   for(const cfg of configs){
-    const d=engine.getDevice(cfg.deviceId);if(!d)continue;const key=keyOf(cfg.deviceId,cfg.peerAddress,cfg.vrf),signature=JSON.stringify([cfg.localAs,cfg.remoteAs,cfg.routerId,cfg.source,cfg.vrf,cfg.ttl,cfg.minimumTTL,cfg.keepalive,cfg.hold,cfg.connectRetry,cfg.maximumPrefix,cfg.enabled,cfg.families]);let s=c.sessions.get(key);
+    const d=engine.getDevice(cfg.deviceId);if(!d)continue;const key=keyOf(cfg.deviceId,cfg.peerAddress,cfg.vrf),signature=JSON.stringify([cfg.localAs,cfg.remoteAs,cfg.routerId,cfg.source,cfg.vrf,cfg.ttl,cfg.minimumTTL,cfg.keepalive,cfg.hold,cfg.connectRetry,cfg.maximumPrefix,cfg.enabled,cfg.families,cfg.routeDistinguisher]);let s=c.sessions.get(key);
     if(s&&(s.runtime!==d.runtime||s.signature!==signature)){s.wanted=false;const channel=s.channel;s.channel=undefined;cancelTimers(engine,s);channel?.close('BGP configuration or device state changed');c.sessions.delete(key);s=undefined;}
     if(!s){s={key,config:cfg,runtime:d.runtime,state:'IDLE',received:new Map(),advertised:new Map(),messagesSent:0,messagesReceived:0,connects:0,signature,wanted:true};c.sessions.set(key,s);}
     if(s.config.password!==cfg.password)s.channel?.setAuthentication(modeledTcpKey(cfg.password));s.config=cfg;s.wanted=true;if(!cfg.enabled){s.state='IDLE';continue;}

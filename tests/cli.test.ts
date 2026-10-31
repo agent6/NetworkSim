@@ -99,7 +99,7 @@ test('DHCP CLI configuration drives the actual host address exchange',()=>{
 test('unsupported commands reject configuration without pretending to operate',()=>{
   const {cli}=lab();conf(cli);assert.match(cli.execute('crypto isakmp certificate 10').join('\n'),/Invalid/);
   ok(cli,'enable secret training');
-  ok(cli,'vrf definition TEST');assert.match(cli.execute('rd 65000:1')[0],/not implemented.*No configuration was changed/);ok(cli,'exit');
+  ok(cli,'vrf definition TEST');ok(cli,'rd 65000:1');assert.match(cli.execute('do show vrf TEST').join('\n'),/65000:1/);ok(cli,'exit');
   ok(cli,'router ospf 1');assert.match(cli.execute('redistribute isis').join('\n'),/Invalid/);
 });
 

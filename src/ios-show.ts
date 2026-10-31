@@ -323,6 +323,14 @@ function eigrp(e: Simulator, d: Device, protocol: 'eigrp' | 'eigrp6', input: str
 }
 
 function bgp(e: Simulator, d: Device, input: string[], family:4|6=4): string[] {
+  // IOS exposes a VRF's IPv4 BGP table through this legacy operational form.
+  // It does not imply that VPNv4 signaling, labels or route leaking are enabled.
+  if (input[0] === 'vpnv4') {
+    if (family !== 4 || input.length > 1 && input[1] !== 'vrf') return invalid();
+    if (input.length < 3) return incomplete();
+    const result=bgp(e, d, input.slice(1), 4),rd=d.config.features.vrfs?.[input[2]]?.rd;
+    return rd&&result[0]?.[0]!=='%'&&!['summary','neighbors'].includes(input[3])?[`Route Distinguisher: ${rd} (default for vrf ${input[2]})`,...result]:result;
+  }
   const a = [...input];let vrf:string|undefined;if(a[0]==='vrf'){a.shift();vrf=a.shift();if(!vrf)return incomplete();}const config=bgpAddressFamily(d,vrf,family); if (!config) return ['% BGP address family not active'];
   const bestRows:any[]=d.runtime.features.bgpTable??[], allPaths:any[]=d.runtime.features.bgpPaths??[];let rows:any[]=allPaths.length?[...allPaths,...bestRows.filter(r=>!allPaths.some(p=>p.network===r.network&&p.prefix===r.prefix))]:bestRows, sessions: any[] = (d.runtime.features.bgpSessions ?? []).filter((s:any)=>(s.vrf??'')===(vrf??'')&&(s.family??4)===family), peers: any[] = config.neighbors ?? [];rows=rows.filter(r=>isIPv6(r.network)===(family===6)&&(r.vrf??'')===(vrf??''));
   if(a[0]==='dampening'){a.shift();const view=word(a.shift(),['parameters','flap-statistics','dampened-paths']);if(a.length)return invalid();const c=config.dampening;if(!c)return ['% Dampening is not enabled'];if(view==='parameters')return [` dampening ${c.halfLife} ${c.reuse} ${c.suppress} ${c.maxSuppress}`,`  Half-life time: ${c.halfLife} mins, maximum suppress time: ${c.maxSuppress} mins`,`  Reuse penalty: ${c.reuse}, suppress penalty: ${c.suppress}`];return [row(['Network','From','Flaps','Penalty','State','Reuse'],[22,18,8,10,14]),...Object.values<any>(d.runtime.features.bgpDampening??{}).filter(r=>view!=='dampened-paths'||r.suppressed).map(r=>{const penalty=currentBgpPenalty(e,d,r),reuse=r.suppressed?Math.max(0,Math.min(c.halfLife*60000*Math.log2(penalty/c.reuse),(r.suppressedAt??0)+c.maxSuppress*60000-e.clock.now())):undefined;return row([r.prefix,r.peer,r.flaps,Math.round(penalty),r.suppressed?'damped':r.withdrawn?'history':'valid',reuse===undefined?'':duration(reuse)],[22,18,8,10,14]);})];}

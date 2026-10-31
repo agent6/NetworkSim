@@ -20,6 +20,13 @@ export function selectBgpCandidate<T extends BgpCandidate>(paths:readonly T[],lo
  return choose([...groups].sort(([a],[b])=>a-b).map(([,values])=>choose(values)!));
 }
 export const privateASN=(asn:number)=>asn>=64512&&asn<=65534||asn>=4200000000&&asn<=4294967294;
+/** The three standard eight-byte RD encodings; this is not a route target. */
+export function canonicalRouteDistinguisher(value:string):string|undefined {
+ const m=/^(\d+(?:\.\d+){3}|\d+):(\d+)$/.exec(value);if(!m)return;
+ const assigned=Number(m[2]);if(m[1].includes('.')){const octets=m[1].split('.').map(Number);if(octets.some(v=>v>255)||assigned>65535)return;return octets.join('.')+':'+assigned;}
+ const admin=Number(m[1]);if(admin>4294967295||assigned>(admin<=65535?4294967295:65535))return;
+ return admin+':'+assigned;
+}
 /** The bare command follows classic IOS all-private behavior; all/replace-as are explicit modes. */
 export function removePrivateAS(path:readonly number[],neighborAS:number,localAS:number,mode?:boolean|'all'|'replace-as'):number[]{
  if(!mode)return [...path];if(mode===true&&(path.some(as=>!privateASN(as))||path.includes(neighborAS)))return [...path];
@@ -31,7 +38,7 @@ export function modeledTcpKey(key:string|undefined):string|undefined {
 }
 
 /** VRF unicast processes inherit BGP options, but keep independent neighbors and origination. */
-export function scopedBgpConfig(d:Device,vrf?:string):any {const root=d.config.protocols.bgp;if(!root)return;if(!vrf)return root;const child=root.vrfs?.[vrf];return child?{...root,...child,asn:root.asn,neighbors:child.neighbors??[],networks:child.networks??[],redistribute:child.redistribute??[],aggregates:child.aggregates??[],ipv6:child.ipv6,vrfs:undefined}:undefined;}
+export function scopedBgpConfig(d:Device,vrf?:string):any {const root=d.config.protocols.bgp;if(!root)return;if(!vrf)return root;const child=root.vrfs?.[vrf];return child?{...root,...child,rd:d.config.features.vrfs?.[vrf]?.rd,asn:root.asn,neighbors:child.neighbors??[],networks:child.networks??[],redistribute:child.redistribute??[],aggregates:child.aggregates??[],ipv6:child.ipv6,vrfs:undefined}:undefined;}
 
 /** Address-family policy is independent; transport settings are inherited from the global neighbor. */
 export function bgpAddressFamily(d:Device,vrf?:string,family:4|6=4):any {
