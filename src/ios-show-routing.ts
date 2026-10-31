@@ -861,7 +861,7 @@ export function bgpTableLines(d: Device, config: any, rows: any[]): string[] {
   let previous = '';
   for (const r of sorted) {
     const net = bgpNetwork(r), shown = net === previous ? '' : net; previous = net;
-    const status = ' ' + (r.suppressed ? 's' : r.damped ? 'd' : '*') + (r.best ? '>' : r.multipath ? 'm' : ' ') + (r.learnedVia === 'ibgp' ? 'i' : ' ') + ' ';
+    const status = ' ' + (r.suppressed ? 's' : r.damped ? 'd' : r.reachable===false ? ' ' : '*') + (r.best ? '>' : r.multipath ? 'm' : ' ') + (r.learnedVia === 'ibgp' ? 'i' : ' ') + ' ';
     const local = r.learnedVia === 'ibgp' || r.localPreference !== undefined && Number(r.localPreference) !== defaultLocal ? String(r.localPreference ?? defaultLocal) : '';
     const metric = typeof r.med === 'number' ? String(r.med) : r.learnedVia ? '' : '0', weight = r.weight ?? (r.learnedVia ? 0 : 32768), path = (r.asPath ?? []).join(' ');
     const nextHop = String(r.nextHop ?? '0.0.0.0'), tail = lpad(metric, 10) + lpad(local, 7) + lpad(weight, 7) + ' ' + (path ? path + ' ' : '') + (r.originCode ?? '?');
@@ -883,8 +883,8 @@ export function bgpEntryLines(e: Simulator, d: Device, config: any, selected: an
     const fromAddress = peer?.address ?? (r.learnedVia ? String(r.from) : '0.0.0.0'), fromId = r.learnedVia ? r.routerId ?? peer?.routerId ?? fromAddress : rid;
     const kind = r.learnedVia === 'ibgp' ? 'internal' : r.learnedVia === 'ebgp' ? 'external' : 'sourced, local';
     const weight = r.weight ?? (r.learnedVia ? 0 : 32768);
-    lines.push('  Refresh Epoch 1', `  ${r.asPath?.length ? r.asPath.join(' ') : 'Local'}`, `    ${r.nextHop ?? '0.0.0.0'} from ${fromAddress} (${fromId})`);
-    lines.push(`      Origin ${r.originCode === 'i' ? 'IGP' : r.originCode === 'e' ? 'EGP' : 'incomplete'}, metric ${r.med ?? 0}, localpref ${r.localPreference ?? config.defaultLocalPreference ?? 100}${weight ? `, weight ${weight}` : ''}, valid, ${kind}${r.multipath ? r.best ? ', multipath(oldest)' : ', multipath' : ''}${r.best ? ', best' : ''}`);
+    lines.push('  Refresh Epoch 1', `  ${r.asPath?.length ? r.asPath.join(' ') : 'Local'}`, `    ${r.nextHop ?? '0.0.0.0'}${r.reachable===false?' (inaccessible)':''} from ${fromAddress} (${fromId})`);
+    lines.push(`      Origin ${r.originCode === 'i' ? 'IGP' : r.originCode === 'e' ? 'EGP' : 'incomplete'}, metric ${r.med ?? 0}, localpref ${r.localPreference ?? config.defaultLocalPreference ?? 100}${weight ? `, weight ${weight}` : ''}${r.reachable===false?'':', valid'}, ${kind}${r.multipath ? r.best ? ', multipath(oldest)' : ', multipath' : ''}${r.best ? ', best' : ''}`);
     if (r.communities?.length) lines.push('      Community: ' + r.communities.map((v: string) => displayCommunity(v, !!d.config.features.bgpCommunityNewFormat)).join(' '));
     if (r.originatorId || r.clusterList?.length) lines.push(`      ${r.originatorId ? `Originator: ${r.originatorId}` : ''}${r.originatorId && r.clusterList?.length ? ', ' : ''}${r.clusterList?.length ? `Cluster list: ${r.clusterList.join(' ')}` : ''}`);
     lines.push(`      rx pathid: 0, tx pathid: ${r.best ? '0x0' : '0'}`);
@@ -950,7 +950,7 @@ export function bgpNeighborLines(e: Simulator, d: Device, config: any, sessions:
     const t = s?.transport;
     if (established && t) {
       const local = t.localPort === 179;
-      lines.push('Connection state is ESTAB, I/O status: 1, unread input bytes: 0', `Connection is ECN Disabled, Mininum incoming TTL 0, Outgoing TTL ${internal || n.ebgpMultihop ? 255 : 1}`, `Local host: ${t.localAddress}, Local port: ${local ? 179 : t.localPort}`, `Foreign host: ${n.address}, Foreign port: ${local ? t.peerPort : 179}`, `Connection tableid (VRF): ${vrf ? 1 : 0}`, 'Maximum output segment queue size: 50', '', 'Enqueued packets for retransmit: 0, input: 0  mis-ordered: 0 (0 bytes)', '');
+      lines.push('Connection state is ESTAB, I/O status: 1, unread input bytes: 0', `Connection is ECN Disabled, Mininum incoming TTL ${n.ttlSecurityHops?Math.max(1,256-Number(n.ttlSecurityHops)):0}, Outgoing TTL ${n.ttlSecurityHops||internal?255:Number(n.ebgpMultihop??1)}`, `Local host: ${t.localAddress}, Local port: ${local ? 179 : t.localPort}`, `Foreign host: ${n.address}, Foreign port: ${local ? t.peerPort : 179}`, `Connection tableid (VRF): ${vrf ? 1 : 0}`, 'Maximum output segment queue size: 50', '', 'Enqueued packets for retransmit: 0, input: 0  mis-ordered: 0 (0 bytes)', '');
     } else lines.push('  No active TCP connection', '');
     return lines;
   });
