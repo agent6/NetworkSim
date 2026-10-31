@@ -1,0 +1,79 @@
+{
+  "lab": "EIGRP Metric Manipulation and Troubleshooting",
+  "catalogId": "eigrp-metric-manipulation-and-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 6,
+  "links": 6,
+  "tasks": 14,
+  "topology": "Classic IOS EIGRP AS100 diamond R1\u2013R2/R3\u2013R4 with PC1 behind R1 and SRV1 behind R4. R4 Loopback0 198.51.100.1/32 is an independent offset-list control prefix. Practice begins with R1 Gi0/1 bandwidth100000 instead of1000000 Kbit/s. Final primary metric10240/RD7680 uses R2; the R3 feasible alternate is20480/RD7680.",
+  "implemented": [
+    "Sixteenth ENARSI Layer3 Technologies catalog entry with independent practice/completed documents, six-row addressing/metric plan, staged instructions, executable reference/verification commands and current-origin/path/query permalinks. Existing simulation engine, networking logic, UI layout, artwork, terminal and styling are unchanged.",
+    "Classic metric calculations are verified against actual RIB/CEF and delivered UPDATE vectors: 256\u00d7(10000000/minimum bandwidth + sum of outgoing interface delays in tens of microseconds). Local incorrect bandwidth produces primary33280 versus alternate20480. Repair returns primary10240 and keeps four actual neighbor pairs.",
+    "Initial diagnosis requires three accepted server requests and matched replies over R1/R3/R4, plus three reverse requests over R4/R2/R1. Corrected bidirectional service traffic uses R2. HTTP requires a complete actual200 service body, not a status label alone.",
+    "Local R1 Gi0/1 delay100 changes the R2 candidate total to33280 while RD remains7680 and historical FD remains10240. Delivered requests prefer R3 while reverse requests continue through R2; restoring delay10 needs fresh primary-path replies.",
+    "Remote R2 Gi0/1 bandwidth156250 gives an exact inverse-bandwidth term64, local R2 service metric21504 and R1 candidate24064/RD21504. R1 prefers R3 while reverse traffic stays on R2. Restoring1000000 requires fresh delivered traffic. Bandwidth metadata does not change interface speed or link state.",
+    "Prepared standard ACL10 selects only192.168.40.0/24 and is not bound as a data-plane filter. R1 inbound offset16384 on Gi0/1 changes its R2 total to26624 with RD7680. R2 outbound offset16384 on Gi0/0 changes advertised RD to24064 and remote total to26624 while its own RIB remains7680. Both exercises require successful service traffic over R3, reverse traffic over R2, and control-loopback traffic still over R2 at10240, followed by fresh restored probes to both prefixes.",
+    "K3 mismatch on R2 removes its two actual EIGRP adjacencies while physical links stay up. Both service directions must traverse R3 during the mismatch. Restoring default K values recovers all four pairs and requires fresh R2 traffic; matching a nondefault metric policy is not the intended repair.",
+    "Per-attempt config/route epochs reject stale packets and config-only toggles. Six live and eight observed criteria produce practice0/14, original diagnosis1/14, repaired baseline9/14 and full14/14. Completed reference provides six live checks only. YAML retains earned stages while dropping runtime; fresh practice starts without observations. Canonical rendered config replays into clean routers and saved reload repairs an unsaved metric error."
+  ],
+  "scope": "Classic IOS IPv4 internal EIGRP bandwidth/delay metrics, selective inbound/outbound offset lists and K-value adjacency troubleshooting. No engine changes or new CLI commands were necessary. No fresh CML capture, physical throughput/latency equivalence, per-packet load sharing, hardware timing equivalence, named wide-metric exercise or IPv6 offset-list support is claimed.",
+  "references": [
+    {
+      "title": "Cisco IOS XE17 EIGRP configuration guide",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_ire-enhanced-igrp.html",
+      "use": "Classic composite metric, vector bandwidth/delay units, default K values, mismatch behavior and IPv4 offset-list scope."
+    },
+    {
+      "title": "Cisco IOS EIGRP command reference: offset-list",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_eigrp/command/ire-cr-book/ire-i1.html",
+      "use": "Inbound/outbound metric offsets, standard route-selection ACL and interface-scoped command syntax."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 22,
+    "nativeTests": 3240,
+    "nativeFailures": 0,
+    "nativeDurationMs": 349041.472834,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=16; six nodes/six links/14 tasks/six-row plan; actual asymmetric bandwidth-fault diagnosis, corrected primary10240 and feasible20480/RD7680, four neighbor pairs, independent loopback control and bidirectional host/HTTP traffic; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 390px: ENARSI Layer 3 Technologies=16; six nodes/six links/14 tasks/six-row plan; actual asymmetric bandwidth-fault diagnosis, corrected primary10240 and feasible20480/RD7680, four neighbor pairs, independent loopback control and bidirectional host/HTTP traffic; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=16; six nodes/six links/14 tasks/six-row plan; actual asymmetric bandwidth-fault diagnosis, corrected primary10240 and feasible20480/RD7680, four neighbor pairs, independent loopback control and bidirectional host/HTTP traffic; all14 including observed local delay, remote bandwidth, selective inbound/outbound offsets and K-value mismatch with fresh restored traffic; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=16; six nodes/six links/14 tasks/six-row plan; actual asymmetric bandwidth-fault diagnosis, corrected primary10240 and feasible20480/RD7680, four neighbor pairs, independent loopback control and bidirectional host/HTTP traffic; all14 including observed local delay, remote bandwidth, selective inbound/outbound offsets and K-value mismatch with fresh restored traffic; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=16; six nodes/six links/14 tasks/six-row plan; actual asymmetric bandwidth-fault diagnosis, corrected primary10240 and feasible20480/RD7680, four neighbor pairs, independent loopback control and bidirectional host/HTTP traffic; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=16; six nodes/six links/14 tasks/six-row plan; actual asymmetric bandwidth-fault diagnosis, corrected primary10240 and feasible20480/RD7680, four neighbor pairs, independent loopback control and bidirectional host/HTTP traffic; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with sixteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with sixteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with sixteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with sixteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with sixteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with sixteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "050f4d6b5243827af4c8b18253c6c110c8e7aecbe844dfe103b4c4ae7043973b",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; generated root/dist HTML and all browser-tested copies match byte for byte with offline assets embedded.",
+    "terminal": "Golden fixture matches unchanged fonts/background/foreground/cursor/tabs/controls in both themes and mobile/desktop.",
+    "verificationCommands": "Published IOS queries and reference commands execute without placeholders; actual Windows ping and HTTP are exercised through normal UI. Native cases verify rendered configuration replay, reload and invalid command transactionality.",
+    "visualInspection": [
+      ".cache/emt-catalog-browser/topology-light-1440.png",
+      ".cache/emt-catalog-browser/guide-light-1440.png",
+      ".cache/emt-catalog-browser/console-light-1440.png",
+      ".cache/emt-catalog-browser/guide-dark-320.png",
+      ".cache/emt-catalog-browser/console-dark-320.png",
+      ".cache/emt-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full14-task ordinary UI workflows complete at320px/dark and1440px/light. Four other theme/viewport cases complete9 baseline tasks and leave the five controlled exercises unearned. All export/import actual YAML in an empty offline profile and load a reference with six live goals only.",
+    "Six file:// cases block external HTTP(S). Two permalink checks preserve domain/path/query without replacing the workspace; seven generic catalog checks cover categories/counts, original labs, prerequisites and save/cancel/import behavior.",
+    "Browser clock advances ordinary application frames; no routes, neighbors, traffic results or task completions are injected. Native negative cases cover wrong offsets, nonmatching/broad ACLs, missing control prefix, power loss, static shortcuts, fewer probes, incomplete directions and stale traffic."
+  ]
+}
