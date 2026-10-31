@@ -835,7 +835,7 @@ export const IOS_KEYWORD_HELP: Record<string, string> = {
   'ip nat|netmask': 'Specify the network mask', 'ip nat pool|netmask': 'Specify the network mask',
   'ip nat inside source list|interface': 'Specify interface for global address', 'ip nat inside source list|pool': 'Name pool of global addresses',
   'ip nat inside source list|overload': 'Overload an address translation',
-  'ip ospf|area': 'Set the OSPF area ID', 'ipv6 ospf|area': 'Set the OSPF area ID',
+  'ip ospf|area': 'Set the OSPF area ID', 'ipv6 ospf|area': 'Set the OSPF area ID', 'ipv6 ospf|instance': 'Set the OSPFv3 interface instance ID',
   'ip route|name': 'Specify name of the next hop', 'ip route|permanent': 'permanent route', 'ip route|tag': 'Set tag for this route',
   'ip route|track': 'Install route depending on tracked item',
   'ip sla schedule|life': 'Length of time to execute in seconds', 'ip sla schedule|start-time': 'When to start this entry',

@@ -1,0 +1,81 @@
+{
+  "lab": "OSPFv3 Troubleshooting",
+  "catalogId": "ospfv3-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 6,
+  "links": 6,
+  "tasks": 15,
+  "topology": "IPv6-only three-router area0 P2P triangle with PC1 behind R1, PC2 behind R2 and HTTP SRV1 behind R3. Direct R1\u2013R3 transit cost5 plus LAN1 gives service cost6; backup via R2 costs21. PC2 service path costs11. R1 Gi0/2 starts in area1 while R3 stays in area0, so successful backup traffic masks the failed primary adjacency.",
+  "implemented": [
+    "Nineteenth ENARSI Layer3 Technologies entry, independent practice/reference documents, six-row IPv6/link-local addressing plan, staged guide, executable reference and verification commands and current-origin/path/query permalinks. Existing layout, artwork and terminal styling are preserved.",
+    "IPv6-only interfaces and scoped host default routes use explicit FE80::1/2/3 gateways. IPv6 unicast routing, dotted-decimal router IDs, passive LANs and P2P transits are checked. Router advertisements are suppressed on the supplied static host LANs. Router static routes and IPv4 shortcuts cannot satisfy intended policy.",
+    "Initial diagnosis requires three delivered requests and parent-linked replies in four host/server directions, including actual cost21 backup forwarding for PC1 and independent cost11 PC2 controls. Area0 repair must restore the direct Full pair and cost6 routes in both service directions.",
+    "Six live checks require intended interface/process policy, all three Full P2P pairs, three received router advertisements and their IPv6 LAN-prefix data, intra-area O routes at AD110 with exact link-local next hops and interface scope, healthy HTTP service and saved router configs. IOS database views retain separate router/link/intra-area-prefix headings rather than printing IPv4 stub networks in Router-LSAs.",
+    "Four-way fresh ICMPv6 delivery and a complete actual HTTP200 response from http://[2001:db8:30::10]/ are graded. Echo evidence requires IPv6 and ICMPV6 identity, accepted requests, matched parent-linked replies and the intended router egresses.",
+    "Six controlled exercises cover one-sided Hello5/Dead20 mismatch, passive primary transit, instance1 versus instance0, local MTU1400 negotiation, withdrawn server-LAN /64 and local cost30 asymmetry. Each requires actual changed-state traffic plus fresh restored four-way traffic; config-only toggles, port shutdown and server power substitutes cannot earn the exercises.",
+    "MTU1400 on R1 produces actual local ExStart and database-description MTU diagnostics while reciprocal routes use R2 at21; restoring MTU1500 restores the intended direct pair. The modeled peer display may remain asymmetric; complete bilateral RFC timing/state equivalence is not claimed.",
+    "LAN withdrawal retains all Full transits but removes remote service routes. Both PCs must experience No route drops while bidirectional PC1/PC2 control succeeds. Cost30 retains all Full pairs but requires actual forward R1\u2013R2\u2013R3 requests at21 and reverse R3\u2013R1 requests at6, plus independent PC2 controls.",
+    "The existing engine already delivered and compared OSPFv3 instance IDs. CLI activation now accepts optional instance0\u2013255, validates arguments before mutation, resets omitted/zero values to default, supplies question-mark/Tab help, removes instance state with activation and renders nondefault instances into IOS configs. Real nondefault matching peers, mismatched backup behavior, file replay and saved reload are tested.",
+    "Six live and nine historical goals produce practice0/15, diagnosis1/15, baseline9/15 and full15/15. Per-attempt config/route epochs reject stale traffic. Portable YAML retains earned observations but drops runtime, while a new attempt starts fresh and a reference starts with six live goals only."
+  ],
+  "scope": "Classic IOS IPv6 OSPFv3 single-area troubleshooting, selected using ipv6 router ospf and ipv6 ospf interface commands. Optional legacy per-interface instance selection is complete through CLI, rendering and the existing delivered-packet engine. Multiple simultaneous processes/instances on a single interface, IPsec/authentication trailers, wire-format interoperability, complete RFC state/timing equivalence, fresh CML captures, multi-area filtering, duplicate-router-ID incidents and OSPFv3 IPv4 address-family exercises are not claimed.",
+  "references": [
+    {
+      "title": "Cisco IOS IPv6 Command Reference: ipv6 ospf area",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipv6/command/ipv6-cr-book/ipv6-i3.html",
+      "use": "Classic IPv6 interface activation, optional instance identifier and matching-instance neighbor selection; distinguishes OSPFv3 authentication from OSPFv2 interface MD5."
+    },
+    {
+      "title": "Cisco IOS XE IP Routing Configuration Guide: IPv6 Routing OSPFv3",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-routing/b-ip-routing/m_ip6-route-ospfv3-xe.html",
+      "use": "IPv6 OSPFv3 link and intra-area-prefix LSA separation and IPv6 address/prefix representation."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 30,
+    "nativeTests": 3318,
+    "nativeFailures": 0,
+    "nativeDurationMs": 430620.510958,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=19; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional IPv6 cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB and IPv6 intra-area prefixes, intra-area AD110 costs6/11 and four delivered host/server directions plus IPv6 HTTP; nine baseline tasks with six controlled repairs unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=19; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional IPv6 cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB and IPv6 intra-area prefixes, intra-area AD110 costs6/11 and four delivered host/server directions plus IPv6 HTTP; nine baseline tasks with six controlled repairs unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=19; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional IPv6 cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB and IPv6 intra-area prefixes, intra-area AD110 costs6/11 and four delivered host/server directions plus IPv6 HTTP; all15 including timer mismatch, passive transit, instance ID, local MTU ExStart, LAN withdrawal and directional cost repairs with fresh restored traffic; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=19; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional IPv6 cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB and IPv6 intra-area prefixes, intra-area AD110 costs6/11 and four delivered host/server directions plus IPv6 HTTP; all15 including timer mismatch, passive transit, instance ID, local MTU ExStart, LAN withdrawal and directional cost repairs with fresh restored traffic; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=19; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional IPv6 cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB and IPv6 intra-area prefixes, intra-area AD110 costs6/11 and four delivered host/server directions plus IPv6 HTTP; nine baseline tasks with six controlled repairs unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=19; six nodes/six links/15 tasks/six-row plan; initial area-mismatch diagnosis with actual bidirectional IPv6 cost21 R2 backup and independent PC2 control, corrected three Full P2P pairs, received three-router LSDB and IPv6 intra-area prefixes, intra-area AD110 costs6/11 and four delivered host/server directions plus IPv6 HTTP; nine baseline tasks with six controlled repairs unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/triangle topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with nineteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with nineteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with nineteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with nineteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with nineteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with nineteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "23a556988462136594b4ce3a5b9b0315b4d65f1a8d3b75d94726360c4f628fa0",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist HTML and all browser-tested copies match byte for byte with offline assets embedded.",
+    "terminal": "Golden fixture matches unchanged fonts/background/foreground/cursor/tabs/controls in both themes and mobile/desktop.",
+    "verificationCommands": "All published IOS/Windows queries, probes, traces and reference commands execute through ordinary CLI. Native tests include blocked delivered protocol89 datagrams, partial probes, rendered file replay, nondefault instance peer formation and actual reload recovery.",
+    "visualInspection": [
+      ".cache/ot3-catalog-browser/topology-light-1440.png",
+      ".cache/ot3-catalog-browser/guide-light-1440.png",
+      ".cache/ot3-catalog-browser/console-light-1440.png",
+      ".cache/ot3-catalog-browser/guide-dark-320.png",
+      ".cache/ot3-catalog-browser/console-dark-320.png",
+      ".cache/ot3-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full15-task ordinary UI workflows complete at320px/dark and1440px/light. Four other theme/viewport cases complete9 baseline tasks and leave all six controlled repairs unearned. Every case exports/imports actual YAML into an empty offline profile and opens a reference with six live goals only.",
+    "Six file:// cases block external HTTP(S). Two permalink checks preserve domain/path/query and current workspace; seven generic catalog checks cover counts, existing labs, prerequisites and save/cancel/import behavior.",
+    "Browser clock advances ordinary application frames; no routes, neighbors, LSA databases, traffic results or task completions are injected. Native evidence-corruption tests use real captured IPv6 exchanges in isolated observer instances to verify packet-family validation."
+  ]
+}
