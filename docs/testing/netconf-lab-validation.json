@@ -1,0 +1,87 @@
+{
+  "lab": "NETCONF Configuration and Verification",
+  "catalogId": "netconf-configuration-and-verification",
+  "group": "CCNP ENCOR",
+  "section": "Network Assurance",
+  "date": "2026-10-30",
+  "nodes": 4,
+  "links": 3,
+  "tasks": 20,
+  "topology": "PC1 and PC2 reach R1 TCP 830 through separate routed management LANs. R1 Gi0/1 carries SRV1 data traffic; Loopback10 is created through real NETCONF RPCs.",
+  "implemented": [
+    "Offline browser NETCONF client under PC Desktop / Network tools: actual TCP 830 and logical SSH authentication, hello capabilities, session/message IDs, editable RPC examples, retained bounded transcript and JSON download.",
+    "Local AAA with privilege-15 operator and rejected privilege-1 observer; authentication passwords are cleared from the form and excluded from protocol transcripts and observation history.",
+    "Filtered get-config configuration versus get operational state and counters; running edit creates Loopback10 and its real local route; fresh delivered ICMP replies prove reachability.",
+    "Invalid multi-interface edit rejects bad IPv4 data atomically without shutting the data interface or creating the invalid loopback.",
+    "IOS XE candidate transition resets existing sessions, removes writable-running, advertises candidate and confirmed-commit 1.0, and rejects running edits in candidate mode.",
+    "Independent client sessions exercise candidate lock conflict, isolated edits, actual candidate reads, discard and commit.",
+    "Unconfirmed data-interface shutdown interrupts actual forwarding; simulation-clock rollback restores it while the separate management session remains open. A second confirmed commit is explicitly confirmed and survives its deadline.",
+    "Temporary ingress ACL blocks only PC1 TCP 830, preserves PC1 ICMP and PC2 management, and requires a successful PC1 read after ACL removal.",
+    "Unlock, close-session, startup save, correct final addressing, no pending candidate/confirmation/locks and zero active sessions are verified.",
+    "Runtime-only bounded 128-record server history and 100-message client transcript are correlated by actual channel/message IDs and delivered replies; completed observations persist through YAML while runtime is discarded.",
+    "Practice begins at 0/20; completed reference has six live configuration tasks only, no pre-earned RPC or traffic observations; missing imported teaching interfaces fail closed."
+  ],
+  "scope": [
+    "IOS XE teaching subset: NETCONF base 1.0 end-of-message framing, modeled SSH, bounded ietf-interfaces/ietf-ip and native hostname data.",
+    "No claim of real SSH cryptography, NETCONF 1.1 chunk framing, full YANG library, subscriptions, startup/copy-config RPCs, or confirmed-commit 1.1 persistence/cancel-commit.",
+    "Primary Cisco documentation and RFC 6241 reviewed. No new live CML capture was performed.",
+    "Terminal styling, node artwork and existing UI theme are unchanged."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE 17.14: NETCONF Protocol",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/prog/configuration/1714/b_1714_programmability_cg/m_1714_prog_yang_netconf.html"
+    },
+    {
+      "title": "RFC 6241: Network Configuration Protocol (NETCONF)",
+      "url": "https://www.rfc-editor.org/rfc/rfc6241"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "nativeTests": 2692,
+    "nativePassed": 2692,
+    "nativeFailed": 0,
+    "nativeDurationMs": 198530.852916,
+    "newLabTests": 24,
+    "existingModelDrivenTests": 18,
+    "browserChecks": [
+      "light 320px: nine Network Assurance labs; four nodes/three links/20 tasks; five-row plan; offline client with private authentication fields and persistent XML editor; actual RPC reads/edits and atomic invalid multi-edit; ten authenticated running-datastore and forwarding tasks; responsive panel/diagram, golden unchanged terminal; YAML export/import preserves earned achievements and clears runtime; completed reference has six live tasks only; cancel/save-copy protection.",
+      "dark 320px: nine Network Assurance labs; four nodes/three links/20 tasks; five-row plan; offline client with private authentication fields and persistent XML editor; actual RPC reads/edits and atomic invalid multi-edit; all20 including two-session locks, candidate discard/commit, timed forwarding rollback, confirmation, selective ACL and recovery; responsive panel/diagram, golden unchanged terminal; YAML export/import preserves earned achievements and clears runtime; completed reference has six live tasks only; cancel/save-copy protection.",
+      "light 1440px: nine Network Assurance labs; four nodes/three links/20 tasks; five-row plan; offline client with private authentication fields and persistent XML editor; actual RPC reads/edits and atomic invalid multi-edit; all20 including two-session locks, candidate discard/commit, timed forwarding rollback, confirmation, selective ACL and recovery; responsive panel/diagram, golden unchanged terminal; YAML export/import preserves earned achievements and clears runtime; completed reference has six live tasks only; cancel/save-copy protection.",
+      "dark 1440px: nine Network Assurance labs; four nodes/three links/20 tasks; five-row plan; offline client with private authentication fields and persistent XML editor; actual RPC reads/edits and atomic invalid multi-edit; ten authenticated running-datastore and forwarding tasks; responsive panel/diagram, golden unchanged terminal; YAML export/import preserves earned achievements and clears runtime; completed reference has six live tasks only; cancel/save-copy protection.",
+      "light 390px: nine Network Assurance labs; four nodes/three links/20 tasks; five-row plan; offline client with private authentication fields and persistent XML editor; actual RPC reads/edits and atomic invalid multi-edit; ten authenticated running-datastore and forwarding tasks; responsive panel/diagram, golden unchanged terminal; YAML export/import preserves earned achievements and clears runtime; completed reference has six live tasks only; cancel/save-copy protection.",
+      "dark 390px: nine Network Assurance labs; four nodes/three links/20 tasks; five-row plan; offline client with private authentication fields and persistent XML editor; actual RPC reads/edits and atomic invalid multi-edit; ten authenticated running-datastore and forwarding tasks; responsive panel/diagram, golden unchanged terminal; YAML export/import preserves earned achievements and clears runtime; completed reference has six live tasks only; cancel/save-copy protection.",
+      "light: permalink preserves current domain, path and query and returns to all nine Network Assurance labs",
+      "dark: permalink preserves current domain, path and query and returns to all nine Network Assurance labs",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with nine labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "b214ddc2c92ae1bcdf90c448bcfe880d83d36b7b2f8038a518ac033207266a6e",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with offline fonts and single-file packaging assertions. Final rebuilt bytes match all browser-tested copies.",
+    "terminal": "Golden fixtures match both light/dark themes and desktop/mobile console behavior.",
+    "visualInspection": [
+      ".cache/netconf-catalog-browser/topology-dark-1440.png",
+      ".cache/netconf-catalog-browser/client-light-1440.png",
+      ".cache/netconf-catalog-browser/client-light-320.png",
+      ".cache/netconf-catalog-browser/client-dark-320.png",
+      ".cache/netconf-catalog-browser/guide-light-320.png",
+      ".cache/netconf-catalog-browser/guide-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "All 20 tasks passed through ordinary browser controls on desktop 1440px/light and mobile 320px/dark; the other four theme/viewport cases reached ten running-datastore tasks without pre-earning candidate/incident tasks.",
+    "Six file:// cases run with external HTTP(S) requests blocked. Two permalink cases preserve the current host, path and query without replacing the workspace. Seven catalog regression cases also passed.",
+    "Browser clock advancement runs normal app animation frames; no simulator state, XML responses, traffic outcomes or achievements were injected.",
+    "The first full npm run check was interrupted before completion. Final typecheck, complete native suite with concurrency 4, build and final-artifact browser validations passed separately."
+  ]
+}
