@@ -1105,6 +1105,7 @@ export class IOSSession {
     if(a.length<4)incomplete();const direction=keyword(a[1],['source','destination']);const session=clone(f.spanSessions?.[id]??{type:'local',sources:[]});
     if(a[2]==='remote'){exactly(a,5);keyword(a[3],['vlan']);const vlan=integer(a[4],1,4094),field=direction==='source'?'sourceVlan':'remoteVlan';if(no)delete session[field];else{session[field]=vlan;session.type=direction==='source'?'rspan-destination':'rspan-source';}}
     else {keyword(a[2],['interface']);this.spanInterface(session,direction,a.slice(3),no);}
+    if(session.remoteVlan&&session.destination||session.sourceVlan&&session.sources?.length||session.remoteVlan&&session.sourceVlan)fail('% Local and remote SPAN endpoints cannot be combined in one session.');
     if(!no||f.spanSessions?.[id])(f.spanSessions??={})[id]=session;this.spanChanged(id);
   }
   private spanInterface(session:any,direction:string,a:string[],no:boolean):void{

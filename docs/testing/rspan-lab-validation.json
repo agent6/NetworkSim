@@ -1,0 +1,112 @@
+{
+  "feature": {
+    "title": "RSPAN Configuration",
+    "catalogId": "rspan-configuration",
+    "group": "CCNP ENCOR",
+    "section": "Network Assurance",
+    "sectionLabCount": 6,
+    "groupLabCount": 28,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6,
+      "Layer 3": 9,
+      "IP Services": 4
+    },
+    "devices": 7,
+    "links": 6,
+    "tasks": 18,
+    "addressingRows": 7,
+    "notes": 2,
+    "permalink": "#/labs/rspan-configuration",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "SW1 connects monitored PC1 192.168.10.10/24 on Gi0/1 and application SRV1 192.168.10.20/24 on Gi0/2. SW1 Gi0/3 connects SW2 Gi0/1; SW2 Gi0/2 connects SW3 Gi0/1. SW3 Gi0/2 connects passive analyzer AN1 192.168.10.99/24, and Gi0/3 connects control PC2 192.168.10.30/24. Ordinary VLAN10 is prepared across both trunks. Dedicated RSPAN VLAN999 connects SW1 source session1 to SW3 destination session7. No router or gateway is used.",
+  "verificationNotes": [
+    "Adds the sixth Network Assurance entry and current-host/path/query permalink. ENCOR now contains 28 labs. Previous entries, group/section order and all other section counts are retained. The seven-node diagram uses a compact layout that fits the existing320px mobile workspace.",
+    "Practice starts at0/18. Six live goals cover dedicated active remote-span markings, exact trunk VLAN/native settings and forwarding, source session1, destination session7, retained addressing/access links, and all three startup saves. Twelve historical observations cover ordinary local/control traffic, remote ICMP/ARP/HTTP/DNS, actual transport/tag/MAC behavior, pruning, missing transit marking, isolation, source removal and analyzer outage/recovery.",
+    "Completed references supply six live saved goals without fabricated traffic or diagnostics. SW2 needs no monitor session: it transports the dedicated VLAN. Different local session IDs1 and7 work because the transport VLAN, rather than a global session number, connects the source and destination.",
+    "Remote capture proof correlates the original source-interface observation, tagged source-switch injection, actual ingress/egress across SW2, delivery into SW3, the collector-port mirror transmission and the matching analyzer receipt. Each copy retains source-device/session/interface/direction/original-frame provenance plus remote VLAN and destination-device/session metadata. Foreign identifiers or a missing transit hop invalidate proof.",
+    "Corrects analyzer presentation by stripping the RSPAN transport tag at the remote destination. Original IP addresses, MACs and IP TTL are retained. The two trunk hops carry VLAN999 while AN1 receives an untagged passive copy. Source Rx-only/Tx-only behavior also has explicit native coverage.",
+    "RSPAN transport floods independently from destination-MAC lookup or multicast snooping and does not dynamically learn transport MACs. Even a stale static unicast entry cannot divert the copies. Normal VLAN10 forwarding and learning remain independent. Marked RSPAN VLAN data avoids ordinary local endpoint processing.",
+    "RSPAN source copying excludes Layer2 switch control protocols such as STP, CDP and LLDP while retaining network-layer IPv6 control traffic. The transport VLAN continues to run its own spanning tree. RSPAN copies have an independent forwarding-hop budget and cannot recursively create more mirrors.",
+    "Pruning only VLAN999 at SW2 egress proves that copies reach the transit ingress but cannot cross the second trunk while both ordinary user paths still succeed. Removing only the SW2 remote-span flag instead produces an explicit received RSPAN VLAN rejection with normal VLAN10 forwarding intact. These diagnostic tasks are observed before repair; final live goals require restored settings.",
+    "Removing only the source stops new injection without disabling the remote receiver or either ordinary path. Analyzer-port shutdown/loss is independent from user forwarding. An actual unavailable analyzer-delivery attempt followed by fresh remote copies and ordinary control-path replies proves recovery. Passive copied ARP is not answered, analyzer ingress is neither learned nor forwarded, and no management connectivity is fabricated.",
+    "The existing Packet capture UI now identifies source session, RSPAN VLAN and destination session. Transport-VLAN filtering and actual filtered JSON downloads retain this metadata; the analyzer frames themselves have no transport tag. The bounded500-frame buffer, stable live details, horizontal scrolling, escaping and controls are preserved. Existing terminal appearance remains unchanged.",
+    "Long custom topology suffixes exposed numeric precision loss in the engine ID counter, producing repeated event/packet/frame identifiers. The internal monotonic counter and base36 suffix restoration now use BigInt; public IDs remain strings and LabDocument serialization remains ordinary JSON/YAML. An explicit beyond-safe-integer topology test verifies unique identifiers, real capture correlation and serialization.",
+    "CLI rejects a local destination combined with an RSPAN source, or local source ports combined with an RSPAN destination, before assigning session state. The complete three-switch configuration renders/replays; show commands identify Remote Source/Destination Session types and actual transport/STP/MAC state. Question-mark and Tab expose working remote VLAN and VLAN-mode syntax.",
+    "Portable YAML retains earned observations and saved configurations while discarding transient capture, MAC and diagnostic runtime. Live goals remain reevaluated; an unmarked/disabled transport VLAN, an access port in VLAN999, extra allowed VLANs, native999, changed addressing or incomplete startup saves cannot satisfy the intended healthy state.",
+    "Scope is physical-interface RSPAN across the prepared access VLAN and two trunks. Source-VLAN monitoring, ERSPAN/GRE, destination ingress forwarding, pcap/Wireshark interoperability and hardware capture-rate limits are not claimed by this lab. Simulated attempt counters do not replace received analyzer evidence. No new live CML capture is claimed.",
+    "Seventeen browser scenarios passed with no page errors or external requests. Full18 workflows ran on light1440px and dark320px; four other theme/viewport cases earned13 without pre-earned pruning/marking/isolation/removal/outage observations. Two arbitrary-origin permalink cases, two analyzer detail/scroll stability cases and seven existing catalog scenarios passed. Actual JSON exports preserve remote-session metadata and untagged analyzer frames. Six offline theme/viewport cases verify all three startup saves, actual YAML export/import into a separate empty profile, retained progress, fitted topology, responsive guide, capture filtering/clear/download and unchanged golden CLI styling."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE3SE Catalyst3650: Configuring SPAN and RSPAN",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3650/software/release/3se/network_management/configuration_guide/b_nm_3se_3650_cg/b_nm_3se_3650_cg_chapter_0111.html",
+      "relevance": "Dedicated remote-span VLAN, trunk transport, source/destination session roles, local/remote endpoint restrictions and excluded Layer2 switch protocols."
+    },
+    {
+      "title": "Cisco: Configuring SPAN and RSPAN on Catalyst3750",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3750/software/release/15-0_2_se/configuration/guide/scg3750/swspan.html",
+      "relevance": "Remote source, transit and destination roles, transport-tag removal, disabled MAC learning and independent ordinary forwarding."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "newFocusedTests": 32,
+    "focusedRegressionTests": 184,
+    "browserFullWorkflowCases": [
+      "light1440px",
+      "dark320px"
+    ],
+    "browserOtherWorkflowCases": [
+      "light320px",
+      "dark1440px",
+      "light390px",
+      "dark390px"
+    ],
+    "visualInspection": [
+      ".cache/rspan-catalog-browser/topology-light-1440.png",
+      ".cache/rspan-catalog-browser/topology-dark-1440.png",
+      ".cache/rspan-catalog-browser/guide-light-320.png",
+      ".cache/rspan-catalog-browser/guide-dark-320.png",
+      ".cache/rspan-catalog-browser/analyzer-light-1440.png",
+      ".cache/rspan-catalog-browser/analyzer-dark-320.png"
+    ],
+    "browserScenarios": 17,
+    "browserChecks": [
+      "light 320px: six Network Assurance labs/badge; seven nodes/six links/18 tasks and zero-credit practice; seven-row plan; all three working CLI references; thirteen healthy configuration and actual traffic outcomes without pre-earned diagnostic experiments; bidirectional remote ICMP/ARP/HTTP200/DNS capture, source1/VLAN999/destination7 metadata and untagged analyzer frames; real filtered JSON exports and stable analyzer controls; three startup saves; offline YAML export/import preserves achievements and discards runtime; completed reference has six live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; question-mark and Tab",
+      "dark 320px: six Network Assurance labs/badge; seven nodes/six links/18 tasks and zero-credit practice; seven-row plan; all three working CLI references; all18 through two-trunk transport, pruning, missing transit marking, passive isolation, source removal and analyzer outage/recovery; bidirectional remote ICMP/ARP/HTTP200/DNS capture, source1/VLAN999/destination7 metadata and untagged analyzer frames; real filtered JSON exports and stable analyzer controls; three startup saves; offline YAML export/import preserves achievements and discards runtime; completed reference has six live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; question-mark and Tab",
+      "light 1440px: six Network Assurance labs/badge; seven nodes/six links/18 tasks and zero-credit practice; seven-row plan; all three working CLI references; all18 through two-trunk transport, pruning, missing transit marking, passive isolation, source removal and analyzer outage/recovery; bidirectional remote ICMP/ARP/HTTP200/DNS capture, source1/VLAN999/destination7 metadata and untagged analyzer frames; real filtered JSON exports and stable analyzer controls; three startup saves; offline YAML export/import preserves achievements and discards runtime; completed reference has six live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; question-mark and Tab",
+      "dark 1440px: six Network Assurance labs/badge; seven nodes/six links/18 tasks and zero-credit practice; seven-row plan; all three working CLI references; thirteen healthy configuration and actual traffic outcomes without pre-earned diagnostic experiments; bidirectional remote ICMP/ARP/HTTP200/DNS capture, source1/VLAN999/destination7 metadata and untagged analyzer frames; real filtered JSON exports and stable analyzer controls; three startup saves; offline YAML export/import preserves achievements and discards runtime; completed reference has six live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; question-mark and Tab",
+      "light 390px: six Network Assurance labs/badge; seven nodes/six links/18 tasks and zero-credit practice; seven-row plan; all three working CLI references; thirteen healthy configuration and actual traffic outcomes without pre-earned diagnostic experiments; bidirectional remote ICMP/ARP/HTTP200/DNS capture, source1/VLAN999/destination7 metadata and untagged analyzer frames; real filtered JSON exports and stable analyzer controls; three startup saves; offline YAML export/import preserves achievements and discards runtime; completed reference has six live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; question-mark and Tab",
+      "dark 390px: six Network Assurance labs/badge; seven nodes/six links/18 tasks and zero-credit practice; seven-row plan; all three working CLI references; thirteen healthy configuration and actual traffic outcomes without pre-earned diagnostic experiments; bidirectional remote ICMP/ARP/HTTP200/DNS capture, source1/VLAN999/destination7 metadata and untagged analyzer frames; real filtered JSON exports and stable analyzer controls; three startup saves; offline YAML export/import preserves achievements and discards runtime; completed reference has six live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; question-mark and Tab",
+      "light: permalink preserves current host/path/query/workspace and returns to all six Network Assurance labs",
+      "dark: permalink preserves current host/path/query/workspace and returns to all six Network Assurance labs",
+      "light 1440px: actual saved YAML reopening, fresh six-frame ICMP capture, stable passive analyzer table/filter/expanded identifiers across live updates, bounded dialog and contained horizontal scrolling",
+      "dark 320px: actual saved YAML reopening, fresh six-frame ICMP capture, stable passive analyzer table/filter/expanded identifiers across live updates, bounded dialog and contained horizontal scrolling",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with six labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "738dde296a8bca2f4da50027872ce28da5157b9d88a9dd2ebde5bfd5248c4e12",
+    "identicalArtifactCopies": 16,
+    "terminal": "Golden CLI font/color/cursor/control fixtures match both themes and mobile full-screen behavior.",
+    "tests": 2604,
+    "passed": 2604,
+    "failed": 0,
+    "skipped": 0,
+    "durationMs": 231395.114708,
+    "build": "npm run build passed; embedded offline fonts and single-file packaging assertions passed",
+    "fullCheck": "Complete native test-file set used by npm run check passed with four isolated workers, followed by a successful rebuild with identical tested artifact bytes."
+  }
+}

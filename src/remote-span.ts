@@ -49,9 +49,16 @@ function captured(
   stats.receivedBytes = (stats.receivedBytes || 0) + bytes(frame);
   stats.lastSource = source;
   if (sequence !== undefined) stats.lastSequence = sequence;
-  if (session.destination && engine.interfaceUp(device.id, session.destination))
-    engine.mirrorFrame(device.id, session.destination, copy(frame));
-  else stats.drops = (stats.drops || 0) + 1;
+  if (session.destination) {
+    if(!engine.interfaceUp(device.id,session.destination))stats.drops=(stats.drops||0)+1;
+    const outgoing=copy(frame);
+    if(session.type==='rspan-destination'){
+      // The transport tag belongs to the RSPAN domain, not to the analyzer.
+      delete outgoing.vlan;
+      if(outgoing.span)outgoing.span.rspan={vlan:session.sourceVlan!,destinationDevice:device.id,destinationSession:id};
+    }
+    engine.mirrorFrame(device.id, session.destination, outgoing);
+  } else stats.drops = (stats.drops || 0) + 1;
 }
 
 /** Remote copies travel as GRE packets or VLAN frames, never topology shortcuts. */
@@ -79,6 +86,8 @@ export function observeRemoteSpan(
       )
     )
       continue;
+    // RSPAN transports data traffic; Layer 2 control protocols are not carried.
+    if(session.type==='rspan-source'&&'kind' in frame.payload&&frame.payload.kind==='link-control'&&['UDLD','STP','CDP','LLDP','DTP','LACP','PAGP','VTP','VPC-CFS'].includes(frame.payload.protocol))continue;
     const stats = row(device, id);
     stats.frames++;
     stats.bytes += bytes(frame);
@@ -93,6 +102,8 @@ export function observeRemoteSpan(
         continue;
       }
       const mirrored = structuredClone(frame);
+      mirrored.hops=64;
+      mirrored.span={sourceDevice:device.id,session:id,sourceInterface:port,direction,configuredDirection:session.sources!.find(s=>s.interface===port)!.direction??'both',sourceFrame:frame.id,rspan:{vlan:session.remoteVlan!}};
       mirrored.remoteSpan = {
         sourceDevice: device.id,
         session: id,

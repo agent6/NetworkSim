@@ -71,7 +71,7 @@ export class Simulator {
   clock: SimulationClock;
   seed: number;
   readonly wireless = new WirelessEngine(this);
-  private sequence = 0;
+  private sequence = 0n;
   private listeners = new Set<() => void>();
   private pendingArp = new Map<string, Resolution>();
   private pendingTunnels = new Map<string,TunnelResolution>();
@@ -468,7 +468,7 @@ export class Simulator {
         const policyPort = c.features.servicePolicyIn ? port : 'Vlan' + vlan;
         if (!applyQos(this, d, policyPort, 'in', frame.payload, (name, packet) => this.aclAllows(d, name, packet))) { this.count(d, port, 'drops'); return; }
       }
-      if (frame.remoteSpan) { if (frame.remoteSpan.vlan !== vlan || !(d.config.features.rspanVlans ?? []).includes(vlan)) { this.event(d, port, frame, 'RSPAN VLAN rejected', 'Mirrored transit requires a VLAN configured for remote SPAN.', 'drop'); return; } receiveRemoteSpanFrame(this, d, port, vlan, frame); this.bridge(d, port, frame, vlan); return; }
+      if (frame.remoteSpan || (d.config.features.rspanVlans??[]).includes(vlan)) { if (frame.remoteSpan && (frame.remoteSpan.vlan !== vlan || !(d.config.features.rspanVlans ?? []).includes(vlan))) { this.event(d, port, frame, 'RSPAN VLAN rejected', 'Mirrored transit requires a VLAN configured for remote SPAN.', 'drop'); return; } receiveRemoteSpanFrame(this, d, port, vlan, frame); this.bridge(d, port, frame, vlan); return; }
       observeMulticastFrame(this, d, port, vlan, frame);
       const origin=frame.vpcSource,runtime=vpcRuntime(d),sourceMember=origin&&origin.domain===d.config.features.nsos?.vpc?.domain&&origin.sender===runtime?.peerId?runtime?.members[origin.member]:undefined;
       const group=c.features.channelGroup,channel=group&&d.runtime.features.portChannels?.[group],aggregate=channel?.state==='up'&&channel.activeMembers.includes(port)&&d.config.interfaces['Port-channel'+group]?.switchport?'Port-channel'+group:port;
@@ -496,7 +496,7 @@ export class Simulator {
   sendRemoteSpanVlan(deviceId: string, vlan: number, frame: Frame): void {
     const d = this.getDevice(deviceId); if (!d?.powered || !d.config.vlans[vlan] || !(d.config.features.rspanVlans ?? []).includes(vlan)) return; const groups = new Set<string>();
     for (const [port, cfg] of Object.entries(d.config.interfaces)) { if (!cfg.switchport || !this.interfaceUp(d.id, port) || !this.carriesVlan(d, port, vlan) || !this.stpAllows(d, port, vlan)) continue; if (spanDestination(d,port)) continue;
-      if (cfg.features.channelGroup) { const group = String(cfg.features.channelGroup); if (groups.has(group) || this.channelMember(d, group, frame, vlan) !== port) continue; groups.add(group); } const outgoing = clone(frame), trunk = this.trunk(d, port); outgoing.id = this.id('rspan'); outgoing.vlan = trunk && vlan !== trunk.nativeVlan ? vlan : undefined; this.sendWire(d, port, outgoing);
+      if (cfg.features.channelGroup) { const group = String(cfg.features.channelGroup); if (groups.has(group) || this.channelMember(d, group, frame, vlan) !== port) continue; groups.add(group); } const outgoing = clone(frame), trunk = this.trunk(d, port); outgoing.id = this.id('rspan'); outgoing.vlan = trunk ? vlan : undefined; this.sendWire(d, port, outgoing);
     }
   }
   private channelMember(d: Device, group: string, frame: Frame, vlan?: number): string | undefined {
@@ -509,8 +509,8 @@ export class Simulator {
     return members[this.hash(key) % members.length];
   }
   private bridge(d: Device, input: string, frame: Frame, vlan: number): void {
-    const multicastPorts = this.multicastPorts(d, vlan, frame);
-    const entry = d.runtime.mac[vlan + '|' + frame.destinationMac];
+    const rspan=(d.config.features.rspanVlans??[]).includes(vlan),multicastPorts = rspan?undefined:this.multicastPorts(d, vlan, frame);
+    const entry = rspan?undefined:d.runtime.mac[vlan + '|' + frame.destinationMac];
     const learnedPort = entry && entry.expires > this.clock.now() ? vpcForwardPort(d,entry.port,vlan) : undefined;
     const inputGroup = d.config.interfaces[input].features.channelGroup, learnedGroup = learnedPort && (/^Port-channel/.test(learnedPort)?learnedPort.slice(12):d.config.interfaces[learnedPort]?.features.channelGroup);
     const groups = new Set<string>();
@@ -521,7 +521,7 @@ export class Simulator {
       const group = cfg.features.channelGroup;
       if (learnedPort && learnedPort !== port && (!group || String(group) !== String(learnedGroup))) continue;
       if (group) { if (String(inputGroup) === String(group) || groups.has(String(group)) || this.channelMember(d, String(group), frame, vlan) !== port) continue; groups.add(String(group)); }
-      const copy = clone(frame); const trunk = this.trunk(d, port); copy.vlan = trunk && vlan !== trunk.nativeVlan || switchVoiceVlan(d,d.config.interfaces[port]) === vlan && vlan !== cfg.vlan ? vlan : switchVoiceVlan(d,d.config.interfaces[port]) === 'dot1p' && frame.vlan === 0 ? 0 : undefined;
+      const copy = clone(frame); const trunk = this.trunk(d, port); copy.vlan = trunk && (vlan !== trunk.nativeVlan || !!frame.remoteSpan) || switchVoiceVlan(d,d.config.interfaces[port]) === vlan && vlan !== cfg.vlan ? vlan : switchVoiceVlan(d,d.config.interfaces[port]) === 'dot1p' && frame.vlan === 0 ? 0 : undefined;
       const sourceMember=vpcMemberId(d,input);
       if(vpcPeerLink(d,port)&&sourceMember)copy.vpcSource={domain:d.config.features.nsos.vpc.domain,member:sourceMember,sender:d.id};else delete copy.vpcSource;
       this.event(d, port, copy, learnedPort ? 'MAC forwarding' : 'Frame flooding', learnedPort ? 'The destination MAC is learned on this port.' : 'Broadcast or unknown destination in VLAN ' + vlan + '.', 'forward'); this.sendWire(d, port, copy);
@@ -540,7 +540,7 @@ export class Simulator {
         if (multicastPorts && !multicastPorts.has(port)) continue;
         if (learnedPort && learnedPort !== port && (!cfg.features.channelGroup || String(cfg.features.channelGroup) !== String(learnedGroup))) continue;
         if (cfg.features.channelGroup) { const group = String(cfg.features.channelGroup); if (groups.has(group) || this.channelMember(d, group, frame, vlan) !== port) continue; groups.add(group); }
-        const copy = clone(frame), trunk = this.trunk(d, port); copy.vlan = trunk && vlan !== trunk.nativeVlan || switchVoiceVlan(d,d.config.interfaces[port]) === vlan && vlan !== cfg.vlan ? vlan : switchVoiceVlan(d,d.config.interfaces[port]) === 'dot1p' && frame.vlan === 0 ? 0 : undefined; this.sendWire(d, port, copy);
+        const copy = clone(frame), trunk = this.trunk(d, port); copy.vlan = trunk && (vlan !== trunk.nativeVlan || !!frame.remoteSpan) || switchVoiceVlan(d,d.config.interfaces[port]) === vlan && vlan !== cfg.vlan ? vlan : switchVoiceVlan(d,d.config.interfaces[port]) === 'dot1p' && frame.vlan === 0 ? 0 : undefined; this.sendWire(d, port, copy);
       }
     } else if (/^Port-channel/i.test(logical)) {
       const member = this.channelMember(d, logical.replace(/^Port-channel/i, ''), frame); if (member) this.sendWire(d, member, frame);
@@ -1547,7 +1547,7 @@ export class Simulator {
     const occupied = new Set<string>();
     for (const link of parsed.lab.links) { if (!link?.a || !link?.b || !Number.isFinite(link.delay) || !Number.isFinite(link.loss)) throw new Error('Invalid link'); for (const e of [link.a, link.b]) { const d = parsed.lab.devices.find((x: Device) => x.id === e.deviceId); const key = e.deviceId + '|' + e.port; if (!d?.config.interfaces[e.port] || occupied.has(key)) throw new Error('Invalid or occupied cable endpoint'); occupied.add(key); } }
     this.lab = parsed.lab; this.seed = Number.isInteger(parsed.seed) ? parsed.seed >>> 0 || 1 : this.seed; this.clock = new SimulationClock(this.seed);
-    for (const id of [...this.lab.devices.map(d => d.id), ...this.lab.links.map(l => l.id), ...this.lab.notes.map(n => n.id)]) { const suffix = /-([0-9a-z]+)$/.exec(id)?.[1]; if (suffix) this.sequence = Math.max(this.sequence, parseInt(suffix, 36)); }
+    for (const id of [...this.lab.devices.map(d => d.id), ...this.lab.links.map(l => l.id), ...this.lab.notes.map(n => n.id)]) { const suffix = /-([0-9a-z]+)$/.exec(id)?.[1]; if (suffix) { const value=[...suffix].reduce((n,c)=>n*36n+BigInt(parseInt(c,36)),0n);if(value>this.sequence)this.sequence=value; } }
     this.resetRuntime();
   }
   restartEndpointInterface(deviceId:string):void {
