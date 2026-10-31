@@ -1,0 +1,82 @@
+{
+  "lab": "BGP Inbound and Outbound Route Filtering",
+  "catalogId": "bgp-inbound-and-outbound-route-filtering",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 7,
+  "links": 7,
+  "tasks": 20,
+  "topology": "R1 AS65001 connects to R2 AS65002 and R3 AS65003, both connected to service origin R4 AS65004. PC1 uses R1, PC2 uses R3, and SRV1 uses R4. R2 originates diagnostic Loopback20. R4 exports only its local service /24 and diagnostic /24 and /25 networks. Four reciprocal eBGP peer pairs are prepared; practice starts with R1 filtering absent.",
+  "implemented": [
+    "Thirty-fourth ENARSI entry with independent practice/reference attempts, seven-row addressing plan, twenty typed objectives, ordinary IOS/Windows commands and current-domain/path/query permalinks. Existing UI, icons, terminal styles and offline single-HTML behavior are preserved.",
+    "Three observed policy stages: unfiltered baseline with two service candidates, R2 service selection and working transit leaks; inbound service-prefix rejection from R2 with retained raw advertisements and R3 forwarding; and local-only outbound export to both neighbors. Final R1 imports remain installed while R3 loses Loopback20 and R2 loses the PC2 LAN.",
+    "Eight actual traffic directions require three unique original probes each, accepted destination requests, physical CEF forwarding and correlated replies for successes. Expected non-transit failures require actual No route drops on the original request or correlated reply. R2 diagnostic probes select its Loopback20 source; router-originated No route requests are counted by actual packet IDs, not untouched receive counters.",
+    "Seven reversible exercises cover equivalent inbound deny/permit route maps; equivalent outbound prefix-matching route maps; empty-AS-path local-only exports; standard ACL network-address matching in outbound route maps; /23 ge24 le24 matching a /24 but rejecting a /25 only from R2; a missing permit tail; and applying the inbound list in the wrong direction. Each requires delivered alternate/failure traffic followed by fresh restored canonical forwarding. Positive alternatives also require complete HTTP from both clients; range observations require real probes to both diagnostic loopbacks.",
+    "AS-path filtering evaluates ^$ before the outbound eBGP local-AS prepend. Locally originated AS_PATH[] is exported as [65001]; imported prefixes stay in R1 RIB but are not exported. R4 uses a prepared origin-only route map so remote transit prefixes cannot bypass R1 export policy through a second path.",
+    "Eight directed peer views receive actual TCP179 OPEN/KEEPALIVE/UPDATE. Soft policy changes preserve channel identities; outbound withdrawals affect the remote table only after real TCP delivery. All accepted external routes retain AD20 and the intended AS_PATH, next hop and physical egress.",
+    "Seven live and thirteen observed objectives: practice0; observed baseline1; inbound2; repaired baseline13; full20; reference7 without pre-earned observations. Reference traffic and both HTTP responses add four observations. Epochs reject stale packets, configuration-only toggles cannot earn exercise credit, and YAML preserves earned history while rebuilding runtime state.",
+    "Corrected name-only no route-map NAME to delete every sequence while explicit sequence deletion preserves others and similarly named maps. Regression tests cover IOS router and NX-OS datacenter nodes. Malformed AS-path expressions validate before allocating a missing policy container. Existing packet-engine filtering is reused; no unsupported neighbor filter-list/distribute-list configuration was added.",
+    "Rendered IOS replay, real hard clears, saved reload, command verification, help/Tab, invalid input atomicity, startup equality, source-selected router probes and foreign/invalid criterion rejection are tested. Quiet completed observation states avoid repeated packet-history scans."
+  ],
+  "scope": "IPv4 unicast eBGP inbound/outbound prefix policy and route maps with prefix-list, AS-path and standard ACL matching. Cisco primary documentation reviewed. No fresh CML capture or universal IOS/NX-OS protocol equivalence is claimed.",
+  "references": [
+    {
+      "title": "Cisco: BGP 4 Prefix Filter and Inbound Route Maps",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_bgp/configuration/xe-3e/irg-iproute-bgp-xe-3e-book/irg-prefix-filter.html"
+    },
+    {
+      "title": "Cisco IOS: Protocol-Independent Command Reference, route-map and name-only deletion",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios/iproute_pi/command/reference/iri_book/iri_pi1.html"
+    },
+    {
+      "title": "Cisco NX-OS: R commands, route-map deletion",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/datacenter/nexus7000/sw/unicast/command/cisco_nexus7000_unicast_routing_command_ref/r_commands.pdf"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "native": {
+      "command": "node --test --test-concurrency=4 tests/*.test.ts",
+      "tests": 3718,
+      "pass": 3718,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "newCatalogTests": 28,
+      "additionalTargetedChecks": 1
+    },
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=34; seven nodes/seven links/20 tasks/seven-row import/export filtering plan; eight real peer views; staged unfiltered, inbound and final outbound policies with actual eight-direction traffic including expected No route denials; complete HTTP from both clients; correct AD20 R3 service forwarding and retained raw R2 advertisements; thirteen baseline tasks with all seven exercises unearned; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=34; seven nodes/seven links/20 tasks/seven-row import/export filtering plan; eight real peer views; staged unfiltered, inbound and final outbound policies with actual eight-direction traffic including expected No route denials; complete HTTP from both clients; correct AD20 R3 service forwarding and retained raw R2 advertisements; thirteen baseline tasks with all seven exercises unearned; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=34; seven nodes/seven links/20 tasks/seven-row import/export filtering plan; eight real peer views; staged unfiltered, inbound and final outbound policies with actual eight-direction traffic including expected No route denials; complete HTTP from both clients; correct AD20 R3 service forwarding and retained raw R2 advertisements; all20 including inbound/outbound prefix route maps, empty-AS-path and ACL export matches, /24 versus /25 range matching, implicit-deny and wrong-direction failures with fresh restored forwarding; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=34; seven nodes/seven links/20 tasks/seven-row import/export filtering plan; eight real peer views; staged unfiltered, inbound and final outbound policies with actual eight-direction traffic including expected No route denials; complete HTTP from both clients; correct AD20 R3 service forwarding and retained raw R2 advertisements; all20 including inbound/outbound prefix route maps, empty-AS-path and ACL export matches, /24 versus /25 range matching, implicit-deny and wrong-direction failures with fresh restored forwarding; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=34; seven nodes/seven links/20 tasks/seven-row import/export filtering plan; eight real peer views; staged unfiltered, inbound and final outbound policies with actual eight-direction traffic including expected No route denials; complete HTTP from both clients; correct AD20 R3 service forwarding and retained raw R2 advertisements; thirteen baseline tasks with all seven exercises unearned; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=34; seven nodes/seven links/20 tasks/seven-row import/export filtering plan; eight real peer views; staged unfiltered, inbound and final outbound policies with actual eight-direction traffic including expected No route denials; complete HTTP from both clients; correct AD20 R3 service forwarding and retained raw R2 advertisements; thirteen baseline tasks with all seven exercises unearned; offline YAML export/import into an empty profile, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "3c538c224286fa5e35d94e305aa3adcb8bbf9f36e2c3989630f90445f1e6b335",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist and all browser-tested offline copies match byte for byte.",
+    "terminal": "Golden terminal fixture matches both themes at mobile and desktop sizes.",
+    "visualInspection": [
+      ".cache/bgf-catalog-browser/topology-light-1440.png",
+      ".cache/bgf-catalog-browser/guide-light-1440.png",
+      ".cache/bgf-catalog-browser/console-light-1440.png",
+      ".cache/bgf-catalog-browser/topology-dark-320.png",
+      ".cache/bgf-catalog-browser/guide-dark-320.png",
+      ".cache/bgf-catalog-browser/console-dark-320.png"
+    ]
+  }
+}
