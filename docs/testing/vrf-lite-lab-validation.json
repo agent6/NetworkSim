@@ -1,0 +1,77 @@
+{
+  "lab": "VRF-Lite Configuration and Verification",
+  "catalogId": "vrf-lite-configuration-and-verification",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 6,
+  "links": 5,
+  "tasks": 15,
+  "topology": "Two PCs on PE1 and two servers on PE2 form BLUE and RED tenants. Both tenants reuse client192.168.10.0/24, transit10.0.0.0/30 and server192.168.20.0/24. One physical PE1 Gi0/1 to PE2 Gi0/1 link carries tagged subinterfaces110 and120. Unique BLUE/RED diagnostic loopbacks on PE2 permit real cross-tenant negative tests.",
+  "implemented": [
+    "Eighth ENARSI Layer 3 Technologies entry with independent practice/completed factories, six-row plan, staged guide, tested IOS/Windows reference and verification commands, accurate accessible counts and current-site domain/path/query permalinks. All previous catalog entries remain available.",
+    "Both routers begin enabled and unnumbered. Learners define BLUE/RED IPv4 address families, bind access and transit subinterfaces before assigning overlapping addresses, and add fully specified scoped forward/return static routes. No route distinguishers, route targets, MPLS or BGP are required for this static VRF-Lite exercise.",
+    "Scoped CEF lookups must resolve the same server IP through separate logical egress interfaces and next-hop contexts. The physical parent stays enabled, unnumbered and global, while matching wire tags select each receiving subinterface and local routing table. VRF names are local identifiers, not a packet-header field.",
+    "Bidirectional host traffic correlates three actual requests and delivered parent-linked replies per direction with the correct client/server node identities and tagged physical transit frames. Explicit router-originated ping vrf BLUE and RED probes are independently required. Matching IP strings or fewer than three replies cannot fabricate delivery.",
+    "Separate dynamic ARP rows are correlated with received tagged ARP request/reply source IP and MAC evidence in the appropriate VRF/subinterface contexts. Passive request learning is accepted; different MAC values are not required because real subinterfaces can share one hardware MAC.",
+    "Both PCs must receive complete actual HTTP200 responses from different intended tenant servers at the same URL. The full body and server transaction identity must match BLUE/RED, not merely a TCP or HTTP success counter.",
+    "Each PC must reach its own unique PE2 loopback and observe three actual No route drops toward the other tenant loopback in its local ingress VRF. PE1 must separately fail three unqualified probes in the real global table while tenant traffic works; an undefined VRF or a general outage cannot stand in for isolation.",
+    "The BLUE tag exercise requires a PE2 tag111 mismatch, real PE1 VLAN110 ARP attempts and BLUE resolution failures, successful RED delivery, restoration to110 and fresh delivered replies from both clients. The missing-route exercise requires actual BLUE No route drops with RED success before restoring the exact scoped /24 and fresh traffic.",
+    "The access-binding exercise removes PE1 BLUE VRF membership, verifies IOS clears the IPv4 address, and requires real BLUE gateway/route failure while RED works. Rebinding alone leaves the address absent; both binding and address must be restored before fresh tenant replies earn the repair. Native tests cover warm and cold host ARP.",
+    "Fifteen tasks combine six live configuration/state/save goals and nine observed outcomes. Practice starts0/15. The completed reference supplies6/15 without invented packets, ARP rows, HTTP transactions or incidents. Earned observations survive portable YAML export/import, while current topology, exact configuration, health and startup equality remain live.",
+    "Per-attempt epochs and normal simulator notifications capture CLI evidence with a closed guide. Configuration-only toggles, fake neighbors, wrong server identity, incomplete topology, global-route shortcuts and missing return routes fail closed. No simulation engine, protocol implementation, UI styling, terminal theme or artwork changed."
+  ],
+  "scope": "IOS IPv4 VRF-Lite using two routers, static routing and one shared 802.1Q cable. Native/browser validation does not claim a fresh CML capture. This lab does not configure MPLS L3VPNs, MP-BGP, inter-VRF leaking, dynamic routing per VRF, IPv6 or NX-OS.",
+  "references": [
+    {
+      "title": "Cisco: VPN Routing and Forwarding (VRF)-Lite Software Configuration Guide",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/connectedgrid/cgr1000/ios/software/15_4_1_cg/vrf_cgr1000.html",
+      "use": "Local interface-to-table classification, static routing, IPv4 address families, physical/logical interfaces and optional RD/RT configuration."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 22,
+    "nativeTests": 3062,
+    "nativeFailures": 0,
+    "nativeDurationMs": 255820.050292,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=8; six nodes/five links/15 tasks and six-row plan; real bidirectional BLUE/RED delivery to correct nodes across shared physical tags with overlapping IPs, explicit router VRF probes, scoped CEF/ARP, distinct HTTP pages at the same URL, positive and negative tenant/global isolation; 12 setup/state/traffic tasks with three incident repairs left unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=8; six nodes/five links/15 tasks and six-row plan; real bidirectional BLUE/RED delivery to correct nodes across shared physical tags with overlapping IPs, explicit router VRF probes, scoped CEF/ARP, distinct HTTP pages at the same URL, positive and negative tenant/global isolation; all15 including tag mismatch, missing scoped route and binding/address repair; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=8; six nodes/five links/15 tasks and six-row plan; real bidirectional BLUE/RED delivery to correct nodes across shared physical tags with overlapping IPs, explicit router VRF probes, scoped CEF/ARP, distinct HTTP pages at the same URL, positive and negative tenant/global isolation; all15 including tag mismatch, missing scoped route and binding/address repair; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=8; six nodes/five links/15 tasks and six-row plan; real bidirectional BLUE/RED delivery to correct nodes across shared physical tags with overlapping IPs, explicit router VRF probes, scoped CEF/ARP, distinct HTTP pages at the same URL, positive and negative tenant/global isolation; 12 setup/state/traffic tasks with three incident repairs left unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=8; six nodes/five links/15 tasks and six-row plan; real bidirectional BLUE/RED delivery to correct nodes across shared physical tags with overlapping IPs, explicit router VRF probes, scoped CEF/ARP, distinct HTTP pages at the same URL, positive and negative tenant/global isolation; 12 setup/state/traffic tasks with three incident repairs left unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=8; six nodes/five links/15 tasks and six-row plan; real bidirectional BLUE/RED delivery to correct nodes across shared physical tags with overlapping IPs, explicit router VRF probes, scoped CEF/ARP, distinct HTTP pages at the same URL, positive and negative tenant/global isolation; 12 setup/state/traffic tasks with three incident repairs left unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "acc330b8c86069a926056d099f45cc32fb3bf7c59185f12a392d86e82b450b29",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Root, dist and every browser-tested copy have identical bytes.",
+    "terminal": "Golden console fixtures match existing fonts, background, foreground, cursor, tabs and controls in both themes and desktop/mobile modes.",
+    "verificationCommands": "Every published IOS/Windows query and reference configuration executes. Assertions cover scoped RIB/CEF/ARP, global-table rejection, explicit VRF probes, intended positive/negative host probes and completed traceroute.",
+    "visualInspection": [
+      ".cache/vl-catalog-browser/topology-light-1440.png",
+      ".cache/vl-catalog-browser/guide-light-1440.png",
+      ".cache/vl-catalog-browser/console-light-1440.png",
+      ".cache/vl-catalog-browser/guide-dark-320.png",
+      ".cache/vl-catalog-browser/console-dark-320.png",
+      ".cache/vl-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full15-task normal UI workflows complete at1440px/light and320px/dark. Four other theme/viewport cases complete12 setup/state/traffic tasks and leave three staged repairs unearned. Every case exports/imports actual YAML into a fresh offline profile, then loads a reference with only six live goals.",
+    "Six file:// scenarios block HTTP(S), use embedded assets and preserve earned progress. Two shared-link scenarios retain current domain/path/query and leave the workspace untouched when opening the guide. Seven generic catalog checks preserve categories, prerequisites and existing save/cancel/import workflows.",
+    "Browser clock advancement drives normal application frames; no route, packet outcome, ARP row or completion result is injected. Clipboard stubbing is limited to share-link verification."
+  ]
+}
