@@ -2,8 +2,11 @@ import type {Simulator,ServiceResult} from './engine.ts';
 import type {Device} from './model.ts';
 import {ownRecordValue} from './record-map.ts';
 
-export interface AAAAuthentication {accepted:boolean;unavailable?:boolean;privilege?:number;role?:string;errors?:string[];radius?:{server:string;authorized:boolean;privilege:number}}
+export interface AAAAuthStep {method:string;outcome:'accept'|'reject'|'error';started:number;completed:number;server?:string;address?:string;transaction?:string;operation?:string;attempt?:number;serverEnabled?:boolean;serverPowered?:boolean;interfaceUp?:boolean;keyMatches?:boolean}
+export interface AAAServerState {serverEnabled?:boolean;serverPowered?:boolean;interfaceUp?:boolean;keyMatches?:boolean}
+export interface AAAAuthentication {steps?:AAAAuthStep[];accepted:boolean;unavailable?:boolean;privilege?:number;role?:string;errors?:string[];radius?:{server:string;authorized:boolean;privilege:number}}
 export interface AAAServer {protocol:'radius'|'tacacs';address:string;port?:number;accountingPort?:number;key?:string;timeout?:number;retransmit?:number;vrf?:string;source?:string;name?:string}
+export function aaaServerState(e:Simulator,server:AAAServer):AAAServerState {const target=e.lab.devices.find(n=>Object.values(n.config.interfaces).some(p=>p.ip===server.address)),port=target&&Object.values(target.config.interfaces).find(p=>p.ip===server.address);return {serverEnabled:target?!!target.config.services[server.protocol]?.enabled:undefined,serverPowered:target?e.devicePowered(target.id):undefined,interfaceUp:target&&port?e.interfaceUp(target.id,port.name):undefined,keyMatches:target?!!server.key&&server.key===target.config.services[server.protocol]?.secret:undefined};}
 export interface AAAStats {requests:number;responses:number;accepts:number;rejects:number;errors:number;timeouts:number;retransmits:number;last?:number}
 /** Client counters are separate from the simulated server's receiver log. Never retain credentials. */
 export function aaaStats(d:Device,name:string,operation:string):AAAStats {
@@ -28,12 +31,13 @@ export function aaaResponse(e:Simulator,d:Device,server:AAAServer,operation:stri
  }
  s.errors++;if(/time(?:d out|out)/i.test(result.error??''))s.timeouts++;return 'error';
 }
-export function aaaExchange(e:Simulator,d:Device,server:AAAServer,payload:Record<string,unknown>):ServiceResult|undefined {
+export function aaaExchange(e:Simulator,d:Device,server:AAAServer,payload:Record<string,unknown>,observe?:(step:AAAAuthStep)=>void):ServiceResult|undefined {
  const operation=String(payload.operation??'authenticate');
  for(let attempt=0;attempt<=(server.protocol==='radius'?server.retransmit??0:0);attempt++){
+  const started=e.clock.now(),context=aaaServerState(e,server);
   const result=aaaRequest(e,d,server,payload,attempt),deadline=e.clock.now()+Math.max(100,Math.min(60000,(server.timeout??5)*1000));
   while(result.status==='running'&&e.clock.now()<deadline)e.clock.advance(Math.min(20,deadline-e.clock.now()));
-  if(aaaResponse(e,d,server,operation,result)!=='error')return result;
+  const outcome=aaaResponse(e,d,server,operation,result);observe?.({method:server.protocol,outcome,started,completed:e.clock.now(),server:server.name??server.address,address:server.address,transaction:result.id,operation,attempt,...context});if(outcome!=='error')return result;
  }
  return undefined;
 }

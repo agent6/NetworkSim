@@ -1,0 +1,83 @@
+{
+  "lab": "AAA Authentication",
+  "catalogId": "aaa-authentication",
+  "group": "CCNP ENCOR",
+  "section": "Security",
+  "date": "2026-10-30",
+  "nodes": 4,
+  "links": 3,
+  "tasks": 20,
+  "topology": "PC1 uses R1 as its gateway to independent TAC1 and RAD1 server LANs. Both prepared remote servers contain netadmin only; rescue exists only locally on R1.",
+  "implemented": [
+    "Second ENCOR Security entry with accurate two-lab count; ENCOR now has34 labs. Existing CCNA local, TACACS+ and RADIUS exercises remain available.",
+    "Actual SSH logins distinguish default local authentication before a named list exists from a defined but unbound VTY-AUTH list; explicit line binding is required.",
+    "Named TACACS+ and RADIUS groups use real simulated TCP49 and UDP1812 authentication. Both remote netadmin and local rescue enter user EXEC at privilege1 because EXEC authorization is intentionally absent; a separate enable secret controls privileged EXEC.",
+    "An incorrect remote password and a valid local rescue credential both receive authoritative TACACS+ Reject while the primary is healthy; no later RADIUS or local method is attempted.",
+    "Disabling only TACACS+ permits RADIUS netadmin authentication; RADIUS Reject must still stop before local. Disabling both services permits rescue local fallback only after actual errors/retries. Fresh server echo replies prove preserved IP reachability.",
+    "Independent named CONSOLE local recovery requires a real fresh console login while both services are disabled. AAA console logout now clears identity and privilege, waits for Return and restarts the configured authentication, matching the protected line/local console flow.",
+    "Temporarily reversing the list requires an actual RADIUS-first login followed by restored TACACS+-first authentication. A wrong TACACS+ shared key produces a protocol error and RADIUS fallback; repairing it requires a fresh healthy primary login.",
+    "Authentication observations correlate immutable list definitions, method outcomes, server service/power/interface/key-match booleans, actual packet transaction IDs and server acceptance. No passwords or shared keys are added to observation metadata. History is bounded256 per device runtime.",
+    "Final save requires restored services, matching keys, the original method order and line bindings, all sixteen SSH-only VTYs with five-minute idle timeout, no active remote sessions, healthy planned addressing/links and R1 startup equality.",
+    "Practice starts0/20. Completed reference contains seven live configuration tasks without invented login, fault or packet evidence. Actual observations survive portable save as earned achievements; runtime sessions, traces and receiver state clear.",
+    "Diagnostic test aaa requests and generic log text alone cannot earn authenticated-session goals; unknown imported criteria, foreign roots and missing teaching interfaces fail closed."
+  ],
+  "scope": [
+    "Authentication-focused IOS exercise. EXEC/command authorization and accounting are intentionally unconfigured; no UDP1813 or TACACS+ accounting records are invented. Separate existing AAA client labs exercise those features.",
+    "Primary Cisco documentation reviewed. No new live CML capture was performed for this catalog addition; existing CML AAA contracts are included in the full regression suite.",
+    "Shared-key protection, AAA wire formats, SSH cryptography and stored IOS secrets are logical teaching models, not external protocol interoperability.",
+    "Server service toggles are exercised through the normal Services AAA forms. Client statistics and packet events expose authentication activity; the existing server AAA log panel displays accounting records and remains empty in this lab.",
+    "Terminal styling, UI theme, layout and node artwork are unchanged."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE: Configuring Authentication / AAA login method lists",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/security-vpn/security-vpn/m_sec-cfg-authentifcn-0.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "nativeTests": 2764,
+    "nativePassed": 2764,
+    "nativeFailed": 0,
+    "nativeDurationMs": 267014.353833,
+    "newLabTests": 25,
+    "browserChecks": [
+      "light 320px: Security=2, four nodes/three links/20 tasks and four-row plan; actual default-list SSH, defined/unbound named list and explicit VTY binding; TACACS+ wrong-password/unknown-user rejection and primary authentication at privilege1; 13 initial configuration/login tasks with no outage/recovery observations pre-earned; YAML export/import preserves achievements and saved configuration but clears runtime; fresh authenticated console; completed reference seven live tasks only; responsive guide, fitted topology, golden terminal styling, cancel/save-copy protection.",
+      "dark 320px: Security=2, four nodes/three links/20 tasks and four-row plan; actual default-list SSH, defined/unbound named list and explicit VTY binding; TACACS+ wrong-password/unknown-user rejection and primary authentication at privilege1; all20 including RADIUS fallback/rejection, both-service local fallback with fresh ICMP, independent console recovery, method reversal/restoration and wrong-key repair through normal AAA service forms; YAML export/import preserves achievements and saved configuration but clears runtime; fresh authenticated console; completed reference seven live tasks only; responsive guide, fitted topology, golden terminal styling, cancel/save-copy protection.",
+      "light 1440px: Security=2, four nodes/three links/20 tasks and four-row plan; actual default-list SSH, defined/unbound named list and explicit VTY binding; TACACS+ wrong-password/unknown-user rejection and primary authentication at privilege1; all20 including RADIUS fallback/rejection, both-service local fallback with fresh ICMP, independent console recovery, method reversal/restoration and wrong-key repair through normal AAA service forms; YAML export/import preserves achievements and saved configuration but clears runtime; fresh authenticated console; completed reference seven live tasks only; responsive guide, fitted topology, golden terminal styling, cancel/save-copy protection.",
+      "dark 1440px: Security=2, four nodes/three links/20 tasks and four-row plan; actual default-list SSH, defined/unbound named list and explicit VTY binding; TACACS+ wrong-password/unknown-user rejection and primary authentication at privilege1; 13 initial configuration/login tasks with no outage/recovery observations pre-earned; YAML export/import preserves achievements and saved configuration but clears runtime; fresh authenticated console; completed reference seven live tasks only; responsive guide, fitted topology, golden terminal styling, cancel/save-copy protection.",
+      "light 390px: Security=2, four nodes/three links/20 tasks and four-row plan; actual default-list SSH, defined/unbound named list and explicit VTY binding; TACACS+ wrong-password/unknown-user rejection and primary authentication at privilege1; 13 initial configuration/login tasks with no outage/recovery observations pre-earned; YAML export/import preserves achievements and saved configuration but clears runtime; fresh authenticated console; completed reference seven live tasks only; responsive guide, fitted topology, golden terminal styling, cancel/save-copy protection.",
+      "dark 390px: Security=2, four nodes/three links/20 tasks and four-row plan; actual default-list SSH, defined/unbound named list and explicit VTY binding; TACACS+ wrong-password/unknown-user rejection and primary authentication at privilege1; 13 initial configuration/login tasks with no outage/recovery observations pre-earned; YAML export/import preserves achievements and saved configuration but clears runtime; fresh authenticated console; completed reference seven live tasks only; responsive guide, fitted topology, golden terminal styling, cancel/save-copy protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with two labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "d62a781cf14accbe7bc61a11ec8d6558e288fda0083ac45a4fba26e20b44f52e",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks; final rebuilt bytes match every browser-tested copy.",
+    "terminal": "Golden fixtures match both themes and desktop/mobile console modes. Authentication inputs are hidden and passwords do not echo in PC login transcripts.",
+    "visualInspection": [
+      ".cache/aaa-authentication-catalog-browser/console-light-1440.png",
+      ".cache/aaa-authentication-catalog-browser/topology-dark-1440.png",
+      ".cache/aaa-authentication-catalog-browser/guide-light-320.png",
+      ".cache/aaa-authentication-catalog-browser/guide-dark-320.png",
+      ".cache/aaa-authentication-catalog-browser/console-light-320.png",
+      ".cache/aaa-authentication-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "All20 tasks pass via normal UI controls on1440px/light and320px/dark. Four other theme/viewport cases pass13 initial login/configuration tasks without pre-earned outage or recovery credit.",
+    "Six file:// cases block external HTTP(S). Two sharing cases retain current domain/path/query and the current workspace. Seven generic catalog regression checks pass.",
+    "Browser clock advances normal application frames; no simulator state, authentication results, packets or earned outcomes were injected.",
+    "Disabling a service preserves interface/link reachability; powering down or disconnecting a server cannot substitute for the service-only outage exercise. Authentication metadata contains only state booleans, never shared-key values."
+  ]
+}

@@ -1,6 +1,6 @@
 import {recordDeviceAccess} from './device-access.ts';
 import {nsosReservedUser} from './nsos-aaa.ts';
-import {aaaServers,aaaExchange,type AAAAuthentication} from './aaa-client.ts';
+import {aaaServers,aaaExchange,type AAAAuthentication,type AAAAuthStep} from './aaa-client.ts';
 import {ownRecordValue,accountCredential} from './record-map.ts';
 import{handleAAARequest}from'./aaa-service.ts';
 import {AAAAccountingClient,type AccountingContext} from './aaa-accounting.ts';
@@ -114,26 +114,27 @@ export class ManagementController {
     return this.authenticateMethods(device,['group',group],username,password);
   }
   private authenticateMethods(device:Device,methods:string[],username:string,password:string,lineName?:string):AAAAuthentication{
-    const deviceId=device.id,aaa=device.config.features.aaa||{},errors:string[]=[];
+    const deviceId=device.id,aaa=device.config.features.aaa||{},errors:string[]=[],steps:AAAAuthStep[]=[],done=(result:AAAAuthentication)=>({...result,steps}),local=(method:string,accepted:boolean,result:AAAAuthentication)=>{const now=this.engine.clock.now();steps.push({method,outcome:accepted?'accept':'reject',started:now,completed:now});return done(result);},exchange=(server:ReturnType<typeof aaaServers>[number],payload:Record<string,unknown>)=>aaaExchange(this.engine,device,server,payload,step=>steps.push(step));
     for(let i=0;i<methods.length;i++){
-      const method=methods[i];if(method==='none')return {accepted:true,privilege:1};
-      if(method==='enable'){const expected=device.config.features.enableSecret??device.config.features.enablePassword;return {accepted:typeof expected==='string'&&expected.length>0&&expected===password,privilege:15};}
-      if(method==='line'){const expected=lineName?device.config.features.lines?.[lineName]?.password:undefined;return {accepted:typeof expected==='string'&&expected.length>0&&expected===password,privilege:1};}
-      if(method==='local'){const user=ownRecordValue(device.config.features.users,username),expected=accountCredential(user);return {accepted:expected!==undefined&&typeof password==='string'&&expected===password,privilege:user?.privilege??1,role:user?.role,errors};}
+      const method=methods[i];if(method==='none')return local(method,true,{accepted:true,privilege:1});
+      if(method==='enable'){const expected=device.config.features.enableSecret??device.config.features.enablePassword,accepted=typeof expected==='string'&&expected.length>0&&expected===password;return local(method,accepted,{accepted,privilege:15});}
+      if(method==='line'){const expected=lineName?device.config.features.lines?.[lineName]?.password:undefined,accepted=typeof expected==='string'&&expected.length>0&&expected===password;return local(method,accepted,{accepted,privilege:1});}
+      if(method==='local'){const user=ownRecordValue(device.config.features.users,username),expected=accountCredential(user),accepted=expected!==undefined&&typeof password==='string'&&expected===password;return local(method,accepted,{accepted,privilege:user?.privilege??1,role:user?.role,errors});}
       if(method!=='group')continue;
       for(const server of aaaServers(device,methods[++i])){
-        const result=aaaExchange(this.engine,device,server,{username,password});
+        const result=exchange(server,{username,password});
         if(!result){errors.push(server.name!);continue;}
-        if(device.kind==='datacenter'&&nsosReservedUser(username))return {accepted:false};
+        if(device.kind==='datacenter'&&nsosReservedUser(username))return done({accepted:false});
         if(device.kind==='datacenter'&&server.protocol==='tacacs'&&result.accepted){
-          const author=aaaExchange(this.engine,device,server,{operation:'authorize',kind:'exec',username});
-          return {accepted:true,privilege:author?.accepted?author.privilege??1:1,role:author?.accepted?author.role??'network-operator':'network-operator'};
+          const author=exchange(server,{operation:'authorize',kind:'exec',username});
+          return done({accepted:true,privilege:author?.accepted?author.privilege??1:1,role:author?.accepted?author.role??'network-operator':'network-operator'});
         }
-        return {accepted:!!result.accepted,privilege:result.privilege??1,role:result.role,...server.protocol==='radius'&&result.accepted?{radius:{server:server.name!,authorized:result.execAuthorized!==false,privilege:result.privilege??1}}:{}};
+        return done({accepted:!!result.accepted,privilege:result.privilege??1,role:result.role,...server.protocol==='radius'&&result.accepted?{radius:{server:server.name!,authorized:result.execAuthorized!==false,privilege:result.privilege??1}}:{}});
       }
     }
-    return {accepted:false,unavailable:true};
+    return done({accepted:false,unavailable:true});
   }
+
   authorize(deviceId:string,kind:'exec'|'commands',listName:string,username:string|undefined,authenticated:boolean,requiredPrivilege=15,radius?:AAAAuthentication['radius'],errors:string[]=[]):{accepted:boolean;privilege?:number;unavailable?:boolean;configured?:boolean}{
     const device=this.engine.getDevice(deviceId);if(!device)return {accepted:false};const aaa=device.config.features.aaa||{},methods=aaa.enabled?aaa.authorization?.[kind==='commands'?'commands'+requiredPrivilege:'exec']?.[listName]:undefined;if(!methods)return {accepted:true,configured:false};
     for(let i=0;i<methods.length;i++){
@@ -211,16 +212,16 @@ export class ManagementController {
     if (session.phase === 'username') { session.username = text.trim(); session.phase = 'password'; return this.reply(session); }
     const line = device.config.features.lines[session.line];
     const user = ownRecordValue(device.config.features.users,session.username),expected=accountCredential(user);
-    const remote=session.method==='aaa'?this.authenticate(device.id,line.authentication||'default',session.username||'',text,'login',session.line):undefined;
+    const remote=session.method==='aaa'||device.config.features.aaa?.enabled&&session.method==='local'?this.authenticate(device.id,line.authentication||'default',session.username||'',text,'login',session.line):undefined;
     const valid = remote?remote.accepted:session.method === 'local' ? expected!==undefined && expected === text : typeof line.password==='string' && line.password.length>0 && line.password === text;
     if (valid) {
       const authorization=this.execPrivilege(device.id,session.line,session.username,true,remote?.privilege??user?.privilege??line.privilege??1,remote);if(!authorization.accepted){this.close(session);return {closed:true,output:['% EXEC authorization failed.']};}session.phase = 'ready';session.cli.setPrivilege(authorization.privilege);session.cli.setIdentity(session.username,true,session.line,session.method==='aaa'?remote?.role??'network-operator':user?.role);this.beginAccounting(session,device,authorization.privilege);
       if(session.port===22&&session.method==='local'&&!device.config.features.aaa?.enabled&&line.login==='local'&&session.username){this.localSSHLogins.push({deviceId:device.id,runtime:device.runtime,username:session.username,source:session.source,privilege:authorization.privilege,line:session.line,time:this.engine.clock.now()});if(this.localSSHLogins.length>1000)this.localSSHLogins.splice(0,this.localSSHLogins.length-1000);}
-      recordDeviceAccess(this.engine,device,{session:session.id,kind:'login',success:true,line:session.line,source:session.source,port:session.port,username:session.username,privilege:authorization.privilege,method:session.method});
+      recordDeviceAccess(this.engine,device,{session:session.id,kind:'login',success:true,line:session.line,source:session.source,port:session.port,username:session.username,privilege:authorization.privilege,method:session.method,authenticationSteps:remote?.steps});
       this.engine.log(device.id, `User ${session.username || 'line'} logged in from ${session.source} on ${session.line}`, 6);
       return this.reply(session, device.config.features.banners?.exec ? [device.config.features.banners.exec] : []);
     }
-    recordDeviceAccess(this.engine,device,{session:session.id,kind:'login',success:false,line:session.line,source:session.source,port:session.port,username:session.username,method:session.method});
+    recordDeviceAccess(this.engine,device,{session:session.id,kind:'login',success:false,line:session.line,source:session.source,port:session.port,username:session.username,method:session.method,authenticationSteps:remote?.steps});
     recordLoginFailure(device,this.engine.clock.now(),session.source,session.username);
     if(loginBlocked(device,this.engine.clock.now())){this.close(session);return {closed:true,output:['% Login blocked: quiet mode is active.']};}
     session.attempts++;
