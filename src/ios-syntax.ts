@@ -174,6 +174,11 @@ function optionGraph(options: Form[], complete = true): SyntaxGraph {
 
 function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): SyntaxGraph | undefined {
   const done = graph(true), area = argument('AREA', 'Area ID, integer or dotted decimal', value => ipv4(value) || /^\d+$/.test(value));
+  if(context.mode==='applet'&&path==='event')return union(chain([word('none','Manually triggered applet')],done),...['watchdog','countdown'].map(mode=>chain([word('timer','Timer event detector'),word(mode,mode==='watchdog'?'Periodic timer':'One-shot timer'),word('time'),number(1,86400,'Seconds')],done)),chain([word('syslog','Syslog event detector'),word('pattern'),text('Regular expression')],done));
+  if(context.mode==='applet'&&path==='action'){
+    const label=argument('WORD','Action label, sorted alphanumerically',value=>/^[-A-Za-z0-9_.]{1,32}$/.test(value));
+    return chain([label],no?done:union(chain([word('cli'),word('command'),tail('IOS CLI command')],done),chain([word('syslog'),word('msg'),tail('Syslog message')],done)));
+  }
   if(path==='show policy-map'){
     const classes=union(done,chain([word('class','Class name'),text('Class-map name')],done));
     const directions=union(classes,...['input','output'].map(d=>chain([word(d,d+' policy')],classes)));

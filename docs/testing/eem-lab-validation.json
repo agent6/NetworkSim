@@ -1,0 +1,98 @@
+{
+  "lab": "EEM Applet Configuration",
+  "catalogId": "eem-applet-configuration",
+  "group": "CCNP ENCOR",
+  "section": "Automation",
+  "date": "2026-10-30",
+  "nodes": 3,
+  "links": 2,
+  "tasks": 14,
+  "topology": "PC1 reaches the prepared HTTP server through two directly connected IPv4 LANs on R1. The learner automates restoration of R1 Gi0/1 while preserving Gi0/0 as a negative control. Addresses, gateways and HTTP are prepared; no routing protocol or static-route shortcut is configured.",
+  "implemented": [
+    "Automation is the seventh ENCOR section with one lab,39 ENCOR entries and accessible singular counts. Existing category order and original CCNA authentication labs are retained. Permalinks preserve the current domain, path and query.",
+    "RESTORE uses event none and seven explicitly padded action labels, enters privileged/configuration/interface modes, restores Gi0/1, sets its description and emits a real HA_EM syslog. Actual outage, failed probes, a real admin-down to admin-up change and three fresh client replies prove manual recovery.",
+    "RECOVER uses an anchored syslog regular expression and the same IOS action sequence. Actual new Gi0/1 down logs drive automatic recovery. A Gi0/0 down negative control remains down and requires manual restoration before client traffic resumes.",
+    "EEM labels preserve their exact strings, replace/remove by exact label and execute in ascending lexical order, including distinct decimal spellings. Applet edits register on leaving configuration mode, including Ctrl-Z and configuration import.",
+    "Syslog detectors use bounded regular-expression matching with literal underscores, anchors, groups, alternation, character ranges and simple quantifiers. Each actual matching log is processed once, even with multiple events in one scan or disabled display buffering. Re-registration starts at the current log cursor rather than replaying old logs. Render/import preserves literal regex backslashes.",
+    "Per-applet registration and timer ownership preserve unrelated countdown/watchdog deadlines. Countdown fires once and watchdog repeats. Deletion, power-off and runtime replacement cancel owned callbacks; startup restoration registers fresh timers. Archive scheduling retains separate ownership.",
+    "Controlled troubleshooting observes a lexical-label ordering failure, an invalid interface action and a missed syslog pattern. Each repair requires actual later recovery and new delivered client traffic. Correcting a missed pattern alone cannot retroactively revive the old event.",
+    "Temporary LAB-WATCH and LAB-ONCE applets demonstrate at least two spaced watchdog executions and one countdown execution across two periods. Learners record these observations while the one-shot applet remains registered, then remove both timers before final save.",
+    "Bounded execution evidence retains trigger provenance, applet definition, exact action labels, status, real log identifiers and actual interface field mutations. Executions cap at128 records, detector observations at512, applets at64, actions at100 and recursion/causal chains at8. Self/mutually matching action syslogs cannot create unbounded loops.",
+    "Question-mark help and Tab expose implemented none/syslog/countdown/watchdog detector and CLI/syslog action paths. Verification uses native policy/history tables, real interfaces, real logs and saved configuration.",
+    "Practice starts0/14. Completed reference provides four live configuration/save goals with no invented events, traffic or fault achievements. All14 earned observations survive YAML export/import while operational histories and detector sessions rebuild. Final save requires exactly the two recovery applets, working links/addresses/gateways/HTTP and R1 startup equality."
+  ],
+  "scope": [
+    "IOS EEM applet exercise covering event none, bounded syslog patterns, countdown/watchdog timers, CLI actions and syslog actions. The simulator continues to stop applets on rejected CLI actions; production EEM error-handling and Tcl runtime behavior are outside this lab.",
+    "Tcl policies, variables, conditionals, cron, AAA integration, IP SLA/track/hardware-specific EEM detectors and NX-OS event-manager policy syntax are not configured or claimed by this lab.",
+    "Primary Cisco IOS and IOS XE documentation reviewed. No new live CML capture was performed; existing IOS/NX-OS CML regression contracts remain in the full native suite.",
+    "No UI theme/layout, terminal styling, node artwork, dependency or backend/server changes."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS: Writing Embedded Event Manager Policies Using the CLI",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/eem/configuration/15-s/eem-15-s-book/eem-policy-cli.html"
+    },
+    {
+      "title": "Cisco IOS EEM command reference: applet registration and event-none execution",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/eem/command/eem-cr-book/eem-cr-e1.html"
+    },
+    {
+      "title": "Cisco IOS EEM command reference: syslog and timer detectors",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/eem/command/eem-cr-book/eem-cr-e2.html"
+    },
+    {
+      "title": "Cisco IOS EEM command reference: action CLI and lexical labels",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/eem/command/eem-cr-book/eem-cr-a1.html"
+    },
+    {
+      "title": "Cisco IOS XE: Writing Embedded Event Manager Policies Using the CLI",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/system-management/system-management/m_eem-policy-cli.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "nativeTests": 2895,
+    "nativePassed": 2895,
+    "nativeFailed": 0,
+    "nativeDurationMs": 240870.720125,
+    "newLabTests": 18,
+    "newRuntimeTests": 15,
+    "browserChecks": [
+      "light 320px: Automation=1; three nodes/two links/14 tasks and three-row plan; real baseline ICMP/HTTP, event-none manual recovery, new-log automatic recovery and negative client-link scope; nine baseline/configuration/traffic tasks with five fault/timer observations left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: Automation=1; three nodes/two links/14 tasks and three-row plan; real baseline ICMP/HTTP, event-none manual recovery, new-log automatic recovery and negative client-link scope; all14 with lexical action-order repair, invalid-interface repair, missed-pattern repair, repeated watchdog and one-shot countdown; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: Automation=1; three nodes/two links/14 tasks and three-row plan; real baseline ICMP/HTTP, event-none manual recovery, new-log automatic recovery and negative client-link scope; all14 with lexical action-order repair, invalid-interface repair, missed-pattern repair, repeated watchdog and one-shot countdown; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: Automation=1; three nodes/two links/14 tasks and three-row plan; real baseline ICMP/HTTP, event-none manual recovery, new-log automatic recovery and negative client-link scope; nine baseline/configuration/traffic tasks with five fault/timer observations left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: Automation=1; three nodes/two links/14 tasks and three-row plan; real baseline ICMP/HTTP, event-none manual recovery, new-log automatic recovery and negative client-link scope; nine baseline/configuration/traffic tasks with five fault/timer observations left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: Automation=1; three nodes/two links/14 tasks and three-row plan; real baseline ICMP/HTTP, event-none manual recovery, new-log automatic recovery and negative client-link scope; nine baseline/configuration/traffic tasks with five fault/timer observations left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENCOR Automation and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENCOR Automation and retains the original CCNA authentication labs in Services & Security",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "28f03d09d15578b60dcfdb84c3699d47c701a71e6fb30df93b14486a08299d86",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Root, dist and all browser-tested copies have identical bytes.",
+    "terminal": "Golden fixtures match existing fonts, colors, cursor and terminal controls in both themes and desktop/mobile modes.",
+    "visualInspection": [
+      ".cache/eem-catalog-browser/topology-light-1440.png",
+      ".cache/eem-catalog-browser/guide-light-1440.png",
+      ".cache/eem-catalog-browser/console-light-1440.png",
+      ".cache/eem-catalog-browser/guide-dark-320.png",
+      ".cache/eem-catalog-browser/console-dark-320.png",
+      ".cache/eem-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "All14 tasks complete through normal UI controls at1440px/light and320px/dark. Four other theme/viewport cases earn nine baseline/configuration/traffic tasks and leave five incident/timer observations unearned.",
+    "Six file:// cases block HTTP(S), export/import into fresh profiles and preserve earned progress. Two sharing cases preserve current domain/path/query/workspace. Seven generic catalog checks confirm accessible Automation1 singular counts and retain other categories.",
+    "Browser clocks advance normal application frames. No simulator state, packet outcomes, logs, timer results or earned achievements are injected. Timer observations are checked in the guide before temporary applets are removed."
+  ]
+}

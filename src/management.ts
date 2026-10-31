@@ -1,3 +1,4 @@
+import {matchIOSExpression,validIOSExpression} from './bgp-policy.ts';
 import {recordDeviceAccess} from './device-access.ts';
 import {nsosReservedUser} from './nsos-aaa.ts';
 import {aaaServers,aaaExchange,type AAAAuthentication,type AAAAuthStep,type AAAAuthorization} from './aaa-client.ts';
@@ -36,6 +37,7 @@ export interface ManagedCLI {
   setIdentity(username:string|undefined,authenticated:boolean,line:string,role?:string):void;
   setAccountingHook?(hook:(command:string,level:number,status:'start'|'stop',taskId:string)=>void):void;
 }
+type EEMTrigger={type:'none'|'syslog'|'timer';registeredAt?:number;mode?:string;source?:{id:string;sequence:number;time:number;message:string;eemChain?:string[]}};
 type Factory = (deviceId: string) => ManagedCLI;
 interface RemoteSession {
   id: string;
@@ -82,6 +84,7 @@ export class ManagementController {
   readonly engine: Simulator;
   private readonly factory: Factory;
   private accounting:AAAAccountingClient;
+  private automationRegistrations=new Map<string,{runtime:Device['runtime'];applets:Map<string,{signature:string;owner:string}>;archive?:string}>();
   private automationRuns = new Map<string, number>();
   private clientVRFs=new Map<string,string>();
   localSSHLoginSnapshot(deviceId:string):LocalSSHLogin[]{
@@ -100,6 +103,7 @@ export class ManagementController {
     engine.registerUDPService(1812,d=>!!d.config.services.radius?.enabled,(d,payload,source)=>this.aaaRequest(d,'radius',payload,source));
     engine.registerTCPService(49,d=>!!d.config.services.tacacs?.enabled,(d,payload,source)=>this.aaaRequest(d,'tacacs',payload,source)??{error:'TACACS+ response unavailable'});
     for (const port of [22, 23]) engine.registerTCPService(port, d => this.accepts(d, port), (d, payload, source, destination) => this.handle(d, port, payload, source, destination));
+    this.syncAutomation();
   }
   private aaaRequest(device:Device,protocol:string,payload:any,source:string):Record<string,any>|undefined{
     return handleAAARequest(this.engine,device,protocol,payload,source);
@@ -149,19 +153,38 @@ export class ManagementController {
   execPrivilege(deviceId:string,lineName:string,username:string|undefined,authenticated:boolean,loginPrivilege:number,authentication?:AAAAuthentication):{accepted:boolean;privilege:number;authorization?:AAAAuthorization}{const d=this.engine.getDevice(deviceId)!,f=d.config.features,line=f.lines?.[lineName]||{};if(!f.aaa?.enabled)return {accepted:true,privilege:loginPrivilege};if(d.kind==='datacenter')return {accepted:true,privilege:loginPrivilege};const base=line.privilege??1;if(lineName.startsWith('console')&&!f.aaa.authorizeConsole)return {accepted:true,privilege:base};const result=this.authorize(deviceId,'exec',line.authorizationExec||'default',username,authenticated,15,authentication?.radius,authentication?.errors);return {accepted:result.accepted,privilege:result.privilege??base,authorization:result};}
   private wait(result:ServiceResult,timeout=10000):void{const deadline=this.engine.clock.now()+timeout,step=Math.max(20,Math.ceil(timeout/2000));let count=0;while(result.status==='running'&&this.engine.clock.now()<deadline&&count++<2001)this.engine.clock.advance(Math.min(step,deadline-this.engine.clock.now()));}
   private syncAutomation():void {
+    const active=new Set(this.engine.lab.devices.filter(d=>d.powered).map(d=>d.id));
+    for(const [id,state]of this.automationRegistrations)if(!active.has(id)){for(const r of state.applets.values())this.engine.clock.cancelOwner(r.owner);this.engine.clock.cancelOwner('management-archive-'+id);this.automationRegistrations.delete(id);}
     for(const device of this.engine.lab.devices){
       if(!device.powered)continue;
-      const f=device.config.features,signature=JSON.stringify([f.eem,f.archive]);
-      if(device.runtime.features.automationSignature===signature)continue;
-      device.runtime.features.automationSignature=signature;
-      const owner=`management-${device.id}`;this.engine.clock.cancelOwner(owner);
-      for(const [name,applet]of Object.entries<any>(f.eem||{}))if(applet.event?.type==='timer'){
-        const delay=applet.event.seconds*1000;if(!Number.isFinite(delay)||delay<1000)continue;
-        this.engine.clock.schedule(delay,()=>{if(device.powered)this.runApplet(device,name);},{owner,repeat:applet.event.mode==='watchdog'?delay:undefined,label:`EEM ${name}`});
+      let state=this.automationRegistrations.get(device.id);
+      if(state?.runtime!==device.runtime){if(state)for(const r of state.applets.values())this.engine.clock.cancelOwner(r.owner);this.engine.clock.cancelOwner('management-archive-'+device.id);state={runtime:device.runtime,applets:new Map()};this.automationRegistrations.set(device.id,state);}
+      const f=device.config.features;
+      for(const [name,registration]of state!.applets)if(!Object.hasOwn(f.eem??{},name)){this.engine.clock.cancelOwner(registration.owner);state!.applets.delete(name);}
+      for(const [name,applet]of Object.entries<any>(f.eem??{}).slice(0,64)){
+        const signature=JSON.stringify(applet),old=state!.applets.get(name);if(old?.signature===signature)continue;
+        const owner='management-eem-'+device.id+':'+name;if(old)this.engine.clock.cancelOwner(old.owner);
+        state!.applets.set(name,{signature,owner});const registeredAt=this.engine.clock.now(),event=structuredClone(applet.event??{type:'none'});
+        if(event.type==='timer'){
+          const delay=event.seconds*1000;if(!Number.isFinite(delay)||delay<1000||delay>86400000||!['countdown','watchdog'].includes(event.mode))continue;
+          this.engine.clock.schedule(delay,()=>{if(device.powered)this.runApplet(device,name,{type:'timer',mode:event.mode,registeredAt});},{owner,repeat:event.mode==='watchdog'?delay:undefined,label:'EEM '+name});
+        }
+        if(event.type==='syslog'&&validIOSExpression(event.pattern??'',false)){
+          let cursor=device.runtime.features.logSequence??0;
+          this.engine.clock.schedule(1000,()=>{
+            if(!device.powered)return;
+            const messages=(device.runtime.features.logEntries??[]).filter((r:any)=>r.sequence>cursor);cursor=device.runtime.features.logSequence??cursor;
+            for(const source of messages){
+              if(source.eemChain?.includes(name)||source.eemChain?.length>=8)continue;
+              const matched=matchIOSExpression(event.pattern,source.message,false),detections=device.runtime.features.eemDetections??=[];
+              detections.push({name,time:this.engine.clock.now(),registeredAt,pattern:event.pattern,matched,source:{id:source.id,sequence:source.sequence,time:source.time,message:source.message}});if(detections.length>512)detections.shift();
+              if(matched)this.runApplet(device,name,{type:'syslog',registeredAt,source:structuredClone(source)});
+            }
+          },{owner,repeat:1000,label:'EEM syslog '+name});
+        }
       }
-      const syslog=Object.entries<any>(f.eem||{}).filter(([,a])=>a.event?.type==='syslog');
-      if(syslog.length){let last=device.runtime.logs.at(-1);this.engine.clock.schedule(1000,()=>{if(!device.powered)return;const index=last?device.runtime.logs.lastIndexOf(last):-1,messages=device.runtime.logs.slice(index+1);for(const [name,applet]of syslog)if(messages.some(message=>message.includes(applet.event.pattern)))this.runApplet(device,name);last=device.runtime.logs.at(-1);},{owner,repeat:1000,label:'EEM syslog scan'});}
-      if(f.archive?.timePeriod){const delay=f.archive.timePeriod*60000;if(Number.isFinite(delay)&&delay>=60000)this.engine.clock.schedule(delay,()=>{if(device.powered){try{this.archive(device,renderConfig(device).join('\n'));}catch(error){this.engine.log(device.id,(error as Error).message,3);}}},{owner,repeat:delay,label:'Configuration archive'});}
+      const archiveSignature=JSON.stringify(f.archive??null);
+      if(state!.archive!==archiveSignature){state!.archive=archiveSignature;const owner='management-archive-'+device.id;this.engine.clock.cancelOwner(owner);if(f.archive?.timePeriod){const delay=f.archive.timePeriod*60000;if(Number.isFinite(delay)&&delay>=60000)this.engine.clock.schedule(delay,()=>{if(device.powered){try{this.archive(device,renderConfig(device).join('\n'));}catch(error){this.engine.log(device.id,(error as Error).message,3);}}},{owner,repeat:delay,label:'Configuration archive'});}}
     }
   }
   private vty(d: Device, port: number): [string, any] | undefined {
@@ -309,21 +332,31 @@ export class ManagementController {
     while (history.length > (settings.maximum || 10)){const old=history.shift();delete device.config.features.files[old.path.replace(/^flash:/,'')];}
     return path;
   }
-  runApplet(device: Device, name: string): string[] {
-    const applet = device.config.features.eem?.[name];
-    if (!applet) return ['% EEM applet does not exist.'];
-    const key = `${device.id}:${name}`, depth = this.automationRuns.get(key) || 0;
-    if (depth) return ['% Recursive applet invocation was blocked.'];
-    this.automationRuns.set(key, depth + 1);
-    const cli = this.factory(device.id); cli.setPrivilege(15); const output: string[] = [];let executed=0,failed=false;
-    try {
-      for (const action of [...(applet.actions || [])].sort((a, b) => Number(a.order) - Number(b.order)).slice(0, 100)) {
-        executed++;if (action.kind === 'syslog') this.engine.log(device.id, action.text, 6);
-        else if (action.kind === 'cli') { const result = cli.execute(action.text); output.push(...result); if (result.some(iosRejected)) {failed=true;break;} }
+  runApplet(device: Device, name: string,trigger:EEMTrigger={type:'none'}): string[] {
+    const configured=ownRecordValue(device.config.features.eem,name);
+    if(!configured)return ['% EEM applet does not exist.'];
+    if((configured.event?.type??'none')!==trigger.type)return ['% EEM applet '+name+' is not registered with event '+trigger.type+'.'];
+    const key=device.id+':'+name;if(this.automationRuns.has(key)||this.automationRuns.size>=8)return ['% Recursive applet invocation was blocked.'];
+    this.automationRuns.set(key,1);
+    const applet=structuredClone(configured),cli=this.factory(device.id);cli.setPrivilege(15);
+    const output:string[]=[],trace:any[]=[],started=this.engine.clock.now();let executed=0,failed=false;
+    const label=(a:any)=>String(a.label??a.order),ordered=[...(applet.actions??[])].sort((a,b)=>label(a)<label(b)?-1:label(a)>label(b)?1:0);
+    const before=()=>Object.fromEntries(Object.values(device.config.interfaces).map(p=>[p.name,{adminUp:p.adminUp,description:p.description,ip:p.ip,mask:p.mask}]));
+    try{
+      if(ordered.length>100){output.push('% EEM applet exceeds the supported 100-action limit.');failed=true;}
+      for(const action of ordered.slice(0,100)){
+        if(failed)break;executed++;const initial=before(),row:any={label:label(action),kind:action.kind,text:action.text,status:'success'};
+        if(action.kind==='syslog'){
+          const sequence=device.runtime.features.logSequence??0;this.engine.log(device.id,'%HA_EM-6-LOG: '+name+': '+action.text,6);
+          const entry=device.runtime.features.logEntries?.at(-1);if(entry?.sequence>sequence&&entry?.message==='%HA_EM-6-LOG: '+name+': '+action.text){entry.eemChain=[...(trigger.source?.eemChain??[]),name];row.logId=entry.id;}
+        }else if(action.kind==='cli'){
+          const result=cli.execute(action.text);output.push(...result);if(result.some(iosRejected)){failed=true;row.status='failed';row.error=result.filter(iosRejected).slice(0,4).map(r=>r.slice(0,512));}
+        }else{failed=true;row.status='failed';output.push('% Unsupported EEM action.');}
+        row.changes=Object.values(device.config.interfaces).flatMap(p=>Object.keys(initial[p.name]??{}).filter(k=>(initial[p.name] as any)[k]!== (p as any)[k]).map(property=>({interface:p.name,property,before:(initial[p.name] as any)[property],after:(p as any)[property]}))).slice(0,32);trace.push(row);
       }
-      device.runtime.features.eemHistory ??= [];
-      device.runtime.features.eemHistory.push({ name, time: this.engine.clock.now(), actions:executed,status:failed?'failed':'success',eventType:applet.event?.type??'none' });
-      return output.length ? output : [`EEM applet ${name} completed.`];
-    } finally { this.automationRuns.delete(key); }
+      const history=device.runtime.features.eemHistory??=[];
+      history.push({name,time:this.engine.clock.now(),started,actions:executed,status:failed?'failed':'success',eventType:applet.event?.type??'none',trigger:structuredClone(trigger),definition:applet,trace});if(history.length>128)history.shift();
+      return output.length?output:[`EEM applet ${name} completed.`];
+    }finally{this.automationRuns.delete(key);}
   }
 }
