@@ -363,6 +363,19 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
 
 /** Deliberately explicit: prose in legacy argument hints is not an executable grammar. */
 function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
+  if(path==='set'&&context.mode==='route-map'){
+    const hops={...ip('Next-hop address'),repeat:true};
+    return [
+      [word('ip','IP specific information'),word('next-hop','Next-hop address'),hops],
+      [word('ip'),word('default'),word('next-hop'),hops],
+      [word('ipv6','IPv6 specific information'),word('next-hop'),argument('X:X:X:X::X','IPv6 next-hop address',isIPv6)],
+      ...['metric','tag','local-preference'].map(value=>[word(value),number(0,4294967295,'Value')]),
+      [word('weight'),number(0,65535,'BGP weight')],
+      ...choices(['type-1','type-2']).map(form=>[word('metric-type'),...form]),
+      [word('as-path'),word('prepend'),{...number(1,4294967295,'AS number'),repeat:true}],
+      [word('community'),tail('Community values or none [additive]')],
+    ];
+  }
   if(path==='monitor session'){const id=number(1,66,'SPAN session number'),source=[word('source'),word('interface'),iface(context)],destination=[word('destination'),word('interface'),iface(context)],remote=[word('remote'),word('vlan'),number(1,4094,'RSPAN VLAN')];return [[id,...source],...choices(['rx','tx','both']).map(c=>[id,...source,...c]),[id,...destination],...choices(['source','destination']).map(c=>[id,...c,...remote]),...choices(['local','erspan-source','erspan-destination']).map(c=>[id,word('type'),...c])];}
   if(path==='show monitor session')return [[],[word('all')],[number(1,66,'SPAN session number')]];
 

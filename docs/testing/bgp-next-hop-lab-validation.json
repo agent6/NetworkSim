@@ -1,0 +1,90 @@
+{
+  "lab": "BGP Next-Hop Troubleshooting",
+  "catalogId": "bgp-next-hop-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 7,
+  "links": 6,
+  "tasks": 16,
+  "topology": "R1/R2/R3 AS65000 form full-mesh iBGP using OSPF-reachable Loopback0 peers 10.255.1.1/2.2/3.3. R3 peers with R4 AS65100 over 172.16.34.0/30. R1 originates the client LAN 192.168.10.0/24; R4 originates service LAN 192.168.40.0/24. PC1 and SRV1 exercise all four routers; PC2/R2 are independent local controls. R3 Loopback10 10.254.3.3/32 is prepared for next-hop-only withdrawal.",
+  "implemented": [
+    "Thirtieth ENARSI lab with independent practice/reference attempts, seven-row plan, ordinary IOS/Windows verification and current-domain/path/query permalinks. Sixteen tasks preserve the existing UI, themes, icons, terminal and single-file offline use.",
+    "Initial eight directed peer views are Established. R1/R2 retain received service paths with inaccessible external next hop 172.16.34.2; those paths have no valid/best state, RIB installation or re-advertisement. Actual failed service probes and working independent controls earn diagnosis.",
+    "R3 next-hop-self toward both internal peers repairs resolution through OSPF Loopback0. R1/R2 install iBGP AD200, next hop10.255.3.3 and AS path65100; R3 installs eBGP AD20. Reverse client routes retain internal AS semantics, and R4 receives path65000. CEF and actual traffic follow physical transit.",
+    "Six exercises cover missing next-hop-self, bad outbound next-hop policy, bad local inbound policy, working recursively resolved static /32 next-hop routes, next-hop-only OSPF withdrawal/recovery, and working passive external-transit OSPF reachability. Each requires observed traffic followed by fresh baseline restoration.",
+    "Outbound NH-OUT changes only R1 advertisements; NH-IN changes only local R1 import while R3 advertised-routes remain correct. R2 retains the correct path. Both incidents require actual failed service requests and working independent controls before repair credit.",
+    "Static resolution adds only 172.16.34.2/32 via OSPF-reachable R3 Lo0 on R1/R2, preserving the BGP next-hop attribute. IGP resolution passively originates the external /30 without making R4 an OSPF peer or redistributing host LANs. Both alternatives require complete HTTP before cleanup and fresh restored baseline traffic.",
+    "NH-RECURSE advertises 10.254.3.3 while all peers use Lo0. Prove alternate forwarding/HTTP, withdraw only Lo10 OSPF membership, observe retained inaccessible paths while all eight channel IDs remain Established, restore alternate forwarding/HTTP, then remove the policy and temporary IGP scope and prove baseline restoration.",
+    "Seven live and nine observed checks: practice0, diagnosis1, baseline10, full16, completed reference only seven live. Three unique ICMP requests per direction correlate actual destination acceptance, physical router egress and parent-linked replies. Failed requests need real No route drops; HTTP needs reassembled TCP response data. YAML preserves earned observations and rebuilds live protocol state.",
+    "Existing route-map set help/Tab grammar now exposes implemented ip next-hop syntax and validates its arguments. No networking-engine change was required."
+  ],
+  "scope": "IOS IPv4 unicast BGP next-hop reachability using full-mesh iBGP, a directly connected eBGP peer, recursive static/OSPF resolution and import/export next-hop policy. Cisco primary documentation reviewed; no fresh CML capture or complete binary BGP interoperability is claimed. No UI or terminal-theme changes.",
+  "references": [
+    {
+      "title": "Cisco: Troubleshoot Border Gateway Protocol Basic Issues",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/border-gateway-protocol-bgp/218027-troubleshoot-border-gateway-protocol-bas.html"
+    },
+    {
+      "title": "Cisco Catalyst9000: Configuring BGP",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr3-fwd/bgp/bgp-configuration-guide/routing-bgp.html"
+    },
+    {
+      "title": "Cisco: BGP Commands M through neighbor soo",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios/iproute_bgp/command/reference/irg_book/irg_bgp3.html"
+    },
+    {
+      "title": "Cisco IOS: BGP Commands neighbor next-hop-self",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_bgp/command/irg-cr-book/bgp-n1.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "native": {
+      "command": "node --test --test-concurrency=4 tests/*.test.ts",
+      "tests": 3603,
+      "pass": 3603,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "newCatalogTests": 25,
+      "focusedBgpTests": 33
+    },
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=30; seven nodes/six links/16 tasks/seven-row plan; actual inaccessible-next-hop diagnosis despite eight Established peer views, received OSPF peer routes, internal AD200/external AD20, correct BGP attributes and recursive physical forwarding; all four service/control directions and full HTTP; ten baseline tasks with all six exercises unearned; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=30; seven nodes/six links/16 tasks/seven-row plan; actual inaccessible-next-hop diagnosis despite eight Established peer views, received OSPF peer routes, internal AD200/external AD20, correct BGP attributes and recursive physical forwarding; all four service/control directions and full HTTP; ten baseline tasks with all six exercises unearned; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=30; seven nodes/six links/16 tasks/seven-row plan; actual inaccessible-next-hop diagnosis despite eight Established peer views, received OSPF peer routes, internal AD200/external AD20, correct BGP attributes and recursive physical forwarding; all four service/control directions and full HTTP; all16 including missing next-hop-self, incorrect export/import next hops, working recursive /32 resolution, working alternate next-hop before IGP withdrawal, repaired alternate and baseline restoration, and working passive external-transit IGP alternative; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=30; seven nodes/six links/16 tasks/seven-row plan; actual inaccessible-next-hop diagnosis despite eight Established peer views, received OSPF peer routes, internal AD200/external AD20, correct BGP attributes and recursive physical forwarding; all four service/control directions and full HTTP; all16 including missing next-hop-self, incorrect export/import next hops, working recursive /32 resolution, working alternate next-hop before IGP withdrawal, repaired alternate and baseline restoration, and working passive external-transit IGP alternative; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=30; seven nodes/six links/16 tasks/seven-row plan; actual inaccessible-next-hop diagnosis despite eight Established peer views, received OSPF peer routes, internal AD200/external AD20, correct BGP attributes and recursive physical forwarding; all four service/control directions and full HTTP; ten baseline tasks with all six exercises unearned; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=30; seven nodes/six links/16 tasks/seven-row plan; actual inaccessible-next-hop diagnosis despite eight Established peer views, received OSPF peer routes, internal AD200/external AD20, correct BGP attributes and recursive physical forwarding; all four service/control directions and full HTTP; ten baseline tasks with all six exercises unearned; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "c96a801ff0af63b0a587bdb06711c990b7491c9ec2465f2511f321c32a6c2e79",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist and all browser-tested offline copies match byte for byte.",
+    "terminal": "Golden terminal fixture matches both themes at mobile and desktop sizes.",
+    "visualInspection": [
+      ".cache/bnh-catalog-browser/topology-light-1440.png",
+      ".cache/bnh-catalog-browser/guide-light-1440.png",
+      ".cache/bnh-catalog-browser/console-light-1440.png",
+      ".cache/bnh-catalog-browser/topology-dark-320.png",
+      ".cache/bnh-catalog-browser/guide-dark-320.png",
+      ".cache/bnh-catalog-browser/console-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full16-task UI workflows at dark320 and light1440; four other theme/width cases earn baseline10 with six exercises unearned. All export/import actual YAML into an empty offline profile, check reference live goals and save/cancel protection.",
+    "Six file:// cases block HTTP(S). Two mocked-host permalink checks preserve current domain/path/query/workspace. Seven generic catalog/prerequisite checks retain prior labs. Browser clocks run ordinary application frames without injected routes, peers, packets or completion flags."
+  ]
+}
