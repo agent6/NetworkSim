@@ -1,0 +1,82 @@
+{
+  "lab": "Classic EIGRP Troubleshooting",
+  "catalogId": "classic-eigrp-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 5,
+  "links": 5,
+  "tasks": 13,
+  "topology": "PC1 enters R1. The R1\u2013R2\u2013R3 triangle provides a preferred path through R2 and a direct higher-delay R1\u2013R3 backup. SRV1 is on R3; R2 Loopback0 is an independent control destination. Physical links, addressing and HTTP are prepared. R3 initially runs classic AS200 while R1/R2 use100.",
+  "implemented": [
+    "Ninth ENARSI Layer 3 Technologies entry with independent practice/completed factories, five-row plan, staged guide, tested reference and IOS/Windows verification commands, current-site domain/path/query permalinks and accurate accessible section counts. All prior entries remain available.",
+    "Initial diagnosis requires three actual PC1/R2-loopback replies and three PC1/server No route drops at R1 with the exact AS200 mismatch and only the R1/R2 adjacency. The repair removes the wrong process and recreates classic AS100 with the intended router ID, networks, passive policy and no auto-summary.",
+    "Each restored router must have two UP EIGRP peers. The intended R1 server and R3 client routes are internal D, AD90, metric10240 and CEF next hop through R2. R2 learns each directly attached remote LAN at metric7680. A lost-UPDATE counterfactual proves configuration and Hello/INIT alone cannot install server reachability.",
+    "Bidirectional host delivery requires three destination-accepted requests and parent-linked delivered replies in each direction, with actual routed sends through R2. HTTP requires the complete actual200 response and expected service body on the preferred request path; a wrong200 page cannot earn it.",
+    "The passive exercise keeps the R1/R2 physical port up but removes its adjacency. The converged R1 server route uses the direct R3 neighbor with metric261120, and three real requests must take that path. Restoring the active exception requires preferred route convergence and fresh bidirectional delivery.",
+    "Removing only R3 server network membership keeps all six directional neighbors UP and the local connected server LAN intact, but delivered withdrawals remove the R1/R2 service routes. Three real No route failures and independent control successes precede restoration and fresh traffic.",
+    "The K-value exercise changes R3 coefficients from1/0/1/0/0 to1/0/0/0/0. Both R3 neighbors disappear while R1/R2 and the diagnostic prefix remain. Actual server failures and control success are required before restoring default weights and bidirectional service. Hello/hold timer equality is not presented as an adjacency requirement.",
+    "A temporary R1 inbound prefix distribute-list excludes the server route from both peers while all neighbors remain UP and R2 retains its own service route. The exercise distinguishes filtering received route information from an interface packet ACL. Removing both binding and temporary list plus fresh traffic earns repair.",
+    "Changing only R1 backup-interface delay1000 to15 selects a working direct request path at metric8960 while R3 continues to prefer its10240 R2 return route. Actual direct-path replies precede restoring delay1000, converging to the intended preferred routes and fresh bidirectional traffic. The chosen comparison remains within the exercised feasibility conditions; no hitless or guaranteed feasible-successor switchover is claimed.",
+    "Thirteen tasks combine five live process/neighbor/route/health/save checks and eight observations. Practice starts0/13. The completed reference supplies5/13 without invented diagnosis, traffic, HTTP or repair evidence. Historical observations survive YAML export/import; current health and startup equality revoke on drift.",
+    "Per-attempt config and route epochs plus normal simulator notifications collect synchronous CLI evidence with a closed guide. Queries, two probes, configuration-only toggles, server power loss, static shortcuts, named-mode substitutions, rewiring and unsaved drift cannot satisfy the prescribed outcomes. No networking engine, protocol implementation, UI styling, terminal theme or artwork changed."
+  ],
+  "scope": "Classic IOS IPv4 internal EIGRP in one AS after repair. This is simulator/native/browser validation against published Cisco behavior, not a fresh CML capture or wire-compatible Cisco implementation. It excludes named mode, IPv6, authentication, redistribution, variance, SIA, BFD and guaranteed hitless/feasible-successor convergence; existing engine boundaries remain documented in docs/audits/eigrp-update-fidelity.md.",
+  "references": [
+    {
+      "title": "Cisco: Troubleshoot EIGRP Common Issues",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/118974-technote-eigrp-00.html",
+      "use": "AS and K-value mismatches, route filtering, neighbor versus missing-prefix diagnosis and metric troubleshooting."
+    },
+    {
+      "title": "Cisco IOS XE17 EIGRP Configuration Guide",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_ire-enhanced-igrp.html",
+      "use": "Classic process/network/passive-interface configuration, default coefficients, metrics and operational verification."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 20,
+    "nativeTests": 3082,
+    "nativeFailures": 0,
+    "nativeDurationMs": 266866.4905,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=9; five nodes/five links/13 tasks and five-row plan; real initial AS200 control-success/server-failure diagnosis, repaired classic AS100 adjacencies and internal10240 routes, bidirectional requests via R2 and full HTTP response; eight diagnosis/setup/state/traffic tasks with five staged repairs left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark 320px: ENARSI Layer 3 Technologies=9; five nodes/five links/13 tasks and five-row plan; real initial AS200 control-success/server-failure diagnosis, repaired classic AS100 adjacencies and internal10240 routes, bidirectional requests via R2 and full HTTP response; all13 including passive-interface alternate261120 delivery, server-network withdrawal, K-value mismatch, route-filter and delay8960 path repairs; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=9; five nodes/five links/13 tasks and five-row plan; real initial AS200 control-success/server-failure diagnosis, repaired classic AS100 adjacencies and internal10240 routes, bidirectional requests via R2 and full HTTP response; all13 including passive-interface alternate261120 delivery, server-network withdrawal, K-value mismatch, route-filter and delay8960 path repairs; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=9; five nodes/five links/13 tasks and five-row plan; real initial AS200 control-success/server-failure diagnosis, repaired classic AS100 adjacencies and internal10240 routes, bidirectional requests via R2 and full HTTP response; eight diagnosis/setup/state/traffic tasks with five staged repairs left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=9; five nodes/five links/13 tasks and five-row plan; real initial AS200 control-success/server-failure diagnosis, repaired classic AS100 adjacencies and internal10240 routes, bidirectional requests via R2 and full HTTP response; eight diagnosis/setup/state/traffic tasks with five staged repairs left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=9; five nodes/five links/13 tasks and five-row plan; real initial AS200 control-success/server-failure diagnosis, repaired classic AS100 adjacencies and internal10240 routes, bidirectional requests via R2 and full HTTP response; eight diagnosis/setup/state/traffic tasks with five staged repairs left unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with nine labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with nine labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with nine labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with nine labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with nine labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with nine labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "db4c6e1b716774e52e02e8df827336d4e78e4b195204b7bc1d85ffff167a4b9c",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Root, dist and all browser-tested copies have identical bytes.",
+    "terminal": "Golden console fixtures match existing fonts, background, foreground, cursor, tabs and controls in both themes and desktop/mobile modes.",
+    "verificationCommands": "Every published IOS/Windows verification command executes. The full R3 repair block executes in the initial AS200 state. Its AS100 stanza can be reapplied on the corrected reference; removing absent AS200 is intentionally not treated as an idempotent operation. Assertions cover actual EIGRP neighbors/routes/counters, preferred CEF, successful pings and completed traceroute.",
+    "visualInspection": [
+      ".cache/ce-catalog-browser/topology-light-1440.png",
+      ".cache/ce-catalog-browser/guide-light-1440.png",
+      ".cache/ce-catalog-browser/console-light-1440.png",
+      ".cache/ce-catalog-browser/guide-dark-320.png",
+      ".cache/ce-catalog-browser/console-dark-320.png",
+      ".cache/ce-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full13-task normal UI workflows complete at1440px/light and320px/dark. Four other theme/viewport scenarios complete eight diagnosis/setup/state/traffic goals and leave five staged repairs unearned. Every scenario exports/imports real YAML in a fresh offline profile, then loads a reference with five live goals only.",
+    "Six file:// scenarios block HTTP(S), use embedded assets and preserve earned progress. Two shared-link scenarios retain the current domain/path/query and do not replace the workspace by opening instructions. Seven generic catalog checks preserve categories, prerequisites and save/cancel/import behavior.",
+    "Browser clock advancement drives normal application frames. No neighbor, route, packet outcome or completion result is injected. Clipboard stubbing is limited to share-link verification."
+  ]
+}
