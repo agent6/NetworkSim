@@ -1,0 +1,87 @@
+{
+  "lab": "Route Summarization Troubleshooting",
+  "catalogId": "route-summarization-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 6,
+  "links": 5,
+  "tasks": 13,
+  "topology": "PC1 and PC2 use separate /24 LANs on R1. R1 \u2192 R2 \u2192 R3 reaches SRV1. All three routers run classic IPv4 EIGRP100 with passive LANs and no auto-summary. Initial R1 summary lines put the desired172.16.0.0/22 on passive LAN Gi0/0 and a nonmatching172.16.4.0/22 on transit Gi0/1. Correct aggregation belongs only on transit Gi0/1. The second LAN has prepared delay30, making it the higher-metric contributor.",
+  "implemented": [
+    "Sixth ENARSI Layer3 lab with independent practice/completed variants, a six-row addressing/role plan, staged guide, tested reference commands, accessible section counts and current-site domain/path/query permalinks. Existing ENARSI and39 ENCOR labs plus other categories remain available.",
+    "Initial baseline requires both remote component /24 routes and real service replies from both PCs. It proves that connectivity and configured summary lines do not establish successful aggregation. The passive LAN placement does not summarize transit advertisements; the nonmatching transit prefix has no contributors and produces no aggregate or discard.",
+    "Correct egress policy suppresses both component /24s remotely and delivers one172.16.0.0/22. Actual routes distinguish local D summary Null0 AD5/metric5120 from learned D AD90/metric7680 on R2 and10240 on R3. Three new replies in all four client/server directions prove both connected LANs still work beneath the summary.",
+    "Covered but unused172.16.2.10 requests originate on SRV1, traverse R3/R2 and are discarded at R1 Null0. Three distinct request IDs and actual router sends are correlated; TTL expiry cannot count as safe summary discard.",
+    "Narrow /24 and wrong-interface regressions require real remote component advertisements and still-successful service probes from both PCs before repair. Correct reaggregation and fresh replies from both PCs are needed after restoration.",
+    "An overbroad /16 attracts outside172.16.8.10 to R1 Null0. The repair must restore only the /22, produce three fresh outside-prefix No route drops at R3 and restore new service replies from both PCs. Merely showing a reachable valid host cannot prove the intended coverage.",
+    "With PC1 connected source withdrawn by R1 Gi0/0 shutdown, PC2 keeps the summary active. Local metric changes to10240, R2 to12800 and R3 to15360. Actual R1 discard toward PC1 and delivered replies from PC2 precede restoration and new reverse replies from both PCs.",
+    "With both contributor interfaces shut, live transit adjacencies remain but local conditional discard and both remote aggregates disappear despite the retained summary configuration. Real R3 No route drops for each PC precede restored advertisements and fresh service replies from both LANs.",
+    "HTTP success requires complete real200 responses for both PCs, each correlated with the server transaction and routed request. Thirteen tasks combine four live policy/state/save goals and nine observations. Practice starts0/13; completed reference supplies4/13 without invented packets. Earned observations survive export/import while live health and startup equality revoke on drift.",
+    "Native negative-delivery checks block reliable EIGRP UPDATE datagrams and prove remote aggregation cannot appear before actual delivery. Counterfactual tests reject fewer/unrelated probes, configuration-only toggles, PC power loss as the prescribed shutdown, static shortcuts, rewired links, changed contributor delay, broken gateways and unsaved drift.",
+    "Per-attempt epochs and normal simulator notifications capture synchronous CLI evidence with a closed guide. No simulation engine, protocol implementation, global UI, terminal styling or artwork changed."
+  ],
+  "scope": "Classic IOS IPv4 EIGRP manual interface summarization. This lab has native/browser validation, not a fresh CML capture. It does not configure OSPF area ranges, BGP aggregation, IPv6, named EIGRP or leak maps. Existing ENCOR OSPF Route Summarization remains available separately.",
+  "references": [
+    {
+      "title": "Cisco: Understand and Use the Enhanced Interior Gateway Routing Protocol",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/16406-eigrp-toc.html",
+      "use": "Manual summaries, component suppression, local discard and EIGRP metrics."
+    },
+    {
+      "title": "Cisco: IP Routing Configuration Guide \u2014 EIGRP",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-routing/b-ip-routing/m_ire-enhanced-igrp.html",
+      "use": "Interface summarization and conditional local Null0 behavior."
+    },
+    {
+      "title": "Cisco: Understand how the Passive Interface Feature Works in EIGRP",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/13675-16.html",
+      "use": "Passive LAN membership versus sending routing updates."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 22,
+    "nativeTests": 3018,
+    "nativeFailures": 0,
+    "nativeDurationMs": 254036.971417,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=6; six nodes/five links/13 tasks and six-row plan; initial unaggregated reachability, received manual summary and local discard, both LANs in both directions, covered-hole discard and HTTP from both PCs; eight setup/state/traffic tasks with five staged outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=6; six nodes/five links/13 tasks and six-row plan; initial unaggregated reachability, received manual summary and local discard, both LANs in both directions, covered-hole discard and HTTP from both PCs; all13 including narrow-mask and wrong-interface repairs, overbroad coverage repair, remaining-contributor metric change and last-contributor withdrawal/recovery; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=6; six nodes/five links/13 tasks and six-row plan; initial unaggregated reachability, received manual summary and local discard, both LANs in both directions, covered-hole discard and HTTP from both PCs; all13 including narrow-mask and wrong-interface repairs, overbroad coverage repair, remaining-contributor metric change and last-contributor withdrawal/recovery; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=6; six nodes/five links/13 tasks and six-row plan; initial unaggregated reachability, received manual summary and local discard, both LANs in both directions, covered-hole discard and HTTP from both PCs; eight setup/state/traffic tasks with five staged outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=6; six nodes/five links/13 tasks and six-row plan; initial unaggregated reachability, received manual summary and local discard, both LANs in both directions, covered-hole discard and HTTP from both PCs; eight setup/state/traffic tasks with five staged outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=6; six nodes/five links/13 tasks and six-row plan; initial unaggregated reachability, received manual summary and local discard, both LANs in both directions, covered-hole discard and HTTP from both PCs; eight setup/state/traffic tasks with five staged outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with six labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "dc401d33468c04f612bd70c611c2db42a745143d006f2be4d5b230c92e19c5d2",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Root, dist and every browser-tested copy have identical bytes.",
+    "terminal": "Golden console fixtures match existing fonts, background, foreground, cursor, tabs and controls in both themes and desktop/mobile modes.",
+    "verificationCommands": "Every published IOS/Windows query and reference command executes. Assertions cover local Null0 output, remote summary metric10240, both LAN service/reverse replies, hole/outside failures and completed service traceroute.",
+    "visualInspection": [
+      ".cache/sum-catalog-browser/topology-light-1440.png",
+      ".cache/sum-catalog-browser/guide-light-1440.png",
+      ".cache/sum-catalog-browser/console-light-1440.png",
+      ".cache/sum-catalog-browser/guide-dark-320.png",
+      ".cache/sum-catalog-browser/console-dark-320.png",
+      ".cache/sum-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full13-task normal UI workflows complete at1440px/light and320px/dark. Four other theme/viewport cases complete eight setup/state/traffic tasks and leave five staged incidents unearned. Every case exports/imports actual YAML into a fresh offline profile, then loads a reference with four live tasks only.",
+    "Six file:// cases block HTTP(S), use embedded assets and preserve earned progress. Two shared-link cases retain current domain/path/query and do not replace the active workspace merely by opening the guide. Seven generic catalog checks retain categories, prerequisites, save/cancel protection and existing workflows.",
+    "Browser clock advancement drives normal application frames; no route, protocol database, packet outcome or completion result is injected. Clipboard stubbing is limited to share-link verification."
+  ]
+}
