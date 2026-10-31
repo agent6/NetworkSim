@@ -91,7 +91,7 @@ function interfaceLines(p: InterfaceConfig, config: DeviceConfig, kind = 'router
   if(p.features.lacpPortPriority)a.push(` lacp port-priority ${p.features.lacpPortPriority}`);
   if (p.features.bpduguard!==undefined) a.push(` spanning-tree bpduguard ${p.features.bpduguard?'enable':'disable'}`);
   if (p.features.stpCost) a.push(` spanning-tree cost ${p.features.stpCost}`);
-  for(const protocol of ['eigrp','eigrp6','rip']){const auth=p.features[protocol];if(!auth)continue;const family=protocol==='eigrp6'?'ipv6':'ip',asn=protocol==='eigrp6'?(auth.asn||config.protocols.eigrp6?.asn||1):(config.protocols.eigrp?.asn||1);if(protocol==='eigrp6'&&auth.asn)a.push(` ipv6 eigrp ${auth.asn}`);if(auth.authenticationMode)a.push(protocol==='rip'?` ip rip authentication mode ${auth.authenticationMode}`:` ${family} authentication mode eigrp ${asn} ${auth.authenticationMode}`);if(auth.authenticationKeyChain)a.push(protocol==='rip'?` ip rip authentication key-chain ${auth.authenticationKeyChain}`:` ${family} authentication key-chain eigrp ${asn} ${auth.authenticationKeyChain}`);if(protocol==='eigrp6')for(const s of auth.summaries||[])a.push(` ipv6 summary-address eigrp ${asn} ${s.network}/${s.prefix}`);}
+  for(const protocol of ['eigrp','eigrp6','rip']){const auth=p.features[protocol];if(!auth)continue;const family=protocol==='eigrp6'?'ipv6':'ip',asn=protocol==='eigrp6'?(auth.asn||config.protocols.eigrp6?.asn||1):(config.protocols.eigrp?.asn||1);if(protocol==='eigrp6'&&auth.asn&&(!config.protocols.eigrp6?.name||auth.asn!==config.protocols.eigrp6?.asn))a.push(` ipv6 eigrp ${auth.asn}`);if(auth.authenticationMode)a.push(protocol==='rip'?` ip rip authentication mode ${auth.authenticationMode}`:` ${family} authentication mode eigrp ${asn} ${auth.authenticationMode}`);if(auth.authenticationKeyChain)a.push(protocol==='rip'?` ip rip authentication key-chain ${auth.authenticationKeyChain}`:` ${family} authentication key-chain eigrp ${asn} ${auth.authenticationKeyChain}`);if(protocol==='eigrp6')for(const s of auth.summaries||[])a.push(` ipv6 summary-address eigrp ${asn} ${s.network}/${s.prefix}`);}
   if (p.features.ospf) {
     const o = p.features.ospf;
     if (o.area !== undefined) a.push(` ip ospf ${o.processId || 1} area ${o.area}`);
@@ -405,15 +405,18 @@ export function renderConfig(device: Device, config: DeviceConfig = device.confi
   lines.push(...compatLines,...endpointGlobalLines(c));
   for (const p of orderedInterfaces(c)) lines.push(...interfaceLines(p,c,device.kind));
   const processEntries=['ospf','eigrp','eigrp6','rip','bgp','ospfv3','ospfv3ipv4','ripng'].flatMap(protocol=>{const root=c.protocols[protocol];return root?[[protocol,undefined,root],...Object.entries<any>(root.vrfs??{}).map(([vrf,p])=>[protocol,vrf,p])]:[];});
+  const namedGroups = new Map<string,{at:number;body:string[]}>();
   for (const [protocol,vrf,p] of processEntries as [string,string|undefined,any][]) {
+    const processStart = lines.length;
     if (!p || p.placeholder || ((protocol==='eigrp'||protocol==='eigrp6')&&p.name&&!p.asn)) continue;
     const named=(protocol==='eigrp'||protocol==='eigrp6')&&p.name;
     lines.push(named?`router eigrp ${p.name}`:protocol==='eigrp6'?`ipv6 router eigrp ${p.asn||1}`:protocol.startsWith('ospfv3')?`${p.modernSyntax?'router ospfv3':'ipv6 router ospf'} ${p.processId||1}`:protocol==='ripng'?`ipv6 router rip ${p.processId||'RIPNG'}`:`router ${protocol}${protocol === 'rip' ? '' : ` ${p.processId || p.asn || 1}`}`);
     if(vrf&&protocol.startsWith('ospf'))lines[lines.length-1]+=` vrf ${vrf}`;
     else if(vrf)lines.push(` address-family ${protocol==='eigrp6'?'ipv6':'ipv4'} vrf ${vrf}${protocol.startsWith('eigrp')?' autonomous-system '+(p.asn||1):''}`);else if(named)lines.push(` address-family ${protocol==='eigrp6'?'ipv6':'ipv4'} unicast autonomous-system ${p.asn||1}`);
     if(protocol.startsWith('ospfv3')&&p.modernSyntax)lines.push(` address-family ${protocol==='ospfv3ipv4'?'ipv4':'ipv6'} unicast`);
-    const routingLines=routingCompatibilityLines(protocol,p);lines.push(...routingLines.filter(line=>!named||!line.trimStart().startsWith('summary-metric ')));if(named){const summaries=routingLines.filter(line=>line.trimStart().startsWith('summary-metric '));if(summaries.length)lines.push(' topology base',...summaries.map(line=>' '+line),' exit-af-topology');}
-    if(p.autoSummary!==undefined){if(named&&protocol==='eigrp')lines.push(' topology base',p.autoSummary?'  auto-summary':'  no auto-summary',' exit-af-topology');else lines.push(p.autoSummary?' auto-summary':' no auto-summary');}
+    const routingLines=routingCompatibilityLines(protocol,p), namedTopology:string[]=[];
+    for(const line of routingLines){if(named&&/^(?:summary-metric|distance|default-metric) /.test(line.trimStart()))namedTopology.push(' '+line);else lines.push(line);}
+    if(p.autoSummary!==undefined){if(named&&protocol==='eigrp')namedTopology.push(p.autoSummary?'  auto-summary':'  no auto-summary');else lines.push(p.autoSummary?' auto-summary':' no auto-summary');}
     if(p.ribScale!==undefined)lines.push(` metric rib-scale ${p.ribScale}`);
     if(p.activeTime!==undefined)lines.push(` timers active-time ${p.activeTime===0?'disabled':p.activeTime/60000}`);
     if(protocol==='bgp'){
@@ -427,18 +430,23 @@ export function renderConfig(device: Device, config: DeviceConfig = device.confi
     }
     if(protocol==='bgp'&&p.timers)lines.push(` timers bgp ${p.timers.keepalive??60} ${p.timers.hold??180}`);
     if(['rip','ripng'].includes(protocol)&&p.timers)lines.push(` timers basic ${p.timers.update} ${p.timers.invalid} ${p.timers.holddown} ${p.timers.flush}`);
-    if(p.enabled===false)lines.push(' shutdown');
+    if(p.enabled===false)lines.push(' shutdown');else if(named&&p.enabled===true)lines.push(' no shutdown');
     if(p.clusterId)lines.push(` bgp cluster-id ${p.clusterId}`);
     if(p.bfd)lines.push(' bfd all-interfaces');
     if(protocol==='eigrp'||protocol==='eigrp6')for(const iface of Object.values(c.interfaces))if((iface.vrf??'')===(vrf??'')&&iface.features[protocol]?.bfd!==undefined){const on=iface.features[protocol].bfd;if(named)lines.push(` af-interface ${iface.name}`,on?'  bfd':'  no bfd',' exit-af-interface');else lines.push(`${on?' ':' no '}bfd interface ${iface.name}`);}
-    if (p.routerId) lines.push(` router-id ${p.routerId}`);
-    for(const filter of p.distributeLists||[])lines.push(` distribute-list ${filter.prefixList?`prefix ${filter.prefixList}`:filter.routeMap?`route-map ${filter.routeMap}`:filter.acl} ${filter.direction}${filter.interface?` ${filter.interface}`:''}${filter.protocol?` ${filter.protocol}${filter.processId!==undefined?' '+filter.processId:''}`:''}`);
+    if (p.routerId) lines.push(` ${named?'eigrp ':''}router-id ${p.routerId}`);
+    for(const filter of p.distributeLists||[]){const line=` distribute-list ${filter.prefixList?`prefix ${filter.prefixList}`:filter.routeMap?`route-map ${filter.routeMap}`:filter.acl} ${filter.direction}${filter.interface?` ${filter.interface}`:''}${filter.protocol?` ${filter.protocol}${filter.processId!==undefined?' '+filter.processId:''}`:''}`;if(named)namedTopology.push(' '+line);else lines.push(line);}
     for(const offset of p.offsetLists||[])lines.push(` offset-list ${offset.acl} ${offset.direction} ${offset.offset}${offset.interface?` ${offset.interface}`:''}`);
     if (protocol === 'rip') lines.push(` version ${p.version || 2}`);
     for (const n of p.networks || []) lines.push(` network ${n.network}${protocol === 'ospfv3'?`/${n.prefix} area ${n.area}`:protocol==='ripng'||protocol==='eigrp6'?`/${n.prefix}`:protocol === 'ospf' ? ` ${wildcard(n.prefix)} area ${n.area}` : protocol === 'bgp' ? ` mask ${prefixMask(n.prefix)}` : protocol === 'eigrp' ? ` ${wildcard(n.prefix)}` : ''}`);
-    if(p.passiveDefault)lines.push(' passive-interface default');
-    for (const intf of p.passiveInterfaces || []) lines.push(` passive-interface ${intf}`);
-    for (const intf of p.activeInterfaces || []) lines.push(` no passive-interface ${intf}`);
+    if(named){
+      for(const intf of [...new Set([...(p.passiveDefault?['default']:[]),...(p.passiveInterfaces??[])])])lines.push(` af-interface ${intf}`,'  passive-interface',' exit-af-interface');
+      for(const intf of p.activeInterfaces??[])lines.push(` af-interface ${intf}`,'  no passive-interface',' exit-af-interface');
+    }else{
+      if(p.passiveDefault)lines.push(' passive-interface default');
+      for(const intf of p.passiveInterfaces??[])lines.push(` passive-interface ${intf}`);
+      for(const intf of p.activeInterfaces??[])lines.push(` no passive-interface ${intf}`);
+    }
     if (p.defaultOriginate) lines.push(' default-information originate'+(p.defaultAlways?' always':''));
     if (p.maximumPaths) lines.push(` maximum-paths ${p.maximumPaths}`);
     if(p.variance!==undefined)lines.push(` variance ${p.variance}`);
@@ -476,9 +484,12 @@ export function renderConfig(device: Device, config: DeviceConfig = device.confi
       if(explicit.length){lines.push(' address-family ipv4 unicast'+(vrf?' vrf '+vrf:''),...explicit.map((n:any)=>`  ${n.activated?'':'no '}neighbor ${n.address} activate`),' exit-address-family');}
       if(p.ipv6){const af=p.ipv6;lines.push(' address-family ipv6 unicast'+(vrf?' vrf '+vrf:''));for(const n of af.networks??[])lines.push(`  network ${n.network}/${n.prefix}`);for(const n of af.neighbors??[]){renderBgpPeer(n);lines.push(`  ${n.activated===false?'no ':''}neighbor ${n.address} activate`);}for(const r of af.redistribute??[])lines.push(`  redistribute ${r.protocol}${r.metric!==undefined?' metric '+r.metric:''}${r.routeMap?' route-map '+r.routeMap:''}`);for(const r of af.aggregates??[])lines.push(`  aggregate-address ${r.network}/${r.prefix}${r.summaryOnly?' summary-only':''}`);if(af.defaultLocalPreference!==undefined)lines.push(`  bgp default local-preference ${af.defaultLocalPreference}`);if(af.alwaysCompareMed)lines.push('  bgp always-compare-med');if(af.deterministicMed)lines.push('  bgp deterministic-med');if(af.dampening)lines.push(`  bgp dampening ${af.dampening.halfLife} ${af.dampening.reuse} ${af.dampening.suppress} ${af.dampening.maxSuppress}`);if(af.maximumPaths)lines.push(`  maximum-paths ${af.maximumPaths}`);if(af.maximumPathsIbgp)lines.push(`  maximum-paths ibgp ${af.maximumPathsIbgp}`);if(af.bgpDistance)lines.push(`  distance bgp ${af.bgpDistance.external} ${af.bgpDistance.internal} ${af.bgpDistance.local}`);lines.push(' exit-address-family');}
     }
+    if(named&&namedTopology.length)lines.push(' topology base',...namedTopology,' exit-af-topology');
     if(named||vrf&&!protocol.startsWith('ospf'))lines.push(' exit-address-family');
     lines.push('!');
+    if(named){const block=lines.splice(processStart),previous=namedGroups.get(p.name);if(previous)previous.body.push(...block.slice(1,-1));else namedGroups.set(p.name,{at:processStart,body:block.slice(0,-1)});}
   }
+  for(const group of [...namedGroups.values()].reverse())lines.splice(group.at,0,...group.body,'!');
   if (c.defaultGateway) lines.push(`ip default-gateway ${c.defaultGateway}`);
   if (IOS_KINDS.includes(device.kind)) lines.push('ip forward-protocol nd', '!');
   const httpPlatform = platformGlobal.filter(line => line.startsWith('ip http '));

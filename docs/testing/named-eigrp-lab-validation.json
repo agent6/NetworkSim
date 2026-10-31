@@ -1,0 +1,83 @@
+{
+  "lab": "Named EIGRP Troubleshooting",
+  "catalogId": "named-eigrp-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 5,
+  "links": 4,
+  "tasks": 13,
+  "topology": "PC1\u2013R1\u2013R2\u2013R3\u2013SRV1 with prepared IPv4/IPv6 addressing, manual link-local host gateways and dual HTTP service. EDGE/CORE/BRANCH are local instance names; both address families use AS100. R2 IPv4 Gi0/2 starts passive, while IPv6 and the IPv4 R2 diagnostic loopback remain operational.",
+  "implemented": [
+    "Tenth ENARSI Layer 3 Technologies lab with independent practice/completed factories, five-row dual-stack plan, staged guide, tested named IOS/Windows verification and reference commands, current-site permalinks and accurate accessible section counts. ENCOR remains39 labs with its original nine-entry Layer3 section; previous catalog entries remain available.",
+    "Initial diagnosis requires three actual IPv4 control replies, three IPv6 server replies and three IPv4 No route drops at R1 with the prescribed downstream passive setting. The reference repairs R2 CORE IPv4 af-interface Gi0/2. Local instance names intentionally differ; native tests prove changing a label alone does not produce an adjacency outage.",
+    "Restored peers are independently checked per family: one on R1/R3 and two on R2. Routes use internal AD90, remote-LAN RIB metric20480 and wide feasible distance2621440. IPv6 next hops are fe80::2 scoped to Gi0/1 at the edge routers. R2 learns each remote LAN at15360 with wideFD1966080.",
+    "Traffic requires three destination-accepted, parent-linked delivered replies for all four host/family directions and actual R2 forwarding. HTTP requires complete expected200 responses over both literal IPv4 and bracketed IPv6 URLs; one family cannot satisfy the other. Lost IPv4 UPDATEs cannot manufacture routes after the passive repair, while the working IPv6 family remains independently testable.",
+    "The IPv6 AF-interface passive exercise removes only the R2/R3 IPv6 neighbor relationship, requires three IPv6 No route failures and three IPv4 server successes, and then fresh four-way delivery after restoration. The IPv4 network exercise withdraws only the advertised server LAN while all eight directional peers stay UP and IPv6 works.",
+    "The temporary NE-V6 prefix list and IPv6 topology distribute-list remove only R1 received service reachability while R2 retains the route and IPv4 keeps forwarding. Actual IPv6 drops and IPv4 control delivery precede removal of both filter and list plus four fresh success directions. This is route-information policy, not an interface packet ACL.",
+    "The administrative-distance exercise compares an installed, working IPv4 route at120 with restored90 while IPv6 stays90. No competing protocol exists, so it is explicitly not an outage exercise. The scale exercise compares IPv4 RIB40960 under scale64 with20480 under128 while wideFD2621440, next hop and IPv6 metrics remain unchanged. Both require real dual-family success during comparison and fresh four-way delivery after restoration.",
+    "Named configuration display now combines IPv4/IPv6 address families under one local instance header, uses eigrp router-id and AF-interface passive/active blocks, places distance/default-metric/summary-metric and distribute-list options in topology base, and avoids redundant classic IPv6 activation for matching named membership. Nonmatching legacy membership is retained. Explicit named no shutdown is preserved.",
+    "Native validation replays the displayed configuration into clean router configurations and verifies both families, real traffic and both HTTP services. Saved startup and IOS reload restore the intended family policy. Existing named/classic EIGRP BFD and summary regression tests also pass. No packet-forwarding engine, protocol scheduler, general UI, terminal styling or artwork changed.",
+    "Thirteen tasks combine five live family/neighbor/route/health/save checks and eight observations. Practice starts0/13. The completed reference supplies5/13 without invented diagnosis, traffic, HTTP or repairs. Route/config epochs and normal notifications capture synchronous CLI work with a closed guide. Earned history survives YAML while live state is rebuilt and remains checked.",
+    "Queries, two probes, configuration-only toggles, incorrect manual gateways, static shortcuts, classic-mode substitutions, rewiring and unsaved drift fail closed. Unknown imported criteria and foreign owners are rejected. Reopening a fresh practice attempt resets observer ownership and earned history."
+  ],
+  "scope": "Named IOS IPv4/IPv6 internal EIGRP in one AS with per-family interface/membership/filter troubleshooting and working AD/RIB-scale comparisons. Validation uses the simulator, native/browser tests and published Cisco references, not a fresh CML capture or wire-compatible Cisco implementation. It does not add NX-OS, authentication, redistribution, variance, SIA/BFD exercises, multiple independent processes per family or future-interface inheritance for af-interface default. Other pre-existing named configuration display boundaries remain outside this patch.",
+  "references": [
+    {
+      "title": "Cisco: Configure EIGRP Named Mode",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/200156-Configure-EIGRP-Named-Mode.html",
+      "use": "Address-family, AF-interface and topology contexts, dual families, named interface policy and configuration hierarchy."
+    },
+    {
+      "title": "Cisco IOS XE17 EIGRP Configuration Guide",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_ire-enhanced-igrp.html",
+      "use": "Named IPv4/IPv6 operation, metrics, local RIB scaling, route policy and operational verification."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 25,
+    "existingEigrpRenderRegressionTests": 12,
+    "nativeTests": 3107,
+    "nativeFailures": 0,
+    "nativeDurationMs": 399204.633625,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=10; five nodes/four links/13 tasks and five-row dual-stack plan; real family-isolated initial diagnosis, named AF-interface repair, independent neighbors, AD90/scoped IPv6 routes and wideFD2621440/RIB20480 metrics, four-way host traffic and both explicit HTTP families; eight diagnosis/setup/state/traffic tasks with five staged repairs unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark 320px: ENARSI Layer 3 Technologies=10; five nodes/four links/13 tasks and five-row dual-stack plan; real family-isolated initial diagnosis, named AF-interface repair, independent neighbors, AD90/scoped IPv6 routes and wideFD2621440/RIB20480 metrics, four-way host traffic and both explicit HTTP families; all13 including IPv6 passive, IPv4 membership, IPv6 topology filter, working distance120 and scale64/40960 comparisons with fresh restoration; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=10; five nodes/four links/13 tasks and five-row dual-stack plan; real family-isolated initial diagnosis, named AF-interface repair, independent neighbors, AD90/scoped IPv6 routes and wideFD2621440/RIB20480 metrics, four-way host traffic and both explicit HTTP families; all13 including IPv6 passive, IPv4 membership, IPv6 topology filter, working distance120 and scale64/40960 comparisons with fresh restoration; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=10; five nodes/four links/13 tasks and five-row dual-stack plan; real family-isolated initial diagnosis, named AF-interface repair, independent neighbors, AD90/scoped IPv6 routes and wideFD2621440/RIB20480 metrics, four-way host traffic and both explicit HTTP families; eight diagnosis/setup/state/traffic tasks with five staged repairs unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=10; five nodes/four links/13 tasks and five-row dual-stack plan; real family-isolated initial diagnosis, named AF-interface repair, independent neighbors, AD90/scoped IPv6 routes and wideFD2621440/RIB20480 metrics, four-way host traffic and both explicit HTTP families; eight diagnosis/setup/state/traffic tasks with five staged repairs unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=10; five nodes/four links/13 tasks and five-row dual-stack plan; real family-isolated initial diagnosis, named AF-interface repair, independent neighbors, AD90/scoped IPv6 routes and wideFD2621440/RIB20480 metrics, four-way host traffic and both explicit HTTP families; eight diagnosis/setup/state/traffic tasks with five staged repairs unearned; offline YAML export/import, five live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with ten labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with ten labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with ten labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with ten labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with ten labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with ten labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "881d672d0554854db85460e81d62c43de9e608d73128662071fbb763902acf0a",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Root, dist and every browser-tested copy have identical bytes.",
+    "terminal": "Golden console fixtures match existing fonts, background, foreground, cursor, tabs and controls in both themes and desktop/mobile modes.",
+    "verificationCommands": "All published named IOS/Windows verification and reference commands execute. Assertions cover actual RIB/CEF, per-family neighbors and wide topology metrics, successful positive probes and completed IPv4/IPv6 traces. IPv6 CEF CLI output is not advertised because that existing command is unsupported; the underlying IPv6 forwarding lookup is exercised directly by native and traffic checks.",
+    "visualInspection": [
+      ".cache/ne-catalog-browser/topology-light-1440.png",
+      ".cache/ne-catalog-browser/guide-light-1440.png",
+      ".cache/ne-catalog-browser/console-light-1440.png",
+      ".cache/ne-catalog-browser/guide-dark-320.png",
+      ".cache/ne-catalog-browser/console-dark-320.png",
+      ".cache/ne-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full13-task normal UI workflows complete at1440px/light and320px/dark. Four other theme/viewport scenarios complete eight diagnosis/setup/state/traffic checks and leave five staged exercises unearned. Every scenario exports/imports real YAML into a fresh offline profile and then loads a reference with five live goals only.",
+    "Six file:// scenarios block HTTP(S), use embedded assets and preserve earned progress. Shared-link cases preserve the current domain/path/query and do not replace the workspace merely by opening instructions. Seven generic catalog checks preserve categories, prerequisites and save/cancel/import behavior.",
+    "Browser clock advancement drives normal application frames. No neighbor, route, packet result or completion is injected. Clipboard stubbing is limited to share-link verification."
+  ]
+}
