@@ -1462,10 +1462,25 @@ function installOspfPackets(engine:Simulator,endpoints:RoutedPort[],protocol:OSP
     const advertised=known.filter(p=>p.device.id===local.device.id||prefixes.has(`${p.device.id}|${p.name}|${p.ip}`));
     // Link-only endpoints remain useful to SPF, but only received prefix LSAs originate routes.
     for(const p of known)if(!advertised.includes(p)){p.iface.features[protocol].area=undefined;p.device.config.protocols[protocol].networks=[];}
+    const routeStart=local.device.runtime.routes.length;
     installIgp(observerEngine,advertised,links,protocol,local.device.id);
     const paths=pathsFrom(local.node,links,protocol);
     for(const origin of view.prefixes.filter(p=>p.kind!=='prefix'&&p.endpoint.node!==local.node)){
-      const source=decode(origin.endpoint),best=(paths.get(source.node)??[]).sort((a,b)=>{const rank=(p:Path)=>p.areas.length===1?config(local.device,protocol)?.rfc1583Compatible===false&&p.areas[0]==='0'?1:0:2;return rank(a)-rank(b)||a.cost-b.cost;})[0],first=best?.edges[0];if(!first)continue;const externalType=ospfExternalType(observerEngine,source,local,best,known,links,protocol);if(!externalType)continue;const r=origin.route??{},metricType=Number(r.metricType??2);addProtocolRoute(local.device,{...r,network:origin.network,prefix:origin.prefix,nextHop:first.to.ip,interface:first.from.name,protocol:`O ${externalType}${metricType}`,ad:110,metric:Number(r.metric??20)+(metricType===1?best.cost:0),vrf:local.iface.vrf,learnedFrom:source.device.id});
+      const source=decode(origin.endpoint),rank=(p:Path)=>p.areas.length===1?config(local.device,protocol)?.rfc1583Compatible===false&&p.areas[0]==='0'?1:0:2,candidates=(paths.get(source.node)??[]).sort((a,b)=>rank(a)-rank(b)||a.cost-b.cost),best=candidates[0];if(!best)continue;
+      for(const path of candidates.filter(p=>rank(p)===rank(best)&&p.cost===best.cost)){
+        const first=path.edges[0];if(!first)continue;const externalType=ospfExternalType(observerEngine,source,local,path,known,links,protocol);if(!externalType)continue;const r=origin.route??{},metricType=Number(r.metricType??2);addProtocolRoute(local.device,{...r,network:origin.network,prefix:origin.prefix,nextHop:first.to.ip,interface:first.from.name,protocol:`O ${externalType}${metricType}`,ad:110,metric:Number(r.metric??20)+(metricType===1?path.cost:0),forwardMetric:path.cost,vrf:local.iface.vrf,learnedFrom:source.device.id});
+      }
+    }
+    // Select within this received OSPF process before offering routes to the RIB.
+    // A lower external metric cannot displace an internal or Type-1 path.
+    const offered=local.device.runtime.routes.splice(routeStart),groups=new Map<string,Route[]>();
+    for(const route of offered){const key=`${route.vrf??''}|${route.network}/${route.prefix}`,rows=groups.get(key)??[];rows.push(route);groups.set(key,rows);}
+    const rank=(r:Route)=>r.protocol==='O'?0:r.protocol==='O IA'?1:/^O [EN]1$/.test(r.protocol)?2:3;
+    const compare=(a:Route,b:Route)=>rank(a)-rank(b)||a.metric-b.metric||(rank(a)===3?(a.forwardMetric??0)-(b.forwardMetric??0):0);
+    for(const rows of groups.values()){
+      rows.sort((a,b)=>compare(a,b)||natural(a.nextHop??'',b.nextHop??''));const best=rows[0];
+      const chosen=rows.filter(r=>compare(r,best)===0).filter((r,i,all)=>all.findIndex(x=>x.nextHop===r.nextHop&&x.interface===r.interface)===i).slice(0,Number(config(local.device,protocol)?.maximumPaths??4));
+      for(const r of chosen){r.loadShare=chosen.length>1;local.device.runtime.routes.push(r);}
     }
   }
 }

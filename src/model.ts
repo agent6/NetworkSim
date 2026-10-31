@@ -49,6 +49,8 @@ export interface Route {
   protocol: string;
   ad: number;
   metric: number;
+  /** Received OSPF external route's internal cost to its advertising ASBR. */
+  forwardMetric?: number;
   vrf?: string;
   learnedFrom?: string;
   tag?: number;

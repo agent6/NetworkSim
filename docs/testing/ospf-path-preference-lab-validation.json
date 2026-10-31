@@ -1,0 +1,88 @@
+{
+  "lab": "OSPF Path Preference Troubleshooting",
+  "catalogId": "ospf-path-preference-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 7,
+  "links": 7,
+  "tasks": 16,
+  "topology": "Area0 four-router diamond R1-R2/R3-R4. PC1 uses the R1 client LAN, PC2 the independent R2 local-control LAN, and SRV1 the R4 service LAN. Intended R1/R4 outbound primary costs10, backup30; R2/R3 transits10 and passive host LANs1. Practice starts with R1 primary cost100, producing successful asymmetric forwarding through R3 outward and R2 back. Intended design is intra-area cost21 in both directions with maximum-paths2.",
+  "implemented": [
+    "Twenty-fifth ENARSI Layer 3 Technologies catalog entry, independent practice/reference documents, seven-row addressing/role plan, staged guide, verified ordinary IOS/Windows commands and current-origin/path/query permalinks. Existing themes, icons, console styling, layout and offline single-file delivery are preserved.",
+    "Initial diagnosis requires three actual replies in each service direction over different branches, plus both independent local PC2/R2 controls. Repairing R1 Gi0/1 cost restores actual R2 primary forwarding and O cost21 routes; success alone is insufficient without the intended egress path.",
+    "Six observed comparisons cover equal-cost RIB paths, intra-area preference over a cheaper inter-area alternative, E1 over numerically cheaper E2, lowest E2 external metric despite higher ASBR cost, E2 forward-cost tie-breaking and primary-link failure with working backup. Each requires received topology, exact intended route type/metric/next hops, three original requests/replies in each of four directions, then fresh primary traffic after restoration.",
+    "Intra-area exercise moves the R3 branch into area10 with primary cost100 and backup10 on R1/R4. Both endpoints retain area0 host LANs. O metric111 wins through R2, while R3 shows O IA host LAN routes. External exercises remove only R4 service-LAN OSPF participation and redistribute real static service routes from R2/R3 through R4; the service is not attached to Null0.",
+    "E1 comparison: R2 external100 plus internal10 yields O E1 metric110, preferred over R3 E2 metric1. E2 comparison: R3 external20 beats R2 external50 despite internal costs30 versus10; reverse traffic remains R2. E2 tie: both external20, so R2 internal10 beats R3 internal30. ECMP retains only equal complete OSPF criteria and respects maximum-paths; one flow is not claimed to alternate across paths.",
+    "Fixed received-OSPF route selection before offering routes to the global RIB: internal/inter-area/Type1/Type2 preference is applied before comparing metrics, E2 ties use stored SPF forward cost, and equal paths to one ASBR can be installed up to maximum-paths. Native regressions also prove internal/IA preference over external, E1 metric addition, two-E1 comparison, external ECMP, one-ASBR ECMP and explicit interface cost overriding reference-bandwidth.",
+    "show ip route detail now displays the actual forward metric for external Type2 routes. Supplemental native tests receive complete HTTP responses in all six comparison states. Source records and redistribution history remain intact. Real protocol89 denial withdraws learned reachability despite matching configurations, preventing configuration-only path fabrication.",
+    "Seven live checks cover intended policy, physical peers, interface metrics, routes, received router LSAs, HTTP health and saved configurations. Nine observations cover initial diagnosis, traffic, completed HTTP and six comparisons. Practice0/16, diagnosis1/16, repaired baseline10/16, full16/16; reference only seven live goals. Portable YAML preserves observations and rebuilds runtime. Stale, partial and configuration-only proof are rejected."
+  ],
+  "scope": "IOS OSPFv2 path preference in this normal-area, single-process diamond with zero forwarding-address static redistribution, actual simulated protocol89 topology exchange and ICMP/TCP forwarding. The existing engine exchanges segmented logical router records rather than individually encoded RFC LSAs; database views derive from received records. No fresh CML capture, arbitrary forwarding-address resolution, complete RFC1583/3101 multi-area ASBR preference, full multi-process selection or binary interoperability is claimed.",
+  "references": [
+    {
+      "title": "Cisco: OSPF Type-5 Route Calculation Configuration Example",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/118799-configure-ospf-00.html",
+      "use": "Type1 before Type2, E1 external-plus-internal metric, E2 external metric and forward-metric tie, Type5 verification and real static redistribution."
+    },
+    {
+      "title": "Cisco: Review OSPF Frequently Asked Questions",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/9237-9.html",
+      "use": "Interface cost, reference bandwidth, explicit-cost precedence and equal-cost paths."
+    },
+    {
+      "title": "Cisco Live BRKCRT-2016: CCNP Enterprise Advanced Routing",
+      "url": "https://www.ciscolive.com/c/dam/r/ciscolive/global-event/docs/2022/pdf/BRKCRT-2016.pdf",
+      "use": "OSPF route-type preference: intra-area, inter-area, E1 and E2."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "native": {
+      "command": "node --test --test-concurrency=4 tests/*.test.ts",
+      "tests": 3478,
+      "pass": 3478,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "newCatalogTests": 23,
+      "supplementalStageHttpTests": 6
+    },
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=25; seven nodes/seven links/16 tasks/seven-row plan; delivered initial wrong-path diagnosis, four Full physical pairs, directed cost-21 primary routes, received router LSAs, all four service/control directions and complete primary HTTP; ten baseline tasks with six comparisons unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=25; seven nodes/seven links/16 tasks/seven-row plan; delivered initial wrong-path diagnosis, four Full physical pairs, directed cost-21 primary routes, received router LSAs, all four service/control directions and complete primary HTTP; ten baseline tasks with six comparisons unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=25; seven nodes/seven links/16 tasks/seven-row plan; delivered initial wrong-path diagnosis, four Full physical pairs, directed cost-21 primary routes, received router LSAs, all four service/control directions and complete primary HTTP; all16 including ECMP, intra-area over cheaper inter-area, E1 over E2, lower external E2 metric, E2 forward-metric tie and backup failover with fresh primary restoration traffic; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=25; seven nodes/seven links/16 tasks/seven-row plan; delivered initial wrong-path diagnosis, four Full physical pairs, directed cost-21 primary routes, received router LSAs, all four service/control directions and complete primary HTTP; all16 including ECMP, intra-area over cheaper inter-area, E1 over E2, lower external E2 metric, E2 forward-metric tie and backup failover with fresh primary restoration traffic; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=25; seven nodes/seven links/16 tasks/seven-row plan; delivered initial wrong-path diagnosis, four Full physical pairs, directed cost-21 primary routes, received router LSAs, all four service/control directions and complete primary HTTP; ten baseline tasks with six comparisons unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=25; seven nodes/seven links/16 tasks/seven-row plan; delivered initial wrong-path diagnosis, four Full physical pairs, directed cost-21 primary routes, received router LSAs, all four service/control directions and complete primary HTTP; ten baseline tasks with six comparisons unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-five labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "8b069cceb27b9fc9b68960e9c31097c1a44b3bb1be19c517e66c1dd5e2aedd1d",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist and all browser-tested offline HTML copies match byte for byte.",
+    "terminal": "Golden terminal fixture matches both themes at mobile/desktop sizes.",
+    "visualInspection": [
+      ".cache/opp-catalog-browser/topology-light-1440.png",
+      ".cache/opp-catalog-browser/guide-light-1440.png",
+      ".cache/opp-catalog-browser/console-light-1440.png",
+      ".cache/opp-catalog-browser/guide-dark-320.png",
+      ".cache/opp-catalog-browser/console-dark-320.png",
+      ".cache/opp-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full sixteen-task ordinary UI workflows at320px/dark and1440px/light; four other theme/width cases earn ten baseline goals with six comparisons unearned. Every case exports/imports real YAML into an empty offline profile and checks reference live goals, save/cancel protection and responsive guide/topology.",
+    "Six file:// cases block HTTP(S); two mocked-host permalink checks preserve host/path/query and workspace; seven generic catalog checks retain prior groups/labs and prerequisites. Browser clocks advance ordinary application frames without injected routes, neighbors, traffic or task completions."
+  ]
+}
