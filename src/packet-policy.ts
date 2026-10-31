@@ -227,10 +227,10 @@ export function observeFrame(engine: Simulator, device: Device, port: string, di
   if (frame.mirrored || frame.remoteSpan) return;
   observeRemoteSpan(engine, device, port, direction, frame);
   for (const [id, session] of Object.entries(device.config.features.spanSessions ?? {}) as [string, any][]) {
-    if (session.type && session.type !== 'local') continue;
+    if (session.shutdown || session.type && session.type !== 'local') continue;
     if (!session.destination || session.destination === port || !session.sources?.some((source: any) => source.interface === port && (source.direction === direction || source.direction === 'both'))) continue;
     const stats = device.runtime.features.spanStats ??= {}, row = stats[id] ??= { frames: 0, bytes: 0 }; row.frames++; row.bytes += 'size' in frame.payload ? frame.payload.size + 18 : 64;
-    engine.mirrorFrame(device.id, session.destination, frame);
+    engine.mirrorFrame(device.id, session.destination, frame,{sourceDevice:device.id,session:id,sourceInterface:port,direction,configuredDirection:session.sources.find((s:any)=>s.interface===port).direction??'both',sourceFrame:frame.id});
   }
 }
 

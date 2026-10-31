@@ -1,3 +1,4 @@
+import {spanDestination} from './span.ts';
 import {stpPacketSummary} from './stp-packet.ts';
 import {natLive,natStats,natStatics,natRuleKey,refreshNatEntry,recordNatFlow,natTranslated,updateNatPeak} from './nat-state.ts';
 import {reconcilePortSecurity} from './port-security.ts';
@@ -51,7 +52,7 @@ export interface IPPacket {
 }
 interface ArpMessage { kind: 'arp'; operation: 'request' | 'reply'; source: string; target: string; mac: string; targetMac?: string; family: 4 | 6 }
 interface DHCPMessage { kind: 'dhcp'; operation: 'discover' | 'offer' | 'request' | 'ack' | 'nak' | 'decline' | 'release'; clientId: string; transaction: string; hostname?: string; serverId?: string; address?: string; prefix?: number; gateway?: string; dns?: string[]; lease?: number; domain?: string; bootfile?: string; nextServer?: string; options?: Record<string, any>; routers?: string[]; relay?: string; relayPort?: string; serverAddress?: string; unicast?: string; phase?: string; reason?: string; option82?: { circuitId: string; remoteId: string } }
-export interface Frame { id: string; sourceMac: string; destinationMac: string; vlan?: number; cos?:number; payload: IPPacket | ArpMessage | DHCPMessage | LinkControl; hops: number; mirrored?: boolean; remoteSpan?: { sourceDevice: string; session: string; vlan: number }; vpcSource?:{domain:number;member:number;sender:string} }
+export interface Frame { id: string; sourceMac: string; destinationMac: string; vlan?: number; cos?:number; payload: IPPacket | ArpMessage | DHCPMessage | LinkControl; hops: number; mirrored?: boolean; span?:import('./span.ts').SpanCopy; remoteSpan?: { sourceDevice: string; session: string; vlan: number }; vpcSource?:{domain:number;member:number;sender:string} }
 interface Resolution { deviceId: string; port: string; target: string; packets: IPPacket[]; attempts: number; timer?: TimerHandle }
 interface TunnelResolution extends Resolution { runtime:Device['runtime'];signature:string;nhrp?:NhrpRuntime;generation?:number }
 interface ProbeWait { deviceId: string; timer: TimerHandle; sentAt: number; callback: (reply: ProbeReply) => void; expectedData?: string; udpTrace?: {target:string;port:number} }
@@ -366,13 +367,14 @@ export class Simulator {
   }
   private summary(frame: Frame): PacketSummary {
     const p = frame.payload;
-    const ethernet = { vlan: frame.vlan,cos:frame.cos, sourceMac: frame.sourceMac, destinationMac: frame.destinationMac };
+    const ethernet = {frameId:frame.id,mirrored:!!frame.mirrored,...frame.span?{span:clone(frame.span)}:{}, vlan: frame.vlan,cos:frame.cos, sourceMac: frame.sourceMac, destinationMac: frame.destinationMac };
     if ('kind' in p && p.kind === 'link-control') return { id: frame.id, source: p.body.source ?? '', destination: p.body.clientId ?? 'multicast', protocol: p.protocol, ...ethernet, messageType: p.body.type, ...(p.protocol === 'STP' && Array.isArray(p.body.vlans) ? {stpBpdus:stpPacketSummary(p.body)} : {}), ...(p.protocol === 'DHCPV6' ? { dhcpOperation: p.body.type, requestedAddress: p.body.address } : p.protocol === 'ICMPV6' && ['ra', 'rs'].includes(p.body.type) ? { icmpType: p.body.type === 'ra' ? 134 : 133, icmpCode: 0 } : {}) };
     if ('kind' in p) return { id: frame.id, source: p.kind === 'arp' ? p.source : p.clientId, destination: p.kind === 'arp' ? p.target : p.serverId ?? 'broadcast', protocol: p.kind === 'arp' ? (p.family === 6 ? 'NDP' : 'ARP') : 'DHCP', ...ethernet, ...(p.kind === 'arp' ? { arpOperation: p.operation, targetMac: p.targetMac, ...(p.family === 6 ? { icmpType: p.operation === 'request' ? 135 : 136, icmpCode: 0 } : {}) } : { dhcpOperation: p.operation, requestedAddress: p.address, relayAddress: p.relay }) };
     return { ...this.packetSummary(p), ...ethernet };
   }
   private event(d: Device, port: string | undefined, frame: Frame, label: string, detail: string, disposition: NewSimEvent['disposition'], peerId?: string): void { this.emit({ nodeId: d.id, peerId, port, protocol: this.summary(frame).protocol, label, detail, disposition, packet: this.summary(frame) }); }
   private sendWire(d: Device, port: string, frame: Frame, dequeued = false): void {
+    if(!frame.mirrored&&spanDestination(d,port)){this.event(d,port,frame,'SPAN destination egress suppressed','The dedicated analyzer port transmits only mirrored frames.','drop');return;}
     if(d.kind==='laptop'&&port==='Wireless0'){if(!this.interfaceUp(d.id,port)||frame.hops<=0){this.count(d,port,'drops');this.event(d,port,frame,'Wireless link unavailable','The wireless interface has no authorized operational association.','drop');return;}this.count(d,port,'tx','size' in frame.payload?frame.payload.size+18:64,frame.destinationMac);observeFrame(this,d,port,'tx',frame);this.wireless.sendClientFrame(d,frame);return;}
     const c = d.config.interfaces[port], link = this.linkAt(d.id, port);
     if (!c || !link || !this.interfaceUp(d.id, port)) { this.event(d, port, frame, 'Link unavailable', 'The egress port has no operational peer.', 'drop'); return; }
@@ -433,9 +435,9 @@ export class Simulator {
   private receiveFrame(d: Device, port: string, frame: Frame): void {
     const c = d.config.interfaces[port]; if (!c) return;
     if(!vpcPeerLink(d,port))delete frame.vpcSource;
-    if ('kind' in frame.payload && frame.payload.kind === 'link-control' && ['UDLD', 'STP', 'CDP', 'LLDP', 'DTP', 'LACP', 'PAGP', 'VTP', 'VPC-CFS'].includes(frame.payload.protocol)) { receiveLinkControl(this, d, port, frame.payload); return; }
     if (frame.mirrored) { const capture = d.runtime.features.capturedFrames ??= []; capture.push({ time: this.clock.now(), port, ...this.summary(frame) }); if (capture.length > 500) capture.shift(); return; }
-    if (Object.values(d.config.features.spanSessions ?? {}).some((session: any) => session.destination === port)) return;
+    if(spanDestination(d,port)){this.event(d,port,frame,'SPAN destination ingress discarded','Incoming analyzer traffic is neither learned nor forwarded.','drop');return;}
+    if ('kind' in frame.payload && frame.payload.kind === 'link-control' && ['UDLD', 'STP', 'CDP', 'LLDP', 'DTP', 'LACP', 'PAGP', 'VTP', 'VPC-CFS'].includes(frame.payload.protocol)) {observeFrame(this,d,port,'rx',frame);receiveLinkControl(this, d, port, frame.payload); return; }
     if(d.kind==='phone'){
       const action=phoneIngress(port,frame,endpointEgressVlan(d,this.clock.now()),this.macOf(d.id,'Network'));
       if(action.forward&&this.interfaceUp(d.id,action.forward)){
@@ -489,11 +491,11 @@ export class Simulator {
   }
   sendWirelessEthernet(deviceId:string,port:string,frame:Frame):void{const d=this.getDevice(deviceId);if(d&&frame.hops>0)this.sendWire(d,port,frame);}
   receiveWirelessEthernet(deviceId:string,frame:Frame):void{const d=this.getDevice(deviceId);if(d?.powered&&this.interfaceUp(d.id,'Wireless0')){this.count(d,'Wireless0','rx','size' in frame.payload?frame.payload.size+18:64,frame.destinationMac);this.event(d,'Wireless0',frame,'Frame received',d.config.hostname+' received a frame on Wireless0','receive',this.wireless.association(d.id)?.apId);this.receiveFrame(d,'Wireless0',frame);}}
-  mirrorFrame(deviceId: string, destination: string, frame: Frame): void { const d = this.getDevice(deviceId); if (d) this.sendWire(d, destination, { ...clone(frame), id: this.id('mirror'), mirrored: true }); }
+  mirrorFrame(deviceId: string, destination: string, frame: Frame,span?:import('./span.ts').SpanCopy): void { const d = this.getDevice(deviceId); if (d) this.sendWire(d, destination, { ...clone(frame), id: this.id('mirror'), hops:1, mirrored: true,...span?{span}:{} }); }
   sendRemoteSpanPacket(deviceId: string, source: string, destination: string, body: any, vrf?: string): void { const d = this.getDevice(deviceId); if (!d) return; const p = this.makePacket(source, destination, 'gre', 44 + ('size' in body.frame.payload ? body.frame.payload.size : 64), { ...clone(body), kind: 'remote-span' }); p.vrf = vrf; this.originate(d, p); }
   sendRemoteSpanVlan(deviceId: string, vlan: number, frame: Frame): void {
     const d = this.getDevice(deviceId); if (!d?.powered || !d.config.vlans[vlan] || !(d.config.features.rspanVlans ?? []).includes(vlan)) return; const groups = new Set<string>();
-    for (const [port, cfg] of Object.entries(d.config.interfaces)) { if (!cfg.switchport || !this.interfaceUp(d.id, port) || !this.carriesVlan(d, port, vlan) || !this.stpAllows(d, port, vlan)) continue; if (Object.values(d.config.features.spanSessions ?? {}).some((session: any) => session.destination === port)) continue;
+    for (const [port, cfg] of Object.entries(d.config.interfaces)) { if (!cfg.switchport || !this.interfaceUp(d.id, port) || !this.carriesVlan(d, port, vlan) || !this.stpAllows(d, port, vlan)) continue; if (spanDestination(d,port)) continue;
       if (cfg.features.channelGroup) { const group = String(cfg.features.channelGroup); if (groups.has(group) || this.channelMember(d, group, frame, vlan) !== port) continue; groups.add(group); } const outgoing = clone(frame), trunk = this.trunk(d, port); outgoing.id = this.id('rspan'); outgoing.vlan = trunk && vlan !== trunk.nativeVlan ? vlan : undefined; this.sendWire(d, port, outgoing);
     }
   }
@@ -514,7 +516,7 @@ export class Simulator {
     const groups = new Set<string>();
     for (const [port, cfg] of Object.entries(d.config.interfaces)) {
       if (port === input || /^Port-channel/.test(port) || !cfg.switchport || !this.interfaceUp(d.id, port) || !this.carriesVlan(d, port, vlan) || !this.stpAllows(d, port, vlan) || !vpcEgressAllowed(d,input,port,vlan)) continue;
-      if (Object.values(d.config.features.spanSessions ?? {}).some((session: any) => session.destination === port)) continue;
+      if (spanDestination(d,port)) continue;
       if (multicastPorts && !multicastPorts.has(port)) continue;
       const group = cfg.features.channelGroup;
       if (learnedPort && learnedPort !== port && (!group || String(group) !== String(learnedGroup))) continue;
@@ -534,7 +536,7 @@ export class Simulator {
       for (const [port, cfg] of Object.entries(d.config.interfaces)) {
         const input=!('kind'in payload)&&payload.vpcIngress?.deviceId===d.id&&payload.vpcIngress.peerLink?d.config.features.nsos?.vpc?.peerLink:undefined;
         if (/^Port-channel/.test(port)||!cfg.switchport || !this.interfaceUp(d.id, port) || !this.carriesVlan(d, port, vlan) || !this.stpAllows(d, port, vlan)||!vpcEgressAllowed(d,input,port,vlan)) continue;
-        if (Object.values(d.config.features.spanSessions ?? {}).some((session: any) => session.destination === port)) continue;
+        if (spanDestination(d,port)) continue;
         if (multicastPorts && !multicastPorts.has(port)) continue;
         if (learnedPort && learnedPort !== port && (!cfg.features.channelGroup || String(cfg.features.channelGroup) !== String(learnedGroup))) continue;
         if (cfg.features.channelGroup) { const group = String(cfg.features.channelGroup); if (groups.has(group) || this.channelMember(d, group, frame, vlan) !== port) continue; groups.add(group); }

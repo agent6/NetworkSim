@@ -1,3 +1,4 @@
+import {spanDestination} from './span.ts';
 import {endpointProfile,endpointVoicePolicy,validVoicePolicy,switchVoiceVlan,type VoicePolicy} from './endpoint.ts';
 import type { Device, Lab, Neighbor, NewSimEvent } from './model.ts';
 import type { SimulationClock, TimerHandle } from './clock.ts';
@@ -27,6 +28,7 @@ const physical=(name:string)=>!(/^(Vlan|Loopback|Tunnel|Port-channel|Null|Wirele
 function enabled(d:Device,p:string,protocol:Protocol,direction:'send'|'receive'):boolean {
   const phone=(d.kind==='pc'||d.kind==='phone')&&endpointProfile(d).role==='phone';
   if(d.kind==='phone'&&p!=='Network')return false;
+  if(spanDestination(d,p))return false;
   if(!d.powered||['pc','server','laptop'].includes(d.kind)&&!phone||!d.config.interfaces[p]?.adminUp)return false;
   if(protocol==='CDP')return d.config.features.cdp!==false&&d.config.interfaces[p].features.cdp!==false;
   if(d.kind==='datacenter'&&!nsosFeature(d,'lldp'))return false;

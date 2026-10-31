@@ -1,0 +1,110 @@
+{
+  "feature": {
+    "title": "SPAN Configuration",
+    "catalogId": "span-configuration",
+    "group": "CCNP ENCOR",
+    "section": "Network Assurance",
+    "sectionLabCount": 5,
+    "groupLabCount": 27,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6,
+      "Layer 3": 9,
+      "IP Services": 4
+    },
+    "devices": 5,
+    "links": 4,
+    "tasks": 16,
+    "addressingRows": 5,
+    "notes": 2,
+    "permalink": "#/labs/span-configuration",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "SW1 provides four VLAN10 access links: Gi0/1 to monitored PC1 192.168.10.10/24, Gi0/2 to SRV1 192.168.10.20/24, Gi0/3 to control PC2 192.168.10.30/24, and Gi0/4 to passive analyzer AN1 192.168.10.99/24. SRV1 has prepared public HTTP80 and DNS53 with span.lab resolving to its own address. All communication is local to the VLAN; no router or gateway is required.",
+  "verificationNotes": [
+    "Adds the fifth Network Assurance entry and current-origin/path/query share link. ENCOR now has 27 labs. Existing entries, section order and the other section counts are retained.",
+    "Practice starts at 0/16. Four live configuration/save checks and twelve historical observations cover the destination, single final source, retained addressing/access links, startup save, client/control pings, Rx-only, Tx-only, both directions, ARP, HTTP200, DNS, duplicate observations, passive isolation, source removal and analyzer-link outage/recovery. The healthy save also rejects an inactive VLAN10.",
+    "Completed references contain the final saved local-SPAN configuration with four live goals and no fabricated packet observations. Natural STP/CDP/DTP copies may appear after the simulation starts; these cannot substitute for required ICMP, application or diagnostic evidence.",
+    "Each local mirror carries bounded provenance: source switch, session, source interface, observed direction, configured direction and original Ethernet frame identifier. The analyzer records the actual receiving interface/time and a separate copy frame identifier while retaining original packet/MAC identities. Criteria correlate a real source observation with switch mirror egress and matching cable delivery; counters or foreign capture identifiers cannot earn proof.",
+    "Rx-only yields three copied ICMP requests, Tx-only yields three copied replies, and both yields six distinct copied packets for a three-ping exchange. Adding the server-facing port as a second both-direction source produces two copies per original packet while the actual client still receives three replies. Filters and JSON identifiers distinguish duplicate observation from new traffic.",
+    "Fixes local SPAN destination isolation: normal ingress is discarded before forwarding, learning or Layer2 control handling; normal egress is suppressed; destination ports are excluded from STP and CDP/LLDP advertisements. Mirrored frames are captured before protocol processing, preventing copies from creating analyzer neighbors or STP state.",
+    "A mirror is a separate one-hop transmission. This fixes loss of copied Layer2 control frames caused by the original forwarding hop budget reaching zero. Copying does not alter original IP TTL, addresses, MACs or delivery, and mirrored frames cannot recursively create more mirrors.",
+    "The analyzer link can fail or be administratively shut while ordinary client traffic succeeds. Actual unavailable-link mirror attempts followed by fresh received copies prove recovery. Removing source mirroring stops new copies while keeping the destination reserved. Already in-flight copies generated before removal are handled correctly.",
+    "CLI validates source/destination role conflicts, dedicated physical destinations, secure ports and EtherChannel membership before assigning session state. Invalid commands do not create phantom sessions. Removing a different destination or a nonexistent source session is harmless. Working source/destination/direction commands render, replay and support question-mark/Tab help.",
+    "Adds Packet capture to Desktop \u2192 Network tools. The passive analyzer has a bounded 500-frame buffer, escaped live table, search, clear and filtered JSON download. It preserves horizontal scroll and expanded identifier details while updating. It requires no analyzer IP address or external backend; the lab deliberately uses AN1 address .99 to demonstrate that a reserved destination is not ordinary host connectivity. The capture view caches its rendered data string instead of comparing normalized DOM serialization, so details remain clickable and stable between real packet updates.",
+    "Successful HTTP200 delivery and DNS resolution require the prepared application and answer plus actual copied TCP80/UDP53 in both directions. ARP is observed after clearing the client neighbor cache. Wrong content, 404s, configuration-only evidence and missing copies do not substitute for actual outcomes.",
+    "Portable YAML discards transient capture and configuration-change runtime while retaining earned historical observations; live configuration/save checks remain reevaluated. Existing excluded TFTP and SCP/SFTP server administration pages remain excluded.",
+    "Scope is local physical-port SPAN on the prepared access VLAN. RSPAN, ERSPAN, source-VLAN monitoring, trunk encapsulation, destination ingress forwarding, hardware oversubscription limits and pcap/Wireshark interoperability are not claimed by this lab. Mirror attempt counters are labeled simulator telemetry. No new live CML capture is claimed.",
+    "Seventeen browser scenarios pass without page errors or external requests. Full16 workflows run on light1440px and dark320px. Four other theme/viewport cases earn ten healthy configuration/protocol outcomes without pre-earned diagnostic experiments. Two arbitrary-origin permalink cases, two analyzer detail/scroll stability cases and seven previous catalog scenarios also pass. Actual filtered JSON downloads are parsed; duplicate copies have distinct frame IDs and matching original packet IDs. Golden CLI appearance is unchanged."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE17: Switch Port Analyzer",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/mgmt/management-configuration-guide/span.html",
+      "relevance": "Receive/transmit observation points, duplicate copies across multiple sources, local source/destination roles and destination isolation."
+    },
+    {
+      "title": "Catalyst3750 IOS15.0(2)SE: Configuring SPAN and RSPAN",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3750/software/release/15-0_2_se/configuration/guide/scg3750/swspan.html",
+      "relevance": "Local monitor session commands, default both direction, dedicated analyzer destination and independence of original switching."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "newFocusedTests": 32,
+    "browserFullWorkflowCases": [
+      "light1440px",
+      "dark320px"
+    ],
+    "browserOtherWorkflowCases": [
+      "light320px",
+      "dark1440px",
+      "light390px",
+      "dark390px"
+    ],
+    "visualInspection": [
+      ".cache/span-catalog-browser/topology-light-1440.png",
+      ".cache/span-catalog-browser/topology-dark-1440.png",
+      ".cache/span-catalog-browser/guide-light-320.png",
+      ".cache/span-catalog-browser/guide-dark-320.png",
+      ".cache/span-catalog-browser/analyzer-light-1440.png",
+      ".cache/span-catalog-browser/analyzer-dark-320.png"
+    ],
+    "terminal": "Golden CLI font/color/cursor/control fixtures match both themes and mobile full-screen behavior.",
+    "browserScenarios": 17,
+    "browserChecks": [
+      "light 320px: five Network Assurance labs and badge; five nodes/four links/16 tasks and zero-credit practice; five-row plan; working local-SPAN CLI and live passive analyzer with filtering, clear and actual JSON download; ten healthy configuration and real protocol outcomes without pre-earned Rx/Tx/duplicate/isolation/removal/recovery experiments; actual ICMP/ARP/HTTP200/DNS capture; SW1 startup save; YAML export/import into a separate empty offline profile retains earned progress without runtime captures; completed reference has four live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden unchanged terminal appearance; question-mark and Tab work",
+      "dark 320px: five Network Assurance labs and badge; five nodes/four links/16 tasks and zero-credit practice; five-row plan; working local-SPAN CLI and live passive analyzer with filtering, clear and actual JSON download; all16 through Rx-only/Tx-only/both, duplicate copies, isolation, source removal and analyzer outage/recovery; actual ICMP/ARP/HTTP200/DNS capture; SW1 startup save; YAML export/import into a separate empty offline profile retains earned progress without runtime captures; completed reference has four live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden unchanged terminal appearance; question-mark and Tab work",
+      "light 1440px: five Network Assurance labs and badge; five nodes/four links/16 tasks and zero-credit practice; five-row plan; working local-SPAN CLI and live passive analyzer with filtering, clear and actual JSON download; all16 through Rx-only/Tx-only/both, duplicate copies, isolation, source removal and analyzer outage/recovery; actual ICMP/ARP/HTTP200/DNS capture; SW1 startup save; YAML export/import into a separate empty offline profile retains earned progress without runtime captures; completed reference has four live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden unchanged terminal appearance; question-mark and Tab work",
+      "dark 1440px: five Network Assurance labs and badge; five nodes/four links/16 tasks and zero-credit practice; five-row plan; working local-SPAN CLI and live passive analyzer with filtering, clear and actual JSON download; ten healthy configuration and real protocol outcomes without pre-earned Rx/Tx/duplicate/isolation/removal/recovery experiments; actual ICMP/ARP/HTTP200/DNS capture; SW1 startup save; YAML export/import into a separate empty offline profile retains earned progress without runtime captures; completed reference has four live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden unchanged terminal appearance; question-mark and Tab work",
+      "light 390px: five Network Assurance labs and badge; five nodes/four links/16 tasks and zero-credit practice; five-row plan; working local-SPAN CLI and live passive analyzer with filtering, clear and actual JSON download; ten healthy configuration and real protocol outcomes without pre-earned Rx/Tx/duplicate/isolation/removal/recovery experiments; actual ICMP/ARP/HTTP200/DNS capture; SW1 startup save; YAML export/import into a separate empty offline profile retains earned progress without runtime captures; completed reference has four live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden unchanged terminal appearance; question-mark and Tab work",
+      "dark 390px: five Network Assurance labs and badge; five nodes/four links/16 tasks and zero-credit practice; five-row plan; working local-SPAN CLI and live passive analyzer with filtering, clear and actual JSON download; ten healthy configuration and real protocol outcomes without pre-earned Rx/Tx/duplicate/isolation/removal/recovery experiments; actual ICMP/ARP/HTTP200/DNS capture; SW1 startup save; YAML export/import into a separate empty offline profile retains earned progress without runtime captures; completed reference has four live goals only; cancel/save-copy protection; fitted diagram, responsive guide and golden unchanged terminal appearance; question-mark and Tab work",
+      "light: permalink preserves current host/path/query/workspace and returns to all five Network Assurance labs",
+      "dark: permalink preserves current host/path/query/workspace and returns to all five Network Assurance labs",
+      "light 1440px: actual saved YAML reopening, fresh six-frame ICMP capture, stable passive analyzer table/filter/expanded identifiers across live updates, bounded dialog and contained horizontal scrolling",
+      "dark 320px: actual saved YAML reopening, fresh six-frame ICMP capture, stable passive analyzer table/filter/expanded identifiers across live updates, bounded dialog and contained horizontal scrolling",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with five labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "fab3f03b5c3be05c116c1faef378126c6b362f1d10f0d23fc5011ef39d6ca489",
+    "identicalArtifactCopies": 16,
+    "tests": 2572,
+    "passed": 2572,
+    "failed": 0,
+    "skipped": 0,
+    "durationMs": 294071.855375,
+    "build": "npm run build passed; embedded offline fonts and single-file packaging assertions passed",
+    "fullCheck": "Complete native test-file set used by npm run check passed with four isolated workers, followed by a successful rebuild with identical tested artifact bytes."
+  }
+}

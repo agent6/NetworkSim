@@ -336,6 +336,9 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
 
 /** Deliberately explicit: prose in legacy argument hints is not an executable grammar. */
 function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
+  if(path==='monitor session'){const id=number(1,66,'SPAN session number'),source=[word('source'),word('interface'),iface(context)],destination=[word('destination'),word('interface'),iface(context)],remote=[word('remote'),word('vlan'),number(1,4094,'RSPAN VLAN')];return [[id,...source],...choices(['rx','tx','both']).map(c=>[id,...source,...c]),[id,...destination],...choices(['source','destination']).map(c=>[id,...c,...remote]),...choices(['local','erspan-source','erspan-destination']).map(c=>[id,word('type'),...c])];}
+  if(path==='show monitor session')return [[],[word('all')],[number(1,66,'SPAN session number')]];
+
   if(context.mode==='flow-record'&&['match','collect'].includes(path)){const fields=['ipv4 source address','ipv4 destination address','ipv6 source address','ipv6 destination address','ip protocol','ipv4 protocol','ipv6 protocol','transport source-port','transport destination-port','interface input','interface output',...path==='collect'?['counter bytes','counter packets','counter bytes long','counter packets long','timestamp sys-uptime first','timestamp sys-uptime last']:[]];return fields.map(f=>f.split(' ').map(w=>word(w)));}
   if(context.mode==='flow-exporter'&&path==='source')return [[iface(context,true)]];
   if(context.mode==='flow-monitor'&&['cache timeout active','cache timeout inactive'].includes(path))return [[number(1,604800,'Flow cache timeout in seconds')]];
@@ -614,6 +617,7 @@ function specialPosition(path: string, tokens: IosToken[], context: IosSyntaxCon
 function summaryMetricKeys(context:IosSyntaxContext):Form[]{const six=context.protocol==='eigrp6',key=argument(six?'X:X:X:X::X/<0-128>':'A.B.C.D/<0-32>',six?'IPv6 summary prefix':'IPv4 summary prefix',value=>{try{return value.includes('/')&&parseCidr(value).family===(six?6:4);}catch{return false;}});return [[key],...(six?[]:[[ip('Summary network address'),ip('Contiguous subnet mask')]])];}
 
 function negativeForms(path: string, forms: Form[], context: IosSyntaxContext): Form[] {
+  if(path==='monitor session')return [[number(1,66,'SPAN session number')],...forms.filter(f=>!f.some(a=>a.literal==='type'))];
   if(path==='ip nhrp')return [...forms.filter(f=>!['network-id','authentication','holdtime','registration'].includes(f[0]?.literal??'')),...choices(['network-id','authentication','holdtime']),[word('registration'),word('timeout')]];
   if(['tunnel source','tunnel mode','tunnel key','tunnel vrf','tunnel protection ipsec profile','set pfs','set transform-set','set security-association lifetime seconds'].includes(path))return[[],...forms];
   if(context.mode==='sla'&&['frequency','timeout','threshold'].includes(path))return [[]];

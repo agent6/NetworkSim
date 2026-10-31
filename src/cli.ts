@@ -1097,16 +1097,25 @@ export class IOSSession {
     const previous=f.tracks[id];if(previous?.type===value.type){const compatible=previous.operator===value.operator&&previous.thresholdType===value.thresholdType,thresholdType=value.thresholdType;value={...previous,...value};if(value.type==='list'){if(compatible)value.objects=previous.objects||[];else{delete value.thresholds;if(thresholdType)delete value.operator;else delete value.thresholdType;}}}
     f.tracks[id]=value;this.enter('track',{name:String(id)});this.change();
   }
+  private spanChanged(id:string):void{const session=this.device.config.features.spanSessions?.[id],history=this.device.runtime.features.spanSessionChanges??=[];history.push({time:this.engine.clock.now(),id,sources:clone(session?.sources??[]),destination:session?.destination,removed:!session});if(history.length>128)history.shift();this.change();}
   private spanConfig(a:string[],no:boolean):void{
-    if(!a.length)incomplete();const id=String(integer(a[0],1,66)),f=this.device.config.features;f.spanSessions??={};
-    if(no&&a.length===1){delete f.spanSessions[id];this.change();return;}
-    if(a[1]==='type'){exactly(a,3);if(no)fail('% Remove the entire monitor session to change its type.');const type=keyword(a[2],['local','erspan-source','erspan-destination']);const previous=f.spanSessions[id];if(previous&&previous.type&&previous.type!==type)fail('% Remove the existing session before changing its type.');f.spanSessions[id]??={type,sources:[],shutdown:type!=='local'};this.enter('span',{name:id});this.change();return;}
-    if(a.length<4)incomplete();const direction=keyword(a[1],['source','destination']);let session=f.spanSessions[id]??={type:'local',sources:[]};
+    if(!a.length)incomplete();const id=String(integer(a[0],1,66)),f=this.device.config.features;
+    if(no&&a.length===1){delete f.spanSessions?.[id];this.spanChanged(id);return;}
+    if(a[1]==='type'){exactly(a,3);if(no)fail('% Remove the entire monitor session to change its type.');const type=keyword(a[2],['local','erspan-source','erspan-destination']);const previous=f.spanSessions?.[id];if(previous&&previous.type&&previous.type!==type)fail('% Remove the existing session before changing its type.');(f.spanSessions??={})[id]??={type,sources:[],shutdown:type!=='local'};this.enter('span',{name:id});this.spanChanged(id);return;}
+    if(a.length<4)incomplete();const direction=keyword(a[1],['source','destination']);const session=clone(f.spanSessions?.[id]??{type:'local',sources:[]});
     if(a[2]==='remote'){exactly(a,5);keyword(a[3],['vlan']);const vlan=integer(a[4],1,4094),field=direction==='source'?'sourceVlan':'remoteVlan';if(no)delete session[field];else{session[field]=vlan;session.type=direction==='source'?'rspan-destination':'rspan-source';}}
     else {keyword(a[2],['interface']);this.spanInterface(session,direction,a.slice(3),no);}
+    if(!no||f.spanSessions?.[id])(f.spanSessions??={})[id]=session;this.spanChanged(id);
+  }
+  private spanInterface(session:any,direction:string,a:string[],no:boolean):void{
+    if(!a.length)incomplete();const port=this.getInterface(a[0]),all=Object.values<any>(this.device.config.features.spanSessions??{});
+    if(direction==='destination'){
+      exactly(a,1);const p=this.device.config.interfaces[port];
+      if(!no){if(!/^(GigabitEthernet|FastEthernet|Ethernet|TenGigabitEthernet)\d[\d/]*$/.test(port)||p.features.channelGroup||p.features.portSecurity?.enabled!==false&&p.features.portSecurity)fail('% A SPAN destination must be a non-secure physical Ethernet port outside an EtherChannel.');if(all.some(s=>s.sources?.some((x:any)=>x.interface===port))||session.sources?.some((x:any)=>x.interface===port))fail('% A SPAN destination cannot also be a source port.');if(all.some(s=>s!==this.device.config.features.spanSessions?.[this.context.name??'']&&s!==session&&s.destination===port)&&session.destination!==port)fail('% This port is already a SPAN destination.');}
+      if(!no||session.destination===port)session.destination=no?undefined:port;
+    }else{if(a.length>2)fail();const mode=a[1]?keyword(a[1],['rx','tx','both']):'both';if(!no&&(session.destination===port||all.some(s=>s.destination===port)))fail('% A SPAN destination cannot also be a source port.');session.sources=(session.sources||[]).filter((x:any)=>x.interface!==port);if(!no)session.sources.push({interface:port,direction:mode});}
     this.change();
   }
-  private spanInterface(session:any,direction:string,a:string[],no:boolean):void{if(!a.length)incomplete();const port=this.getInterface(a[0]);if(direction==='destination'){exactly(a,1);session.destination=no?undefined:port;}else{if(a.length>2)fail();const mode=a[1]?keyword(a[1],['rx','tx','both']):'both';session.sources=(session.sources||[]).filter((x:any)=>x.interface!==port);if(!no)session.sources.push({interface:port,direction:mode});}this.change();}
   private spanModeCommands():Command[]{const session=this.device.config.features.spanSessions[this.context.name!];if(this.mode==='span-peer')return [
     this.c('erspan-id','Set remote mirror identifier',(a,no)=>{exactly(a,no?0:1);session.erspanId=no?undefined:integer(a[0],1,1023);this.change();},'<1-1023>'),
     this.c('ip address','Set destination collector address',(a,no)=>{exactly(a,no?0:1);session.ipAddress=no?undefined:ipv4(a[0]);this.change();},'<address>'),

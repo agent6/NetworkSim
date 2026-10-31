@@ -1,3 +1,4 @@
+import {spanDestination} from './span.ts';
 import type {Device, InterfaceConfig, StpPortState} from './model.ts';
 
 export function stpRegion(d:Device):string {
@@ -17,7 +18,7 @@ export function stpPortState(device:Device, port:string, vlan:number|string):Stp
 
 export function stpInterfaces(device:Device):InterfaceConfig[] {
   return Object.values(device.config.interfaces).filter(p=>{
-    if(!p.switchport||p.features.channelGroup||/^(Vlan|Loopback|Tunnel|Null)/i.test(p.name)||p.name.includes('.'))return false;
+    if(spanDestination(device,p.name)||!p.switchport||p.features.channelGroup||/^(Vlan|Loopback|Tunnel|Null)/i.test(p.name)||p.name.includes('.'))return false;
     return !/^Port-channel/i.test(p.name)||!!device.runtime.features.portChannels?.[p.name.slice(12)];
   });
 }
@@ -28,6 +29,7 @@ export function stpMembers(device:Device, port:string):string[] {
 }
 
 export function stpMemberActive(device:Device, port:string):boolean {
+  if(spanDestination(device,port))return false;
   const group=device.config.interfaces[port]?.features.channelGroup;
   if(!group)return true;
   const logical=device.config.interfaces['Port-channel'+group];
