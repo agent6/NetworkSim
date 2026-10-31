@@ -1,0 +1,95 @@
+{
+  "lab": "IP SLA Configuration and Verification",
+  "catalogId": "ip-sla-configuration-and-verification",
+  "group": "CCNP ENCOR",
+  "section": "Network Assurance",
+  "date": "2026-10-30",
+  "nodes": 6,
+  "links": 6,
+  "tasks": 19,
+  "topology": "PC1\u2192R1\u2192R2(primary) or R3(backup)\u2192R4\u2192SRV1. R4 Lo0 203.0.113.4 is pinned through R2 for SLA1; Lo1 203.0.113.44 supplies the UDP responder. Prepared return routes explicitly support both user paths.",
+  "implemented": [
+    "ICMP echo1 with source Gi0/1, five-second frequency,500ms timeout,100ms threshold and forever/now scheduling",
+    "A fully specified untracked monitor /32, delayed reachability track1, state track2, tracked AD1 primary and prepared AD200 floating default",
+    "Real scheduled request/reply IDs and measured results are correlated to retained packet events; manual pings and invented counters cannot satisfy scheduled-probe tasks",
+    "Carrier-up primary-core blackhole, measured timeouts, delayed track withdrawal, actual user delivery through R3 and fresh measured/forwarded recovery through R2",
+    "OverThreshold preserves reachability Up while state becomes Down; only reachability controls the tracked default",
+    "HTTP GET2 uses60-second frequency and actual TCP service transactions; HTTP404 is now a failed probe",
+    "UDP jitter3 uses five packets20ms apart, control UDP1967 and echo UDP20000 with actual negotiated responder replies and mean absolute RTT variation",
+    "Independent HTTP and responder failures require earlier successful operation, actual failed transactions, continuing ICMP success and fresh service recovery",
+    "Operation1 can be unscheduled without deleting its parameters or stopping unrelated operations; backup user traffic must continue",
+    "Bounded runtime-only256-result observation history and128 schedule-change records; snapshots preserve operation settings and routing/track/carrier state at completion",
+    "Four-router startup saves, practice/completed modes, offline YAML and preserved historical guide achievements; dynamic results rebuild after reopening"
+  ],
+  "scope": [
+    "IPv4 ICMP echo, HTTP GET200 and negotiated UDP echo-train/round-trip variation workflows",
+    "No claim of Cisco raw IP SLA wire-format interoperability, one-way jitter/loss/delay/clock synchronization, VoIP MOS or historical-distribution buckets",
+    "Primary Cisco documentation reviewed; no new live CML capture was performed",
+    "No terminal styling, UI theme or node artwork changes"
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS15M&T: Configuring IP SLAs ICMP Echo Operations",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipsla/configuration/15-mt/sla-15-mt-book/sla_icmp_echo.html"
+    },
+    {
+      "title": "Cisco IOS15M&T: Configuring IP SLAs HTTP Operations",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipsla/configuration/15-mt/sla-15-mt-book/sla_http-0.html"
+    },
+    {
+      "title": "Cisco IOS15M&T: Configuring IP SLAs UDP Jitter Operations",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipsla/configuration/15-mt/sla-15-mt-book/sla_udp_jitter.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "focusedCommand": "node --test tests/ip-sla-catalog.test.ts tests/sla-failover.test.ts tests/tracking.test.ts tests/http-service.test.ts tests/static-nat-catalog.test.ts",
+    "focusedTests": 72,
+    "newTests": 30,
+    "artifactSha256": "66e9534334788459e77d3b1f3359103f9371fe731030f384dc983fab53a3dc4c",
+    "tests": 2668,
+    "passed": 2668,
+    "failed": 0,
+    "skipped": 0,
+    "durationMs": 295640.9585,
+    "fullCheck": "Complete native test-file set used by npm run check passed with four isolated workers after typecheck.",
+    "browserScenarios": 15,
+    "browserChecks": [
+      "light 320px: eight Network Assurance labs/badge; six nodes/six links/19 tasks and zero-credit practice; six-row plan; four working router references; thirteen healthy configuration and actual probe/user-path outcomes without pre-earned failure tasks; measured ICMP/HTTP200/UDP1967+20000 results and actual tracked/floating forwarding; all four startup saves; offline YAML preserves achievements and discards runtime; completed reference earns11 only after real automatic probes; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden terminal; correct hierarchy, question-mark and Tab. Browser clock advances normal app animation frames without simulator-state injection.",
+      "dark 320px: eight Network Assurance labs/badge; six nodes/six links/19 tasks and zero-credit practice; six-row plan; four working router references; all19 with real carrier-up blackhole, primary restoration, threshold/state distinction, schedule pause, HTTP service failure and responder recovery; measured ICMP/HTTP200/UDP1967+20000 results and actual tracked/floating forwarding; all four startup saves; offline YAML preserves achievements and discards runtime; completed reference earns11 only after real automatic probes; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden terminal; correct hierarchy, question-mark and Tab. Browser clock advances normal app animation frames without simulator-state injection.",
+      "light 1440px: eight Network Assurance labs/badge; six nodes/six links/19 tasks and zero-credit practice; six-row plan; four working router references; all19 with real carrier-up blackhole, primary restoration, threshold/state distinction, schedule pause, HTTP service failure and responder recovery; measured ICMP/HTTP200/UDP1967+20000 results and actual tracked/floating forwarding; all four startup saves; offline YAML preserves achievements and discards runtime; completed reference earns11 only after real automatic probes; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden terminal; correct hierarchy, question-mark and Tab. Browser clock advances normal app animation frames without simulator-state injection.",
+      "dark 1440px: eight Network Assurance labs/badge; six nodes/six links/19 tasks and zero-credit practice; six-row plan; four working router references; thirteen healthy configuration and actual probe/user-path outcomes without pre-earned failure tasks; measured ICMP/HTTP200/UDP1967+20000 results and actual tracked/floating forwarding; all four startup saves; offline YAML preserves achievements and discards runtime; completed reference earns11 only after real automatic probes; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden terminal; correct hierarchy, question-mark and Tab. Browser clock advances normal app animation frames without simulator-state injection.",
+      "light 390px: eight Network Assurance labs/badge; six nodes/six links/19 tasks and zero-credit practice; six-row plan; four working router references; thirteen healthy configuration and actual probe/user-path outcomes without pre-earned failure tasks; measured ICMP/HTTP200/UDP1967+20000 results and actual tracked/floating forwarding; all four startup saves; offline YAML preserves achievements and discards runtime; completed reference earns11 only after real automatic probes; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden terminal; correct hierarchy, question-mark and Tab. Browser clock advances normal app animation frames without simulator-state injection.",
+      "dark 390px: eight Network Assurance labs/badge; six nodes/six links/19 tasks and zero-credit practice; six-row plan; four working router references; thirteen healthy configuration and actual probe/user-path outcomes without pre-earned failure tasks; measured ICMP/HTTP200/UDP1967+20000 results and actual tracked/floating forwarding; all four startup saves; offline YAML preserves achievements and discards runtime; completed reference earns11 only after real automatic probes; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden terminal; correct hierarchy, question-mark and Tab. Browser clock advances normal app animation frames without simulator-state injection.",
+      "light: permalink preserves current host/path/query/workspace and returns to all eight Network Assurance labs",
+      "dark: permalink preserves current host/path/query/workspace and returns to all eight Network Assurance labs",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with eight labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging assertions; final rebuilt bytes match all browser-tested copies.",
+    "terminal": "Golden fixtures match both themes and responsive mobile full-screen console behavior.",
+    "visualInspection": [
+      ".cache/ip-sla-catalog-browser/topology-light-1440.png",
+      ".cache/ip-sla-catalog-browser/topology-dark-1440.png",
+      ".cache/ip-sla-catalog-browser/guide-light-320.png",
+      ".cache/ip-sla-catalog-browser/guide-dark-320.png",
+      ".cache/ip-sla-catalog-browser/statistics-light-1440.png",
+      ".cache/ip-sla-catalog-browser/statistics-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "The complete19-task workflow passed on desktop1440px/light and mobile320px/dark; the other four theme/viewport cases reached13 healthy tasks and did not pre-earn the six diagnostic tasks.",
+    "The final browser harness waits for an in-flight Pending probe to finish before checking its completed return code; all final15 cases use the same tested artifact.",
+    "Browser timing uses Playwright clock advancement through normal requestAnimationFrame callbacks. It does not inject simulator state, responses, routes or achievements.",
+    "The practice document starts0/19. The completed reference contains empty runtime and no earned observations, then reaches11/19 only after its actual scheduled packets complete. Historical achievements survive YAML; dynamic probe results and evidence are cleared and rebuilt."
+  ]
+}

@@ -30,6 +30,17 @@ export interface SLAResult {
   successes: number;
   failures: number;
 }
+/** Bounded runtime evidence; never exported as device configuration or a portable measurement. */
+export interface SLAObservation extends SLAResult {
+  operation: string;
+  completedAt: number;
+  probe: SLAOperation;
+  source: string;
+  requests: string[];
+  tracks: Record<string, {up:boolean;rawUp?:boolean}>;
+  defaults: Array<{nextHop?:string;interface?:string;ad?:number}>;
+  upInterfaces: string[];
+}
 export const slaDefaults = { frequency: 60, timeout: 5000, threshold: 5000 };
 export const slaReservedPorts = new Set([53, 67, 68, 123, 161, 162, 514, 1812, 1813, 1967]);
 export const slaStart = (schedule: SLASchedule) => schedule.start ?? 'now';

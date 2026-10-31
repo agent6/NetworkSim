@@ -345,6 +345,8 @@ export class Simulator {
       result.snmp={application:m.application,version:m.version,operation:m.operation,username:m.username,securityLevel:m.securityLevel,kind:m.kind,notificationId:m.notificationId,...Array.isArray(m.oids)?{oids:m.oids.slice(0,64).map(short)}:{},...m.errorStatus?{errorStatus:m.errorStatus}:{},...Array.isArray(m.varbinds)?{varbinds:m.varbinds.slice(0,64).map((v:any)=>({oid:short(v.oid),type:short(v.type),...v.exception?{exception:short(v.exception)}:{value:short(v.value)}}))}:{}};
     }
     if(b.kind==='syslog-message')result.syslog={hostname:b.hostname,message:String(b.message).slice(0,1024),severity:b.severity,facility:b.facility,timestamp:b.timestamp};
+    if(typeof b.probeId==='string')result.probeId=b.probeId;
+    if(typeof b.transaction==='string')result.serviceTransaction=b.transaction;
     if(b.kind==='remote-span')result.erspan={id:b.sessionId,sequence:b.sequence,sourceDevice:b.sourceDevice,sourceFrame:b.frame?.span?.sourceFrame};
     if(b.kind==='esp')Object.assign(result,{espSpi:b.spi,espSequence:b.sequence,protectedProtocol:b.inner?.protocol?.toUpperCase()});
     if(b.kind==='ike')Object.assign(result,{ikeStage:b.stage,ikeExchangeId:b.id});
@@ -1256,6 +1258,7 @@ export class Simulator {
     if (!['http:','https:'].includes(parsed.protocol)) return Object.assign(result,{status:'failure',error:'The simulated browser supports HTTP and modeled HTTPS endpoints.'});
     const startHttp = (address: string) => {
       const response = this.fetchHTTP(sourceId, address, parsed.pathname + parsed.search, {...options,port:Number(parsed.port||(parsed.protocol==='https:'?443:80)),secure:parsed.protocol==='https:'});
+      result.transportTransaction=response.id;
       const done = (r: ServiceResult) => Object.assign(result, r, { id: result.id, body: r.content, url });
       const pending = this.serviceWait.get(response.id); if (pending) pending.callback = done; else done(response);
     };

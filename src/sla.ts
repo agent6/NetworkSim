@@ -1,7 +1,7 @@
 import type { Device } from './model.ts';
 import type { Simulator, ServiceResult } from './engine.ts';
 import type { SimulationClock } from './clock.ts';
-import { slaLife, slaStart, slaReservedPorts, type SLAOperation, type SLAResult, type SLASchedule, type SLAScheduleState } from './sla-config.ts';
+import { slaLife, slaStart, slaReservedPorts, type SLAOperation, type SLAResult, type SLASchedule, type SLAScheduleState, type SLAObservation } from './sla-config.ts';
 import { iosBooting } from './ios-boot.ts';
 
 interface ScheduledOperation {
@@ -86,6 +86,8 @@ export class SLAController {
   }
   private stop(key: string, id: string, operation: ScheduledOperation): void {
     operation.clock.cancelOwner(operation.owner); this.cancelResult(id, operation);
+    const changes=operation.runtime.features.ipSlaScheduleChanges??=[];
+    changes.push({operation:id,time:operation.clock.now(),scheduled:false});if(changes.length>128)changes.shift();
     delete operation.runtime.features.ipSlaScheduleState?.[id];
     this.operations.delete(key);
   }
@@ -108,6 +110,8 @@ export class SLAController {
     const state: SLAResult = { lastRun: started, success: previous?.success ?? false, rtt: previous?.rtt, returnCode: previous?.returnCode ?? 'Pending', pending: true, runs: (previous?.runs ?? 0) + 1, successes: previous?.successes ?? 0, failures: previous?.failures ?? 0 };
     (runtime.features.ipSla ??= {})[id] = state;
     let finished = false;
+    const requests:string[]=[];
+    const source = engine.serviceSource(device, probe.target, { source: probe.source });
     const finish = (times: number[], sent: number, error = 'Timeout') => {
       if (finished || !active() || runtime.features.ipSla?.[id] !== state) return;
       finished = true;
@@ -115,7 +119,12 @@ export class SLAController {
       Object.assign(state, { pending: false, success: times.length > 0, rtt, packetsSent: sent, packetsReceived: times.length, returnCode: times.length ? rtt! > (probe.threshold ?? 5000) ? 'Over threshold' : 'OK' : error });
       if (times.length) state.successes++; else state.failures++;
       if (probe.type === 'udp-jitter') state.jitter = times.length > 1 ? times.slice(1).reduce((sum, time, i) => sum + Math.abs(time - times[i]), 0) / (times.length - 1) : 0;
-      engine.recompute(); engine.notify();
+      engine.recompute();
+      const history:SLAObservation[]=runtime.features.ipSlaHistory??=[];
+      history.push({...structuredClone(state),operation:id,completedAt:clock.now(),probe:structuredClone(probe),source:source??'',requests:[...requests],tracks:Object.fromEntries(Object.entries<any>(runtime.features.tracks??{}).map(([id,t])=>[id,{up:t.up,rawUp:t.rawUp}])),upInterfaces:[],defaults:device.runtime.routes.filter(r=>r.prefix===0&&!r.vrf).map(r=>({nextHop:r.nextHop,interface:r.interface,ad:r.ad}))});
+      history[history.length-1].upInterfaces=Object.keys(device.config.interfaces).filter(port=>engine.interfaceUp(device.id,port));
+      if(history.length>256)history.shift();
+      engine.notify();
     };
     const watch = (result: ServiceResult, deadline: number, callback: (result: ServiceResult) => void) => {
       const poll = () => {
@@ -125,11 +134,11 @@ export class SLAController {
       };
       poll();
     };
-    const source = engine.serviceSource(device, probe.target, { source: probe.source });
     if (source === undefined) { finish([], 0, 'Source unavailable'); return; }
     if (probe.type === 'http') {
       const result = engine.httpRequest(device.id, probe.url!, { source, timeout });
-      watch(result, started + timeout, r => finish(r.status === 'success' ? [clock.now() - started] : [], 1, r.status === 'failure' ? r.error : undefined));
+      requests.push(result.id);
+      watch(result, started + timeout, r => {if(typeof r.transportTransaction==='string')requests.push(r.transportTransaction);finish(r.status === 'success'&&r.statusCode===200 ? [clock.now() - started] : [], 1, r.status==='success'?`HTTP error ${r.statusCode}`:r.status === 'failure' ? r.error : undefined);});
       return;
     }
     if (probe.type === 'udp-jitter') {
@@ -140,6 +149,7 @@ export class SLAController {
           if (finished || !active()) return;
           const time = clock.now(); sent++;
           const result = engine.udpRequest(device.id, probe.target!, probe.port!, { application: 'sla-echo', sequence: i, target: probe.target }, { source, timeout, sourcePort: probe.sourcePort });
+          requests.push(result.id);
           watch(result, time + timeout, r => {
             if (r.status === 'success' && r.accepted && r.sequence === i) times.push(clock.now() - time);
             if (++complete === count) finish(times, sent);
@@ -149,11 +159,13 @@ export class SLAController {
       if (probe.control === false) train();
       else {
         const control = engine.udpRequest(device.id, probe.target, 1967, { application: 'sla-control', port: probe.port, duration: timeout + count * interval + 1000 }, { source, timeout });
+        requests.push(control.id);
         watch(control, started + timeout, r => { if (r.status === 'success' && r.accepted) train(); else finish([], 0, 'Responder unavailable'); });
       }
       return;
     }
     const result = engine.ping(device.id, probe.target, { count: 1, source: source || undefined, timeout, size: probe.target.includes(':') ? 84 : 64 });
+    requests.push(result.id);
     const poll = () => {
       if (!active() || finished) return;
       if (result.status !== 'running' || clock.now() >= started + timeout) finish(result.replies.filter(x => !x.error).map(x => x.time ?? 0), result.sent);
