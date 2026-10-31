@@ -46,6 +46,10 @@ function leaseDuration(milliseconds: number): string {
   return `${seconds}s`;
 }
 
+function netflowView(d:Device):string{
+ const records:any[]=d.runtime.features.netflowReceived??[];
+ return `<div class="section-label mb-2">Received flow records · ${records.length}</div><pre class="max-h-72 overflow-auto rounded-lg bg-slate-50 p-3 text-[11px] whitespace-pre" data-netflow-records>${esc(records.slice(-100).map(r=>`Exporter ${r.exporter} → UDP${r.collectorPort??2055} v${r.version??9} · ${r.monitor??'classic'} · ${r.record??'default'}\n${r.source??'?'}:${r.sourcePort??'?'} → ${r.destination??'?'}:${r.destinationPort??'?'} ${r.protocol??'?'}  input=${r.input??'?'} output=${r.output??'?'}\nPackets ${r.packets} · Bytes ${r.bytes} · First ${r.first} ms · Last ${r.last} ms`).join('\n\n')||'No flow records received.')}</pre>`;
+}
 function accountingView(d:Device):string{
   const records:any[]=d.runtime.features.aaaAccountingReceived??[],stats=d.runtime.features.aaaAccountingReceiverStats??{};
   return `<div class="section-label mb-2">Received accounting records</div><p class="mb-2 text-[11px] text-slate-400">${records.length} stored · ${stats.duplicates??0} duplicate retries · ${stats.rejected??0} rejected. RADIUS supports EXEC; TACACS+ also supports command records.</p><pre class="max-h-52 overflow-auto rounded-lg bg-slate-50 p-3 text-[10px] whitespace-pre-wrap">${esc(records.slice(-100).map(row=>`sim ${row.received} ms ${row.protocol} ${row.source} ${row.username||'(line)'} ${row.line} ${row.kind} ${row.status} session=${row.sessionId}${row.remoteSource?' remote='+row.remoteSource:''}${typeof row.privilege==='number'?' privilege='+row.privilege:''}${row.command?' command='+row.command:''}${row.reason?' reason='+row.reason:''}`).join('\n')||'No accounting records received.')}</pre>`;
@@ -85,7 +89,7 @@ export function showServices(
   formDialog(
     `${d.config.hostname} · Services`,
     `
-    <div class="flex flex-wrap gap-1 border-b border-slate-100 pb-3" role="tablist" aria-label="Server services">${["DNS", "DHCP", "HTTP", "AAA", "NTP", "FTP", "Syslog"].map((label, i) => `<button class="btn ${i === 0 ? "tool-active" : ""}" type="button" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-service-tab="${label}">${label}</button>`).join("")}</div>
+    <div class="flex flex-wrap gap-1 border-b border-slate-100 pb-3" role="tablist" aria-label="Server services">${["DNS", "DHCP", "HTTP", "AAA", "NTP", "FTP", "Syslog", "NetFlow"].map((label, i) => `<button class="btn ${i === 0 ? "tool-active" : ""}" type="button" role="tab" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-service-tab="${label}">${label}</button>`).join("")}</div>
     <section data-service-section="DNS" class="space-y-3">${toggle("dns-enabled", "DNS server enabled", svc.dns?.enabled)}<p class="text-[11px] leading-5 text-slate-400">Serve A, AAAA, CNAME, MX, NS and PTR records through simulated DNS. TTL controls resolver caching. Enter reverse-zone names for PTR records; MX preference applies only to MX.</p><div class="space-y-3 rounded-xl border border-slate-200 p-3" data-dhcp-dns>${dhcpDNSView(d,sim)}</div><div class="section-label">Manual records</div><div id="dns-rows" class="space-y-3">${dnsRecords(svc.dns).map(record=>dnsRow(record)).join('')}</div><button type="button" class="btn" id="add-dns">${icon("plus", 14)} Add record</button></section>
     <section data-service-section="DHCP" class="hidden space-y-3">${toggle("dhcp-enabled", "DHCP server enabled", svc.dhcp?.enabled)}<div class="space-y-3 rounded-xl border border-slate-200 p-3"><label class="field">Find a lease<input type="search" data-dhcp-lease-search aria-label="Search DHCP leases" placeholder="IP address, client, MAC address, or pool"></label><div class="space-y-3" data-dhcp-leases>${dhcpLeaseView(d,sim)}</div><p class="text-[11px] text-slate-400">Live allocations from this server. Remaining time follows the simulation clock.</p></div><div id="pool-rows" class="space-y-3">${(svc.dhcp?.pools || []).map(poolRow).join("")}</div><button type="button" class="btn" id="add-pool">${icon("plus", 14)} Add address pool</button><label class="field">Excluded addresses · one address or start–end range per line<textarea name="dhcp-excluded" rows="3" class="font-mono text-xs" placeholder="192.168.10.1 - 192.168.10.20">${esc((svc.dhcp?.excluded || []).map((r: any) => (r.start === r.end ? r.start : `${r.start} - ${r.end}`)).join("\n"))}</textarea></label></section>
     <section data-service-section="HTTP" class="hidden space-y-3">${toggle("http-enabled", "HTTP server enabled", svc.http?.enabled)}<div class="grid grid-cols-2 gap-3"><label class="field">HTTP authentication<select name="http-auth">${["none", "local", "enable", "aaa"].map((mode) => `<option value="${mode}" ${(svc.http?.authentication || "none") === mode ? "selected" : ""}>${{ none: "Public", local: "Local users", enable: "Enable password", aaa: "AAA method list" }[mode]}</option>`).join("")}</select></label>${input("AAA login method list", "http-auth-list", svc.http?.authenticationList || "default")}${input("Flash base path (optional)", "http-base", svc.http?.basePath || "", "flash:/www")}<label class="field">Enable password (lab only)<input type="password" autocomplete="off" name="http-enable-password" value="${esc(d.config.features.enableSecret ?? d.config.features.enablePassword ?? "")}"></label></div><details><summary class="cursor-pointer text-xs">Local device users</summary><p class="my-2 text-[11px] text-slate-400">Use lab-only credentials. These users are also available to device login; exported labs include them.</p><div id="http-local-users" class="space-y-3">${Object.entries(
@@ -112,8 +116,10 @@ export function showServices(
 
 
     <section data-service-section="FTP" class="hidden space-y-3">${ftpFormFields(svc.ftp)}</section>
+    <section data-service-section="NetFlow" class="hidden space-y-3">${toggle('netflow-enabled','NetFlow collector enabled',svc.netflow?.enabled)}<label class="field">Collector UDP port<input type="number" min="1" max="65535" name="netflow-port" value="${esc(svc.netflow?.port??2055)}"></label><p class="text-xs text-slate-500">Received simulated NetFlow records. UDP exports have no delivery acknowledgement. Configure the router destination, source and port to match this collector.</p><div data-netflow-received>${netflowView(d)}</div></section>
     <section data-service-section="Syslog" class="hidden space-y-3">${toggle("syslog-enabled", "Syslog receiver enabled", svc.syslog?.enabled)}<div><div class="section-label mb-2">Received logs</div><pre class="max-h-44 overflow-auto rounded-lg bg-slate-50 p-3 text-[10px] whitespace-pre-wrap">${esc((d.runtime.features.syslogReceived || []).map((entry: any) => `${entry.timestamp ?? `sim ${entry.received ?? 0} ms`} ${entry.source}${entry.hostname ? ` (${entry.hostname})` : ""} facility=${entry.facility ?? "?"} severity=${entry.severity ?? "?"}: ${entry.message}`).join("\n") || "No messages received.")}</pre></div></section>`,
     (data) => {
+      const netflowPresent=data.has('netflow-port')||data.has('netflow-enabled'),netflowPort=Number(data.get('netflow-port')??2055);if(netflowPresent&&(!Number.isInteger(netflowPort)||netflowPort<1||netflowPort>65535))throw Error('NetFlow UDP port must be 1–65535.');
       const records:Record<string,string>=Object.create(null),names=data.getAll("record-name"),addresses=data.getAll("record-address");
       const resourceRecords=validateDNSRecords(names.flatMap((name,i)=>{
         const host=String(name).trim(),value=String(addresses[i]??'').trim();if(!host&&!value)return [];
@@ -285,6 +291,7 @@ export function showServices(
           content: String(data.get("html")),
           files,
         };
+        if(netflowPresent)svc.netflow={...svc.netflow,enabled:data.has('netflow-enabled'),port:netflowPort};
         svc.ntp = { ...svc.ntp, enabled: data.has("ntp-enabled"), stratum };
         if (svc.tftp) svc.tftp.enabled = false;
         svc.syslog = { ...svc.syslog, enabled: data.has("syslog-enabled") };
@@ -323,6 +330,7 @@ export function showServices(
       if (details && focused === row.dataset.dhcpLease) details.querySelector<HTMLElement>("summary")?.focus({preventScroll:true});
     }
   };
+  const refreshNetflow=()=>{const output=root.querySelector<HTMLElement>('[data-netflow-received]');if(output){const markup=netflowView(d);if(output.innerHTML!==markup)output.innerHTML=markup;}};
   const refreshAccounting=()=>{const output=root.querySelector<HTMLElement>('[data-aaa-accounting]');if(output){const markup=accountingView(d);if(output.innerHTML!==markup)output.innerHTML=markup;}};
   const refreshDNS=()=>{const output=root.querySelector<HTMLElement>('[data-dhcp-dns]');if(output){const markup=dhcpDNSView(d,sim);if(output.innerHTML!==markup)output.innerHTML=markup;}};
   root.querySelector("[data-dhcp-lease-search]")?.addEventListener("input", refreshLeases);
@@ -331,6 +339,7 @@ export function showServices(
     if (!sections.find(panel => panel.dataset.serviceSection === "DHCP")?.classList.contains("hidden")) refreshLeases();
     if (!sections.find(panel => panel.dataset.serviceSection === "DNS")?.classList.contains("hidden")) refreshDNS();
     if (!sections.find(panel => panel.dataset.serviceSection === "AAA")?.classList.contains("hidden")) refreshAccounting();
+    if (!sections.find(panel => panel.dataset.serviceSection === "NetFlow")?.classList.contains("hidden")) refreshNetflow();
   });
   root.addEventListener("keydown", (event) => {
     const current = tabs.indexOf(event.target as HTMLButtonElement);
@@ -355,6 +364,7 @@ export function showServices(
       if (tab.dataset.serviceTab === "DHCP") refreshLeases();
       if (tab.dataset.serviceTab === "DNS") refreshDNS();
       if (tab.dataset.serviceTab === "AAA") refreshAccounting();
+      if (tab.dataset.serviceTab === "NetFlow") refreshNetflow();
     }
     if (target.closest("[data-remove-row]"))
       target

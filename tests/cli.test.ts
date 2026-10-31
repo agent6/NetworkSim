@@ -206,7 +206,7 @@ test('flexible NetFlow CLI records actual transit traffic and exports packet del
   conf(cli,'flow record SOURCE','match ipv4 source address','collect counter packets','collect counter bytes','exit','flow exporter COLLECTOR','destination 10.2.0.20','source g0/1','transport udp 2055','exit','flow monitor MONITOR','record SOURCE','exporter COLLECTOR','cache timeout active 1','exit','interface g0/0','ip address 10.1.0.1 255.255.255.0','ip flow monitor MONITOR input','no shutdown','interface g0/1','ip address 10.2.0.1 255.255.255.0','no shutdown','end');
   const host=new IOSSession(engine,a.id);assert.match(host.execute('ping 10.2.0.20 -n 2').join('\n'),/Received = 2/);engine.clock.advance(2000);
   // Windows ping counts 32 data bytes plus the 20-byte IPv4 and 8-byte ICMP headers.
-  assert.equal(r.runtime.features.flowMonitorCaches.MONITOR.length,1);assert.equal(r.runtime.features.flowMonitorCaches.MONITOR[0].packets,2);assert.equal(b.runtime.features.netflowReceived.reduce((n:number,f:any)=>n+f.packets,0),2);assert.match(cli.execute('show flow monitor MONITOR cache').join('\n'),/10\.1\.0\.10.*\s2\s+120/);
+  assert.equal(r.runtime.features.flowMonitorCaches.MONITOR.length,0);assert.equal(b.runtime.features.netflowReceived.reduce((n:number,f:any)=>n+f.packets,0),2);assert.equal(b.runtime.features.netflowReceived.reduce((n:number,f:any)=>n+f.bytes,0),120);assert.match(cli.execute('show flow monitor MONITOR cache').join('\n'),/Current entries: 0/);
 });
 
 test('RIP distribute and offset lists change learned routes and serialize the consumed rules',()=>{

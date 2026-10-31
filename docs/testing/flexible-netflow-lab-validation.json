@@ -1,0 +1,106 @@
+{
+  "feature": {
+    "title": "Flexible NetFlow Configuration",
+    "catalogId": "flexible-netflow-configuration",
+    "group": "CCNP ENCOR",
+    "section": "Network Assurance",
+    "sectionLabCount": 4,
+    "groupLabCount": 26,
+    "otherSections": {
+      "Virtualization": 3,
+      "Layer 2": 6,
+      "Layer 3": 9,
+      "IP Services": 4
+    },
+    "devices": 4,
+    "links": 3,
+    "tasks": 16,
+    "addressingRows": 7,
+    "notes": 3,
+    "permalink": "#/labs/flexible-netflow-configuration",
+    "modes": [
+      "practice",
+      "completed"
+    ]
+  },
+  "topology": "PC1 192.168.10.10/24 uses R1 Gi0/0 192.168.10.1. SRV1 192.168.20.10/24 uses R1 Gi0/1 192.168.20.1 and supplies prepared HTTP80 and DNS53. NMS1 192.168.100.10/24 uses R1 Gi0/2 192.168.100.1 and receives NetFlow on UDP2055. R1 Loopback0 10.255.0.1/32 provides the exporter source. Monitoring is input-only on the client and server interfaces; the collector link is unmonitored.",
+  "verificationNotes": [
+    "Adds the fourth Network Assurance entry and current-origin/path/query share link. ENCOR has26 labs. Previous entries and all other section counts are retained.",
+    "Practice starts0/16. Eight live configuration/save goals and eight historical observations cover the custom six-field key, output/counters/timestamps collection, sourced v9 exporter, normal-cache monitor, both ingress attachments, actual collector and router startup save. The completed reference supplies eight saved live goals without invented traffic or collector runtime.",
+    "Actual bidirectional ICMP records have transport ports zero and exact packet/IP-byte totals. Actual HTTP200 application delivery and DNS resolution generate separate TCP80/UDP53 request/return keys. Record evidence is correlated with router ingress and egress, destination receipt, actual export packets and collector packet identifiers; configuration or sender counters alone cannot satisfy these observations.",
+    "Corrects Flexible NetFlow normal-cache aging: active/inactive deadlines retire and export a record, subsequent traffic starts a fresh record, and no exporter still allows normal retirement. The lab uses15-second active and5-second inactive timers. Defaults are1800/15 seconds. A20-packet continuous stream proves active expiry followed by residual inactive expiry without double counting.",
+    "Implements canonical IPv4 protocol and long counter field spelling, question-mark/Tab grammar, collected output-interface values, IPv4/IPv6 record separation, inactive-timeout configuration serialization and replay with a logical source interface. v9 export sequence advances per packet. Existing classic NetFlow regressions continue to cover their separate behavior.",
+    "Adds an accessible NetFlow server service tab with independently enabled UDP listener, validated1\u201365535 port and live bounded/escaped received record view. Wrong port and stopped receiver return actual ICMP Port Unreachable. A down configured source cannot silently fall back to another identity. Unacknowledged failed exports are not retried as successful delivery.",
+    "Collected runtime is bounded, transient and discarded on portable reload. Earned observations persist in YAML while live configuration goals remain reevaluated. Completed references never pre-earn observed traffic. Existing excluded TFTP and SCP/SFTP server pages remain excluded.",
+    "Scope is simulated NetFlow v9 records and routed UDP delivery inside the offline browser app. Binary v9 templates, IPFIX, sampling, external collector interoperability and new live CML captures are not implemented or claimed.",
+    "Browser verification uses actual CLI, desktop browser, DNS command, NetFlow service form, startup save and YAML export/import into a separate empty profile. Full16 workflows run in light1440px and dark320px. Four other viewport/theme cases earn15 with active aging unearned. Both arbitrary-origin permalink checks and seven previous catalog scenarios pass; all15 scenarios have no page errors or external requests. Golden terminal appearance is unchanged."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS15M&T: Flexible NetFlow\u2014IPv4 Unicast Flows",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/fnetflow/configuration/15-mt/fnf-15-mt-book/fnf-ipv4-uni.html",
+      "relevance": "Custom match keys versus collected fields, exporter/monitor configuration and interface activation."
+    },
+    {
+      "title": "Cisco IOS Flexible NetFlow Command Reference: cache",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/fnetflow/command/fnf-cr-book/fnf-c1.html",
+      "relevance": "Normal-cache retirement, active/inactive deadlines and documented1800/15-second defaults."
+    },
+    {
+      "title": "Cisco IOS XE17: Flexible NetFlow",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ntw-servs/b-network-services/m_fnf-fnetflow.html",
+      "relevance": "Flexible flow record, monitor, exporter and unidirectional traffic observation model."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "newFocusedTests": 30,
+    "browserScenarios": 15,
+    "browserFullWorkflowCases": [
+      "light1440px",
+      "dark320px"
+    ],
+    "browserOtherWorkflowCases": [
+      "light320px",
+      "dark1440px",
+      "light390px",
+      "dark390px"
+    ],
+    "browserChecks": [
+      "light 320px: four Network Assurance labs and badge; four nodes/three links/16 tasks with zero-credit practice; seven-row plan; full working CLI and real collector form; 15 outcomes without pre-earned active aging; actual bidirectional ICMP/TCP80/UDP53 flows and collector records; router startup save; offline YAML export/import into separate empty profile retains achievements without runtime; completed reference has eight live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; Tab and question-mark help",
+      "dark 320px: four Network Assurance labs and badge; four nodes/three links/16 tasks with zero-credit practice; seven-row plan; full working CLI and real collector form; all16 including active aging under a20-packet stream; actual bidirectional ICMP/TCP80/UDP53 flows and collector records; router startup save; offline YAML export/import into separate empty profile retains achievements without runtime; completed reference has eight live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; Tab and question-mark help",
+      "light 1440px: four Network Assurance labs and badge; four nodes/three links/16 tasks with zero-credit practice; seven-row plan; full working CLI and real collector form; all16 including active aging under a20-packet stream; actual bidirectional ICMP/TCP80/UDP53 flows and collector records; router startup save; offline YAML export/import into separate empty profile retains achievements without runtime; completed reference has eight live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; Tab and question-mark help",
+      "dark 1440px: four Network Assurance labs and badge; four nodes/three links/16 tasks with zero-credit practice; seven-row plan; full working CLI and real collector form; 15 outcomes without pre-earned active aging; actual bidirectional ICMP/TCP80/UDP53 flows and collector records; router startup save; offline YAML export/import into separate empty profile retains achievements without runtime; completed reference has eight live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; Tab and question-mark help",
+      "light 390px: four Network Assurance labs and badge; four nodes/three links/16 tasks with zero-credit practice; seven-row plan; full working CLI and real collector form; 15 outcomes without pre-earned active aging; actual bidirectional ICMP/TCP80/UDP53 flows and collector records; router startup save; offline YAML export/import into separate empty profile retains achievements without runtime; completed reference has eight live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; Tab and question-mark help",
+      "dark 390px: four Network Assurance labs and badge; four nodes/three links/16 tasks with zero-credit practice; seven-row plan; full working CLI and real collector form; 15 outcomes without pre-earned active aging; actual bidirectional ICMP/TCP80/UDP53 flows and collector records; router startup save; offline YAML export/import into separate empty profile retains achievements without runtime; completed reference has eight live goals only; cancel/save-copy protection; fitted diagram, responsive guide and unchanged golden CLI appearance; Tab and question-mark help",
+      "light: permalink preserves current host/path/query/workspace and returns to all four Network Assurance labs",
+      "dark: permalink preserves current host/path/query/workspace and returns to all four Network Assurance labs",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "3c59ff0906a7e9aaeed1f3411ff33b304072057e954c67eb9e13a31dc89edfaf",
+    "identicalArtifactCopies": 16,
+    "visualInspection": [
+      ".cache/flexible-netflow-catalog-browser/topology-light-1440.png",
+      ".cache/flexible-netflow-catalog-browser/topology-dark-1440.png",
+      ".cache/flexible-netflow-catalog-browser/guide-light-320.png",
+      ".cache/flexible-netflow-catalog-browser/guide-dark-320.png"
+    ],
+    "terminal": "Golden CLI font/color/cursor/control fixtures match both themes and mobile full-screen behavior.",
+    "tests": 2540,
+    "passed": 2540,
+    "failed": 0,
+    "skipped": 0,
+    "durationMs": 232513.872167,
+    "build": "npm run build passed; embedded offline fonts and single-file packaging assertions passed",
+    "fullCheck": "Complete native test-file set used by npm run check passed with four isolated workers, followed by a successful rebuild with identical tested artifact bytes."
+  }
+}

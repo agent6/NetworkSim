@@ -336,6 +336,10 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
 
 /** Deliberately explicit: prose in legacy argument hints is not an executable grammar. */
 function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
+  if(context.mode==='flow-record'&&['match','collect'].includes(path)){const fields=['ipv4 source address','ipv4 destination address','ipv6 source address','ipv6 destination address','ip protocol','ipv4 protocol','ipv6 protocol','transport source-port','transport destination-port','interface input','interface output',...path==='collect'?['counter bytes','counter packets','counter bytes long','counter packets long','timestamp sys-uptime first','timestamp sys-uptime last']:[]];return fields.map(f=>f.split(' ').map(w=>word(w)));}
+  if(context.mode==='flow-exporter'&&path==='source')return [[iface(context,true)]];
+  if(context.mode==='flow-monitor'&&['cache timeout active','cache timeout inactive'].includes(path))return [[number(1,604800,'Flow cache timeout in seconds')]];
+
   if(path==='switchport port-security mac-address'){
     const mac=argument('H.H.H','48-bit hardware address',value=>/^(?:[0-9a-f]{4}\.){2}[0-9a-f]{4}$|^(?:[0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(value));
     return [[mac],[word('sticky')],[word('sticky'),mac]];

@@ -92,3 +92,10 @@ test('SVC-GUI-09 invalid DHCP DNS domains reject all form changes transactionall
   const {server,save}=dialog(),data=form();pool(data);data.set('pool-domain','bad..domain');data.set('dns-enabled','on');
   const before=JSON.stringify(server.config);assert.throws(()=>save(data),/DNS domain.*invalid/);assert.equal(JSON.stringify(server.config),before);
 });
+
+test('NetFlow collector form exposes received real records, escapes content and saves the UDP listener',()=>{
+ const {server,save,markup}=dialog(),data=form();assert.match(markup,/data-service-tab="NetFlow"/);assert.match(markup,/No flow records received/);data.set('netflow-enabled','on');data.set('netflow-port','9995');save(data);assert.deepEqual(server.config.services.netflow,{enabled:true,port:9995});
+ server.runtime.features.netflowReceived=[{exporter:'10.255.0.1',collectorPort:9995,version:9,monitor:'<unsafe>',source:'192.0.2.1',destination:'198.51.100.1',sourcePort:50000,destinationPort:80,protocol:'tcp',packets:3,bytes:180,first:5,last:8}];const next=dialog(undefined,server);assert.match(next.markup,/UDP9995 v9/);assert.match(next.markup,/&lt;unsafe&gt;/);assert.doesNotMatch(next.markup,/<unsafe>/);assert.match(next.markup,/198\.51\.100\.1:80/);
+});
+test('NetFlow collector invalid UDP input rejects before committing any service settings',()=>{for(const port of ['0','65536','2.5','NaN']){const {server,save}=dialog(),data=form(),before=JSON.stringify(server.config);data.set('netflow-enabled','on');data.set('netflow-port',port);assert.throws(()=>save(data),/NetFlow UDP port/);assert.equal(JSON.stringify(server.config),before);}});
+test('NetFlow absent legacy form fields preserve existing collector and unchecked new form disables it',()=>{const {server,save}=dialog();server.config.services.netflow={enabled:true,port:9995};save(form());assert.equal(server.config.services.netflow.enabled,true);const data=form();data.set('netflow-port','9995');save(data);assert.deepEqual(server.config.services.netflow,{enabled:false,port:9995});});

@@ -243,7 +243,7 @@ export function recordFlow(engine: Simulator, device: Device, input: string | un
   const classic = (input && device.config.interfaces[input]?.features.netflowIn) || device.config.interfaces[output]?.features.netflowOut;
   for (const name of [...(classic ? [''] : []), ...monitors]) {
     const monitor = name ? device.config.features.flowMonitors?.[name] : undefined, record = monitor && device.config.features.flowRecords?.[monitor.record];
-    if (name && !record) continue;
+    if (name && (!record || (record.match ?? []).some((field:string)=>field.startsWith(isIPv6(packet.destination)?'ipv4 ':'ipv6 ')))) continue;
     // Classic NetFlow overloads its destination-port field with ICMP type/code.
     // Flexible transport fields remain ports: ICMP has neither source nor destination port.
     const flowValues = !name && icmp ? { ...values, destinationPort: (icmp.type << 8) | icmp.code } : values;
@@ -251,9 +251,24 @@ export function recordFlow(engine: Simulator, device: Device, input: string | un
     if (!selected.length) continue;
     const cache: any[] = name ? (device.runtime.features.flowMonitorCaches ??= {})[name] ??= [] : device.runtime.features.netflowCache ??= [];
     const key = selected.map((field: string) => flowValues[field]).join('|'); let flow = cache.find(x => x.key === key);
-    if (!flow) { flow = { key, ...Object.fromEntries(selected.map((field: string) => [field, flowValues[field]])), monitor: name || undefined, record: monitor?.record, packets: 0, bytes: 0, first: engine.clock.now(), last: engine.clock.now() }; cache.push(flow); if (cache.length > 2000) cache.shift(); }
+    if (!flow) { flow = { key, ...Object.fromEntries([...new Set([...selected,...(record?.collect??[]).map((field:string)=>fields[field]).filter(Boolean)])].map((field: string) => [field, flowValues[field]])), monitor: name || undefined, record: monitor?.record, packets: 0, bytes: 0, first: engine.clock.now(), last: engine.clock.now() }; cache.push(flow); if (cache.length > 2000) cache.shift(); }
     flow.packets++; flow.bytes += packet.size; flow.last = engine.clock.now();
     const exporter = name ? device.config.features.flowExporters?.[monitor.exporter] : device.config.features.netflow;
+    if(name){
+      // Normal caches retire a record at the earlier active/inactive deadline.
+      // A retired key starts a new record on its next packet, including without an exporter.
+      if(!flow.aging){flow.aging=true;const row=flow;
+        const expire=()=>{
+          if(device.runtime.features.flowMonitorCaches?.[name]!==cache||!cache.includes(row))return;
+          const settings=device.config.features.flowMonitors?.[name];if(!settings){cache.splice(cache.indexOf(row),1);return;}
+          const active=row.first+(settings.cacheTimeout??1800)*1000,inactive=row.last+(settings.inactiveTimeout??15)*1000,remaining=Math.min(active,inactive)-engine.clock.now();
+          if(remaining>0){engine.clock.schedule(remaining,expire,{owner:device.id,label:'Flexible NetFlow cache aging'});return;}
+          engine.exportNetFlow(device.id,name,new Set([row.key]));cache.splice(cache.indexOf(row),1);
+          const history=device.runtime.features.flowRetirements??=[];history.push({monitor:name,key:row.key,reason:active<=inactive?'active':'inactive',time:engine.clock.now(),first:row.first,last:row.last,packets:row.packets,bytes:row.bytes});if(history.length>256)history.shift();
+        };
+        engine.clock.schedule(Math.min(monitor.cacheTimeout??1800,monitor.inactiveTimeout??15)*1000,expire,{owner:device.id,label:'Flexible NetFlow cache aging'});
+      }continue;
+    }
     const classicConfig=device.config.features.netflow??{};
     if(!name&&(classicConfig.activeTimeout!==undefined||classicConfig.inactiveTimeout!==undefined)){
       if(!flow.aging){flow.aging=true;const row=flow;

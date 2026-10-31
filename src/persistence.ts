@@ -57,6 +57,7 @@ function validateConfig(c: any) {
     if (vlan.active === undefined) vlan.active = true;
     else if (typeof vlan.active !== 'boolean') throw Error('Invalid VLAN active state.');
   }
+  if(c.services.netflow!==undefined){const n=c.services.netflow;if(!object(n)||typeof n.enabled!=='boolean'||n.port!==undefined&&(!Number.isInteger(n.port)||n.port<1||n.port>65535))throw Error('Invalid NetFlow collector settings.');}
   validateSNMPConfiguration(c);
   validateSLAConfiguration(c);
   validateTunnelConfiguration(c);

@@ -360,10 +360,10 @@ test('static bindings and ARP ACLs control DAI while per-port DHCP and ARP rates
   sw.config.interfaces[g(1)].features.errDisabled = false; sw.config.features.dhcpSnooping = { enabled: true, vlans: [1] }; sw.config.interfaces[g(1)].features.dhcpSnoopingRate = 1; s.changed(); s.advance(1100);
   for (let i = 0; i < 2; i++) (s as any).transmit(a, p, 'ff:ff:ff:ff:ff:ff', { kind: 'dhcp', operation: 'discover', clientId: a.id, transaction: 'flood-' + i }); s.advance(100); assert.equal(sw.config.interfaces[g(1)].features.errDisabled, true); assert.equal(sw.runtime.features.errdisableCauses[g(1)], 'dhcp-rate-limit');
 });
-test('flexible NetFlow record keys aggregate matching traffic and exporter sends deltas', () => {
+test('flexible NetFlow normal-cache aging exports and retires records without double counting', () => {
   const { s, a, r, b } = routed(); r.config.features.flowRecords = { SOURCE: { match: ['ipv4 source address'], collect: ['counter packets long', 'counter bytes long'] } }; r.config.features.flowExporters = { COLLECTOR: { destination: '10.2.0.20', port: 2055, version: 9 } }; r.config.features.flowMonitors = { MONITOR: { record: 'SOURCE', exporter: 'COLLECTOR', cacheTimeout: 1 } }; r.config.interfaces[g(0)].features.flowMonitorIn = 'MONITOR'; b.config.services.netflow = { enabled: true };
   s.ping(a.id, '10.2.0.20', { count: 1 }); s.advance(2000); s.ping(a.id, '10.2.0.20', { count: 1 }); s.advance(2000);
-  assert.equal(r.runtime.features.flowMonitorCaches.MONITOR.length, 1); assert.equal(r.runtime.features.flowMonitorCaches.MONITOR[0].packets, 2); assert.equal(b.runtime.features.netflowReceived.reduce((n: number, flow: any) => n + flow.packets, 0), 2);
+  assert.equal(r.runtime.features.flowMonitorCaches.MONITOR.length, 0); assert.equal(b.runtime.features.netflowReceived.length, 2); assert.equal(b.runtime.features.netflowReceived.reduce((n: number, flow: any) => n + flow.packets, 0), 2);
 });
 test('portable reload discards absolute DHCP timers and reacquires fresh v4/v6 leases', () => {
   const s = new Simulator(89), pc = s.addDevice('pc'), server = s.addDevice('server'), p = 'GigabitEthernet0'; ip(server, p, '192.0.2.1'); server.config.interfaces[p].ipv6 = ['2001:db8:a::1/64']; server.config.interfaces[p].features.dhcpv6Server = 'V6';
