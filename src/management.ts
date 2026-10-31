@@ -1,3 +1,4 @@
+import {recordDeviceAccess} from './device-access.ts';
 import {nsosReservedUser} from './nsos-aaa.ts';
 import {aaaServers,aaaExchange,type AAAAuthentication} from './aaa-client.ts';
 import {ownRecordValue,accountCredential} from './record-map.ts';
@@ -31,6 +32,7 @@ export interface ManagedCLI {
   pollOutput():string[];
   execute(line: string): string[];
   setPrivilege(level: number): void;
+  setAccessContext?(session:string,source:string,port:number):void;
   setIdentity(username:string|undefined,authenticated:boolean,line:string,role?:string):void;
   setAccountingHook?(hook:(command:string,level:number,status:'start'|'stop',taskId:string)=>void):void;
 }
@@ -190,6 +192,7 @@ export class ManagementController {
   private close(session: RemoteSession,reason='connection closed'): void {
     if(!this.sessions.has(session.id))return;
     this.engine.clock.cancel(session.expiryTimer);
+    const target=this.engine.getDevice(session.deviceId);if(target?.runtime.features.managementSessions?.includes(session.id))recordDeviceAccess(this.engine,target,{session:session.id,kind:reason==='idle timeout'?'idle-timeout':reason==='logout'?'logout':'close',success:true,line:session.line,source:session.source,port:session.port,username:session.username,method:session.method,reason});
     this.sessions.delete(session.id);
     for(const key of this.clientVRFs.keys())if(key.endsWith('|'+session.id))this.clientVRFs.delete(key);
     const device = this.engine.getDevice(session.deviceId);
@@ -213,9 +216,11 @@ export class ManagementController {
     if (valid) {
       const authorization=this.execPrivilege(device.id,session.line,session.username,true,remote?.privilege??user?.privilege??line.privilege??1,remote);if(!authorization.accepted){this.close(session);return {closed:true,output:['% EXEC authorization failed.']};}session.phase = 'ready';session.cli.setPrivilege(authorization.privilege);session.cli.setIdentity(session.username,true,session.line,session.method==='aaa'?remote?.role??'network-operator':user?.role);this.beginAccounting(session,device,authorization.privilege);
       if(session.port===22&&session.method==='local'&&!device.config.features.aaa?.enabled&&line.login==='local'&&session.username){this.localSSHLogins.push({deviceId:device.id,runtime:device.runtime,username:session.username,source:session.source,privilege:authorization.privilege,line:session.line,time:this.engine.clock.now()});if(this.localSSHLogins.length>1000)this.localSSHLogins.splice(0,this.localSSHLogins.length-1000);}
+      recordDeviceAccess(this.engine,device,{session:session.id,kind:'login',success:true,line:session.line,source:session.source,port:session.port,username:session.username,privilege:authorization.privilege,method:session.method});
       this.engine.log(device.id, `User ${session.username || 'line'} logged in from ${session.source} on ${session.line}`, 6);
       return this.reply(session, device.config.features.banners?.exec ? [device.config.features.banners.exec] : []);
     }
+    recordDeviceAccess(this.engine,device,{session:session.id,kind:'login',success:false,line:session.line,source:session.source,port:session.port,username:session.username,method:session.method});
     recordLoginFailure(device,this.engine.clock.now(),session.source,session.username);
     if(loginBlocked(device,this.engine.clock.now())){this.close(session);return {closed:true,output:['% Login blocked: quiet mode is active.']};}
     session.attempts++;
@@ -239,7 +244,7 @@ export class ManagementController {
       if(loginBlocked(d,this.engine.clock.now()))return {closed:true,output:['% Login blocked: quiet mode is active.']};
       const [name, line] = this.vty(d, port)!;
       const accessClass=isIPv6(source)?line.ipv6AccessClassIn:line.accessClassIn;
-      if(accessClass&&!this.engine.aclPermits(d.id,accessClass,source,destination,'tcp',{destinationPort:port}))return {closed:true,output:['% Connection refused by VTY access-class.']};
+      if(accessClass&&!this.engine.aclPermits(d.id,accessClass,source,destination,'tcp',{destinationPort:port})){recordDeviceAccess(this.engine,d,{session:'',kind:'access-denied',success:false,line:name,source,port,username:payload.username,method:this.method(d,line)});return {closed:true,output:['% Connection refused by VTY access-class.']};}
       if(line.exec===false)return {closed:true,output:['% EXEC is disabled on this line.']};
       const method = this.method(d, line);
       if (method === 'password' && !line.password) return { closed: true, output: ['', 'Password required, but none set', 'Connection closed.'] };
@@ -248,6 +253,7 @@ export class ManagementController {
       if ([...this.sessions.values()].filter(s => s.deviceId === d.id && s.line === name).length >= capacity) return { closed: true, output: ['% All configured VTY lines are in use.'] };
       const used=new Set([...this.sessions.values()].filter(s=>s.deviceId===d.id).map(s=>s.lineNumber));const lineNumber=Array.from({length:capacity},(_,i)=>span[0]+i).find(n=>!used.has(n));if(lineNumber===undefined)return {closed:true,output:['% All configured VTY lines are in use.']};
       const session: RemoteSession = {lineNumber,lastActivity:this.engine.clock.now(), id: `vty-${++this.sequence}`, deviceId: d.id, source, port, line: name, cli: this.factory(d.id), method, phase: method === 'none' ? 'ready' : (method === 'local'||method==='aaa') && !payload.username ? 'username' : 'password', username: payload.username, attempts: 0, expires: this.engine.clock.now() + (line.execTimeout === 0 ? Number.MAX_SAFE_INTEGER : (line.execTimeout ?? 600) * 1000) };
+      session.cli.setAccessContext?.(session.id,source,port);
       if(port===22)session.authDeadline=this.engine.clock.now()+(d.config.features.ssh?.timeout??120)*1000;
       this.sessions.set(session.id, session); (d.runtime.features.managementSessions ??= []).push(session.id);
       if(Number.isInteger(payload.columns)&&payload.columns>0&&payload.columns<=512)session.cli.setViewportColumns?.(payload.columns);

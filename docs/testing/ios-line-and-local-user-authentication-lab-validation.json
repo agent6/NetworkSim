@@ -1,0 +1,88 @@
+{
+  "lab": "IOS Line and Local User Authentication",
+  "catalogId": "ios-line-and-local-user-authentication",
+  "group": "CCNP ENCOR",
+  "section": "Security",
+  "date": "2026-10-30",
+  "nodes": 4,
+  "links": 3,
+  "tasks": 18,
+  "topology": "PC1 is the permitted management source on R1 Gi0/0. PC2 reaches R1 Gi0/2 but is denied by a VTY-only source ACL. Both retain independent routed data access to SRV1 behind Gi0/1.",
+  "implemented": [
+    "New sixth ENCOR section Security with one lab and an accessible singular count; original CCNA Local User Authentication stays in Services & Security.",
+    "Temporary shared console and Telnet line-password stage requires an actual rejected password and successful login in each same session.",
+    "Protected console EXEC logout now clears identity/privilege, waits for Return and restarts configured line/local authentication. Ctrl-C cannot skip a local login prompt.",
+    "Local console authentication exercises both privilege1 operator and privilege15 administrator with real failed/successful hidden-password input.",
+    "SSH operator authentication requires wrong-password rejection, actual privilege1 login and configuration denial. The separate enable secret rejects the matching legacy enable password, elevates to15 and disable returns to1.",
+    "Administrator SSH enters privilege15 directly. SSH-only VTY transport must then refuse a real Telnet handshake.",
+    "All sixteen VTYs require local login, SSH-only transport, no shared password or line privilege bypass, a five-minute timeout and the exact LOCAL-MGMT source ACL.",
+    "PC2 VTY refusal requires actual access-class enforcement, fresh PC2 server echo replies and a fresh permitted PC1 administrator login; interface ACL shortcuts cannot satisfy final topology.",
+    "A temporary ten-second VTY timer expires an authenticated session despite normal status polling. Typed commands refresh activity; zero disables expiry. The lab restores five minutes and requires fresh operator authentication.",
+    "Both SSH identities must log out and no VTY sessions remain for clean closure and startup-save credit.",
+    "Credential-free console/VTY/enable/denial/timeout/closure observations are bounded256 per current device runtime. Read-only snapshots are copied; portable save/load discards sessions and observations while retaining earned achievements.",
+    "Practice starts0/18. Completed reference has seven live configuration tasks and no pre-earned login, traffic or incident evidence. Unknown criteria, foreign roots and missing teaching interfaces fail closed."
+  ],
+  "scope": [
+    "IOS line passwords, local users and enable authentication without aaa new-model; centralized AAA is covered by separate catalog labs.",
+    "SSH cryptography and IOS password hashing are logical teaching models. Console automatic idle expiry is not exercised or newly configured by this lab; actual VTY expiry is verified.",
+    "Primary Cisco documentation reviewed; no new live CML capture was performed.",
+    "Terminal styling, existing UI theme and node artwork are unchanged."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE: Basic router configuration / configuring command-line access",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/secure-routers/sec-8100-series/software-config-guide/cisco-8100-series-secure-routers-software-configuration-guide/basic_router_config.html"
+    },
+    {
+      "title": "Cisco IOS XE Software Hardening Guide: local authentication, VTY control and EXEC timeout",
+      "url": "https://sec.cloudapps.cisco.com/security/center/resources/IOS_XE_hardening"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "nativeTests": 2739,
+    "nativePassed": 2739,
+    "nativeFailed": 0,
+    "nativeDurationMs": 217269.878125,
+    "newLabTests": 23,
+    "focusedManagementAndOriginalLocalAuthTests": 40,
+    "browserChecks": [
+      "light 320px: six ENCOR sections with Security=1 and preserved CCNA authentication lab; four nodes/three links/18 tasks and four-row plan; actual shared console/Telnet login then local console and SSH migration; hidden passwords, rejected credentials, distinct privileges, configuration denial, enable-secret precedence, disable, admin SSH and clean logout; fifteen authentication/configuration tasks without pre-earned transport/source/timeout incidents; offline YAML preserves achievements and saved credentials while runtime clears; fresh authenticated console after reopening; seven live tasks only in completed reference; responsive guide, fitted diagram and unchanged golden CLI styling; cancel/save-copy protection.",
+      "dark 320px: six ENCOR sections with Security=1 and preserved CCNA authentication lab; four nodes/three links/18 tasks and four-row plan; actual shared console/Telnet login then local console and SSH migration; hidden passwords, rejected credentials, distinct privileges, configuration denial, enable-secret precedence, disable, admin SSH and clean logout; all18 with Telnet refusal, PC2 VTY denial while routed ICMP works, fresh PC1 management and actual VTY idle expiry/recovery; offline YAML preserves achievements and saved credentials while runtime clears; fresh authenticated console after reopening; seven live tasks only in completed reference; responsive guide, fitted diagram and unchanged golden CLI styling; cancel/save-copy protection.",
+      "light 1440px: six ENCOR sections with Security=1 and preserved CCNA authentication lab; four nodes/three links/18 tasks and four-row plan; actual shared console/Telnet login then local console and SSH migration; hidden passwords, rejected credentials, distinct privileges, configuration denial, enable-secret precedence, disable, admin SSH and clean logout; all18 with Telnet refusal, PC2 VTY denial while routed ICMP works, fresh PC1 management and actual VTY idle expiry/recovery; offline YAML preserves achievements and saved credentials while runtime clears; fresh authenticated console after reopening; seven live tasks only in completed reference; responsive guide, fitted diagram and unchanged golden CLI styling; cancel/save-copy protection.",
+      "dark 1440px: six ENCOR sections with Security=1 and preserved CCNA authentication lab; four nodes/three links/18 tasks and four-row plan; actual shared console/Telnet login then local console and SSH migration; hidden passwords, rejected credentials, distinct privileges, configuration denial, enable-secret precedence, disable, admin SSH and clean logout; fifteen authentication/configuration tasks without pre-earned transport/source/timeout incidents; offline YAML preserves achievements and saved credentials while runtime clears; fresh authenticated console after reopening; seven live tasks only in completed reference; responsive guide, fitted diagram and unchanged golden CLI styling; cancel/save-copy protection.",
+      "light 390px: six ENCOR sections with Security=1 and preserved CCNA authentication lab; four nodes/three links/18 tasks and four-row plan; actual shared console/Telnet login then local console and SSH migration; hidden passwords, rejected credentials, distinct privileges, configuration denial, enable-secret precedence, disable, admin SSH and clean logout; fifteen authentication/configuration tasks without pre-earned transport/source/timeout incidents; offline YAML preserves achievements and saved credentials while runtime clears; fresh authenticated console after reopening; seven live tasks only in completed reference; responsive guide, fitted diagram and unchanged golden CLI styling; cancel/save-copy protection.",
+      "dark 390px: six ENCOR sections with Security=1 and preserved CCNA authentication lab; four nodes/three links/18 tasks and four-row plan; actual shared console/Telnet login then local console and SSH migration; hidden passwords, rejected credentials, distinct privileges, configuration denial, enable-secret precedence, disable, admin SSH and clean logout; fifteen authentication/configuration tasks without pre-earned transport/source/timeout incidents; offline YAML preserves achievements and saved credentials while runtime clears; fresh authenticated console after reopening; seven live tasks only in completed reference; responsive guide, fitted diagram and unchanged golden CLI styling; cancel/save-copy protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "6e9075c632992f1b1dba98214d26e8d21d6de2c176435263272e8ae59aef59d5",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks; final rebuilt bytes match all browser-tested copies.",
+    "terminal": "Golden fixtures match both light/dark themes and desktop/mobile full-screen console behavior. Hidden authentication input and absence of secret echo in PC transcripts are verified.",
+    "visualInspection": [
+      ".cache/ios-line-auth-catalog-browser/console-light-1440.png",
+      ".cache/ios-line-auth-catalog-browser/topology-dark-1440.png",
+      ".cache/ios-line-auth-catalog-browser/guide-light-320.png",
+      ".cache/ios-line-auth-catalog-browser/guide-dark-320.png",
+      ".cache/ios-line-auth-catalog-browser/console-dark-320.png",
+      ".cache/ios-line-auth-catalog-browser/topology-light-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "All18 tasks passed through normal controls on1440px/light and320px/dark. Four other theme/viewport cases reached15 initial authentication/configuration tasks without pre-earned transport/source/timeout incidents.",
+    "Six file:// cases block external HTTP(S) requests. Two sharing cases preserve current host/path/query/workspace and confirm the original CCNA lab remains available. Seven generic catalog regression checks also passed, including Security1, Network Assurance10 and Layer3 nine labs.",
+    "Browser clock advances normal application animation frames; no simulator state, credentials, network responses or earned outcomes were injected.",
+    "Live guide evaluation generates no ACL hits or packets. Configuration remains live, observations persist only after actual transitions, and saved YAML reopens with a fresh authenticated console."
+  ]
+}
