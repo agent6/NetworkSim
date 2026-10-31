@@ -353,6 +353,7 @@ export class Simulator {
     if(b.kind==='netflow-export'){result.netflowVersion=b.version;result.netflow={monitor:b.monitor,record:b.record,version:b.version,sequence:b.sequence,records:clone(b.records.slice(0,20))};}
     if(b.kind==='control-plane'&&b.payload?.kind==='vrrp')Object.assign(result,{messageType:'vrrp-advertisement',fhrpGroup:b.payload.group,fhrpPriority:b.payload.priority,fhrpState:b.payload.state,fhrpVersion:b.payload.version,advertisementTime:b.payload.advertisementTime});
     if(b.kind==='control-plane'&&b.payload?.wireless)Object.assign(result,{messageType:'capwap-'+b.payload.type,innerFrameId:b.payload.frame?.id,vlan:b.payload.vlan,ssid:b.payload.wlan});
+    if(b.kind==='control-plane'&&b.payload?.protocol==='eigrp-dual')result.eigrp={family:b.payload.family,asn:b.payload.asn,operation:b.payload.operation,network:b.payload.network,prefix:b.payload.prefix};
     if (p.fragment) Object.assign(result, { fragmentOffset: p.fragment.offset, moreFragments: p.fragment.more, fragmentId: p.fragment.id });
     if (p.protocol === 'tcp') {
       const flags: Record<string, string> = { 'tcp-syn': 'SYN', 'tcp-syn-ack': 'SYN ACK', 'tcp-ack': 'ACK', 'tcp-request': 'PSH ACK', 'tcp-request-segment':'PSH ACK','tcp-request-ack':'ACK', 'tcp-data': 'PSH ACK', 'tcp-data-ack': 'ACK', 'tcp-fin': 'FIN ACK', 'tcp-fin-ack': 'FIN ACK', 'tcp-rst': 'RST' }; result.tcpFlags = flags[b.kind];

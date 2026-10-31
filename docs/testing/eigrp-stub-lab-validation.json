@@ -1,0 +1,89 @@
+{
+  "lab": "EIGRP Stub Configuration and Troubleshooting",
+  "catalogId": "eigrp-stub-configuration-and-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 6,
+  "links": 6,
+  "tasks": 14,
+  "topology": "R1/R2 distribution hubs with a direct core link and dual-homed BR1. PC1 is behind R2, PC2 behind BR1 and SRV1 behind R1. AS100 is prepared; only BR1 is intended to be a connected/summary stub. Practice begins receive-only. R1 Loopback0 198.51.100.1/32 is the query target; BR1 Loopback0 192.168.31.1/24 combines with its192.168.30.0/24 LAN for the controlled summary exercise.",
+  "implemented": [
+    "Fourteenth ENARSI Layer3 Technologies entry with independent practice/completed documents, six-row addressing/role plan, staged guide, working reference and verification commands and current-origin/path/query permalinks. Existing entries remain; ENCOR39 and ENCOR Layer3 nine are preserved.",
+    "Initial diagnosis requires three real SRV1-to-branch echo requests dropped No route at R1 and three delivered PC1 server replies as a positive hub control. BR1 retains two peers and a received server route while its own branch prefixes are absent at both hubs. Show-only output, fewer probes and unrelated outages cannot fabricate this observation.",
+    "Repair uses classic AS100 eigrp stub connected summary only on BR1, with equivalent connected/summary option orders accepted, nonstub hubs, exact network membership, router IDs, passive LANs and active uplinks. Bare eigrp stub defaults to connected/summary. Internal AD90 routes are checked in actual RIB/CEF: server paths7680, branch routes7680 atR1 and10240 atR2. Learned hub routes must not be advertised back through BR1 as transit candidates.",
+    "Fixed stub CLI canonicalization: supported abbreviations store full option names; duplicate selectors and receive-only mixed with other options reject before mutation. No form removes the policy. Detailed neighbor output now identifies the remote peer scoped stub policy and suppressed queries, including when the local hub itself is nonstub.",
+    "Four actual host/server directions require three accepted requests and parent-linked delivered replies over intended router egresses. PC2 HTTP needs the complete actual200 service body across BR1/R1. A wrong200 body, one direction or disabled server cannot satisfy the traffic/HTTP goals.",
+    "Receive-only incident requires real branch route withdrawal plus failed server-to-branch probes and working PC1 control probes. Restoring default policy must be followed by fresh replies in all four host directions.",
+    "Summary-only without a configured summary withdraws branch prefixes. After observed loss, actual /23 manual summaries on both BR1 uplinks advertise192.168.30.0/23 instead of specifics and install local AD5 Null0. Branch/server delivery and PC1-to-BR1-loopback delivery must work. Restoring defaults/removing summaries plus fresh four-way traffic completes the exercise.",
+    "Core-link failure under stub policy removes R2 server reachability but leaves branch/server delivery operational. Temporarily removing BR1 stub permits real hub transit viaBR1 at metric33280. Reapplying stub while the core stays down must withdraw that path, with actual PC1 failures/PC2 successes. Restore core and four-way delivery; leaving BR1 nonstub fails live health.",
+    "Query comparison uses actual received QUERY frames for198.51.100.1/32 with family/AS/operation/prefix metadata. A nonstub branch must first receive such a query during R1 loopback withdrawal. With stub restored, a real R2-to-R1 query exchange must occur while BR1 receives none for that prefix. Blocking all QUERY packets cannot impersonate suppression. Restore the loopback and prove its actual delivery from both PCs plus four host/server directions.",
+    "Branch preferred-uplink failure preserves its stub role and installs the R2 server path at33280. Actual branch/server requests in both directions traverse BR1\u2013R2\u2013R1 while the hub control works. Restore preferred link and prove fresh four-way delivery. Configuration-only toggles do not earn any controlled exercise.",
+    "Six live and eight historical criteria produce practice0/14, original diagnosis1/14, baseline9/14 and full14/14. The completed reference supplies six live checks without invented diagnosis/traffic/incidents. Per-attempt config/route epochs and ordinary notifications record CLI evidence with the guide closed; query epochs retain configuration boundaries across actual route withdrawals.",
+    "YAML retains earned observations while dynamic tables rebuild; new practice resets history. Canonical config replays into clean routers, and saved reload repairs an unsaved receive-only change. Static shortcuts, wrong gateways, rewiring, changed roles and unsaved drift revoke live health/save. Layout, terminal styling/fonts/controls and artwork remain unchanged."
+  ],
+  "scope": "Classic IOS IPv4 internal EIGRP connected/summary, receive-only, no stub, query suppression and dual-homed nontransit behavior. Only these stub options are advertised by the lab. Static/redistributed selectors, leak maps, named/IPv6 stub scenarios, timed convergence equivalence and binary/wire compatibility are excluded. No fresh CML capture is claimed. Existing peer configuration/eligibility provides stub capability and scoped display; no wire-encoded stub capability exchange was added. DUAL trace metadata annotates actual packets and changes no forwarding behavior. See docs/audits/eigrp-update-fidelity.md for protocol limits.",
+  "references": [
+    {
+      "title": "Cisco IOS XE17 EIGRP Stub Routing",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_ire-eigrp-stub-rtg.html",
+      "use": "Connected/summary defaults, receive-only, nontransit design and query suppression."
+    },
+    {
+      "title": "Cisco EIGRP command reference: eigrp stub",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_eigrp/command/ire-cr-book/ire-a1.html",
+      "use": "Stub option semantics and receive-only exclusivity."
+    },
+    {
+      "title": "Cisco Borderless Campus design guide",
+      "url": "https://www.cisco.com/c/en/us/td/docs/solutions/Enterprise/Campus/Borderless_Campus_Network_1-0/Borderless_Campus_1-0_Design_Guide/BN_Campus_Technologies.html",
+      "use": "Remote Stub Peer Advertising and Suppressing queries fields in detailed neighbor output."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 24,
+    "focusedControlAndShowTests": 84,
+    "nativeTests": 3199,
+    "nativeFailures": 0,
+    "nativeDurationMs": 422734.022167,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=14; six nodes/six links/14 tasks/six-row plan; real initial receive-only diagnosis with failed branch and working hub traffic, correct connected/summary stub policy, three neighbor pairs, internal AD90 routes and all four delivered host/server directions plus full PC2 HTTP; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark 320px: ENARSI Layer 3 Technologies=14; six nodes/six links/14 tasks/six-row plan; real initial receive-only diagnosis with failed branch and working hub traffic, correct connected/summary stub policy, three neighbor pairs, internal AD90 routes and all four delivered host/server directions plus full PC2 HTTP; all14 including observed receive-only repair, summary construction, nontransit comparison, actual query suppression and branch uplink failover; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=14; six nodes/six links/14 tasks/six-row plan; real initial receive-only diagnosis with failed branch and working hub traffic, correct connected/summary stub policy, three neighbor pairs, internal AD90 routes and all four delivered host/server directions plus full PC2 HTTP; all14 including observed receive-only repair, summary construction, nontransit comparison, actual query suppression and branch uplink failover; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=14; six nodes/six links/14 tasks/six-row plan; real initial receive-only diagnosis with failed branch and working hub traffic, correct connected/summary stub policy, three neighbor pairs, internal AD90 routes and all four delivered host/server directions plus full PC2 HTTP; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=14; six nodes/six links/14 tasks/six-row plan; real initial receive-only diagnosis with failed branch and working hub traffic, correct connected/summary stub policy, three neighbor pairs, internal AD90 routes and all four delivered host/server directions plus full PC2 HTTP; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=14; six nodes/six links/14 tasks/six-row plan; real initial receive-only diagnosis with failed branch and working hub traffic, correct connected/summary stub policy, three neighbor pairs, internal AD90 routes and all four delivered host/server directions plus full PC2 HTTP; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with fourteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with fourteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with fourteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with fourteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with fourteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with fourteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "b94ee83b8bfae110fe97c4caa1b24daf95fd0c25e404a463f12db55f8917e030",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging. Root/dist and all browser-tested artifacts match byte for byte.",
+    "terminal": "Golden terminal fixture matches fonts/background/foreground/cursor/tabs/controls in both themes and desktop/mobile.",
+    "verificationCommands": "Every published IOS/Windows query, positive probe, trace and reference command executes. Native cases verify actual UPDATE delivery, query packet positive/negative controls, rendered config replay, reload and invalid-command transactionality.",
+    "visualInspection": [
+      ".cache/est-catalog-browser/topology-light-1440.png",
+      ".cache/est-catalog-browser/guide-light-1440.png",
+      ".cache/est-catalog-browser/console-light-1440.png",
+      ".cache/est-catalog-browser/guide-dark-320.png",
+      ".cache/est-catalog-browser/console-dark-320.png",
+      ".cache/est-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full fourteen-task normal UI workflows complete at1440px/light and320px/dark. Four other theme/viewport scenarios complete nine baseline tasks and leave five controlled exercises unearned. Each exports/imports actual YAML in a fresh offline profile and loads a reference with six live goals only.",
+    "Six file:// scenarios block external HTTP(S), use embedded assets and retain progress. Two shared-link checks preserve current origin/path/query without replacing the workspace. Seven generic catalog checks preserve categories/sections/counts, prerequisites and save/cancel/import behavior.",
+    "Browser clock advances ordinary application frames. No routes, neighbors, packet results or completions are injected. Clipboard stubbing is limited to link-copy verification."
+  ]
+}

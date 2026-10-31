@@ -684,7 +684,13 @@ function eigrpNeighbors(e: Simulator, d: Device, protocol: EigrpProtocol, config
     const tail = pad(shortInterfaceName(n.interface), 23) + lpad(hold, 4) + ' ' + pad(uptime(now - (n.establishedAt ?? hello?.since ?? now)), 9) + lpad(srtt, 4) + lpad(rto, 6) + lpad(queue, 3) + '  ' + Number(update?.receivedSequence ?? 0);
     if (protocol === 'eigrp6') lines.push(pad(h, 4) + pad('Link-local address:', 24) + tail, '    ' + n.address.toUpperCase());
     else lines.push(pad(h, 4) + pad(n.address, 24) + tail);
-    if (detail) lines.push(`   Version 23.0/2.0, Retrans: ${Number(update?.retries ?? 0)}, Retries: ${Number(update?.retries ?? 0)}, Prefixes: ${Number(update?.receivedPrefixes ?? 0)}`, '   Topology-ids from peer - 0');
+    if (detail) {
+      lines.push(`   Version 23.0/2.0, Retrans: ${Number(update?.retries ?? 0)}, Retries: ${Number(update?.retries ?? 0)}, Prefixes: ${Number(update?.receivedPrefixes ?? 0)}`, '   Topology-ids from peer - 0');
+      const peer=e.getDevice(n.deviceId),peerVrf=peer?.config.interfaces[n.peerInterface??'']?.vrf;
+      const remote=peer?routingConfig(peer,protocol,peerVrf):undefined;
+      const stub=Array.isArray(remote?.stub)?remote.stub:remote?.stub?['connected','summary']:[];
+      if(stub.length)lines.push(`   Stub Peer Advertising ( ${stub.map((s:string)=>s.toUpperCase()).join(' ')} ) Routes`,'   Suppressing queries');
+    }
   }
   if (detail) lines.push(`Max Nbrs: 0, Current Nbrs: ${indexed.length}`);
   return lines;
