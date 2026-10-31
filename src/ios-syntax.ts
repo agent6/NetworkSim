@@ -371,6 +371,8 @@ function formsFor(path: string, context: IosSyntaxContext): Form[] | undefined {
       [word('ipv6','IPv6 specific information'),word('next-hop'),argument('X:X:X:X::X','IPv6 next-hop address',isIPv6)],
       ...['metric','tag','local-preference'].map(value=>[word(value),number(0,4294967295,'Value')]),
       [word('weight'),number(0,65535,'BGP weight')],
+      ...choices(['igp','incomplete']).map(form=>[word('origin','BGP origin code'),...form]),
+      [word('origin'),word('egp'),number(1,65535,'Remote EGP autonomous system')],
       ...choices(['type-1','type-2']).map(form=>[word('metric-type'),...form]),
       [word('as-path'),word('prepend'),{...number(1,4294967295,'AS number'),repeat:true}],
       [word('community'),tail('Community values or none [additive]')],

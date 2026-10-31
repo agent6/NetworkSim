@@ -1,0 +1,91 @@
+{
+  "lab": "BGP Path Selection and Attributes",
+  "catalogId": "bgp-path-selection-and-attributes",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 8,
+  "links": 8,
+  "tasks": 20,
+  "topology": "R1 AS65001 has two providers: R2 AS65002 and R3 AS65003, each connected to service origin R4 AS65004. R5 AS65001 is an iBGP observer directly connected to R1; reciprocal next-hop-self preserves reachability. PC1 uses R1, PC2 uses R5 and SRV1 uses R4. PC1 and PC2 /24s are prepared; practice begins with only R4 service origination missing.",
+  "implemented": [
+    "Thirty-second ENARSI entry, with independent practice/reference attempts, eight-row addressing plan, twenty typed goals, ordinary IOS/Windows instructions and current-domain/path/query permalinks. Existing UI, icons, terminal styling and single-HTML offline use remain intact.",
+    "Eight primary observed stages cover equal-attribute baseline forwarding; default MED scope across different neighboring AS numbers; always-compare-med; shorter AS_PATH overriding MED; origin i beating e; origin e beating incomplete; LP200 overriding a longer path; and Cisco weight300 overriding the competing LP200 path. Both candidate attributes and actual selected RIB/CEF forwarding are required.",
+    "Ten directed peer views receive actual TCP179 OPEN/KEEPALIVE/UPDATE. Policy and soft-refresh stages preserve channel identities. R1 installs one eBGP AD20 service route; R5 receives only R1 selected path, preserves the AS_PATH without inserting AS65001, uses next hop10.0.15.1 and installs iBGP AD200.",
+    "Local preference is propagated to the iBGP observer: LP200 or250 when R3 wins, LP100 when local R1 weight selects R2. Weight is not advertised, so R5 receives weight0. External advertisements omit both LOCAL_PREF and weight. Service-scoped prefix matches plus permit20 preserve the client/control prefixes.",
+    "The community exercise first delivers standard community65003:250 on the non-best R3 candidate while weight300 still selects R2. After actual six-direction traffic and both HTTP pages, matching PL-SERVICE and community FAVOR sets LP250, selects R3 and propagates LP250/community to R5. Fresh final weighted forwarding is required after cleanup.",
+    "Eligibility filtering rejects only the service prefix from R2 while its TCP/BGP session and raw received advertisement remain intact. Weight300 stays configured but cannot select an ineligible route. A separate physical Gi0/1 shutdown loses exactly two directed peer views; both clients forward over R3 and restore the weighted path after no shutdown.",
+    "Implemented route-map set origin igp, egp AS1..65535 and incomplete, including help/Tab, argument validation, replacement and no-form. Origin changes apply to inbound policy, outbound advertisements and redistributed local routes before real UPDATE delivery. Setting an EGP origin code does not start an EGP protocol or change the original source/AS_PATH. Export policy does not mutate the provider local received path.",
+    "Seven live and thirteen observed goals: practice0; baseline/final workflow11; full20; reference only seven live without pre-earned observations. Six traffic directions require three unique original ICMP requests each, destination acceptance, selected-provider physical egress/receipt and parent-correlated replies. HTTP requires complete reassembled responses from both clients and actual request forwarding through the selected provider. Per-state epochs reject stale traffic; YAML retains earned history and rebuilds runtime sessions."
+  ],
+  "scope": "IOS IPv4 unicast BGP core path attributes, two eBGP providers, one iBGP observer, standard communities and controlled route filtering/failover. Cisco primary documentation reviewed. No fresh CML capture, universal IOS/NX-OS interoperability, complete binary BGP encoding, every late tie-breaker, extended-cost communities, confederations or complete RFC event matrix is claimed.",
+  "references": [
+    {
+      "title": "Cisco: Select BGP Best-path Algorithm",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/border-gateway-protocol-bgp/13753-25.html"
+    },
+    {
+      "title": "Cisco: BGP Commands O through show bgp, set origin",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_bgp/command/irg-cr-book/bgp-n1.pdf"
+    },
+    {
+      "title": "Cisco: Configure an Upstream Provider Network with BGP Community Values",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/border-gateway-protocol-bgp/28784-bgp-community.html"
+    },
+    {
+      "title": "Cisco: BGP Commands C through I, ip community-list",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_bgp/command/irg-cr-book/bgp-c1.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "native": {
+      "command": "node --test --test-concurrency=4 tests/*.test.ts",
+      "tests": 3659,
+      "pass": 3659,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "newCatalogTests": 31,
+      "relatedFocusedTests": 66,
+      "additionalTargetedChecks": 2
+    },
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=32; eight nodes/eight links/20 tasks/eight-row two-provider and iBGP-observer plan; ten received OPEN/KEEPALIVE peer views; actual six-direction client/control traffic and complete HTTP from both clients; correct R1 AD20 and R5 AD200 routes and unchanged iBGP AS path; eleven baseline/final tasks with six middle stages and three exercises unearned; actual offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=32; eight nodes/eight links/20 tasks/eight-row two-provider and iBGP-observer plan; ten received OPEN/KEEPALIVE peer views; actual six-direction client/control traffic and complete HTTP from both clients; correct R1 AD20 and R5 AD200 routes and unchanged iBGP AS path; eleven baseline/final tasks with six middle stages and three exercises unearned; actual offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=32; eight nodes/eight links/20 tasks/eight-row two-provider and iBGP-observer plan; ten received OPEN/KEEPALIVE peer views; actual six-direction client/control traffic and complete HTTP from both clients; correct R1 AD20 and R5 AD200 routes and unchanged iBGP AS path; all20 including cross-AS MED scope/comparison, AS length, i/e/incomplete origin policy, propagated LP, local-only weight, tag-only/community-match HTTP, eligibility filtering and physical failover with fresh restored traffic; actual offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=32; eight nodes/eight links/20 tasks/eight-row two-provider and iBGP-observer plan; ten received OPEN/KEEPALIVE peer views; actual six-direction client/control traffic and complete HTTP from both clients; correct R1 AD20 and R5 AD200 routes and unchanged iBGP AS path; all20 including cross-AS MED scope/comparison, AS length, i/e/incomplete origin policy, propagated LP, local-only weight, tag-only/community-match HTTP, eligibility filtering and physical failover with fresh restored traffic; actual offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=32; eight nodes/eight links/20 tasks/eight-row two-provider and iBGP-observer plan; ten received OPEN/KEEPALIVE peer views; actual six-direction client/control traffic and complete HTTP from both clients; correct R1 AD20 and R5 AD200 routes and unchanged iBGP AS path; eleven baseline/final tasks with six middle stages and three exercises unearned; actual offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=32; eight nodes/eight links/20 tasks/eight-row two-provider and iBGP-observer plan; ten received OPEN/KEEPALIVE peer views; actual six-direction client/control traffic and complete HTTP from both clients; correct R1 AD20 and R5 AD200 routes and unchanged iBGP AS path; eleven baseline/final tasks with six middle stages and three exercises unearned; actual offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "645e96eb2f05df862c9dace9a488cc130cd47d98eea5501371e0bc54e589b4f4",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist and all browser-tested offline copies match byte for byte.",
+    "terminal": "Golden terminal fixture matches both themes at mobile and desktop sizes.",
+    "visualInspection": [
+      ".cache/bpa-catalog-browser/topology-light-1440.png",
+      ".cache/bpa-catalog-browser/guide-light-1440.png",
+      ".cache/bpa-catalog-browser/console-light-1440.png",
+      ".cache/bpa-catalog-browser/topology-dark-320.png",
+      ".cache/bpa-catalog-browser/guide-dark-320.png",
+      ".cache/bpa-catalog-browser/console-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full20-task UI workflows at dark320 and light1440; four other theme/width cases earn baseline11 with six middle primary stages and three exercises unearned. All export/import actual YAML into an empty offline profile, verify reference live goals and save/cancel protection.",
+    "Six file:// cases block HTTP(S). Two mocked-host permalink checks preserve current domain/path/query/workspace. Seven generic catalog/prerequisite checks retain prior labs. Browser clocks run ordinary application frames without injected routes, peers, attributes, packets or completion flags.",
+    "Native checks additionally cover blocked UPDATE delivery, inbound origin policy, redistributed origin policy, no-form/replacement/invalid-input atomicity, channel stability, stale or insufficient traffic, missing second HTTP client, rendered replay, saved IOS reload, bounded imported criteria, absent/foreign roots, static shortcuts and ECMP exclusion."
+  ]
+}
