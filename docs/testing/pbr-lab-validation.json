@@ -1,0 +1,86 @@
+{
+  "lab": "Policy-Based Routing Configuration and Verification",
+  "catalogId": "policy-based-routing-configuration-and-verification",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 7,
+  "links": 7,
+  "tasks": 14,
+  "topology": "Two client LANs enter R1 independently. The prepared RIB prefers R1 \u2192 R2 \u2192 R4 for SRV1 and a diagnostic R4 loopback. A second R1 \u2192 R3 \u2192 R4 path supplies the adjacent policy next hop10.0.13.2. Static routes and independent return paths are prepared; no routing protocol or server backend is added.",
+  "implemented": [
+    "Seventh ENARSI Layer3 lab with independent practice/completed variants, seven-row addressing/role plan, staged guide, tested reference commands, accessible counts and current-site domain/path/query permalinks. Existing ENARSI and39 ENCOR entries plus other categories remain available.",
+    "The normal baseline requires three actual client/server replies on each client through R2 with no classifier or policy configured. Correct extended ACLs, ordered route-map deny10/permit20 and two ingress bindings then steer only PC1 server requests through R3 while R1 RIB and ordinary CEF lookup continue to point to R2.",
+    "Selected traffic proof correlates three policy events with the same request IDs, correct ingress, R1 egress, downstream router sends, destination acceptance and parent-linked delivered replies. Real selected counters must advance, but counters or only two requests cannot fabricate the outcome.",
+    "PC1 diagnostic requests match route-map deny10 and are delivered using R2 normal forwarding. PC2 server requests match the classification ACL deny, do not match the permit clause and also remain delivered through R2. These checks distinguish classification and policy exemptions from interface packet filtering.",
+    "Ingress-binding removal and a nonmatching classifier source each require three real normal-path replies before restoration and fresh policy-path replies. Configuration-only toggles cannot count as repairs.",
+    "Shutting R1 Gi0/2 makes the directly adjacent policy next hop unavailable; successful traffic uses the R2 RIB route until restoration and fresh R3 delivery. A native counterfactual leaves that link up but disables R3 forwarding: policy is still selected and the failed delivery cannot be credited as end-to-end tracked fallback.",
+    "The default-next-hop exercise requires three observed stages: normal R2 forwarding under an explicit service /24, policy R3 forwarding when only a normal0/0 remains, and new R3 forwarding after restoring the explicit /24 and ordinary set ip next-hop action. Skipping the explicit-prefix comparison cannot earn it.",
+    "The local-policy exercise first proves router-originated ping uses R2 despite interface policy, then proves a temporary LOCAL-PBR map redirects actual router requests through R3. Removing the temporary global binding and map plus fresh intended client steering complete restoration. Skipping the normal local-origin stage cannot earn it.",
+    "Both clients must receive complete actual HTTP200 responses on their respective selected/normal request paths. Fourteen tasks combine four live configuration/state/save goals and ten observations. Practice starts0/14; completed reference supplies4/14 with no fabricated traffic or counters. Earned observations survive export/import, while health and startup equality revoke on drift.",
+    "Per-attempt epochs and normal simulator notifications capture synchronous CLI evidence with a closed guide. Exact route sets, canonical links, gateways, input bindings and policy clauses reject shortcuts and drift. No simulation engine, protocol implementation, global UI, terminal styling or artwork changed."
+  ],
+  "scope": "Classic IOS IPv4 PBR with directly connected next hops. Native/browser validation does not claim a fresh CML capture. This lab does not configure recursive policy next hops, IP SLA verify-availability, VRFs, IPv6 PBR or NX-OS. Adjacent-link fallback is explicitly distinguished from remote health tracking.",
+  "references": [
+    {
+      "title": "Cisco: Configure Policy-based Routing with Next-Hop Commands",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/ip-routed-protocols/47121-pbr-cmds-ce.html",
+      "use": "Ordinary versus default policy next hops and fallback to destination routing."
+    },
+    {
+      "title": "Cisco: Policy-Based Routing Default Next-Hop Routes",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-routing/b-ip-routing/m_iri-pbr-default-nexthop-route.html",
+      "use": "Explicit-prefix versus default-route precedence."
+    },
+    {
+      "title": "Cisco: Policy-Based Routing Configuration Guide",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/c9000/lyr3-fwd/pbr/policy-based-routing-configuration-guide/policy-based-routing.html",
+      "use": "Route-map matching, deny/nonmatch processing and next-hop actions; platform restrictions remain outside this IOS-router exercise."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 22,
+    "nativeTests": 3040,
+    "nativeFailures": 0,
+    "nativeDurationMs": 276210.503875,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=7; seven nodes/seven links/14 tasks and seven-row plan; actual normal baseline, selected R3 path with unchanged R2 RIB/CEF, deny exemption, ACL-denied nonmatch, both HTTP request paths and real policy counters; nine setup/state/traffic tasks with five staged outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=7; seven nodes/seven links/14 tasks and seven-row plan; actual normal baseline, selected R3 path with unchanged R2 RIB/CEF, deny exemption, ACL-denied nonmatch, both HTTP request paths and real policy counters; all14 including ingress-binding and classifier repairs, adjacent-link fallback, default-next-hop comparisons and local router policy; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=7; seven nodes/seven links/14 tasks and seven-row plan; actual normal baseline, selected R3 path with unchanged R2 RIB/CEF, deny exemption, ACL-denied nonmatch, both HTTP request paths and real policy counters; all14 including ingress-binding and classifier repairs, adjacent-link fallback, default-next-hop comparisons and local router policy; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=7; seven nodes/seven links/14 tasks and seven-row plan; actual normal baseline, selected R3 path with unchanged R2 RIB/CEF, deny exemption, ACL-denied nonmatch, both HTTP request paths and real policy counters; nine setup/state/traffic tasks with five staged outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=7; seven nodes/seven links/14 tasks and seven-row plan; actual normal baseline, selected R3 path with unchanged R2 RIB/CEF, deny exemption, ACL-denied nonmatch, both HTTP request paths and real policy counters; nine setup/state/traffic tasks with five staged outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=7; seven nodes/seven links/14 tasks and seven-row plan; actual normal baseline, selected R3 path with unchanged R2 RIB/CEF, deny exemption, ACL-denied nonmatch, both HTTP request paths and real policy counters; nine setup/state/traffic tasks with five staged outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with seven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with seven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with seven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with seven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with seven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with seven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "e39a626994833aa925d6361dd588d6cff5b7d06a21a9564eab79516466922ae7",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Root, dist and every browser-tested copy have identical bytes.",
+    "terminal": "Golden console fixtures match existing fonts, background, foreground, cursor, tabs and controls in both themes and desktop/mobile modes.",
+    "verificationCommands": "Every published IOS/Windows query and reference command executes. Assertions cover ordinary RIB/CEF, policy bindings, actual route-map counters, client and diagnostic success, service traces and normal router repeat3 success.",
+    "visualInspection": [
+      ".cache/pbr-catalog-browser/topology-light-1440.png",
+      ".cache/pbr-catalog-browser/guide-light-1440.png",
+      ".cache/pbr-catalog-browser/console-light-1440.png",
+      ".cache/pbr-catalog-browser/guide-dark-320.png",
+      ".cache/pbr-catalog-browser/console-dark-320.png",
+      ".cache/pbr-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full14-task normal UI workflows complete at1440px/light and320px/dark. Four other theme/viewport cases complete nine setup/state/traffic tasks and leave five staged outcomes unearned. Every case exports/imports actual YAML into a fresh offline profile, then loads a reference with four live tasks only.",
+    "Six file:// cases block HTTP(S), use embedded assets and preserve earned progress. Two shared-link cases retain current domain/path/query and do not replace the workspace just by opening the guide. Seven generic catalog checks retain categories, prerequisites, save/cancel protection and existing workflows.",
+    "Browser clock advancement drives normal application frames; no route, packet outcome, policy counter or completion result is injected. Clipboard stubbing is limited to share-link verification."
+  ]
+}
