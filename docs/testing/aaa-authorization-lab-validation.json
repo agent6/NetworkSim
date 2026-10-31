@@ -1,0 +1,85 @@
+{
+  "lab": "AAA Authorization",
+  "catalogId": "aaa-authorization",
+  "group": "CCNP ENCOR",
+  "section": "Security",
+  "date": "2026-10-30",
+  "nodes": 3,
+  "links": 2,
+  "tasks": 20,
+  "topology": "PC1 reaches the independent AUTH1 TACACS+ LAN through R1. Passwords authenticate locally on R1; only permission decisions go to AUTH1. The server lab passwords deliberately differ from local passwords.",
+  "implemented": [
+    "Third ENCOR Security lab and35 total ENCOR entries with accurate catalog counts, current-host permalinks, practice and completed reference. Existing CCNA AAA labs and both earlier ENCOR Security labs remain available.",
+    "Authentication-only admin SSH starts at user EXEC; explicitly binding named VTY-EXEC enables TACACS+ shell permissions and privilege15/admin versus privilege1/operator. Server authentication and accounting counters stay zero in the permission workflow.",
+    "A server Deny shell response closes SSH after successful local authentication; a local privilege15 credential cannot override the explicit rejection.",
+    "Level15 VTY-CMDS checks apply before privileged EXEC and configuration commands. A real authorized SSH session creates Loopback10 and delivered PC1 echo replies prove the resulting interface works.",
+    "Lowering the remote admin privilege blocks configure terminal in an already privileged session, without replacing the live session identity. A separate denial inside Loopback10 configuration leaves its existing description unchanged.",
+    "Service-only outage produces actual TCP49 communication errors then local EXEC/command authorization. Server pings remain available; powering off or disconnecting the server cannot substitute for this exercise.",
+    "Local command fallback creates a real temporary Loopback20, requiring delivered echo replies. An operator elevated with enable is still denied by local command authorization because its username privilege remains1.",
+    "Named local CONSOLE recovery works during the outage without remote EXEC or command authorization. Restoration requires new healthy remote EXEC and command decisions plus clean remote logout.",
+    "Final live checks require matching restored server policy, TAC-GROUP then local list order, local authentication, all sixteen SSH-only VTYs and five-minute timeout, configuration-command authorization, saved R1 configuration, correct Loopback10 and removed temporary Loopback20.",
+    "Credential-free runtime authorization observations copy configured methods, actual method outcomes, service/interface/key-match state, requested kind, session identity and redacted command. TCP transaction IDs and server-side accepted/rejected authorization requests corroborate observations. Existing decisions and enforcement are preserved.",
+    "Practice starts0/20; completed reference has seven live goals and no pre-earned permission incidents or traffic. Portable saves retain earned observations but clear runtime, sessions, packet traces and receiver logs. Imported criteria reject unknown checks and foreign/missing roots.",
+    "Diagnostic test aaa authentication traffic, generic log text, none/if-authenticated shortcuts and disabled configuration-command enforcement cannot replace the required authorization evidence."
+  ],
+  "scope": [
+    "IOS EXEC and privilege-based level15 command authorization using TACACS+ with local fallback. Arbitrary TACACS+ per-command/argument regex rules and external wire interoperability are not implemented or claimed.",
+    "RADIUS EXEC attributes are covered by the existing RADIUS AAA Client lab. This exercise does not configure RADIUS command authorization, new accounting services or packet formats.",
+    "Primary Cisco authorization documentation reviewed. No new live CML capture was performed; existing IOS/NX-OS CML AAA contracts are covered by full native regression.",
+    "The normal server AAA form controls service availability, IOS privilege and Allow/Deny shell. Its existing accounting panel remains empty in this lab; client show commands expose real authorization counters.",
+    "No terminal styling, UI theme/layout, node artwork or dependency changes."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE17.14 Catalyst9300: Configuring Authorization",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-14/configuration_guide/sec/b_1714_sec_9300_cg/configuring_authorization.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "nativeTests": 2788,
+    "nativePassed": 2788,
+    "nativeFailed": 0,
+    "nativeDurationMs": 286494.869459,
+    "newLabTests": 24,
+    "initialAAAConsoleAndCMLRegressions": 76,
+    "browserChecks": [
+      "light 320px: Security=3, three nodes/two links/20 tasks with a three-row plan; actual local authentication alone, named TACACS+ EXEC binding, admin15/operator1 and explicit shell denial; authorized Loopback10 with delivered echoes; 13 initial configuration and observed permission tasks without pre-earned outage/command-denial/recovery evidence; normal server policy forms, zero accounting, portable YAML with cleared runtime, seven live tasks in completed reference, responsive guide, unchanged terminal golden styles and cancel/save-copy protection.",
+      "dark 320px: Security=3, three nodes/two links/20 tasks with a three-row plan; actual local authentication alone, named TACACS+ EXEC binding, admin15/operator1 and explicit shell denial; authorized Loopback10 with delivered echoes; all20 including existing-session command denial, configuration-mode rejection, service-only EXEC/command local fallback, operator denial after enable, independent console recovery, restored remote authorization and temporary-loopback removal; normal server policy forms, zero accounting, portable YAML with cleared runtime, seven live tasks in completed reference, responsive guide, unchanged terminal golden styles and cancel/save-copy protection.",
+      "light 1440px: Security=3, three nodes/two links/20 tasks with a three-row plan; actual local authentication alone, named TACACS+ EXEC binding, admin15/operator1 and explicit shell denial; authorized Loopback10 with delivered echoes; all20 including existing-session command denial, configuration-mode rejection, service-only EXEC/command local fallback, operator denial after enable, independent console recovery, restored remote authorization and temporary-loopback removal; normal server policy forms, zero accounting, portable YAML with cleared runtime, seven live tasks in completed reference, responsive guide, unchanged terminal golden styles and cancel/save-copy protection.",
+      "dark 1440px: Security=3, three nodes/two links/20 tasks with a three-row plan; actual local authentication alone, named TACACS+ EXEC binding, admin15/operator1 and explicit shell denial; authorized Loopback10 with delivered echoes; 13 initial configuration and observed permission tasks without pre-earned outage/command-denial/recovery evidence; normal server policy forms, zero accounting, portable YAML with cleared runtime, seven live tasks in completed reference, responsive guide, unchanged terminal golden styles and cancel/save-copy protection.",
+      "light 390px: Security=3, three nodes/two links/20 tasks with a three-row plan; actual local authentication alone, named TACACS+ EXEC binding, admin15/operator1 and explicit shell denial; authorized Loopback10 with delivered echoes; 13 initial configuration and observed permission tasks without pre-earned outage/command-denial/recovery evidence; normal server policy forms, zero accounting, portable YAML with cleared runtime, seven live tasks in completed reference, responsive guide, unchanged terminal golden styles and cancel/save-copy protection.",
+      "dark 390px: Security=3, three nodes/two links/20 tasks with a three-row plan; actual local authentication alone, named TACACS+ EXEC binding, admin15/operator1 and explicit shell denial; authorized Loopback10 with delivered echoes; 13 initial configuration and observed permission tasks without pre-earned outage/command-denial/recovery evidence; normal server policy forms, zero accounting, portable YAML with cleared runtime, seven live tasks in completed reference, responsive guide, unchanged terminal golden styles and cancel/save-copy protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with three labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "9b7eafb38dde0cf1c855b30dbacc59011a84ae2afe728d450cf1766b36926f16",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Final built bytes match all browser-tested copies.",
+    "terminal": "Golden fixtures match CLI colors, cursor, fonts and terminal controls in both themes and desktop/mobile modes; password fields remain hidden.",
+    "visualInspection": [
+      ".cache/aaa-authorization-catalog-browser/topology-light-1440.png",
+      ".cache/aaa-authorization-catalog-browser/guide-light-1440.png",
+      ".cache/aaa-authorization-catalog-browser/guide-dark-320.png",
+      ".cache/aaa-authorization-catalog-browser/console-dark-320.png",
+      ".cache/aaa-authorization-catalog-browser/topology-dark-320.png",
+      ".cache/aaa-authorization-catalog-browser/guide-light-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "All20 tasks pass through normal controls on1440px/light and320px/dark, including live server policy edits affecting existing SSH sessions. Four other theme/viewport cases earn13 initial tasks without pre-earned fault or recovery credit.",
+    "Six offline file:// cases block HTTP(S). Two sharing cases preserve current host/path/query/workspace. Seven generic catalog regression checks pass with Security3 and unchanged other-section counts.",
+    "Browser clock advances normal application frames. No simulator state, permission results, packets or earned achievements are injected.",
+    "The lab uses existing working permission enforcement; added observation metadata makes its actual effects inspectable and gradeable without inventing a session or successful configuration."
+  ]
+}

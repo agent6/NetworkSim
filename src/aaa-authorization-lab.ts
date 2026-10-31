@@ -1,0 +1,49 @@
+import type {Simulator} from './engine.ts';
+import type {Device} from './model.ts';
+import type {AAAAuthStep} from './aaa-client.ts';
+import {deviceAccessSnapshot,type DeviceAccessEvent} from './device-access.ts';
+import {managementSessionSnapshot} from './management.ts';
+export const aaaAuthorizationId=(n:string)=>'device-aaa-author-'+n.toLowerCase();
+export const AAA_AUTHZ_METHODS=['group','TAC-GROUP','local'];
+type Live='local'|'server'|'exec-method'|'exec-line'|'commands-method'|'commands-line'|'saved';
+type Observed='baseline'|'unbound'|'admin'|'operator'|'exec-deny'|'command-allow'|'command-deny'|'config-deny'|'exec-fallback'|'command-fallback'|'operator-deny'|'console'|'recovery';
+export type AAAAuthorizationCriterion={kind:'aaa-author-live';device:string;check:Live}|{kind:'aaa-author-observe';device:string;check:Observed};
+export function validAAAAuthorizationCriterion(c:any):boolean{return !!c&&typeof c.device==='string'&&c.device.length>0&&c.device.length<=128&&(c.kind==='aaa-author-live'?['local','server','exec-method','exec-line','commands-method','commands-line','saved'].includes(c.check):c.kind==='aaa-author-observe'&&['baseline','unbound','admin','operator','exec-deny','command-allow','command-deny','config-deny','exec-fallback','command-fallback','operator-deny','console','recovery'].includes(c.check));}
+const id=aaaAuthorizationId,get=(s:Simulator,n:string)=>s.getDevice(id(n)),eq=(a:unknown,b:unknown)=>JSON.stringify(a)===JSON.stringify(b);
+function vtys(d:Device){return Object.entries<any>(d.config.features.lines??{}).filter(([n])=>/^vty \d+(?: \d+)?$/.test(n));}
+function covered(d:Device,check:(line:any)=>boolean){const rows=vtys(d);return rows.length>0&&rows.every(([,l])=>check(l))&&Array.from({length:16},(_,n)=>n).every(n=>rows.some(([name])=>{const[a,b]=name.split(' ').slice(1).map(Number);return a<=n&&n<=(b??a);}));}
+function live(s:Simulator,d:Device,c:Live):boolean{const f=d.config.features,a=f.aaa,u=f.users,server=get(s,'AUTH1')!,svc=server.config.services.tacacs;switch(c){
+ case'local':return a?.enabled===true&&eq(a.login?.default,['local'])&&eq(a.login?.CONSOLE,['local'])&&eq(a.login?.['VTY-LOGIN'],['local'])&&u?.admin?.secret==='Admin-Authz-2026'&&u.admin.privilege===15&&u?.operator?.secret==='Operator-Authz-2026'&&u.operator.privilege===1&&u?.rescue?.secret==='Rescue-Authz-2026'&&u.rescue.privilege===15&&f.enableSecret==='Enable-Authz-2026'&&!a.authorizeConsole&&!Object.keys(a.accounting??{}).length&&f.lines?.['console 0']?.authentication==='CONSOLE'&&!f.lines['console 0'].authorizationExec;
+ case'server':{const p=a?.servers?.AUTH1;return p?.protocol==='tacacs'&&p.address==='192.168.20.20'&&(p.port??49)===49&&p.key==='Authz-Key'&&p.timeout===1&&a.groups?.['TAC-GROUP']?.protocol==='tacacs'&&eq(a.groups['TAC-GROUP'].servers,['AUTH1'])&&svc?.enabled===true&&svc.secret==='Authz-Key'&&svc.users?.admin?.privilege===15&&svc.users.admin.authorization!==false&&svc.users.admin.password==='Server-Only-2026'&&svc.users.operator?.privilege===1&&svc.users.operator.authorization!==false&&svc.users.operator.password==='Server-Only-2026'&&!svc.users.rescue&&s.devicePowered(server.id)&&s.interfaceUp(server.id,'GigabitEthernet0');}
+ case'exec-method':return a?.enabled===true&&eq(a.authorization?.exec?.['VTY-EXEC'],AAA_AUTHZ_METHODS)&&Object.keys(a.authorization.exec).length===1;
+ case'exec-line':return d.config.hostname==='R1'&&f.domainName==='authz.lab.example'&&f.ssh?.version===2&&f.ssh.keys?.modulus>=2048&&covered(d,l=>l.authentication==='VTY-LOGIN'&&l.authorizationExec==='VTY-EXEC'&&l.transport==='ssh'&&l.exec!==false&&(l.privilege??1)===1&&l.execTimeout===300&&!l.accessClassIn);
+ case'commands-method':return a?.enabled===true&&a.authorizeConfig===true&&eq(a.authorization?.commands15?.['VTY-CMDS'],AAA_AUTHZ_METHODS)&&Object.keys(a.authorization.commands15).length===1;
+ case'commands-line':return covered(d,l=>l.authorizationCommands?.['15']==='VTY-CMDS'&&!l.accountingExec&&!Object.keys(l.accountingCommands??{}).length);
+ case'saved':return ['local','server','exec-method','exec-line','commands-method','commands-line'].every(c=>live(s,d,c as Live))&&eq(d.config,d.startupConfig)&&managementSessionSnapshot(s,d.id).length===0&&d.config.interfaces.Loopback10?.ip==='192.0.2.10'&&d.config.interfaces.Loopback10.mask==='255.255.255.255'&&d.config.interfaces.Loopback10.description==='TACACS-authorized'&&d.config.interfaces.Loopback10.adminUp&&!d.config.interfaces.Loopback20&&[0,1].every(n=>{const p=d.config.interfaces['GigabitEthernet0/'+n];return p.ip===['192.168.10.1','192.168.20.1'][n]&&p.mask==='255.255.255.0'&&!p.features.aclIn&&!p.features.aclOut&&s.interfaceUp(d.id,p.name);})&&['PC1','AUTH1'].every((n,i)=>{const p=get(s,n)!,port=p.config.interfaces.GigabitEthernet0;return port.ip===['192.168.10.10','192.168.20.20'][i]&&port.mask==='255.255.255.0'&&p.config.defaultGateway===['192.168.10.1','192.168.20.1'][i];})&&s.lab.links.length===2&&s.lab.links.every(l=>l.enabled&&l.loss===0);
+}}
+function pinged(s:Simulator,target:string,after=-Infinity){return new Set(s.events.filter(e=>e.nodeId===id('PC1')&&e.label==='Echo reply received'&&e.packet?.source===target&&e.time>after).map(e=>e.packet!.parentId)).size>=3;}
+export function matchesAAAAuthorizationCriterion(s:Simulator,d:Device,c:AAAAuthorizationCriterion):boolean{
+ if(d.id!==id('R1')||d.kind!=='router'||get(s,'PC1')?.kind!=='pc'||get(s,'AUTH1')?.kind!=='server'||['PC1','AUTH1'].some(n=>!get(s,n)?.config.interfaces.GigabitEthernet0)||[0,1].some(n=>!d.config.interfaces['GigabitEthernet0/'+n]))return false;
+ if(c.kind==='aaa-author-live')return live(s,d,c.check);
+ const rows=deviceAccessSnapshot(s,d.id).filter(r=>r.aaa),pc=(r:DeviceAccessEvent)=>r.source==='192.168.10.10'&&r.port===22,az=rows.filter(r=>r.kind==='authorization'&&pc(r)),steps=(r:DeviceAccessEvent)=>r.authorizationSteps??[],localAuth=(r:DeviceAccessEvent)=>r.authenticationSteps?.length===1&&r.authenticationSteps[0].method==='local'&&r.authenticationSteps[0].outcome==='accept';
+ const state=(r:DeviceAccessEvent,on:boolean)=>{const v=r.authenticationServers?.AUTH1;return v?.serverEnabled===on&&v.serverPowered===true&&v.interfaceUp===true&&v.keyMatches===true;};
+ const wire=(p:AAAAuthStep,outcome:string)=>p.method==='tacacs'&&p.operation==='authorize'&&p.outcome===outcome&&!!p.transaction&&s.events.some(e=>e.nodeId===d.id&&e.label==='Frame sent'&&e.packet?.serviceTransaction===p.transaction&&e.packet?.destinationPort===49&&e.packet?.destination==='192.168.20.20')&&(outcome==='error'||s.events.some(e=>e.nodeId===d.id&&e.label==='Frame received'&&e.packet?.serviceTransaction===p.transaction&&e.packet?.source==='192.168.20.20'));
+ const remote=(r:DeviceAccessEvent,outcome='accept')=>eq(r.authorizationMethods,AAA_AUTHZ_METHODS)&&steps(r).length===1&&wire(steps(r)[0],outcome)&&state(r,true)&&(outcome==='error'||(get(s,'AUTH1')!.runtime.features.aaaRequests??[]).some((q:any)=>q.operation==='authorize'&&q.kind===r.authorizationKind&&q.username===r.username&&q.accepted===(outcome==='accept')&&q.time>=steps(r)[0].started&&q.time<=steps(r)[0].completed));
+ const fallback=(r:DeviceAccessEvent)=>state(r,false)&&eq(r.authorizationMethods,AAA_AUTHZ_METHODS)&&steps(r).length===2&&wire(steps(r)[0],'error')&&steps(r)[1].method==='local';
+ const exec=(r:DeviceAccessEvent)=>r.authorizationKind==='exec'&&r.authorizationList==='VTY-EXEC'&&localAuth(r),command=(r:DeviceAccessEvent,name:string)=>r.authorizationKind==='commands'&&r.authorizationList==='VTY-CMDS'&&r.command===name,admin=(r:DeviceAccessEvent)=>exec(r)&&r.success&&r.username==='admin'&&r.privilege===15&&remote(r);
+ switch(c.check){
+ case'baseline':return pinged(s,'192.168.20.20');
+ case'unbound':return rows.some(r=>r.kind==='login'&&pc(r)&&r.success&&r.username==='admin'&&r.privilege===1&&localAuth(r)&&r.execAuthorizationConfigured===false);
+ case'admin':return az.some(admin);
+ case'operator':return az.some(r=>exec(r)&&r.success&&r.username==='operator'&&r.privilege===1&&remote(r));
+ case'exec-deny':return az.some(r=>exec(r)&&!r.success&&r.username==='admin'&&remote(r,'reject'));
+ case'command-allow':return az.some(r=>command(r,'ip address 192.0.2.10 255.255.255.255')&&r.success&&r.username==='admin'&&remote(r))&&d.config.interfaces.Loopback10?.description==='TACACS-authorized'&&pinged(s,'192.0.2.10');
+ case'command-deny':return az.some(r=>command(r,'configure terminal')&&!r.success&&r.username==='admin'&&r.privilege===15&&remote(r,'reject'));
+ case'config-deny':return az.some(r=>command(r,'description Denied-by-TACACS')&&!r.success&&r.username==='admin'&&r.authorizationConfig===true&&remote(r,'reject'))&&d.config.interfaces.Loopback10?.description==='TACACS-authorized';
+ case'exec-fallback':return az.some(r=>exec(r)&&r.success&&r.username==='admin'&&r.privilege===15&&fallback(r)&&steps(r)[1].outcome==='accept'&&pinged(s,'192.168.20.20',steps(r)[0].started));
+ case'command-fallback':return az.some(r=>command(r,'description Local-fallback')&&r.success&&r.username==='admin'&&fallback(r)&&steps(r)[1].outcome==='accept')&&d.config.interfaces.Loopback20?.description==='Local-fallback'&&pinged(s,'192.0.2.20');
+ case'operator-deny':return az.some(r=>command(r,'configure terminal')&&!r.success&&r.username==='operator'&&r.privilege===15&&fallback(r)&&steps(r)[1].outcome==='reject'&&rows.some(e=>e.session===r.session&&e.kind==='enable'&&e.success));
+ case'console':return rows.some(r=>r.kind==='login'&&r.source==='console'&&r.username==='rescue'&&r.success&&r.privilege===1&&r.authenticationList==='CONSOLE'&&localAuth(r)&&state(r,false)&&!r.consoleAuthorization);
+ case'recovery':return az.some(r=>exec(r)&&r.success&&fallback(r)&&az.some(a=>a.time>r.time&&admin(a)&&az.some(p=>p.session===a.session&&p.time>a.time&&command(p,'configure terminal')&&p.success&&remote(p))&&rows.some(e=>e.session===a.session&&e.kind==='logout')))&&managementSessionSnapshot(s,d.id).length===0;
+ }
+}

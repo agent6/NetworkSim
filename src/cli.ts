@@ -9,7 +9,7 @@ import {iosBootState,iosBooting,type IOSBootState} from './ios-boot.ts';
 import {refreshMacAging} from './mac-aging.ts';
 import { slaDefaults, slaReservedPorts, type SLAOperation, type SLASchedule } from './sla-config.ts';
 import {ownRecordValue,setRecordValue,accountCredential} from './record-map.ts';
-import {showAccounting} from './aaa-accounting.ts';
+import {showAccounting,redactAccountingCommand} from './aaa-accounting.ts';
 import { schedulingError, catalystQueueProfile } from './qos-scheduler.ts';
 import {wredConfiguration,type WredConfig} from './qos-congestion.ts';
 import { speedIsAuto, ethernetSpeeds, interfaceBandwidth } from './ethernet.ts';
@@ -429,7 +429,7 @@ export class IOSSession {
     if(no&&!iosCommandSupportsNegation(command.words))fail();
     if(this.device.kind==='router'&&command.words.join(' ').startsWith('show mac address-table'))fail();
     const name=command.words.join(' '),userCommand=this.mode==='priv'&&this.execCommands(false).some(c=>c.words.join(' ')===name),navigation=['end','exit','do','disable','logout'].includes(name);
-    if(this.identity&&this.mode!=='user'&&!userCommand&&!navigation){const f=this.device.config.features,who=this.identity,consoleAllowed=!who.line.startsWith('console')||f.aaa?.authorizeConsole,configAllowed=this.mode==='priv'||f.aaa?.authorizeConfig!==false;if(consoleAllowed&&configAllowed){const list=f.lines?.[who.line]?.authorizationCommands?.['15']||'default',result=this.management.authorize(this.deviceId,'commands',list,who.username,who.authenticated);if(!result.accepted)return ['% Command authorization failed.'];}if(this.privilege<15)return ['% Insufficient privilege level.'];}
+    if(this.identity&&this.mode!=='user'&&!userCommand&&!navigation){const f=this.device.config.features,who=this.identity,consoleAllowed=!who.line.startsWith('console')||f.aaa?.authorizeConsole,configAllowed=this.mode==='priv'||f.aaa?.authorizeConfig!==false;if(consoleAllowed&&configAllowed){const list=f.lines?.[who.line]?.authorizationCommands?.['15']||'default',result=this.management.authorize(this.deviceId,'commands',list,who.username,who.authenticated);if(result.configured)this.accessEvent('authorization',result.accepted,{authorizationKind:'commands',authorizationSteps:result.steps,command:redactAccountingCommand([no?'no':'',name,...args].filter(Boolean).join(' '))});if(!result.accepted)return ['% Command authorization failed.'];}if(this.privilege<15)return ['% Insufficient privilege level.'];}
     const level=navigation?0:this.mode==='user'||userCommand?1:15,taskId=String(++this.accountingSequence),text=[no?'no':'',name,...args].filter(Boolean).join(' '),hook=name==='do'?undefined:this.accountingHook;
     hook?.(text,level,'start',taskId);
     try{
