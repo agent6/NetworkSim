@@ -1,0 +1,92 @@
+{
+  "lab": "BGP Route Reflector",
+  "catalogId": "bgp-route-reflector",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 9,
+  "links": 11,
+  "tasks": 20,
+  "topology": "R1 and R2 clients, R3 non-client edge, and redundant RR1/RR2 share AS65000. Seven OSPF point-to-point links carry only loopback/transit reachability. R4 AS65100 originates the service LAN. Both clients peer only with both reflectors; the reflectors and R3 form the non-client mesh. Practice begins with sixteen Established peer views but no client roles or shared cluster ID.",
+  "implemented": [
+    "Thirty-third ENARSI entry with independent practice/reference attempts, nine-row addressing plan, twenty typed goals, ordinary IOS/Windows commands and current-domain/path/query permalinks. Existing UI, icons, terminal styles and offline single HTML are preserved.",
+    "Both reflectors use cluster10.255.0.100, R1/R2 client roles, and R3/inter-reflector non-client roles. Actual received advertisements preserve NEXT_HOP, AS_PATH, LOCAL_PREF and MED; iBGP routes install at AD200 and external routes at AD20. The edge, rather than the reflectors, supplies next-hop-self for the external prefix.",
+    "Client routes reach clients/non-clients; non-client service reaches only clients. Raw shared-cluster client copies arrive but are excluded before best-path preference. Temporarily removing only R1 roles produces a partial service failure with all sixteen peer views up; temporarily making R3 a client permits service reflection to peer RRs, which reject shared-cluster copies.",
+    "Removing both R3 next-hop-self statements leaves the external next hop inaccessible on both RRs. Those candidates cannot enter the RIB or be reflected. Both client service paths disappear while client-to-client and local-control traffic keep working.",
+    "A temporary RR2 cluster10.255.0.200 plus neighbor weight200 accepts RR1 client paths and reflects them with CLUSTER_LIST[B,A] and preserved ORIGINATOR_ID. Both clients receive but reject their own reflected prefixes. Returning only RR2 cluster ID to A rejects the previously preferred copies before weight200 can apply; direct weight0 client candidates remain usable.",
+    "Full RR1 physical isolation followed by185 simulated seconds leaves eight Established directed peer views and actual forwarding/HTTP through RR2. Restoring all four ports rebuilds OSPF recursion and BGP paths. A separate test proves selecting RR2 as advertising peer does not force physical forwarding through RR2 when the preserved next hop resolves through RR1.",
+    "Seven live and thirteen observed goals: practice0, diagnosis1, repaired baseline14, full20 and reference7 with no pre-earned observations. Each traffic state requires three unique original requests in all eight directions, actual destination acceptance, recursive CEF physical forwarding and correlated replies; expected failures require actual No route drops. Both HTTP client responses must be fully reassembled. Six exercises require proved alternative/failure states and fresh restored traffic. Epochs reject stale packets, YAML preserves earned observations and runtime state is rebuilt.",
+    "Existing BGP engine and CLI behavior are reused; no unsupported commands or protocol placeholders were introduced. Rendered IOS replay, saved reload, real hard clears, help/Tab, no-forms and invalid-input atomicity are covered."
+  ],
+  "scope": "IOS IPv4 unicast route reflection, redundant shared-cluster RRs, a temporary two-cluster hierarchy, loop prevention, edge next-hop reachability and actual forwarding/recovery. Cisco primary documentation and RFC4456 reviewed. No fresh CML capture or complete IOS/NX-OS equivalence is claimed.",
+  "references": [
+    {
+      "title": "Cisco: Configuring IP Unicast Routing, route reflectors and client/non-client behavior",
+      "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3750/software/release/12-2_55_se/configuration/guide/scg3750/swiprout.pdf"
+    },
+    {
+      "title": "RFC4456: BGP Route Reflection, sections6\u201310",
+      "url": "https://www.rfc-editor.org/rfc/rfc4456.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "native": {
+      "uniqueTestsVerified": 3690,
+      "remainingFailures": 0,
+      "newCatalogTests": 31,
+      "fullSuiteRun": {
+        "command": "node --test --test-concurrency=4 tests/*.test.ts",
+        "tests": 3690,
+        "pass": 3689,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "correctedReplayCase": {
+        "command": "node --test --test-name-pattern='BRR-28' tests/bgp-route-reflector-catalog.test.ts",
+        "tests": 1,
+        "passed": 1,
+        "failed": 0,
+        "note": "Replay into running routers is followed by confirmed clear ip ospf process so the configured router IDs take effect. The original test omitted this operational reset. All full-suite failures, if present, are confined to that superseded replay setup."
+      },
+      "additionalCLIChecks": {
+        "tests": 2,
+        "passed": 2,
+        "failed": 0
+      }
+    },
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=33; nine nodes/eleven links/20 tasks/nine-row redundant reflector plan; sixteen real peer views; actual eight-direction service/client/control traffic and HTTP from both clients; reflected NEXT_HOP/AS_PATH and AD200 routes; fourteen baseline tasks with all six exercises unearned; offline YAML export/import into an empty profile, seven live reference checks, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=33; nine nodes/eleven links/20 tasks/nine-row redundant reflector plan; sixteen real peer views; actual eight-direction service/client/control traffic and HTTP from both clients; reflected NEXT_HOP/AS_PATH and AD200 routes; fourteen baseline tasks with all six exercises unearned; offline YAML export/import into an empty profile, seven live reference checks, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=33; nine nodes/eleven links/20 tasks/nine-row redundant reflector plan; sixteen real peer views; actual eight-direction service/client/control traffic and HTTP from both clients; reflected NEXT_HOP/AS_PATH and AD200 routes; all20 including client/non-client rules, inaccessible next hops, ORIGINATOR_ID and CLUSTER_LIST rejection, RR1 isolation/RR2 forwarding and fresh restored traffic; offline YAML export/import into an empty profile, seven live reference checks, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=33; nine nodes/eleven links/20 tasks/nine-row redundant reflector plan; sixteen real peer views; actual eight-direction service/client/control traffic and HTTP from both clients; reflected NEXT_HOP/AS_PATH and AD200 routes; all20 including client/non-client rules, inaccessible next hops, ORIGINATOR_ID and CLUSTER_LIST rejection, RR1 isolation/RR2 forwarding and fresh restored traffic; offline YAML export/import into an empty profile, seven live reference checks, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=33; nine nodes/eleven links/20 tasks/nine-row redundant reflector plan; sixteen real peer views; actual eight-direction service/client/control traffic and HTTP from both clients; reflected NEXT_HOP/AS_PATH and AD200 routes; fourteen baseline tasks with all six exercises unearned; offline YAML export/import into an empty profile, seven live reference checks, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=33; nine nodes/eleven links/20 tasks/nine-row redundant reflector plan; sixteen real peer views; actual eight-direction service/client/control traffic and HTTP from both clients; reflected NEXT_HOP/AS_PATH and AD200 routes; fourteen baseline tasks with all six exercises unearned; offline YAML export/import into an empty profile, seven live reference checks, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-three labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "a822c3903187173c3dc1516c3a9b9a0495600510e935ac5674f5a8ea69c498d8",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist and all browser-tested offline copies match byte for byte.",
+    "terminal": "Golden terminal fixture matches both themes at mobile and desktop sizes.",
+    "visualInspection": [
+      ".cache/brr-catalog-browser/topology-light-1440.png",
+      ".cache/brr-catalog-browser/guide-light-1440.png",
+      ".cache/brr-catalog-browser/console-light-1440.png",
+      ".cache/brr-catalog-browser/topology-dark-320.png",
+      ".cache/brr-catalog-browser/guide-dark-320.png",
+      ".cache/brr-catalog-browser/console-dark-320.png"
+    ]
+  }
+}
