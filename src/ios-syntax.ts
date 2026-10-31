@@ -310,6 +310,10 @@ function protocolGraph(path: string, context: IosSyntaxContext, no: boolean): Sy
     const process = union(options, chain([number(1, 4294967295, 'Source process or autonomous system')], options));
     return union(...['connected', 'static', 'ospf', 'eigrp', 'rip', 'bgp', 'ospfv3', 'ripng'].map(value => chain([word(value, 'Source protocol')], process)));
   }
+  if (path === 'ip ospf message-digest-key') {
+    const keyId=number(1,255,'Key ID');
+    return no?chain([keyId],done):chain([keyId,word('md5','Use MD5 authentication'),text('The OSPF password (key)')],done);
+  }
   if (path === 'area' && context.protocol === 'ospf') {
     return chain([area], union(
       chain([word('authentication')], union(done, chain([word('message-digest')],done))),

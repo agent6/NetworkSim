@@ -39,7 +39,7 @@ import { resetOSPF } from './ospf-packets.ts';
 import type { Simulator } from './engine.ts';
 import { defaultInterface, factoryDeviceConfig, type Device, type InterfaceConfig, type StaticRoute } from './model.ts';
 import { renderConfig, prefixMask, isRenderedDefaultLine, isRenderedDefaultBlock } from './config-renderer.ts';
-import { isIPv4, isIPv6, ipv6ToBigInt, bigIntToIPv6, prefixContains, parseCidr as parseIPCidr } from './ip.ts';
+import { isIPv4, isIPv6, ipToInt, ipv6ToBigInt, bigIntToIPv6, prefixContains, parseCidr as parseIPCidr } from './ip.ts';
 import { resolveForwardingPaths } from './route-resolver.ts';
 import { fileSystemStats, writeFlashFile } from './filesystem.ts';
 import { decodeType7 } from './credentials.ts';
@@ -1243,7 +1243,7 @@ export class IOSSession {
     }
     if(type==='filter-list'){exactly(a,5);keyword(a[2],['prefix']);const name=a[3];if(!name||name.length>128||/\s/.test(name))fail();const direction=keyword(a[4],['in','out']),field=direction==='in'?'filterIn':'filterOut';const key=String(isIPv4(id)?id.split('.').reduce((n,v)=>n*256+Number(v),0):Number(id)),aliases=Object.keys(p.areas).filter(a=>String(isIPv4(a)?a.split('.').reduce((n,v)=>n*256+Number(v),0):Number(a))===key);p.areas[key]=Object.assign({},...aliases.map(a=>p.areas[a]));for(const alias of aliases)if(alias!==key)delete p.areas[alias];if(no){if(p.areas[key][field]===name)delete p.areas[key][field];}else p.areas[key][field]=name;this.change();return;}
     if(type==='range'){if(a.length<4)incomplete();const prefix=maskPrefix(a[3]),net=network(ipv4(a[2]),prefix);p.areas[id]??={};const range:any={network:net,prefix};let i=4;while(i<a.length){const option=keyword(a[i++],['not-advertise','cost']);if(option==='cost')range.cost=integer(a[i++],0,16777215);else range.notAdvertise=true;}p.areas[id].ranges=(p.areas[id].ranges||[]).filter((r:any)=>r.network!==net||r.prefix!==prefix);if(!no)p.areas[id].ranges.push(range);this.change();return;}
-    if(type==='authentication'){if(a.length>3)fail();const mode=a[2]?keyword(a[2],['message-digest']):'simple';p.areas[id]??={};if(no)delete p.areas[id].authentication;else p.areas[id].authentication=mode;this.change();return;}
+    if(type==='authentication'){if(a.length>3)fail();const mode=a[2]?keyword(a[2],['message-digest']):'simple',number=(area:string)=>isIPv4(area)?ipToInt(area):Number(area),key=Object.keys(p.areas).find(area=>number(area)===number(id))??id;p.areas[key]??={};if(no){delete p.areas[key].authentication;if(!Object.keys(p.areas[key]).length)delete p.areas[key];}else p.areas[key].authentication=mode;this.change();return;}
     const options=a.slice(2).map(x=>keyword(x,type==='nssa'?['no-summary','default-information-originate','no-redistribution']:['no-summary']));if(no)delete p.areas[id];else p.areas[id]={...p.areas[id],type,noSummary:options.includes('no-summary'),defaultOriginate:options.includes('default-information-originate'),noRedistribution:options.includes('no-redistribution')};this.change();
   }
   private interfaceOSPF(a:string[],no:boolean):void {
