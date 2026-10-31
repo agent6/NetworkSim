@@ -220,6 +220,27 @@ function ospfNeighbors(v: OspfView, args: string[]): string[] {
     return `${pad(n.routerId, 15)} ${lpad(n.priority, 3)}   ${pad(stateText, 15)} ${pad(hms(n.deadAt - v.now), 11)} ${pad(address, 15)} ${n.interface}`;
   })];
 }
+// Virtual-link state is derived from received transit-area topology. Do not invent
+// separate virtual Hello timers, uptime or retransmission counters in the display.
+function virtualLinks(v: OspfView) {
+  if (v.protocol !== 'ospf') return [];
+  return (v.config.virtualLinks ?? []).map((config: any, index: number) => {
+    const state = (v.d.runtime.features.ospfVirtualLinks ?? []).find((x: any) => x.routerId === config.routerId && areaKey(x.transitArea) === areaKey(config.transitArea));
+    return { config, index, state, up: state?.state === 'UP' };
+  });
+}
+function ospfVirtualLinks(v: OspfView): string[] {
+  return virtualLinks(v).flatMap(({config, index, state, up}: any) => {
+    const authentication = config.authentication ?? areaConfig(v.config, '0')?.authentication;
+    return [
+      `Virtual Link OSPF_VL${index} to router ${config.routerId} is ${up ? 'up' : 'down'}`,
+      `  Transit area ${config.transitArea}${state?.interface ? ', via interface '+state.interface : ''}${state?.cost !== undefined ? ', Cost of using '+state.cost : ''}`,
+      `  Timer intervals configured, Hello ${config.helloInterval ?? 10}, Dead ${config.deadInterval ?? 40}`,
+      `    Adjacency State ${up ? 'FULL' : 'DOWN'}`,
+      ...(authentication === 'message-digest' ? ['  Message digest authentication enabled', ...(Object.keys(config.messageDigestKeys ?? {}).length ? ['    Youngest key id is '+Math.max(...Object.keys(config.messageDigestKeys).map(Number))] : [])] : authentication === 'simple' ? ['  Simple password authentication enabled'] : []), '',
+    ];
+  });
+}
 function briefState(p: OspfPort): string {
   if (!p.up) return 'DOWN';
   if (p.loopback && p.networkType === 'loopback') return 'LOOP';
@@ -586,6 +607,7 @@ export function ospfShow(e: Simulator, d: Device, protocol: OspfProtocol, kind: 
       case 'neighbor': return ospfNeighbors(v, a);
       case 'interface': return ospfInterfaces(v, a);
       case 'database': return ospfDatabase(v, a);
+      case 'virtual-links': if (a.length) return invalid(); return v.v3 ? undefined : ospfVirtualLinks(v);
       case 'statistics': {
         if (a.length) return invalid();
         const areas = [...new Set(v.ports.map(p => p.area))].sort((x, y) => Number(x) - Number(y));

@@ -1,0 +1,87 @@
+{
+  "lab": "OSPF Virtual Link",
+  "catalogId": "ospf-virtual-link",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 7,
+  "links": 6,
+  "tasks": 16,
+  "topology": "Four routers in a compact U layout: R1/R2 area0, R2/R3 normal transit area10, R3/R4 area20. PC1 is on the R1 core LAN, PC2 on the R2 local control LAN, and SRV1 on the R4 remote service LAN. Initial physical neighbors are Full but reciprocal router-ID virtual links are missing. Intended links use matching MD5 key1 and default virtual Hello10/Dead40; physical transits cost10 and passive host LANs1.",
+  "implemented": [
+    "Twenty-fourth ENARSI Layer 3 Technologies entry, independent practice/reference documents, seven-row addressing/role plan, staged guide, ordinary verified IOS/Windows commands and shareable current-origin/path/query permalink. Existing icons, theme, terminal styling, layout and offline delivery are preserved.",
+    "Reciprocal area10 virtual-link peer router IDs2.2.2.2/3.3.3.3, explicit message-digest authentication and matching Virtual10 key1 restore computed logical backbone continuity. Virtual-link UP depends on reciprocal configuration and received normal-transit OSPF topology; actual protocol89 filtering withdraws the underlay and routes.",
+    "Reference learns remote service/core LANs as O IA AD110/metric31 at R1/R4, service as IA21 at R2 and core as intra-area O21 at R3. Request forwarding uses actual physical next hops R1-R2-R3-R4, without synthetic data tunnels. Received area10 summary inspection identifies R3 as service advertiser and R2 as core advertiser.",
+    "Initial diagnosis and six controlled exercises distinguish wrong interface-IP peer identity, missing reciprocal configuration, virtual Hello mismatch, mismatched MD5 key, passive physical transit and real backbone attachment loss. Local PC2/R2 traffic stays operational. During passive transit, direct R2/R3 IP probes still work; physical OSPF and the logical virtual link fail. Backbone loss is graded by withdrawn core/service routes and traffic, independently of whether a virtual adjacency remains up.",
+    "Each success requires three unique original requests accepted at the destination, parent-correlated replies and expected physical router egresses. Failure requires actual No route drops correlated to original requests or their replies, with independent working controls. Config/RIB epochs reject stale, partial and configuration-only proof. HTTP requires complete TCP-backed PC1/SRV1 response and actual four-router egress.",
+    "Seven live checks cover policy, physical peers, logical virtual links, routes, database, health and saved configuration. Nine observed checks cover initial diagnosis, four traffic directions, completed HTTP and six incidents. Practice0/16, diagnosis1/16, repaired baseline10/16, full16/16; reference only seven live goals. YAML retains earned history and rebuilds runtime.",
+    "Fixed decimal/dotted transit-area alias identity so update/removal targets one link and preserves unrelated options. Improved show ip ospf virtual-links to display configured peer, derived up/down, actual transit interface/cost, configured timers and authentication/key ID without secrets or invented timers/uptime/counters. Physical-neighbor display stays separate, as in the cited Cisco example."
+  ],
+  "scope": "IOS OSPFv2 logical virtual-link configuration, received physical transit topology, computed backbone SPF and actual simulated packet forwarding. The existing engine exchanges segmented logical router records; virtual adjacency is derived rather than a separate virtual wire Hello/DBD FSM. It does not encode individual virtual area0 router-LSA links, implement DoNotAge/demand-circuit flooding, calculate cryptographic wire MD5 digests or claim full RFC timing/interoperability. Database grading inspects existing received area10 summaries rather than inventing virtual area0 LSAs. No fresh CML capture is claimed.",
+  "references": [
+    {
+      "title": "Cisco: Understand OSPF Areas and Virtual Links",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13703-8.html",
+      "use": "Normal nonbackbone transit area, backbone continuity, reciprocal router IDs and equivalent dotted/decimal area identity."
+    },
+    {
+      "title": "Cisco: Configure OSPF Connection in a Virtual Link Environment",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/47866-ospfdb7.html",
+      "use": "Transit SPF, native data forwarding, area0 intra-area routes, virtual-link verification and physical-only show ip ospf neighbor output."
+    },
+    {
+      "title": "Cisco: Configuring OSPF Authentication on a Virtual Link",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/8313-27.html",
+      "use": "Logical virtual-link message-digest authentication and key-ID presentation."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "native": {
+      "command": "node --test --test-concurrency=4 tests/*.test.ts",
+      "tests": 3455,
+      "pass": 3455,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "newCatalogTests": 22,
+      "focusedAuthenticationAndCatalogTests": 26
+    },
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=24; seven nodes/six links/16 tasks/seven-row plan; initial missing backbone diagnosis with two actual failed service directions and two working local controls; three Full physical pairs, reciprocal MD5 virtual links up cost10, physical next-hop O IA 31 service/core routes, O 21 backbone route at R3 and received summaries; all four delivered directions and completed remote HTTP; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=24; seven nodes/six links/16 tasks/seven-row plan; initial missing backbone diagnosis with two actual failed service directions and two working local controls; three Full physical pairs, reciprocal MD5 virtual links up cost10, physical next-hop O IA 31 service/core routes, O 21 backbone route at R3 and received summaries; all four delivered directions and completed remote HTTP; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=24; seven nodes/six links/16 tasks/seven-row plan; initial missing backbone diagnosis with two actual failed service directions and two working local controls; three Full physical pairs, reciprocal MD5 virtual links up cost10, physical next-hop O IA 31 service/core routes, O 21 backbone route at R3 and received summaries; all four delivered directions and completed remote HTTP; all16 including peer router-ID, reciprocal, virtual timers, MD5 key, passive transit and missing backbone recovery with fresh restored traffic; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=24; seven nodes/six links/16 tasks/seven-row plan; initial missing backbone diagnosis with two actual failed service directions and two working local controls; three Full physical pairs, reciprocal MD5 virtual links up cost10, physical next-hop O IA 31 service/core routes, O 21 backbone route at R3 and received summaries; all four delivered directions and completed remote HTTP; all16 including peer router-ID, reciprocal, virtual timers, MD5 key, passive transit and missing backbone recovery with fresh restored traffic; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=24; seven nodes/six links/16 tasks/seven-row plan; initial missing backbone diagnosis with two actual failed service directions and two working local controls; three Full physical pairs, reciprocal MD5 virtual links up cost10, physical next-hop O IA 31 service/core routes, O 21 backbone route at R3 and received summaries; all four delivered directions and completed remote HTTP; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=24; seven nodes/six links/16 tasks/seven-row plan; initial missing backbone diagnosis with two actual failed service directions and two working local controls; three Full physical pairs, reciprocal MD5 virtual links up cost10, physical next-hop O IA 31 service/core routes, O 21 backbone route at R3 and received summaries; all four delivered directions and completed remote HTTP; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "14d334cb3e9aa731184c007e664f9046fab3a018881853436b1fca34f6351d5d",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist and all browser-tested offline HTML copies match byte for byte.",
+    "terminal": "Golden terminal fixture matches both themes at mobile/desktop sizes.",
+    "visualInspection": [
+      ".cache/ovl-catalog-browser/topology-light-1440.png",
+      ".cache/ovl-catalog-browser/guide-light-1440.png",
+      ".cache/ovl-catalog-browser/console-light-1440.png",
+      ".cache/ovl-catalog-browser/guide-dark-320.png",
+      ".cache/ovl-catalog-browser/console-dark-320.png",
+      ".cache/ovl-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full sixteen-task ordinary UI workflows at320px/dark and1440px/light; four other theme/width cases earn ten baseline goals with six incidents unearned. Each exports/imports real YAML into an empty offline profile and checks reference live goals, save/cancel protection and responsive guide/topology.",
+    "Six file:// cases block HTTP(S); two mocked-host permalink checks preserve host/path/query and workspace; seven generic catalog checks retain prior groups/labs and prerequisites. Browser clocks run ordinary application frames; no routes, neighbors, packets or completions are injected."
+  ]
+}
