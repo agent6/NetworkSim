@@ -1,0 +1,86 @@
+{
+  "lab": "IPv4 ACL Configuration and Verification",
+  "catalogId": "ipv4-acl-configuration-and-verification",
+  "group": "CCNP ENCOR",
+  "section": "Security",
+  "date": "2026-10-30",
+  "nodes": 6,
+  "links": 5,
+  "tasks": 20,
+  "topology": "PC1 and PC2 share a prepared access switch and R1 client LAN. R1 has separate routed SRV1 HTTP and SRV2 DNS/HTTP LANs. All addresses, gateways, services and VLAN1 switching are prepared.",
+  "implemented": [
+    "Fourth ENCOR Security lab and36 total ENCOR entries; original CCNA standard, extended and named/numbered ACL labs remain available. Share links retain the current host/path/query.",
+    "An unfiltered four-path baseline precedes a named source-only standard ACL. CLIENT-SOURCES permits the PC1 host before denying the broader client subnet, applied outbound only toward SRV1. Three ACL-permitted PC1 replies, PC2 drops and fresh unaffected PC2/SRV2 replies prove the destination scope.",
+    "Migration retains the standard list but removes its binding. EDGE-POLICY alone filters R1 Gi0/0 inbound with ordered destination TCP80, UDP53 and ICMP echo permits followed by the explicit SRV1 IP deny.",
+    "Actual full HTTP responses, receiver-confirmed fresh DNS answers, three correlated ACL-permitted echo replies and explicit/implicit packet drops distinguish protocols and destinations. A TCP80 permit cannot satisfy ICMP, and DNS permission cannot satisfy the DNS server HTTP service.",
+    "Controlled first-match shadowing, incorrect HTTP destination/source port, incorrect DNS protocol/port and reversed interface direction produce real drops. Repair requires new correctly filtered traffic after the observed fault; earlier successes cannot substitute.",
+    "The reversed-direction incident requires an actual server-accepted echo request and its reply dropped on R1 client egress, followed by three fresh permitted replies after restoring inbound placement.",
+    "Temporarily unbinding an intact list permits an actual complete PC2 web page without applied ACL decisions. Final live binding and save requirements force restoration.",
+    "Both IOS clear access-list counters aliases retain their operational behavior. A bounded32-entry runtime reset history records target name, time and pre-clear counts. The lesson requires populated named counts, prior packet decisions and fresh successful/denied HTTP after clearing; empty, unrelated or global clears cannot substitute. Other ACL counters remain separate.",
+    "The final saved state requires exact restored lists, exclusive operational inbound placement, R1 startup equality, active routing and prepared addresses/gateways, VLAN1 switch access paths, enabled server services/DNS record, five healthy links and no other node ACL bindings.",
+    "Practice starts0/20; completed reference supplies four live configuration/save tasks with empty runtime and no invented traffic, repair or reset achievements. Earned observations survive YAML while counters, reset history and packet state clear on reopen.",
+    "New criteria use bounded enums and fixed teaching roots; missing required interfaces and foreign roots fail closed. Counter edits, cached DNS and advisory ACL checks alone do not create packet observations."
+  ],
+  "scope": [
+    "Working IOS IPv4 standard and extended interface ACLs, host/wildcard matching, first-match sequence editing, ingress/egress behavior and named counters. Filtering decisions and packet forwarding are unchanged.",
+    "ACL resequence automation, ACL log/syslog aggregation, fragmentation matches, scheduled ACLs and stateful firewall behavior are not configured or claimed by this lab.",
+    "Primary Cisco ACL documentation reviewed. No new live CML capture was performed; existing IOS/NX-OS CML contracts are covered by full regression.",
+    "No UI theme/layout, terminal styling, node artwork, dependency or backend/server changes."
+  ],
+  "references": [
+    {
+      "title": "Cisco IOS XE16.12: Creating an IP Access List and Applying It to an Interface",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/sec_data_acl/configuration/xe-16-12/sec-data-acl-xe-16-12-book/sec-create-ip-apply.html"
+    },
+    {
+      "title": "Cisco IOS XE16.12: IP Access List Entry Sequence Numbering",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/sec_data_acl/configuration/xe-16-12/sec-data-acl-xe-16-12-book/sec-acl-seq-num.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "nativeTests": 2812,
+    "nativePassed": 2812,
+    "nativeFailed": 0,
+    "nativeDurationMs": 250175.266833,
+    "newLabTests": 24,
+    "browserChecks": [
+      "light 320px: Security=4, six nodes/five links/20 tasks and six-row plan; unfiltered baseline, standard output host/subnet policy, separate server scope, migration to exact extended inbound TCP80/UDP53/ICMP policy, real permitted and denied HTTP/DNS/echo traffic and implicit deny; 14 baseline/policy/traffic tasks with six fault/reset outcomes left unearned; offline YAML export/import with fresh runtime and four live tasks only in completed reference, responsive guide, fitted topology, unchanged golden terminal styles and save/cancel protection.",
+      "dark 320px: Security=4, six nodes/five links/20 tasks and six-row plan; unfiltered baseline, standard output host/subnet policy, separate server scope, migration to exact extended inbound TCP80/UDP53/ICMP policy, real permitted and denied HTTP/DNS/echo traffic and implicit deny; all20 with first-match shadow, wrong HTTP port, wrong DNS protocol, reversed reply filtering, unbound bypass and actual populated counter reset/rebuild; offline YAML export/import with fresh runtime and four live tasks only in completed reference, responsive guide, fitted topology, unchanged golden terminal styles and save/cancel protection.",
+      "light 1440px: Security=4, six nodes/five links/20 tasks and six-row plan; unfiltered baseline, standard output host/subnet policy, separate server scope, migration to exact extended inbound TCP80/UDP53/ICMP policy, real permitted and denied HTTP/DNS/echo traffic and implicit deny; all20 with first-match shadow, wrong HTTP port, wrong DNS protocol, reversed reply filtering, unbound bypass and actual populated counter reset/rebuild; offline YAML export/import with fresh runtime and four live tasks only in completed reference, responsive guide, fitted topology, unchanged golden terminal styles and save/cancel protection.",
+      "dark 1440px: Security=4, six nodes/five links/20 tasks and six-row plan; unfiltered baseline, standard output host/subnet policy, separate server scope, migration to exact extended inbound TCP80/UDP53/ICMP policy, real permitted and denied HTTP/DNS/echo traffic and implicit deny; 14 baseline/policy/traffic tasks with six fault/reset outcomes left unearned; offline YAML export/import with fresh runtime and four live tasks only in completed reference, responsive guide, fitted topology, unchanged golden terminal styles and save/cancel protection.",
+      "light 390px: Security=4, six nodes/five links/20 tasks and six-row plan; unfiltered baseline, standard output host/subnet policy, separate server scope, migration to exact extended inbound TCP80/UDP53/ICMP policy, real permitted and denied HTTP/DNS/echo traffic and implicit deny; 14 baseline/policy/traffic tasks with six fault/reset outcomes left unearned; offline YAML export/import with fresh runtime and four live tasks only in completed reference, responsive guide, fitted topology, unchanged golden terminal styles and save/cancel protection.",
+      "dark 390px: Security=4, six nodes/five links/20 tasks and six-row plan; unfiltered baseline, standard output host/subnet policy, separate server scope, migration to exact extended inbound TCP80/UDP53/ICMP policy, real permitted and denied HTTP/DNS/echo traffic and implicit deny; 14 baseline/policy/traffic tasks with six fault/reset outcomes left unearned; offline YAML export/import with fresh runtime and four live tasks only in completed reference, responsive guide, fitted topology, unchanged golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENCOR Security and retains the original CCNA local-auth lab in Services & Security",
+      "light 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with four labs, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "018104aa3fe4e7ac4dacdbcc7e9580103d02b4e26ed02617a43fab362b886239",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Final rebuilt bytes match all browser-tested copies.",
+    "terminal": "Golden fixtures match fonts, colors, cursor and terminal controls in both themes and desktop/mobile modes.",
+    "visualInspection": [
+      ".cache/encor-ipv4-acl-catalog-browser/topology-light-1440.png",
+      ".cache/encor-ipv4-acl-catalog-browser/guide-light-1440.png",
+      ".cache/encor-ipv4-acl-catalog-browser/guide-dark-320.png",
+      ".cache/encor-ipv4-acl-catalog-browser/console-dark-320.png",
+      ".cache/encor-ipv4-acl-catalog-browser/topology-dark-320.png",
+      ".cache/encor-ipv4-acl-catalog-browser/guide-light-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "All20 tasks pass through normal UI controls on1440px/light and320px/dark. Four other theme/viewport cases reach14 policy and traffic tasks with six fault/reset observations left unearned.",
+    "Six file:// cases block HTTP(S). Two sharing cases preserve current domain/path/query/workspace and original CCNA ACL/AAA entries. Seven generic catalog checks pass with Security4 and unchanged other-section counts.",
+    "Browser clock advances normal application frames; no simulator state, packet delivery, ACL results or earned achievements are injected.",
+    "An optional after-time argument in the existing ACL evidence helper permits fresh repair checks without changing imported criterion formats or existing filtering semantics."
+  ]
+}

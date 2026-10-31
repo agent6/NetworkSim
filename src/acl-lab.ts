@@ -35,7 +35,7 @@ export function validACLLabCriterion(c:any):boolean{
 const find=(sim:Simulator,id:string)=>sim.lab.devices.find(d=>d.id===id||d.config.hostname===id);
 const address=(d:Device)=>Object.values(d.config.interfaces).find(p=>!!p.ip)?.ip;
 
-export function matchesACLLabCriterion(sim:Simulator,d:Device,c:ACLLabCriterion):boolean{
+export function matchesACLLabCriterion(sim:Simulator,d:Device,c:ACLLabCriterion,after=-Infinity):boolean{
  if(c.kind==='standard-acl'||c.kind==='extended-acl'){
   const acl=ownRecordValue(d.config.features.acls,c.name),entries=(acl?.entries??[]).filter((e:any)=>e.action!=='remark'&&e.remark===undefined).sort((a:any,b:any)=>a.sequence-b.sequence);
   return acl?.type===(c.kind==='standard-acl'?'standard':'extended')&&entries.length===c.entries.length&&c.entries.every((expected,i)=>{const actual=entries[i];return actual.sequence===expected.sequence&&actual.action===expected.action&&actual.source===expected.source&&actual.wildcard===expected.wildcard&&!actual.timeRange&&(c.kind==='standard-acl'?!actual.sourcePort&&!actual.destinationPort:['protocol','destination','destinationWildcard','sourcePort','destinationPort','icmpType','icmpCode'].every(key=>actual[key]===(expected as any)[key]));});
@@ -46,7 +46,7 @@ export function matchesACLLabCriterion(sim:Simulator,d:Device,c:ACLLabCriterion)
  }
  const source=find(sim,c.source),target=find(sim,c.target);if(!source||!target)return false;
  const src=address(source),dst=address(target);if(!src||!dst)return false;
- const decisions:any[]=(d.runtime.features.aclDecisions??[]).filter((row:any)=>row.name===c.name&&row.port===c.interface&&row.direction===c.direction&&row.source===src&&row.destination===dst&&row.action===c.action&&(c.implicit===true?row.implicit===true:row.implicit===false&&(c.sequence===undefined||row.sequence===c.sequence)));
+ const decisions:any[]=(d.runtime.features.aclDecisions??[]).filter((row:any)=>row.time>after&&row.name===c.name&&row.port===c.interface&&row.direction===c.direction&&row.source===src&&row.destination===dst&&row.action===c.action&&(c.implicit===true?row.implicit===true:row.implicit===false&&(c.sequence===undefined||row.sequence===c.sequence)));
  const dropped=(row:any)=>sim.events.some(e=>e.nodeId===d.id&&e.port===c.interface&&e.label===(c.direction==='in'?'Ingress ACL denied':'Egress ACL denied')&&e.disposition==='drop'&&e.packet?.id===row.packetId);
  if(c.kind==='acl-ping')return decisions.some(row=>row.protocol==='icmp'&&row.kind==='echo-request'&&(c.action==='deny'?dropped(row):sim.events.some(e=>e.nodeId===target.id&&e.label==='Echo request accepted'&&e.packet?.id===row.packetId)&&sim.events.some(e=>e.nodeId===source.id&&e.label==='Echo reply received'&&e.disposition==='success'&&e.packet?.parentId===row.packetId&&e.packet?.source===dst&&e.packet.destination===src)));
  if(c.kind==='acl-dns')return decisions.some(row=>row.protocol==='udp'&&row.kind==='dns-query'&&row.destinationPort===53&&(target.runtime.features.dnsQueries??[]).some((query:any)=>query.packetId===row.packetId&&query.transaction===row.transaction&&query.source===src&&query.name===c.query.toLowerCase()&&query.type==='A'&&query.rcode==='NOERROR'&&query.address===c.answer)&&sim.events.some(e=>e.nodeId===source.id&&e.disposition==='receive'&&e.packet?.messageType==='dns-response'&&e.packet.parentId===row.packetId&&e.packet.source===dst&&e.packet.destination===src&&e.packet.sourcePort===53&&e.packet.destinationPort===row.sourcePort));
