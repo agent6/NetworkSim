@@ -1,0 +1,84 @@
+{
+  "lab": "Routing Loop Prevention",
+  "catalogId": "routing-loop-prevention",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 4,
+  "links": 3,
+  "tasks": 12,
+  "topology": "PC1 \u2192 R1 \u2192 R2 \u2192 SRV1. R1 summarizes 192.168.32.0/22 toward R2. R2 has a connected 192.168.32.0/24 service LAN and a default back to R1. Unused 192.168.35.10 initially loops through the summary/default pair; R2 must add the matching /22 Null0 discard guard with distance250.",
+  "implemented": [
+    "Fourth CCNP ENARSI Layer3 lab; accessible section counts now show four. Includes independent practice/completed variants, four-row addressing/role plan, staged guide, working reference commands and current-site domain/path/query permalinks. All existing categories and39 ENCOR entries remain available.",
+    "Twelve tasks combine four live configuration/state/save goals with eight historical observations. Practice starts0/12; reference starts4/12 without traffic or fabricated incidents. Earned observations persist through export/import, while live forwarding, topology health and saved state revoke on drift.",
+    "Initial proof correlates three distinct client echo requests: each revisits both routers, produces a TTL1 discard and returns a parent-linked ICMP Type11 Code0 error to PC1. Six-hop Windows trace independently shows alternating routers. Queries, unrelated packets and fewer than three loop probes cannot earn the loop task.",
+    "The configured Null0 /22 guard terminates three new unused-summary requests at R2 without hairpin forwarding or TTL expiry. The connected /24 continues to deliver three real service replies, demonstrating prefix length precedence separately from administrative distance.",
+    "Three controlled incidents require genuine fault evidence followed by fresh repaired traffic: R2 service interface shutdown withdraws its connected /24 and triggers safe discard; a wrong more-specific /24 via R1 overrides the guard after connected withdrawal and causes actual TTL-expiring loops; later removal of the guard recreates the original unused-summary loop, followed by restored discard and service delivery.",
+    "The more-specific repair requires removing the bad static route as well as restoring the interface; merely hiding it behind the connected route does not pass health or the repair task. Server power loss and interface toggles without observed discard do not count as the prescribed withdrawal incident.",
+    "HTTP success requires a complete real200 response with the expected page, matching server transaction and routed request. Saved goals compare both routers running and startup configuration. Normal simulator notifications capture synchronous CLI results when the guide is closed; per-attempt ownership resets with a new lab.",
+    "No simulation engine, global UI, terminal style, node artwork or networking behavior changed. The lab uses existing static forwarding, CEF lookup, TTL handling, ICMP errors, traceroute and HTTP implementation."
+  ],
+  "scope": "IPv4 IOS summary/default forwarding-loop prevention and longest-prefix failure handling. Does not claim CML validation for this new lab or configure mutual redistribution, EIGRP feasible successors, RIP split horizon, BGP AS-path loop prevention, IPv6 or NX-OS.",
+  "references": [
+    {
+      "title": "Cisco: Use a Static Route to the Null0 Interface for Loop Prevention",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/ip-routed-protocols/14956-route-to-null-interface.html",
+      "use": "Summary/default loops and matching discard guard."
+    },
+    {
+      "title": "Cisco: Configure Route Selection for Routers",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/8651-21.html",
+      "use": "Longest-prefix forwarding versus administrative distance for the same prefix."
+    },
+    {
+      "title": "Cisco: Use the Traceroute Command on Operating Systems",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/ip-routed-protocols/22826-traceroute.html",
+      "use": "TTL-limited probes and returned ICMP Time exceeded."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 20,
+    "nativeTests": 2974,
+    "nativeFailures": 0,
+    "nativeDurationMs": 256401.244458,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=4; four nodes/three links/12 tasks and four-row plan; actual initial loop, Null0 discard, connected24 over summary22, service traffic and HTTP; nine tasks with three incident outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=4; four nodes/three links/12 tasks and four-row plan; actual initial loop, Null0 discard, connected24 over summary22, service traffic and HTTP; all12 including connected withdrawal/repair, more-specific looping static repair and guard regression/repair; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=4; four nodes/three links/12 tasks and four-row plan; actual initial loop, Null0 discard, connected24 over summary22, service traffic and HTTP; all12 including connected withdrawal/repair, more-specific looping static repair and guard regression/repair; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=4; four nodes/three links/12 tasks and four-row plan; actual initial loop, Null0 discard, connected24 over summary22, service traffic and HTTP; nine tasks with three incident outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=4; four nodes/three links/12 tasks and four-row plan; actual initial loop, Null0 discard, connected24 over summary22, service traffic and HTTP; nine tasks with three incident outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=4; four nodes/three links/12 tasks and four-row plan; actual initial loop, Null0 discard, connected24 over summary22, service traffic and HTTP; nine tasks with three incident outcomes left unearned; offline YAML export/import, four live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with four labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "0a6efacc128527e34e6ae1583a8ab98ea9995d793fe3f36c302248f4dff15b1d",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed, including embedded offline fonts and single-file packaging checks. Root, dist and all browser-tested copies have identical bytes.",
+    "terminal": "Golden console fixtures match existing fonts, background, foreground, cursor, tabs and controls in both themes and desktop/mobile modes.",
+    "verificationCommands": "All published IOS/Windows commands and reference commands execute through normal CLI. Assertions cover real unused-address failure, server replies, Null0 route output, service traceroute and six-hop looping trace.",
+    "visualInspection": [
+      ".cache/lp-catalog-browser/topology-light-1440.png",
+      ".cache/lp-catalog-browser/guide-light-1440.png",
+      ".cache/lp-catalog-browser/console-light-1440.png",
+      ".cache/lp-catalog-browser/guide-dark-320.png",
+      ".cache/lp-catalog-browser/console-dark-320.png",
+      ".cache/lp-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full12-task UI workflows complete at1440px/light and320px/dark; the other four viewport/theme cases complete nine tasks and leave the three staged incidents unearned. Every case exports/imports actual YAML into an empty offline profile, then loads a reference with four live tasks only.",
+    "Six file:// cases block HTTP(S), use embedded fonts/assets and preserve earned progress. Two sharing cases retain current domain/path/query and do not load a topology just by opening its guide. Seven generic catalog checks retain existing groups, prerequisites, save/cancel protection and lab workflows.",
+    "Browser clock advancement drives normal application frames. No simulator state, route, packet result or completion outcome is injected. Clipboard stubbing is limited to share-link verification."
+  ]
+}
