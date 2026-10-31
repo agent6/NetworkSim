@@ -1,0 +1,82 @@
+{
+  "lab": "EIGRP IPv4 and IPv6 Address Families",
+  "catalogId": "eigrp-ipv4-and-ipv6-address-families",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 4,
+  "links": 3,
+  "tasks": 14,
+  "topology": "PC1\u2013R1\u2013R2\u2013SRV1 with prepared dual-stack addresses, enabled physical links, manual IPv6 host gateways and HTTP. Routers begin without EIGRP and with IPv6 forwarding disabled. SITE-A/SITE-B are local names; the exercise builds IPv4 AS100 before adding IPv6 AS200.",
+  "implemented": [
+    "Eleventh ENARSI Layer 3 Technologies entry with independent practice/completed factories, four-row plan, ordered configuration guide, tested reference and verification commands, current-site permalinks and accurate accessible counts. All existing catalog entries remain; ENCOR stays39 labs with nine in Layer3.",
+    "A real ordered IPv4-only phase requires the exact AS100 network/passive configuration, actual adjacency and learned routes, three delivered replies in each host direction and three IPv6 Routing disabled drops at R1. IPv6 interface addressing alone is not treated as enabled forwarding or a configured routing family. Turning on forwarding without its EIGRP AF does not create a remote route or earn the earlier phase.",
+    "IPv6 unicast forwarding and named AS200 are configured independently under the same local instance. Each family has a matching peer AS, explicit router IDs, passive LANs and one active Gi0/1 exception. Local names intentionally differ. The resulting remote LANs use D AD90, RIB15360 and wideFD1966080; IPv6 fe80::1/.2 next hops are interface-scoped.",
+    "IPv4 and IPv6 traffic are graded separately. Each needs three accepted requests and parent-linked delivered replies in both host directions, correlated with both actual router egresses. The ordered first phase does not substitute for delivery after both families are configured.",
+    "Router-originated proof uses ordinary R1 ping/repeat3 and ping ipv6/repeat3 commands, separately from host probes. Actual transit-source10.0.12.1 and2001:db8:12::1 requests must reach the server and return. Host-only tests cannot earn this goal.",
+    "HTTP requires complete actual200 responses with the expected body over both the literal IPv4 URL and bracketed IPv6 URL. One family, a successful transport alone or a wrong200 body cannot satisfy both service checks.",
+    "After both traffic families are proven, shutting R2 IPv4 AS100 at AF level must withdraw its adjacency and R1 service route without changing the physical link or IPv6 AS200 operation. Three actual IPv4 No route failures plus three IPv6 successes precede restoration and fresh four-way delivery. The IPv6 AF shutdown exercise requires the converse independently.",
+    "Configuration-only shutdown/no-shutdown toggles, two failed probes, server power loss, absent family configuration and general connectivity failure cannot impersonate an observed family recovery. Lost UPDATE counterfactuals separately prevent IPv4 or IPv6 reachability while the other family can still forward.",
+    "Fourteen goals combine seven live forwarding/AF/neighbor/route/health/save checks with seven historical phase/traffic/router/HTTP/recovery observations. Practice starts0/14, the IPv4-only phase reaches2/14, the baseline reaches12/14 and the full normal workflow reaches14/14. The completed reference supplies7/14 without invented observations.",
+    "Per-attempt configuration/route epochs and normal simulator notifications capture CLI evidence with the guide closed. YAML retains earned history but clears runtime protocol/transport state; reopening rebuilds live state. A fresh practice attempt resets phase ownership. Static shortcuts, changed forwarding/gateways, rewiring and unsaved drift revoke live health.",
+    "All published IOS/Windows commands run through the normal CLI. Named configuration displays both AS values under one local instance and replays into clean routers with both real traffic paths restored. Saved startup/reload preserves AS100/AS200 and cancels an unsaved family shutdown. No engine, protocol implementation, CLI parser, UI styling, terminal theme or artwork changed."
+  ],
+  "scope": "IOS named IPv4/IPv6 internal EIGRP using two independently configured address families and a single routed transit. Native/browser validation follows published Cisco behavior and does not claim a fresh CML capture, Cisco binary/wire compatibility, NX-OS, redistribution, authentication, variance, BFD/SIA, multiple independent processes per family or inter-family route conversion. Existing engine limits remain documented in docs/audits/eigrp-update-fidelity.md.",
+  "references": [
+    {
+      "title": "Cisco: Configure EIGRP Named Mode",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/200156-Configure-EIGRP-Named-Mode.html",
+      "use": "Separate named IPv4/IPv6 AF configuration, per-family AS/router ID, AF-interface policy and AF shutdown."
+    },
+    {
+      "title": "Cisco IOS XE17 EIGRP Configuration Guide",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios/config/17-x/ip-routing/b-ip-routing/m_ire-enhanced-igrp.html",
+      "use": "Family-specific operation, wide metrics, RIB scaling and operational verification."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 22,
+    "nativeTests": 3129,
+    "nativeFailures": 0,
+    "nativeDurationMs": 378396.006666,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=11; four nodes/three links/14 tasks and four-row plan; IPv4-only phase with both delivered directions and real IPv6 Routing disabled, independently configured AS100/AS200 families, scoped routes and wideFD1966080/RIB15360, four host/family directions, explicit router probes and both full HTTP responses; 12 configuration/phase/state/traffic tasks with two recoveries unearned; offline YAML export/import, seven live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark 320px: ENARSI Layer 3 Technologies=11; four nodes/three links/14 tasks and four-row plan; IPv4-only phase with both delivered directions and real IPv6 Routing disabled, independently configured AS100/AS200 families, scoped routes and wideFD1966080/RIB15360, four host/family directions, explicit router probes and both full HTTP responses; all14 including independently observed IPv4 and IPv6 AF shutdown/recovery; offline YAML export/import, seven live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=11; four nodes/three links/14 tasks and four-row plan; IPv4-only phase with both delivered directions and real IPv6 Routing disabled, independently configured AS100/AS200 families, scoped routes and wideFD1966080/RIB15360, four host/family directions, explicit router probes and both full HTTP responses; all14 including independently observed IPv4 and IPv6 AF shutdown/recovery; offline YAML export/import, seven live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=11; four nodes/three links/14 tasks and four-row plan; IPv4-only phase with both delivered directions and real IPv6 Routing disabled, independently configured AS100/AS200 families, scoped routes and wideFD1966080/RIB15360, four host/family directions, explicit router probes and both full HTTP responses; 12 configuration/phase/state/traffic tasks with two recoveries unearned; offline YAML export/import, seven live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=11; four nodes/three links/14 tasks and four-row plan; IPv4-only phase with both delivered directions and real IPv6 Routing disabled, independently configured AS100/AS200 families, scoped routes and wideFD1966080/RIB15360, four host/family directions, explicit router probes and both full HTTP responses; 12 configuration/phase/state/traffic tasks with two recoveries unearned; offline YAML export/import, seven live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=11; four nodes/three links/14 tasks and four-row plan; IPv4-only phase with both delivered directions and real IPv6 Routing disabled, independently configured AS100/AS200 families, scoped routes and wideFD1966080/RIB15360, four host/family directions, explicit router probes and both full HTTP responses; 12 configuration/phase/state/traffic tasks with two recoveries unearned; offline YAML export/import, seven live goals only in completed reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with eleven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with eleven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with eleven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with eleven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with eleven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with eleven labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "c682b64a22ed9b3937104c3bd74d5fee96fc800eeb28791cef35fca19fb0338c",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with embedded offline fonts and single-file packaging checks. Root, dist and every browser-tested copy have identical bytes.",
+    "terminal": "Golden console fixtures match existing fonts, background, foreground, cursor, tabs and controls in both themes and desktop/mobile modes.",
+    "verificationCommands": "Every published IOS/Windows query, positive host/router probe, IPv4/IPv6 trace and reference configuration executes. IPv6 route output is compared without imposing a non-Cisco hexadecimal case. Unsupported IPv6 CEF CLI output is not advertised; its forwarding lookup is checked natively and through actual traffic.",
+    "visualInspection": [
+      ".cache/af-catalog-browser/topology-light-1440.png",
+      ".cache/af-catalog-browser/guide-light-1440.png",
+      ".cache/af-catalog-browser/console-light-1440.png",
+      ".cache/af-catalog-browser/guide-dark-320.png",
+      ".cache/af-catalog-browser/console-dark-320.png",
+      ".cache/af-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full14-task normal UI workflows complete at1440px/light and320px/dark. Four other theme/viewport cases complete12 configuration/phase/state/traffic goals and leave two recoveries unearned. Each exports/imports real YAML into a fresh offline profile, then loads a reference with seven live goals only.",
+    "Six file:// scenarios block HTTP(S), use embedded assets and preserve progress. Shared-link scenarios retain the current domain/path/query and leave the workspace untouched by opening instructions. Seven generic catalog checks preserve categories, prerequisites and save/cancel/import behavior.",
+    "Browser clock advancement drives normal application frames. No route, neighbor, packet result or completion is injected. Clipboard stubbing is limited to share-link verification."
+  ]
+}
