@@ -943,14 +943,15 @@ export function bgpNeighborLines(e: Simulator, d: Device, config: any, sessions:
     const reachable = resolveForwardingPaths(d, n.address, vrf, port => e.interfaceUp(d.id, port)).some(path => !/^Null/i.test(path.port));
     lines.push(`  Address tracking is enabled, the RIB does ${reachable ? '' : 'not '}have a route to ${n.address}`, `  Connections established ${stats.established ?? 0}; dropped ${stats.dropped ?? 0}`, `  Last reset ${stats.resetAt !== undefined ? hms(now - stats.resetAt) : 'never'}${stats.resetAt !== undefined && stats.resetReason ? `, due to ${stats.resetReason}` : ''}`);
     if (!internal) {
-      lines.push(`  External BGP neighbor ${n.ebgpMultihop ? `may be up to ${n.ebgpMultihop} hops away` : 'configured for connected checks (single-hop no-disable-connected-check)'}`);
-      if (!n.ebgpMultihop && runtime?.interface) lines.push(`  Interface associated: ${runtime.interface} (peering address in same link)`);
+      const hops = n.ttlSecurityHops ?? n.ebgpMultihop;
+      lines.push(`  External BGP neighbor ${hops ? `may be up to ${hops} hops away` : 'configured for connected checks (single-hop no-disable-connected-check)'}`);
+      if (!hops && runtime?.interface) lines.push(`  Interface associated: ${runtime.interface} (peering address in same link)`);
     }
     lines.push('  Transport(tcp) path-mtu-discovery is enabled', '  Graceful-Restart is disabled');
     const t = s?.transport;
     if (established && t) {
       const local = t.localPort === 179;
-      lines.push('Connection state is ESTAB, I/O status: 1, unread input bytes: 0', `Connection is ECN Disabled, Mininum incoming TTL ${n.ttlSecurityHops?Math.max(1,256-Number(n.ttlSecurityHops)):0}, Outgoing TTL ${n.ttlSecurityHops||internal?255:Number(n.ebgpMultihop??1)}`, `Local host: ${t.localAddress}, Local port: ${local ? 179 : t.localPort}`, `Foreign host: ${n.address}, Foreign port: ${local ? t.peerPort : 179}`, `Connection tableid (VRF): ${vrf ? 1 : 0}`, 'Maximum output segment queue size: 50', '', 'Enqueued packets for retransmit: 0, input: 0  mis-ordered: 0 (0 bytes)', '');
+      lines.push('Connection state is ESTAB, I/O status: 1, unread input bytes: 0', `Connection is ECN Disabled, Mininum incoming TTL ${n.ttlSecurityHops?Math.max(1,255-Number(n.ttlSecurityHops)):0}, Outgoing TTL ${n.ttlSecurityHops||internal?255:Number(n.ebgpMultihop??1)}`, `Local host: ${t.localAddress}, Local port: ${local ? 179 : t.localPort}`, `Foreign host: ${n.address}, Foreign port: ${local ? t.peerPort : 179}`, `Connection tableid (VRF): ${vrf ? 1 : 0}`, 'Maximum output segment queue size: 50', '', 'Enqueued packets for retransmit: 0, input: 0  mis-ordered: 0 (0 bytes)', '');
     } else lines.push('  No active TCP connection', '');
     return lines;
   });

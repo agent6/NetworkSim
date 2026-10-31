@@ -1307,8 +1307,8 @@ export class IOSSession {
     else if(action==='send-community'){if(a.length>3)fail();if(a[2])keyword(a[2],['standard']);if(!n)fail('% Configure neighbor remote-as first.');n.sendCommunity=!no;}
     else if(action==='route-reflector-client'){exactly(a,2);if(!n)fail('% Configure neighbor remote-as first.');n.routeReflectorClient=!no;}
     else if(action==='update-source'){exactly(a,no?2:3);if(!n)fail('% Configure neighbor remote-as first.');n.updateSource=no?undefined:this.getInterface(a[2]);}
-    else if(action==='ttl-security'){if(!n)fail('% Configure neighbor remote-as first.');if(no){if(a.length!==2&&a.length!==3)fail();if(a[2])keyword(a[2],['hops']);delete n.ttlSecurityHops;}else{exactly(a,4);keyword(a[2],['hops']);if(n.ebgpMultihop>1)fail('% TTL-security and ebgp-multihop are mutually exclusive.');n.ttlSecurityHops=integer(a[3],1,254);}}
-    else if(action==='ebgp-multihop'){exactly(a,no?2:3);if(!n)fail('% Configure neighbor remote-as first.');if(!no&&n.ttlSecurityHops)fail('% TTL-security and ebgp-multihop are mutually exclusive.');n.ebgpMultihop=no?1:integer(a[2],1,255);}
+    else if(action==='ttl-security'){if(!n)fail('% Configure neighbor remote-as first.');if(no){if(a.length!==2&&a.length!==3)fail();if(a[2])keyword(a[2],['hops']);delete n.ttlSecurityHops;}else{exactly(a,4);keyword(a[2],['hops']);if(n.ebgpMultihop!==undefined)fail('% TTL-security and ebgp-multihop are mutually exclusive.');n.ttlSecurityHops=integer(a[3],1,254);}}
+    else if(action==='ebgp-multihop'){exactly(a,no?2:3);if(!n)fail('% Configure neighbor remote-as first.');if(!no&&n.ttlSecurityHops)fail('% TTL-security and ebgp-multihop are mutually exclusive.');if(no)delete n.ebgpMultihop;else n.ebgpMultihop=integer(a[2],1,255);}
     else{exactly(a,2);if(!n)fail('% Configure neighbor remote-as first.');n[action==='shutdown'?'shutdown':action==='activate'?'activated':'nextHopSelf']=!no;}
     this.change();
   }

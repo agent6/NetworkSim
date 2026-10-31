@@ -1,0 +1,99 @@
+{
+  "lab": "eBGP Multihop Troubleshooting",
+  "catalogId": "ebgp-multihop-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 7,
+  "links": 6,
+  "tasks": 16,
+  "topology": "R1 AS65001 peers from Loopback0 10.255.1.1 to R4 AS65004 Loopback0 10.255.4.4 across R2 and R3 routed transit. Both transit routers run no BGP. Exact bidirectional peer /32 routes and transit LAN forwarding are prepared; edge remote LANs must be received over actual BGP at AD20. PC1 and SRV1 exercise all four routers; PC2/R2 provide independent local controls.",
+  "implemented": [
+    "Thirty-first ENARSI lab with independent practice/reference attempts, seven-row addressing plan, ordinary IOS/Windows instructions and current-domain/path/query permalinks. Sixteen tasks preserve the existing UI, icons, terminal theme and offline single-HTML use.",
+    "R1 starts with explicit multihop2; R4 uses3. Actual TCP packets from R1 expire at the second transit while both sourced Lo0 ICMP directions and local controls work. Diagnosis requires observed service failure, independent successful controls, sourced peer replies and actual TTL-expiry evidence.",
+    "Reference sets R1 multihop3. TCP travels with TTL3/2/1; both peer views receive OPEN/KEEPALIVE and install edge BGP routes at AD20. R1 service path contains AS65004 and next hop10.255.4.4; R4 client path contains AS65001 and next hop10.255.1.1. The two transit routers do not prepend AS numbers.",
+    "Six exercises cover insufficient TTL2, physical update-source mismatch, missing R1 forward peer /32, missing R3 return peer /32, actual TCP179 ACL filtering and a working TTL-security alternative with strict-bound failure/recovery. Every incident requires actual failed service with working controls and fresh restored forwarding.",
+    "Forward/return route exercises preserve all physical interfaces and TTL3. Return-route verification proves a sourced request reaches R4, then its real reply is dropped at R3 with No route. Underlay loss and TCP179 filtering allow185 simulated seconds for transport/hold expiry. The ACL denies both source/destination TCP179 on R2 Gi0/1 input/output and permits ordinary IP; actual ACL drop events are required.",
+    "TTL-security hops2 sends TTL255 and accepts received TTL253 after two transit decrements. Hops1 at R1 requires254 and rejects that TCP traffic while ordinary Lo0 ping still works. Credit requires working alternative ICMP/HTTP, real minimum-TTL rejection, repaired alternative ICMP/HTTP and final multihop3 baseline restoration.",
+    "Corrected the shared GTSM receive threshold from256-minus-hops to Cisco255-minus-hops, including show output. no neighbor ebgp-multihop now removes the explicit setting; explicit multihop1 also conflicts with TTL-security. GTSM show-neighbor output reports the configured hop bound. Rendered GTSM configuration replays without an obsolete multihop1 conflict.",
+    "Seven live and nine observed tasks: practice0, diagnosis1, baseline10, full16, completed reference only seven live. Three unique ICMP requests per required direction correlate destination acceptance, physical router egress and parent-linked replies; failed probes need actual No route drops. HTTP requires reassembled response data through all four routers. TCP TTL evidence uses the configuration epoch while service recovery evidence follows the healthy-route epoch. YAML retains earned history and rebuilds actual runtime sessions."
+  ],
+  "scope": "IOS IPv4 unicast loopback eBGP across two ordinary routed transit routers, static peer /32 reachability, explicit outgoing TTL and modeled GTSM receive filtering. Cisco primary documentation reviewed; no fresh CML capture, complete binary BGP encoding, cryptographic transport or universal platform interoperability is claimed. No terminal styling or general UI changes.",
+  "references": [
+    {
+      "title": "Cisco: Configure iBGP and eBGP with or without a Loopback Address",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/border-gateway-protocol-bgp/13751-23.html"
+    },
+    {
+      "title": "Cisco: Configuring BGP Neighbor Session Options",
+      "url": "https://www.cisco.com/c/en/us/td/docs/routers/ios-xe/ip-routing/b-ip-routing/m_irg-neighbor-0.html"
+    },
+    {
+      "title": "Cisco: BGP Commands neighbor timers through show bgp nsap summary",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios/iproute_bgp/command/reference/irg_book/irg_bgp4.html"
+    },
+    {
+      "title": "Cisco: Troubleshoot BGP Neighborship Connection Issues",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/border-gateway-protocol-bgp/13752-24.html"
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "native": {
+      "fullRunCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+      "fullRun": {
+        "tests": 3628,
+        "pass": 3627,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "newCatalogTests": 25,
+      "validatedUniqueTests": 3628,
+      "unresolvedFailures": 0,
+      "catalogCountCorrection": {
+        "command": "node --test --test-name-pattern='^(fourth|fifth|sixth|seventh|eighth) ENARSI lab' tests/loop-prevention-catalog.test.ts tests/redistribution-catalog.test.ts tests/summary-troubleshooting-catalog.test.ts tests/pbr-catalog.test.ts tests/vrf-lite-catalog.test.ts",
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "reason": "Five older assertions used spaced syntax and retained expected ENARSI count30. They now expect31; all five corrected test cases pass. Remaining tests are unchanged. The full run had only stale count-assertion failures; all are covered by this successful follow-up."
+      }
+    },
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=31; seven nodes/six links/16 tasks/seven-row two-transit plan; initial actual TTL2 exhaustion despite successful sourced loopback ICMP and independent controls; delivered loopback eBGP OPEN/KEEPALIVE, recursive /32 transport, AD20 and correct single-edge AS paths; all six traffic directions and complete HTTP; ten baseline tasks with all six exercises unearned; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=31; seven nodes/six links/16 tasks/seven-row two-transit plan; initial actual TTL2 exhaustion despite successful sourced loopback ICMP and independent controls; delivered loopback eBGP OPEN/KEEPALIVE, recursive /32 transport, AD20 and correct single-edge AS paths; all six traffic directions and complete HTTP; ten baseline tasks with all six exercises unearned; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=31; seven nodes/six links/16 tasks/seven-row two-transit plan; initial actual TTL2 exhaustion despite successful sourced loopback ICMP and independent controls; delivered loopback eBGP OPEN/KEEPALIVE, recursive /32 transport, AD20 and correct single-edge AS paths; all six traffic directions and complete HTTP; all16 including TTL2, physical source mismatch, missing forward and transit return routes, actual TCP179 filtering and working TTL-security hops2 / strict hops1 rejection / repaired HTTP / baseline restoration; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=31; seven nodes/six links/16 tasks/seven-row two-transit plan; initial actual TTL2 exhaustion despite successful sourced loopback ICMP and independent controls; delivered loopback eBGP OPEN/KEEPALIVE, recursive /32 transport, AD20 and correct single-edge AS paths; all six traffic directions and complete HTTP; all16 including TTL2, physical source mismatch, missing forward and transit return routes, actual TCP179 filtering and working TTL-security hops2 / strict hops1 rejection / repaired HTTP / baseline restoration; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=31; seven nodes/six links/16 tasks/seven-row two-transit plan; initial actual TTL2 exhaustion despite successful sourced loopback ICMP and independent controls; delivered loopback eBGP OPEN/KEEPALIVE, recursive /32 transport, AD20 and correct single-edge AS paths; all six traffic directions and complete HTTP; ten baseline tasks with all six exercises unearned; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=31; seven nodes/six links/16 tasks/seven-row two-transit plan; initial actual TTL2 exhaustion despite successful sourced loopback ICMP and independent controls; delivered loopback eBGP OPEN/KEEPALIVE, recursive /32 transport, AD20 and correct single-edge AS paths; all six traffic directions and complete HTTP; ten baseline tasks with all six exercises unearned; offline YAML export/import, seven live reference goals, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirty-one labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "3aef464351d66efb44763c75cc4d4d486e81e663edf35b40fa22f2ee59f14ed9",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist and all browser-tested offline copies match byte for byte.",
+    "terminal": "Golden terminal fixture matches both themes at mobile and desktop sizes.",
+    "visualInspection": [
+      ".cache/emh-catalog-browser/topology-light-1440.png",
+      ".cache/emh-catalog-browser/guide-light-1440.png",
+      ".cache/emh-catalog-browser/console-light-1440.png",
+      ".cache/emh-catalog-browser/topology-dark-320.png",
+      ".cache/emh-catalog-browser/guide-dark-320.png",
+      ".cache/emh-catalog-browser/console-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full16-task UI workflows at dark320 and light1440; four other theme/width cases earn baseline10 with six exercises unearned. All export/import actual YAML into an empty offline profile, check reference live goals and save/cancel protection.",
+    "Six file:// cases block HTTP(S). Two mocked-host permalink checks preserve current domain/path/query/workspace. Seven generic catalog/prerequisite checks retain prior labs. Browser clocks run ordinary application frames without injected routes, peers, packets or completion flags."
+  ]
+}
