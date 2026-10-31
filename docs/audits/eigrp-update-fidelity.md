@@ -27,6 +27,12 @@ These rows describe the tested command families, not every command registered un
 
 `tests/eigrp-updates.test.ts` adds 14 independent network cases: four classic/named AF initialization cases; IPv4/IPv6 ACK-loss and stale-sequence cases; INIT retry exhaustion; IPv4/IPv6 old-session replay after reload; UPDATE hold refresh; IPv4/IPv6 ACL expiry/reload; and IPv4/IPv6 transit policy/no-form delivery. Assertions include actual routed echo success/failure, queued withdrawals and live counters. Old sequence replay is transmitted through the real simulated link rather than inserted into the RIB.
 
+## Successor and feasible-successor displays
+
+Topology publication now classifies received alternatives against DUAL's retained feasible distance. The ordinary topology display includes successors and feasible successors; `all-links` also includes known nonfeasible paths. Each alternate retains its next hop, interface, total metric and reported distance. A promoted successor is excluded from its own feasible-successor list. Displaying an alternate does not install it in the RIB.
+
+`tests/eigrp-successor-catalog.test.ts` verifies the strict RD < FD condition, RD = FD rejection, retained FD after a higher-cost feasible-successor promotion, classification against historical FD rather than the current route metric, and variance rejection of nonfeasible candidates. Its routed diamond also contrasts promotion without service-prefix ACTIVE with actual QUERY/REPLY convergence; blocking a required reply keeps the route ACTIVE and absent from the RIB. The catalog lab requires actual host traffic before and after each controlled change.
+
 ## Implementation limits
 
 The teaching transport uses a stop-and-wait window, a fixed 500 ms retry interval and 16 attempts. Session/stream generations reject delayed pre-restart packets; they are logical simulator metadata. Full-refresh chunks retain per-prefix ordering. No conditional-receive multicast, binary EIGRP TLVs, adaptive RTT/RTO, sequence-number wrap, graceful restart, control-bandwidth pacing, complete DUAL input matrix or multiple independent named processes are claimed. Existing computed membership/auth eligibility can remove a peer when its configuration becomes incompatible; this is not a complete wire-driven discovery/authentication implementation. Split-horizon and summaries act per local outgoing interface; logical origin/path provenance supplements DUAL loop protection. Redistribution retains a scalar fallback where a complete external vector is unavailable.

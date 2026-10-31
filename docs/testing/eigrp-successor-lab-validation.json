@@ -1,0 +1,88 @@
+{
+  "lab": "EIGRP Successor and Feasible Successor Troubleshooting",
+  "catalogId": "eigrp-successor-and-feasible-successor-troubleshooting",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 6,
+  "links": 6,
+  "tasks": 14,
+  "topology": "PC1\u2013R1\u2013(R2 or R3)\u2013R4\u2013SRV1 routed diamond. All four AS100 neighbor pairs begin working. R1 prefers R2 with server route metric/FD10240 and RD7680. Its known R3 alternate begins at25600/RD12800, failing the feasibility condition. R3 Gi0/1 delay30 is repaired to10; R1 Gi0/2 delay50 and R3 Gi0/0 delay1000 remain intentional.",
+  "implemented": [
+    "Thirteenth ENARSI Layer3 Technologies catalog entry, independent practice/completed instances, six-row addressing/metric plan, staged guide, tested CLI reference and current-origin/path/query permalink. Existing catalog entries remain; ENCOR39 and ENCOR Layer3 nine are preserved.",
+    "Fixed topology publication and show rendering: all-links includes received nonfeasible candidates with actual interface/total/RD; default topology contains successors and feasible successors only. Both classifications use the retained historical FD; a promoted successor is not its own FS. This visibility change does not install alternate routes or alter DUAL selection.",
+    "Initial diagnosis requires actual three-reply delivery in both host directions over R2 while the R3 alternate RD12800 fails FD10240. Repairing R3 delay creates a standby20480/RD7680 with exactly one installed primary successor, AD90 and metric10240.",
+    "Feasible promotion exercise shuts only R1 Gi0/1. The service-prefix entry remains PASSIVE, installs R3 at current metric20480 and retains FD10240 without a service-prefix DUAL ACTIVE. Actual requests in both host directions must bypass R2 through R3/R4 before uplink restoration and fresh preferred-path delivery.",
+    "Strict-boundary exercise uses R3 delay20: alternate23040/RD10240 equals local FD10240 and is rejected as feasible. It appears only in all-links. Real primary-path traffic is required before restoration and fresh traffic afterward. Changing a local R1 delay cannot rewrite the remote RD.",
+    "Nonfeasible exercise uses R3 delay30 plus R1 primary shutdown. Actual DUAL ACTIVE with pending replies and no installed service route must precede DUAL PASSIVE/newFD25600 and the25600 R3 route. Blocking the actual R3 REPLY holds the route ACTIVE and absent; restoring delivery permits convergence and real alternate traffic. This cannot impersonate immediate feasible promotion.",
+    "Local-metric exercise changes R1 primary delay100, making the R2 path33280 while R3 remains20480. Outgoing server requests follow R3 and reverse client requests use still-up R2. Historical FD remains10240. A counterfactual RD12800 is classified nonfeasible even though it is below the current20480 metric; variance also cannot install it.",
+    "Both-uplink loss requires exact R1 interface shutdowns, real server No route failures and working three-reply local-gateway delivery. Server power loss or removed cables cannot impersonate it. Restore both ports and prove fresh preferred-path traffic.",
+    "Every controlled exercise needs its own actual state/path evidence plus three fresh replies in both directions after restoring the intended baseline. Configuration-only toggles, fewer probes, one-way requests, static shortcuts, rewiring, wrong gateways or unrelated server failures cannot earn these recoveries.",
+    "HTTP needs a complete actual200 service response with the correct body, traversing R2. Six live and eight historical criteria yield practice0/14, initial diagnosis1/14, baseline9/14 and full14/14. Reference supplies only six live goals, without invented observations.",
+    "Per-attempt config/route epochs and ordinary simulator notifications record actual events with the guide closed. YAML preserves earned history while protocol/transport state rebuilds; new practice resets it. Canonical metric/protocol config replays into clean routers; saved reload restores an unsaved standby fault. UI layout, terminal theme/fonts/controls and icons are unchanged."
+  ],
+  "scope": "Classic IOS IPv4 internal EIGRP, default K-values, variance1 and one AS100 routed diamond. The display fix covers the common IPv4/IPv6 topology publication/rendering path, with broad existing protocol/show regressions retained. No fresh CML capture, exact IOS timing/binary compatibility, complete DUAL input matrix, multipath-share ratios, SIA timing exercise, named/wide-metric conversion or EIGRP authentication expansion is claimed. The ACTIVE interval can be brief and is inspected in simulation events. Existing logical protocol/transport limits remain in docs/audits/eigrp-update-fidelity.md.",
+  "references": [
+    {
+      "title": "Cisco EIGRP show command reference",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_eigrp/command/ire-cr-book/ire-s1.html",
+      "use": "Topology/default/all-links behavior and strict reported-distance feasibility."
+    },
+    {
+      "title": "RFC7868: Cisco EIGRP, sections3.2\u20133.3 and5.6.1",
+      "url": "https://www.rfc-editor.org/rfc/rfc7868.html",
+      "use": "Historical FD, strict feasibility, PASSIVE/ACTIVE and classic metric components."
+    },
+    {
+      "title": "Cisco: Troubleshoot EIGRP Common Issues",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/118974-technote-eigrp-00.html",
+      "use": "Nonfeasible path inspection and distinction from installed successor routes."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 23,
+    "focusedControlAndShowTests": 85,
+    "nativeTests": 3175,
+    "nativeFailures": 0,
+    "nativeDurationMs": 360870.389625,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=13; six nodes/six links/14 tasks/six-row plan; actual working-primary diagnosis with nonfeasible RD12800/FD10240, corrected FS20480/RD7680, successor AD90/current10240 and real bidirectional host/HTTP traffic; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark 320px: ENARSI Layer 3 Technologies=13; six nodes/six links/14 tasks/six-row plan; actual working-primary diagnosis with nonfeasible RD12800/FD10240, corrected FS20480/RD7680, successor AD90/current10240 and real bidirectional host/HTTP traffic; all14 including observed FS promotion, strict equality, diffusing convergence, metric selection and both-uplink isolation/recovery; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=13; six nodes/six links/14 tasks/six-row plan; actual working-primary diagnosis with nonfeasible RD12800/FD10240, corrected FS20480/RD7680, successor AD90/current10240 and real bidirectional host/HTTP traffic; all14 including observed FS promotion, strict equality, diffusing convergence, metric selection and both-uplink isolation/recovery; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=13; six nodes/six links/14 tasks/six-row plan; actual working-primary diagnosis with nonfeasible RD12800/FD10240, corrected FS20480/RD7680, successor AD90/current10240 and real bidirectional host/HTTP traffic; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=13; six nodes/six links/14 tasks/six-row plan; actual working-primary diagnosis with nonfeasible RD12800/FD10240, corrected FS20480/RD7680, successor AD90/current10240 and real bidirectional host/HTTP traffic; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=13; six nodes/six links/14 tasks/six-row plan; actual working-primary diagnosis with nonfeasible RD12800/FD10240, corrected FS20480/RD7680, successor AD90/current10240 and real bidirectional host/HTTP traffic; nine baseline tasks with five controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with thirteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with thirteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with thirteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "225beb619a686865e7258eb07ec567e092f362c51aaa0c427a6d664aae653427",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed with offline fonts and single-file packaging checks; root/dist and all browser-tested artifacts are identical.",
+    "terminal": "Golden console fixture matches existing fonts/background/foreground/cursor/tabs/controls across both themes and desktop/mobile.",
+    "verificationCommands": "All published IOS/Windows queries, positive probes, trace and repair commands execute normally. Native tests verify ordinary/all-links output, actual forwarding choices, real UPDATE and QUERY/REPLY counterfactuals, rendered config replay and saved reload.",
+    "visualInspection": [
+      ".cache/efs-catalog-browser/topology-light-1440.png",
+      ".cache/efs-catalog-browser/guide-light-1440.png",
+      ".cache/efs-catalog-browser/console-light-1440.png",
+      ".cache/efs-catalog-browser/guide-dark-320.png",
+      ".cache/efs-catalog-browser/console-dark-320.png",
+      ".cache/efs-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full fourteen-task workflows complete at1440px/light and320px/dark. Four other theme/viewport scenarios complete nine baseline goals and leave five controlled exercises unearned. Every scenario exports/imports actual YAML in a fresh offline profile, then loads a reference with six live goals only.",
+    "Six file:// scenarios block external HTTP(S) and use embedded assets. Two permalink checks retain origin/path/query without replacing the workspace. Seven generic checks preserve catalog groups/sections/counts, prerequisites and save/cancel/import behavior.",
+    "Browser clock drives ordinary application frames. No routes, peers, packet results or goal completions are injected. Clipboard stubbing is limited to link-copy verification."
+  ]
+}

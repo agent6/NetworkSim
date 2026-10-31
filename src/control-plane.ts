@@ -168,7 +168,13 @@ function dualPublish(engine:Simulator,entry:DualEntry):void {
   const original=engine.getDevice(entry.deviceId),d=original?routingDevice(original,entry.vrf):undefined;if(!d)return;const field=entry.protocol==='eigrp6'?'eigrp6Topology':'eigrpTopology';
   const rows:any[]=d.runtime.features[field]??=[];let row=rows.find(r=>r.network===entry.network&&r.prefix===entry.prefix&&(r.vrf??'')===(entry.vrf??''));
   if(!row){row={network:entry.network,prefix:entry.prefix,vrf:entry.vrf};rows.push(row);}
-  Object.assign(row,{state:entry.state,feasibleDistance:entry.fd,ribMetric:eigrpRibMetric(d,entry.protocol,entry.successors[0]?.metric??entry.fd),metricMode:config(d,entry.protocol)?.name?'wide':'classic',activeSince:entry.activeSince,successors:entry.successors.map(r=>({nextHop:r.nextHop,interface:r.interface,metric:r.metric,reportedDistance:r.reportedDistance})),pendingReplies:[...entry.pending.values()].map(p=>({address:p.edge.to.ip,interface:p.edge.from.name,siaQueries:p.siaSent})),reason:entry.lastReason});
+  const path=(r:DualRoute)=>({nextHop:r.nextHop,interface:r.interface,metric:r.metric,reportedDistance:r.reportedDistance});
+  // Classify received alternatives against DUAL's retained FD, not the current
+  // successor metric. Non-feasible paths remain visible only with all-links.
+  const alternatives=entry.candidates.filter((r,i,all)=>
+    !entry.successors.some(s=>s.nextHop===r.nextHop&&s.interface===r.interface)&&
+    all.findIndex(s=>s.nextHop===r.nextHop&&s.interface===r.interface)===i);
+  Object.assign(row,{state:entry.state,feasibleDistance:entry.fd,ribMetric:eigrpRibMetric(d,entry.protocol,entry.successors[0]?.metric??entry.fd),metricMode:config(d,entry.protocol)?.name?'wide':'classic',activeSince:entry.activeSince,successors:entry.successors.map(path),feasibleSuccessors:alternatives.filter(r=>(r.reportedDistance??Infinity)<entry.fd).map(path),nonFeasiblePaths:alternatives.filter(r=>!((r.reportedDistance??Infinity)<entry.fd)).map(path),pendingReplies:[...entry.pending.values()].map(p=>({address:p.edge.to.ip,interface:p.edge.from.name,siaQueries:p.siaSent})),reason:entry.lastReason});
 }
 function dualInstall(engine:Simulator,entry:DualEntry,candidates:DualRoute[]):void {
   const original=engine.getDevice(entry.deviceId),d=original?routingDevice(original,entry.vrf):undefined;if(!d)return;

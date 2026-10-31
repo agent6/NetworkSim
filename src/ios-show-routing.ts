@@ -696,7 +696,7 @@ function eigrpEntries(d: Device, protocol: EigrpProtocol, config: any, vrf?: str
   const learned = (s: any): EigrpPath => ({ via: String(s.nextHop ?? 'Connected'), interface: s.interface, metric: s.metric, reported: s.reportedDistance });
   for (const r of d.runtime.features[v6 ? 'eigrp6Topology' : 'eigrpTopology'] ?? []) {
     if (!sameVrf(r.vrf, vrf)) continue;
-    entries.set(key(r.network, r.prefix), { network: r.network, prefix: r.prefix, active: r.state === 'ACTIVE', fd: Number(r.feasibleDistance), successors: (r.successors ?? []).map(learned), feasible: (r.feasibleSuccessors ?? []).map(learned), other: [], activeSince: r.activeSince, pendingReplies: r.pendingReplies });
+    entries.set(key(r.network, r.prefix), { network: r.network, prefix: r.prefix, active: r.state === 'ACTIVE', fd: Number(r.feasibleDistance), successors: (r.successors ?? []).map(learned), feasible: (r.feasibleSuccessors ?? []).map(learned), other: (r.nonFeasiblePaths ?? []).map(learned), activeSince: r.activeSince, pendingReplies: r.pendingReplies });
   }
   const routes = d.runtime.routes.filter(r => sameVrf(r.vrf, vrf) && isIPv6(r.network) === v6);
   for (const s of routes.filter(r => r.protocol === 'D summary')) {
