@@ -1,0 +1,86 @@
+{
+  "lab": "BGP IPv4 and IPv6 Address Families",
+  "catalogId": "bgp-ipv4-and-ipv6-address-families",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 6,
+  "links": 5,
+  "tasks": 16,
+  "topology": "R1 AS65001 - R2 AS65002 - R3 AS65003. PC1 uses the R1 client LAN, PC2 independently tests the R2 local LAN, and SRV1 uses the R3 service LAN. All links and hosts are dual stack. Each physical router pair has one native IPv4 BGP transport and one native IPv6 BGP transport. Only R1 and R3 originate their client/service LANs in the corresponding address families. No IGP or router static/default routes; host IPv6 defaults use the local router link-local address.",
+  "implemented": [
+    "Twenty-eighth ENARSI entry: independent practice/reference documents, six-row dual-stack addressing/role plan, staged ordinary IOS/Windows guide and current-deployment domain/path/query permalinks. Existing UI, icons, themes, terminal styling, layout and offline single-HTML delivery remain intact.",
+    "Practice prepares global AS/peer definitions after no bgp default ipv4-unicast and leaves both families explicitly unactivated. No remote learned routes or live peer sessions are fabricated. Diagnosis requires actual failed service probes in both directions/families and real replies in both directions/families of the independent PC2/R2 control.",
+    "IPv4-only configuration activates only IPv4 transport peers under address-family ipv4 unicast; four directed IPv4 peer views establish and exchange IPv4 LANs while IPv6 service remains unavailable. It can earn IPv4 traffic/HTTP goals independently. Adding explicit IPv6 activation forms native IPv6 transports and receives IPv6 LAN routes without enabling IPv4 NLRI on those IPv6 neighbors.",
+    "Dual stack has four directed peer views per family: two physical peer pairs per family, with separate native IPv4 and IPv6 TCP179 transports. Received OPEN/KEEPALIVE and negotiated family evidence, actual transport sources, BGP AS-path prepending, external AD20, global next-hop rewriting and physical CEF forwarding are checked. R1 service AS path is 65002 65003 in both families; R3 client path is 65002 65001.",
+    "Four faults independently deactivate IPv4/IPv6 on R1 or deny IPv4/IPv6 service export on R2. Each requires three actual failed service requests in both affected directions, working unaffected-family requests and both local-control directions in both families, followed by fresh successful restored traffic. Policy faults retain Established sessions and R2 service routes. Same-name SERVICE-OUT sequence5 entries remain separate IPv4/IPv6 namespaces.",
+    "Nine observed goals check diagnosis, separate IPv4/IPv6 service/control traffic, full explicit IPv4/IPv6 TCP HTTP responses, and four family recoveries. Seven live goals check independent family policy/session-route state, combined paths, health and all saved router configs. Practice0, diagnosis1, IPv4 phase5, dual-stack baseline12, full16; completed reference earns only seven live goals. Configuration-only, partial, omitted unaffected/control traffic and stale evidence fail. YAML retains earned observations and rebuilds live protocol state.",
+    "Corrected BGP address-family CLI discovery: the expanded command tree now includes both implemented IPv4 and IPv6 branches, so ambiguous ipv Tab input is retained and explicit IPv6 activation completion/help is available. BGP usage advertises its implemented optional VRF syntax. No simulation-engine or terminal-theme rewrite."
+  ],
+  "scope": "IOS IPv4/IPv6 unicast eBGP in this bounded three-AS topology. Native IPv4 and native IPv6 transport sessions are separate; this lab does not teach cross-family NLRI transport or claim a shared connection. Native checks additionally cover IPv6-first activation, exact IPv6 origination, wire family/source/TTL, ND, IPv4 TCP179 blocking/hold expiry with IPv6 continuity, rendered replay, hard reset, saved reload and family-scoped policy. No fresh CML capture, complete binary BGP encoding or universal platform interoperability is claimed.",
+  "references": [
+    {
+      "title": "Cisco: Configuring a Basic BGP Network",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_bgp/configuration/15-mt/irg-15-mt-book/irg-basic-net.html",
+      "use": "Explicit neighbor activation, no bgp default ipv4-unicast, and IPv6 transport neighbors not implicitly activated in the IPv4 family."
+    },
+    {
+      "title": "Cisco: BGP Commands A through B",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_bgp/command/irg-cr-book/bgp-a1.html",
+      "use": "Address-family contexts and default IPv4 unicast behavior."
+    },
+    {
+      "title": "Cisco: BGP Commands M through neighbor soo",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios/iproute_bgp/command/reference/irg_book/irg_bgp3.html",
+      "use": "Family-scoped neighbor activate/no neighbor activate and route exchange."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed",
+    "native": {
+      "command": "node --test --test-concurrency=4 tests/*.test.ts",
+      "tests": 3553,
+      "pass": 3553,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "newCatalogTests": 25
+    },
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=28; six nodes/five links/16 tasks/six-row dual-stack plan; actual unactivated-family diagnosis, independently configured IPv4-only and dual-stack phases, four native sessions per family with delivered OPEN/KEEPALIVE, AD20, AS prepending and physical next-hop forwarding; eight service/control traffic directions and complete explicit IPv4/IPv6 HTTP; twelve baseline goals with all four incidents unearned; offline YAML export/import, seven live reference goals, responsive topology/guide, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=28; six nodes/five links/16 tasks/six-row dual-stack plan; actual unactivated-family diagnosis, independently configured IPv4-only and dual-stack phases, four native sessions per family with delivered OPEN/KEEPALIVE, AD20, AS prepending and physical next-hop forwarding; eight service/control traffic directions and complete explicit IPv4/IPv6 HTTP; twelve baseline goals with all four incidents unearned; offline YAML export/import, seven live reference goals, responsive topology/guide, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=28; six nodes/five links/16 tasks/six-row dual-stack plan; actual unactivated-family diagnosis, independently configured IPv4-only and dual-stack phases, four native sessions per family with delivered OPEN/KEEPALIVE, AD20, AS prepending and physical next-hop forwarding; eight service/control traffic directions and complete explicit IPv4/IPv6 HTTP; all16 including independent IPv4/IPv6 activation and same-name policy failure/repair with unaffected-family traffic; offline YAML export/import, seven live reference goals, responsive topology/guide, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=28; six nodes/five links/16 tasks/six-row dual-stack plan; actual unactivated-family diagnosis, independently configured IPv4-only and dual-stack phases, four native sessions per family with delivered OPEN/KEEPALIVE, AD20, AS prepending and physical next-hop forwarding; eight service/control traffic directions and complete explicit IPv4/IPv6 HTTP; all16 including independent IPv4/IPv6 activation and same-name policy failure/repair with unaffected-family traffic; offline YAML export/import, seven live reference goals, responsive topology/guide, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=28; six nodes/five links/16 tasks/six-row dual-stack plan; actual unactivated-family diagnosis, independently configured IPv4-only and dual-stack phases, four native sessions per family with delivered OPEN/KEEPALIVE, AD20, AS prepending and physical next-hop forwarding; eight service/control traffic directions and complete explicit IPv4/IPv6 HTTP; twelve baseline goals with all four incidents unearned; offline YAML export/import, seven live reference goals, responsive topology/guide, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=28; six nodes/five links/16 tasks/six-row dual-stack plan; actual unactivated-family diagnosis, independently configured IPv4-only and dual-stack phases, four native sessions per family with delivered OPEN/KEEPALIVE, AD20, AS prepending and physical next-hop forwarding; eight service/control traffic directions and complete explicit IPv4/IPv6 HTTP; twelve baseline goals with all four incidents unearned; offline YAML export/import, seven live reference goals, responsive topology/guide, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-eight labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "558243781e101f97d3f183945a989c5af22a670e2d3f148d3ff4f801c603923d",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist and all browser-tested copies match byte for byte.",
+    "terminal": "Golden terminal fixture matches both themes at mobile and desktop sizes.",
+    "visualInspection": [
+      ".cache/baf-catalog-browser/topology-light-1440.png",
+      ".cache/baf-catalog-browser/guide-light-1440.png",
+      ".cache/baf-catalog-browser/console-light-1440.png",
+      ".cache/baf-catalog-browser/guide-dark-320.png",
+      ".cache/baf-catalog-browser/console-dark-320.png",
+      ".cache/baf-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full16-task ordinary UI workflows at dark320 and light1440; four other theme/width cases earn baseline12 with all four incidents unearned. All export/import real YAML into an empty offline profile and check reference live goals, responsive topology/guide and save/cancel protection.",
+    "Six file:// cases block HTTP(S); two mocked-host permalink checks preserve domain/path/query/workspace; seven generic catalog/prerequisite checks retain earlier labs. Browser clocks run ordinary application frames without injected routes, peers, packets or completion flags."
+  ]
+}
