@@ -110,6 +110,6 @@ export function pruneInactiveStaticRoutes(device:Device,interfaceUp:(port:string
 /** The operational RIB retains the best administrative tier per exact prefix, including eligible variance paths. */
 function installedRoutes(routes:readonly Route[]):Route[] {
  const groups=new Map<string,Route[]>();for(const route of routes){const key=[route.vrf??'',route.network,route.prefix].join('|');const rows=groups.get(key)??[];rows.push(route);groups.set(key,rows);}
- return [...groups.values()].flatMap(rows=>{const usable=rows.filter(r=>r.ad<255&&(r.share===undefined||r.share>0));if(!usable.length)return[];const best=[...usable].sort((a,b)=>a.ad-b.ad||a.metric-b.metric)[0];return usable.filter(r=>r.ad===best.ad&&(r.metric===best.metric||r.loadShare&&best.loadShare));});
+ return [...groups.values()].flatMap(rows=>{const usable=rows.filter(r=>r.ad<255&&(r.share===undefined||Number.isFinite(r.share)&&(r.share>0||r.share===0&&r.protocol.startsWith('D')&&r.loadShare)));if(!usable.length)return[];const best=[...usable].sort((a,b)=>a.ad-b.ad||a.metric-b.metric)[0];return usable.filter(r=>r.ad===best.ad&&(r.metric===best.metric||r.loadShare&&best.loadShare));});
 }
 export function selectInstalledRoutes(device:Device):void {device.runtime.routes=installedRoutes(device.runtime.routes);}

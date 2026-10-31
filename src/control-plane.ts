@@ -181,9 +181,12 @@ function dualInstall(engine:Simulator,entry:DualEntry,candidates:DualRoute[]):vo
   d.runtime.routes=d.runtime.routes.filter(r=>!(r.protocol.startsWith('D')&&r.protocol!=='D summary'&&r.network===entry.network&&r.prefix===entry.prefix&&(r.vrf??'')===(entry.vrf??'')));
   if(entry.state==='ACTIVE'){dualPublish(engine,entry);return;}
   candidates.sort((a,b)=>a.ad-b.ad||a.metric-b.metric||natural(a.nextHop??'',b.nextHop??''));const best=candidates[0],cfg=config(d,entry.protocol)!;
-  const eligible=best?candidates.filter(r=>r.ad===best.ad&&r.metric<=best.metric*(cfg.trafficShare==='min'?1:Math.max(1,Number(cfg.variance??1)))&&(r.metric===best.metric||(r.reportedDistance??Infinity)<entry.fd)):[];
+  const eligible=best?candidates.filter(r=>r.ad===best.ad&&r.metric<=best.metric*Math.max(1,Number(cfg.variance??1))&&(r.metric===best.metric||(r.reportedDistance??Infinity)<entry.fd)):[];
   const chosen=eligible.filter((r,i)=>eligible.findIndex(p=>p.nextHop===r.nextHop&&p.interface===r.interface)===i).slice(0,Number(cfg.maximumPaths??4));
-  entry.successors=chosen.map(r=>({...r}));for(const r of chosen)d.runtime.routes.push({...r,metric:eigrpRibMetric(d,entry.protocol,r.metric),...(config(d,entry.protocol)?.name?{wideMetric:r.metric}:{}),loadShare:chosen.length>1});dualPublish(engine,entry);
+  const largest=Math.max(...chosen.map(r=>r.metric));
+  // Zero share suppresses forwarding, not RIB installation: traffic-share min
+  // retains variance-eligible backups alongside the minimum-metric paths.
+  entry.successors=chosen.map(r=>({...r}));for(const r of chosen)d.runtime.routes.push({...r,metric:eigrpRibMetric(d,entry.protocol,r.metric),...(config(d,entry.protocol)?.name?{wideMetric:r.metric}:{}),loadShare:chosen.length>1,share:cfg.trafficShare==='min'?(r.metric===best.metric?1:0):Math.max(1,Math.floor(largest/Math.max(1,r.metric)))});dualPublish(engine,entry);
 }
 function dualComplete(engine:Simulator,entry:DualEntry):void {
   if(entry.state!=='ACTIVE'||entry.pending.size)return;engine.clock.cancel(entry.timer);entry.timer=undefined;
@@ -1148,10 +1151,11 @@ function installIgp(engine:Simulator,endpoints:RoutedPort[],edges:Adj[],protocol
     for(const entries of groups.values()) {
       const rank=(r:Route)=>r.protocol==='O'?0:r.protocol==='O IA'?1:2;
       entries.sort((a,b)=>a.ad-b.ad||(ospfProtocol(protocol)?rank(a)-rank(b):0)||a.metric-b.metric||natural(a.nextHop??'',b.nextHop??''));
-      const best=entries[0],fd=best.metric,variance=eigrpProtocol(protocol)&&localConfig.trafficShare!=='min'?Math.max(1,Number(localConfig.variance??1)):1;
+      const best=entries[0],fd=best.metric,variance=eigrpProtocol(protocol)?Math.max(1,Number(localConfig.variance??1)):1;
       const eligible=entries.filter(r=>r.ad===best.ad&&(!ospfProtocol(protocol)||rank(r)===rank(best))&&r.metric<=fd*variance&&(!eigrpProtocol(protocol)||r.metric===fd||(r.reportedDistance??Infinity)<fd));
       const unique=eligible.filter((r,i)=>eligible.findIndex(x=>x.nextHop===r.nextHop&&x.interface===r.interface)===i).slice(0,Number(localConfig.maximumPaths??4));
-      for(const r of unique){r.loadShare=unique.length>1;local.device.runtime.routes.push(r);}
+      const largest=Math.max(...unique.map(r=>r.metric));
+      for(const r of unique){r.loadShare=unique.length>1;if(eigrpProtocol(protocol))r.share=localConfig.trafficShare==='min'?(r.metric===fd?1:0):Math.max(1,Math.floor(largest/Math.max(1,r.metric)));local.device.runtime.routes.push(r);}
       if(eigrpProtocol(protocol))local.device.runtime.features[protocol==='eigrp6'?'eigrp6Topology':'eigrpTopology'].push({network:best.network,prefix:best.prefix,vrf:local.iface.vrf,state:'PASSIVE',feasibleDistance:fd,successors:unique.map(r=>({nextHop:r.nextHop,interface:r.interface,metric:r.metric,reportedDistance:r.reportedDistance})),feasibleSuccessors:entries.filter(r=>(r.reportedDistance??Infinity)<fd&&r.metric>fd).map(r=>({nextHop:r.nextHop,metric:r.metric,reportedDistance:r.reportedDistance}))});
     }
   }

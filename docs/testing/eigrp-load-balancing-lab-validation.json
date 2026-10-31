@@ -1,0 +1,78 @@
+{
+  "lab": "EIGRP Equal and Unequal Cost Load Balancing",
+  "catalogId": "eigrp-equal-and-unequal-cost-load-balancing",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 6,
+  "links": 6,
+  "tasks": 14,
+  "topology": "Classic IOS EIGRP AS100 diamond R1\u2013R2/R3\u2013R4, PC1 behind R1 and SRV1 behind R4. Eight prepared server IP bindings .40.10\u201317 create separate default CEF source/destination flows. Practice begins with equal metrics but maximum-paths 1. Final R1 paths have metrics10240/20480, RD7680, maximum-paths2, variance2 and balanced traffic-share counts2/1.",
+  "implemented": [
+    "Fifteenth ENARSI Layer3 Technologies lab with independent practice/completed documents, six-row addressing plan, staged instructions, validated reference/verification commands and current-origin/path/query permalinks. Existing UI, terminal, artwork and layout are preserved.",
+    "Corrected EIGRP forwarding shares: balanced installation assigns integer traffic-share counts using the highest installed metric divided by each path metric, rounded down. Detailed show ip route and CEF now consume the same weights. Equal paths use1/1; the prepared unequal paths use2/1. Maximum-paths remains an installation cap and strict RD < retained FD still excludes nonfeasible alternatives.",
+    "Corrected traffic-share min across-interfaces: all variance-eligible paths remain in the operational RIB, with zero forwarding share on worse paths. CEF excludes the zero-share backup; DUAL reassigns share1 if it becomes the only successor after uplink failure. Route selection preserves zero-share EIGRP multipath backups without changing zero-share static forwarding behavior.",
+    "Initial observation requires three accepted requests and parent-linked replies for each of eight server addresses over R1/R2/R4. ECMP requires those eight actual flows to use both branches with stable per-flow egress. Unequal variance1 requires only the primary installed while the alternate remains feasible; variance2 admits both and actual weighted CEF traffic must reach the service.",
+    "Balanced service validation requires all eight three-reply destination flows, a three-reply reverse server probe and a complete actual HTTP200 service body. Minimum-only, nonfeasibility and failover exercises require delivered traffic in the changed state followed by fresh restored balanced traffic; config toggles alone cannot earn them.",
+    "Feasibility comparison retains FD10240 while R3 RD becomes10240 and total23040. Despite variance3 including the total metric threshold, strict feasibility excludes that path. Restoring R3 delay10 and R1 variance2 must restore the two weighted paths.",
+    "Per-attempt config/route epochs prevent stale traffic from earning a later stage. Six live and eight historical checks yield practice0/14, initial diagnosis1/14, baseline11/14 and full14/14. Completed reference supplies six live checks only. Earned observations persist through YAML export/import; fresh practice starts without history."
+  ],
+  "scope": "Classic IOS IPv4 EIGRP internal multipath and CEF per-flow weighted forwarding. No new per-packet load-sharing command, hash bucket/hardware ASIC equivalence, exact sample packet ratio, physical bandwidth throughput model or fresh CML capture is claimed. The shared EIGRP installation fix also applies to existing named/IPv6 paths, with existing regression coverage; this lab teaches classic IPv4 only.",
+  "references": [
+    {
+      "title": "Cisco: Unequal Cost Path Load Balancing (Variance) in IGRP and EIGRP",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/13677-19.html",
+      "use": "Variance, feasibility, integer traffic-share counts and retaining routes under traffic-share min; CEF per-flow behavior."
+    },
+    {
+      "title": "Cisco IOS EIGRP command reference",
+      "url": "https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/iproute_eigrp/command/ire-cr-book/ire-s1.html",
+      "use": "EIGRP traffic-sharing verification and supported command context."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "focusedTests": 19,
+    "focusedControlAndResolverTests": 85,
+    "nativeTests": 3218,
+    "nativeFailures": 0,
+    "nativeDurationMs": 353926.676333,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light 320px: ENARSI Layer 3 Technologies=15; six nodes/six links/14 tasks/six-row plan; eight server destination flows with actual three-reply delivery, stable per-flow egress, single-path diagnosis, ECMP and variance-1 exclusion followed by 2:1 weighted UCMP and reverse/HTTP traffic; eleven baseline tasks with three controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 390px: ENARSI Layer 3 Technologies=15; six nodes/six links/14 tasks/six-row plan; eight server destination flows with actual three-reply delivery, stable per-flow egress, single-path diagnosis, ECMP and variance-1 exclusion followed by 2:1 weighted UCMP and reverse/HTTP traffic; eleven baseline tasks with three controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=15; six nodes/six links/14 tasks/six-row plan; eight server destination flows with actual three-reply delivery, stable per-flow egress, single-path diagnosis, ECMP and variance-1 exclusion followed by 2:1 weighted UCMP and reverse/HTTP traffic; all14 including minimum-only RIB retention, strict feasibility and uplink failover with fresh restored traffic; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=15; six nodes/six links/14 tasks/six-row plan; eight server destination flows with actual three-reply delivery, stable per-flow egress, single-path diagnosis, ECMP and variance-1 exclusion followed by 2:1 weighted UCMP and reverse/HTTP traffic; all14 including minimum-only RIB retention, strict feasibility and uplink failover with fresh restored traffic; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=15; six nodes/six links/14 tasks/six-row plan; eight server destination flows with actual three-reply delivery, stable per-flow egress, single-path diagnosis, ECMP and variance-1 exclusion followed by 2:1 weighted UCMP and reverse/HTTP traffic; eleven baseline tasks with three controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=15; six nodes/six links/14 tasks/six-row plan; eight server destination flows with actual three-reply delivery, stable per-flow egress, single-path diagnosis, ECMP and variance-1 exclusion followed by 2:1 weighted UCMP and reverse/HTTP traffic; eleven baseline tasks with three controlled exercises unearned; offline YAML export/import, six live goals only in completed reference, responsive guide/diamond topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with fifteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with fifteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with fifteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with fifteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with fifteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with fifteen labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "581383a1ecd08cbb95f7426e7bf675c95a51217e755e3e42f4e658018c9d0231",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; generated root/dist HTML and all browser-tested copies are byte-identical, with offline assets embedded.",
+    "terminal": "Golden fixture matches unchanged font/background/foreground/cursor/tabs/controls in light/dark and mobile/desktop.",
+    "visualInspection": [
+      ".cache/elb-catalog-browser/topology-light-1440.png",
+      ".cache/elb-catalog-browser/guide-light-1440.png",
+      ".cache/elb-catalog-browser/console-light-1440.png",
+      ".cache/elb-catalog-browser/guide-dark-320.png",
+      ".cache/elb-catalog-browser/console-dark-320.png",
+      ".cache/elb-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full14-task ordinary UI workflows complete at320px/dark and1440px/light. Four other theme/viewport cases complete11 baseline tasks and leave the three controlled exercises unearned. All export/import actual YAML in an empty offline profile and load a reference with six live goals only.",
+    "Six file:// browser cases block all external HTTP(S). Two permalink checks preserve domain/path/query without replacing the workspace; seven generic catalog checks cover counts, original labs, prerequisites and save/cancel/import behavior.",
+    "Browser clock advances ordinary application frames; no routes, neighbors, traffic results or task completions are injected. Native tests additionally check3000 stable CEF lookups for approximate2:1 weighting, nonintegral share rounding, path limits and zero-share backup failover."
+  ]
+}
