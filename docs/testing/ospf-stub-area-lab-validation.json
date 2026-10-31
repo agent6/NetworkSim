@@ -1,0 +1,81 @@
+{
+  "lab": "OSPF Stub and Totally Stubby Area",
+  "catalogId": "ospf-stub-and-totally-stubby-area",
+  "group": "CCNP ENARSI",
+  "section": "Layer 3 Technologies",
+  "date": "2026-10-31",
+  "nodes": 8,
+  "links": 7,
+  "tasks": 16,
+  "topology": "R1 core/ASBR and R2 ABR share area0. R2 connects R3/PC1 in stub area1 and R4/PC2 in totally stubby area2. R1 core PC3 is an independent control; HTTP SRV1 is on connected external203.0.113.0/24, outside OSPF. Only that connected prefix is redistributed through prefix-list/route-map EXTERNAL as E2 metric20. Transits cost10, passive LANs1. R2 originates defaults with cost1, so branch installed defaults cost11; normal inter-area LAN routes cost21. R2 has no default route itself.",
+  "implemented": [
+    "Twenty-second ENARSI Layer 3 Technologies entry with independent normal-area practice and completed stub/reference documents, eight-row addressing/role plan, detailed staged instructions, verified IOS/Windows commands, current-origin/path/query permalinks and accurate catalog counts. Existing layout, node artwork, themes, terminal styling and offline single-HTML behavior are preserved.",
+    "Initial normal-area comparison requires six actual three-request/three-reply exchanges: PC1, PC2 and core control PC3 to the external server and back. Both normal branches receive inter-area specifics and the E2 external prefix without an invented default. The ASBR is in the backbone, and the intended stub branches contain no ASBR.",
+    "Area1 uses stub on R2/R3: the branch retains inter-area specifics and an ABR-originated O IA default at AD110/cost11, with no external specific. Area2 uses stub no-summary on R2 only and stub on R4: R4 retains only intra-area routes and its O IA default. R2 retains the actual E2 external route, R1 retains specific branch return routes, and actual traffic uses these distinct forwarding decisions.",
+    "Database verification uses views projected from the observer’s received logical records: the stub sees a Type3 default and nondefault summaries, the totally stubby branch only the Type3 default, neither sees Type4/5 entries, and R2 sees the external advertisement. Three received Full point-to-point pairs, exact route costs/next hops and actual service configuration provide seven live checks including saved configs.",
+    "Six comparison/recovery tasks require mixed stub/normal comparison, both plain stubs versus ABR no-summary, a real stub-option mismatch with other branch/core controls working, internal-router no-summary scope, external withdrawal while leaf defaults remain, and loss/recovery of ABR backbone activation. Physical interfaces remain up during configuration faults. Each task requires actual changed-state success/failure evidence and fresh six-direction traffic after restoring the intended design.",
+    "Success correlates unique original requests, accepted destinations, parent-linked replies and required router egresses. Failure correlates three original requests with actual No route drops of requests or their replies at the expected router and rejects received success. Epochs keyed to config and OSPF RIB reject stale proof. Both branch HTTP clients must receive a complete TCP-backed200 body. Configuration-only toggles, partial directions/two replies, static defaults and wrong area roles cannot substitute.",
+    "Practice starts0/16; actual normal-area comparison earns1/16; direct reference repair plus fresh traffic, both HTTP requests and saves earns10/16. Six separately observed comparison/recovery tasks yield16/16. The completed reference supplies seven live checks without invented observations. Export/import retains observed achievements while clearing/rebuilding runtime; a fresh attempt starts0/16.",
+    "Fixed delivered OSPF Hello compatibility to compare normal/stub/NSSA area options, with a specific mismatch diagnostic. Changing the local area type invalidates the old neighbor exchange; matching command text cannot preserve a neighbor across incompatible received options.",
+    "Fixed no-summary policy to act at the ABR crossing for the selected path, rather than any internal router with that area setting. Summary database projection likewise uses the originating ABR’s setting. Losing backbone attachment removes the projected stub default as well as the actual installed defaults.",
+    "Fixed stub/NSSA CLI negation so removing no-summary preserves the stub type and unrelated area attributes. Decimal/dotted aliases update one area policy, removing the type preserves authentication, duplicate options reject atomically and area0 cannot be made stub/NSSA. Existing contextual question-mark/Tab expose no-summary. No unsupported default-cost or other new configuration is offered by this lab."
+  ],
+  "scope": "IOS OSPFv2 normal/stub/totally-stubby comparison, ABR default origination, route suppression, received logical topology/database projections and actual simulated control/data-plane traffic. The engine exchanges segmented logical router records across its modeled domain; Type3/4/5 show views are projected from received records, not individually scoped binary LSAs. Area-type Hello compatibility is logical rather than encoded E/N bits. No fresh CML capture, binary LSA flooding conformance, complete RFC state/timer equivalence, NSSA translation exercise, multiple-ABR path selection or virtual-link exercise is claimed.",
+  "references": [
+    {
+      "title": "Cisco: Understand OSPF Areas and Virtual Links",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13703-8.html",
+      "use": "Stub area membership, normal/stub/totally-stubby route/LSA differences and ABR no-summary."
+    },
+    {
+      "title": "Cisco: How Does OSPF Generate Default Routes?",
+      "url": "https://www.cisco.com/c/en/us/support/docs/ip/open-shortest-path-first-ospf/13692-21.html",
+      "use": "Stub and totally-stubby Type3 defaults are originated by the ABR without an installed ABR default or default-information originate."
+    }
+  ],
+  "validation": {
+    "typecheck": "npm run typecheck passed.",
+    "newFocusedTests": 27,
+    "nativeTests": 3405,
+    "nativeFailures": 0,
+    "nativeDurationMs": 744870.368542,
+    "nativeCommand": "node --test --test-concurrency=4 tests/*.test.ts",
+    "browserChecks": [
+      "light: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "dark: shared permalink preserves current domain/path/query/workspace, opens ENARSI Layer 3 Technologies and retains the original CCNA authentication labs in Services & Security",
+      "light 320px: ENARSI Layer 3 Technologies=22; eight nodes/seven links/16 tasks/eight-row plan; normal-area comparison with actual six-direction external/control traffic; area1 stub keeps IA specifics and default11, area2 ABR no-summary leaves only default IA, three Full pairs, received summary/default/external projections, exact AD110 costs11/20/21, six delivered directions and complete HTTP from both branches; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 390px: ENARSI Layer 3 Technologies=22; eight nodes/seven links/16 tasks/eight-row plan; normal-area comparison with actual six-direction external/control traffic; area1 stub keeps IA specifics and default11, area2 ABR no-summary leaves only default IA, three Full pairs, received summary/default/external projections, exact AD110 costs11/20/21, six delivered directions and complete HTTP from both branches; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: ENARSI Layer 3 Technologies=22; eight nodes/seven links/16 tasks/eight-row plan; normal-area comparison with actual six-direction external/control traffic; area1 stub keeps IA specifics and default11, area2 ABR no-summary leaves only default IA, three Full pairs, received summary/default/external projections, exact AD110 costs11/20/21, six delivered directions and complete HTTP from both branches; all16 including mixed stub/normal and plain/totally-stubby comparisons, stub-option mismatch recovery, internal no-summary scope, external withdrawal and ABR backbone recovery with actual failed probes, independent controls and fresh restored traffic; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 320px: ENARSI Layer 3 Technologies=22; eight nodes/seven links/16 tasks/eight-row plan; normal-area comparison with actual six-direction external/control traffic; area1 stub keeps IA specifics and default11, area2 ABR no-summary leaves only default IA, three Full pairs, received summary/default/external projections, exact AD110 costs11/20/21, six delivered directions and complete HTTP from both branches; all16 including mixed stub/normal and plain/totally-stubby comparisons, stub-option mismatch recovery, internal no-summary scope, external withdrawal and ABR backbone recovery with actual failed probes, independent controls and fresh restored traffic; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 390px: ENARSI Layer 3 Technologies=22; eight nodes/seven links/16 tasks/eight-row plan; normal-area comparison with actual six-direction external/control traffic; area1 stub keeps IA specifics and default11, area2 ABR no-summary leaves only default IA, three Full pairs, received summary/default/external projections, exact AD110 costs11/20/21, six delivered directions and complete HTTP from both branches; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "dark 1440px: ENARSI Layer 3 Technologies=22; eight nodes/seven links/16 tasks/eight-row plan; normal-area comparison with actual six-direction external/control traffic; area1 stub keeps IA specifics and default11, area2 ABR no-summary leaves only default IA, three Full pairs, received summary/default/external projections, exact AD110 costs11/20/21, six delivered directions and complete HTTP from both branches; ten baseline tasks with six controlled exercises unearned; offline YAML export/import, seven live goals only in reference, responsive guide/topology, golden terminal styles and save/cancel protection.",
+      "light 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "light 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 1440px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 390px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "dark 320px: catalog order, four groups, ENARSI Layer 3 Technologies with twenty-two labs, ENCOR Virtualization with three labs and Layer 2 with six labs plus Layer 3 with nine labs and IP Services with four labs plus Network Assurance with ten labs and Security with six labs plus Automation with one lab, four CCNA sections with accurate counts and accessible singular/plural labels, offline instructions, practice, cancel, save-copy protection, completed routing checks and actual YAML export/import into an empty offline profile with restored guide progress",
+      "Imported guide actions respect declared prerequisites and source power"
+    ],
+    "pageErrors": [],
+    "externalRequests": [],
+    "artifactSha256": "fa0aec1514b40be4386aac6736df9666ab8b6e9a174bf0a87380646697dde0c8",
+    "identicalArtifactCopies": 16,
+    "build": "npm run build passed; root/dist and every browser-tested HTML copy match byte for byte with embedded offline assets.",
+    "terminal": "Golden fixture matches unchanged fonts/background/foreground/cursor/tabs/controls in both themes and mobile/desktop.",
+    "verificationCommands": "All published IOS/Windows queries, traces, probes and reference configurations execute through ordinary CLI. Native cases deny real protocol89 delivery, check actual received neighbors/routes, correlate success/failure/control traffic, reject config-only/stale/partial proof and exercise rendered-config replay, a real OSPF process reset and saved reload.",
+    "visualInspection": [
+      ".cache/ost-catalog-browser/topology-light-1440.png",
+      ".cache/ost-catalog-browser/guide-light-1440.png",
+      ".cache/ost-catalog-browser/console-light-1440.png",
+      ".cache/ost-catalog-browser/guide-dark-320.png",
+      ".cache/ost-catalog-browser/console-dark-320.png",
+      ".cache/ost-catalog-browser/topology-dark-320.png"
+    ]
+  },
+  "verificationNotes": [
+    "Full16-task ordinary UI workflows complete at320px/dark and1440px/light. Four other theme/viewport cases earn ten baseline tasks with six exercises unearned. All export/import actual YAML into an empty offline profile and load a seven-live-check-only reference.",
+    "Six file:// cases block external HTTP(S). Two mocked-host permalink checks preserve current domain/path/query/workspace. Seven generic catalog checks cover counts, existing labs, prerequisites and save/cancel/import protection.",
+    "Browser clocks advance ordinary application frames; routes, LSAs, neighbors, traffic results and task completions are never injected."
+  ]
+}

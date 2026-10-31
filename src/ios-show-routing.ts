@@ -367,12 +367,12 @@ function ospfDatabaseEntries(v: OspfView): DbLsa[] {
       result.push({ type: 2, area, linkId: dr.address, adv: dr.routerId, age: owner?.age ?? 0, seq: owner?.sequence ?? 1, checksum: checksum(2, key, dr.routerId, owner?.sequence), mask: dr.prefix, attached });
     }
     // Summary LSAs (type 3/4) originated by area border routers attached to this area
-    const kind = areaKind(v, area), cfgArea = areaConfig(v.config, area);
+    const kind = areaKind(v, area);
     for (const abr of lsas.filter(l => areasOf(l).size > 1 && areasOf(l).has(area))) {
       const abrDevice = v.e.getDevice(deviceOf(abr) ?? ''), received = [...abr.links.map(k => k.from), ...abr.prefixes.map(p => p.endpoint)].find(p => p.deviceId === abrDevice?.id && p.snapshot)?.snapshot?.deviceConfig, abrConfig = abrDevice ? routingConfig(received ? { ...abrDevice, config: received } : abrDevice, v.protocol) : undefined, mineAreas = areasOf(abr);
       const add = (linkId: string, mask: number, metric: number) => { if (!result.some(r => r.type === 3 && r.area === area && r.linkId === linkId && r.mask === mask && r.adv === abr.routerId)) result.push({ type: 3, area, linkId, adv: abr.routerId, age: abr.age, seq: abr.sequence, checksum: checksum(3, area, linkId, mask, abr.routerId, abr.sequence), mask, metric }); };
-      if (kind !== 'normal') add(v.protocol === 'ospfv3' ? '::' : '0.0.0.0', 0, Number(areaConfig(abrConfig, area)?.defaultCost ?? 1));
-      if (kind !== 'normal' && (cfgArea?.noSummary || areaConfig(abrConfig, area)?.noSummary)) continue;
+      if (kind !== 'normal' && mineAreas.has('0')) add(v.protocol === 'ospfv3' ? '::' : '0.0.0.0', 0, Number(areaConfig(abrConfig, area)?.defaultCost ?? 1));
+      if (kind !== 'normal' && areaConfig(abrConfig, area)?.noSummary) continue;
       for (const source of [...new Set(lsas.flatMap(l => [...areasOf(l)]))].filter(x => x !== area && (area !== '0' || mineAreas.has(x)))) {
         if (area !== '0' && source !== '0' && !mineAreas.has(source) && !mineAreas.has('0')) continue;
         const paths = ospfSummaryPaths(lsas, source, abr.routerId, !mineAreas.has(source)), ranges: any[] = [...areaConfig(abrConfig, source)?.ranges ?? []].sort((a, b) => Number(b.prefix) - Number(a.prefix)), aggregates = new Map<string, { network: string; prefix: number; metric: number }>();

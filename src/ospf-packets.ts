@@ -10,7 +10,7 @@ export interface OSPFEndpoint {
   deviceId: string; name: string; node: string; address: string; transportAddress?: string; prefix: number; family: 4 | 6;
   routerId: string; area: string; vrf?: string; snapshot?: { deviceConfig: any; interfaceConfig: any };
 }
-export interface OSPFInterface extends OSPFEndpoint { networkType?:string; helloInterval?: number; deadInterval?: number; passive?: boolean; mtu?: number; mtuIgnore?: boolean; instanceId?: number; role?: 'DR' | 'BDR' | 'DROTHER' | 'POINT-TO-POINT'; authentication?: { mode: string | boolean; send?: { id: string; keyString: string; algorithm?:string }; accept: { id: string; keyString: string; algorithm?:string }[] } }
+export interface OSPFInterface extends OSPFEndpoint { areaType?:'normal'|'stub'|'nssa'; networkType?:string; helloInterval?: number; deadInterval?: number; passive?: boolean; mtu?: number; mtuIgnore?: boolean; instanceId?: number; role?: 'DR' | 'BDR' | 'DROTHER' | 'POINT-TO-POINT'; authentication?: { mode: string | boolean; send?: { id: string; keyString: string; algorithm?:string }; accept: { id: string; keyString: string; algorithm?:string }[] } }
 export interface OSPFAdjacency { from: OSPFEndpoint; to: OSPFEndpoint; area: string; cost: number; bandwidth: number; delay: number; fullDesired?: boolean }
 export interface OSPFOrigin { endpoint: OSPFEndpoint; kind: 'prefix' | 'external' | 'default'; network: string; prefix: number; cost?: number; route?: Record<string, any> }
 export interface OSPFLink extends OSPFAdjacency { sequence?: number; age?: number }
@@ -37,7 +37,7 @@ const interval = (value: number | undefined, fallback: number): number => Math.m
 const active = (engine: OSPFHost, node: NodeState): boolean => { const d = engine.getDevice(node.deviceId); return !!d?.powered && d.runtime === node.runtime && context(engine).nodes.get(node.key) === node; };
 const authenticated = (local: OSPFInterface, remote: OSPFInterface): boolean => { const a = local.authentication, b = remote.authentication, mode = (v: OSPFInterface['authentication']) => !v?.mode || v.mode === 'none' ? 'none' : String(v.mode); return mode(a) === 'none' && mode(b) === 'none' || mode(a) === mode(b) && !!b?.send && !!a?.accept.some(key => key.id === b.send!.id && key.keyString === b.send!.keyString && (key.algorithm??'md5') === (b.send!.algorithm??'md5')); };
 const wantsFull = (local: OSPFInterface, remote: OSPFInterface, fallback?: boolean): boolean => local.role && remote.role ? [local.role,remote.role].some(role => role === 'DR' || role === 'BDR' || role === 'POINT-TO-POINT') : fallback !== false;
-const compatible = (a: OSPFInterface, b: OSPFInterface): boolean => a.area === b.area && (a.instanceId ?? 0) === (b.instanceId ?? 0) && interval(a.helloInterval, 10) === interval(b.helloInterval, 10) && interval(a.deadInterval, 40) === interval(b.deadInterval, 40);
+const compatible = (a: OSPFInterface, b: OSPFInterface): boolean => a.area === b.area && (a.areaType ?? 'normal') === (b.areaType ?? 'normal') && (a.instanceId ?? 0) === (b.instanceId ?? 0) && interval(a.helloInterval, 10) === interval(b.helloInterval, 10) && interval(a.deadInterval, 40) === interval(b.deadInterval, 40);
 function update(engine: OSPFHost, node: NodeState): void {
   publish(engine,node);if(node.spfTimer&&!node.spfTimer.canceled&&node.spfTimer.at>=engine.clock.now())return;
   const cfg=routingConfig(engine.getDevice(node.deviceId)!,node.protocol,node.vrf),timers=cfg?.throttle?.spf;
@@ -151,7 +151,7 @@ export function ospfLiveDetail(engine: OSPFHost, deviceId: string, protocol: OSP
   return undefined;
 }
 function rejectedHello(engine:OSPFHost,node:NodeState,local:OSPFInterface,remote:OSPFInterface,source:string):void{
- const reason=local.area!==remote.area?`mismatched area ID, from area ${remote.area}, expected ${local.area}`:!authenticated(local,remote)?'authentication mismatch':remote.routerId===local.routerId?'duplicate router ID':'mismatched Hello/dead timers or instance ID';
+ const reason=local.area!==remote.area?`mismatched area ID, from area ${remote.area}, expected ${local.area}`:!authenticated(local,remote)?'authentication mismatch':remote.routerId===local.routerId?'duplicate router ID':(local.areaType??'normal')!==(remote.areaType??'normal')?'mismatched stub/NSSA area options':'mismatched Hello/dead timers or instance ID';
  engine.emit({nodeId:node.deviceId,port:local.name,protocol:node.protocol.toUpperCase(),label:'Hello rejected',detail:`Rcv pkt from ${source}: ${reason}`,disposition:'warning'});
 }
 export function receiveOSPFControl(engine: OSPFHost, deviceId: string, source: string, _destination: string, payload: any, ttl: number, input?: string): boolean {
