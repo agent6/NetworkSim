@@ -55,7 +55,7 @@ async function login(page,user,exercise=false){
   const text=await page.locator('#terminal-output').textContent();
   for(const password of ['AdminLab123','OperatorLab123','EnableLab123','WrongLab123'])assert.ok(!text.includes(password),'Password leaked in terminal output');
   const colors=await page.locator('#terminal-output').evaluate(e=>({background:getComputedStyle(e.closest('.terminal')).backgroundColor,foreground:getComputedStyle(e).color}));
-  assert.deepEqual(colors,{background:'rgb(51, 51, 51)',foreground:'rgb(255, 185, 0)'});
+  assert.deepEqual(colors,{background:'rgb(23, 35, 52)',foreground:'rgb(244, 247, 251)'});
   await command(page,'exit');await prompt(page,'C:\\>');await page.locator('[data-action=close-dock]').click();
 }
 async function changeTransport(page,value){

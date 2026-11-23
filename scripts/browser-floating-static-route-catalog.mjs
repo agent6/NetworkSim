@@ -35,7 +35,7 @@ async function routes(page,backup){
 async function traces(page,backup){
  await openNode(page,'PC1');await page.getByRole('button',{name:'Command prompt',exact:true}).click();
  for(const target of ['192.168.30.10','2001:db8:30::10']){const text=await output(page,`tracert ${target.includes(':')?'-6 ':''}-d ${target}`);assert.match(text,/Tracecomplete/);assert.equal(text.includes(target.includes(':')?'2001:db8:12::2':'10.0.12.2'),backup);}
- const terminal=await page.locator('#terminal-output').evaluate(e=>({background:getComputedStyle(e.closest('.terminal')).backgroundColor,foreground:getComputedStyle(e).color}));assert.deepEqual(terminal,{background:'rgb(51, 51, 51)',foreground:'rgb(255, 185, 0)'});await page.locator('[data-action=close-dock]').click();
+ const terminal=await page.locator('#terminal-output').evaluate(e=>({background:getComputedStyle(e.closest('.terminal')).backgroundColor,foreground:getComputedStyle(e).color}));assert.deepEqual(terminal,{background:'rgb(23, 35, 52)',foreground:'rgb(244, 247, 251)'});await page.locator('[data-action=close-dock]').click();
 }
 async function reload(page,theme,width,expected,phase){
  await page.waitForTimeout(1200);const before=await page.evaluate(()=>localStorage.getItem('network-sim.workspace.v1'));assert.equal(parseDocument(before).lab.name,title);await page.reload();

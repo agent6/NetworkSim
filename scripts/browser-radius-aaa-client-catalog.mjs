@@ -57,7 +57,7 @@ async function login(page,user='netadmin',exercise=false){
   assert.ok((await output(page,'show users')).includes(user));
   if(user==='netadmin')await pollOutput(page,'show accounting',/Delivered[1-9]/);else await pollOutput(page,'show accounting',/Failed[1-9]/);
   const text=await page.locator('#terminal-output').textContent();for(const password of ['RadiusAdmin123','RescueLab123','EnableLab123','WrongLab123'])assert.ok(!text.includes(password));
-  const colors=await page.locator('#terminal-output').evaluate(e=>({background:getComputedStyle(e.closest('.terminal')).backgroundColor,foreground:getComputedStyle(e).color}));assert.deepEqual(colors,{background:'rgb(51, 51, 51)',foreground:'rgb(255, 185, 0)'});await assertTerminalTheme(page);
+  const colors=await page.locator('#terminal-output').evaluate(e=>({background:getComputedStyle(e.closest('.terminal')).backgroundColor,foreground:getComputedStyle(e).color}));assert.deepEqual(colors,{background:'rgb(23, 35, 52)',foreground:'rgb(244, 247, 251)'});await assertTerminalTheme(page);
   await command(page,'exit');await prompt(page,'C:\\>');await page.locator('[data-action=close-dock]').click();
 }
 async function rejectLocal(page){

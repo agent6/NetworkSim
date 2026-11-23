@@ -2,48 +2,52 @@
 @source "./**/*.ts";
 @font-face { font-family: "Inter"; src: url("./assets/fonts/Inter.woff2") format("woff2"); font-style: normal; font-weight: 400 700; font-display: swap; }
 @font-face { font-family: "JetBrains Mono"; src: url("./assets/fonts/JetBrainsMono.woff2") format("woff2"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: "Nunito Sans"; src: url("./assets/fonts/NunitoSans.woff2") format("woff2"); font-style: normal; font-weight: 200 900; font-display: swap; }
 @theme {
+  --font-heading: "Nunito Sans", var(--font-sans);
+  --radius-lg: 10px;
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  --radius-xl: 8px;
-  --radius-2xl: 8px;
+  --radius-xl: 14px;
+  --radius-2xl: 18px;
   --color-ink: var(--ui-text);
   --color-teal: var(--ui-accent-text);
 }
-/* Mono Cobalt: semantic app tokens. Console overrides below are a separate boundary. */
+/* Workspace surfaces, actions and diagram colors. */
 :root {
   color-scheme: light;
-  --ui-bg: #F8FAFC;
+  --ui-heading: #0F1B3D;
+  --ui-bg: #F7FBFA;
   --ui-panel: #FFFFFF;
-  --ui-surface: #F1F5F9;
-  --ui-text: #0F172A;
-  --ui-muted: #475569;
-  --ui-border: #DCE4EE;
-  --ui-border-strong: #CBD5E1;
-  --ui-accent: #2563EB;
-  --ui-accent-text: #2563EB;
-  --ui-focus: #2563EB;
-  --ui-accent-soft: #EFF6FF;
-  --ui-accent-border: #BFDBFE;
-  --ui-accent-hover: #1D4ED8;
+  --ui-surface: #F2F7F6;
+  --ui-text: #29364B;
+  --ui-muted: #566274;
+  --ui-border: #DCE5E7;
+  --ui-border-strong: #B8C8C9;
+  --ui-accent: #087B56;
+  --ui-accent-text: #087B56;
+  --ui-focus: #087B56;
+  --ui-accent-soft: #E8FBF5;
+  --ui-accent-border: #B3E7D5;
+  --ui-accent-hover: #066344;
   --ui-on-accent: #FFFFFF;
-  --ui-node-tile: #1B3B68;
-  --ui-on-tile: #FFFFFF;
-  --ui-node-outline: #1B3B68;
-  --ui-grid: #DCE4EE;
+  --ui-node-tile: #E6F3FF;
+  --ui-on-tile: #0F1B3D;
+  --ui-node-outline: #0F1B3D;
+  --ui-grid: #DCE5E7;
   --ui-wire: #7890AF;
   --ui-wire-down: #A1AEC0;
-  --ui-overlay: rgb(15 23 42 / .32);
-  --ui-tooltip-bg: #0F172A;
-  --ui-tooltip-text: #F8FAFC;
+  --ui-overlay: rgb(15 27 61 / .32);
+  --ui-tooltip-bg: #29364B;
+  --ui-tooltip-text: #F7FBFA;
   --ui-status-up-text: #207E6C;
-  --ui-danger: #B4233A;
+  --ui-danger: #B42318;
   --ui-danger-bg: #FFF1F2;
-  --ui-radius: 8px;
-  --ui-shadow: 0 3px 12px rgb(15 23 42 / .07);
-  --ui-dialog-shadow: 0 8px 24px rgb(15 23 42 / .12);
-  --ui-selection-bg: #BFDBFE;
-  --ui-selection-text: #0F172A;
+  --ui-radius: 12px;
+  --ui-shadow: 0 5px 18px rgb(15 27 61 / .05);
+  --ui-dialog-shadow: 0 8px 24px rgb(15 27 61 / .12);
+  --ui-selection-bg: #B3E7D5;
+  --ui-selection-text: #29364B;
   --color-white: var(--ui-panel);
   --color-slate-50: var(--ui-bg);
   --color-slate-100: var(--ui-surface);
@@ -63,17 +67,20 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --ui-heading: #F4F7FB;
+  --ui-node-tile: #23384B;
+  --ui-on-tile: #ECF5FF;
   --ui-bg: #101827;
   --ui-panel: #172235;
   --ui-surface: #1E2C42;
-  --ui-text: #F1F5F9;
-  --ui-muted: #CBD5E1;
+  --ui-text: #F2F7F6;
+  --ui-muted: #B8C8C9;
   --ui-border: #334155;
-  --ui-border-strong: #475569;
-  --ui-accent-text: #60A5FA;
-  --ui-focus: #60A5FA;
-  --ui-accent-soft: #1B3559;
-  --ui-accent-border: #3B6091;
+  --ui-border-strong: #566274;
+  --ui-accent-text: #7EE5BB;
+  --ui-focus: #7EE5BB;
+  --ui-accent-soft: #173D36;
+  --ui-accent-border: #326858;
   --ui-grid: #334155;
   --ui-wire: #8CA5C6;
   --ui-node-outline: #FFFFFF;
@@ -86,14 +93,18 @@
   --ui-danger-bg: #492635;
   --ui-shadow: 0 3px 12px rgb(0 0 0 / .14);
   --ui-dialog-shadow: 0 8px 24px rgb(0 0 0 / .22);
-  --ui-selection-bg: #60A5FA;
+  --ui-selection-bg: #7EE5BB;
   --ui-selection-text: #101827;
   --color-amber-50: #3A301B;
   --color-amber-200: #775E28;
   --color-amber-800: #F0CE85;
 }
+.brand-name, h1, h2, h3, h4 { font-family: var(--font-heading); color: var(--ui-heading); }
+.brand-name { font-size: 19px; font-weight: 800; letter-spacing: -.035em; }
+.dialog-heading { background: var(--ui-accent-soft); }
+.dialog-heading h2 { font-size: 20px; font-weight: 800; }
 .brand-logo {
-  display: block; width: 36px; height: 36px; background-color: var(--ui-accent);
+  display: block; width: 36px; height: 36px; background-color: var(--ui-accent-text);
   -webkit-mask: var(--brand-image) center / contain no-repeat;
   mask: var(--brand-image) center / contain no-repeat;
 }
@@ -158,6 +169,8 @@
     @apply inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors;
     border-color: var(--ui-accent); background: var(--ui-accent); color: var(--ui-on-accent);
   }
+  .btn, .btn-primary { font-family: var(--font-heading); font-weight: 750; }
+  .btn:hover { color: var(--ui-accent-text); border-color: var(--ui-accent-border); background: var(--ui-accent-soft); }
   .btn-primary:hover { background: var(--ui-accent-hover); border-color: var(--ui-accent-hover); }
   .icon-btn {
     @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800;
@@ -179,21 +192,21 @@
   }
   .palette-card {
     @apply flex w-full flex-col items-center justify-center gap-1 rounded-lg border border-transparent px-1 py-3 text-center transition-colors;
-    background: var(--ui-node-tile); color: var(--ui-on-tile);
+    background: var(--ui-node-tile); color: var(--ui-on-tile); border-color: var(--ui-border);
   }
   .palette-card:hover { border-color: var(--ui-focus); box-shadow: inset 0 0 0 1px var(--ui-focus); }
   .palette-symbol {
     @apply flex h-10 w-10 shrink-0 items-center justify-center text-slate-600;
   }
   .sidebar {
-    @apply flex w-[204px] shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white;
+    @apply flex w-[224px] shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white;
   }
   .dialog-backdrop {
     @apply fixed inset-0 z-50 flex items-center justify-center p-5;
     background: var(--ui-overlay);
   }
   .dialog {
-    @apply flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-lg border border-slate-200 bg-white;
+    @apply flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white;
     box-shadow: var(--ui-dialog-shadow);
   }
   .dialog-heading {
@@ -267,10 +280,6 @@
   display: block; flex-shrink: 0; pointer-events: none;
   color: var(--ui-on-tile); background: var(--ui-node-tile); border-radius: var(--ui-radius);
 }
-/* Recolor the original image only, keeping its silhouette and transparent areas. */
-.node-artwork > use { filter: brightness(0) invert(1); }
-.device .node-artwork > use { filter: none; }
-[data-theme="dark"] .device .node-artwork > use { filter: brightness(0) invert(1); }
 .device-label {
   font-size: 12px;
   font-weight: 600;
@@ -355,12 +364,12 @@
 /* Keep only the command pane independent of the application theme. */
 .terminal {
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  background: #333333;
-  color: #FFB900;
+  background: #172334;
+  color: #F4F7FB;
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
-  scrollbar-color: #6b6b6b #333333;
+  scrollbar-color: #6b6b6b #172334;
   scrollbar-gutter: stable;
   cursor: text;
   padding: 15px 20px 28px;
@@ -381,12 +390,12 @@
 .terminal-input input {
   border: 0; background: transparent; border-radius: 0; color: inherit;
   flex: 1; min-width: 2ch; padding: 0; outline: none; font: inherit;
-  box-shadow: none; caret-color: #00FF00; line-height: inherit;
+  box-shadow: none; caret-color: #7EE5BB; line-height: inherit;
 }
-.terminal-input:focus-within { box-shadow: -2px 0 #00FF00; }
+.terminal-input:focus-within { box-shadow: -2px 0 #7EE5BB; }
 .terminal-input .prompt { color: inherit; white-space: pre; flex-shrink: 0; }
 .terminal-input input:focus-visible { outline: none; }
-.terminal::selection, .terminal ::selection { background: #FFB900; color: #333333; }
+.terminal::selection, .terminal ::selection { background: #F4F7FB; color: #172334; }
 .terminal-empty { display: flex; height: 100%; min-height: 90px; align-items: center; justify-content: center; gap: 12px; color: inherit; font: 13px var(--font-sans); }
 #dock { position: relative; min-height: 150px; }
 #app.console-expanded .app-header,
@@ -445,7 +454,8 @@
   pointer-events: none;
 }
 .empty-hint > div {
-  max-width: 330px;
+  max-width: 360px;
+  padding: 12px;
   text-align: center;
 }
 .app-tooltip {
@@ -502,12 +512,12 @@
   stroke-width: 1;
   stroke-dasharray: 4 3;
 }
-.palette-heading { display: flex; align-items: center; min-height: 48px; padding: 0 16px; font-size: 11px; font-weight: 600; color: var(--color-slate-500); }
+.palette-heading { display: flex; align-items: center; min-height: 48px; padding: 0 16px; font: 800 16px var(--font-heading); color: var(--ui-heading); }
 .palette-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0 10px 14px; }
 .palette-card { min-width: 0; cursor: grab; }
 .palette-card:active { cursor: grabbing; }
 .palette-card .palette-symbol { width: 76px; height: 64px; }
-.palette-card .node-artwork { width: 72px; height: 64px; }
+.palette-card .node-artwork { width: 64px; height: 64px; }
 .palette-copy { font-size: 11px; font-weight: 600; line-height: 1.4; white-space: nowrap; color: var(--ui-on-tile); }
 
 @media (max-width: 900px) {
@@ -528,7 +538,7 @@
   }
   .palette-grid { grid-template-columns: 1fr; padding: 0 6px 12px; gap: 5px; }
   .palette-card .palette-symbol { width: 64px; height: 58px; }
-  .palette-card .node-artwork { width: 62px; height: 58px; }
+  .palette-card .node-artwork { width: 58px; height: 58px; }
   .palette-card .palette-copy { font-size: 10px; }
   .palette-heading { justify-content: center; padding: 0; }
 }
@@ -654,16 +664,16 @@ input:is([name="ip"], [name="mask"], [name="gateway"], [name="dns"], [name="reco
 .catalog-subsections button:hover { background: var(--ui-surface); }
 .catalog-subsections button[aria-pressed=true] { color: var(--ui-accent-text); border-color: var(--ui-accent-border); background: var(--ui-accent-soft); }
 .catalog-subsection-heading { margin: 0 0 12px; font-size: 12px; font-weight: 600; }
-.catalog-card { display: flex; gap: 14px; padding: 18px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); }
+.catalog-card { display: flex; gap: 14px; padding: 18px; box-shadow: var(--ui-shadow); border: 1px solid var(--ui-border); border-radius: var(--ui-radius); }
 .catalog-card + .catalog-card { margin-top: 12px; }
-.catalog-card h4 { margin: 0; font-size: 14px; font-weight: 600; }
+.catalog-card h4 { margin: 0; font-size: 17px; font-weight: 800; }
 .catalog-card p { color: var(--ui-muted); font-size: 12px; line-height: 1.7; margin: 8px 0; }
 .catalog-card .btn { margin-top: 14px; }
 .catalog-card-icon { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: var(--ui-radius); background: var(--ui-node-tile); }
 .catalog-meta, .catalog-footnote { color: var(--ui-muted); font-size: 11px; line-height: 1.7; }
 .catalog-footnote { margin-top: 20px; }
 .catalog-empty { padding: 24px; border: 1px dashed var(--ui-border); border-radius: var(--ui-radius); font-size: 12px; color: var(--ui-muted); }
-.catalog-instructions { white-space: pre-line; font-size: 12px; line-height: 1.8; color: var(--ui-muted); margin: 12px 0 20px; }
+.catalog-instructions { white-space: pre-line; max-width: 76ch; font-size: 14px; line-height: 1.8; color: var(--ui-muted); margin: 12px 0 20px; }
 .catalog-table-wrap { overflow-x: auto; margin: 20px 0; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); }
 .catalog-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
 .catalog-table caption { text-align: left; padding: 12px; font-size: 12px; font-weight: 600; background: var(--ui-surface); }

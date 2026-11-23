@@ -36,7 +36,7 @@ async function routes(page,alternate){
 }
 async function trace(page,alternate){
  await openNode(page,'PC1');await page.getByRole('button',{name:'Command prompt',exact:true}).click();const text=await output(page,'tracert -d 192.168.30.10');assert.match(text,/Tracecomplete/);assert.equal(text.includes('10.0.12.2'),alternate);
- const terminal=await page.locator('#terminal-output').evaluate(e=>({background:getComputedStyle(e.closest('.terminal')).backgroundColor,foreground:getComputedStyle(e).color}));assert.deepEqual(terminal,{background:'rgb(51, 51, 51)',foreground:'rgb(255, 185, 0)'});await page.locator('[data-action=close-dock]').click();
+ const terminal=await page.locator('#terminal-output').evaluate(e=>({background:getComputedStyle(e.closest('.terminal')).backgroundColor,foreground:getComputedStyle(e).color}));assert.deepEqual(terminal,{background:'rgb(23, 35, 52)',foreground:'rgb(244, 247, 251)'});await page.locator('[data-action=close-dock]').click();
 }
 async function reload(page,theme,width,alternate){
  await page.waitForTimeout(1200);const before=await page.evaluate(()=>localStorage.getItem('network-sim.workspace.v1'));assert.equal(parseDocument(before).lab.name,title);await page.reload();
